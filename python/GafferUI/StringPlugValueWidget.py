@@ -1,0 +1,97 @@
+##########################################################################
+#  
+#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#  
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#  
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#  
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#  
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  
+##########################################################################
+
+from __future__ import with_statement
+
+from PySide import QtGui
+
+import Gaffer
+import GafferUI
+
+## User docs :
+#
+# Return commits any changes onto the plug.
+#
+# \todo Escape abandons any uncommitted changes.
+# \todo Right click menu for cut and paste
+# \todo Stop editing for non editable plugs.
+class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug ) :
+	
+		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug )
+
+		self._qtWidget().setLayout( QtGui.QGridLayout() )
+		self.__textWidget = GafferUI.TextWidget()		
+		self._qtWidget().layout().setSpacing( 0 )
+		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
+		self._qtWidget().layout().addWidget( self.__textWidget._qtWidget(), 0, 0 )
+
+		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( self.__textChanged )
+
+		#self.gtkEntry = self.gtkWidget()
+		#self.gtkEntry.connect( "key-press-event", self.__keyPress )
+		#self.gtkEntry.connect( "focus-out-event", self.__focusOut )
+		#self.gtkEntry.set_name( "gafferStringPlugEntry" )
+
+		self.updateFromPlug()
+
+	def updateFromPlug( self ) :
+
+		if not hasattr( self, "_StringPlugValueWidget__textWidget" ) :
+			# we're still constructing
+			return
+
+		self.__textWidget.setText( self.getPlug().getValue() )
+
+	#def __keyPress( self, widget, event ) :
+#	
+#		# escape abandons everything
+#		if event.keyval==65307 :
+#			self.updateFromPlug()
+#			return True
+#
+#		return False
+		
+	def __textChanged( self, textWidget ) :
+			
+		assert( textWidget is self.__textWidget )
+	
+		text = self.__textWidget.getText()
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().setValue( text )
+
+GafferUI.PlugValueWidget.registerType( Gaffer.StringPlug.staticTypeId(), StringPlugValueWidget )

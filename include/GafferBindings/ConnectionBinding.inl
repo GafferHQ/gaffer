@@ -1,0 +1,170 @@
+//////////////////////////////////////////////////////////////////////////
+//  
+//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//  
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//  
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//  
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//  
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef GAFFERBINDINGS_CONNECTIONBINDING_INL
+#define GAFFERBINDINGS_CONNECTIONBINDING_INL
+
+namespace boost { namespace python {
+
+/// \todo this works for now, but should blatantly be implemented as some rvalue_from_python jobby.
+template<>
+struct extract<boost::signals::detail::unusable>
+{
+	extract( PyObject *o ) { m_obj = o; };
+	extract( object const &o ) { m_obj = o.ptr();  };
+	PyObject *m_obj;
+	bool check() const { return m_obj==Py_None; };
+	boost::signals::detail::unusable operator()() const { return boost::signals::detail::unusable(); };
+};
+
+}}
+
+namespace GafferBindings
+{
+
+template<int Arity, typename Signal>
+struct DefaultSlotCallerBase;
+
+template<typename Signal>
+struct DefaultSlotCallerBase<1, Signal>
+{
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1 )
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1 ) )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCallerBase<2, Signal>
+{
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2 ) )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCallerBase<3, Signal>
+{
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2, a3 ) )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCaller : public DefaultSlotCallerBase<Signal::slot_function_type::arity, Signal>
+{
+};
+
+template<int Arity, typename Signal, typename Caller>
+struct SlotBase;
+
+template<typename Signal, typename Caller>
+struct SlotBase<1, Signal, Caller>
+{
+	SlotBase( Connection *connection )
+		:	m_connection( connection )
+	{
+	}
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1 )
+	{
+		return Caller()( m_connection->slot(), a1 );
+	}
+	Connection *m_connection;
+};
+
+template<typename Signal, typename Caller>
+struct SlotBase<2, Signal, Caller>
+{
+	SlotBase( Connection *connection )
+		:	m_connection( connection )
+	{
+	}
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+	{
+		return Caller()( m_connection->slot(), a1, a2 );
+	}
+	Connection *m_connection;
+};
+
+template<typename Signal, typename Caller>
+struct SlotBase<3, Signal, Caller>
+{
+	SlotBase( Connection *connection )
+		:	m_connection( connection )
+	{
+	}
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+	{
+		return Caller()( m_connection->slot(), a1, a2, a3 );
+	}
+	Connection *m_connection;
+};
+
+template<typename Signal, typename Caller>
+struct Slot : public SlotBase<Signal::slot_function_type::arity, Signal, Caller>
+{
+	Slot( Connection *connection )
+		:	SlotBase<Signal::slot_function_type::arity, Signal, Caller>( connection )
+	{
+	}
+};
+
+template<typename Signal, typename SlotCaller>
+PyObject *Connection::create( Signal &s, boost::python::object &slot )
+{
+	Connection *connection = new Connection;
+	
+	typedef boost::python::manage_new_object::apply<Connection *>::type ResultConverter;
+	connection->m_pyObject = ResultConverter()( connection );
+
+	// now we need to stuff the slot into the dictionary for the
+	// new python object. it has to go in there so it can be seen
+	// by the garbage collector (the garbage collector can't see
+	// inside the c++ Connection instance). this is an annoying
+	// complication, and the only reason we have this weird create()
+	// function instead of just having a normal constructor.
+	boost::python::object connectionObj( boost::python::handle<>( boost::python::borrowed( connection->m_pyObject ) ) );
+	boost::python::dict d = boost::python::extract<boost::python::dict>( connectionObj.attr( "__dict__" ) );
+	d["slot"] = slot;
+	connection->m_connection = s.connect( Slot<Signal, SlotCaller>( connection ) );
+	return connection->m_pyObject;
+}
+
+}; // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_CONNECTIONBINDING_INL
