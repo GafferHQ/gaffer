@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -54,8 +55,6 @@ using namespace boost;
 
 IE_CORE_DEFINERUNTIMETYPED( NodeGadget );
 
-NodeGadget::CreatorMap NodeGadget::g_creators;
-
 NodeGadget::NodeGadget( Gaffer::NodePtr node )
 	:	m_node( node.get() )
 {
@@ -67,13 +66,14 @@ NodeGadget::~NodeGadget()
 
 NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 {
-	CreatorMap::const_iterator it = g_creators.find( node->typeId() );
-	if( it==g_creators.end() )
+	const CreatorMap &cr = creators();
+	CreatorMap::const_iterator it = cr.find( node->typeId() );
+	if( it==cr.end() )
 	{
 		const std::vector<IECore::TypeId> &baseTypes = IECore::RunTimeTyped::baseTypeIds( node->typeId() );
 		for( std::vector<IECore::TypeId>::const_iterator tIt=baseTypes.begin(); tIt!=baseTypes.end(); tIt++ )
 		{
-			if( ( it = g_creators.find( *tIt ) )!=g_creators.end() )
+			if( ( it = cr.find( *tIt ) )!=cr.end() )
 			{
 				break;
 			}
@@ -85,7 +85,7 @@ NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 
 void NodeGadget::registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator )
 {
-	g_creators[nodeType] = creator;
+	creators()[nodeType] = creator;
 }
 
 Gaffer::NodePtr NodeGadget::node()
@@ -106,4 +106,10 @@ NodulePtr NodeGadget::nodule( Gaffer::ConstPlugPtr plug )
 ConstNodulePtr NodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 {
 	return 0;
+}
+
+NodeGadget::CreatorMap &NodeGadget::creators()
+{
+	static CreatorMap c;
+	return c;
 }
