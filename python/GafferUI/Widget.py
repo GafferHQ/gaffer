@@ -226,21 +226,21 @@ class Widget( object ) :
 		"""
 		QWidget {
 
-			color: #f0f0f0;
-			background-color: #4c4c4c;
-			alternate-background-color: #6c6c6c;
-
+			color: $foreground;
+			background-color: $backgroundMid;
+			alternate-background-color: $backgroundLighter;
+			selection-background-color: $brightColor
 		}
 
 		QMenuBar {
 
-			background-color: black;
+			background-color: $backgroundDarkest;
 
 		}
 
 		QMenu {
 
-			border: 1px solid black;
+			border: 1px solid $backgroundDarkest;
 			padding-bottom: 5px;
 			padding-top: 5px;
 			etch-disabled-text: 0;
@@ -249,14 +249,14 @@ class Widget( object ) :
 
 		QMenu::item:disabled {
 
-			color: #999999;
+			color: $foregroundFaded;
 
 		}
 
 		QMenu::separator {
 
 			height: 1px;
-			background: black;
+			background: $backgroundDarkest;
 			margin-left: 10px;
 			margin-right: 10px;
 			margin-top: 5px;
@@ -266,11 +266,17 @@ class Widget( object ) :
 
 		QMenu, QTabBar::tab:selected, QPushButton, QHeaderView::section {
 
-			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #7d7d7d, stop: 1 #4c4c4c);
+			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLight, stop: 1 $backgroundMid);
 
 		}
 
-		QLineEdit {
+		QPlainTextEdit {
+		
+			border: 1px solid $backgroundDark;
+		
+		}
+
+		QLineEdit, QPlainTextEdit[readOnly="false"] {
 
 			border: 1px solid transparent;
 			padding: 1px;
@@ -280,20 +286,20 @@ class Widget( object ) :
 
 		QLineEdit[readOnly="false"], QPlainTextEdit[readOnly="false"] {
 
-			background-color: #6c6c6c;
+			background-color: $backgroundLighter;
 
 		}
 
-		QLineEdit:focus {
+		QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus {
 
-			border: 2px solid #779cbd;
+			border: 2px solid $brightColor;
 			padding: 0px;
 
 		}
 
 		QPushButton {
 
-			border: 1px solid black;
+			border: 1px solid $backgroundDarkest;
 			border-radius: 3px;
 			padding: 4px;
 			padding-left: 8px;
@@ -303,7 +309,7 @@ class Widget( object ) :
 
 		QPushButton:hover {
 
-			background-color: #7d7d7d;
+			background-color: $backgroundLight;
 
 		}
 
@@ -315,7 +321,7 @@ class Widget( object ) :
 
 		QTabBar::tab {
 
-			border: 1px solid black;
+			border: 1px solid $backgroundDarkest;
 			padding: 4px;
 			padding-left: 8px;
 			padding-right: 8px;
@@ -332,7 +338,7 @@ class Widget( object ) :
 
 		QTabBar::tab:!selected, QSplitter::handle {
 
-			background-color: #3c3c3c;
+			background-color: $backgroundDark;
 
 		}
 
@@ -340,7 +346,7 @@ class Widget( object ) :
 		QRadioButton#gafferCollapsibleToggle::hover, QPushButton:pressed {
 
 			color: white;
-			background-color:	#779cbd;
+			background-color:	$brightColor;
 
 		}
 
@@ -348,7 +354,7 @@ class Widget( object ) :
 		/* so that it sits underneath the bottom of the tabs.         */
 		/* this means the active tab can blend into the frame.        */
 		QTabWidget::pane {
-			border-top: 1px solid black;
+			border-top: 1px solid $backgroundDarkest;
 			top: -1px;
 		}
 
@@ -375,15 +381,15 @@ class Widget( object ) :
 		QHeaderView::section {
 		
 			border: 1px solid transparent;
-			border-bottom: 1px solid black;
+			border-bottom: 1px solid $backgroundDarkest;
 			padding: 4px;
 		
 		}
 		
 		QScrollBar {
 		
-			border: 1px solid black;
-			background-color: #3c3c3c;
+			border: 1px solid $backgroundDarkest;
+			background-color: $backgroundDark;
 			
 		}
 		
@@ -407,8 +413,8 @@ class Widget( object ) :
 		}
 		
 		QScrollBar::add-line, QScrollBar::sub-line {
-			background-color: #7d7d7d;
-			border: 1px solid black;
+			background-color: $backgroundLight;
+			border: 1px solid $backgroundDarkest;
 		}
 		
 		QScrollBar::add-line:vertical {
@@ -456,8 +462,8 @@ class Widget( object ) :
 		}
 
 		QScrollBar::handle {
-			background-color: #7d7d7d;			
-			border: 1px solid black;
+			background-color: $backgroundLight;			
+			border: 1px solid $backgroundDarkest;
 		}
 		
 		QScrollBar::handle:vertical {
@@ -475,12 +481,24 @@ class Widget( object ) :
 		}
 		
 		QScrollBar::handle:hover {
-			background-color: #779cbd;
+			background-color: $brightColor;
 		}
 
 		"""
 		
-	).substitute( os.environ )
+	).substitute( {
+	
+		"GAFFER_ROOT" : os.environ["GAFFER_ROOT"],
+		"backgroundDarkest" : "#000000",
+		"backgroundDark" : "#3c3c3c",
+		"backgroundMid" : "#4c4c4c",
+		"backgroundLighter" : "#6c6c6c",
+		"backgroundLight" : "#7d7d7d",
+		"brightColor" : "#779cbd",
+		"foreground" : "#f0f0f0",
+		"foregroundFaded" : "#999999",
+	
+	} )
 	
 class _EventFilter( QtCore.QObject ) :
 
