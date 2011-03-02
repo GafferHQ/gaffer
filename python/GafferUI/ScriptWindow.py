@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -155,7 +156,7 @@ class ScriptWindow( GafferUI.Window ) :
 	@staticmethod
 	def __scriptAdded( scriptContainer, script ) :
 	
-		ScriptWindow( script )
+		ScriptWindow( script ).setVisible( True )
 		
 	@staticmethod
 	def __staticScriptRemoved( scriptContainer, script ) :
