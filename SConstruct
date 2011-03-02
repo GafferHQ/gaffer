@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,7 +48,15 @@ CacheDir( "/home/john/dev/sconsBuildCache" )
 # Command line options
 ###############################################################################################
 
-options = Variables( "", ARGUMENTS )
+optionsFile = None
+
+if "GAFFER_OPTIONS_FILE" in os.environ :
+	optionsFile = os.environ["GAFFER_OPTIONS_FILE"]
+	
+if "OPTIONS" in ARGUMENTS :
+	optionsFile = ARGUMENTS["OPTIONS"]
+	
+options = Variables( optionsFile, ARGUMENTS )
 
 options.Add(
 	"BUILD_DIR",
@@ -174,10 +183,6 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_GTK", "Set this to build gtk.", "$BUILD_DEPENDENCIES" )
-)
-
-options.Add(
 	BoolVariable( "BUILD_PKGCONFIG", "Set this to build the pkgconfig library.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -281,33 +286,60 @@ options.Add(
 	"$DEPENDENCIES_SRC_DIR/ttf-bitstream-vera-1.10",
 )
 
+options.Add(
+	"ENV_VARS_TO_IMPORT",
+	"By default SCons ignores the environment it is run in, to avoid it contaminating the "
+	"build process. This can be problematic if some of the environment is critical for "
+	"running the applications used during the build. This space separated list of environment "
+	"variables is imported to help overcome these problems.",
+	"",
+)
+
+###############################################################################################
+# Basic environment object. All the other environments will be based on this
+###############################################################################################
+
+env = Environment(
+
+	options = options,
+
+	GAFFER_MAJOR_VERSION = "0",
+	GAFFER_MINOR_VERSION = "1",
+	GAFFER_PATCH_VERSION = "2",
+	
+)
+
+for e in env["ENV_VARS_TO_IMPORT"].split() :
+	if e in os.environ :
+		env["ENV"][e] = os.environ[e]
+
+env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
+		
 ###############################################################################################
 # Dependencies
 # They doesn't fit into the SCons way of things too well so we just build them directly when
 # the script runs.
 ###############################################################################################
+			
+depEnv = env.Clone()
 
-depEnv = Environment(
-	options = options,
+depEnv["ENV"].update(
+	{
+		"PATH" : depEnv.subst( "$BUILD_DIR/bin:" + os.environ["PATH"] ),
+		"LD_LIBRARY_PATH" : depEnv.subst( "$BUILD_DIR/lib" ),
+		"M4PATH" : depEnv.subst( "$BUILD_DIR/share/aclocal" ),
+		"PKG_CONFIG_PATH" : depEnv.subst( "$BUILD_DIR/lib/pkgconfig" ),
+		"MACOSX_DEPLOYMENT_TARGET" : "10.4",
+		"HOME" : os.environ["HOME"],
+	}
 )
-
-depEnv["CXX_MAJOR_VERSION"] = depEnv["CXXVERSION"].split( "." )[0]
-depEnv["CXX_MINOR_VERSION"] = depEnv["CXXVERSION"].split( "." )[1]
-depEnv["DELIGHT"] = os.environ["DELIGHT"]
 
 def runCommand( command ) :
 
+	command = depEnv.subst( command )
+
 	sys.stderr.write( command + "\n" )
-	command = "export PATH=%s DYLD_LIBRARY_PATH= LD_LIBRARY_PATH=%s M4PATH=%s PKG_CONFIG_PATH=%s MACOSX_DEPLOYMENT_TARGET=10.4 && %s " % (
-		depEnv.subst( "$BUILD_DIR/bin:/usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin" ),
-		depEnv.subst( "$BUILD_DIR/lib" ),
-		depEnv.subst( "$BUILD_DIR/share/aclocal" ),
-		depEnv.subst( "$BUILD_DIR/lib/pkgconfig" ),
-		depEnv.subst( command )
-	)
-	status = os.system( command )
-	if status :
-		raise RuntimeError( "Failed to build dependency" )
+	subprocess.check_call( command, shell=True, env=depEnv["ENV"] )
 
 if depEnv["BUILD_PKGCONFIG"] :
 	runCommand( "cd $PKGCONFIG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
@@ -318,10 +350,10 @@ if depEnv["BUILD_PYTHON"] :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --enable-framework=$BUILD_DIR/frameworks --prefix=$BUILD_DIR && make clean && make && make install" )
 		runCommand( "cd $BUILD_DIR/bin && ln -fsh python2.6 python" )
 	else :
-		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-unicode=ucs4 && make clean && make && make install" )
+		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make && make install" )
 
 if depEnv["BUILD_JPEG"] :
-	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install-lib install-headers" )
+	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install" )
 
 if depEnv["BUILD_TIFF"] :
 	runCommand( "cd $TIFF_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
@@ -343,7 +375,7 @@ if depEnv["BUILD_TBB"] :
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $TBB_SRC_DIR; cp build/macos_intel64_gcc_cc4.2.1_os10.6.2_release/*.dylib $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 	else :
-		runCommand( "cd $TBB_SRC_DIR; cp build/linux_intel64_gcc_cc4.4.1_libc2.10.1_kernel2.6.31_release/*.so* $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
+		runCommand( "cd $TBB_SRC_DIR; cp build/*_release/*.so* $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 
 if depEnv["BUILD_OPENEXR"] :
 	runCommand( "cd $ILMBASE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
@@ -358,7 +390,7 @@ if depEnv["BUILD_GLEW"] :
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 	
 if depEnv["BUILD_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install -j 3 DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install -j 3 DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
 	
 if depEnv["BUILD_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install" )
@@ -384,18 +416,14 @@ if depEnv["BUILD_GOOGLEPERFTOOLS"] :
 
 boostLibSuffix = ""
 
-env = Environment(
-
-	options = options,
-
-	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "1",
-	GAFFER_PATCH_VERSION = "2",
+libEnv = env.Clone()
+libEnv.Append(
 
 	CPPPATH = [
 		"include",
 		"$BUILD_DIR/include",
-		"$BUILD_DIR/include/boost-1_40",
+		"$BUILD_DIR/include/python2.6",
+		"$BUILD_DIR/include/boost-1_42",
 		"$BUILD_DIR/include/OpenEXR",
 	],
 	
@@ -425,15 +453,13 @@ env = Environment(
 	
 )
 
-env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
+gafferLibrary = libEnv.SharedLibrary( "lib/Gaffer", glob.glob( "src/Gaffer/*.cpp" ) )
+libEnv.Default( gafferLibrary )
 
-gafferLibrary = env.SharedLibrary( "lib/Gaffer", glob.glob( "src/Gaffer/*.cpp" ) )
-env.Default( gafferLibrary )
+gafferLibraryInstall = libEnv.Install( "$BUILD_DIR/lib", gafferLibrary )
+libEnv.Alias( "build", gafferLibraryInstall )
 
-gafferLibraryInstall = env.Install( "$BUILD_DIR/lib", gafferLibrary )
-env.Alias( "build", gafferLibraryInstall )
-
-uiEnv = env.Clone()
+uiEnv = libEnv.Clone()
 uiEnv.Append(
 
 	LIBS = [ gafferLibrary ],
@@ -442,14 +468,14 @@ uiEnv.Append(
 gafferUILibrary = uiEnv.SharedLibrary( "lib/GafferUI", glob.glob( "src/GafferUI/*.cpp" ) )
 uiEnv.Default( gafferUILibrary )
 
-gafferUILibraryInstall = env.Install( "$BUILD_DIR/lib", gafferUILibrary )
-env.Alias( "build", gafferUILibraryInstall )
+gafferUILibraryInstall = uiEnv.Install( "$BUILD_DIR/lib", gafferUILibrary )
+uiEnv.Alias( "build", gafferUILibraryInstall )
 
 ###############################################################################################
 # Gaffer python modules
 ###############################################################################################
 
-pythonEnv = env.Clone()
+pythonEnv = libEnv.Clone()
 
 pythonEnv.Append(
 
