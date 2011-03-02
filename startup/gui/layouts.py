@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,3 +38,4 @@
 import GafferUI
 
 GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( children = ( GafferUI.SplitContainer.Orientation.Horizontal, ( (GafferUI.GraphEditor(),), ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.NodeEditor(),), (GafferUI.ScriptEditor(),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Empty", "GafferUI.CompoundEditor()" )
