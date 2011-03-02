@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -147,7 +148,10 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def _resize( self, size ) :
 		
 		GafferUI.GLWidget._resize( self, size )
-		self.__cameraController.setResolution( size )
+		if size.x and size.y :
+			# avoid resizing if resolution has hit 0, as then
+			# the reframing maths breaks down
+			self.__cameraController.setResolution( size )
 	
 	def _draw( self ) :
 	
@@ -464,42 +468,4 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __eventToGadgetSpace( self, event ) :
 		
 		event.line.p0, event.line.p1 = self.__cameraController.unproject( IECore.V2i( int( event.line.p0.x ), int( event.line.p0.y ) ) )
-	
-	#########################################################################################################
-	# conversion of gtk events to gadget events
-	#########################################################################################################
-	
-	def __gtkEventToGadgetEvent( self, gtkEvent, gadgetEvent=None ) :
-	
-		if gadgetEvent is None :
 		
-			if gtkEvent.type==gtk.gdk.BUTTON_PRESS :
-				gadgetEvent = ButtonEvent()
-			elif gtkEvent.type==gtk.gdk.BUTTON_RELEASE :
-				gadgetEvent = ButtonEvent()
-			elif gtkEvent.type==gtk.gdk.MOTION_NOTIFY :
-				gadgetEvent = ButtonEvent()
-			elif gtkEvent.type==gtk.gdk.KEY_PRESS :
-				gadgetEvent = KeyEvent()
-			else :
-				raise ValueError( "Unsupported event type " + str( gtkEvent.type ) )
-		
-		if isinstance( gadgetEvent, ModifiableEvent ) :
-			gadgetEvent.modifiers = GadgetWidget.__gtkStateToEventModifiers( gtkEvent.state )
-		
-		if isinstance( gadgetEvent, ButtonEvent ) :
-		
-			if hasattr( gtkEvent, "button" ) :
-				gadgetEvent.buttons = GadgetWidget.__gtkButtonToEventButton( gtkEvent.button )
-			else :
-				gadgetEvent.buttons = GadgetWidget.__gtkStateToEventButton( gtkEvent.state )
-		
-			if hasattr( gtkEvent, "x" ) :
-			
-				gadgetEvent.line.p0, gadgetEvent.line.p1 = self.__cameraController.unproject( IECore.V2i( int(gtkEvent.x), int(gtkEvent.y) ) )
-		
-		if isinstance( gadgetEvent, KeyEvent ) :
-		
-			gadgetEvent.key = gtk.gdk.keyval_name( gtkEvent.keyval ) 
-		
-		return gadgetEvent
