@@ -350,7 +350,7 @@ if depEnv["BUILD_PYTHON"] :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --enable-framework=$BUILD_DIR/frameworks --prefix=$BUILD_DIR && make clean && make && make install" )
 		runCommand( "cd $BUILD_DIR/bin && ln -fsh python2.6 python" )
 	else :
-		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make && make install" )
+		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make -j 4 && make install" )
 
 if depEnv["BUILD_JPEG"] :
 	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install" )
@@ -397,13 +397,13 @@ if depEnv["BUILD_GL"] :
 
 if depEnv["BUILD_QT"] :
 
-	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative && make clean && make && make install" )
+	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle && make clean && make -j 4 && make install" )
 
 if depEnv["BUILD_PYSIDE"] :
-	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make && make install" )
-	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make && make install" )
-	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make && make install" )
-	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make && make install" )
+	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 
 if depEnv["BUILD_GOOGLEPERFTOOLS"] :
 
@@ -596,6 +596,7 @@ def buildGraphics( target, source, env ) :
 			)
 
 graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "graphics/graphics.svg", buildGraphics )
+env.NoCache( graphicsBuild )
 env.Alias( "build", graphicsBuild )
 	
 #########################################################################################################
