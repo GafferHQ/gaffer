@@ -42,8 +42,6 @@ import shutil
 import py_compile
 import subprocess
 
-CacheDir( "/home/john/dev/sconsBuildCache" )
-
 ###############################################################################################
 # Command line options
 ###############################################################################################
@@ -62,6 +60,14 @@ options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
 	"/home/john/dev/build/gaffer"
+)
+
+options.Add(
+	"BUILD_CACHEDIR",
+	"Specify a directory for SCons to cache build results in. This allows the sharing of build results"
+	"among multiple developers and can significantly reduce build times, particularly when switching"
+	"between multiple compilers and build options.",
+	""
 )
 
 options.Add(
@@ -314,7 +320,10 @@ for e in env["ENV_VARS_TO_IMPORT"].split() :
 		env["ENV"][e] = os.environ[e]
 
 env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
-		
+
+if env["BUILD_CACHEDIR"] != "" :
+	CacheDir( env["BUILD_CACHEDIR"] )
+			
 ###############################################################################################
 # Dependencies
 # They doesn't fit into the SCons way of things too well so we just build them directly when
@@ -390,7 +399,7 @@ if depEnv["BUILD_GLEW"] :
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 	
 if depEnv["BUILD_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install -j 3 DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
 	
 if depEnv["BUILD_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install" )
