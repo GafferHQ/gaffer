@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -78,29 +79,6 @@ class gui( Gaffer.Application ) :
 				application["scripts"].addChild( scriptNode )
 		else :
 			application["scripts"]["script1"] = Gaffer.ScriptNode()
-			
-			s = application["scripts"]["script1"]
-			n = Gaffer.Node()
-			n.addChild( Gaffer.StringPlug( "s1" ) )
-			n.addChild( Gaffer.StringPlug( "s2" ) )
-			n.addChild( Gaffer.IntPlug( "i1" ) )
-			n.addChild( Gaffer.FloatPlug( "f1" ) )
-			n.addChild( Gaffer.Color3fPlug( "c1" ) )
-			n.addChild( Gaffer.Color4fPlug( "c2" ) )
-			
-			n["c1"].setValue( IECore.Color3f( 1, 0, 0 ) )
-			n["c2"].setValue( IECore.Color4f( 1.0, 0.5, 0.25, 0.5 ) )
-			
-			c = Gaffer.CompoundPlug( "c" )
-			c.addChild( Gaffer.StringPlug( "s1" ) )
-			c.addChild( Gaffer.StringPlug( "s2" ) )
-			c.addChild( Gaffer.IntPlug( "i1" ) )
-			c.addChild( Gaffer.FloatPlug( "f1" ) )
-			
-			n.addChild( c )
-			
-			s.addChild( n )
-			s.selection().add( n )
 								
 		GafferUI.EventLoop.start()		
 		
