@@ -36,9 +36,11 @@
 ##########################################################################
 
 import os
+import re
 import sys
 import glob
 import shutil
+import fnmatch
 import py_compile
 import subprocess
 
@@ -471,7 +473,7 @@ libEnv.Alias( "build", gafferLibraryInstall )
 uiEnv = libEnv.Clone()
 uiEnv.Append(
 
-	LIBS = [ gafferLibrary ],
+	LIBS = [ "Gaffer" ],
 
 )
 gafferUILibrary = uiEnv.SharedLibrary( "lib/GafferUI", glob.glob( "src/GafferUI/*.cpp" ) )
@@ -607,6 +609,25 @@ def buildGraphics( target, source, env ) :
 graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "graphics/graphics.svg", buildGraphics )
 env.NoCache( graphicsBuild )
 env.Alias( "build", graphicsBuild )
+
+#########################################################################################################
+# Licenses
+#########################################################################################################
+
+for l in [
+	( "python", "$PYTHON_SRC_DIR/LICENSE" ),
+	( "boost", "$BOOST_SRC_DIR/LICENSE_1_0.txt" ),
+	( "cortex", "$CORTEX_SRC_DIR/LICENSE" ),
+	( "freetype", "$FREETYPE_SRC_DIR/docs/FTL.TXT" ),
+	( "glew", "$GLEW_SRC_DIR/LICENSE.txt" ),
+	( "ilmbase", "$ILMBASE_SRC_DIR/COPYING" ),
+	( "libjpeg", "$JPEG_SRC_DIR/README" ),
+	( "openexr", "$OPENEXR_SRC_DIR/LICENSE" ),
+	( "libtiff", "$TIFF_SRC_DIR/COPYRIGHT" ),
+] :
+
+	license = env.InstallAs( "$BUILD_DIR/doc/licenses/" + l[0], l[1] )
+	env.Alias( "build", license )
 	
 #########################################################################################################
 # Documentation
@@ -665,151 +686,79 @@ docInstall = docEnv.Install( "$BUILD_DIR/doc/gaffer", "doc/html" )
 manifest = [
 	"bin/gaffer",
 	"bin/gaffer.py",
-	"apps/cli/1/cli.py",
-	"apps/gui/1/gui.py",
-	"apps/test/1/test.py",
-	"apps/view/1/view.py",
-	"apps/license/1/license.py",
-	"lib/libboost_signals" + boostLibSuffix + ".dylib",
-	"lib/libboost_thread" + boostLibSuffix + ".dylib",
-	"lib/libboost_wave" + boostLibSuffix + ".dylib",
-	"lib/libboost_regex" + boostLibSuffix + ".dylib",
-	"lib/libboost_python" + boostLibSuffix + ".dylib",
-	"lib/libboost_date_time" + boostLibSuffix + ".dylib",
-	"lib/libboost_filesystem" + boostLibSuffix + ".dylib",
-	"lib/libboost_iostreams" + boostLibSuffix + ".dylib",
-	"lib/libboost_system" + boostLibSuffix + ".dylib",
-	"lib/libIECore.dylib",
-	"lib/libIECoreGL.dylib",
-	"lib/libIECoreRI.dylib",
-	"lib/libGaffer.dylib",
-	"lib/libGafferBindings.dylib",
-	"lib/libGafferUI.dylib",
-	"lib/libGafferUIBindings.dylib",
-	"lib/libIex.6.dylib",
-	"lib/libHalf.6.dylib",
-	"lib/libImath.6.dylib",
-	"lib/libIlmImf.6.dylib",
-	"lib/libIlmThread.6.dylib",
-	"lib/libtiff.3.dylib",
-	"lib/libfreetype.6.dylib",
-	"lib/libpyglib-2.0-python.0.dylib",
-	"lib/libgobject-2.0.0.dylib",
-	"lib/libgthread-2.0.0.dylib",
-	"lib/libglib-2.0.0.dylib",
-	"lib/libgtk-x11-2.0.0.dylib",
-	"lib/libgdk-x11-2.0.0.dylib",
-	"lib/libatk-1.0.0.dylib",
-	"lib/libgdk_pixbuf-2.0.0.dylib",
-	"lib/libgio-2.0.0.dylib",
-	"lib/libpangocairo-1.0.0.dylib",
-	"lib/libpangoft2-1.0.0.dylib",
-	"lib/libcairo.2.dylib",
-	"lib/libpixman-1.0.dylib",
-	"lib/libpango-1.0.0.dylib",
-	"lib/libfontconfig.1.dylib",
-	"lib/libexpat.1.dylib",
-	"lib/libgmodule-2.0.0.dylib",
-	"lib/libgtkglext-x11-1.0.0.dylib",
-	"lib/libgdkglext-x11-1.0.0.dylib",
-	"lib/libpangox-1.0.0.dylib",
-	"lib/libGLEW.1.5.1.dylib",
-	"frameworks/Python.framework",
+	"bin/python",
+	"apps/cli/cli-1.py",
+	"apps/gui/gui-1.py",
+	"apps/test/test-1.py",
+	"apps/view/view-1.py",
+	"apps/license/license-1.py",
+	"lib/libboost_signals" + boostLibSuffix + "*",
+	"lib/libboost_thread" + boostLibSuffix + "*",
+	"lib/libboost_wave" + boostLibSuffix + "*",
+	"lib/libboost_regex" + boostLibSuffix + "*",
+	"lib/libboost_python" + boostLibSuffix + "*",
+	"lib/libboost_date_time" + boostLibSuffix + "*",
+	"lib/libboost_filesystem" + boostLibSuffix + "*",
+	"lib/libboost_iostreams" + boostLibSuffix + "*",
+	"lib/libboost_system" + boostLibSuffix + "*",
+	"lib/libIECore*",
+	"lib/libGaffer*",
+	"lib/libIex.*",
+	"lib/libHalf.*",
+	"lib/libImath.*",
+	"lib/libIlmImf.*",
+	"lib/libIlmThread.*",
+	"lib/libtiff.*",
+	"lib/libfreetype.*",
+	"lib/libpython*",
+	"lib/libGLEW.*",
+	"lib/libtbb.*",
+	"lib/libjpeg.so*",
+	"lib/libpyside*",
+	"lib/libshiboken*",
+	"lib/libQt*.so*",
 	"startup/gui/menus.py",
 	"startup/gui/layouts.py",
 	"shaders",
+	"fonts",
+	"graphics/*.png",
 	"glsl/IECoreGL",
+	"doc/licenses",
 	"doc/gaffer/html",
 	"doc/cortex/html",
-	"lib/python2.6/site-packages/IECore",
-	"lib/python2.6/site-packages/IECoreGL",
-	"lib/python2.6/site-packages/IECoreRI",
-	"lib/python2.6/site-packages/Gaffer/_Gaffer.so",	
-	"lib/python2.6/site-packages/GafferTest",	
-	"lib/python2.6/site-packages/GafferUI/_GafferUI.so",
-	"lib/python2.6/site-packages/GafferUITest",
-	"lib/python2.6/site-packages/pygtk.pyc",
-	"lib/python2.6/site-packages/gtk-2.0",
-	"lib/python2.6/site-packages/cairo",
+	"lib/python*",
 ]
-
-symlinks = [
-	# have to symlink python on the mac as the bin/python you get otherwise is just a stub with a hardcoded full
-	# path to wherever the framework was built
-	( "bin/python", "../frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python" ),
-]
-
-pythonSourceToCompile = [
-	"lib/python2.6/site-packages/Gaffer/*.py",
-	"lib/python2.6/site-packages/GafferRI/*.py",
-	"lib/python2.6/site-packages/GafferUI/*.py",
-	"lib/python2.6/site-packages/GafferRIUI/*.py",
-]
-
-licenses = [
-	( "python", "$PYTHON_SRC_DIR/LICENSE" ),
-	( "boost", "$BOOST_SRC_DIR/LICENSE_1_0.txt" ),
-	( "cortex", "$CORTEX_SRC_DIR/LICENSE" ),
-	( "freetype", "$FREETYPE_SRC_DIR/docs/FTL.TXT" ),
-	( "glew", "$GLEW_SRC_DIR/LICENSE.txt" ),
-	( "glib", "$GLIB_SRC_DIR/COPYING" ),
-	( "ilmbase", "$ILMBASE_SRC_DIR/COPYING" ),
-	( "libjpeg", "$JPEG_SRC_DIR/README" ),
-	( "openexr", "$OPENEXR_SRC_DIR/LICENSE" ),
-	( "libtiff", "$TIFF_SRC_DIR/COPYRIGHT" ),
-]
-
-def expandSourceFiles( files, env ) :
-
-	result = []
-	root = env.subst( "$BUILD_DIR" )
-	for f in files :
-		for ff in glob.glob( os.path.join( root, f ) ) :
-			result.append( ff[len(root)+1:] )
-	
-	return result
 
 def installer( target, source, env ) :
 
-	shutil.rmtree( env.subst( "$INSTALL_DIR" ), True )
-	for f in manifest :
-
-		src = env.subst( os.path.join( "$BUILD_DIR", f ) )
-		dst = env.subst( os.path.join( "$INSTALL_DIR", f ) )
-		dstDir = os.path.dirname( dst )
-		if not os.path.isdir( dstDir ) :
-			os.makedirs( dstDir )
+	def copyTree( src, dst, regex ) :
+	
+		names = os.listdir( src )
+		
+		for name in names:
 				
-		if os.path.isdir( src ) :	
-			shutil.copytree( src, dst, True )
-		else :
-			shutil.copy( src, dst )
-			
-	for s in symlinks :
-	
-		os.symlink( s[1], env.subst( os.path.join( "$INSTALL_DIR", s[0] ) ) )
-
-	for f in expandSourceFiles( pythonSourceToCompile, env ) :
-		
-		src = env.subst( os.path.join( "$BUILD_DIR", f ) )
-		dst = env.subst( os.path.join( "$INSTALL_DIR", f + "c" ) )
-		dstDir = os.path.dirname( dst )
-		
-		if not os.path.isdir( dstDir ) :
-			os.makedirs( dstDir )
-		
-		py_compile.compile( src, dst, doraise=True )
-		
-	licenseDir = env.subst( "$INSTALL_DIR/doc/licenses" )
-	os.makedirs( licenseDir )
-	for l in licenses :
-	
-		src = env.subst( l[1] )
-		dst = os.path.join( licenseDir, l[0] )
-		
-		shutil.copy( src, dst )
+			srcName = os.path.join( src, name )
+			dstName = os.path.join( dst, name )
+						
+			if os.path.isdir( srcName ) :
+				if regex.match( srcName ) :
+					copyTree( srcName, dstName, re.compile( ".*" ) )
+				else :
+					copyTree( srcName, dstName, regex )
+			else :
+				if regex.match( srcName ) :
+					dstDir = os.path.dirname( dstName )
+					if not os.path.isdir( dstDir ) :
+						os.makedirs( dstDir )
+					if os.path.islink( srcName ) :
+						os.symlink( os.readlink( srcName ), dstName )
+					else:
+						shutil.copy2( srcName, dstName )
+				
+	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in manifest ] ) )	
+	copyTree( env.subst( "$BUILD_DIR" ), env.subst( "$INSTALL_DIR" ), regex )
 										
-install = env.Command( "$INSTALL_DIR/bin/gaffer", "$BUILD_DIR", installer )
+install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
 env.AlwaysBuild( install )
 env.NoCache( install )
 
