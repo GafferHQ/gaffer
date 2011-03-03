@@ -727,6 +727,12 @@ manifest = [
 	"doc/gaffer/html",
 	"doc/cortex/html",
 	"lib/python*",
+	"include/IECore*",
+	"include/boost",
+	"include/GL",
+	"include/OpenEXR",
+	"include/python*",
+	"include/tbb",
 ]
 
 def installer( target, source, env ) :
