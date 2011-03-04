@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,7 +46,6 @@ import GafferUI
 #
 # Return commits any changes onto the plug.
 #
-# \todo Escape abandons any uncommitted changes.
 # \todo Right click menu for cut and paste
 # \todo Stop editing for non editable plugs.
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -60,12 +60,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
 		self._qtWidget().layout().addWidget( self.__textWidget._qtWidget(), 0, 0 )
 
-		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( self.__textChanged )
-
-		#self.gtkEntry = self.gtkWidget()
-		#self.gtkEntry.connect( "key-press-event", self.__keyPress )
-		#self.gtkEntry.connect( "focus-out-event", self.__focusOut )
-		#self.gtkEntry.set_name( "gafferStringPlugEntry" )
+		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( self.__keyPress )
+		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( self.__textChanged )
 
 		self.updateFromPlug()
 
@@ -77,14 +73,19 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__textWidget.setText( self.getPlug().getValue() )
 
-	#def __keyPress( self, widget, event ) :
-#	
-#		# escape abandons everything
-#		if event.keyval==65307 :
-#			self.updateFromPlug()
-#			return True
-#
-#		return False
+	def __keyPress( self, widget, event ) :
+	
+		assert( widget is self.__textWidget )
+	
+		if not self.__textWidget.getEditable() :
+			return False
+				
+		# escape abandons everything
+		if event.key=="Escape" :
+			self.updateFromPlug()
+			return True
+
+		return False
 		
 	def __textChanged( self, textWidget ) :
 			

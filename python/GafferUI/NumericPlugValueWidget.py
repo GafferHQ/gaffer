@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -58,7 +59,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._qtWidget().layout().addWidget( self.__numericWidget._qtWidget(), 0, 0 )
  
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( self.__keyPress )
-		self.__textChangedConnection = self.__numericWidget.textChangedSignal().connect( self.__textChanged )
+		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( self.__textChanged )
 						
 		self.updateFromPlug()
 		
@@ -84,6 +85,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if event.key=="Escape" :
 			self.updateFromPlug()
 			return True
+			
+		return False
 		
 	def __textChanged( self, widget ) :
 		

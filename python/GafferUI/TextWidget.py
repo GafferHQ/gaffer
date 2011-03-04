@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,6 +50,7 @@ class TextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().textChanged.connect( self.__textChanged )
 		self._qtWidget().returnPressed.connect( self.__returnPressed )
+		self._qtWidget().editingFinished.connect( self.__editingFinished )
 
 		self.setText( text )
 		self.setEditable( editable )
@@ -77,6 +79,13 @@ class TextWidget( GafferUI.Widget ) :
 	
 		return self._qtWidget().cursorPosition()
 	
+	## \todo Should this be moved to the Widget class?
+	def grabFocus( self ) :
+	
+		self._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
+
+	## A signal emitted whenever the text changes. If the user is typing
+	# then a signal will be emitted for every character entered.
 	def textChangedSignal( self ) :
 	
 		try :
@@ -86,10 +95,17 @@ class TextWidget( GafferUI.Widget ) :
 			
 		return self.__textChangedSignal
 
-	## \todo Should this be moved to the Widget class?
-	def grabFocus( self ) :
+	## A signal emitted whenever the user has edited the text and
+	# completed that process either by hitting enter, or by moving
+	# focus to another Widget.
+	def editingFinishedSignal( self ) :
 	
-		self._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
+		try :
+			return self.__editingFinishedSignal
+		except :
+			self.__editingFinishedSignal = GafferUI.WidgetSignal()
+			
+		return self.__editingFinishedSignal
 
 	## A signal emitted when enter is pressed.
 	def activatedSignal( self ) :
@@ -120,6 +136,15 @@ class TextWidget( GafferUI.Widget ) :
 	
 		try :
 			signal = self.__activatedSignal
+		except :
+			return
+			
+		signal( self )
+	
+	def __editingFinished( self ) :
+	
+		try :
+			signal = self.__editingFinishedSignal
 		except :
 			return
 			
