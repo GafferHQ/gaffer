@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -61,4 +62,6 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def selectedText( self ) :
 	
 		cursor = self._qtWidget().textCursor()
-		return str( cursor.selectedText() )
+		text = cursor.selectedText()
+		text = text.replace( u"\u2029", "\n" )
+		return str( text )
