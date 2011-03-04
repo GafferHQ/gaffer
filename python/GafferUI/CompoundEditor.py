@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,7 +60,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		self.__qtLayout.addWidget( self.__splitContainer._qtWidget(), 0, 0 )
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
 		
-		self.__splitContainer._qtWidget().contextMenuEvent = types.MethodType( self.__contextMenuEvent, self.__splitContainer._qtWidget() )					
+		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( self.__buttonPress )					
 
 		if children :		
 			self.__addChildren( self.__splitContainer, children )
@@ -96,9 +97,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			
 		return "GafferUI.CompoundEditor( children = %s )" % __serialise( self.__splitContainer )
 
-	def __contextMenuEvent( self, qtWidget, event ) :
+	def __buttonPress( self, splitContainer, event ) :
 		
-		splitContainer = GafferUI.Widget._owner( qtWidget )
+		if event.buttons != event.Buttons.Right :
+			return False
 
 		if len( splitContainer ) != 1 :
 			# Can only do things at the leaf level
@@ -173,13 +175,13 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		
 		sc1 = GafferUI.SplitContainer()
 		sc1.append( splitContainer[0] )
-		sc1._qtWidget().contextMenuEvent = types.MethodType( self.__contextMenuEvent, sc1._qtWidget() )					
+		sc1.__buttonPressConnection = sc1.buttonPressSignal().connect( self.__buttonPress )					
 
 		assert( len( splitContainer ) == 0 )
 		
 		sc2 = GafferUI.SplitContainer()
 		sc2.append( GafferUI.TabbedContainer() )
-		sc2._qtWidget().contextMenuEvent = types.MethodType( self.__contextMenuEvent, sc2._qtWidget() )					
+		sc2.__buttonPressConnection = sc2.buttonPressSignal().connect( self.__buttonPress )					
 		
 		if subPanelIndex==1 :
 			splitContainer.append( sc1 )
