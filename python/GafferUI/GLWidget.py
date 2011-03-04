@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -100,9 +101,12 @@ class GLWidget( GafferUI.Widget ) :
 		raise NotImplementedError
 		
 	## Derived classes may call this when they wish to trigger a redraw.
-	def _redraw( self ) :
+	def _redraw( self, immediate=False ) :
 		
-		self._qtWidget().updateGL()
+		if immediate :
+			self._qtWidget().updateGL()
+		else :
+			self._qtWidget().update()
 	
 	def __resizeGL( self, width, height ) :
 	
