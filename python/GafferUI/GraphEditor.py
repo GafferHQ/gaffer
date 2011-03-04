@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,7 +60,6 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		self._qtWidget().layout().addWidget( self.__gadgetWidget._qtWidget() )
 		
 		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
-		#self.__gadgetWidget.gtkWidget().connect( "button-press-event", self.__buttonPress )
 	
 		self.setScriptNode( scriptNode )
 	
