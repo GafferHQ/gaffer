@@ -50,6 +50,7 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		
 		layout = QtGui.QVBoxLayout()
 		self._qtWidget().setLayout( layout )
+		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		
 		self.__toggle = QtGui.QRadioButton()
 		self.__toggle.setObjectName( "gafferCollapsibleToggle" )

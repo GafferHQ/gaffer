@@ -50,6 +50,7 @@ class Window( GafferUI.ContainerWidget ) :
 		self.__child = None
 		self.__qtLayout = QtGui.QGridLayout()
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
+		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		
 		self._qtWidget().setLayout( self.__qtLayout )
 
