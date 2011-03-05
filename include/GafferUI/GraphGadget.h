@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -79,8 +80,9 @@ class GraphGadget : public ContainerGadget
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
 		
-		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const ButtonEvent &event );	
-		bool dragUpdate( GadgetPtr gadget, const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
+		bool dragUpdate( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		
 		void addNodeGadget( Gaffer::Node *node );
 		NodeGadget *findNodeGadget( const Gaffer::Node *node ) const;
@@ -101,7 +103,9 @@ class GraphGadget : public ContainerGadget
 		typedef std::map<const Gaffer::Plug *, ConnectionGadget *> ConnectionGadgetMap;
 		ConnectionGadgetMap m_connectionGadgets;
 
+		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
+		bool m_dragSelecting;
 		
 
 };

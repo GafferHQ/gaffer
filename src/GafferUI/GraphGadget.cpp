@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +40,7 @@
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/Nodule.h"
 #include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/Style.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -60,7 +62,11 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr graphRoot )
-	:	m_graphRoot( graphRoot.get() )
+	:
+		m_graphRoot( graphRoot.get() ),
+		m_dragStartPosition( 0 ),
+		m_lastDragPosition( 0 ),
+		m_dragSelecting( false )
 {
 	graphRoot->childAddedSignal().connect( boost::bind( &GraphGadget::childAdded, this, ::_1,  ::_2 ) );
 	graphRoot->childRemovedSignal().connect( boost::bind( &GraphGadget::childRemoved, this, ::_1,  ::_2 ) );
@@ -70,6 +76,7 @@ GraphGadget::GraphGadget( Gaffer::NodePtr graphRoot )
 	buttonReleaseSignal().connect( boost::bind( &GraphGadget::buttonRelease, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &GraphGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragUpdateSignal().connect( boost::bind( &GraphGadget::dragUpdate, this, ::_1, ::_2 ) );
+	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
 	
 	// make gadgets for each node
 	for( Gaffer::ChildNodeIterator cIt = graphRoot->childrenBegin<Gaffer::Node>(); cIt!=cIt.end(); cIt++ )
@@ -122,6 +129,17 @@ void GraphGadget::doRender( IECore::RendererPtr renderer ) const
 			{
 				IECore::staticPointerCast<const Gadget>( *it )->render( renderer );
 			}
+		}
+		
+		// render drag select thing if needed
+		if( m_dragSelecting )
+		{
+			Box2f b;
+			b.extendBy( m_dragStartPosition );
+			b.extendBy( m_lastDragPosition );
+			/// \figure out how we can modify the Style classes to allow this to be a nice blue colour
+			renderer->setAttribute( "opacity", new IECore::Color3fData( Color3f( 0.2f ) ) );
+			getStyle()->renderFrame( renderer, b, 0.5f );		
 		}
 	
 	renderer->attributeEnd();
@@ -258,7 +276,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	return false;
 }
 
-IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
+IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( gadget->isInstanceOf( Nodule::staticTypeId() ) )
 	{
@@ -273,48 +291,113 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const ButtonEv
 	}
 	
 	V3f i;
-	if( event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
 	{
-		m_lastDragPosition = V2f( i.x, i.y );
+		return 0;
+	}
+	
+	m_dragStartPosition = m_lastDragPosition = V2f( i.x, i.y );
+	if( scriptNode->selection()->size() )
+	{
 		return scriptNode->selection();
+	}
+	else
+	{
+		return new IECore::V2fData( m_dragStartPosition );
 	}
 	return 0;
 }
 
-bool GraphGadget::dragUpdate( GadgetPtr gadget, const ButtonEvent &event )
+bool GraphGadget::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
 {
-	Gaffer::ScriptNodePtr script = runTimeCast<Gaffer::ScriptNode>( m_graphRoot );
-	if( !script )
+	Gaffer::ScriptNodePtr scriptNode = script();
+	if( !scriptNode )
 	{
-		script = m_graphRoot->scriptNode();
+		return false;
 	}
-	if( script )
+	
+	V3f i;
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
 	{
-		V3f i;
-		if( event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+		return false;
+	}
+	
+	if( event.data->isInstanceOf( Gaffer::Set::staticTypeId() ) )
+	{
+		// we're dragging some nodes around
+		V2f pos = V2f( i.x, i.y );
+		V2f delta = pos - m_lastDragPosition;
+		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 		{
-			V2f pos = V2f( i.x, i.y );
-			V2f delta = pos - m_lastDragPosition;
-			for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+			NodeGadgetPtr nodeGadget = runTimeCast<NodeGadget>( *it );
+			if( nodeGadget )
 			{
-				NodeGadgetPtr nodeGadget = runTimeCast<NodeGadget>( *it );
-				if( nodeGadget )
+				Gaffer::NodePtr node = nodeGadget->node();
+				if( scriptNode->selection()->contains( node ) )
 				{
-					Gaffer::NodePtr node = nodeGadget->node();
-					if( script->selection()->contains( node ) )
-					{
-						Gaffer::FloatPlugPtr xp = node->getChild<Gaffer::FloatPlug>( "__uiX" );
-						Gaffer::FloatPlugPtr yp = node->getChild<Gaffer::FloatPlug>( "__uiY" );
-						xp->setValue( xp->getValue() + delta.x );
-						yp->setValue( yp->getValue() + delta.y );
-					}
+					Gaffer::FloatPlugPtr xp = node->getChild<Gaffer::FloatPlug>( "__uiX" );
+					Gaffer::FloatPlugPtr yp = node->getChild<Gaffer::FloatPlug>( "__uiY" );
+					xp->setValue( xp->getValue() + delta.x );
+					yp->setValue( yp->getValue() + delta.y );
 				}
 			}
-			m_lastDragPosition = pos;
-			return true;
 		}
+		m_lastDragPosition = pos;
+		return true;
 	}
+	else
+	{
+		// we're drag selecting
+		m_dragSelecting	= true;
+		m_lastDragPosition = V2f( i.x, i.y );
+		renderRequestSignal()( this );
+		return true;
+	}
+		
+	assert( 0 ); // shouldn't get here
 	return false;
+}
+
+bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
+{
+	m_dragSelecting = false;
+	
+	Gaffer::ScriptNodePtr scriptNode = script();
+	if( !scriptNode )
+	{
+		return false;
+	}
+	
+	V3f i;
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return false;
+	}
+
+	if( event.data->isInstanceOf( V2fData::staticTypeId() ) )
+	{
+		Box2f selectionBound;
+		selectionBound.extendBy( m_dragStartPosition );
+		selectionBound.extendBy( m_lastDragPosition );
+	
+		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+		{
+			NodeGadgetPtr nodeGadget = runTimeCast<NodeGadget>( *it );
+			if( nodeGadget )
+			{
+				Box3f nodeBound3 = nodeGadget->transformedBound();
+				Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
+				if( selectionBound.intersects( nodeBound2 ) )
+				{
+					scriptNode->selection()->add( nodeGadget->node() );
+				}
+			}
+		}
+	
+		renderRequestSignal()( this );
+	}
+
+	return true;
 }
 
 Gaffer::ScriptNodePtr GraphGadget::script()

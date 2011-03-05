@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -47,7 +48,7 @@ void main()
 	
 	vec3 c = mix( gl_Color.rgb, gl_Color.rgb * 0.6, gl_TexCoord[0].y );
 	c = mix( c, vec3( 0.05 ), ieFilteredStep( 0.8, r ) );
-	float a = 1.0 - ieFilteredStep( 1.0, r );
+	float a = gl_Color.a * (1.0 - ieFilteredStep( 1.0, r ));
 	gl_FragColor = vec4( c, a );
 
 }
