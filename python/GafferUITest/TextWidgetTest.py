@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,24 +34,38 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
+import unittest
+import weakref
+import gc
 
+import GafferUI
+
+class TextWidgetTest( unittest.TestCase ) :
+
+	def testLifespan( self ) :
+	
+		w = GafferUI.TextWidget()
+		r = weakref.ref( w )
+		
+		self.failUnless( r() is w )
+		
+		del w
+		
+		self.failUnless( r() is None )
+	
+	def testTextChangedSignal( self ) :
+	
+		self.emissions = 0
+		def f( w ) :
+			self.emissions += 1
+			
+		w = GafferUI.TextWidget()
+		c = w.textChangedSignal().connect( f )
+		
+		w.setText( "hello" )
+		self.assertEqual( w.getText(), "hello" )		
+		
+		self.assertEqual( self.emissions, 1 )
+		
 if __name__ == "__main__":
 	unittest.main()

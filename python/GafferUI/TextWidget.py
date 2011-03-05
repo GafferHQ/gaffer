@@ -40,6 +40,7 @@ from PySide import QtGui
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 class TextWidget( GafferUI.Widget ) :
@@ -48,9 +49,9 @@ class TextWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLineEdit() )
 
-		self._qtWidget().textChanged.connect( self.__textChanged )
-		self._qtWidget().returnPressed.connect( self.__returnPressed )
-		self._qtWidget().editingFinished.connect( self.__editingFinished )
+		self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
+		self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )
+		self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished ) )
 
 		self.setText( text )
 		self.setEditable( editable )
@@ -123,8 +124,8 @@ class TextWidget( GafferUI.Widget ) :
 	
 		return self._qtWidget().cursorPositionAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
 
-	def __textChanged( self ) :
-				
+	def __textChanged( self, text ) :
+						
 		try :
 			signal = self.__textChangedSignal
 		except :
