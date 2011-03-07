@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,25 +34,48 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
+import unittest
+import weakref
 
+import GafferUI
+
+class CheckBoxTest( unittest.TestCase ) :
+
+	def testLifespan( self ) :
+	
+		w = GafferUI.CheckBox()
+		r = weakref.ref( w )
+		
+		self.failUnless( r() is w )
+		
+		del w
+		
+		self.failUnless( r() is None )
+	
+	def testStateChangedSignal( self ) :
+	
+		self.emissions = 0
+		def f( w ) :
+			self.emissions += 1
+			
+		w = GafferUI.CheckBox()
+		c = w.stateChangedSignal().connect( f )
+		
+		w.setState( True )
+		self.assertEqual( w.getState(), True )		
+		
+		self.assertEqual( self.emissions, 1 )
+	
+	def testState( self ) :
+	
+		w = GafferUI.CheckBox()
+		self.assertEqual( w.getState(), False )
+		
+		w.setState( True )		
+		self.assertEqual( w.getState(), True )
+		
+		w.setState( False )		
+		self.assertEqual( w.getState(), False )
+		
 if __name__ == "__main__":
 	unittest.main()

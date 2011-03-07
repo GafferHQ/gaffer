@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,25 +34,36 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
+from PySide import QtCore
+from PySide import QtGui
 
-if __name__ == "__main__":
-	unittest.main()
+import Gaffer
+import GafferUI
+
+class CheckBox( GafferUI.Widget ) :
+
+	def __init__( self, text="", checked=False ) :
+	
+		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ) )
+		
+		self.setState( checked )
+		
+		self.__stateChangedSignal = GafferUI.WidgetSignal()
+		
+		self._qtWidget().stateChanged.connect( Gaffer.WeakMethod( self.__stateChanged ) )
+		
+	def setState( self, checked ) :
+	
+		self._qtWidget().setCheckState( QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked )
+		
+	def getState( self ) :
+	
+		return self._qtWidget().checkState() == QtCore.Qt.Checked
+
+	def stateChangedSignal( self ) :
+	
+		return self.__stateChangedSignal
+	
+	def __stateChanged( self, state ) :
+	
+		self.__stateChangedSignal( self )

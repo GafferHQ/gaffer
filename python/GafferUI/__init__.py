@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -72,12 +73,14 @@ from ColorChooserDialogue import ColorChooserDialogue
 from ShowURL import showURL
 #from URLWidget import URLWidget
 from Spacer import Spacer
+from CheckBox import CheckBox
 
 # then stuff specific to graph uis
 
 from PlugValueWidget import PlugValueWidget
 from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget
+from BoolPlugValueWidget import BoolPlugValueWidget
 #from FileNamePlugValueWidget import FileNamePlugValueWidget
 from PlugWidget import PlugWidget
 from EditorWidget import EditorWidget

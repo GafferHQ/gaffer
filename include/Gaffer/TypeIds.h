@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -66,6 +67,7 @@ enum TypeId
 	SplinefColor3fPlugTypeId = 400020,
 	M33fPlugTypeId = 400021,
 	M44fPlugTypeId = 400022,
+	BoolPlugTypeId = 400023,
 	
 	FirstPythonTypeId = 405000,
 	

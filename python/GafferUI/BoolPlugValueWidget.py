@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,25 +34,48 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
+from __future__ import with_statement
 
-if __name__ == "__main__":
-	unittest.main()
+from PySide import QtGui
+
+import Gaffer
+import GafferUI
+
+class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug ) :
+	
+		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug )
+
+		self._qtWidget().setLayout( QtGui.QGridLayout() )
+		self.__checkBox = GafferUI.CheckBox()		
+		self._qtWidget().layout().setSpacing( 0 )
+		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
+		self._qtWidget().layout().addWidget( self.__checkBox._qtWidget(), 0, 0 )
+ 
+		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( self.__stateChanged )
+						
+		self.updateFromPlug()
+		
+	def updateFromPlug( self ) :
+
+		if not hasattr( self, "_BoolPlugValueWidget__checkBox" ) :
+			# we're still constructing
+			return
+		
+		if self.getPlug() is not None :
+			self.__checkBox.setState( self.getPlug().getValue() )
+		
+	def __stateChanged( self, widget ) :
+		
+		self.__setPlugValue()
+			
+		return False
+	
+	def __setPlugValue( self ) :
+			
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+						
+			self.getPlug().setValue( self.__checkBox.getState() )
+	
+GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug.staticTypeId(), BoolPlugValueWidget )

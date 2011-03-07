@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -88,10 +89,12 @@ class TypedPlug : public ValuePlug
 
 };
 
+typedef TypedPlug<bool> BoolPlug;
 typedef TypedPlug<std::string> StringPlug;
 typedef TypedPlug<Imath::M33f> M33fPlug;
 typedef TypedPlug<Imath::M44f> M44fPlug;
 
+IE_CORE_DECLAREPTR( BoolPlug );
 IE_CORE_DECLAREPTR( StringPlug );
 IE_CORE_DECLAREPTR( M33fPlug );
 IE_CORE_DECLAREPTR( M44fPlug );

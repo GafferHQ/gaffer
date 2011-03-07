@@ -483,6 +483,28 @@ class Widget( object ) :
 		QScrollBar::handle:hover {
 			background-color: $brightColor;
 		}
+		
+		QCheckBox {
+			spacing: 5px;
+		}
+
+		QCheckBox::indicator {
+			width: 10px;
+			height: 10px;
+			border: 1px solid $backgroundDark;
+		}
+		
+		QCheckBox::indicator:unchecked {
+			background-color: $backgroundLighter;			
+		}
+		
+		QCheckBox::indicator:hover {
+			background-color: $brightColor;			
+		}
+		
+		QCheckBox::indicator:checked {
+			background-color: $brightColor2;			
+		}
 
 		"""
 		
@@ -495,6 +517,7 @@ class Widget( object ) :
 		"backgroundLighter" : "#6c6c6c",
 		"backgroundLight" : "#7d7d7d",
 		"brightColor" : "#779cbd",
+		"brightColor2" : "#e5c618",
 		"foreground" : "#f0f0f0",
 		"foregroundFaded" : "#999999",
 	
