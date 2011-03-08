@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,10 +51,8 @@ class Menu( GafferUI.Widget ) :
 	def __init__( self, definition, _qtMenu=None ) :
 	
 		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else QtGui.QMenu() )
-	
-		self.definition = definition
-		
-		self._qtWidget().connect( self._qtWidget(), QtCore.SIGNAL( "aboutToShow()" ), self.__show )
+			
+		self._qtWidget().aboutToShow.connect( curry( self.__show, self._qtWidget(), definition ) )
 		
 		self.__popupParent = None
 		
@@ -99,13 +98,12 @@ class Menu( GafferUI.Widget ) :
 		
 		command( *args, **kw )
 
-	def __show( self ) :
+	def __show( self, qtMenu, definition ) :
 		
-		definition = self.definition		
 		if callable( definition ) :
 			definition = definition()
 			
-		self._qtWidget().clear()
+		qtMenu.clear()
 			
 		done = set()
 		for path, item in definition.items() :
@@ -119,33 +117,27 @@ class Menu( GafferUI.Widget ) :
 				if len( pathComponents ) > 1 :
 					
 					# it's a submenu
-					pass
-					#subMenu = gtk.Menu()
-					#subMenuDefinition = definition.reRooted( "/" + name + "/" )
-					#subMenu.connect( "show", Menu.__show, subMenuDefinition )
-
-					#menuItem = gtk.MenuItem( label = name )
-					#menuItem.set_submenu( subMenu )
-						
+					
+					subMenu = qtMenu.addMenu( name )
+					subMenuDefinition = definition.reRooted( "/" + name + "/" )
+					subMenu.aboutToShow.connect( curry( self.__show, subMenu, subMenuDefinition ) )
+					
 				else :
 				
 					# it's not a submenu
 					
 					if item.divider :
 						
-						self._qtWidget().addSeparator()
+						qtMenu.addSeparator()
 						
 					elif item.subMenu :
 					
-						pass
-						#subMenu = gtk.Menu()
-						#subMenu.connect( "show", Menu.__show, item.subMenu )
-						#menuItem = gtk.MenuItem( label = name )
-						#menuItem.set_submenu( subMenu )						
+						subMenu = qtMenu.addMenu( name )
+						subMenu.aboutToShow.connect( curry( self.__show, subMenu, item.subMenu ) )				
 											
 					else :
 					
-						qtAction = QtGui.QAction( name, self._qtWidget() )
+						qtAction = QtGui.QAction( name, qtMenu )
 						
 						if item.checkBox :
 							qtAction.setCheckable( item.checkBox() )
@@ -165,7 +157,7 @@ class Menu( GafferUI.Widget ) :
 												
 						qtAction.setEnabled( active )
 	
-						self._qtWidget().addAction( qtAction )
+						qtMenu.addAction( qtAction )
 						
 				done.add( name )
 
