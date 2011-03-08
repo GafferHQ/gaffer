@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -138,7 +139,7 @@ static typename T::Ptr construct(
 }
 
 template<typename T>
-static void bind( const char *name )
+static void bind()
 {
 	typedef typename T::ValueType V;
 	
@@ -171,6 +172,6 @@ static void bind( const char *name )
 
 void GafferBindings::bindNumericPlug()
 {
-	bind<FloatPlug>( "FloatPlug" );
-	bind<IntPlug>( "IntPlug" );
+	bind<FloatPlug>();
+	bind<IntPlug>();
 }
