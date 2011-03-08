@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -136,25 +137,8 @@ class NodeWrapper : public Node, public IECorePython::Wrapper<Node>
 			initNode( this, inputs, dynamicPlugs );
 		}		
 		
-		virtual void dirty( ConstPlugPtr dirty ) const
-		{
-			if( PyObject_HasAttrString( m_pyObject, "dirty" ) )
-			{
-				override f = this->get_override( "dirty" );
-				f( IECore::constPointerCast<Plug>( dirty ) );
-			}
-		}
-		
-		virtual void compute( PlugPtr output ) const
-		{
-			if( PyObject_HasAttrString( m_pyObject, "compute" ) )
-			{
-				override f = this->get_override( "compute" );
-				f( IECore::constPointerCast<Plug>( output ) );
-			}
-		}
-		
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Node );
+		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Node )
+		GAFFERBINDINGS_NODEWRAPPERFNS
 
 };
 

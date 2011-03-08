@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,11 +38,35 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_H
 #define GAFFERBINDINGS_NODEBINDING_H
 
+#include "IECorePython/ScopedGILLock.h"
+
 #include "Gaffer/Node.h"
 
 namespace GafferBindings
 {
 
+#define GAFFERBINDINGS_NODEWRAPPERFNS\
+\
+	virtual void dirty( ConstPlugPtr dirty ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "dirty" ) )\
+		{\
+			override f = this->get_override( "dirty" );\
+			f( IECore::constPointerCast<Plug>( dirty ) );\
+		}\
+	}\
+\
+	virtual void compute( PlugPtr output ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
+		{\
+			override f = this->get_override( "compute" );\
+			f( IECore::constPointerCast<Plug>( output ) );\
+		}\
+	}
+		
 void bindNode();
 
 void initNode( Gaffer::Node *node, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs );
