@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -81,6 +82,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		self.__column.append( frame, expand=True )
 		frame.setChild( uiBuilder( node ) )
 	
+	## \todo I think the factory belongs in NodeUI.
 	__uiBuilders = {}
 	@classmethod
 	def registerNodeUI( cls, nodeType, uiBuilder ) :
