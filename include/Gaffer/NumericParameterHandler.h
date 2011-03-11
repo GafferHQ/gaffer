@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,47 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#ifndef GAFFER_NUMERICPARAMETERHANDLER_H
+#define GAFFER_NUMERICPARAMETERHANDLER_H
+
+#include "Gaffer/ParameterHandler.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
 
-enum TypeId
+template<typename T>
+class NumericParameterHandler : public ParameterHandler
 {
 
-	GraphComponentTypeId = 400000,
-	NodeTypeId = 400001,
-	PlugTypeId = 400002,
-	ValuePlugTypeId = 400003,
-	FloatPlugTypeId = 400004,
-	IntPlugTypeId = 400005,
-	StringPlugTypeId = 400006,
-	ScriptNodeTypeId = 400007,
-	ApplicationRootTypeId = 400008,
-	ScriptContainerTypeId = 400009,
-	SetTypeId = 400010,
-	ObjectPlugTypeId = 400011,
-	CompoundPlugTypeId = 400012,
-	V2fPlugTypeId = 400013,
-	V3fPlugTypeId = 400014,
-	V2iPlugTypeId = 400015,
-	V3iPlugTypeId = 400016,
-	Color3fPlugTypeId = 400017,
-	Color4fPlugTypeId = 400018,
-	SplineffPlugTypeId = 400019,
-	SplinefColor3fPlugTypeId = 400020,
-	M33fPlugTypeId = 400021,
-	M44fPlugTypeId = 400022,
-	BoolPlugTypeId = 400023,
-	ParameterisedHolderNodeTypeId = 400024,
+	public :
+
+		typedef IECore::NumericParameter<T> ParameterType;
+		typedef NumericPlug<T> PlugType;
+
+		NumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
+		virtual ~NumericParameterHandler();
+		
+		virtual void setParameterValue();
+		virtual void setPlugValue();
+		
+	protected :
+		
+		
+	private :
 	
-	FirstPythonTypeId = 405000,
+		typename PlugType::Ptr m_plug;
 	
-	LastTypeId = 409999
-	
+		static ParameterHandlerDescription<NumericParameterHandler<T>, ParameterType> g_description;
+
 };
 
 } // namespace Gaffer
 
-#endif // GAFFER_TYPEIDS_H
+#endif // GAFFER_NUMERICPARAMETERHANDLER_H

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -55,7 +56,7 @@ __definition = IECore.MenuDefinition()
 def append( path, nodeCreator ) :
 
 	definition().append( path, { "command" : __creatorWrapper( nodeCreator=nodeCreator ) } )
-	
+
 def __creatorWrapper( nodeCreator ) :
 
 	def f( menu ) :
@@ -72,3 +73,33 @@ def __creatorWrapper( nodeCreator ) :
 		script.selection().add( node )
 
 	return f
+
+## Utility function to append menu items to definition. One item will
+# be created for each class found on the specified search path.
+def appendParameterisedHolders( path, parameterisedHolderType, searchPathEnvVar ) :
+
+	definition().append( path, { "subMenu" : IECore.curry( __parameterisedHolderMenu, parameterisedHolderType, searchPathEnvVar ) } )
+
+def __parameterisedHolderCreator( parameterisedHolderType, className, classVersion, searchPathEnvVar ) :
+
+	nodeName = className.rpartition( "/" )[-1]
+	node = parameterisedHolderType( nodeName )
+
+	## \todo Use node.setParameterised( className, classVersion, searchPathEnvVar ) when
+	# it has been implemented.
+	cl = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
+	c = cl.load( className, classVersion )()
+	node.setParameterised( c )
+
+	return node
+
+def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar ) :
+
+	c = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
+	d = IECore.MenuDefinition()
+	for n in c.classNames() :
+		nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
+		v = c.getDefaultVersion( n )
+		d.append( "/" + nc, { "command" : __creatorWrapper( IECore.curry( __parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
+
+	return d

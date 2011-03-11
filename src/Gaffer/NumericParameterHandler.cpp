@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,47 +34,48 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#include "IECore/NumericParameter.h"
 
-namespace Gaffer
+#include "Gaffer/NumericParameterHandler.h"
+#include "Gaffer/NumericPlug.h"
+
+using namespace Gaffer;
+
+template<typename T>
+ParameterHandler::ParameterHandlerDescription<NumericParameterHandler<T>, IECore::NumericParameter<T> > NumericParameterHandler<T>::g_description;
+
+template<typename T>
+NumericParameterHandler<T>::NumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
+	:	ParameterHandler( parameter )
 {
+	m_plug = plugParent->getChild<PlugType>( parameter->name() );
+	if( !m_plug )
+	{
+		m_plug = new PlugType( parameter->name(), Plug::In, parameter->numericDefaultValue(), parameter->minValue(), parameter->maxValue() );
+	}
+	plugParent->addChild( m_plug );
+}
 
-enum TypeId
+template<typename T>
+NumericParameterHandler<T>::~NumericParameterHandler()
 {
+}
+		
+template<typename T>
+void NumericParameterHandler<T>::setParameterValue()
+{
+	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
+	p->setNumericValue( m_plug->getValue() );
+}
 
-	GraphComponentTypeId = 400000,
-	NodeTypeId = 400001,
-	PlugTypeId = 400002,
-	ValuePlugTypeId = 400003,
-	FloatPlugTypeId = 400004,
-	IntPlugTypeId = 400005,
-	StringPlugTypeId = 400006,
-	ScriptNodeTypeId = 400007,
-	ApplicationRootTypeId = 400008,
-	ScriptContainerTypeId = 400009,
-	SetTypeId = 400010,
-	ObjectPlugTypeId = 400011,
-	CompoundPlugTypeId = 400012,
-	V2fPlugTypeId = 400013,
-	V3fPlugTypeId = 400014,
-	V2iPlugTypeId = 400015,
-	V3iPlugTypeId = 400016,
-	Color3fPlugTypeId = 400017,
-	Color4fPlugTypeId = 400018,
-	SplineffPlugTypeId = 400019,
-	SplinefColor3fPlugTypeId = 400020,
-	M33fPlugTypeId = 400021,
-	M44fPlugTypeId = 400022,
-	BoolPlugTypeId = 400023,
-	ParameterisedHolderNodeTypeId = 400024,
-	
-	FirstPythonTypeId = 405000,
-	
-	LastTypeId = 409999
-	
-};
+template<typename T>
+void NumericParameterHandler<T>::setPlugValue()
+{
+	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
+	m_plug->setValue( p->getNumericValue() );
+}
+		
+// explicit instantiations
 
-} // namespace Gaffer
-
-#endif // GAFFER_TYPEIDS_H
+template class NumericParameterHandler<float>;
+template class NumericParameterHandler<int>;

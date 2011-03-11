@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,6 +52,7 @@
 #include "GafferBindings/CompoundPlugBinding.h"
 #include "GafferBindings/CompoundNumericPlugBinding.h"
 #include "GafferBindings/SplinePlugBinding.h"
+#include "GafferBindings/ParameterisedHolderBinding.h"
 
 using namespace GafferBindings;
 
@@ -73,6 +75,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindCompoundPlug();
 	bindCompoundNumericPlug();
 	bindSplinePlug();
+	bindParameterisedHolder();
 	
 	typedef boost::signal<int ( float )> TestSignal;
 	SignalBinder<TestSignal>::bind( "TestSignal" );

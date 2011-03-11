@@ -52,6 +52,8 @@ GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
 GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
+GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.ParameterisedHolderNode, "IECORE_OP_PATHS" )
+GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ParameterisedHolderNode, "IECORE_PROCEDURAL_PATHS" )
 
 haveRI = False
 try :

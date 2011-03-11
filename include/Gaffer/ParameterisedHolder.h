@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,47 +34,57 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#ifndef GAFFER_PARAMETERISEDHOLDER_H
+#define GAFFER_PARAMETERISEDHOLDER_H
+
+#include "Gaffer/Node.h"
 
 namespace Gaffer
 {
 
-enum TypeId
+IE_CORE_FORWARDDECLARE( CompoundParameterHandler );
+
+template<typename BaseType>
+class ParameterisedHolder : public BaseType
 {
 
-	GraphComponentTypeId = 400000,
-	NodeTypeId = 400001,
-	PlugTypeId = 400002,
-	ValuePlugTypeId = 400003,
-	FloatPlugTypeId = 400004,
-	IntPlugTypeId = 400005,
-	StringPlugTypeId = 400006,
-	ScriptNodeTypeId = 400007,
-	ApplicationRootTypeId = 400008,
-	ScriptContainerTypeId = 400009,
-	SetTypeId = 400010,
-	ObjectPlugTypeId = 400011,
-	CompoundPlugTypeId = 400012,
-	V2fPlugTypeId = 400013,
-	V3fPlugTypeId = 400014,
-	V2iPlugTypeId = 400015,
-	V3iPlugTypeId = 400016,
-	Color3fPlugTypeId = 400017,
-	Color4fPlugTypeId = 400018,
-	SplineffPlugTypeId = 400019,
-	SplinefColor3fPlugTypeId = 400020,
-	M33fPlugTypeId = 400021,
-	M44fPlugTypeId = 400022,
-	BoolPlugTypeId = 400023,
-	ParameterisedHolderNodeTypeId = 400024,
+	public :
+
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ParameterisedHolder<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ParameterisedHolder<BaseType> );		
+
+		ParameterisedHolder( const std::string &name=staticTypeName() );
+			
+		void setParameterised( IECore::RunTimeTypedPtr parameterised );
+		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar );
+		IECore::RunTimeTypedPtr getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
+		
+		void setParameterisedValues();
+		
+		/// \todo Is this even needed? Can we just use an UndoContext instead?
+		class ParameterModificationContext
+		{
+			public :
+				ParameterModificationContext( Ptr parameterisedHolder );
+				~ParameterModificationContext();
+			private :
+				Ptr m_parameterisedHolder;
+		};
+		
+		
+	private :
 	
-	FirstPythonTypeId = 405000,
+		friend class ParameterModificationContext;
 	
-	LastTypeId = 409999
+		IECore::RunTimeTypedPtr m_parameterised;
+		CompoundParameterHandlerPtr m_parameterHandler;
 	
 };
 
+typedef ParameterisedHolder<Node> ParameterisedHolderNode;
+
+IE_CORE_DECLAREPTR( ParameterisedHolderNode )
+
 } // namespace Gaffer
 
-#endif // GAFFER_TYPEIDS_H
+#endif // GAFFER_PARAMETERISEDHOLDER_H
