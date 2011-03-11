@@ -362,9 +362,9 @@ class Widget( object ) :
 
 			width: 12px;
 			height: 12px;
+			background-color: none;
 
 		}
-
 
 		QRadioButton#gafferCollapsibleToggle::indicator::unchecked {
 

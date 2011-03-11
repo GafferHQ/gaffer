@@ -597,7 +597,7 @@ def buildGraphics( target, source, env ) :
 	for object in objects.split( "\n" ) :
 		tokens = object.split( "," )
 		if tokens[0].startswith( "forExport:" ) :
-			os.system( "inkscape --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s" % (
+			os.system( "inkscape --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s --export-background-opacity=0" % (
 					dir,
 					tokens[0].split( ":" )[-1],
 					tokens[0],
