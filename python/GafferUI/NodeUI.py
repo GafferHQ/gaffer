@@ -130,7 +130,7 @@ class NodeUI( GafferUI.Widget ) :
 
 			if plug.typeId()==Gaffer.CompoundPlug.staticTypeId() :
 			
-				with self._collapsible( plug.getName() ) :
+				with self._collapsible( IECore.CamelCase.toSpaced( plug.getName() ) ) :
 					self.__buildWalk( plug )
 				
 			else :
