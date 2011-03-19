@@ -114,50 +114,39 @@ class Menu( GafferUI.Widget ) :
 			if not name in done :
 
 				menuItem = None
-				if len( pathComponents ) > 1 :
+				if len( pathComponents ) > 1 or item.subMenu :
 					
 					# it's a submenu
 					
 					subMenu = qtMenu.addMenu( name )
-					subMenuDefinition = definition.reRooted( "/" + name + "/" )
+					subMenuDefinition = item.subMenu or definition.reRooted( "/" + name + "/" )
 					subMenu.aboutToShow.connect( curry( self.__show, subMenu, subMenuDefinition ) )
 					
 				else :
 				
 					# it's not a submenu
 					
+					qtAction = QtGui.QAction( name, qtMenu )
+
+					if item.checkBox :
+						qtAction.setCheckable( item.checkBox() )
+					
 					if item.divider :
-						
-						qtMenu.addSeparator()
-						
-					elif item.subMenu :
-					
-						subMenu = qtMenu.addMenu( name )
-						subMenu.aboutToShow.connect( curry( self.__show, subMenu, item.subMenu ) )				
-											
-					else :
-					
-						qtAction = QtGui.QAction( name, qtMenu )
-						
-						if item.checkBox :
-							qtAction.setCheckable( item.checkBox() )
-						
-						active = False
-						if item.command :
-						
-							active = item.active
-							if callable( active ) :
-								active = active()
-							
-							## \todo Check we're not making unbreakable circular references here
-							if item.checkBox :	
-								qtAction.connect( qtAction, QtCore.SIGNAL( "toggled( bool )" ), curry( self.__commandWrapper, item.command ) )							
-							else :
-								qtAction.connect( qtAction, QtCore.SIGNAL( "triggered( bool )" ), curry( self.__commandWrapper, item.command ) )
-												
-						qtAction.setEnabled( active )
-	
-						qtMenu.addAction( qtAction )
+						qtAction.setSeparator( True )
+
+					if item.command :
+
+						## \todo Check we're not making unbreakable circular references here
+						if item.checkBox :	
+							qtAction.connect( qtAction, QtCore.SIGNAL( "toggled( bool )" ), curry( self.__commandWrapper, item.command ) )							
+						else :
+							qtAction.connect( qtAction, QtCore.SIGNAL( "triggered( bool )" ), curry( self.__commandWrapper, item.command ) )
+
+					active = item.active
+					if callable( active ) :
+						active = active()
+					qtAction.setEnabled( active )
+
+					qtMenu.addAction( qtAction )
 						
 				done.add( name )
-
