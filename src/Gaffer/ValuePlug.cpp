@@ -154,8 +154,7 @@ void ValuePlug::computeIfDirty()
 			}
 			n->compute( this );
 		}
-		/// \todo consider a better response to failure here - perhaps call setToDefault()?
+		/// \todo we need a proper response to failure here - perhaps call setToDefault()?
 		/// and do we need some kind of error status for plugs?
-		assert( !getDirty() );
 	}
 }
