@@ -37,6 +37,9 @@
 
 from __future__ import with_statement
 
+from PySide import QtCore
+from PySide import QtGui
+
 import Gaffer
 import GafferUI
 
@@ -45,6 +48,8 @@ class NameWidget( GafferUI.TextWidget ) :
 	def __init__( self, graphComponent ) :
 	
 		GafferUI.TextWidget.__init__( self )
+
+		self._qtWidget().setValidator( QtGui.QRegExpValidator( QtCore.QRegExp( "[A-Za-z_]+[A-Za-z_0-9]*" ), self._qtWidget() ) )
 
 		self.setGraphComponent( graphComponent )
 
