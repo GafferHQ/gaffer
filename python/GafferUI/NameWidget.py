@@ -53,12 +53,12 @@ class NameWidget( GafferUI.TextWidget ) :
 
 		self.setGraphComponent( graphComponent )
 
-		self.__editingFinishedConnection = self.editingFinishedSignal().connect( lambda x : self.__setName() )
+		self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ) )
 
 	def setGraphComponent( self, graphComponent ) :
 	
 		self.__graphComponent = graphComponent	
-		self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( lambda x : self.__setText() )
+		self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) )
 		
 		self.__setText()
 		
@@ -66,11 +66,11 @@ class NameWidget( GafferUI.TextWidget ) :
 	
 		return self.__graphComponent
 	
-	def __setName( self ) :
+	def __setName( self, *unwantedArgs ) :
 		
 		with Gaffer.UndoContext( self.__graphComponent.scriptNode() ) :
 			self.setText( self.__graphComponent.setName( self.getText() ) )
 
-	def __setText( self ) :
+	def __setText( self, *unwantedArgs ) :
 	
 		self.setText( self.__graphComponent.getName() )
