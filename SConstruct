@@ -633,51 +633,83 @@ for l in [
 # Documentation
 #########################################################################################################
 
-def docMunger( target, source, env ) :
+def readLinesMinusLicense( f ) :
 
-	f = open( str( source[0] ) )
-	o = open( str( target[0] ), "w" )
-	for l in f :
+	if isinstance( f, basestring ) :
+		f = open( f, "r" )
+
+	result = []
+	skippedLicense = False
+	for line in f.readlines() :
+	
+		if not line.startswith( "#" ) :
+			skippedLicense = True
+		if skippedLicense :
+			result.append( line )
+			
+	return result
+
+# Builder action that munges a nicely organised python module into a much less nicely organised one
+# that doxygen will understand. Otherwise it puts every class implemented in its own file
+# into its own namespace and the docs get mighty confusing.
+def createDoxygenPython( target, source, env ) :
+
+	target = str( target[0] )
+	source = str( source[0] )
+	
+	if not os.path.isdir( target ) :
+		os.makedirs( target )
+	
+	outFile = open( target + "/__init__.py", "w" )
+	
+	for line in readLinesMinusLicense( source ) :
+	
+		outFile.write( line )
+	
+		if line.startswith( "import" ) :
 		
-		w = l.split()
-		if len( w ) < 2 :
-			continue
-			
-		if w[0]=="from" :
-			
-			if not w[1].startswith( "_" ) :
-				ff = open( os.path.dirname( str( source[0] ) ) + "/" + w[1] + ".py" )
-				for ll in ff :
-					o.write( ll )
-					
-		elif w[0]=="import" :
-			sourceFileName = os.path.dirname( str( source[0] ) ) + "/" + w[1] + ".py"
-			if os.path.exists( sourceFileName ) :
-				shutil.copyfile( sourceFileName, os.path.dirname( str( target[0] ) ) + "/" + w[1] + ".py" )
+			# copy source file over to target directory
+			words = line.split()
+			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
+			if os.path.isfile( fileName ) :
+				destFile = open( target + "/" + words[1] + ".py", "w" )
+				for l in readLinesMinusLicense( fileName ) :
+					destFile.write( l )
+		
+		elif line.startswith( "from" ) :
+		
+			# cat source file directly into init file
+			words = line.split()
+			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
+			if os.path.isfile( fileName ) :
+				
+				outFile.write( "\n" )
+				
+				for line in readLinesMinusLicense( fileName ) :
+					outFile.write( line )
+				
+				outFile.write( "\n" )
 	
 docEnv = env.Clone()
 docEnv["ENV"]["PATH"] = os.environ["PATH"]
 for v in ( "BUILD_DIR", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
 	docEnv["ENV"][v] = docEnv[v]
 
-gafferMunged = env.Command( "doc/src/Gaffer.py", "python/Gaffer/__init__.py", docMunger )
-env.Depends( gafferMunged, glob.glob( "python/Gaffer/*.py" ) )
-
-gafferRIMunged = env.Command( "doc/src/GafferRI.py", "python/GafferRI/__init__.py", docMunger )
-env.Depends( gafferRIMunged, glob.glob( "python/GafferRI/*.py" ) )
-
-gafferUIMunged = env.Command( "doc/src/GafferUI.py", "python/GafferUI/__init__.py", docMunger )
-env.Depends( gafferUIMunged, glob.glob( "python/GafferUI/*.py" ) )
-
-gafferRIUIMunged = env.Command( "doc/src/GafferRIUI.py", "python/GafferRIUI/__init__.py", docMunger )
-env.Depends( gafferRIUIMunged, glob.glob( "python/GafferRIUI/*.py" ) )
-
 docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "doxygen doc/config/Doxyfile" )
 env.NoCache( docs )
-docEnv.Depends( docs, glob.glob( "include/*/*.h" ) + gafferMunged + gafferRIMunged + gafferUIMunged + gafferRIUIMunged + glob.glob( "doc/src/*.dox" ) )
+
+for modulePath in ( "python/Gaffer", "python/GafferRI", "python/GafferUI", "python/GafferRIUI" ) :
+
+	module = os.path.basename( modulePath )
+	mungedModule = docEnv.Command( "doc/python/" + module, modulePath + "/__init__.py", createDoxygenPython )
+	docEnv.Depends( mungedModule, glob.glob( modulePath + "/*.py" ) )
+	docEnv.Depends( docs, mungedModule )
+	docEnv.NoCache( mungedModule )
+
+docEnv.Depends( docs, glob.glob( "include/*/*.h" ) + glob.glob( "doc/src/*.dox" ) )
 
 docInstall = docEnv.Install( "$BUILD_DIR/doc/gaffer", "doc/html" )
-#docEnv.Alias( "build", docInstall )
+docEnv.Alias( "build", docInstall )
 
 #########################################################################################################
 # Installation
