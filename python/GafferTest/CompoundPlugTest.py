@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -223,6 +224,18 @@ class CompoundPlugTest( unittest.TestCase ) :
 		self.failUnless( "c" in self.setPlugs )
 		self.failUnless( "c1" in self.setPlugs )
 		self.failUnless( "f1" in self.setPlugs )
+		
+	def testAcceptsInput( self ) :
+	
+		i = Gaffer.CompoundPlug()
+		o = Gaffer.CompoundPlug( direction=Plug.Direction.Out )
+		s = Gaffer.StringPlug( direction=Gaffer.Plug.Direction.Out )
+		
+		i.addChild( Gaffer.IntPlug() )
+		o.addChild( Gaffer.IntPlug( direction=Plug.Direction.Out ) )
+		
+		self.failUnless( i.acceptsInput( o ) )
+		self.failIf( i.acceptsInput( s ) )
 				
 if __name__ == "__main__":
 	unittest.main()

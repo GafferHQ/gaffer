@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -43,6 +44,55 @@
 namespace GafferBindings
 {
 
+#define GAFFERBINDINGS_PLUGWRAPPERFNS( BASECLASS )\
+\
+	virtual bool acceptsInput( ConstPlugPtr input ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "acceptsInput" ) )\
+		{\
+			override f = this->get_override( "acceptsInput" );\
+			if( f )\
+			{\
+				return f( IECore::constPointerCast<Plug>( input ) );\
+			}\
+		}\
+		return BASECLASS::acceptsInput( input );\
+	}\
+\
+	virtual void setInput( PlugPtr input )\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "setInput" ) )\
+		{\
+			override f = this->get_override( "setInput" );\
+			if( f ) \
+			{\
+				f( IECore::constPointerCast<Plug>( input ) );\
+				return;\
+			}\
+		}\
+		BASECLASS::setInput( input );\
+	}\
+
+/// This must be used in /every/ plug binding. See the lengthy comments in
+/// IECorePython/ParameterBinding.h for an explanation.
+#define GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CLASSNAME )\
+	def( "acceptsInput", &acceptsInput<CLASSNAME> )\
+	.def( "setInput", &setInput<CLASSNAME> )
+
+template<typename T>
+static bool acceptsInput( const T &p, Gaffer::ConstPlugPtr input )
+{
+	return p.T::acceptsInput( input );
+}
+
+template<typename T>
+static void setInput( T &p, Gaffer::PlugPtr input )
+{
+	p.T::setInput( input );
+}
+	
 void bindPlug();
 
 std::string serialisePlugDirection( Gaffer::Plug::Direction direction );

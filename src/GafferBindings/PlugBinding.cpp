@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -41,10 +42,28 @@
 #include "Gaffer/Node.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+class PlugWrapper : public Plug, public IECorePython::Wrapper<Plug>
+{
+
+	public :
+	
+		PlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags )
+			:	Plug( name, direction, flags ), IECorePython::Wrapper<Plug>( self, this )
+		{
+		}
+
+		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Plug )
+		GAFFERBINDINGS_PLUGWRAPPERFNS( Plug )
+
+};
+
+IE_CORE_DECLAREPTR( PlugWrapper );
 
 std::string GafferBindings::serialisePlugDirection( Plug::Direction direction )
 {
@@ -95,11 +114,6 @@ static boost::python::tuple outputs( Plug &p )
 	return boost::python::tuple( l );
 }
 
-static PlugPtr constructor( const std::string &name, Plug::Direction direction, Plug::Flags flags )
-{
-	return new Plug( name, direction, flags );
-}
-
 static NodePtr node( Plug &p )
 {
 	return p.node();
@@ -108,7 +122,7 @@ static NodePtr node( Plug &p )
 void GafferBindings::bindPlug()
 {
 
-	IECorePython::RunTimeTypedClass<Plug> c;
+	IECorePython::RunTimeTypedClass<Plug, PlugWrapperPtr> c;
 	{
 		scope s( c );
 		enum_<Plug::Direction>( "Direction" )
@@ -122,16 +136,15 @@ void GafferBindings::bindPlug()
 			.value( "All", Plug::All )
 		;
 	}
-	
-	c.def( "__init__", make_constructor(
-				&constructor,
-				default_call_policies(),
+			
+	c.def(  init< const std::string &, Plug::Direction, unsigned >
+			(
 				(
-					boost::python::arg_( "name" )=Plug::staticTypeName(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "flags" )=Plug::None
+					arg( "name" ) = Plug::staticTypeName(),
+					arg( "direction" ) = Plug::In,
+					arg( "flags" ) = Plug::None
 				)
-			)
+			)	
 		)
 		.def( "node", &node )
 		.def( "direction", &Plug::direction )
@@ -139,8 +152,7 @@ void GafferBindings::bindPlug()
 		.def( "getFlags", (bool (Plug::*)( unsigned ) const )&Plug::getFlags )
 		.def( "setFlags", (void (Plug::*)( unsigned ) )&Plug::setFlags )
 		.def( "setFlags", (void (Plug::*)( unsigned, bool ) )&Plug::setFlags )
-		.def( "acceptsInput", &Plug::acceptsInput )
-		.def( "setInput", (void (Plug::*)(PlugPtr))&Plug::setInput )
+		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( Plug )
 		.def( "getInput", (PlugPtr (Plug::*)())&Plug::getInput<Plug> )
 		.def( "removeOutputs", &Plug::removeOutputs )
 		.def( "outputs", &outputs )

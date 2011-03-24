@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -127,6 +128,54 @@ class PlugTest( unittest.TestCase ) :
 		
 		p.setFlags( Gaffer.Plug.Flags.Dynamic, False )
 		self.assertEqual( p.getFlags( Gaffer.Plug.Flags.Dynamic ), False )
+	
+	def testDerivingInPython( self ) :
+	
+		class TestPlug( Gaffer.Plug ) :
+		
+			def __init__( self, name = "TestPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
+			
+				Gaffer.Plug.__init__( self, name, direction, flags )
+				
+				self.inputHasBeenSet = False
+
+			def acceptsInput( self, plug ) :
+			
+				if not Gaffer.Plug.acceptsInput( self, plug ) :
+					return False
+					
+				return isinstance( plug, TestPlug )
+				
+			def setInput( self, plug ) :
+			
+				Gaffer.Plug.setInput( self, plug )
+				
+				self.inputHasBeenSet = True
+				
+		IECore.registerRunTimeTyped( TestPlug )
+		
+		p1 = TestPlug( "testIn" )
+		self.assertEqual( p1.getName(), "testIn" )
+		self.assertEqual( p1.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p1.getFlags(), Gaffer.Plug.Flags.None )
+		
+		n1 = Gaffer.Node()
+		n1.addChild( p1 )
+		self.assertEqual( n1["testIn"], p1 )
+		
+		n2 = Gaffer.Node()
+		n2.addChild( TestPlug( name = "testOut", direction = Gaffer.Plug.Direction.Out ) )
+		n2.addChild( Gaffer.IntPlug( name = "intOut", direction = Gaffer.Plug.Direction.Out ) )
+		
+		self.failUnless( n1["testIn"].acceptsInput( n2["testOut"] ) )
+		self.failIf( n1["testIn"].acceptsInput( n2["intOut"] ) )
+		
+		self.assertRaises( RuntimeError, n1["testIn"].setInput, n2["intOut"] )
+		self.assertEqual( n1["testIn"].inputHasBeenSet, False )
+		
+		n1["testIn"].setInput( n2["testOut"] )
+		self.assertEqual( n1["testIn"].inputHasBeenSet, True )
+		self.assertEqual( n1["testIn"].getInput(), n2["testOut"] )
 				
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -95,8 +96,17 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assert_( f.isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )			
 		self.assert_( not f.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )			
 		self.assert_( not i.isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )			
-		self.assert_( i.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )			
-
+		self.assert_( i.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )
+		
+	def testAcceptsInput( self ) :
+	
+		i = Gaffer.IntPlug()		
+		o = Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out )
+		s = Gaffer.StringPlug( direction=Gaffer.Plug.Direction.Out )
+		
+		self.failUnless( i.acceptsInput( o ) )
+		self.failIf( i.acceptsInput( s ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
