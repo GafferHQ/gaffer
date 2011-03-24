@@ -95,8 +95,49 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		self.assertEqual( op["multiply"].getNumericValue(), 20 )
 		self.assertEqual( op["dst"].getTypedValue(), "lalalal.##.tif" )
+	
+	def testVectorTypedParameter( self ) :
+	
+		p = IECore.Parameterised( "" )
 		
+		p.parameters().addParameters(
+			
+			[
 		
+				IECore.IntVectorParameter( "iv", "", IECore.IntVectorData() ),
+				IECore.FloatVectorParameter( "fv", "", IECore.FloatVectorData() ),
+				IECore.StringVectorParameter( "sv", "", IECore.StringVectorData() ),
+		
+			]
+			
+		)	
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.assertEqual( ph["parameters"]["iv"].defaultValue(), IECore.IntVectorData() )
+		self.assertEqual( ph["parameters"]["fv"].defaultValue(), IECore.FloatVectorData() )
+		self.assertEqual( ph["parameters"]["sv"].defaultValue(), IECore.StringVectorData() )
+		
+		with ph.parameterModificationContext() as parameters :
+		
+			parameters["iv"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
+			parameters["fv"].setValue( IECore.FloatVectorData( [ 1 ] ) )
+			parameters["sv"].setValue( IECore.StringVectorData( [ "a" ] ) )
+		
+		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 1, 2, 3 ] ) )
+		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 1 ] ) )
+		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "a" ] ) )	
+		
+		ph["parameters"]["iv"].setValue( IECore.IntVectorData( [ 2, 3, 4 ] ) )
+		ph["parameters"]["fv"].setValue( IECore.FloatVectorData( [ 2 ] ) )
+		ph["parameters"]["sv"].setValue( IECore.StringVectorData( [ "b" ] ) )
+		
+		ph.setParameterisedValues()
+		
+		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 2, 3, 4 ] ) )
+		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 2 ] ) )
+		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )	
 		
 if __name__ == "__main__":
 	unittest.main()

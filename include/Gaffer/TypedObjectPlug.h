@@ -39,6 +39,7 @@
 #define GAFFER_TYPEDOBJECTPLUG_H
 
 #include "IECore/Object.h"
+#include "IECore/VectorTypedData.h"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/PlugIterator.h"
@@ -99,12 +100,30 @@ class TypedObjectPlug : public ValuePlug
 };
 
 typedef TypedObjectPlug<IECore::Object> ObjectPlug;
+typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
+typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
+typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
+IE_CORE_DECLAREPTR( IntVectorDataPlug );
+IE_CORE_DECLAREPTR( FloatVectorDataPlug );
+IE_CORE_DECLAREPTR( StringVectorDataPlug );
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectPlug> > OutputObjectPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntVectorDataPlug> > IntVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, IntVectorDataPlug> > InputIntVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, IntVectorDataPlug> > OutputIntVectorDataPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, FloatVectorDataPlug> > FloatVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, FloatVectorDataPlug> > InputFloatVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, FloatVectorDataPlug> > OutputFloatVectorDataPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, StringVectorDataPlug> > StringVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, StringVectorDataPlug> > InputStringVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringVectorDataPlug> > OutputStringVectorDataPlugIterator;
 
 } // namespace Gaffer
 

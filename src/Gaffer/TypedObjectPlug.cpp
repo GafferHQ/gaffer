@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -122,8 +123,14 @@ namespace Gaffer
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectPlug, ObjectPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( IntVectorDataPlug, IntVectorDataPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FloatVectorDataPlug, FloatVectorDataPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVectorDataPlugTypeId )
 
 }
 
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
+template class TypedObjectPlug<IECore::IntVectorData>;
+template class TypedObjectPlug<IECore::FloatVectorData>;
+template class TypedObjectPlug<IECore::StringVectorData>;
