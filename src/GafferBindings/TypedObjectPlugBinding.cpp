@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -112,6 +113,12 @@ static typename T::Ptr construct(
 }
 
 template<typename T>
+static typename T::ValuePtr defaultValue( typename T::Ptr p )
+{
+	return p->defaultValue()->copy();
+}
+
+template<typename T>
 static void bind()
 {
 	typedef typename T::ValuePtr V;
@@ -127,7 +134,7 @@ static void bind()
 				)
 			)
 		)
-		.def( "defaultValue", &T::defaultValue )
+		.def( "defaultValue", &defaultValue<T> )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", getValue<T>, "Returns a copy of the value." )
 	;
@@ -139,4 +146,7 @@ static void bind()
 void GafferBindings::bindTypedObjectPlug()
 {
 	bind<ObjectPlug>();
+	bind<IntVectorDataPlug>();
+	bind<FloatVectorDataPlug>();
+	bind<StringVectorDataPlug>();
 }
