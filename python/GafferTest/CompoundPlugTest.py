@@ -228,11 +228,11 @@ class CompoundPlugTest( unittest.TestCase ) :
 	def testAcceptsInput( self ) :
 	
 		i = Gaffer.CompoundPlug()
-		o = Gaffer.CompoundPlug( direction=Plug.Direction.Out )
+		o = Gaffer.CompoundPlug( direction=Gaffer.Plug.Direction.Out )
 		s = Gaffer.StringPlug( direction=Gaffer.Plug.Direction.Out )
 		
 		i.addChild( Gaffer.IntPlug() )
-		o.addChild( Gaffer.IntPlug( direction=Plug.Direction.Out ) )
+		o.addChild( Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out ) )
 		
 		self.failUnless( i.acceptsInput( o ) )
 		self.failIf( i.acceptsInput( s ) )
