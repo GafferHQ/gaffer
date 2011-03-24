@@ -1,3 +1,4 @@
 Next version
 ------------
 
+* ParameterisedHolders now allow some Parameters to opt out of representation as a Plug by adding a "noHostMapping" user data item with a value of BoolData( True ).

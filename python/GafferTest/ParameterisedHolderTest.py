@@ -137,7 +137,31 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 2, 3, 4 ] ) )
 		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 2 ] ) )
-		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )	
+		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )
+		
+	def testNoHostMapping( self ) :
+	
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameters(
+			
+			[
+		
+				IECore.IntParameter( "i1", "", 1, userData = { "noHostMapping" : IECore.BoolData( False ) } ),
+				IECore.IntParameter( "i2", "", 2, userData = { "noHostMapping" : IECore.BoolData( True ) } ),
+				IECore.IntParameter( "i3", "", 2 ),
+		
+			]
+			
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.failUnless( "i1" in ph["parameters"] )
+		self.failIf( "i2" in ph["parameters"] )
+		self.failUnless( "i3" in ph["parameters"] )
+		
 		
 if __name__ == "__main__":
 	unittest.main()

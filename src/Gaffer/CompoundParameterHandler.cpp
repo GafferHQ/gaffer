@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/CompoundParameterHandler.h"
 #include "Gaffer/CompoundPlug.h"
@@ -106,10 +107,15 @@ ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child 
 		return it->second;
 	}
 	
-	ParameterHandlerPtr h = ParameterHandler::create( child, m_plug );
-	if( !h )
-	{
-		IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", boost::format(  "Unable to create handler for parameter \"%s\" of type \"%s\"" ) % child->name() % child->typeName() );
+	ParameterHandlerPtr h = 0;
+	IECore::ConstBoolDataPtr noHostMapping = child->userData()->member<BoolData>( "noHostMapping" );
+	if( !noHostMapping || !noHostMapping->readable() )
+	{	
+		h = ParameterHandler::create( child, m_plug );
+		if( !h )
+		{
+			IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", boost::format(  "Unable to create handler for parameter \"%s\" of type \"%s\"" ) % child->name() % child->typeName() );
+		}
 	}
 	
 	m_handlers[child->internedName()] = h;
