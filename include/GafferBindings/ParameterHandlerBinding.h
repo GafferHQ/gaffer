@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,53 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/SetBinding.h"
-#include "GafferBindings/ObjectSignalBinding.h"
-#include "GafferBindings/UndoContextBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/SplinePlugBinding.h"
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ParameterHandlerBinding.h"
+#ifndef GAFFERBINDINGS_PARAMETERHANDLERBINDING_H
+#define GAFFERBINDINGS_PARAMETERHANDLERBINDING_H
 
-using namespace GafferBindings;
-
-BOOST_PYTHON_MODULE( _Gaffer )
+namespace GafferBindings
 {
+		
+void bindParameterHandler();
 
-	bindConnection();
-	bindGraphComponent();
-	bindNode();
-	bindPlug();
-	bindValuePlug();
-	bindNumericPlug();
-	bindTypedPlug();
-	bindTypedObjectPlug();
-	bindScriptNode();
-	bindApplicationRoot();
-	bindSet();
-	bindObjectSignal();
-	bindUndoContext();
-	bindCompoundPlug();
-	bindCompoundNumericPlug();
-	bindSplinePlug();
-	bindParameterisedHolder();
-	bindParameterHandler();
-	
-	typedef boost::signal<int ( float )> TestSignal;
-	SignalBinder<TestSignal>::bind( "TestSignal" );
-	typedef boost::signal<float ( float, float )> TestSignal2;
-	SignalBinder<TestSignal2>::bind( "TestSignal2" );
+} // namespace GafferBindings
 
-}
+#endif // GAFFERBINDINGS_PARAMETERHANDLERBINDING_H

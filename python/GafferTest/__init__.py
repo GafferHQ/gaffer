@@ -59,6 +59,7 @@ from TypedObjectPlugTest import TypedObjectPlugTest
 from SplinePlugTest import SplinePlugTest
 from AboutTest import AboutTest
 from ParameterisedHolderTest import ParameterisedHolderTest
+from ParameterHandlerTest import ParameterHandlerTest
 
 if __name__ == "__main__":
 	import unittest

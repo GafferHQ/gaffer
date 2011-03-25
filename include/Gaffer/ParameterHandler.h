@@ -53,6 +53,8 @@ class ParameterHandler : public IECore::RefCounted
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( ParameterHandler );
+
 		virtual ~ParameterHandler();
 		
 		IECore::ParameterPtr parameter();
