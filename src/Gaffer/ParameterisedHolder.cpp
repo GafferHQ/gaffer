@@ -66,6 +66,7 @@ void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr pa
 	
 	m_parameterised = parameterised;
 	m_parameterHandler = new CompoundParameterHandler( interface->parameters(), this );
+	m_parameterHandler->setPlugValue();
 }
 
 template<typename BaseType>

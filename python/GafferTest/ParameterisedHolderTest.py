@@ -161,7 +161,19 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.failUnless( "i1" in ph["parameters"] )
 		self.failIf( "i2" in ph["parameters"] )
 		self.failUnless( "i3" in ph["parameters"] )
+	
+	def testCreateWithNonDefaultValues( self ) :
+	
+		p = IECore.Parameterised( "" )
+		p.parameters().addParameter( IECore.IntParameter( "i1", "", 1, ) )
 		
+		p["i1"].setNumericValue( 10 )
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.assertEqual( ph["parameters"]["i1"].defaultValue(), 1 )
+		self.assertEqual( ph["parameters"]["i1"].getValue(), 10 )
 		
 if __name__ == "__main__":
 	unittest.main()

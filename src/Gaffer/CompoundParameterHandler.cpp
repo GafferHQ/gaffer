@@ -84,7 +84,10 @@ void CompoundParameterHandler::setParameterValue()
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
 		ParameterHandlerPtr h = handler( *it );
-		h->setParameterValue();
+		if( h )
+		{
+			h->setParameterValue();
+		}
 	}
 }
 
@@ -95,7 +98,10 @@ void CompoundParameterHandler::setPlugValue()
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
 		ParameterHandlerPtr h = handler( *it );
-		h->setPlugValue();
+		if( h )
+		{
+			h->setPlugValue();
+		}
 	}
 }
 
