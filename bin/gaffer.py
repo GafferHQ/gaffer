@@ -2,6 +2,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,34 +36,30 @@
 #  
 ##########################################################################
 
-try :
+import os
+import sys
+import signal
 
-	import os
-	import sys
-	import IECore
+# Get rid of the annoying signal handler which turns Ctrl-C into a KeyboardInterrupt exception
+signal.signal( signal.SIGINT, signal.SIG_DFL )
 
-	## \todo Modify this to accomodate unversioned classes, so we can lose the subdirectories
-	# in apps
-	appLoader = IECore.ClassLoader( IECore.SearchPath( os.environ["GAFFER_APP_PATHS"], ":" ) )
+import IECore
 
-	appName = "gui"
-	appArgs = sys.argv[1:]
-	if len( sys.argv ) > 1 :
-	
-		if sys.argv[1] in appLoader.classNames() :
-			appName = sys.argv[1]
-			appArgs = appArgs[1:]
+## \todo Modify this to accomodate unversioned classes, so we can lose the subdirectories
+# in apps
+appLoader = IECore.ClassLoader( IECore.SearchPath( os.environ["GAFFER_APP_PATHS"], ":" ) )
 
-	app = appLoader.load( appName )()
+appName = "gui"
+appArgs = sys.argv[1:]
+if len( sys.argv ) > 1 :
 
-	IECore.ParameterParser().parse( appArgs, app.parameters() )
+	if sys.argv[1] in appLoader.classNames() :
+		appName = sys.argv[1]
+		appArgs = appArgs[1:]
 
-	result = app.run()
-	sys.exit( result )
+app = appLoader.load( appName )()
 
-except KeyboardInterrupt :
+IECore.ParameterParser().parse( appArgs, app.parameters() )
 
-	import sys
-	sys.exit( 1 )
-	
-	
+result = app.run()
+sys.exit( result )
