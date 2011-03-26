@@ -78,6 +78,10 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.ObjectPlug( "p", defaultValue = IECore.IntVectorData( [ 1, 2, 3 ] ) )
 		self.assertEqual( p.defaultValue(), IECore.IntVectorData( [ 1, 2, 3 ] ) )
+	
+	def testRunTimeTyped( self ) :
+	
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( Gaffer.ObjectPlug.staticTypeId() ), Gaffer.ValuePlug.staticTypeId() )
 				
 if __name__ == "__main__":
 	unittest.main()

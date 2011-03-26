@@ -6,3 +6,5 @@ Next version
 * Can now implement and use ParameterHandlers in python.
 
 * Ctrl-C now correctly kills Gaffer
+
+* Fixed type registration for TypedObjectPlugs.
