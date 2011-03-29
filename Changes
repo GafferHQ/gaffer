@@ -8,3 +8,5 @@ Next version
 * Ctrl-C now correctly kills Gaffer
 
 * Fixed type registration for TypedObjectPlugs.
+
+* Fixed NodeEditor lag when selecting several nodes in the GraphEditor.

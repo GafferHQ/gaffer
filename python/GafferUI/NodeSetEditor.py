@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,6 +35,8 @@
 #  
 ##########################################################################
 
+from PySide import QtCore
+
 import Gaffer
 import GafferUI
 
@@ -45,6 +48,8 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	def __init__( self, qtWidget, scriptNode ) :
 	
 		GafferUI.EditorWidget.__init__( self, qtWidget, scriptNode )
+		
+		self.__updateScheduled = False
 			
 	def setScriptNode( self, scriptNode ) :
 	
@@ -71,7 +76,14 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		raise NotImplementedError
 
 	def __membersChanged( self, set, member ) :
-	
-		## \todo Check that all set members are children of the script
 		
+		if self.__updateScheduled :
+			return
+		
+		QtCore.QTimer.singleShot( 0, self.__updateTimeout )
+		self.__updateScheduled = True
+	
+	def __updateTimeout( self ) :
+		
+		self.__updateScheduled = False
 		self._updateFromSet()
