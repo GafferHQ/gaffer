@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,89 +34,22 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/Nodule.h"
+#include "boost/python.hpp"
+
+#include "GafferUIBindings/StandardNoduleBinding.h"
+#include "GafferUI/StandardNodule.h"
 
 #include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
+using namespace boost::python;
+using namespace GafferUIBindings;
 using namespace GafferUI;
-using namespace Imath;
-using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( Nodule );
-
-Nodule::Nodule( Gaffer::PlugPtr plug )
-	:	Gadget( staticTypeName() ), m_plug( plug )
+void GafferUIBindings::bindStandardNodule()
 {
-}
-
-Nodule::~Nodule()
-{
-}
-
-Gaffer::PlugPtr Nodule::plug()
-{
-	return m_plug;
-}
-
-Gaffer::ConstPlugPtr Nodule::plug() const
-{
-	return m_plug;
-}
-
-Nodule::CreatorMap &Nodule::creators()
-{
-	static CreatorMap m;
-	return m;
-}
-
-Nodule::NamedCreatorMap &Nodule::namedCreators()
-{
-	static NamedCreatorMap m;
-	return m;
-}
-
-NodulePtr Nodule::create( Gaffer::PlugPtr plug )
-{
-	Gaffer::ConstNodePtr node = plug->node();
-	if( node )
-	{
-		std::string plugPath = plug->relativeName( node );
-		const NamedCreatorMap &m = namedCreators();
-		IECore::TypeId t = node->typeId();
-		while( t!=IECore::InvalidTypeId )
-		{
-			NamedCreatorMap::const_iterator it = m.find( TypeAndPath( t, plugPath ) );
-			if( it!=m.end() )
-			{
-				return it->second( plug );
-			}
-			t = IECore::RunTimeTyped::baseTypeId( t );
-		}
-	}
-	
-	CreatorMap &m = creators();
-	IECore::TypeId t = plug->typeId();
-	while( t!=IECore::InvalidTypeId )
-	{
-		CreatorMap::const_iterator it = m.find( t );
-		if( it!=m.end() )
-		{
-			return it->second( plug );
-		}
-		t = IECore::RunTimeTyped::baseTypeId( t );
-	}
-	
-	return 0;
-}
-
-		
-void Nodule::registerNodule( IECore::TypeId plugType, NoduleCreator creator )
-{
-	creators()[plugType] = creator;
-}
-
-void Nodule::registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator )
-{
-	namedCreators()[TypeAndPath( nodeType, plugPath )] = creator;
+	IECorePython::RunTimeTypedClass<StandardNodule>()
+		.def( init<Gaffer::PlugPtr>() )
+	;
 }

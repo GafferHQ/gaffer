@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,6 +59,8 @@ enum TypeId
 	ConnectionGadgetTypeId = 410013,
 	StandardNodeGadgetTypeId = 410014,
 	SplinePlugGadgetTypeId = 410015,
+	StandardNoduleTypeId = 410016,
+	ArrayNoduleTypeId = 410017,
 	
 	LastTypeId = 419999
 };

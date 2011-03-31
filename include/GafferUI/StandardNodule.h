@@ -35,10 +35,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_NODULE_H
-#define GAFFERUI_NODULE_H
+#ifndef GAFFERUI_STANDARDNODULE_H
+#define GAFFERUI_STANDARDNODULE_H
 
-#include "GafferUI/Gadget.h"
+#include "GafferUI/Nodule.h"
 
 namespace Gaffer
 {
@@ -48,60 +48,40 @@ namespace Gaffer
 namespace GafferUI
 {
 
-IE_CORE_FORWARDDECLARE( Nodule )
-
-class Nodule : public Gadget
+class StandardNodule : public Nodule
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Nodule, NoduleTypeId, Gadget );
-		
-		Gaffer::PlugPtr plug();
-		Gaffer::ConstPlugPtr plug() const;
+		StandardNodule( Gaffer::PlugPtr plug );
+		virtual ~StandardNodule();
 
-		/// Creates a Nodule for the specified plug.
-		static NodulePtr create( Gaffer::PlugPtr plug );
-		
-		typedef boost::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;
-		/// Registers a function which will return a Nodule instance for a plug of a specific
-		/// type.
-		static void registerNodule( IECore::TypeId plugType, NoduleCreator creator );
-		/// Registers a function which will return a Nodule instance for a specific plug on
-		/// a specific type of node. Nodules registered in this way will take precedence over those registered above.
-		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator );
-		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardNodule, StandardNoduleTypeId, Nodule );
+
+		virtual Imath::Box3f bound() const;
+
 	protected :
 
-		Nodule( Gaffer::PlugPtr plug );
-		virtual ~Nodule();
+		void doRender( IECore::RendererPtr renderer ) const;
+
+		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const ButtonEvent &event );	
+		bool dragUpdate( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+
+		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 		
-		/// Creating a static one of these is a convenient way of registering a Nodule type.
-		template<class T>
-		struct NoduleTypeDescription
-		{
-			NoduleTypeDescription( IECore::TypeId plugType ) { Nodule::registerNodule( plugType, &creator ); };
-			static NodulePtr creator( Gaffer::PlugPtr plug ) { return new T( plug ); };
-		};
-				
 	private :
-		
-		Gaffer::PlugPtr m_plug;
-		
-		typedef std::map<IECore::TypeId, NoduleCreator> CreatorMap;
-		static CreatorMap &creators();
 
-		typedef std::pair<IECore::TypeId, std::string> TypeAndPath;
-		typedef std::map<TypeAndPath, NoduleCreator> NamedCreatorMap;
-		static NamedCreatorMap &namedCreators();
+		bool m_dragging;
+		Imath::V3f m_dragPosition;
 
-
+		static NoduleTypeDescription<StandardNodule> g_noduleTypeDescription;
+				
 };
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Nodule> > ChildNoduleIterator;
-
-IE_CORE_DECLAREPTR( Nodule );
+IE_CORE_DECLAREPTR( StandardNodule );
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_NODULE_H
+#endif // GAFFERUI_STANDARDNODULE_H

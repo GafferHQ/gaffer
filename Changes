@@ -10,3 +10,23 @@ Next version
 * Fixed type registration for TypedObjectPlugs.
 
 * Fixed NodeEditor lag when selecting several nodes in the GraphEditor.
+
+* Added a factory mechanism for Nodules, allowing different nodules to be used for different plugs. Used this to implement an ArrayNodule type which allows connections to the children of a CompoundPlug to be managed. The code below can be used to demonstrate this :
+
+	import GafferUI
+	GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "c", GafferUI.ArrayNodule )
+
+	n = Gaffer.Node()
+
+	n.addChild( Gaffer.CompoundPlug( "c" ) )
+	n["c"].addChild( Gaffer.IntPlug( "a" ) )
+	n["c"].addChild( Gaffer.IntPlug( "b" ) )
+	n["c"].addChild( Gaffer.IntPlug( "c" ) )
+
+	addChild( n )
+
+	n2 = Gaffer.Node()
+	n2.addChild( Gaffer.IntPlug( "o", Gaffer.Plug.Direction.Out ) )
+
+	addChild( n2 )
+

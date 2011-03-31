@@ -38,12 +38,14 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/CompoundPlug.h"
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
 #include "GafferUI/NameGadget.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Style.h"
+#include "GafferUI/ArrayNodule.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -90,7 +92,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	for( Gaffer::PlugIterator it=node->plugsBegin(); it!=node->plugsEnd(); it++ )
 	{
 		addNodule( *it );
-	}	
+	}
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -157,10 +159,25 @@ void StandardNodeGadget::doRender( IECore::RendererPtr renderer ) const
 }
 
 NodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug )
-{
+{	
 	NoduleMap::iterator it = m_nodules.find( plug.get() );
 	if( it==m_nodules.end() )
 	{
+		/// \todo This needs to be generalised so other compound nodule types
+		/// are possible, and so we can do nested compounds too.
+		Gaffer::ConstCompoundPlugPtr arrayParent = plug->parent<Gaffer::CompoundPlug>();
+		if( arrayParent )
+		{
+			it = m_nodules.find( arrayParent.get() );
+			if( it!=m_nodules.end() )
+			{
+				ArrayNodulePtr arrayNodule = IECore::runTimeCast<ArrayNodule>( it->second );
+				if( arrayNodule )
+				{
+					return arrayNodule->nodule( plug );
+				}
+			}
+		}
 		return 0;
 	}
 	return it->second;
@@ -188,7 +205,11 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 		return 0;
 	}
 	
-	NodulePtr nodule = new Nodule( plug );
+	NodulePtr nodule = Nodule::create( plug );
+	if( !nodule )
+	{
+		return 0;
+	}
 	
 	if( plug->direction()==Gaffer::Plug::In )
 	{

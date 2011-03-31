@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -47,9 +48,41 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+struct NoduleCreator
+{
+	NoduleCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+	
+	NodulePtr operator()( Gaffer::PlugPtr plug )
+	{
+		IECorePython::ScopedGILLock gilLock;
+		NodulePtr result = extract<NodulePtr>( m_fn( plug ) );
+		return result;
+	}
+	
+	private :
+	
+		object m_fn;
+
+};
+
+static void registerNodule1( IECore::TypeId plugType, object creator )
+{
+	Nodule::registerNodule( plugType, NoduleCreator( creator ) );
+}
+
+static void registerNodule2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
+{
+	Nodule::registerNodule( nodeType, plugPath, NoduleCreator( creator ) );
+}
+
 void GafferUIBindings::bindNodule()
 {
 	IECorePython::RunTimeTypedClass<Nodule>()
-		.def( init<Gaffer::PlugPtr>() )
+		.def( "create", &Nodule::create ).staticmethod( "create" )
+		.def( "registerNodule", &registerNodule1 )
+		.def( "registerNodule", &registerNodule2 ).staticmethod( "registerNodule" )
 	;
 }

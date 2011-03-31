@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,73 +34,60 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_NODULE_H
-#define GAFFERUI_NODULE_H
+#ifndef GAFFERUI_ARRAYNODULE_H
+#define GAFFERUI_ARRAYNODULE_H
 
-#include "GafferUI/Gadget.h"
+#include "GafferUI/Nodule.h"
 
 namespace Gaffer
 {
-	IE_CORE_FORWARDDECLARE( Plug )
-}
+
+IE_CORE_FORWARDDECLARE( CompoundPlug )
+
+} // namespace Gaffer
 
 namespace GafferUI
 {
 
-IE_CORE_FORWARDDECLARE( Nodule )
+IE_CORE_FORWARDDECLARE( LinearContainer );
 
-class Nodule : public Gadget
+class ArrayNodule : public Nodule
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Nodule, NoduleTypeId, Gadget );
-		
-		Gaffer::PlugPtr plug();
-		Gaffer::ConstPlugPtr plug() const;
+		ArrayNodule( Gaffer::CompoundPlugPtr plug );
+		virtual ~ArrayNodule();
 
-		/// Creates a Nodule for the specified plug.
-		static NodulePtr create( Gaffer::PlugPtr plug );
-		
-		typedef boost::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;
-		/// Registers a function which will return a Nodule instance for a plug of a specific
-		/// type.
-		static void registerNodule( IECore::TypeId plugType, NoduleCreator creator );
-		/// Registers a function which will return a Nodule instance for a specific plug on
-		/// a specific type of node. Nodules registered in this way will take precedence over those registered above.
-		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArrayNodule, ArrayNoduleTypeId, Nodule );
+
+		virtual Imath::Box3f bound() const;
+
+		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+
+		/// Returns a Nodule for a child of the CompoundPlug being represented.
+		NodulePtr nodule( Gaffer::ConstPlugPtr plug );
+		ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
 		
 	protected :
 
-		Nodule( Gaffer::PlugPtr plug );
-		virtual ~Nodule();
-		
-		/// Creating a static one of these is a convenient way of registering a Nodule type.
-		template<class T>
-		struct NoduleTypeDescription
-		{
-			NoduleTypeDescription( IECore::TypeId plugType ) { Nodule::registerNodule( plugType, &creator ); };
-			static NodulePtr creator( Gaffer::PlugPtr plug ) { return new T( plug ); };
-		};
-				
+		void doRender( IECore::RendererPtr renderer ) const;
+	
 	private :
+	
+		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		void childRenderRequest( Gadget *child );
+
+		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
+		NoduleMap m_nodules;
 		
-		Gaffer::PlugPtr m_plug;
-		
-		typedef std::map<IECore::TypeId, NoduleCreator> CreatorMap;
-		static CreatorMap &creators();
-
-		typedef std::pair<IECore::TypeId, std::string> TypeAndPath;
-		typedef std::map<TypeAndPath, NoduleCreator> NamedCreatorMap;
-		static NamedCreatorMap &namedCreators();
-
-
+		LinearContainerPtr m_row;
+				
 };
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Nodule> > ChildNoduleIterator;
-
-IE_CORE_DECLAREPTR( Nodule );
+IE_CORE_DECLAREPTR( ArrayNodule );
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_NODULE_H
+#endif // GAFFERUI_ARRAYNODULE_H

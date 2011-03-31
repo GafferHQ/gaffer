@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -56,6 +57,8 @@
 #include "GafferUIBindings/WidgetSignalBinding.h"
 #include "GafferUIBindings/StandardNodeGadgetBinding.h"
 #include "GafferUIBindings/SplinePlugGadgetBinding.h"
+#include "GafferUIBindings/StandardNoduleBinding.h"
+#include "GafferUIBindings/ArrayNoduleBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -82,5 +85,7 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindWidgetSignal();
 	bindStandardNodeGadget();
 	bindSplinePlugGadget();
+	bindStandardNodule();
+	bindArrayNodule();
 	
 }
