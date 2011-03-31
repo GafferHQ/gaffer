@@ -1,5 +1,5 @@
-Next version
-------------
+0.3.0
+-----
 
 * ParameterisedHolders now allow some Parameters to opt out of representation as a Plug by adding a "noHostMapping" user data item with a value of BoolData( True ).
 
@@ -30,3 +30,4 @@ Next version
 
 	addChild( n2 )
 
+* Fixed bug which caused "RuntimeError: Internal C++ object (PySide.QtGui.QLineEdit) already deleted." messages to be displayed.

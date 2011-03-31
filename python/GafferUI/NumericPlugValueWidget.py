@@ -58,8 +58,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
 		self._qtWidget().layout().addWidget( self.__numericWidget._qtWidget(), 0, 0 )
  
-		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( self.__keyPress )
-		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( self.__textChanged )
+		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 						
 		self.updateFromPlug()
 		

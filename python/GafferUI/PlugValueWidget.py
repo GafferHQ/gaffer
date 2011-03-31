@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,9 +51,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__plug = plug
 
 		if self.__plug is not None :
-			self.__plugSetConnection = plug.node().plugSetSignal().connect( self.__plugSetSlot )
-			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( self.__plugDirtiedSlot )
-			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( self.__plugInputChangedSlot )
+			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
 		else :
 			self.__plugSetConnection = None
 			self.__plugDirtiedConnection = None
@@ -103,19 +104,19 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 	__typesToCreators = {}	
 		
-	def __plugSetSlot( self, plug ) :
+	def __plugSet( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
 		
 			self.updateFromPlug()	
 
-	def __plugDirtiedSlot( self, plug ) :
+	def __plugDirtied( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
 		
 			self.updateFromPlug()	
 
-	def __plugInputChangedSlot( self, plug ) :
+	def __plugInputChanged( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
 		
