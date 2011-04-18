@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -106,10 +107,10 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		typedef std::list<GraphComponentPtr> ChildContainer;
 		typedef ChildContainer::const_iterator ChildIterator;
 		/// Components can accept or reject potential children by implementing this
-		/// call.
+		/// call. By default all children are accepted.
 		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
 		/// Components can accept or reject potential parents by implementing this
-		/// call.
+		/// call. By default all parents are accepted.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		/// Adds a child to this component. If the child already has a parent it
 		/// will first be removed from it. Note that the child may be renamed to
