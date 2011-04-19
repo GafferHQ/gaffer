@@ -59,8 +59,7 @@ class ParameterisedHolderNodeWrapper : public ParameterisedHolderNode, public IE
 			initNode( this, inputs, dynamicPlugs );
 		}		
 		
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Node )
-		GAFFERBINDINGS_NODEWRAPPERFNS
+		GAFFERBINDINGS_NODEWRAPPERFNS( ParameterisedHolderNode )
 
 };
 
@@ -121,6 +120,7 @@ void GafferBindings::bindParameterisedHolder()
 					)
 				)
 		)
+		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( ParameterisedHolderNode )
 		.def( "setParameterised", (void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr ))&ParameterisedHolderNode::setParameterised )
 		.def( "setParameterised", (void (ParameterisedHolderNode::*)( const std::string &, int, const std::string & ))&ParameterisedHolderNode::setParameterised )
 		.def( "getParameterised", getParameterised )

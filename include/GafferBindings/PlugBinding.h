@@ -39,12 +39,15 @@
 #define GAFFERBINDINGS_PLUGBINDING_H
 
 #include "GafferBindings/Serialiser.h"
+#include "GafferBindings/GraphComponentBinding.h"
 #include "Gaffer/Plug.h"
 
 namespace GafferBindings
 {
 
 #define GAFFERBINDINGS_PLUGWRAPPERFNS( BASECLASS )\
+\
+	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( BASECLASS )\
 \
 	virtual bool acceptsInput( ConstPlugPtr input ) const\
 	{\
@@ -78,7 +81,8 @@ namespace GafferBindings
 /// This must be used in /every/ plug binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.
 #define GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CLASSNAME )\
-	def( "acceptsInput", &acceptsInput<CLASSNAME> )\
+	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
+	.def( "acceptsInput", &acceptsInput<CLASSNAME> )\
 	.def( "setInput", &setInput<CLASSNAME> )
 
 template<typename T>

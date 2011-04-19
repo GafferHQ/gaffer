@@ -58,7 +58,6 @@ class PlugWrapper : public Plug, public IECorePython::Wrapper<Plug>
 		{
 		}
 
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Plug )
 		GAFFERBINDINGS_PLUGWRAPPERFNS( Plug )
 
 };

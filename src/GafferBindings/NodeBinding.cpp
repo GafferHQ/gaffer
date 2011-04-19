@@ -137,8 +137,7 @@ class NodeWrapper : public Node, public IECorePython::Wrapper<Node>
 			initNode( this, inputs, dynamicPlugs );
 		}		
 		
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Node )
-		GAFFERBINDINGS_NODEWRAPPERFNS
+		GAFFERBINDINGS_NODEWRAPPERFNS( Node )
 
 };
 
@@ -194,6 +193,7 @@ void GafferBindings::bindNode()
 					)
 				)
 		)
+		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( Node )
 		.def( "scriptNode", (ScriptNodePtr (Node::*)())&Node::scriptNode )
 		.def( "_init", &initNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )

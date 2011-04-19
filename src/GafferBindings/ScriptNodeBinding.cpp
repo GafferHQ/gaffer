@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +40,7 @@
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialiser.h"
+#include "GafferBindings/GraphComponentBinding.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECorePython/Wrapper.h"
@@ -221,6 +223,7 @@ void bindScriptNode()
 	scope s = IECorePython::RunTimeTypedClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
+		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( ScriptNode )
 		.def( "selection", (SetPtr (ScriptNode::*)())&ScriptNode::selection )
 		.def( "undo", &ScriptNode::undo )
 		.def( "redo", &ScriptNode::redo )

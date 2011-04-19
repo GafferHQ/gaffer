@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,10 +43,27 @@
 #include "Gaffer/GraphComponent.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+class GraphComponentWrapper : public GraphComponent, public IECorePython::Wrapper<GraphComponent>
+{
+
+	public :
+	
+		GraphComponentWrapper( PyObject *self, const std::string &name=staticTypeName() )
+			:	GraphComponent( name ), IECorePython::Wrapper<GraphComponent>( self, this )
+		{
+		}
+
+		GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( GraphComponent )
+
+};
+
+IE_CORE_DECLAREPTR( GraphComponentWrapper );
 
 static boost::python::tuple children( GraphComponent &c )
 {
@@ -149,7 +167,7 @@ struct BinarySlotCaller
 void GafferBindings::bindGraphComponent()
 {
 
-	scope s = IECorePython::RunTimeTypedClass<GraphComponent>()
+	scope s = IECorePython::RunTimeTypedClass<GraphComponent, GraphComponentWrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "setName", &GraphComponent::setName, return_value_policy<copy_const_reference>() )
@@ -157,8 +175,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "fullName", &GraphComponent::fullName )
 		.def( "relativeName", &GraphComponent::relativeName )
 		.def( "nameChangedSignal", &GraphComponent::nameChangedSignal, return_internal_reference<1>() )
-		.def( "acceptsChild", &GraphComponent::acceptsChild )
-		.def( "acceptsParent", &GraphComponent::acceptsParent )
+		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( GraphComponent )
 		.def( "addChild", &GraphComponent::addChild )
 		.def( "removeChild", &GraphComponent::removeChild )
 		.def( "getChild", (GraphComponentPtr (GraphComponent::*)( const std::string & ))&GraphComponent::getChild<GraphComponent> )

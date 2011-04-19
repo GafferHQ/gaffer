@@ -42,10 +42,13 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferBindings/GraphComponentBinding.h"
+
 namespace GafferBindings
 {
 
-#define GAFFERBINDINGS_NODEWRAPPERFNS\
+#define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
+	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 \
 	virtual void dirty( ConstPlugPtr dirty ) const\
 	{\

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -289,6 +290,70 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.failIf( n.isAncestorOf( n ) )
 		self.failIf( n2.isAncestorOf( n ) )
 		self.failIf( n.isAncestorOf( n2 ) )
+		
+	def testDerivingInPython( self ) :
+		
+		class TestGraphComponent( Gaffer.GraphComponent ) :
+		
+			def __init__( self, name = "TestGraphComponent" ) :
+			
+				Gaffer.GraphComponent.__init__( self, name )
+				
+				self.acceptsChildCalled = False
+				self.acceptsParentCalled = False
+				
+			def acceptsChild( self, potentialChild ) :
+				
+				self.acceptsChildCalled = True
+				
+				return isinstance( potentialChild, TestGraphComponent )
+				
+			def acceptsParent( self, potentialParent ) :
+			
+				self.acceptsParentCalled = True
+				return isinstance( potentialParent, TestGraphComponent )
+		
+		IECore.registerRunTimeTyped( TestGraphComponent )
+		
+		# check names in constructors
+		
+		g1 = TestGraphComponent()
+		self.assertEqual( g1.getName(), "TestGraphComponent" )
+		
+		g2 = TestGraphComponent( "g" )
+		self.assertEqual( g2.getName(), "g" )
+		
+		# check calling virtual overrides directly
+		
+		self.assertEqual( g1.acceptsChildCalled, False )
+		self.assertEqual( g1.acceptsParentCalled, False )
+		self.assertEqual( g2.acceptsChildCalled, False )
+		self.assertEqual( g2.acceptsParentCalled, False )
+		
+		self.failUnless( g1.acceptsChild( g2 ) )
+		self.failUnless( g1.acceptsParent( g2 ) )
+		self.failIf( g1.acceptsChild( Gaffer.Node() ) )
+		self.failIf( g1.acceptsParent( Gaffer.Node() ) )
+		
+		self.assertEqual( g1.acceptsChildCalled, True )
+		self.assertEqual( g1.acceptsParentCalled, True )
+		self.assertEqual( g2.acceptsChildCalled, False )
+		self.assertEqual( g2.acceptsParentCalled, False )
+		
+		# check calling virtual overrides indirectly through C++
+		
+		g1 = TestGraphComponent()		
+		g2 = TestGraphComponent( "g" )
+		self.assertEqual( g1.acceptsChildCalled, False )
+		self.assertEqual( g1.acceptsParentCalled, False )
+		
+		self.assertRaises( RuntimeError, g1.addChild, Gaffer.Node() )
+		self.assertEqual( g1.acceptsChildCalled, True )
+		self.assertEqual( g1.acceptsParentCalled, False )
+		
+		self.assertRaises( RuntimeError, Gaffer.GraphComponent().addChild, g1 )
+		self.assertEqual( g1.acceptsChildCalled, True )
+		self.assertEqual( g1.acceptsParentCalled, True )
 		
 if __name__ == "__main__":
 	unittest.main()

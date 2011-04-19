@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,9 +38,60 @@
 #ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 #define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 
+#include "Gaffer/GraphComponent.h"
+
 namespace GafferBindings
 {
 
+#define GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
+	IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( CLASSNAME )\
+\
+	virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "acceptsChild" ) )\
+		{\
+			override f = this->get_override( "acceptsChild" );\
+			if( f )\
+			{\
+				return f( IECore::constPointerCast<GraphComponent>( potentialChild ) );\
+			}\
+		}\
+		return CLASSNAME::acceptsChild( potentialChild );\
+	}\
+\
+	virtual bool acceptsParent( const GraphComponent *potentialParent ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "acceptsParent" ) )\
+		{\
+			override f = this->get_override( "acceptsParent" );\
+			if( f ) \
+			{\
+				return f( GraphComponentPtr( const_cast<GraphComponent *>( potentialParent ) ) );\
+			}\
+		}\
+		return CLASSNAME::acceptsParent( potentialParent );\
+	}\
+
+/// This must be used in /every/ GraphComponent binding. See the lengthy comments in
+/// IECorePython/ParameterBinding.h for an explanation.
+#define GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
+	def( "acceptsChild", &acceptsChild<CLASSNAME> )\
+	.def( "acceptsParent", &acceptsParent<CLASSNAME> )
+
+template<typename T>
+static bool acceptsChild( const T &p, Gaffer::ConstGraphComponentPtr potentialChild )
+{
+	return p.T::acceptsChild( potentialChild );
+}
+
+template<typename T>
+static bool acceptsParent( T &p, const Gaffer::GraphComponent *potentialParent )
+{
+	return p.T::acceptsParent( potentialParent );
+}
+	
 void bindGraphComponent();
 
 } // namespace GafferBindings

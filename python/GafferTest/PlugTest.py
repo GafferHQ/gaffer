@@ -152,7 +152,19 @@ class PlugTest( unittest.TestCase ) :
 				
 				self.inputHasBeenSet = True
 				
+			def acceptsParent( self, potentialParent ) :
+			
+				if not Gaffer.Plug.acceptsParent( self, potentialParent ) :
+					return False
+					
+				if isinstance( potentialParent, Gaffer.CompoundPlug ) :
+					return False
+					
+				return True
+				
 		IECore.registerRunTimeTyped( TestPlug )
+		
+		# check the constructor
 		
 		p1 = TestPlug( "testIn" )
 		self.assertEqual( p1.getName(), "testIn" )
@@ -167,6 +179,8 @@ class PlugTest( unittest.TestCase ) :
 		n2.addChild( TestPlug( name = "testOut", direction = Gaffer.Plug.Direction.Out ) )
 		n2.addChild( Gaffer.IntPlug( name = "intOut", direction = Gaffer.Plug.Direction.Out ) )
 		
+		# check that accepts input and setInput can be overridden
+		
 		self.failUnless( n1["testIn"].acceptsInput( n2["testOut"] ) )
 		self.failIf( n1["testIn"].acceptsInput( n2["intOut"] ) )
 		
@@ -176,6 +190,11 @@ class PlugTest( unittest.TestCase ) :
 		n1["testIn"].setInput( n2["testOut"] )
 		self.assertEqual( n1["testIn"].inputHasBeenSet, True )
 		self.assertEqual( n1["testIn"].getInput(), n2["testOut"] )
+		
+		# check that acceptsParent can be overridden
+		
+		p2 = TestPlug()
+		self.assertRaises( RuntimeError, Gaffer.CompoundPlug().addChild, p2 )
 				
 if __name__ == "__main__":
 	unittest.main()
