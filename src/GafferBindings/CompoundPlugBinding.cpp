@@ -43,10 +43,33 @@
 #include "Gaffer/CompoundPlug.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+class CompoundPlugWrapper : public CompoundPlug, public IECorePython::Wrapper<CompoundPlug>
+{
+
+	public :
+	
+		CompoundPlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags, tuple children )
+			:	CompoundPlug( name, direction, flags ), IECorePython::Wrapper<CompoundPlug>( self, this )
+		{
+			size_t s = extract<size_t>( children.attr( "__len__" )() );
+			for( size_t i=0; i<s; i++ )
+			{
+				PlugPtr c = extract<PlugPtr>( children[i] );
+				addChild( c );
+			}
+		}
+
+		GAFFERBINDINGS_PLUGWRAPPERFNS( CompoundPlug )
+
+};
+
+IE_CORE_DECLAREPTR( CompoundPlugWrapper );
 
 static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 {
@@ -81,34 +104,18 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	return result;
 }
 
-static CompoundPlugPtr construct(
-	const char *name,
-	Plug::Direction direction,
-	unsigned flags,
-	tuple children
-)
-{
-	CompoundPlugPtr result = new CompoundPlug( name, direction, flags );
-	size_t s = extract<size_t>( children.attr( "__len__" )() );
-	for( size_t i=0; i<s; i++ )
-	{
-		PlugPtr c = extract<PlugPtr>( children[i] );
-		result->addChild( c );
-	}
-	return result;
-}
-
 void GafferBindings::bindCompoundPlug()
 {
-	IECorePython::RunTimeTypedClass<CompoundPlug>()
-		.def( "__init__", make_constructor( construct, default_call_policies(),
+	IECorePython::RunTimeTypedClass<CompoundPlug, CompoundPlugWrapperPtr>()
+		.def(	init< const std::string &, Plug::Direction, unsigned, tuple >
 				(
-					boost::python::arg_( "name" )=CompoundPlug::staticTypeName(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "flags" )=Plug::None,
-					boost::python::arg_( "children" )=tuple()
-				)
-			)
+					(
+						arg( "name" ) = CompoundPlug::staticTypeName(),
+						arg( "direction" ) = Plug::In,
+						arg( "flags" ) = Plug::None,
+						arg( "children" )=tuple()
+					)
+				)	
 		)
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CompoundPlug )
 	;

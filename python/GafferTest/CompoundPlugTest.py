@@ -236,7 +236,52 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 		self.failUnless( i.acceptsInput( o ) )
 		self.failIf( i.acceptsInput( s ) )
+	
+	def testDerivingInPython( self ) :
+	
+		class TestCompoundPlug( Gaffer.CompoundPlug ) :
+		
+			def __init__( self, name = "TestCompoundPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
+			
+				Gaffer.CompoundPlug.__init__( self, name, direction, flags )
 				
+			def acceptsChild( self, child ) :
+						
+				if not Gaffer.CompoundPlug.acceptsChild( self, child ) :
+					return False
+					
+				return isinstance( child, Gaffer.IntPlug )
+				
+		IECore.registerRunTimeTyped( TestCompoundPlug )
+		
+		# check the constructor
+		
+		p = TestCompoundPlug()
+		self.assertEqual( p.getName(), "TestCompoundPlug" )
+		self.assertEqual( p.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.None )
+		
+		p = TestCompoundPlug( name = "p", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( p.getName(), "p" )
+		self.assertEqual( p.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Dynamic )
+		
+		# check that acceptsChild can be overridden
+		
+		p = TestCompoundPlug()
+		
+		self.assertRaises( RuntimeError, p.addChild, Gaffer.FloatPlug() )
+		
+		p.addChild( Gaffer.IntPlug() )
+		
+		# check that the fact the plug has been wrapped solves the object identity problem
+		
+		p = TestCompoundPlug()
+		n = Gaffer.Node()
+		n["p"] = p
+		
+		self.failUnless( n["p"] is p )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

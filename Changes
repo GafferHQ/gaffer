@@ -1,5 +1,7 @@
 * Can now derive from GraphComponent in python and override acceptsParent and acceptsChild methods. These methods can also be overridden in other python-derivable classes such as Plug and Node.
 
+* Can now derive from CompoundPlug in python.
+
 0.3.0
 -----
 
