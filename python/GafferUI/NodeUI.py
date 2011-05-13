@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,9 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
-## This class forms a useful base for creating node uis for use in the NodeEditor
-# and elsewhere. It provides simple methods for building a ui structured using tabs
-# and collapsible elements, and allows customisation of the widget types used for
+## This class forms the base class for all uis for nodes. It provides simple methods for building a ui
+# structured using tabs and collapsible elements, and allows customisation of the widget types used for
 # each Plug.
 class NodeUI( GafferUI.Widget ) :
 
@@ -141,5 +141,27 @@ class NodeUI( GafferUI.Widget ) :
 	def _registerPlugWidget( self, nodeTypeId, plugPath, widgetType, **kw ) :
 	
 		raise NotImplementedError
+	
+	
+	## Creates a NodeUI instance for the specified node.
+	@classmethod
+	def create( cls, node ) :
+	
+		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+		for typeId in [ node.typeId() ] + nodeHierarchy :	
+			nodeUI = cls.__nodeUIs.get( typeId, None )
+			if nodeUI is not None :
+				return nodeUI( node )
 		
-GafferUI.NodeEditor.registerNodeUI( Gaffer.Node.staticTypeId(), NodeUI )
+		assert( 0 )
+	
+	__nodeUIs = {}
+	## Registers a subclass of NodeUI to be used with a specific node type.
+	@classmethod
+	def registerNodeUI( cls, nodeTypeId, nodeUIType ) :
+	
+		assert( issubclass( nodeUIType, NodeUI ) )
+	
+		cls.__nodeUIs[nodeTypeId] = nodeUIType	
+			
+NodeUI.registerNodeUI( Gaffer.Node.staticTypeId(), NodeUI )

@@ -1,3 +1,5 @@
+* NodeEditor.registerNodeUI has been moved to NodeUI.registerNodeUI, and a NodeUI.create factory functiona added. This allows NodeUIs to be used in places other than the NodeEditor. 
+
 0.4.0
 -----
 

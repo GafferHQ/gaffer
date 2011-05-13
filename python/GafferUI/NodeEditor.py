@@ -71,22 +71,9 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			return
 		
 		self.__column.append( GafferUI.NameWidget( node ) )
-
-		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-		for typeId in [ node.typeId() ] + nodeHierarchy :	
-			uiBuilder = self.__uiBuilders.get( typeId, None )
-			if uiBuilder is not None :
-				break
 						
 		frame = GafferUI.Frame()
 		self.__column.append( frame, expand=True )
-		frame.setChild( uiBuilder( node ) )
-	
-	## \todo I think the factory belongs in NodeUI.
-	__uiBuilders = {}
-	@classmethod
-	def registerNodeUI( cls, nodeType, uiBuilder ) :
-	
-		cls.__uiBuilders[nodeType] = uiBuilder	
+		frame.setChild( GafferUI.NodeUI.create( node ) )
 				
 GafferUI.EditorWidget.registerType( "NodeEditor", NodeEditor )
