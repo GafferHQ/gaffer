@@ -107,3 +107,4 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 #from SplineEditor import SplineEditor
 #from AboutWindow import AboutWindow
 import ApplicationMenu
+from OpDialogue import OpDialogue

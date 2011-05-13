@@ -572,7 +572,7 @@ for module in ( "GafferTest", "GafferUITest", "GafferRI", "GafferRIUI" ) :
 scriptsInstall = env.Install( "$BUILD_DIR/bin", [ "bin/gaffer", "bin/gaffer.py" ] )
 env.Alias( "build", scriptsInstall )
 
-for app in ( "gui", "view", "test", "cli", "license" ) :
+for app in ( "gui", "view", "test", "cli", "license", "op" ) :
 	appInstall = env.Install( "$BUILD_DIR/apps/%s" % app, "apps/%s/%s-1.py" % ( app, app ) )
 	env.Alias( "build", appInstall )
 
@@ -723,6 +723,7 @@ manifest = [
 	"apps/gui/gui-1.py",
 	"apps/test/test-1.py",
 	"apps/view/view-1.py",
+	"apps/op/op-1.py",
 	"apps/license/license-1.py",
 	"lib/libboost_signals" + boostLibSuffix + "*",
 	"lib/libboost_thread" + boostLibSuffix + "*",
