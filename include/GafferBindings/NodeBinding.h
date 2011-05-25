@@ -69,6 +69,9 @@ namespace GafferBindings
 			f( IECore::constPointerCast<Plug>( output ) );\
 		}\
 	}
+
+#define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
+	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )
 		
 void bindNode();
 

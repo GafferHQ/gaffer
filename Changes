@@ -1,3 +1,5 @@
+* Can now derive from ScriptNode in python and override acceptsChild etc as expected.
+
 0.6.0
 -----
 

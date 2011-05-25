@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -256,6 +257,29 @@ class ScriptNodeTest( unittest.TestCase ) :
 
 		self.failUnless( s.evaluate( "set( locals().keys() )" )==l )
 		self.failUnless( s.evaluate( "set( globals().keys() )" )==g )
+
+	def testDeriveAndOverrideAcceptsChild( self ) :
+	
+		class MyScriptNode( Gaffer.ScriptNode ) :
+		
+			def __init__( self, name ) :
+			
+				Gaffer.ScriptNode.__init__( self, name )
+				
+			def acceptsChild( self, child ) :
+			
+				return isinstance( child, GafferTest.AddNode )
+				
+		n = MyScriptNode( "s" )
+		
+		c1 = GafferTest.AddNode()
+		c2 = Gaffer.Node()
+		
+		n.addChild( c1 )
+		self.failUnless( c1.parent() is n )
+	
+		self.assertRaises( RuntimeError, n.addChild, c2 )
+		self.failUnless( c2.parent() is None )
 							
 if __name__ == "__main__":
 	unittest.main()

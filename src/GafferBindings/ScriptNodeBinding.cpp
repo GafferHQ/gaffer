@@ -40,7 +40,7 @@
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialiser.h"
-#include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/NodeBinding.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECorePython/Wrapper.h"
@@ -176,6 +176,8 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 			}
 		}
 		
+		GAFFERBINDINGS_NODEWRAPPERFNS( ScriptNode )
+		
 	private :
 	
 		object executionGlobals()
@@ -223,7 +225,7 @@ void bindScriptNode()
 	scope s = IECorePython::RunTimeTypedClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
-		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( ScriptNode )
+		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( ScriptNode )
 		.def( "selection", (SetPtr (ScriptNode::*)())&ScriptNode::selection )
 		.def( "undo", &ScriptNode::undo )
 		.def( "redo", &ScriptNode::redo )
