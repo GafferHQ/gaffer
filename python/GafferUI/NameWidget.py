@@ -37,11 +37,11 @@
 
 from __future__ import with_statement
 
-from PySide import QtCore
-from PySide import QtGui
-
 import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class NameWidget( GafferUI.TextWidget ) :
 

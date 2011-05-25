@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +35,6 @@
 #  
 ##########################################################################
 
-from PySide import QtGui
-
 import IECore
 
 from Gaffer import ScriptNode
@@ -43,6 +42,8 @@ import GafferUI
 from Menu import Menu
 from Widget import Widget
 from EditorWidget import EditorWidget
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Output redirection of both python stderr and stdout and IECore::msg - with the option to still output to the shell as well
 #		- but how do we know which script editor to output to? eh?

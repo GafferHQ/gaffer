@@ -39,11 +39,11 @@ import gc
 import types
 import traceback
 
-from PySide import QtGui
-
 import IECore
 
 import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Implement an option to float in a new window, and an option to anchor back - drag and drop of tabs?
 class CompoundEditor( GafferUI.EditorWidget ) :

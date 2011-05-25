@@ -37,10 +37,6 @@
 
 import os
 
-from PySide import QtCore
-from PySide import QtGui
-from PySide import QtOpenGL
-
 from OpenGL.GL import *
 
 import IECoreGL
@@ -48,6 +44,10 @@ import IECore
 
 import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
+QtOpenGL = GafferUI._qtImport( "QtOpenGL" )
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.

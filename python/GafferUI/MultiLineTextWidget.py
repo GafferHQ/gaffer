@@ -35,9 +35,9 @@
 #  
 ##########################################################################
 
-from PySide import QtGui
-
 import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 

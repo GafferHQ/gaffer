@@ -38,13 +38,13 @@
 import inspect
 import weakref
 
-from PySide import QtCore
-from PySide import QtGui
-
 from IECore import curry
 
 import GafferUI
 import CamelCase
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class Menu( GafferUI.Widget ) :
 

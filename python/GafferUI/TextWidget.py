@@ -35,13 +35,13 @@
 #  
 ##########################################################################
 
-from PySide import QtCore
-from PySide import QtGui
-
 import IECore
 
 import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class TextWidget( GafferUI.Widget ) :
 

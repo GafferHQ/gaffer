@@ -37,10 +37,10 @@
 
 from __future__ import with_statement
 
-from PySide import QtGui
-
 import Gaffer
 import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Maths expressions to modify the existing value
 ## \todo Enter names of other plugs to create a connection

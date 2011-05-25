@@ -35,12 +35,12 @@
 #  
 ##########################################################################
 
-from PySide import QtGui
-
 import IECore
 
 import Gaffer
 import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class NodeEditor( GafferUI.NodeSetEditor ) :
 

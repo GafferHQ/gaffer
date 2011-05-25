@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +35,12 @@
 #  
 ##########################################################################
 
-from PySide import QtCore
-from PySide import QtGui
-
 import IECore
 
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Support other list operations for child access
 ## \todo Can this share things with ListContainer?

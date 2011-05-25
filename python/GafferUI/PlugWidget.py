@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +35,11 @@
 #  
 ##########################################################################
 
-from PySide import QtGui
-
 import GafferUI
 from PlugValueWidget import PlugValueWidget
 import CamelCase
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Make tooltips work
 ## \todo Useful popup menu on label - connect, disconnect, expressions etc

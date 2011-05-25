@@ -1,3 +1,11 @@
+0.6.0
+-----
+
+* Can now specify whether to use PySide or PyQt for Qt python bindings, using the GAFFERUI_QT_BINDINGS environment variable.
+
+0.5.0
+-----
+
 * Added a new OpDialogue class to make it easy to run ops.
 
 * Added a new op application, to allow users to run ops in a gui.

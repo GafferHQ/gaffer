@@ -35,6 +35,37 @@
 #  
 ##########################################################################
 
+##########################################################################
+# Function to import a module from the qt bindings. This must be used
+# rather than importing the module directly. This allows us to support
+# the use of both PyQt and PySide.
+##########################################################################
+
+__qtModuleName = None
+def _qtImport( name ) :
+
+	# decide which qt bindings to use
+	global __qtModuleName
+	if __qtModuleName is None :
+		import os
+		if "GAFFERUI_QT_BINDINGS" in os.environ :
+			__qtModuleName = os.environ["GAFFERUI_QT_BINDINGS"]
+		else :
+			# no preference stated via environment - see what we shipped with
+			import glob
+			if os.path.exists( os.environ["GAFFER_ROOT"] + "/lib/python2.6/site-packages/PySide" ) :
+				__qtModuleName = "PySide"
+			else :
+				__qtModuleName = "PyQt4"
+
+	# import the submodule from those bindings and return it
+	qtModule = __import__( __qtModuleName + "." + name )
+	return getattr( qtModule, name )
+
+##########################################################################
+# now import our actual functionality
+##########################################################################
+
 import IECore
 
 from _GafferUI import *

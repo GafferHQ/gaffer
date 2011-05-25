@@ -285,6 +285,23 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_PYQT", "Set this to build PyQt.", "$BUILD_DEPENDENCIES" )
+)
+
+options.Add(
+	"SIP_SRC_DIR",
+	"The location of SIP.",
+	"$DEPENDENCIES_SRC_DIR/sip-4.12.3",
+)
+
+
+options.Add(
+	"PYQT_SRC_DIR",
+	"The location of SIP.",
+	"$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.8.4",
+)
+
+options.Add(
 	BoolVariable( "BUILD_FONTS", "", "$BUILD_DEPENDENCIES" )
 )
 
@@ -312,7 +329,7 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "5",
+	GAFFER_MINOR_VERSION = "6",
 	GAFFER_PATCH_VERSION = "0",
 	
 )
@@ -415,6 +432,10 @@ if depEnv["BUILD_PYSIDE"] :
 	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+
+if depEnv["BUILD_PYQT"] :
+	runCommand( "cd $SIP_SRC_DIR && python configure.py && make && make install" )
+	runCommand( "cd $PYQT_SRC_DIR && python configure.py --confirm-license && make && make install" )
 
 if depEnv["BUILD_GOOGLEPERFTOOLS"] :
 

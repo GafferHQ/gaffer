@@ -37,10 +37,10 @@
 
 from __future__ import with_statement
 
-from PySide import QtGui
-
 import Gaffer
 import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## User docs :
 #

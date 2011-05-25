@@ -40,13 +40,13 @@ import string
 import os
 import math
 
-from PySide import QtCore
-from PySide import QtGui
-
 import IECore
 
 import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The Widget class provides a base class for all widgets in GafferUI.
 # GafferUI.Widget subclasses are implemented using Qt widgets (using PySide), but the public API

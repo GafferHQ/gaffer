@@ -37,12 +37,12 @@
 
 from __future__ import with_statement
 
-from PySide import QtGui
-
 import IECore
 
 import Gaffer
 import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## This class forms the base class for all uis for nodes. It provides simple methods for building a ui
 # structured using tabs and collapsible elements, and allows customisation of the widget types used for

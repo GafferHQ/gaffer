@@ -35,10 +35,10 @@
 #  
 ##########################################################################
 
-from PySide import QtCore
-
 import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
 
 ## The NodeSetEditor is a base class for all Editors which focus their
 # editing on a subset of nodes beneath a ScriptNode. This set defaults

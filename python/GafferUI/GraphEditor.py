@@ -37,13 +37,13 @@
 
 from __future__ import with_statement
 
-from PySide import QtGui
-
 import IECore
 
 import Gaffer
 import GafferUI
 from GafferUI import EditorWidget, GraphGadget, GadgetWidget
+
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class GraphEditor( GafferUI.EditorWidget ) :
 
