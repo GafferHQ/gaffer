@@ -34,30 +34,33 @@
 #  
 ##########################################################################
 
-import gtk
-
 import IECore
 
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
+	
 class ScrolledContainer( GafferUI.ContainerWidget ) :
 
 	ScrollMode = IECore.Enum.create( "Never", "Always", "Automatic" )
 
 	def __init__( self, horizontalMode=ScrollMode.Automatic, verticalMode=ScrollMode.Automatic, borderWidth=0 ) :
 	
-		GafferUI.ContainerWidget.__init__( self, gtk.ScrolledWindow() )
+		GafferUI.ContainerWidget.__init__( self, _ScrollArea() )
+				
+		self._qtWidget().setViewportMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		
-		self.gtkWidget().set_property( "border-width", borderWidth )
 		self.setHorizontalMode( horizontalMode )
 		self.setVerticalMode( verticalMode )
-		
+						
 		self.__child = None
 		
 	def removeChild( self, child ) :
 	
 		assert( child is self.__child )
-		self.gtkWidget().remove( self.__child.gtkWidget() )
+		
+		child.setParent( None )
 		self.__child = None
 		
 	def setChild( self, child ) :
@@ -65,76 +68,100 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 		if self.__child :
 			self.removeChild( self.__child )
 		
-		needsViewport = True
-		try :
-			child.gtkWidget().get_property( "hadjustment" )
-			needsViewport = False
-		except :
-			pass
-			
-		if needsViewport :
-			self.gtkWidget().add_with_viewport( child.gtkWidget() )
-		else :
-			self.gtkWidget().add( child.gtkWidget() )
-		
+		self._qtWidget().setWidget( child._qtWidget() )
 		self.__child = child
-	
+		
 	def getChild( self ) :
 	
 		return self.__child
 	
 	__modesToPolicies = {
-		ScrollMode.Never : gtk.POLICY_NEVER,
-		ScrollMode.Always : gtk.POLICY_ALWAYS,
-		ScrollMode.Automatic : gtk.POLICY_AUTOMATIC,
+		ScrollMode.Never : QtCore.Qt.ScrollBarAlwaysOff,
+		ScrollMode.Always : QtCore.Qt.ScrollBarAlwaysOn,
+		ScrollMode.Automatic : QtCore.Qt.ScrollBarAsNeeded,
 	}
 
 	__policiesToModes = {
-		gtk.POLICY_NEVER : ScrollMode.Never,
-		gtk.POLICY_ALWAYS : ScrollMode.Always,
-		gtk.POLICY_AUTOMATIC : ScrollMode.Automatic,
+		QtCore.Qt.ScrollBarAlwaysOff : ScrollMode.Never,
+		QtCore.Qt.ScrollBarAlwaysOn : ScrollMode.Always,
+		QtCore.Qt.ScrollBarAsNeeded : ScrollMode.Automatic,
 	}
 		
 	def setHorizontalMode( self, mode ) :
 	
-		p = self.gtkWidget().get_policy()
-		self.gtkWidget().set_policy( self.__modesToPolicies[mode], p[1] )
+		self._qtWidget().setHorizontalScrollBarPolicy( self.__modesToPolicies[mode] )
 
 	def getHorizontalMode( self ) :
 	
-		p = self.gtkWidget().get_policy()
+		p = self._qtWidget().horizontalScrollBarPolicy()
 		return self.__policiesToModes[p[0]]
 		
 	def setVerticalMode( self, mode ) :
 	
-		p = self.gtkWidget().get_policy()
-		self.gtkWidget().set_policy( p[0], self.__modesToPolicies[mode] )
+		self._qtWidget().setVerticalScrollBarPolicy( self.__modesToPolicies[mode] )
 
 	def getVerticalMode( self ) :
 	
-		p = self.gtkWidget().get_policy()
+		p = self._qtWidget().verticalScrollBarPolicy()
 		return self.__policiesToModes[p[1]]
-		
-GafferUI.Widget._parseRCStyle(
 
-	"""
-	style "gafferScrollbar"
-	{
-		GtkScrollbar::slider-width = 12
-		GtkScrollbar::has-backward-stepper = 0
-		GtkScrollbar::has-secondary-backward-stepper = 1
-		bg[ACTIVE] = $dull
-		bg[PRELIGHT] = $bright
-		bg[SELECTED] = $bright
-	}
+# Private implementation - a QScrollArea derived class which is a bit more
+# forceful aboout claiming size when the scrollbars are off in a particular 
+# direction.
+class _ScrollArea( QtGui.QScrollArea ) :
 
-	widget_class "*<GtkScrollbar>*" style "gafferScrollbar"
-	""",
+	def __init__( self ) :
 	
-	{
-		"dull" : GafferUI.Widget._gtkRCColor( IECore.Color3f( 0.05 ) ),
-		"bright" : GafferUI.Widget._gtkRCColor( IECore.Color3f( 0.1 ) ),
-	}
-
-)
+		QtGui.QScrollArea.__init__( self )
+	
+		self.__marginLeft = 0
+		self.__marginRight = 0
+		self.__marginTop = 0
+		self.__marginBottom = 0
+	
+	def setWidget( self, widget ) :
+	
+		QtGui.QScrollArea.setWidget( self, widget )
+		widget.installEventFilter( self )
 		
+	def setViewportMargins( self, left, top, right, bottom ) :
+	
+		QtGui.QScrollArea.setViewportMargins( self, left, top, right, bottom )
+		
+		self.__marginLeft = left
+		self.__marginRight = right
+		self.__marginTop = top
+		self.__marginBottom = bottom
+				
+	def sizeHint( self ) :
+			
+		result = QtGui.QScrollArea.sizeHint( self )
+		
+		w = self.widget()
+		if w :
+		
+			wSize = w.sizeHint()
+			if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
+				result.setWidth(
+					self.__marginLeft +
+					self.__marginRight +
+					wSize.width() +
+					self.verticalScrollBar().sizeHint().width()
+				)
+
+			if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
+				result.setHeight(
+					self.__marginTop +
+					self.__marginBottom +
+					wSize.height() +
+					self.horizontalScrollBar().sizeHint().width()
+				)
+				
+		return result
+	
+	def eventFilter( self, widget, event ) :
+	
+		if widget is self.widget() and isinstance( event, QtGui.QResizeEvent ) :
+			self.updateGeometry()
+		
+		return False

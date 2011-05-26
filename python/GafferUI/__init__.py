@@ -89,7 +89,7 @@ from Button import Button
 from MultiLineTextWidget import MultiLineTextWidget
 from Label import Label
 from GLWidget import GLWidget
-#from ScrolledContainer import ScrolledContainer
+from ScrolledContainer import ScrolledContainer
 from PathWidget import PathWidget
 from PathListingWidget import PathListingWidget
 from PathChooserWidget import PathChooserWidget
@@ -136,6 +136,6 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 #from SplineWidget import SplineWidget
 #from SplinePlugValueWidget import SplinePlugValueWidget
 #from SplineEditor import SplineEditor
-#from AboutWindow import AboutWindow
+from AboutWindow import AboutWindow
 import ApplicationMenu
 from OpDialogue import OpDialogue
