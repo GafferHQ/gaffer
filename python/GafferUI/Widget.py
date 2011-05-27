@@ -49,7 +49,7 @@ QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The Widget class provides a base class for all widgets in GafferUI.
-# GafferUI.Widget subclasses are implemented using Qt widgets (using PySide), but the public API
+# GafferUI.Widget subclasses are implemented using Qt widgets (using PySide or PyQt), but the public API
 # exposed by the GafferUI classes never includes Qt functions or classes directly - this
 # allows the implementation to be changed in the future. Furthermore it allows the use
 # of the GafferUI module without learning all the Qt API. To enforce this separation,
