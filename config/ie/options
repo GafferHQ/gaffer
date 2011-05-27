@@ -60,11 +60,9 @@ PYOPENGL_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyOpenGL-3.0.1"
 BUILD_GOOGLE_PERFTOOLS = False
 
 QT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.7.1"
-APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.2"
-GENERATORRUNNER_SRC_DIR = "$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.9"
-SHIBOKEN_SRC_DIR = "$DEPENDENCIES_SRC_DIR/shiboken-1.0.2"
-PYSIDE_SRC_DIR = "$DEPENDENCIES_SRC_DIR/pyside-qt4.7+1.0.2"
+BUILD_PYSIDE = False
 FONTS_SRC_DIR = "$DEPENDENCIES_SRC_DIR/ttf-bitstream-vera-1.10"
+PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.8.4"
 
 # we set this so that LD_LIBRARY_PATH will point where we want it
 # when the gaffer sconstruct invokes the cortex sconstruct
