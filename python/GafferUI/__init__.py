@@ -105,6 +105,7 @@ from ShowURL import showURL
 #from URLWidget import URLWidget
 from Spacer import Spacer
 from CheckBox import CheckBox
+from Image import Image
 
 # then stuff specific to graph uis
 

@@ -2,6 +2,8 @@
 
 * ScrolledContainer class has now been ported to the Qt based GafferUI.
 
+* Added a GafferUI.Image class for displaying images in a widget.
+
 0.6.0
 -----
 
