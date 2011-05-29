@@ -37,27 +37,30 @@
 import copy 
 import functools
 
-import gtk
-
 import IECore
 import IECoreGL
 
 import Gaffer
 import GafferUI
 
+QtGui = GafferUI._qtImport( "QtGui" )
+
 class Viewer( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode=None ) :
 	
-		GafferUI.NodeSetEditor.__init__( self, gtk.EventBox(), scriptNode )
+		GafferUI.NodeSetEditor.__init__( self, QtGui.QWidget(), scriptNode )
 
 		self.__renderableGadget = GafferUI.RenderableGadget( None )
 		self.__gadgetWidget = GafferUI.GadgetWidget( self.__renderableGadget, bufferOptions=set( ( GafferUI.GLWidget.BufferOptions.Depth, ) ), cameraMode=GafferUI.GadgetWidget.CameraMode.Mode3D )
-		self.__gadgetWidget.gtkWidget().connect( "button-press-event", self.__buttonPress )
 		self.__gadgetWidget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
 		
-		self.gtkWidget().add( self.__gadgetWidget.gtkWidget() )
-		
+		self._qtWidget().setLayout( QtGui.QGridLayout() )
+		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
+		self._qtWidget().layout().addWidget( self.__gadgetWidget._qtWidget() )
+
+		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
+				
 		self._updateFromSet()
 	
 	## Returns an IECore.MenuDefinition which is used to define the right click menu for all Viewers.
@@ -105,7 +108,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			
 	def __buttonPress( self, widget, event ) :
 	
-		if event.button==3 :
+		if event.buttons & GafferUI.ButtonEvent.Buttons.Right :
 		
 			# right click menu
 			menuDefinition = copy.deepcopy( self.menuDefinition() )

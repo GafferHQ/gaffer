@@ -37,5 +37,5 @@
 
 import GafferUI
 
-GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( children = ( GafferUI.SplitContainer.Orientation.Horizontal, ( (GafferUI.GraphEditor(),), ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.NodeEditor(),), (GafferUI.ScriptEditor(),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( children = ( GafferUI.SplitContainer.Orientation.Horizontal, ( ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.Viewer(),), (GafferUI.GraphEditor(),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.NodeEditor(),), (GafferUI.ScriptEditor(),) ) ) ) ) )" )
 GafferUI.Layouts.add( "Empty", "GafferUI.CompoundEditor()" )
