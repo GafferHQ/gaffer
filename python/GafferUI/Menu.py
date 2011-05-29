@@ -77,7 +77,7 @@ class Menu( GafferUI.Widget ) :
 			
 		return GafferUI.Widget.parent( self )
 		
-	def __commandWrapper( self, command, toggled ) :
+	def __commandWrapper( self, qtAction, command, toggled ) :
 	
 		args = []
 		kw = {}
@@ -88,13 +88,13 @@ class Menu( GafferUI.Widget ) :
 		
 		if "checkBox" in commandArgs :
 			kw["checkBox"] = toggled
-		#elif qtAction.isCheckable() :
+		elif qtAction.isCheckable() :
 			# workaround for the fact that curried functions
 			# don't have arguments we can query right now. we
 			# just assume that if it's a check menu item then
 			# there must be an argument to receive the check
 			# status.
-		#	args.append( toggled )
+			args.append( toggled )
 		
 		command( *args, **kw )
 
@@ -128,19 +128,22 @@ class Menu( GafferUI.Widget ) :
 					
 					qtAction = QtGui.QAction( name, qtMenu )
 
-					if item.checkBox :
-						qtAction.setCheckable( item.checkBox() )
-					
+					if item.checkBox is not None :
+						qtAction.setCheckable( True )
+						qtAction.setChecked( item.checkBox() )
+						
 					if item.divider :
 						qtAction.setSeparator( True )
 
 					if item.command :
 
-						## \todo Check we're not making unbreakable circular references here
 						if item.checkBox :	
-							qtAction.connect( qtAction, QtCore.SIGNAL( "toggled( bool )" ), curry( self.__commandWrapper, item.command ) )							
+							signal = qtAction.toggled[bool]
 						else :
-							qtAction.connect( qtAction, QtCore.SIGNAL( "triggered( bool )" ), curry( self.__commandWrapper, item.command ) )
+							signal = qtAction.triggered[bool]
+							
+						## \todo Check we're not making unbreakable circular references here
+						signal.connect( curry( self.__commandWrapper, qtAction, item.command ) )
 
 					active = item.active
 					if callable( active ) :

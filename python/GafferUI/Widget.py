@@ -247,12 +247,25 @@ class Widget( object ) :
 
 		}
 
+		QMenu::item {
+
+			background-color: transparent;
+			border: 0px;
+			padding: 2px 25px 2px 20px;
+			
+		}
+		
 		QMenu::item:disabled {
 
 			color: $foregroundFaded;
 
 		}
 
+		QMenu::right-arrow {
+			image: url($GAFFER_ROOT/graphics/subMenuArrow.png);
+			padding: 0px 7px 0px 0px;
+		}
+		
 		QMenu::separator {
 
 			height: 1px;
@@ -263,13 +276,25 @@ class Widget( object ) :
 			margin-bottom: 5px;
 
 		}
-
+		
+		QMenu::indicator {
+			padding: 0px 0px 0px 3px;
+		}
+		
+		QMenu::indicator:non-exclusive:checked {
+			image: url($GAFFER_ROOT/graphics/menuChecked.png);
+		}
+		
+		QMenu::indicator:exclusive:checked:selected {
+			image: url($GAFFER_ROOT/graphics/arrowRight10.png);
+		}
+		
 		QMenu, QTabBar::tab:selected, QPushButton, QHeaderView::section {
 
 			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLight, stop: 1 $backgroundMid);
 
 		}
-
+		
 		QPlainTextEdit {
 		
 			border: 1px solid $backgroundDark;
@@ -489,21 +514,24 @@ class Widget( object ) :
 		}
 
 		QCheckBox::indicator {
-			width: 10px;
-			height: 10px;
-			border: 1px solid $backgroundDark;
+			width: 20px;
+			height: 20px;
+			background-color: transparent;			
 		}
 		
 		QCheckBox::indicator:unchecked {
-			background-color: $backgroundLighter;			
+			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
 		}
 		
-		QCheckBox::indicator:hover {
-			background-color: $brightColor;			
+		QCheckBox::indicator:unchecked:hover {
+			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);
+		}
+		QCheckBox::indicator:checked:hover {
+			image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
 		}
 		
 		QCheckBox::indicator:checked {
-			background-color: $brightColor2;			
+			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
 		}
 
 		"""

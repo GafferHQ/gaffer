@@ -4,6 +4,10 @@
 
 * Added a GafferUI.Image class for displaying images in a widget.
 
+* GafferUI.Menu class now supports checkBox menu items again.
+
+* GafferUI.CheckBox widget now displayed with a tick rather than a blank yellow box.
+
 0.6.0
 -----
 
