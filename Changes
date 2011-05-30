@@ -1,6 +1,6 @@
 * Can now derive from ScriptNode in python and override acceptsChild etc as expected.
 
-* ScrolledContainer class has now been ported to the Qt based GafferUI.
+* ScrolledContainer and viewer classes have now been ported to the Qt based GafferUI.
 
 * Added a GafferUI.Image class for displaying images in a widget.
 
