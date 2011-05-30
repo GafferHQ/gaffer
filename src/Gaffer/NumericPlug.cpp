@@ -152,10 +152,10 @@ void NumericPlug<T>::setFromInput()
 	switch( i->typeId() )
 	{
 		case FloatPlugTypeId :
-			setValue( IECore::staticPointerCast<FloatPlug>( i )->getValue() );
+			setValue( (T)IECore::staticPointerCast<FloatPlug>( i )->getValue() );
 			break;
 		case IntPlugTypeId :
-			setValue( IECore::staticPointerCast<IntPlug>( i )->getValue() );
+			setValue( (T)IECore::staticPointerCast<IntPlug>( i )->getValue() );
 			break;
 		default :
 			assert( 0 ); // shouldn't have connections of any other type
