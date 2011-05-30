@@ -43,19 +43,12 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 	def __init__( self, path ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QWidget() )
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
 		
-		## \todo How many places are we doing this? Perhaps we could pass
-		# a GafferUI.Widget to the constructor instead and have this done for us?
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setSpacing( 0 )
-		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
+		GafferUI.Widget.__init__( self, self.__column )
 		
 		self.__path = path
-		
-		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
-		self._qtWidget().layout().addWidget( self.__column._qtWidget(), 0, 0 )
-		
+				
 		self.__directoryListing = GafferUI.PathListingWidget( self.__path )
 		self.__column.append( self.__directoryListing, True )
 		

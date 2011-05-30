@@ -50,14 +50,10 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 	
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug )
+		self.__numericWidget = GafferUI.NumericWidget( plug.getValue() )
+			
+		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug )
 
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self.__numericWidget = GafferUI.NumericWidget( plug.getValue() )		
-		self._qtWidget().layout().setSpacing( 0 )
-		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
-		self._qtWidget().layout().addWidget( self.__numericWidget._qtWidget(), 0, 0 )
- 
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 						

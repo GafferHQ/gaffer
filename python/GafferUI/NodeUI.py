@@ -51,12 +51,10 @@ class NodeUI( GafferUI.Widget ) :
 
 	def __init__( self, node ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QWidget() )
-	
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
 		self.__currentColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=2 )
-		self._qtWidget().layout().addWidget( self.__currentColumn._qtWidget(), 0, 0 )
 		
+		GafferUI.Widget.__init__( self, self.__currentColumn )
+	
 		self.__node = node
 		
 		self._build()

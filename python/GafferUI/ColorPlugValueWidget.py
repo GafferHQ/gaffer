@@ -48,14 +48,8 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		self.__swatch = GafferUI.ColorSwatch()
 		
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug )
-		
-		layout = QtGui.QGridLayout()
-		self._qtWidget().setLayout( layout )
-		layout.setSpacing( 0 )
-		layout.setContentsMargins( 0, 0, 0, 0 )
-		layout.addWidget( self.__swatch._qtWidget(), 0, 0 )
-		
+		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug )
+				
 		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( self.__buttonPress )
 		
 		self.__colorChooserDialogue = None

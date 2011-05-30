@@ -50,14 +50,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode=None, children=None ) :
 		
-		GafferUI.EditorWidget.__init__( self, QtGui.QWidget(), scriptNode )
-		
-		self.__qtLayout = QtGui.QGridLayout()
-		self.__qtLayout.setContentsMargins( 0, 0, 0, 0 )
-		self._qtWidget().setLayout( self.__qtLayout )
-		
 		self.__splitContainer = GafferUI.SplitContainer()
-		self.__qtLayout.addWidget( self.__splitContainer._qtWidget(), 0, 0 )
+		
+		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode )
+		
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
 		
 		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( self.__buttonPress )					

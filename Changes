@@ -8,6 +8,10 @@
 
 * GafferUI.CheckBox widget now displayed with a tick rather than a blank yellow box.
 
+* CompoundNumericPlugValueWidget has now been ported to the Qt based GafferUI, providing uis for V2f, V3f, V2i and V3i plug types.
+
+* GafferUI.Widget derived classes may now pass a GafferUI.Widget instead of a QtGui.QWidget instance to the base class constructor. This makes it possible to develop a wider variety of custom widgets without resorting to Qt APIs.
+
 0.6.0
 -----
 

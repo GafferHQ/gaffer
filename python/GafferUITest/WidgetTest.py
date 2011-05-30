@@ -50,6 +50,14 @@ class TestWidget( GafferUI.Widget ) :
 	def __init__( self ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLabel( "hello" ) )
+
+class TestWidget2( GafferUI.Widget ) :
+
+	def __init__( self ) :
+	
+		self.topLevelGafferWidget = TestWidget()
+		
+		GafferUI.Widget.__init__( self, self.topLevelGafferWidget )
 		
 class WidgetTest( unittest.TestCase ) :
 
@@ -86,6 +94,15 @@ class WidgetTest( unittest.TestCase ) :
 		self.assert_( p.ancestor( GafferUI.ListContainer ) is l )
 		self.assert_( p.ancestor( GafferUI.Window ) is w )
 		self.assert_( p.ancestor( GafferUI.Menu ) is None )
+	
+	def testGafferWidgetAsTopLevel( self ) :
+	
+		w = TestWidget2()
+		
+		self.assert_( GafferUI.Widget._owner( w._qtWidget() ) is w )
+		self.assert_( w.topLevelGafferWidget.parent() is w )
+		self.assert_( GafferUI.Widget._owner( w.topLevelGafferWidget._qtWidget() ) is not w )
+	
 			
 if __name__ == "__main__":
 	unittest.main()

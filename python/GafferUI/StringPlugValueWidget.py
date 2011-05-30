@@ -52,13 +52,9 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 	
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug )
-
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self.__textWidget = GafferUI.TextWidget()		
-		self._qtWidget().layout().setSpacing( 0 )
-		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
-		self._qtWidget().layout().addWidget( self.__textWidget._qtWidget(), 0, 0 )
+		self.__textWidget = GafferUI.TextWidget()
+			
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug )
 
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( self.__keyPress )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( self.__textChanged )

@@ -46,12 +46,10 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode=None ) :
 	
-		GafferUI.NodeSetEditor.__init__( self, QtGui.QWidget(), scriptNode )
-				
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
-		self._qtWidget().layout().addWidget( self.__column._qtWidget(), 0, 0 )
 		
+		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode )
+				
 		self._updateFromSet()
 				
 	def __repr__( self ) :

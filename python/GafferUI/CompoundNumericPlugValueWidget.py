@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +35,6 @@
 #  
 ##########################################################################
 
-import gtk
-
 import Gaffer
 import GafferUI
 
@@ -43,9 +42,9 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 	
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, homogeneous=True )
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__row.gtkWidget(), plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
 
 		componentPlugs = plug.children()
 		for p in componentPlugs :

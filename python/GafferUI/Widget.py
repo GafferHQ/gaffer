@@ -68,17 +68,29 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # \todo Consider how this relates to the other Widget class we'll be making for the GL editors
 class Widget( object ) :
 
-	## Derived classes must create an appropriate qt widget to be the top
-	# level for their implementation and pass it to the Widget.__init__ method.
-	# The widget can subsequently be accessed using _qtWidget() but it cannot be
-	# replaced with another.
-	def __init__( self, qtWidget ) :
+	## All GafferUI.Widget instances must hold a corresponding QtGui.QWidget instance
+	# which provides the top level implementation for the widget, and to which other
+	# widgets may be parented. This QWidget is created during __init__, and cannot be
+	# replaced later. Derived classes may pass either a QtGui.QWidget directly, or if
+	# they prefer may pass a GafferUI.Widget, in which case a top level QWidget will be
+	# created automatically, with the GafferUI.Widget being parented to it. The top level
+	# QWidget can be accessed at any time using the _qtWidget() method. Note that this is
+	# protected to encourage non-reliance on knowledge of the Qt backend.
+	def __init__( self, topLevelWidget ) :
 	
-		assert( isinstance( qtWidget, QtGui.QWidget ) )
-		assert( Widget.__qtWidgetOwners.get( qtWidget ) is None )
+		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
 		
-		self.__qtWidget = qtWidget
-		Widget.__qtWidgetOwners[qtWidget] = weakref.ref( self )
+		if isinstance( topLevelWidget, QtGui.QWidget ) :
+			assert( Widget.__qtWidgetOwners.get( topLevelWidget ) is None )
+			self.__qtWidget = topLevelWidget
+		else :
+			self.__gafferWidget = topLevelWidget
+			self.__qtWidget = QtGui.QWidget()
+			self.__qtWidget.setLayout( QtGui.QGridLayout() )
+			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
+			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
+			
+		Widget.__qtWidgetOwners[self.__qtWidget] = weakref.ref( self )
 		
 		self.__qtWidget.setStyleSheet( self.__styleSheet )
 		

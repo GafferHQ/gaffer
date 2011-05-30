@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,16 +50,13 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode=None ) :
 	
-		GafferUI.NodeSetEditor.__init__( self, QtGui.QWidget(), scriptNode )
-
 		self.__renderableGadget = GafferUI.RenderableGadget( None )
 		self.__gadgetWidget = GafferUI.GadgetWidget( self.__renderableGadget, bufferOptions=set( ( GafferUI.GLWidget.BufferOptions.Depth, ) ), cameraMode=GafferUI.GadgetWidget.CameraMode.Mode3D )
+		
+		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode )
+
 		self.__gadgetWidget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
 		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
-		self._qtWidget().layout().addWidget( self.__gadgetWidget._qtWidget() )
-
 		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
 				
 		self._updateFromSet()

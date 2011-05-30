@@ -49,15 +49,12 @@ class GraphEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode=None ) :
 		
-		EditorWidget.__init__( self, QtGui.QWidget(), scriptNode )
-		
 		self.__gadgetWidget = GadgetWidget( cameraMode = GadgetWidget.CameraMode.Mode2D )
+		
+		EditorWidget.__init__( self, self.__gadgetWidget, scriptNode )
+		
 		self.__gadgetWidget.setBackgroundColor( IECore.Color3f( 0.5 ) )
 		self.__gadgetWidget._framingBound = Gaffer.WeakMethod( self.__framingBound )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
-		self._qtWidget().layout().addWidget( self.__gadgetWidget._qtWidget() )
 		
 		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
 	

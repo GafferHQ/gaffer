@@ -57,14 +57,10 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode=None ) :
 	
-		GafferUI.EditorWidget.__init__( self, QtGui.QWidget(), scriptNode )
-	
-		layout = QtGui.QGridLayout()
-		self._qtWidget().setLayout( layout )
-		
 		self.__splittable = GafferUI.SplitContainer()
-		layout.addWidget( self.__splittable._qtWidget(), 0, 0 )
 		
+		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode )
+			
 		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False )
 		self.__inputWidget = GafferUI.MultiLineTextWidget()
 		

@@ -46,13 +46,9 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 	
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug )
-
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self.__checkBox = GafferUI.CheckBox()		
-		self._qtWidget().layout().setSpacing( 0 )
-		self._qtWidget().layout().setContentsMargins( 0, 0, 0, 0 )
-		self._qtWidget().layout().addWidget( self.__checkBox._qtWidget(), 0, 0 )
+		self.__checkBox = GafferUI.CheckBox()
+		
+		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug )
  
 		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( self.__stateChanged )
 						

@@ -131,7 +131,7 @@ import EditMenu
 import NodeMenu
 from Viewer import Viewer
 from Frame import Frame
-#from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
+from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from NodeUI import NodeUI
 from ColorPlugValueWidget import ColorPlugValueWidget
 #from SplineWidget import SplineWidget
