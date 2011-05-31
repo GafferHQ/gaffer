@@ -35,42 +35,88 @@
 ##########################################################################
 
 import os
+import IEEnv
 
-DEPENDENCIES_SRC_DIR = "/home/john/opendev/gafferDependencies"
+##########################################################################
+# get arguments and other stuff to help us configure things
+##########################################################################
 
-BUILD_DIR = "/home/john/build/gaffer"
+def getOption( name, default ) :
 
-PYTHON_SRC_DIR = "$DEPENDENCIES_SRC_DIR/Python-2.6.6"
-PKGCONFIG_SRC_DIR = "$DEPENDENCIES_SRC_DIR/pkg-config-0.25"
-BOOST_SRC_DIR = "$DEPENDENCIES_SRC_DIR/boost_1_42_0"
-TBB_SRC_DIR = "$DEPENDENCIES_SRC_DIR/tbb22_013oss"
-ILMBASE_SRC_DIR = "$DEPENDENCIES_SRC_DIR/ilmbase-1.0.1"
-OPENEXR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/openexr-1.6.1"
-JPEG_SRC_DIR = "$DEPENDENCIES_SRC_DIR/jpeg-8c"
-TIFF_SRC_DIR = "$DEPENDENCIES_SRC_DIR/tiff-3.9.4"
-FREETYPE_SRC_DIR = "$DEPENDENCIES_SRC_DIR/freetype-2.4.4"
-GLEW_SRC_DIR = "$DEPENDENCIES_SRC_DIR/glew-1.5.8"
-CORTEX_SRC_DIR = "/home/john/opendev/cortex/trunk"
+	import sys
+	result = default
+	for a in sys.argv:
+		if a[:len(name)+1]==name+"=" :	
+			result = a[len(name)+1:]
 
-BUILD_GRAPHVIZ = False
-BUILD_DOXYGEN = False
+	return result	
 
-PYOPENGL_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyOpenGL-3.0.1"
+cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
+cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion]
+compiler = getOption( "COMPILER", IEEnv.registry["platformDefaults"][IEEnv.platform()]["compiler"] )
+compilerVersion = getOption( "COMPILER", IEEnv.registry["platformDefaults"][IEEnv.platform()]["compilerVersion"] )
+pythonVersion = cortexReg["preferredPythonVersion"]
+pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
-BUILD_GOOGLE_PERFTOOLS = False
+##########################################################################
+# set where we'll put things
+##########################################################################
 
-QT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.7.1"
-BUILD_PYSIDE = False
-FONTS_SRC_DIR = "$DEPENDENCIES_SRC_DIR/ttf-bitstream-vera-1.10"
-PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.8.4"
+versionString = "${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}"
+if getOption( "RELEASE", "0" )=="1" :
+	installRoot = "/software"
+else :
+	installRoot = os.path.expanduser( "~/gafferTestInstalls" )
+	versionString += "dev"
+
+BUILD_DIR = os.path.expanduser( "~/apps/gaffer/" + versionString + "/" + IEEnv.platform() )
+INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform()
+
+##########################################################################
+# get include locations right
+##########################################################################
+
+LOCATE_DEPENDENCY_CPPPATH = [
+
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", "OpenEXR", cortexReg["OpenEXRVersion"] ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", cortexReg["tbbVersion"] ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", cortexReg["boostVersion"] ),
+	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion )
+
+]
+
+##########################################################################
+# get lib locations right
+##########################################################################
+
+LOCATE_DEPENDENCY_LIBPATH = [
+
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
+
+]
+
+##########################################################################
+# figure out the lib suffixes
+##########################################################################
+
+compilerVersionSplit = compilerVersion.split( "." )
+boostVersionSplit = cortexReg["boostVersion"].split( "." )
+
+BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + "-mt-" + "_".join( boostVersionSplit[0:2] )
+
+CORTEX_LIB_SUFFIX = "-" + cortexMajorVersion
+CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
 
 # we set this so that LD_LIBRARY_PATH will point where we want it
 # when the gaffer sconstruct invokes the cortex sconstruct
-os.environ["IEENV_LIBRARY_PREFIX_PATH"] = BUILD_DIR + "/lib"
+#os.environ["IEENV_LIBRARY_PREFIX_PATH"] = BUILD_DIR + "/lib"
+
+# we need these imported so scons runs ok when we invoke the cortex build
+ENV_VARS_TO_IMPORT="PATH PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IEENV_WORKING_PATH  DOXYGEN_VERSION"
+
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
-# we need these imported so scons runs ok when we invoke the cortex build
-ENV_VARS_TO_IMPORT="IEBUILD_CACHEDIR PATH COMPILER COMPILER_VERSION PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IEENV_WORKING_PATH IEENV_LIBRARY_PREFIX_PATH DOXYGEN_VERSION IEENV_DEBUG IEENV_DEBUG_PYTHON IEENV_DEBUGGER IEENV_DEBUGGER_ARGS DELIGHT_CONF SCONS_VERSION DL_VERSION DL_SHADERS_PATH DL_DISPLAYS_PATH CMAKE_VERSION"
 
 # speed up the build a bit hopefully.
 BUILD_CACHEDIR = os.environ["IEBUILD_CACHEDIR"]

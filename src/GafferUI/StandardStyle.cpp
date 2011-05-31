@@ -42,6 +42,8 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/ObjectWriter.h"
 #include "IECore/FileNameParameter.h"
+#include "IECore/SearchPath.h"
+#include "IECore/Exception.h"
 
 using namespace GafferUI;
 using namespace IECore;
@@ -58,13 +60,21 @@ StandardStyle::~StandardStyle()
 {
 }
 
-
 IECore::FontPtr StandardStyle::labelFont() const
 {
-	const char *r = getenv( "GAFFER_ROOT" );
-	string fn = string( r ? r : "" ) + "/fonts/Vera.ttf"; 
-	static FontPtr f = new Font( fn );
-	return f;
+	static FontPtr g_font = 0;
+	if( !g_font )
+	{
+		const char *e = getenv( "IECORE_FONT_PATHS" );
+		SearchPath s( e ? e : "", ":" );
+		boost::filesystem::path p = s.find( "Vera.ttf" );
+		if( p.empty() )
+		{
+			throw Exception( "Unable to find font \"Vera.ttf\" on IECORE_FONT_PATHS" );
+		} 
+		g_font = new Font( p.string() );
+	}
+	return g_font;
 }
 
 void StandardStyle::renderFrame( IECore::RendererPtr renderer, const Imath::Box2f &frame, float borderWidth ) const

@@ -52,19 +52,27 @@ popd &> /dev/null
 
 export IECOREGL_SHADER_PATHS=$GAFFER_ROOT/shaders${IECOREGL_SHADER_PATHS:+:}${IECOREGL_SHADER_PATHS:-}
 export IECOREGL_SHADER_INCLUDE_PATHS=$GAFFER_ROOT/glsl${IECOREGL_SHADER_INCLUDE_PATHS:+:}${IECOREGL_SHADER_INCLUDE_PATHS:-}
-export IECORE_FONT_PATHS=${IECORE_FONT_PATHS:-}${IECORE_FONT_PATHS:+:}/usr/X11R6/lib/X11/fonts/TTF/
+export IECORE_FONT_PATHS=$GAFFER_ROOT/fonts${IECORE_FONT_PATHS:+:}${IECORE_FONT_PATHS:-}
 export IECORE_OP_PATHS=$GAFFER_ROOT/ops${IECORE_OP_PATHS:+:}${IECORE_OP_PATHS:-}
 
 export GAFFER_APP_PATHS=$GAFFER_ROOT/apps${GAFFER_APP_PATHS:+:}${GAFFER_APP_PATHS:-}
 export GAFFER_STARTUP_PATHS=~/gaffer/startup:$GAFFER_ROOT/startup${GAFFER_STARTUP_PATHS:+:}${GAFFER_STARTUP_PATHS:-}
 
-# Make sure we're running the right version of python
+# Make sure PYTHONHOME is set appropriately. We only do this
+# if Gaffer has been built with an internal version of python - otherwise
+# we assume the existing environment is providing the right value.
 
-if [[ `uname` = "Linux" ]] ; then
-	export PYTHONHOME=$GAFFER_ROOT
-else
-	export PYTHONHOME=$GAFFER_ROOT/frameworks/Python.framework/Versions/Current
+if [ -e $GAFFER_ROOT/bin/python ] ; then
+
+	if [[ `uname` = "Linux" ]] ; then
+		export PYTHONHOME=$GAFFER_ROOT
+	else
+		export PYTHONHOME=$GAFFER_ROOT/frameworks/Python.framework/Versions/Current
+	fi
+
 fi
+
+# Get python module path set up
 
 export PYTHONPATH=$GAFFER_ROOT/lib/python2.6/site-packages${PYTHONPATH:+:}${PYTHONPATH:-}
 
@@ -83,12 +91,12 @@ fi
 
 # Get the executable path set up, for running child processes from Gaffer
 
-export PATH=$PATH:$GAFFER_ROOT/bin
+export PATH=$GAFFER_ROOT/bin:$PATH
 
 # Run gaffer itself
 
 if [[ -n $GAFFER_DEBUG ]] ; then 
-	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec gdb --args $PYTHONHOME/bin/python $GAFFER_ROOT/bin/gaffer.py $@
 else
-	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec $PYTHONHOME/bin/python $GAFFER_ROOT/bin/gaffer.py $@
 fi

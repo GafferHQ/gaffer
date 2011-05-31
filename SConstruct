@@ -59,6 +59,18 @@ if "OPTIONS" in ARGUMENTS :
 options = Variables( optionsFile, ARGUMENTS )
 
 options.Add(
+	"CXX",
+	"The C++ compiler.",
+	"g++",
+)
+
+options.Add(
+	"CXXFLAGS",
+	"The extra flags to pass to the C++ compiler during compilation.",
+	[ "-pipe", "-Wall", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" ]
+)
+
+options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
 	"/home/john/dev/build/gaffer"
@@ -88,6 +100,12 @@ options.Add(
 	BoolVariable( "BUILD_DEPENDENCIES", "Set this to build all the library dependencies gaffer has.", False )
 )
 
+# variables related to building all the dependencies for gaffer. these are mutually exclusive
+# with the LOCATE_* below, which are about finding the dependencies in existing locations.
+# use the BUILD_* options to make a completely standalone package and the other options to
+# make a build to integrate into an existing setup where the dependencies have been installed
+# somewhere centrally.
+
 options.Add(
 	"DEPENDENCIES_SRC_DIR",
 	"The location of a directory holding dependencies.",
@@ -95,159 +113,159 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_PYTHON", "Set this to build python.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_PYTHON", "Set this to build python.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"PYTHON_SRC_DIR",
-	"The location of the python source to be used if BUILD_PYTHON is specified.",
+	"The location of the python source to be used if BUILD_DEPENDENCY_PYTHON is specified.",
 	"$DEPENDENCIES_SRC_DIR/Python-2.6.3",
 )
 
 options.Add(
-	BoolVariable( "BUILD_BOOST", "Set this to build boost.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_BOOST", "Set this to build boost.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"BOOST_SRC_DIR",
-	"The location of the boost source to be used if BUILD_BOOST is specified.",
+	"The location of the boost source to be used if BUILD_DEPENDENCY_BOOST is specified.",
 	"$DEPENDENCIES_SRC_DIR/boost_1_42_0",
 )
 
 options.Add(
-	BoolVariable( "BUILD_TBB", "Set this to build tbb.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_TBB", "Set this to build tbb.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"TBB_SRC_DIR",
-	"The location of the tbb source to be used if BUILD_TBB is specified.",
+	"The location of the tbb source to be used if BUILD_DEPENDENCY_TBB is specified.",
 	"$DEPENDENCIES_SRC_DIR/tbb22_004oss",
 )
 
 options.Add(
-	BoolVariable( "BUILD_OPENEXR", "Set this to build openexr.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_OPENEXR", "Set this to build openexr.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"ILMBASE_SRC_DIR",
-	"The location of the ilmbase source to be used if BUILD_OPENEXR is specified.",
+	"The location of the ilmbase source to be used if BUILD_DEPENDENCY_OPENEXR is specified.",
 	"$DEPENDENCIES_SRC_DIR/ilmbase-1.0.1",
 )
 
 options.Add(
 	"OPENEXR_SRC_DIR",
-	"The location of the exr source to be used if BUILD_OPENEXR is specified.",
+	"The location of the exr source to be used if BUILD_DEPENDENCY_OPENEXR is specified.",
 	"$DEPENDENCIES_SRC_DIR/openexr-1.6.1",
 )
 
 options.Add(
-	BoolVariable( "BUILD_JPEG", "Set this to build the jpeg library.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_JPEG", "Set this to build the jpeg library.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"JPEG_SRC_DIR",
-	"The location of the jpeg source to be used if BUILD_JPEG is specified.",
+	"The location of the jpeg source to be used if BUILD_DEPENDENCY_JPEG is specified.",
 	"$DEPENDENCIES_SRC_DIR/jpeg-6b",
 )
 
 options.Add(
-	BoolVariable( "BUILD_TIFF", "Set this to build the tiff library.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_TIFF", "Set this to build the tiff library.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"TIFF_SRC_DIR",
-	"The location of the tiff source to be used if BUILD_TIFF is specified.",
+	"The location of the tiff source to be used if BUILD_DEPENDENCY_TIFF is specified.",
 	"$DEPENDENCIES_SRC_DIR/tiff-3.8.2",
 )
 
 options.Add(
-	BoolVariable( "BUILD_FREETYPE", "Set this to build freetype.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_FREETYPE", "Set this to build freetype.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"FREETYPE_SRC_DIR",
-	"The location of the freetype source to be used if BUILD_FREETYPE is specified.",
+	"The location of the freetype source to be used if BUILD_DEPENDENCY_FREETYPE is specified.",
 	"$DEPENDENCIES_SRC_DIR/freetype-2.3.9",
 )
 
 options.Add(
-	BoolVariable( "BUILD_GLEW", "Set this to build GLEW.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_GLEW", "Set this to build GLEW.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"GLEW_SRC_DIR",
-	"The location of the glew source to be used if BUILD_GLEW is specified.",
+	"The location of the glew source to be used if BUILD_DEPENDENCY_GLEW is specified.",
 	"$DEPENDENCIES_SRC_DIR/glew-1.5.4",
 )
 
 options.Add(
-	BoolVariable( "BUILD_CORTEX", "Set this to build cortex.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_CORTEX", "Set this to build cortex.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"CORTEX_SRC_DIR",
-	"The location of the boost source to be used if BUILD_CORTEX is specified.",
+	"The location of the boost source to be used if BUILD_DEPENDENCY_CORTEX is specified.",
 	"$DEPENDENCIES_SRC_DIR/cortex-vfx/trunk",
 )
 
 options.Add(
-	BoolVariable( "BUILD_PKGCONFIG", "Set this to build the pkgconfig library.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_PKGCONFIG", "Set this to build the pkgconfig library.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"PKGCONFIG_SRC_DIR",
-	"The location of the pkg-config source to be used if BUILD_GTK is specified.",
+	"The location of the pkg-config source to be used if BUILD_DEPENDENCY_PKGCONFIG is specified.",
 	"$DEPENDENCIES_SRC_DIR/pkg-config-0.23",
 )
 
 options.Add(
-	BoolVariable( "BUILD_GRAPHVIZ", "Set this to build the graphviz library.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_GRAPHVIZ", "Set this to build the graphviz library.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"GRAPHVIZ_SRC_DIR",
-	"The location of the graphviz source to be used if BUILD_GRAPHVIZ is specified.",
+	"The location of the graphviz source to be used if BUILD_DEPENDENCY_GRAPHVIZ is specified.",
 	"$DEPENDENCIES_SRC_DIR/graphviz-2.24.0",
 )
 
 options.Add(
-	BoolVariable( "BUILD_DOXYGEN", "Set this to build doxygen.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_DOXYGEN", "Set this to build doxygen.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"DOXYGEN_SRC_DIR",
-	"The location of the doxygen source to be used if BUILD_DOXYGEN is specified.",
+	"The location of the doxygen source to be used if BUILD_DEPENDENCY_DOXYGEN is specified.",
 	"$DEPENDENCIES_SRC_DIR/doxygen-1.7.2",
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_GL", "Set this to build PyOpenGL.", "$BUILD_DEPENDENCIES" )
+)
+
+options.Add(
 	"PYOPENGL_SRC_DIR",
-	"The location of the PyOpenGL source to be used if BUILD_GL is specified.",
+	"The location of the PyOpenGL source to be used if BUILD_DEPENDENCY_GL is specified.",
 	"$DEPENDENCIES_SRC_DIR/PyOpenGL-3.0.0",
 )
 
 options.Add(
-	BoolVariable( "BUILD_GL", "Set this to build PyOpenGL.", "$BUILD_DEPENDENCIES" )
-)
-
-options.Add(
-	BoolVariable( "BUILD_GOOGLEPERFTOOLS", "Set this to build the google perftools.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_GOOGLEPERFTOOLS", "Set this to build the google perftools.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
 	"GOOGLEPERFTOOLS_SRC_DIR",
-	"The location of the google performance tools source if BUILD_GOOGLEPERFTOOLS is specified.",
+	"The location of the google performance tools source if BUILD_DEPENDENCY_GOOGLEPERFTOOLS is specified.",
 	"$DEPENDENCIES_SRC_DIR/google-perftools-1.6",
 )
 
 options.Add(
 	"LIBUNWIND_SRC_DIR",
-	"The location of the libunwind source if BUILD_GOOGLEPERFTOOLS is specified.",
+	"The location of the libunwind source if BUILD_DEPENDENCY_GOOGLEPERFTOOLS is specified.",
 	"$DEPENDENCIES_SRC_DIR/libunwind-0.99-beta",
 )
 
 options.Add(
-	BoolVariable( "BUILD_QT", "Set this to build QT.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_QT", "Set this to build QT.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
@@ -257,7 +275,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_PYSIDE", "Set this to build PySide.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_PYSIDE", "Set this to build PySide.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
@@ -285,7 +303,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_PYQT", "Set this to build PyQt.", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_PYQT", "Set this to build PyQt.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
@@ -302,7 +320,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_FONTS", "", "$BUILD_DEPENDENCIES" )
+	BoolVariable( "BUILD_DEPENDENCY_FONTS", "", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
@@ -310,6 +328,45 @@ options.Add(
 	"The location of fonts.",
 	"$DEPENDENCIES_SRC_DIR/ttf-bitstream-vera-1.10",
 )
+
+# variables to be used when making a build which will use dependencies previously
+# installed in some central location. these are mutually exclusive with the BUILD_*
+# variables above, which are all about building the dependencies and packaging them
+# with gaffer.
+
+options.Add(
+	"LOCATE_DEPENDENCY_CPPPATH",
+	"The locations on which to search for include files "
+	"for the dependencies.",
+	"",
+)
+
+options.Add(
+	"LOCATE_DEPENDENCY_LIBPATH",
+	"The locations on which to search for libraries for "
+	"the dependencies.",
+	"",
+)
+
+options.Add(
+	"BOOST_LIB_SUFFIX",
+	"The suffix used when locating the boost libraries.",
+	"",
+)
+
+options.Add(
+	"CORTEX_LIB_SUFFIX",
+	"The suffix used when locating the cortex libraries.",
+	"",
+)
+
+options.Add(
+	"CORTEX_PYTHON_LIB_SUFFIX",
+	"The suffix used when locating the IECorePython library.",
+	"",
+)
+
+# general variables
 
 options.Add(
 	"ENV_VARS_TO_IMPORT",
@@ -344,6 +401,23 @@ if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
 			
 ###############################################################################################
+# Verify that we're either trying to build and package the dependencies with gaffer, /or/
+# trying to build against libraries installed elsewhere, but not both.
+###############################################################################################
+
+buildingDependencies = False
+locatingDependencies = False
+for o in options.options :
+	if o.key.startswith( "BUILD_DEPENDENC" ) and str( env.subst( "$" + o.key ) ) != str( env.subst( o.default ) ) :
+		buildingDependencies = True
+		print "BBB", o.key, type( env.subst( "$" + o.key ) ), type( env.subst( o.default ) )
+	elif o.key.startswith( "LOCATE_DEPENDENCY" ) and str( env.subst( "$" + o.key ) ) != str( env.subst( o.default ) ) :
+		locatingDependencies = True
+
+if buildingDependencies and locatingDependencies :
+	raise RuntimeError( "Cannot specify BUILD_DEPENDENCY_* variables and LOCATE_DEPENDENCY* variables." )
+
+###############################################################################################
 # Dependencies
 # They doesn't fit into the SCons way of things too well so we just build them directly when
 # the script runs.
@@ -369,10 +443,10 @@ def runCommand( command ) :
 	sys.stderr.write( command + "\n" )
 	subprocess.check_call( command, shell=True, env=depEnv["ENV"] )
 
-if depEnv["BUILD_PKGCONFIG"] :
+if depEnv["BUILD_DEPENDENCY_PKGCONFIG"] :
 	runCommand( "cd $PKGCONFIG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 
-if depEnv["BUILD_PYTHON"] :
+if depEnv["BUILD_DEPENDENCY_PYTHON"] :
 	
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --enable-framework=$BUILD_DIR/frameworks --prefix=$BUILD_DIR && make clean && make && make install" )
@@ -380,64 +454,64 @@ if depEnv["BUILD_PYTHON"] :
 	else :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make -j 4 && make install" )
 
-if depEnv["BUILD_JPEG"] :
+if depEnv["BUILD_DEPENDENCY_JPEG"] :
 	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install" )
 
-if depEnv["BUILD_TIFF"] :
+if depEnv["BUILD_DEPENDENCY_TIFF"] :
 	runCommand( "cd $TIFF_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 		
-if depEnv["BUILD_FREETYPE"] :
+if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 		
-if depEnv["BUILD_GRAPHVIZ"] :
+if depEnv["BUILD_DEPENDENCY_GRAPHVIZ"] :
 	runCommand( "cd $GRAPHVIZ_SRC_DIR && ./configure --enable-perl=no --prefix=$BUILD_DIR && make clean && make && make install" )
 
-if depEnv["BUILD_DOXYGEN"] :
+if depEnv["BUILD_DEPENDENCY_DOXYGEN"] :
 	runCommand( "cd $DOXYGEN_SRC_DIR && ./configure --prefix $BUILD_DIR && make && make install" )
 	
-if depEnv["BUILD_BOOST"] :
+if depEnv["BUILD_DEPENDENCY_BOOST"] :
 	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python2.6 --with-python-root=$BUILD_DIR && ./bjam install" )
 
-if depEnv["BUILD_TBB"] :
+if depEnv["BUILD_DEPENDENCY_TBB"] :
 	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $TBB_SRC_DIR; cp build/macos_intel64_gcc_cc4.2.1_os10.6.2_release/*.dylib $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 	else :
 		runCommand( "cd $TBB_SRC_DIR; cp build/*_release/*.so* $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 
-if depEnv["BUILD_OPENEXR"] :
+if depEnv["BUILD_DEPENDENCY_OPENEXR"] :
 	runCommand( "cd $ILMBASE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 	runCommand( "cd $OPENEXR_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 
-if depEnv["BUILD_FONTS"] :
+if depEnv["BUILD_DEPENDENCY_FONTS"] :
 	runCommand( "mkdir -p $BUILD_DIR/fonts && cp $FONTS_DIR/*.ttf $BUILD_DIR/fonts" )
 
-if depEnv["BUILD_GLEW"] :
+if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	if depEnv["PLATFORM"]=="posix" :
 		runCommand( "mkdir -p $BUILD_DIR/lib64/pkgconfig" )
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 	
-if depEnv["BUILD_CORTEX"] :
+if depEnv["BUILD_DEPENDENCY_CORTEX"] :
 	runCommand( "cd $CORTEX_SRC_DIR; scons install -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
 	
-if depEnv["BUILD_GL"] :
+if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install" )
 
-if depEnv["BUILD_QT"] :
+if depEnv["BUILD_DEPENDENCY_QT"] :
 
 	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle && make clean && make -j 4 && make install" )
 
-if depEnv["BUILD_PYSIDE"] :
+if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 
-if depEnv["BUILD_PYQT"] :
+if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py && make && make install" )
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py --confirm-license && make && make install" )
 
-if depEnv["BUILD_GOOGLEPERFTOOLS"] :
+if depEnv["BUILD_DEPENDENCY_GOOGLEPERFTOOLS"] :
 
 	runCommand( "cd $LIBUNWIND_SRC_DIR && ./configure --prefix=$BUILD_DIR CFLAGS=-U_FORTIFY_SOURCE && make clean && make && make install" )	
 	runCommand( "cd $GOOGLEPERFTOOLS_SRC_DIR && ./configure --prefix=$BUILD_DIR CPPFLAGS=-I$BUILD_DIR/include LDFLAGS=-L$BUILD_DIR/lib && make clean && make && make install" )
@@ -446,7 +520,10 @@ if depEnv["BUILD_GOOGLEPERFTOOLS"] :
 # Gaffer libraries
 ###############################################################################################
 
-boostLibSuffix = ""
+if buildingDependencies :
+	boostLibSuffix = ""
+else :
+	boostLibSuffix = env["BOOST_LIB_SUFFIX"]
 
 libEnv = env.Clone()
 libEnv.Append(
@@ -455,18 +532,14 @@ libEnv.Append(
 		"include",
 		"$BUILD_DIR/include",
 		"$BUILD_DIR/include/python2.6",
-		"$BUILD_DIR/include/boost-1_42",
 		"$BUILD_DIR/include/OpenEXR",
-	],
-	
-	CXXFLAGS = [
-		"-Wall",
-		#"-Werror", # \todo reintroduce when boost sorts itself out
-		"-O2",
+		"$LOCATE_DEPENDENCY_CPPPATH",
 	],
 	
 	LIBPATH = [
-		"$BUILD_DIR/lib"
+		"./lib",
+		"$BUILD_DIR/lib",
+		"$LOCATE_DEPENDENCY_LIBPATH",
 	],
 	
 	LIBS = [
@@ -480,7 +553,7 @@ libEnv.Append(
 		"boost_system" + boostLibSuffix,
 		"tbb",
 		"Imath",
-		"IECore",
+		"IECore$CORTEX_LIB_SUFFIX",
 	],
 	
 )
@@ -513,18 +586,25 @@ pythonEnv.Append(
 
 	CPPFLAGS = [
 		"-DBOOST_PYTHON_MAX_ARITY=20",
-	] + os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python2.6-config --includes" ) ).read().split(),
-	
-	LIBPATH = [ "./lib" ],
-	
+	],
+		
 	LIBS = [
 		"boost_python" + boostLibSuffix,
-		"IECorePython",
+		"IECorePython$CORTEX_PYTHON_LIB_SUFFIX",
 		"Gaffer",
 	],
 	
-	SHLINKFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python2.6-config --ldflags" ) ).read().split(),
 )
+
+if buildingDependencies :
+	
+	env.Append(
+	
+		CPPFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python2.6-config --includes" ) ).read().split(),
+	
+		SHLINKFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python2.6-config --ldflags" ) ).read().split(),
+	
+	)
 
 if pythonEnv["PLATFORM"]=="darwin" :
 	pythonEnv.Append( SHLINKFLAGS = "-single_module" )
@@ -635,20 +715,22 @@ env.Alias( "build", graphicsBuild )
 # Licenses
 #########################################################################################################
 
-for l in [
-	( "python", "$PYTHON_SRC_DIR/LICENSE" ),
-	( "boost", "$BOOST_SRC_DIR/LICENSE_1_0.txt" ),
-	( "cortex", "$CORTEX_SRC_DIR/LICENSE" ),
-	( "freetype", "$FREETYPE_SRC_DIR/docs/FTL.TXT" ),
-	( "glew", "$GLEW_SRC_DIR/LICENSE.txt" ),
-	( "ilmbase", "$ILMBASE_SRC_DIR/COPYING" ),
-	( "libjpeg", "$JPEG_SRC_DIR/README" ),
-	( "openexr", "$OPENEXR_SRC_DIR/LICENSE" ),
-	( "libtiff", "$TIFF_SRC_DIR/COPYRIGHT" ),
-] :
+if buildingDependencies :
 
-	license = env.InstallAs( "$BUILD_DIR/doc/licenses/" + l[0], l[1] )
-	env.Alias( "build", license )
+	for l in [
+		( "python", "$PYTHON_SRC_DIR/LICENSE" ),
+		( "boost", "$BOOST_SRC_DIR/LICENSE_1_0.txt" ),
+		( "cortex", "$CORTEX_SRC_DIR/LICENSE" ),
+		( "freetype", "$FREETYPE_SRC_DIR/docs/FTL.TXT" ),
+		( "glew", "$GLEW_SRC_DIR/LICENSE.txt" ),
+		( "ilmbase", "$ILMBASE_SRC_DIR/COPYING" ),
+		( "libjpeg", "$JPEG_SRC_DIR/README" ),
+		( "openexr", "$OPENEXR_SRC_DIR/LICENSE" ),
+		( "libtiff", "$TIFF_SRC_DIR/COPYRIGHT" ),
+	] :
+
+		license = env.InstallAs( "$BUILD_DIR/doc/licenses/" + l[0], l[1] )
+		env.Alias( "build", license )
 	
 #########################################################################################################
 # Documentation
