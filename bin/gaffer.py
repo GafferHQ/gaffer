@@ -45,8 +45,6 @@ signal.signal( signal.SIGINT, signal.SIG_DFL )
 
 import IECore
 
-## \todo Modify this to accomodate unversioned classes, so we can lose the subdirectories
-# in apps
 appLoader = IECore.ClassLoader( IECore.SearchPath( os.environ["GAFFER_APP_PATHS"], ":" ) )
 
 appName = "gui"
