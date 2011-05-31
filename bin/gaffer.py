@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.6
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.

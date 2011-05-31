@@ -58,18 +58,12 @@ export IECORE_OP_PATHS=$GAFFER_ROOT/ops${IECORE_OP_PATHS:+:}${IECORE_OP_PATHS:-}
 export GAFFER_APP_PATHS=$GAFFER_ROOT/apps${GAFFER_APP_PATHS:+:}${GAFFER_APP_PATHS:-}
 export GAFFER_STARTUP_PATHS=~/gaffer/startup:$GAFFER_ROOT/startup${GAFFER_STARTUP_PATHS:+:}${GAFFER_STARTUP_PATHS:-}
 
-# Make sure PYTHONHOME is set appropriately. We only do this
-# if Gaffer has been built with an internal version of python - otherwise
-# we assume the existing environment is providing the right value.
+# Make sure PYTHONHOME is pointing to our internal python build.
 
-if [ -e $GAFFER_ROOT/bin/python ] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		export PYTHONHOME=$GAFFER_ROOT
-	else
-		export PYTHONHOME=$GAFFER_ROOT/frameworks/Python.framework/Versions/Current
-	fi
-
+if [[ `uname` = "Linux" ]] ; then
+	export PYTHONHOME=$GAFFER_ROOT
+else
+	export PYTHONHOME=$GAFFER_ROOT/frameworks/Python.framework/Versions/Current
 fi
 
 # Get python module path set up
@@ -96,7 +90,7 @@ export PATH=$GAFFER_ROOT/bin:$PATH
 # Run gaffer itself
 
 if [[ -n $GAFFER_DEBUG ]] ; then 
-	exec gdb --args $PYTHONHOME/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
 else
-	exec $PYTHONHOME/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
 fi
