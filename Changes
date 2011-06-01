@@ -1,3 +1,5 @@
+* Can now access the internal QPixmap for a GafferUI.Image widget using the _qtPixmap() method. This is to assist in implementing other widget types and should be considered off limits for user code (along with all the other protected _qt* function).
+
 0.8.0
 -----
 

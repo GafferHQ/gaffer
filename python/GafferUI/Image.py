@@ -61,6 +61,10 @@ class Image( GafferUI.Widget ) :
 		if pixmap is not None :	
 			self._qtWidget().setPixmap( pixmap )
 
+	def _qtPixmap( self ) :
+	
+		return self._qtWidget().pixmap()
+
 	@staticmethod
 	def _qtPixmapFromImagePrimitive( image ) :
 		
