@@ -55,17 +55,17 @@ class EventLoopTest( unittest.TestCase ) :
 		def stop() :
 			
 			if self.__idleCalls==2 :
-				GafferUI.EventLoop.stop()
+				GafferUI.EventLoop.mainEventLoop().stop()
 				
 			return True
 			
 		GafferUI.EventLoop.addIdleCallback( idle )
-		stopID = GafferUI.EventLoop.addIdleCallback( stop )
-		GafferUI.EventLoop.start()
+		GafferUI.EventLoop.addIdleCallback( stop )
+		GafferUI.EventLoop.mainEventLoop().start()
 	
 		self.assertEqual( self.__idleCalls, 2 )
 		
-		GafferUI.EventLoop.removeIdleCallback( stopID )
+		GafferUI.EventLoop.removeIdleCallback( stop )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -2,6 +2,10 @@
 
 * OpDialogue can now be used non-modally without waitForResult(). The new OpDialogue.opExecutedSignal() can be used to tell when the op has been executed, and to get the result.
 
+* GafferUI.EventLoop addIdleCallback() and removeIdleCallback() have been ported from the old gtk code to the new Qt code.
+
+* Reworked GafferUI.EventLoop to support embedding of Gaffer in Maya. See documentation in GafferUI/EventLoop.py and apps/gui/gui-1.py for details.
+
 0.7.0
 -----
 

@@ -35,48 +35,151 @@
 #  
 ##########################################################################
 
+import time
+import threading
+
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## This class manages the event loop used to run GafferUI based applications.
-## \todo I don't know that this makes sense with the new Qt shit going on
+## This class provides the event loops used to run GafferUI based applications.
 class EventLoop() :
-
-	__qtApplication = QtGui.QApplication( [] )
-	__eventLoops = []
-
-	## Starts the event loop, passing control to the UI code. This will return when
-	# EventLoop.stop() is called. This may be called recursively.
-	@classmethod
-	def start( cls ) :
 	
-		if len( cls.__eventLoops )==0 :
-			cls.__eventLoops.append( cls.__qtApplication )
+	## Creates a new EventLoop. Note that if you are creating the primary
+	# EventLoop for an application then you should use mainEventLoop() instead.
+	def __init__( self, __qtEventLoop=None ) :
+	
+		if __qtEventLoop is None :
+			if self.__mainEventLoop is None or self.__mainEventLoop.__startCount==0 :
+				raise Exception( "Main event loop is not running - perhaps you should use EventLoop.mainEventLoop()?" )
+			self.__qtEventLoop = QtCore.QEventLoop()
 		else :
-			cls.__eventLoops.append( QtCore.QEventLoop() )
-	
-		cls.__eventLoops[-1].exec_()
-	
-	## Stops the event loop last started using start().
-	@classmethod
-	def stop( cls ) :
-	
-		cls.__eventLoops.pop().exit()
-	
-	## Adds a function to be called when the event loop is idle (has no events
-	# remaining to be processed). Returns an id which can be used with removeIdleCallback().
-	# If callback returns False then it will be removed automatically after running,
-	# if it returns True it will be called again until it returns False, or until
-	# removeIdleCallback() is called.
-	@staticmethod
-	def addIdleCallback( callback ) :
+			self.__qtEventLoop = __qtEventLoop
+			
+		self.__startCount = 0
+		self.__pumpThread = None
 		
-		return gobject.idle_add( callback )
+	## Starts the event loop, passing control to the UI code. This function returns
+	# when the corresponding stop() method is called. See documentation for
+	# mainEventLoop() for exceptions to this rule.
+	def start( self ) :
+			
+		if self.__needPumpThread() :
+		
+			if self.__pumpThread is None :
+				self.__pumpThread = threading.Thread( target = self.__pumpThreadFn )
+				self.__pumpThread.start()
+			
+			self.__startCount += 1
+				
+		else :
+		
+			# we're just a bog standard event loop
+			assert( self.__startCount == 0 )
+			self.__startCount += 1
+			self.__qtEventLoop.exec_()
+				
+	## Stops the event loop last started using start().
+	def stop( self ) :
+			
+		if self.__pumpThread is not None :
+			assert( self.__startCount > 0 )
+			## \todo Should we try to stop the pump thread
+			# when self.__startCount hits 0? Right not we're
+			# just keeping it running on the assumption we'll
+			# need it again soon.
+		else :
+			# we're just a bog standard event loop
+			assert( self.__startCount == 1 )
+			self.__qtEventLoop.exit()
+
+		self.__startCount -= 1
+	
+	## Returns true if this event loop is currently running.	
+	def running( self ) :
+	
+		return self.__startCount > 0
+	
+	__qtApplication = QtGui.QApplication( [] )
+	__mainEventLoop = None
+	## Returns the main event loop for the application. This should always
+	# be started before running any other nested event loops. In the standalone
+	# Gaffer applications, the main event loop acts like any other, but when
+	# GafferUI is embedded in another application (like Maya) it behaves slightly
+	# differently. In this case, the start() method returns immediately so that
+	# the GafferUI event loop may be interleaved with the event loop of the host
+	# application. Additionally, the start() method may also be called multiple
+	# times to allow several GafferUI-based applications to run in the same host.
+	# The main event loop will therefore only cease running when the number of
+	# calls to stop() matches the number of calls to start().
+	@classmethod
+	def mainEventLoop( cls ) :
+	
+		if cls.__mainEventLoop is None :
+			cls.__mainEventLoop = cls( cls.__qtApplication )
+			
+		return cls.__mainEventLoop
+	
+	__idleCallbacks = []
+	__idleTimer = None
+	## Adds a function to be called when the event loop is idle (has no events
+	# remaining to be processed). If callback returns False then it will be removed
+	# automatically after running, if it returns True it will be called again until
+	# it returns False, or until removeIdleCallback() is called.
+	@classmethod
+	def addIdleCallback( cls, callback ) :
+		
+		assert( callback not in cls.__idleCallbacks )
+		cls.__idleCallbacks.append( callback )
+		
+		if cls.__idleTimer is None :
+			cls.__idleTimer = QtCore.QTimer( cls.__qtApplication )
+			cls.__idleTimer.timeout.connect( cls.__qtIdleCallback )
+		
+		if not cls.__idleTimer.isActive() :
+			cls.__idleTimer.start()
 	
 	## Removes an idle callback previously created with addIdleCallback().
-	@staticmethod
-	def removeIdleCallback( callbackId ) :
+	@classmethod
+	def removeIdleCallback( cls, callback ) :
 	
-		gobject.source_remove( callbackId )
+		cls.__idleCallbacks.remove( callback )
+		
+		if len( cls.__idleCallbacks )==0 :
+			cls.__idleTimer.stop()
+	
+	@classmethod
+	def __qtIdleCallback( cls ) :
+	
+		toRemove = []
+		for c in cls.__idleCallbacks :
+			if not c() :
+				toRemove.append( c )
+				
+		for c in toRemove :
+			cls.removeIdleCallback( c )
+				
+	def __needPumpThread( self ) :
+	
+		if not isinstance( self.__qtEventLoop, QtGui.QApplication ) :
+			# not the main event loop
+			return False
+			
+		try :
+			import maya.cmds
+			return True
+		except ImportError :
+			return False
+
+	def __pumpThreadFn( self ) :
+	
+		import maya.utils
+		
+		while 1 :
+			time.sleep( 0.01 )
+			maya.utils.executeDeferred( self.__pump )
+				
+	def __pump( self ) :
+	
+		self.__qtEventLoop.processEvents()

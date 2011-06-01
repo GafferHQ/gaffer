@@ -144,13 +144,15 @@ class ScriptWindow( GafferUI.Window ) :
 
 	## This function provides the top level functionality for instantiating
 	# the UI. Once called, new ScriptWindows will be instantiated for each
-	# script added to the application, and the EventLoop will be terminated
-	# when the last script is removed.
-	@staticmethod
-	def connect( applicationRoot ) :
+	# script added to the application, and EventLoop.mainEventLoop().stop() will
+	# be called when the last script is removed.
+	__scriptAddedConnections = []
+	__scriptRemovedConnections = []
+	@classmethod
+	def connect( cls, applicationRoot ) :
 	
-		ScriptWindow.__scriptAddedConnection = applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded )
-		ScriptWindow.__scriptRemovedConnection = applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved )
+		cls.__scriptAddedConnections.append( applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded ) )
+		cls.__scriptRemovedConnections.append( applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved ) )
 
 	__instances = []
 	@staticmethod
@@ -163,4 +165,4 @@ class ScriptWindow( GafferUI.Window ) :
 	
 		if not len( scriptContainer.children() ) :
 			
-			GafferUI.EventLoop.stop()
+			GafferUI.EventLoop.mainEventLoop().stop()

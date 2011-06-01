@@ -79,5 +79,5 @@ class view( Gaffer.Application ) :
 		
 		window.show()
 		
-		GafferUI.EventLoop.start()
+		GafferUI.EventLoop.mainEventLoop().start()		
 		return 0

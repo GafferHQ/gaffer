@@ -64,17 +64,19 @@ class Dialogue( GafferUI.Window ) :
 		self.setVisible( False )
 		self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
 		self.setVisible( True )
-				
+		
+		self.__eventLoop = GafferUI.EventLoop()		
 		self.__buttonConnections = []
 		self.__closeConnection = self.closeSignal().connect( self.__close )
 		for button in self.__buttonRow :
 			self.__buttonConnections.append( button.clickedSignal().connect( self.__buttonClicked ) )
 		
 		self.__resultOfWait = None
-		GafferUI.EventLoop.start() # returns when a button has been pressed
+		self.__eventLoop.start() # returns when a button has been pressed
 		self.__buttonConnections = []
 		self.__closeConnection = None
-
+		self.__eventLoop = None
+		
 		self._qtWidget().setWindowModality( QtCore.Qt.NonModal )
 						
 		return self.__resultOfWait
@@ -96,15 +98,15 @@ class Dialogue( GafferUI.Window ) :
 	def __buttonClicked( self, button ) :
 	
 		# check we're in a call to _waitForButton
-		assert( len( self.__buttonConnections ) )
+		assert( len( self.__buttonConnections ) and self.__eventLoop is not None )
 		
 		self.__resultOfWait = button
-		GafferUI.EventLoop.stop()
+		self.__eventLoop.stop()
 		
 	def __close( self, widget ) :
 	
 		# check we're in a call to _waitForButton
-		assert( len( self.__buttonConnections ) )
+		assert( len( self.__buttonConnections ) and self.__eventLoop is not None  )
 
 		self.__resultOfWait = None
-		GafferUI.EventLoop.stop()
+		self.__eventLoop.stop()
