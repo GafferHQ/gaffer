@@ -41,7 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
-from GafferUI import EditorWidget, GraphGadget, GadgetWidget
+from GafferUI import EditorWidget, GraphGadget, GadgetWidget, GLWidget
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -49,7 +49,12 @@ class GraphEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode=None ) :
 		
-		self.__gadgetWidget = GadgetWidget( cameraMode = GadgetWidget.CameraMode.Mode2D )
+		self.__gadgetWidget = GadgetWidget(
+			bufferOptions = set( [
+				GLWidget.BufferOptions.Double,
+			] ),
+			cameraMode = GadgetWidget.CameraMode.Mode2D,
+		)
 		
 		EditorWidget.__init__( self, self.__gadgetWidget, scriptNode )
 		

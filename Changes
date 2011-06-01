@@ -2,6 +2,8 @@
 
 * GafferUI.Button can now display an optional GafferUI.Image in addition to text, and has setText(), getText(), setImage() and getImage() accessors. Note that the label keyword parameter has been renamed to text. The GafferUI.Dialogue._addButton() method now accepts a Button directly (as well as still accepting a string for backwards compatibility) to allow buttons with images to be used in Dialogues.
 
+* GraphEditor flicker should now be fixed (enabled double buffering for GL display).
+
 0.8.0
 -----
 
