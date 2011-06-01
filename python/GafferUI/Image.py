@@ -112,16 +112,24 @@ class Image( GafferUI.Widget ) :
 		resolvedFileName = cls.__imageSearchPaths.find( fileName )
 		if not resolvedFileName :
 			raise Exception( "Unable to find file \"%s\"" % fileName )
-			
-		reader = IECore.Reader.create( fileName )
-		if not reader :
-			raise Exception( "Unable to create Reader for file \"%s\"" % fileName )
-			
-		image = reader.read()
-		if not isinstance( image, IECore.ImagePrimitive ) :
-			raise Exception( "File \"%s\" is not an image file" % fileName )
+							
+		try :
+			reader = IECore.Reader.create( resolvedFileName )
+		except : 
+			reader = None
 		
-		result = cls._qtPixmapFromImagePrimitive( image )
+		if reader is not None :	
+			
+			image = reader.read()
+			if not isinstance( image, IECore.ImagePrimitive ) :
+				raise Exception( "File \"%s\" is not an image file" % resolvedFileName )
+		
+			result = cls._qtPixmapFromImagePrimitive( image )
+		
+		else :
+		
+			result = QtGui.QPixmap( resolvedFileName, "png" )
+			
 		cost = result.width() * result.height() * ( 4 if result.hasAlpha() else 3 )
 		
 		return ( result, cost )

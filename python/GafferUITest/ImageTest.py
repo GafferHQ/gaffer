@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,26 +34,31 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
+import os
+import unittest
 
+import GafferUI
+
+class ImageTest( unittest.TestCase ) :
+
+	def testPNGLoad( self ) :
+				
+		i = GafferUI.Image._qtPixmapFromFile( "arrowRight10.png" )
+		
+		self.assertEqual( i.width(), 10 )
+		self.assertEqual( i.height(), 10 )
+	
+		i2 = GafferUI.Image._qtPixmapFromFile( "arrowRight10.png" )
+		
+		self.assertEqual( i2.width(), 10 )
+		self.assertEqual( i2.height(), 10 )
+		
+		self.failUnless( i is i2 )
+	
+	def testLoadMissing( self ) :
+	
+		self.assertRaises( Exception, GafferUI.Image, "iAmNotAFile" )
+		
 if __name__ == "__main__":
 	unittest.main()
+	
