@@ -57,6 +57,16 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		self.__cancelButton = self._addButton( "Cancel" )
 		self.__executeButton = self._addButton( "Execute" )
+		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( self.__buttonClicked )
+		
+		self.__opExecutedSignal = Gaffer.ObjectSignal()
+	
+	## A signal called when the user has pressed the execute button
+	# and the Op has been successfully executed. This is passed the
+	# result of the execution.
+	def opExecutedSignal( self ) :
+	
+		return self.__opExecutedSignal
 	
 	## Causes the dialogue to enter a modal state, returning the result
 	# of executing the Op, or None if the user cancelled the operation.
@@ -65,11 +75,20 @@ class OpDialogue( GafferUI.Dialogue ) :
 		button = self.waitForButton()
 		
 		if button is self.__executeButton :
-		
-			## \todo Deal with exceptions by reporting them and
-			# returning to the wait state.
-		
-			self.__node.setParameterisedValues()
-			return self.__node.getParameterised()[0]()
+				
+			return self.__execute()
 
 		return None
+
+	def __execute( self ) :
+	
+		## \todo Deal with exceptions by reporting them in a modal dialogue
+		self.__node.setParameterisedValues()
+		return self.__node.getParameterised()[0]()		
+
+	def __buttonClicked( self, button ) :
+	
+		if button is self.__executeButton :
+		
+			result = self.__execute()
+			self.opExecutedSignal()( result )
