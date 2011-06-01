@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+from __future__ import with_statement
+
 import IECore
 
 import Gaffer
@@ -72,16 +74,19 @@ class OpDialogue( GafferUI.Dialogue ) :
 	# of executing the Op, or None if the user cancelled the operation.
 	def waitForResult( self ) :
 	
-		button = self.waitForButton()
+		# block our button connection so we don't end up executing twice
+		with Gaffer.BlockedConnection( self.__executeButtonConnection ) :
 		
-		if button is self.__executeButton :
+			button = self.waitForButton()
+		
+			if button is self.__executeButton :
 				
-			return self.__execute()
+				return self.__execute()
 
 		return None
 
 	def __execute( self ) :
-	
+		
 		## \todo Deal with exceptions by reporting them in a modal dialogue
 		self.__node.setParameterisedValues()
 		return self.__node.getParameterised()[0]()		

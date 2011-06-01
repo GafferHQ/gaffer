@@ -4,6 +4,8 @@
 
 * GraphEditor flicker should now be fixed (enabled double buffering for GL display).
 
+* Fixed bug which would cause Ops to be executed twice in OpDialogue.waitForResult().
+
 0.8.0
 -----
 
