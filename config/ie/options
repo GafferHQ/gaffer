@@ -64,12 +64,14 @@ pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
 versionString = "${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}"
 if getOption( "RELEASE", "0" )=="1" :
+	buildRoot = "/tmp/gafferBuilds"
 	installRoot = "/software"
 else :
+	buildRoot = os.path.expanduser( "~" )
 	installRoot = os.path.expanduser( "~/gafferTestInstalls" )
 	versionString += "dev"
 
-BUILD_DIR = os.path.expanduser( "~/apps/gaffer/" + versionString + "/" + IEEnv.platform() )
+BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform()
 INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform()
 
 ##########################################################################
