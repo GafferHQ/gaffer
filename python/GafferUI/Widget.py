@@ -341,6 +341,8 @@ class Widget( object ) :
 			padding: 4px;
 			padding-left: 8px;
 			padding-right: 8px;
+			min-height: 16px;
+			min-width: 16px;
 
 		}
 

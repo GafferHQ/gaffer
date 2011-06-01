@@ -42,16 +42,51 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Button( GafferUI.Widget ) :
 
-	def __init__( self, label="Button" ) :
+	def __init__( self, text="", image=None ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QPushButton( label ) )
+		GafferUI.Widget.__init__( self, QtGui.QPushButton() )
+		
+		self.setText( text )
+		self.setImage( image )
 		
 		# using a WeakMethod to avoid circular references which would otherwise
 		# never be broken.		
 		self._qtWidget().clicked.connect( Gaffer.WeakMethod( self.__clicked ) )
 		
 		self.__clickedSignal = GafferUI.WidgetSignal()
-				
+	
+	def setText( self, text ) :
+	
+		assert( isinstance( text, basestring ) )
+	
+		self._qtWidget().setText( text )
+		
+	def getText( self ) :
+	
+		return self._qtWidget().text()
+		
+	def setImage( self, imageOrImageFileName ) :
+	
+		assert( isinstance( imageOrImageFileName, ( basestring, GafferUI.Image, type( None ) ) ) )
+		
+		if isinstance( imageOrImageFileName, basestring ) :
+			self.__image = GafferUI.Image( imageOrImageFileName )
+		else :
+			self.__image = imageOrImageFileName
+		
+		if self.__image is not None :
+		
+			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmap() ) )
+			self._qtWidget().setIconSize( self.__image._qtPixmap().size() )
+		
+		else : 
+		
+			self._qtWidget().setIcon( QtGui.QIcon() )
+	
+	def getImage( self ) :
+	
+		return self.__image
+		
 	def clickedSignal( self ) :
 	
 		return self.__clickedSignal

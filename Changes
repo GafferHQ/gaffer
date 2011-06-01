@@ -1,5 +1,7 @@
 * Can now access the internal QPixmap for a GafferUI.Image widget using the _qtPixmap() method. This is to assist in implementing other widget types and should be considered off limits for user code (along with all the other protected _qt* function).
 
+* GafferUI.Button can now display an optional GafferUI.Image in addition to text, and has setText(), getText(), setImage() and getImage() accessors. Note that the label keyword parameter has been renamed to text. The GafferUI.Dialogue._addButton() method now accepts a Button directly (as well as still accepting a string for backwards compatibility) to allow buttons with images to be used in Dialogues.
+
 0.8.0
 -----
 

@@ -89,10 +89,17 @@ class Dialogue( GafferUI.Window ) :
 		
 		return self.__column[0]
 		
-	def _addButton( self, label ) :
+	def _addButton( self, textOrButton ) :
 		
-		button = GafferUI.Button( label=label )
+		assert( isinstance( textOrButton, ( basestring, GafferUI.Button ) ) )
+		
+		if isinstance( textOrButton, basestring ) :
+			button = GafferUI.Button( textOrButton )
+		else :
+			button = textOrButton
+		
 		self.__buttonRow.append( button )		
+
 		return button
 		
 	def __buttonClicked( self, button ) :

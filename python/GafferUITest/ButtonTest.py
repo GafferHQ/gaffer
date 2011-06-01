@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,27 +34,51 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
+import os
+import unittest
 
+import GafferUI
+
+class ButtonTest( unittest.TestCase ) :
+
+	def testConstructor( self ) :
+				
+		b = GafferUI.Button( "" )
+		self.assertEqual( b.getText(), "" )
+		self.assertEqual( b.getImage(), None )
+
+		b = GafferUI.Button( "OK" )
+		self.assertEqual( b.getText(), "OK" )
+		self.assertEqual( b.getImage(), None )
+		
+		b = GafferUI.Button( "", "arrowRight10.png" )
+		self.assertEqual( b.getText(), "" )
+		self.failUnless( isinstance( b.getImage(), GafferUI.Image ) )
+	
+	def testAccessors( self ) :
+	
+		b = GafferUI.Button()
+		
+		b.setText( "a" )
+		self.assertEqual( b.getText(), "a" )
+		
+		i = GafferUI.Image( "arrowRight10.png" )
+		b.setImage( i )
+		self.failUnless( b.getImage() is i )
+		
+		b.setImage( "arrowRight10.png" )
+		self.failUnless( isinstance( b.getImage(), GafferUI.Image ) )
+		
+		b.setImage( None )
+		self.assertEqual( b.getImage(), None )
+		
+	def testAccessorTypeChecking( self ) :
+	
+		b = GafferUI.Button()
+		
+		self.assertRaises( Exception, b.setText, 1 )
+		self.assertRaises( Exception, b.setImage, 1 )
+		
 if __name__ == "__main__":
 	unittest.main()
+	
