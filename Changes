@@ -1,3 +1,6 @@
+0.8.0
+-----
+
 * GafferUI.Image now falls back to using Qt image loading code if no IECore.Reader is available. This provides support for PNG images among others. Also fixed some bugs whereby images would fail to load if a full path wasn't provided - now the GAFFERUI_IMAGE_PATHS are used appropriately.
 
 * OpDialogue can now be used non-modally without waitForResult(). The new OpDialogue.opExecutedSignal() can be used to tell when the op has been executed, and to get the result.
