@@ -51,7 +51,18 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def __init__( self, scriptNode=None ) :
 	
 		self.__renderableGadget = GafferUI.RenderableGadget( None )
-		self.__gadgetWidget = GafferUI.GadgetWidget( self.__renderableGadget, bufferOptions=set( ( GafferUI.GLWidget.BufferOptions.Depth, ) ), cameraMode=GafferUI.GadgetWidget.CameraMode.Mode3D )
+		self.__gadgetWidget = GafferUI.GadgetWidget(
+			
+			self.__renderableGadget,
+			
+			bufferOptions = set( (
+				GafferUI.GLWidget.BufferOptions.Depth,
+				GafferUI.GLWidget.BufferOptions.Double )
+			),
+			
+			cameraMode = GafferUI.GadgetWidget.CameraMode.Mode3D
+		
+		)
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode )
 

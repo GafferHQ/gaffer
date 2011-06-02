@@ -1,3 +1,5 @@
+* Fixed flickering in the Viewer - enabled double buffering in same way as GraphEditor.
+
 0.9.0
 -----
 
