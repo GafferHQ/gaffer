@@ -43,13 +43,16 @@ import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
+## The Collapsible container provides an easy means of controlling the
+# visibility of a child Widget. A labelled heading is always visible
+# and clicking on it reveals or hides the child below.
 class Collapsible( GafferUI.ContainerWidget ) :
 
 	def __init__( self, label="", child=None, collapsed=False ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
 		
-		layout = QtGui.QVBoxLayout()
+		layout = _VBoxLayout()
 		self._qtWidget().setLayout( layout )
 		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		
@@ -115,3 +118,25 @@ class Collapsible( GafferUI.ContainerWidget ) :
 			self.__child.setVisible( not value )
 			
 		self.stateChangedSignal()( self )
+
+class _VBoxLayout( QtGui.QVBoxLayout ) :
+
+	def __init__( self ) :
+	
+		QtGui.QVBoxLayout.__init__( self )
+		
+	## Reimplemented so that requested width takes account of the
+	# width of child items even if they are currently hidden. That
+	# way the width doesn't change when the child is shown.
+	def sizeHint( self ) :
+		
+		s = QtGui.QVBoxLayout.sizeHint( self )
+		
+		maxWidth = 0
+		for i in range( 0, self.count() ) :
+			maxWidth = max( maxWidth, self.itemAt( i ).widget().sizeHint().width() )
+		
+		margins = self.contentsMargins()
+			
+		s.setWidth( maxWidth + margins.left() + margins.right() )
+		return s

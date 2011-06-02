@@ -2,6 +2,8 @@
 
 * The view application has been ported from gtk to Qt.
 
+* The Collapsible widget no longer changes width when its collapse state is changed.
+
 0.9.0
 -----
 
