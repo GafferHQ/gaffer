@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,9 +36,9 @@
 ##########################################################################
 
 import IECore
+
 import Gaffer
 import GafferUI
-import gtk
 
 class view( Gaffer.Application ) :
 
@@ -68,16 +69,33 @@ class view( Gaffer.Application ) :
 		if len( args["files"] ) < 1 or len( args["files"] ) > 2 :
 		
 			raise Exception( "Must view exactly one file." )
-	
-		o = IECore.Reader.create( args["files"][0] ).read()
+			
+		self.__script = Gaffer.ScriptNode()
 		
-		window = GafferUI.Window( title = "Gaffer Viewer" )
-		## \todo Remove gtk from the interface.
-		window.gtkWidget().connect( "delete_event", gtk.main_quit )
-		viewer = GafferUI.GadgetWidget( GafferUI.RenderableGadget( o ) )
-		window.setChild( viewer )
+		readNode = Gaffer.ReadNode()
+		readNode["filename"].setValue( args["files"][0] )
 		
-		window.show()
+		self.__script.addChild( readNode )
+		self.__script.selection().add( readNode )
 		
-		GafferUI.EventLoop.mainEventLoop().start()		
+		self.__window = GafferUI.Window( title = "Gaffer Viewer", resizeable=True) 
+			
+		viewer = GafferUI.Viewer( self.__script )
+		
+		self.__window.setChild( viewer )
+		
+		self.__closeConnection = self.__window.closeSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		
+		## \todo The window doesn't appear without this naughtiness. I think we either need to
+		# add a similar method in the public interface, or maybe make a SizeConstraintContainer
+		# or somethign along those lines.
+		self.__window._qtWidget().setMinimumSize( 300, 200 )
+		self.__window.setVisible( True )
+		
+		GafferUI.EventLoop.mainEventLoop().start()
+		
 		return 0
+
+	def __close( self, window ) :
+	
+		GafferUI.EventLoop.mainEventLoop().stop()
