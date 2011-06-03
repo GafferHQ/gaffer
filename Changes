@@ -6,6 +6,8 @@
 
 * Window.addChildWindow() has been ported from gtk to Qt. This means that dialogues can be made to stay on top of the windows that launch them.
 
+* GafferUI.Dialogue.__init__ now accepts borderWidth and resizeable arguments.
+
 0.9.0
 -----
 

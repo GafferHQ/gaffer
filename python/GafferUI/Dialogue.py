@@ -42,9 +42,9 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 class Dialogue( GafferUI.Window ) :
 
-	def __init__( self, title ) :
+	def __init__( self, title, borderWidth=8, resizeable=True ) :
 	
-		GafferUI.Window.__init__( self, title, borderWidth = 8 )
+		GafferUI.Window.__init__( self, title, borderWidth, resizeable )
 		
 		self._qtWidget().setWindowFlags( QtCore.Qt.WindowFlags( QtCore.Qt.Dialog ) )
 		
