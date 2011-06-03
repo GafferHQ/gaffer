@@ -8,6 +8,8 @@
 
 * GafferUI.Dialogue.__init__ now accepts borderWidth and resizeable arguments.
 
+* Collapsible constructor now accepts borderWidth argument.
+
 0.9.0
 -----
 

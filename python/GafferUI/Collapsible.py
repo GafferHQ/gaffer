@@ -48,13 +48,14 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # and clicking on it reveals or hides the child below.
 class Collapsible( GafferUI.ContainerWidget ) :
 
-	def __init__( self, label="", child=None, collapsed=False ) :
+	def __init__( self, label="", child=None, collapsed=False, borderWidth=0 ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
 		
 		layout = _VBoxLayout()
 		self._qtWidget().setLayout( layout )
 		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		layout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		
 		self.__toggle = QtGui.QRadioButton()
 		self.__toggle.setObjectName( "gafferCollapsibleToggle" )
@@ -124,7 +125,7 @@ class _VBoxLayout( QtGui.QVBoxLayout ) :
 	def __init__( self ) :
 	
 		QtGui.QVBoxLayout.__init__( self )
-		
+				
 	## Reimplemented so that requested width takes account of the
 	# width of child items even if they are currently hidden. That
 	# way the width doesn't change when the child is shown.
