@@ -16,7 +16,7 @@
 
 * All signal connections are now made to Gaffer.WeakMethod objects where appropriate. Updated the Widget documentation to encourage the use of WeakMethod.
 
-* GafferUI.Frame class now accepts a child argument to the constructor, and Frame.setChild( None ) no longer errors.
+* GafferUI.Frame class now accepts a child argument to the constructor, actually uses the borderWidth argument, and Frame.setChild( None ) no longer errors.
 
 0.9.0
 -----

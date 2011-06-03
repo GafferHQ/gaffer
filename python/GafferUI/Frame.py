@@ -48,6 +48,7 @@ class Frame( GafferUI.ContainerWidget ) :
 		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame() )
 		
 		self._qtWidget().setLayout( QtGui.QGridLayout() )
+		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		
 		self.__child = None
 		self.setChild( child )
