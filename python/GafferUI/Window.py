@@ -131,6 +131,7 @@ class _WindowEventFilter( QtCore.QObject ) :
 	
 		if qEvent.type()==QtCore.QEvent.Close :
 			widget = GafferUI.Widget._owner( qObject )
+			print "CLOSE!!"
 			return widget.closeSignal()( widget )
 
 		return False

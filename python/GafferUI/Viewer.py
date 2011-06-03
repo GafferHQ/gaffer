@@ -68,7 +68,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.__gadgetWidget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
 		
-		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 				
 		self._updateFromSet()
 	
@@ -94,7 +94,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		node = self.getNodeSet().lastAdded()
 		if node :
-			self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( self.__plugDirtied )
+			self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 		else :
 			self.__plugDirtiedConnection = None
 			

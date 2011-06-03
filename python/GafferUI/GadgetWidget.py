@@ -42,6 +42,7 @@ from OpenGL.GL import *
 import IECore
 import IECoreGL
 
+import Gaffer
 import GafferUI
 from GLWidget import GLWidget
 from _GafferUI import ButtonEvent, ModifiableEvent, ContainerGadget, DragDropEvent, KeyEvent
@@ -75,10 +76,10 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
-		self.__keyPressConnection = self.keyPressSignal().connect( self.__keyPress )
-		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
-		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( self.__buttonRelease )
-		self.__mouseMoveConnection = self.mouseMoveSignal().connect( self.__mouseMove )
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 	
 		self.__camera = IECore.Camera()
 		self.__cameraController = IECore.CameraController( self.__camera )
@@ -100,7 +101,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__scene = None
 		
 		if self.__gadget :
-			self.__renderRequestConnection = self.__gadget.renderRequestSignal().connect( self.__renderRequest )
+			self.__renderRequestConnection = self.__gadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ) )
 		else :
 			self.__renderRequestConnection = None
 			

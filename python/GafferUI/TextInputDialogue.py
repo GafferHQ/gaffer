@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,7 +46,7 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 		
 		self.__textWidget = GafferUI.TextWidget( initialText )
 		self._setWidget( self.__textWidget )
-		self.__textActivatedConnection = self.__textWidget.activatedSignal().connect( self.__textActivated )
+		self.__textActivatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
 
 		self.__cancelButton = self._addButton( cancelLabel )
 		self.__confirmButton = self._addButton( confirmLabel )

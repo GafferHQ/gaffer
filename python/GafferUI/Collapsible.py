@@ -39,6 +39,7 @@ import os
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -62,7 +63,7 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		layout.addWidget( self.__toggle )
 		
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
-		self.__toggle.toggled.connect( self.__toggled )
+		self.__toggle.toggled.connect( Gaffer.WeakMethod( self.__toggled ) )
 		
 		self.__child = None
 		self.setChild( child )

@@ -1,7 +1,6 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,7 +49,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug )
  
-		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( self.__stateChanged )
+		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 						
 		self.updateFromPlug()
 		

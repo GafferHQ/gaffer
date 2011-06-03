@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,13 +48,13 @@ class PathWidget( GafferUI.TextWidget ) :
 	
 		GafferUI.TextWidget.__init__( self )
 		
-		self.__keyPressConnection = self.keyPressSignal().connect( self.__keyPress )
-		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 				
 		self.__path = path
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( self.__pathChanged )
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		
-		self.__textChangedConnection = self.textChangedSignal().connect( self.__textChanged )
+		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 				
 	def __keyPress( self, widget, event ) :
 				

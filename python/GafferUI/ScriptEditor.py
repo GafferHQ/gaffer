@@ -37,6 +37,7 @@
 
 import IECore
 
+import Gaffer
 from Gaffer import ScriptNode
 import GafferUI
 from Menu import Menu
@@ -67,7 +68,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
 	
-		self.__inputWidgetKeyPressConnection = self.__inputWidget.keyPressSignal().connect( self.__keyPress )
+		self.__inputWidgetKeyPressConnection = self.__inputWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 	
 ## \todo ?
 #		self.__gtkOutputWidget.connect( "button-press-event", self.__buttonPress )
@@ -78,8 +79,8 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.setScriptNode( self, scriptNode )
 		
 		if scriptNode :
-			self.__execConnection = self.getScriptNode().scriptExecutedSignal().connect( self.__execSlot )
-			self.__evalConnection = self.getScriptNode().scriptEvaluatedSignal().connect( self.__evalSlot )
+			self.__execConnection = self.getScriptNode().scriptExecutedSignal().connect( Gaffer.WeakMethod( self.__execSlot ) )
+			self.__evalConnection = self.getScriptNode().scriptEvaluatedSignal().connect( Gaffer.WeakMethod( self.__evalSlot ) )
 		else :
 			self.__execConnection = None
 			self.__evalConnection = None

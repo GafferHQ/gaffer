@@ -54,8 +54,8 @@ class Slider( GafferUI.Widget ) :
 		
 		self.__position = position
 
-		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
-		self.__mouseMoveConnection = self.mouseMoveSignal().connect( self.__mouseMove )
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 		

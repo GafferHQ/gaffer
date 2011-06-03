@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -67,7 +68,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__editorWindow = GafferUI.Window()
 				self.__editor = GafferUI.SplineEditor( None )
 				self.__editorWindow.setChild( self.__editor )
-				self.__editorWindowClosedConnection = self.__editorWindow.closedSignal().connect( self.__editorWindowClosed )
+				self.__editorWindowClosedConnection = self.__editorWindow.closedSignal().connect( Gaffer.WeakMethod( self.__editorWindowClosed ) )
 			
 			scriptNode = self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() )
 				

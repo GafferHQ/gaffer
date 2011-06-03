@@ -12,6 +12,12 @@
 
 * MultiLineTextWidget now accepts text argument to constructor.
 
+* OpDialogue now reliably closes itself following execution or cancel. A future version may stay open if userData on the Op requests it.
+
+* All signal connections are now made to Gaffer.WeakMethod objects where appropriate. Updated the Widget documentation to encourage the use of WeakMethod.
+
+* Op execution errors in OpDialogue are now reported using a new ErrorDialogue class.
+
 0.9.0
 -----
 

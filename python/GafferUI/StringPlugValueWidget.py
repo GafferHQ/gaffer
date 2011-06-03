@@ -56,8 +56,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug )
 
-		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( self.__keyPress )
-		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( self.__textChanged )
+		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 
 		self.updateFromPlug()
 

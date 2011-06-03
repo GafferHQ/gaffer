@@ -50,7 +50,7 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug )
 				
-		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( self.__buttonPress )
+		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		
 		self.__colorChooserDialogue = None
 		
@@ -71,10 +71,10 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__colorChooserDialogue.colorChooser().setColor( self.getPlug().getValue() )
 		self.__colorChooserDialogue.colorChooser().setInitialColor( self.getPlug().getValue() )
 		
-		self.__colorChangedConnection = self.__colorChooserDialogue.colorChooser().colorChangedSignal().connect( self.__colorChanged )
-		self.__confirmClickedConnection = self.__colorChooserDialogue.confirmButton.clickedSignal().connect( self.__buttonClicked )
-		self.__cancelClickedConnection = self.__colorChooserDialogue.cancelButton.clickedSignal().connect( self.__buttonClicked )
-		self.__dialogueClosedConnection = self.__colorChooserDialogue.closeSignal().connect( self.__dialogueClosed )
+		self.__colorChangedConnection = self.__colorChooserDialogue.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
+		self.__confirmClickedConnection = self.__colorChooserDialogue.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.__cancelClickedConnection = self.__colorChooserDialogue.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.__dialogueClosedConnection = self.__colorChooserDialogue.closeSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 		
 		self.__colorChooserDialogue.setVisible( True )
 				

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,8 +48,8 @@ class SplineEditor( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.__init__( self, self.__column.gtkWidget(), scriptNode )
 		
 		self.__splineGadget = GafferUI.SplinePlugGadget()
-		self.__selectionAddedConnection = self.__splineGadget.selection().memberAddedSignal().connect( self.__selectionChanged )
-		self.__selectionRemovedConnection = self.__splineGadget.selection().memberRemovedSignal().connect( self.__selectionChanged )
+		self.__selectionAddedConnection = self.__splineGadget.selection().memberAddedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self.__selectionRemovedConnection = self.__splineGadget.selection().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		
 		self.__gadgetWidget = GafferUI.GadgetWidget( self.__splineGadget, cameraMode=GafferUI.GadgetWidget.CameraMode.Mode2D )
 		self.__gadgetWidget.setBackgroundColor( IECore.Color3f( 0.07 ) )

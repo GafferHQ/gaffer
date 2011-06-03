@@ -63,8 +63,8 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	def setNodeSet( self, nodeSet ) :
 	
 		self.__nodeSet = nodeSet
-		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( self.__membersChanged )
-		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( self.__membersChanged )
+		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		self._updateFromSet()
 		
 	def getNodeSet( self ) :

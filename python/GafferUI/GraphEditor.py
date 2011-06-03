@@ -61,7 +61,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		self.__gadgetWidget.setBackgroundColor( IECore.Color3f( 0.5 ) )
 		self.__gadgetWidget._framingBound = Gaffer.WeakMethod( self.__framingBound )
 		
-		self.__buttonPressConnection = self.buttonPressSignal().connect( self.__buttonPress )
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 	
 		self.setScriptNode( scriptNode )
 	

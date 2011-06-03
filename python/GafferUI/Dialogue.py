@@ -67,9 +67,9 @@ class Dialogue( GafferUI.Window ) :
 		
 		self.__eventLoop = GafferUI.EventLoop()		
 		self.__buttonConnections = []
-		self.__closeConnection = self.closeSignal().connect( self.__close )
+		self.__closeConnection = self.closeSignal().connect( Gaffer.WeakMethod( self.__close ) )
 		for button in self.__buttonRow :
-			self.__buttonConnections.append( button.clickedSignal().connect( self.__buttonClicked ) )
+			self.__buttonConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
 		
 		self.__resultOfWait = None
 		self.__eventLoop.start() # returns when a button has been pressed

@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -57,8 +58,8 @@ class PathChooserWidget( GafferUI.Widget ) :
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 
-		self.__listingSelectedConnection = self.__directoryListing.pathSelectedSignal().connect( self.__pathSelected )
-		self.__pathWidgetSelectedConnection = self.__pathWidget.activatedSignal().connect( self.__pathSelected )
+		self.__listingSelectedConnection = self.__directoryListing.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
+		self.__pathWidgetSelectedConnection = self.__pathWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
 
 	## Returns the PathWidget used for text-based path entry.
 	def pathWidget( self ) :

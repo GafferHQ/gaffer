@@ -41,6 +41,7 @@ import traceback
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -56,7 +57,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
 		
-		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( self.__buttonPress )					
+		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )					
 
 		if children :		
 			self.__addChildren( self.__splitContainer, children )
@@ -171,13 +172,13 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		
 		sc1 = GafferUI.SplitContainer()
 		sc1.append( splitContainer[0] )
-		sc1.__buttonPressConnection = sc1.buttonPressSignal().connect( self.__buttonPress )					
+		sc1.__buttonPressConnection = sc1.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )					
 
 		assert( len( splitContainer ) == 0 )
 		
 		sc2 = GafferUI.SplitContainer()
 		sc2.append( GafferUI.TabbedContainer() )
-		sc2.__buttonPressConnection = sc2.buttonPressSignal().connect( self.__buttonPress )					
+		sc2.__buttonPressConnection = sc2.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )					
 		
 		if subPanelIndex==1 :
 			splitContainer.append( sc1 )

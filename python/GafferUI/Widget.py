@@ -49,21 +49,21 @@ QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The Widget class provides a base class for all widgets in GafferUI.
+#
+# When building UIs, you will typically derive from an existing Widget subclass such as Window,
+# Dialogue or Editor and then populate it with other Widgets. You define behaviours by connecting
+# methods of your class to event signals on your base class and child Widgets. It is
+# important to avoid circular references when doing this - naively connecting a signal of your
+# base class to a method on your class creates a reference cycle - although this will eventually
+# be broken by the garbage collector, it may extend the lifetime of the UI beyond the appropriate
+# point. To avoid this problem a simple rule of thumb is to always connect signals to Gaffer.WeakMethod
+# instances referring to your methods.
+#
 # GafferUI.Widget subclasses are implemented using Qt widgets (using PySide or PyQt), but the public API
 # exposed by the GafferUI classes never includes Qt functions or classes directly - this
 # allows the implementation to be changed in the future. Furthermore it allows the use
 # of the GafferUI module without learning all the Qt API. To enforce this separation,
 # GafferUI classes must not derive from Qt classes.
-#
-# Notes for implementing a Widget subclass :
-#
-# * Currently there seem to be some lifetime issues with PySide widgets, relating to ownership
-#   being passed back and forth between python and C++. Calling setParent( None ) seems to
-#   trigger some odd behaviour, which seems to be righted by immediately querying parent().
-#
-# * When connecting signals to methods of your Widget subclass, you must be very careful not
-#   to create circular references which the garbage collector cannot break. Connecting to a
-#   Gaffer.WeakMethod constructed using the method is a useful technique here.
 #
 # \todo Consider how this relates to the other Widget class we'll be making for the GL editors
 class Widget( object ) :

@@ -1,5 +1,6 @@
 ##########################################################################
 #  
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -47,12 +48,12 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		
 		self.__pathChooserWidget = GafferUI.PathChooserWidget( path )
 		self._setWidget( self.__pathChooserWidget )
-		self.__pathChooserSelectedConnection = self.__pathChooserWidget.pathSelectedSignal().connect( self.__pathChooserSelected )
+		self.__pathChooserSelectedConnection = self.__pathChooserWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathChooserSelected ) )
 
 		self.__cancelButton = self._addButton( cancelLabel )
-		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( self.__buttonClicked )
+		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__confirmButton = self._addButton( confirmLabel )
-		self.__confirmButtonConnection = self.__confirmButton.clickedSignal().connect( self.__buttonClicked )
+		self.__confirmButtonConnection = self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
 		self.__pathSelectedSignal = Gaffer.ObjectSignal()
 	

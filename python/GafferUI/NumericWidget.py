@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -57,7 +58,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 		
 		self._qtWidget().setValidator( validator )
 		
-		self.__keyPressConnection = self.keyPressSignal().connect( self.__keyPress )
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 	
 	def setValue( self, value ) :
 	

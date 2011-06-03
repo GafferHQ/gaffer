@@ -65,12 +65,12 @@ class ScriptWindow( GafferUI.Window ) :
 		
 		scriptParent = script.parent()
 		if scriptParent :
-			self.__scriptRemovedConnection = scriptParent.childRemovedSignal().connect( self.__scriptRemoved )
+			self.__scriptRemovedConnection = scriptParent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__scriptRemoved ) )
 
-		self.__closeConnection = self.closeSignal().connect( self.__close )
+		self.__closeConnection = self.closeSignal().connect( Gaffer.WeakMethod( self.__close ) )
 
-		self.__scriptPlugSetConnection = script.plugSetSignal().connect( self.__scriptPlugChanged )
-		self.__scriptPlugDirtiedConnection = script.plugDirtiedSignal().connect( self.__scriptPlugChanged )
+		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
+		self.__scriptPlugDirtiedConnection = script.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
 	
 		self.__updateTitle()
 

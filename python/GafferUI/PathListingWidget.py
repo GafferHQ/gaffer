@@ -59,7 +59,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
 				
 		self.__path = path
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( self.__pathChanged )
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 				
 		self.__currentDir = None
 		self.__update()

@@ -37,6 +37,7 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -121,11 +122,11 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__sliderConnections = []
 		for s in self.__sliders.values() :
-			self.__sliderConnections.append( s.positionChangedSignal().connect( self.__sliderChanged ) )
+			self.__sliderConnections.append( s.positionChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) ) )
 
 		swatchRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		self.__initialColorSwatch = GafferUI.ColorSwatch( color )		
-		self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( lambda widget, event : self.setColor( self.getInitialColor() ) )
+		self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
 		swatchRow.append( self.__initialColorSwatch, expand=True )
 		self.__colorSwatch = GafferUI.ColorSwatch( color )
 		swatchRow.append( self.__colorSwatch, expand=True )
@@ -162,6 +163,10 @@ class ColorChooser( GafferUI.Widget ) :
 	def colorChangedSignal( self ) :
 	
 		return self.__colorChangedSignal
+
+	def __initialColorPress( self, button, event ) :
+	
+		self.setColor( self.getInitialColor() )
 
 	def __sliderChanged( self, slider ) :
 			
