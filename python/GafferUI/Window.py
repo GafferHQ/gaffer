@@ -100,14 +100,14 @@ class Window( GafferUI.ContainerWidget ) :
 	# on top of the parent at all times. This is useful for
 	# preventing dialogues and the like from disappearing behind
 	# the main window.
-	# \todo
 	def addChildWindow( self, childWindow ) :
 
-		return
-#	
-#		assert( isinstance( childWindow, Window ) )
-#		
-#		childWindow.gtkWidget().set_transient_for( self.gtkWidget() )
+		assert( isinstance( childWindow, Window ) )
+		
+		# i think it's ok for this window to not own a reference to the GafferUI.Window which is becoming
+		# a child, on the assumption that the thing that created the window will maintain a reference.
+		# this may or may not turn out to be the case. 
+		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() )
 		
 	def setResizeable( self, resizeable ) :
 	

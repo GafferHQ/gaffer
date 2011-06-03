@@ -4,6 +4,8 @@
 
 * The Collapsible widget no longer changes width when its collapse state is changed.
 
+* Window.addChildWindow() has been ported from gtk to Qt. This means that dialogues can be made to stay on top of the windows that launch them.
+
 0.9.0
 -----
 
