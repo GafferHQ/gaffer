@@ -43,13 +43,14 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Frame( GafferUI.ContainerWidget ) :
 
-	def __init__( self, borderWidth=0 ) :
+	def __init__( self, child=None, borderWidth=0 ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame() )
 		
 		self._qtWidget().setLayout( QtGui.QGridLayout() )
 		
 		self.__child = None
+		self.setChild( child )
 		
 	def removeChild( self, child ) :
 	
@@ -60,10 +61,12 @@ class Frame( GafferUI.ContainerWidget ) :
 		
 	def setChild( self, child ) :
 	
-		if self.__child :
+		if self.__child is not None :
 			self.removeChild( self.__child )
-			
-		self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
+		
+		if child is not None :	
+			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
+		
 		self.__child = child	
 
 	def getChild( self ) :

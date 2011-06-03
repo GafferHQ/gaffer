@@ -16,7 +16,7 @@
 
 * All signal connections are now made to Gaffer.WeakMethod objects where appropriate. Updated the Widget documentation to encourage the use of WeakMethod.
 
-* Op execution errors in OpDialogue are now reported using a new ErrorDialogue class.
+* GafferUI.Frame class now accepts a child argument to the constructor, and Frame.setChild( None ) no longer errors.
 
 0.9.0
 -----
