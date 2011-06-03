@@ -10,6 +10,8 @@
 
 * Collapsible constructor now accepts borderWidth argument.
 
+* MultiLineTextWidget now accepts text argument to constructor.
+
 0.9.0
 -----
 

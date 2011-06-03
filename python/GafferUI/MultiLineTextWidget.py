@@ -41,10 +41,12 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
-	def __init__( self, editable=True ) :
+	def __init__( self, text="", editable=True ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit() )
 
+		self.setText( text )
+		
 		self._qtWidget().setReadOnly( not editable )
 
 	def getText( self ) :
