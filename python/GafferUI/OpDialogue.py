@@ -50,7 +50,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		if title is None :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )
 
-		GafferUI.Dialogue.__init__( self, title )
+		GafferUI.Dialogue.__init__( self, title, resizeable=False )
 		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( opInstance )
@@ -58,8 +58,9 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self._setWidget( GafferUI.NodeUI.create( self.__node ) )
 		
 		self.__cancelButton = self._addButton( "Cancel" )
+		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__executeButton = self._addButton( "Execute" )
-		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( self.__buttonClicked )
+		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
 		self.__opExecutedSignal = Gaffer.ObjectSignal()
 	
@@ -71,29 +72,43 @@ class OpDialogue( GafferUI.Dialogue ) :
 		return self.__opExecutedSignal
 	
 	## Causes the dialogue to enter a modal state, returning the result
-	# of executing the Op, or None if the user cancelled the operation.
+	# of executing the Op, None if the user cancelled the operation, or
+	# an Exception if an Exception was thrown (in this case the Exception
+	# will already have been reported to the user).
 	def waitForResult( self ) :
 	
 		# block our button connection so we don't end up executing twice
 		with Gaffer.BlockedConnection( self.__executeButtonConnection ) :
 		
 			button = self.waitForButton()
-		
+					
 			if button is self.__executeButton :
 				
 				return self.__execute()
-
+				
 		return None
 
 	def __execute( self ) :
-		
-		## \todo Deal with exceptions by reporting them in a modal dialogue
-		self.__node.setParameterisedValues()
-		return self.__node.getParameterised()[0]()		
-
+				
+		try :
+			
+			self.__node.setParameterisedValues()
+			result =  self.__node.getParameterised()[0]()
+			self.opExecutedSignal()( result )
+			
+			## \todo Support Op userData for specifying closing of Dialogue?
+			self.close()
+			
+			return result
+			
+		except Exception, e :
+			
+			GafferUI.ErrorDialogue.displayException()
+			return e
+	
 	def __buttonClicked( self, button ) :
 	
 		if button is self.__executeButton :
-		
-			result = self.__execute()
-			self.opExecutedSignal()( result )
+			self.__execute()
+		else :
+			self.close()

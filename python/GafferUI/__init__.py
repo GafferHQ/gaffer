@@ -106,6 +106,7 @@ from ShowURL import showURL
 from Spacer import Spacer
 from CheckBox import CheckBox
 from Image import Image
+from ErrorDialogue import ErrorDialogue
 
 # then stuff specific to graph uis
 
