@@ -43,7 +43,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Frame( GafferUI.ContainerWidget ) :
 
-	def __init__( self, child=None, borderWidth=0 ) :
+	## \todo Raised and Inset?
+	BorderStyle = IECore.Enum.create( "None", "Flat" )
+
+	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame() )
 		
@@ -52,6 +55,17 @@ class Frame( GafferUI.ContainerWidget ) :
 		
 		self.__child = None
 		self.setChild( child )
+		
+		self.setBorderStyle( borderStyle )
+	
+	def setBorderStyle( self, borderStyle ) :
+		
+		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
+	
+	def getBorderStyle( self ) :
+	
+		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
+		return getattr( self.BorderStyle, n )
 		
 	def removeChild( self, child ) :
 	

@@ -548,6 +548,18 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
 		}
 
+		.QFrame#borderStyleNone {
+			border: 1px solid transparent;
+			border-radius: 4px;
+			padding: 2px;
+		}
+		
+		.QFrame#borderStyleFlat {
+			border: 1px solid $backgroundDarkest;
+			border-radius: 4px;
+			padding: 2px;
+		}
+
 		"""
 		
 	).substitute( {
