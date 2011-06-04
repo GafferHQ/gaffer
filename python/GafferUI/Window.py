@@ -61,7 +61,7 @@ class Window( GafferUI.ContainerWidget ) :
 		
 		self.setResizeable( resizeable )
 
-		self.__closeSignal = GafferUI.WidgetSignal()
+		self.__closedSignal = GafferUI.WidgetSignal()
 				
 	def setTitle( self, title ) :
 	
@@ -117,9 +117,38 @@ class Window( GafferUI.ContainerWidget ) :
 	
 		return self.__qtLayout.sizeConstraint() == QtGui.QLayout.SetDefaultConstraint
 
-	def closeSignal( self ) :
+	## Requests that this window be closed - this function may either be called
+	# directly or in response to the user attempting to close the window.
+	# If successful, setVisible( False ) will be called on the window and True will
+	# be returned. However, the window may choose to deny the request in which case
+	# the window will remain visible and False will be returned. The latter possibility
+	# is to allow windows to take appropriate action when closing a window would mean a
+	# user losing work. If a window is not visible on entry to this function then no
+	# action is taken and False is returned.
+	def close( self ) :
 	
-		return self.__closeSignal
+		if not self.getVisible() :
+			return False
+	
+		if self._acceptsClose() :
+			self.setVisible( False )
+			self.closedSignal()( self )
+			return True
+		else :
+			return False
+	
+	## Subclasses may override this to deny the closing of a window triggered
+	# either by user action or by a call to close(). Simply return False to
+	# prevent the closing.
+	def _acceptsClose( self ) :
+
+		return True
+		
+	## A signal emitted when the window has been closed successfully, either through
+	# user action or a call to close()
+	def closedSignal( self ) :
+	
+		return self.__closedSignal
 
 class _WindowEventFilter( QtCore.QObject ) :
 
@@ -131,8 +160,12 @@ class _WindowEventFilter( QtCore.QObject ) :
 	
 		if qEvent.type()==QtCore.QEvent.Close :
 			widget = GafferUI.Widget._owner( qObject )
-			print "CLOSE!!"
-			return widget.closeSignal()( widget )
+			closed = widget.close()
+			if closed :
+				qEvent.accept()
+			else :
+				qEvent.ignore()
+			return True
 
 		return False
 

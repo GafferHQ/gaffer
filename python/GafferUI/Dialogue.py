@@ -67,7 +67,7 @@ class Dialogue( GafferUI.Window ) :
 		
 		self.__eventLoop = GafferUI.EventLoop()		
 		self.__buttonConnections = []
-		self.__closeConnection = self.closeSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		self.__closeConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 		for button in self.__buttonRow :
 			self.__buttonConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
 		
@@ -108,7 +108,8 @@ class Dialogue( GafferUI.Window ) :
 		assert( len( self.__buttonConnections ) and self.__eventLoop is not None )
 		
 		self.__resultOfWait = button
-		self.__eventLoop.stop()
+		if self.__eventLoop.running() : # may already have stopped in __close (if a subclass called close())
+			self.__eventLoop.stop()
 		
 	def __close( self, widget ) :
 	
@@ -116,4 +117,5 @@ class Dialogue( GafferUI.Window ) :
 		assert( len( self.__buttonConnections ) and self.__eventLoop is not None  )
 
 		self.__resultOfWait = None
-		self.__eventLoop.stop()
+		if self.__eventLoop.running() : # may already have stopped in __buttonClicked (if same button later triggered close())
+			self.__eventLoop.stop()

@@ -74,7 +74,7 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__colorChangedConnection = self.__colorChooserDialogue.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
 		self.__confirmClickedConnection = self.__colorChooserDialogue.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__cancelClickedConnection = self.__colorChooserDialogue.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__dialogueClosedConnection = self.__colorChooserDialogue.closeSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
+		self.__dialogueClosedConnection = self.__colorChooserDialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 		
 		self.__colorChooserDialogue.setVisible( True )
 				

@@ -112,7 +112,77 @@ class WindowTest( unittest.TestCase ) :
 		w1.addChildWindow( w2 )
 		self.failUnless( w1.parent() is None )
 		self.failUnless( w2.parent() is w1 )
+		
+	def testCloseMethod( self ) :
+	
+		self.__windowWasClosed = 0
+		def closeFn( w ) :
+			assert( isinstance( w, GafferUI.Window ) )
+			self.__windowWasClosed += 1
+	
+		w = GafferUI.Window()
+		
+		w.setVisible( True )
+		self.assertEqual( w.getVisible(), True )
+		
+		c = w.closedSignal().connect( closeFn )
+		
+		self.assertEqual( w.close(), True )
+		self.assertEqual( w.getVisible(), False )
+		self.assertEqual( self.__windowWasClosed, 1 )
+		
+	def testUserCloseAction( self ) :
+	
+		self.__windowWasClosed = 0
+		def closeFn( w ) :
+			assert( isinstance( w, GafferUI.Window ) )
+			self.__windowWasClosed += 1
+			
+		w = GafferUI.Window()
+		w.setVisible( True )
+		self.assertEqual( w.getVisible(), True )
+		
+		c = w.closedSignal().connect( closeFn )
 
+		# simulate user clicking on the x
+		w._qtWidget().close()
+		
+		self.assertEqual( w.getVisible(), False )
+		self.assertEqual( self.__windowWasClosed, 1 )
+		
+	def testCloseDenial( self ) :
+	
+		self.__windowWasClosed = 0
+		def closeFn( w ) :
+			assert( isinstance( w, GafferUI.Window ) )
+			self.__windowWasClosed += 1
+			
+		class TestWindow( GafferUI.Window ) :
+		
+			def __init__( self ) :
+			
+				GafferUI.Window.__init__( self )
+				
+			def _acceptClose( self ) :
+				
+				return False
+				
+		w = TestWindow()
+		w.setVisible( True )
+		self.assertEqual( w.getVisible(), True )
+		
+		c = w.closedSignal().connect( closeFn )
+		
+		self.assertEqual( w.close(), False )
+		self.assertEqual( w.getVisible(), True )
+		self.assertEqual( self.__windowWasClosed, 0 )
+		
+		# simulate user clicking on the x
+		w._qtWidget().close()
+		
+		self.assertEqual( w.getVisible(), True )
+		self.assertEqual( self.__windowWasClosed, 0 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

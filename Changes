@@ -18,6 +18,8 @@
 
 * GafferUI.Frame class now accepts a child argument to the constructor, actually uses the borderWidth argument, and Frame.setChild( None ) no longer errors.
 
+* Rationalised Window close behaviour. Added Window.close() method which may be called to request that a window be closed - this is also called when the user clicks the close icon. Window subclasses may override Window._acceptsClose to reject or defer closing. Window.closeSignal() has been renamed to Window.closedSignal() and now is now used purely for notification when a window has closed (the return value from attached slots is irrelevant).
+
 0.9.0
 -----
 

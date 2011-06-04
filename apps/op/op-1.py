@@ -102,16 +102,14 @@ class op( Gaffer.Application ) :
 		
 		op = classLoader.load( opName, opVersion )()
 		
-		dialogue = GafferUI.OpDialogue( op )
-		opExecutedConnection = dialogue.opExecutedSignal().connect( self.__opExecuted )
-		dialogue.setVisible( True )
+		self.__dialogue = GafferUI.OpDialogue( op )
+		self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( self.__dialogueClosed )
+		self.__dialogue.setVisible( True )
 		
 		GafferUI.EventLoop.mainEventLoop().start()
 		
 		return 0
 
-	def __opExecuted( self, opResult ) :
+	def __dialogueClosed( self, dialogue ) :
 	
-		## \todo Display the result
-				
 		GafferUI.EventLoop.mainEventLoop().stop()
