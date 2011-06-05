@@ -73,7 +73,7 @@ options.Add(
 options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
-	"/home/john/dev/build/gaffer"
+	"./build/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}",
 )
 
 options.Add(
@@ -87,7 +87,7 @@ options.Add(
 options.Add(
 	"INSTALL_DIR",
 	"The destination directory for the installation.",
-	"/home/john/dev/install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}",
+	"./install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}",
 )
 
 options.Add(
@@ -271,7 +271,7 @@ options.Add(
 options.Add(
 	"QT_SRC_DIR",
 	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.7.1",
+	"$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.7.3",
 )
 
 options.Add(
@@ -410,7 +410,6 @@ locatingDependencies = False
 for o in options.options :
 	if o.key.startswith( "BUILD_DEPENDENC" ) and str( env.subst( "$" + o.key ) ) != str( env.subst( o.default ) ) :
 		buildingDependencies = True
-		print "BBB", o.key, type( env.subst( "$" + o.key ) ), type( env.subst( o.default ) )
 	elif o.key.startswith( "LOCATE_DEPENDENCY" ) and str( env.subst( "$" + o.key ) ) != str( env.subst( o.default ) ) :
 		locatingDependencies = True
 
@@ -454,11 +453,11 @@ if depEnv["BUILD_DEPENDENCY_PYTHON"] :
 	else :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make -j 4 && make install" )
 
-if depEnv["BUILD_DEPENDENCY_JPEG"] :
-	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install" )
-
 if depEnv["BUILD_DEPENDENCY_TIFF"] :
 	runCommand( "cd $TIFF_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
+
+if depEnv["BUILD_DEPENDENCY_JPEG"] :
+	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install" )
 		
 if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
