@@ -40,9 +40,9 @@ import GafferUI
 
 class PlugValueWidget( GafferUI.Widget ) :
 
-	def __init__( self, qtWidget, plug ) :
+	def __init__( self, topLevelWidget, plug ) :
 	
-		GafferUI.Widget.__init__( self, qtWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget )
 	
 		self.setPlug( plug )
 		

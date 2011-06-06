@@ -45,9 +45,9 @@ QtCore = GafferUI._qtImport( "QtCore" )
 # to the ScriptNode.selection() but can be modified to be any Set of nodes.
 class NodeSetEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, qtWidget, scriptNode ) :
+	def __init__( self, topLevelWidget, scriptNode ) :
 	
-		GafferUI.EditorWidget.__init__( self, qtWidget, scriptNode )
+		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode )
 		
 		self.__updateScheduled = False
 			

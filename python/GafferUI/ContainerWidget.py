@@ -40,9 +40,9 @@ import GafferUI
 # Widgets which may hold other Widgets as children.
 class ContainerWidget( GafferUI.Widget ) :
 
-	def __init__( self, qtWidget ) :
+	def __init__( self, topLevelWidget ) :
 	
-		GafferUI.Widget.__init__( self, qtWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget )
 	
 	## Must be implemented in subclasses to remove
 	# any references to the specified child. This allows

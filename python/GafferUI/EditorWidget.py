@@ -41,9 +41,9 @@ import GafferUI
 # manipulate a ScriptNode or its children.
 class EditorWidget( GafferUI.Widget ) :
 
-	def __init__( self, qtWidget, scriptNode=None ) :
+	def __init__( self, topLevelWidget, scriptNode=None ) :
 	
-		GafferUI.Widget.__init__( self, qtWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget )
 		
 		self.setScriptNode( scriptNode )
 	
