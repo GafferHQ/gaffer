@@ -35,7 +35,6 @@
 #  
 ##########################################################################
 
-from CamelCaseTest import CamelCaseTest
 from WidgetTest import WidgetTest
 from MenuTest import MenuTest
 from SplitContainerTest import SplitContainerTest

@@ -106,7 +106,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		m = IECore.MenuDefinition()
 
 		for c in GafferUI.EditorWidget.types() :
-			m.append( "/" + GafferUI.CamelCase.toSpaced( c ), { "command" : IECore.curry( self.__addChild, splitContainer, c ) } )
+			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : IECore.curry( self.__addChild, splitContainer, c ) } )
 
 		m.append( "/divider", { "divider" : True } )
 
@@ -163,7 +163,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			editor.setScriptNode( self.getScriptNode() )
 			
 		tabbedContainer.append( editor )
-		tabbedContainer.setLabel( editor, GafferUI.CamelCase.toSpaced( editor.__class__.__name__ ) )
+		tabbedContainer.setLabel( editor, IECore.CamelCase.toSpaced( editor.__class__.__name__ ) )
 		tabbedContainer.setCurrent( editor )
 		
 	def __split( self, splitContainer, orientation, subPanelIndex ) :

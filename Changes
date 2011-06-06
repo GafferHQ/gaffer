@@ -24,6 +24,8 @@
 
 * OpDialogue now reports errors using a new ErrorDialogue class.
 
+* GafferUI.CamelCase has been removed as it was ported into IECore some time ago.
+
 0.9.0
 -----
 

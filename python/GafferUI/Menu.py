@@ -41,7 +41,6 @@ import weakref
 from IECore import curry
 
 import GafferUI
-import CamelCase
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )

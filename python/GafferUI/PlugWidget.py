@@ -35,9 +35,10 @@
 #  
 ##########################################################################
 
+import IECore
+
 import GafferUI
 from PlugValueWidget import PlugValueWidget
-import CamelCase
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -62,7 +63,7 @@ class PlugWidget( GafferUI.Widget ) :
 			self.__valueWidget = PlugValueWidget.create( plugOrPlugValueWidget )
 			plug = plugOrPlugValueWidget
 
-		self.__label = GafferUI.Label( label or CamelCase.toSpaced( plug.getName() ) )
+		self.__label = GafferUI.Label( label or IECore.CamelCase.toSpaced( plug.getName() ) )
 		
 		layout.addWidget( self.__label._qtWidget() )
 		layout.addWidget( self.__valueWidget._qtWidget() )

@@ -70,8 +70,6 @@ import IECore
 
 from _GafferUI import *
 
-import CamelCase ## \todo Use cortex version
-
 # general ui stuff first
 
 from Widget import Widget
