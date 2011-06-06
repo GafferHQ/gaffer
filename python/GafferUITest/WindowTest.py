@@ -163,8 +163,8 @@ class WindowTest( unittest.TestCase ) :
 			
 				GafferUI.Window.__init__( self )
 				
-			def _acceptClose( self ) :
-				
+			def _acceptsClose( self ) :
+								
 				return False
 				
 		w = TestWindow()
