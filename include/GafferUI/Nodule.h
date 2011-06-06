@@ -71,6 +71,8 @@ class Nodule : public Gadget
 		/// a specific type of node. Nodules registered in this way will take precedence over those registered above.
 		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator );
 		
+		virtual std::string getToolTip() const;
+
 	protected :
 
 		Nodule( Gaffer::PlugPtr plug );

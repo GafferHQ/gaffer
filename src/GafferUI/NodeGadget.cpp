@@ -113,3 +113,24 @@ NodeGadget::CreatorMap &NodeGadget::creators()
 	static CreatorMap c;
 	return c;
 }
+
+std::string NodeGadget::getToolTip() const
+{
+	std::string result = IndividualContainer::getToolTip();
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	Gaffer::ScriptNodePtr script = m_node->ancestor<Gaffer::ScriptNode>();
+	if( script )
+	{
+		result = m_node->relativeName( script );
+	}
+	else
+	{
+		result = m_node->getName();
+	}
+	
+	return result;
+}

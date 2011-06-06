@@ -137,6 +137,21 @@ class Gadget : public Gaffer::GraphComponent
 		RenderRequestSignal &renderRequestSignal();
 		//@}
 		
+		/// @name Tool tips
+		/// Gadgets may have tool tips - they are not responsible for displaying
+		/// them but instead just need to provide the text to be displayed.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the tool tip to be displayed. Derived classes may
+		/// reimplement this, in which case they should return Base::getToolTip()
+		/// if it is non-empty (ie has been set by setToolTip()) and otherwise
+		/// return some automatically generated tip.
+		virtual std::string getToolTip() const;
+		/// Sets the tool tip - pass the empty string if you wish to reset this
+		/// and revert to default behaviour.
+		void setToolTip( const std::string &toolTip );
+		//@}
+		
 		/// @name Events
 		/// Events are specified as boost::signals. This allows anything to
 		/// react to an event rather than just the Gadget receiving it,
@@ -184,6 +199,8 @@ class Gadget : public Gaffer::GraphComponent
 		Imath::M44f m_transform;
 		
 		RenderRequestSignal m_renderRequestSignal;
+		
+		IECore::InternedString m_toolTip;
 			
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;

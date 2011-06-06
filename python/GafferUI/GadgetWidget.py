@@ -47,6 +47,9 @@ import GafferUI
 from GLWidget import GLWidget
 from _GafferUI import ButtonEvent, ModifiableEvent, ContainerGadget, DragDropEvent, KeyEvent
 
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
+
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.
 # Widgets are UI elements implemented using GTK, whereas
@@ -57,7 +60,7 @@ from _GafferUI import ButtonEvent, ModifiableEvent, ContainerGadget, DragDropEve
 # for tracking and the right mouse button for dollying.
 #
 ## \todo It feels like this could be split into two classes - one that just
-# takes gtk events and turns them into GafferUI events, and one that takes
+# takes qt events and turns them into GafferUI events, and one that takes
 # those events and forwards them to the Gadgets appropriately, maintaining
 # current drag state etc. The latter class could then be used if implementing
 # other hosts.
@@ -94,6 +97,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__cameraInMotion = False
 		
 		self.__baseState = IECoreGL.State( True )
+		
+		self._qtWidget().installEventFilter( _eventFilter )
 		
 	def setGadget( self, gadget ) :
 	
@@ -470,3 +475,47 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		event.line.p0, event.line.p1 = self.__cameraController.unproject( IECore.V2i( int( event.line.p0.x ), int( event.line.p0.y ) ) )
 		
+## Used to make the tooltips dependent on which gadget is under the mouse
+class _EventFilter( QtCore.QObject ) :
+
+	def __init__( self ) :
+	
+		QtCore.QObject.__init__( self )
+		
+	def eventFilter( self, qObject, qEvent ) :
+	
+		if qEvent.type()==QtCore.QEvent.ToolTip :
+		
+			widget = GafferUI.Widget._owner( qObject )
+			
+			assert( isinstance( widget, GadgetWidget ) )
+			
+			event = GafferUI.ButtonEvent(
+				GafferUI.ButtonEvent.Buttons.Left,
+				IECore.LineSegment3f(
+				IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+				),
+				GafferUI.ButtonEvent.Modifiers.None,
+			)
+			
+			gadgets = widget._GadgetWidget__select( event )
+			
+			toolTip = None
+			for g in gadgets :
+				while g is not None :
+					toolTip = g.getToolTip()
+					if toolTip :
+						break
+					g = g.parent()
+				if toolTip :
+					break
+						
+			QtGui.QToolTip.showText( qEvent.globalPos(), toolTip if toolTip is not None else "", qObject )
+
+			return True
+			
+		return False
+
+# this single instance is used by all widgets
+_eventFilter = _EventFilter()

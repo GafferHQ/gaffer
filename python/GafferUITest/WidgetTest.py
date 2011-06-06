@@ -47,9 +47,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class TestWidget( GafferUI.Widget ) :
 
-	def __init__( self ) :
+	def __init__( self, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QLabel( "hello" ) )
+		GafferUI.Widget.__init__( self, QtGui.QLabel( "hello" ), **kw )
 
 class TestWidget2( GafferUI.Widget ) :
 
@@ -103,7 +103,17 @@ class WidgetTest( unittest.TestCase ) :
 		self.assert_( w.topLevelGafferWidget.parent() is w )
 		self.assert_( GafferUI.Widget._owner( w.topLevelGafferWidget._qtWidget() ) is not w )
 	
-			
+	def testToolTip( self ) :
+	
+		w = TestWidget()
+		self.assertEqual( w.getToolTip(), "" )
+		
+		w = TestWidget( toolTip="hi" )
+		self.assertEqual( w.getToolTip(), "hi" )
+		
+		w.setToolTip( "a" )
+		self.assertEqual( w.getToolTip(), "a" )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

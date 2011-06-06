@@ -65,6 +65,8 @@ class ConnectionGadget : public Gadget
 		
 		NodulePtr srcNodule();
 		NodulePtr dstNodule();
+
+		virtual std::string getToolTip() const;
 		
 	protected :
 

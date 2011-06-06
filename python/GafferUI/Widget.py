@@ -65,7 +65,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # of the GafferUI module without learning all the Qt API. To enforce this separation,
 # GafferUI classes must not derive from Qt classes.
 #
-# \todo Consider how this relates to the other Widget class we'll be making for the GL editors
+# \todo Consider how this relates to the Gadget class. Currently I'm aiming to have the two classes
+# have identical signatures in as many places as possible, with the possibility of perhaps having
+# a common base class in the future. Right now the signatures are the same for the event signals and
+# for the tool tips.
 class Widget( object ) :
 
 	## All GafferUI.Widget instances must hold a corresponding QtGui.QWidget instance
@@ -76,7 +79,7 @@ class Widget( object ) :
 	# created automatically, with the GafferUI.Widget being parented to it. The top level
 	# QWidget can be accessed at any time using the _qtWidget() method. Note that this is
 	# protected to encourage non-reliance on knowledge of the Qt backend.
-	def __init__( self, topLevelWidget ) :
+	def __init__( self, topLevelWidget, toolTip="" ) :
 	
 		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
 		
@@ -100,6 +103,8 @@ class Widget( object ) :
 		self.__buttonPressSignal = GafferUI.WidgetEventSignal()
 		self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
 		self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
+		
+		self.setToolTip( toolTip )
 		
 	def setVisible( self, visible ) :
 	
@@ -155,6 +160,23 @@ class Widget( object ) :
 	def mouseMoveSignal( self ) :
 	
 		return self.__mouseMoveSignal
+	
+	## Returns the tooltip to be displayed. This may be overriden
+	# by derived classes to provide sensible default behaviour, but
+	# allow custom behaviour when setToolTip( nonEmptyString ) has
+	# been called.
+	def getToolTip( self ) :
+	
+		return self.__toolTip
+	
+	## Sets the tooltip to be displayed for this Widget. This
+	# will override any default behaviour until setToolTip( "" )
+	# is called.
+	def setToolTip( self, toolTip ) :
+	
+		assert( isinstance( toolTip, basestring ) )
+		
+		self.__toolTip = toolTip
 		
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.
@@ -559,6 +581,15 @@ class Widget( object ) :
 			border-radius: 4px;
 			padding: 2px;
 		}
+		
+		QToolTip {
+			background-clip: border;
+			color: $backgroundDarkest;
+			background-color: $brightColor2;
+			border: 1px solid $backgroundDarkest;
+			padding: 2px;
+
+		}
 
 		"""
 		
@@ -636,7 +667,13 @@ class _EventFilter( QtCore.QObject ) :
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
-			return widget.mouseMoveSignal()( widget, event )	
+			return widget.mouseMoveSignal()( widget, event )
+			
+		elif qEvent.type()==QtCore.QEvent.ToolTip :
+		
+			widget = Widget._owner( qObject )
+			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
+			return True
 			
 		return False
 

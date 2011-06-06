@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -74,6 +75,8 @@ void GafferUIBindings::bindGadget()
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)( ConstGadgetPtr ) const)&Gadget::transformedBound )
 		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
+		.def( "getToolTip", &Gadget::getToolTip )
+		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &Gadget::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "dragBeginSignal", &Gadget::dragBeginSignal, return_internal_reference<1>() )

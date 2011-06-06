@@ -28,6 +28,8 @@
 
 * Fixed bug which prevented GraphComponent::commonAncestor<T>() from compiling.
 
+* Gadgets and Widgets may now have tooltips. Client code can set the tooltip using setToolTip(), and classes may provide default dynamic values by implementing getToolTip() appropriately. Currently the NodeGadget, Nodule and ConnectionGadget implement getToolTip to return information about the Nodes, Plugs and Connections they represent.
+
 0.9.0
 -----
 

@@ -71,6 +71,8 @@ class NodeGadget : public IndividualContainer
 		/// Registers a function which will return a NodeGadget instance for a node of a specific
 		/// type. This can be used to customise the NodeGadget for specific node types.
 		static void registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator );
+
+		virtual std::string getToolTip() const;
 		
 	protected :
 

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -202,3 +203,35 @@ bool ConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	return true;
 }
 
+std::string ConnectionGadget::getToolTip() const
+{
+	std::string result = Gadget::getToolTip();
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	if( !m_srcNodule || !m_dstNodule )
+	{
+		return result;
+	}
+	
+	Gaffer::Plug *srcPlug = m_srcNodule->plug();
+	Gaffer::Plug *dstPlug = m_dstNodule->plug();
+	const Gaffer::GraphComponent *ancestor = srcPlug->commonAncestor<Gaffer::GraphComponent>( dstPlug );
+
+	std::string srcName;
+	std::string dstName;
+	if( ancestor )
+	{
+		srcName = srcPlug->relativeName( ancestor );
+		dstName = dstPlug->relativeName( ancestor );
+	}
+	else
+	{
+		srcName = srcPlug->fullName();
+		dstName = dstPlug->fullName();
+	}
+	
+	return srcName + " -> " + dstName;
+}

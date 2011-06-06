@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -62,6 +63,14 @@ class GadgetTest( unittest.TestCase ) :
 		
 		self.assertEqual( g.fullTransform(), t * t2 )
 		self.assertEqual( g.fullTransform( c1 ), t )
+	
+	def testToolTip( self ) :
+	
+		g = GafferUI.TextGadget( "hello" )
+		
+		self.assertEqual( g.getToolTip(), "" )
+		g.setToolTip( "hi" )
+		self.assertEqual( g.getToolTip(), "hi" )
 	
 if __name__ == "__main__":
 	unittest.main()

@@ -110,7 +110,6 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 	
 	return 0;
 }
-
 		
 void Nodule::registerNodule( IECore::TypeId plugType, NoduleCreator creator )
 {
@@ -120,4 +119,22 @@ void Nodule::registerNodule( IECore::TypeId plugType, NoduleCreator creator )
 void Nodule::registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator )
 {
 	namedCreators()[TypeAndPath( nodeType, plugPath )] = creator;
+}
+
+std::string Nodule::getToolTip() const
+{
+	std::string result = Gadget::getToolTip();
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	result = m_plug->fullName();
+	Gaffer::NodePtr node = m_plug->ancestor<Gaffer::Node>();
+	if( node )
+	{
+		result = m_plug->relativeName( node->parent<Gaffer::GraphComponent>() );
+	}
+	
+	return result;
 }

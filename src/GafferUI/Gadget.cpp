@@ -48,7 +48,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( Style::getDefaultStyle() )
+	:	GraphComponent( name ), m_style( Style::getDefaultStyle() ), m_toolTip( "" )
 {
 }
 
@@ -131,6 +131,16 @@ Imath::Box3f Gadget::transformedBound( ConstGadgetPtr ancestor ) const
 Gadget::RenderRequestSignal &Gadget::renderRequestSignal()
 {
 	return m_renderRequestSignal;
+}
+
+std::string Gadget::getToolTip() const
+{
+	return m_toolTip;
+}
+
+void Gadget::setToolTip( const std::string &toolTip )
+{
+	m_toolTip = toolTip;
 }
 
 Gadget::ButtonSignal &Gadget::buttonPressSignal()
