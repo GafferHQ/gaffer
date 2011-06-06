@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -117,13 +118,13 @@ const T *GraphComponent::ancestor() const
 template<typename T>
 typename T::Ptr GraphComponent::commonAncestor( ConstGraphComponentPtr other )
 {
-	return boost::static_pointer_cast<T>( commonAncestor( other, T::staticTypeId() ) );
+	return IECore::staticPointerCast<T>( commonAncestor( other, T::staticTypeId() ) );
 }
 
 template<typename T>
 typename T::ConstPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other ) const
 {
-	return boost::static_pointer_cast<const T>( commonAncestor( other, T::staticTypeId() ) );
+	return IECore::staticPointerCast<const T>( commonAncestor( other, T::staticTypeId() ) );
 }
 		
 } // namespace Gaffer

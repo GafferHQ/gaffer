@@ -26,6 +26,8 @@
 
 * GafferUI.CamelCase has been removed as it was ported into IECore some time ago.
 
+* Fixed bug which prevented GraphComponent::commonAncestor<T>() from compiling.
+
 0.9.0
 -----
 
