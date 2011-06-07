@@ -50,6 +50,7 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 		GafferUI.ContainerWidget.__init__( self, _ScrollArea() )
 				
 		self._qtWidget().setViewportMargins( borderWidth, borderWidth, borderWidth, borderWidth )
+		self._qtWidget().setWidgetResizable( True )
 		
 		self.setHorizontalMode( horizontalMode )
 		self.setVerticalMode( verticalMode )

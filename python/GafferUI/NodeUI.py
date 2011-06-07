@@ -58,9 +58,6 @@ class NodeUI( GafferUI.Widget ) :
 		self.__node = node
 		
 		self._build()
-
-		# to fill any additional space
-		self.__currentColumn.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand=True )
 		
 	## Returns the node the ui is being created for.
 	def _node( self ) :
@@ -70,7 +67,37 @@ class NodeUI( GafferUI.Widget ) :
 	def _tab( self, label ) :
 	
 		raise NotImplementedError
+	
+	def _scrollable( self ) :
+	
+		class ScrollableContext() :
 		
+			def __init__( self, nodeUI ) :
+			
+				self.__nodeUI = nodeUI
+			
+			def __enter__( self ) :
+			
+				sc = GafferUI.ScrolledContainer(
+					horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never,
+					verticalMode = GafferUI.ScrolledContainer.ScrollMode.Automatic,
+					borderWidth = 8
+				)
+				
+				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=2 )
+				sc.setChild( co )
+				
+				self.__prevColumn = self.__nodeUI._NodeUI__currentColumn
+				
+				self.__nodeUI._NodeUI__currentColumn.append( sc )
+				self.__nodeUI._NodeUI__currentColumn = co
+				
+			def __exit__( self, type, value, traceBack ) :
+			
+				self.__nodeUI._NodeUI__currentColumn = self.__prevColumn
+		
+		return ScrollableContext( self )
+								
 	def _collapsible( self, label ) :
 	
 		class CollapsibleContext() :
@@ -93,7 +120,6 @@ class NodeUI( GafferUI.Widget ) :
 				
 			def __exit__( self, type, value, traceBack ) :
 			
-				self.__nodeUI._NodeUI__currentColumn.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand=True )
 				self.__nodeUI._NodeUI__currentColumn = self.__prevColumn
 				
 		return CollapsibleContext( self )
@@ -118,7 +144,8 @@ class NodeUI( GafferUI.Widget ) :
 	# intended to be overriden in derived classes.
 	def _build( self ) :
 		
-		self.__buildWalk( self._node() )
+		with self._scrollable() :
+			self.__buildWalk( self._node() )
 
 	def __buildWalk( self, parent ) :
 	

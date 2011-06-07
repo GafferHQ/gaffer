@@ -47,6 +47,12 @@ class Label( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLabel( text ) )
 
+		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
+		# the same size. it's particularly important that it doesn't accept growth vertically as then vertical ListContainers
+		# don't shrink properly when a child is hidden or shrunk - instead the container would distribute the extra height
+		# among all the labels.
+		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+
 		## \todo ??
 		#self.setFont( **font )
 		#self.setAlignment( alignment )

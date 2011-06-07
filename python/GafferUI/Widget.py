@@ -90,6 +90,11 @@ class Widget( object ) :
 			self.__gafferWidget = topLevelWidget
 			self.__qtWidget = QtGui.QWidget()
 			self.__qtWidget.setLayout( QtGui.QGridLayout() )
+			## We need to set the size constraint to prevent widgets expanding in an unwanted
+			# way. However we may want other types to expand in the future. I think what we
+			# really need to do is somehow make __qtWidget without a layout, and just have
+			# it's size etc. dictated directly by self.__gafferWidget._qtWidget() somehow.
+			self.__qtWidget.layout().setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
 			
@@ -548,6 +553,10 @@ class Widget( object ) :
 		
 		QScrollBar::handle:hover {
 			background-color: $brightColor;
+		}
+		
+		QScrollArea {
+			border: none;
 		}
 		
 		QCheckBox {

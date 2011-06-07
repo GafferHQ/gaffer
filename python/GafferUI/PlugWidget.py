@@ -42,9 +42,10 @@ from PlugValueWidget import PlugValueWidget
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## \todo Make tooltips work
 ## \todo Useful popup menu on label - connect, disconnect, expressions etc
-## Or does that belong on the PlugValueWidget?
+## Or does that belong on the PlugValueWidget? It probably belongs on the PlugValueWidget
+## so that compound plugs can have a different menu for each child - for the x y z of
+## a V3fPlug for instance.
 class PlugWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugOrPlugValueWidget, label=None, description=None ) :
@@ -54,6 +55,7 @@ class PlugWidget( GafferUI.Widget ) :
 		layout = QtGui.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )
 		layout.setSpacing( 4 )
+		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		self._qtWidget().setLayout( layout )
 
 		if isinstance( plugOrPlugValueWidget, PlugValueWidget ) :
