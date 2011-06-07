@@ -118,12 +118,12 @@ class Slider( GafferUI.Widget ) :
 		self._drawBackground( painter )
 		self._drawPosition( painter )
 			
-	def __buttonPress( self, gtkWidget, event ) :
+	def __buttonPress( self, widget, event ) :
 	
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
 			self.setPosition( float( event.line.p0.x ) / self.size().x )
 
-	def __mouseMove( self, gtkWidget, event ) :
+	def __mouseMove( self, widget, event ) :
 	
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
 			self.setPosition( float( event.line.p0.x ) / self.size().x )

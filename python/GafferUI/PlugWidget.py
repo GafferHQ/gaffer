@@ -67,18 +67,3 @@ class PlugWidget( GafferUI.Widget ) :
 		
 		layout.addWidget( self.__label._qtWidget() )
 		layout.addWidget( self.__valueWidget._qtWidget() )
-		
-		#label.set_width_chars( 15 )
-		#label.set_alignment( 1, 0.5 )
-
-		#labelEventBox = gtk.EventBox()
-		#labelEventBox.add( label )
-		
-		#self.__gtkHBox.pack_start( labelEventBox, False )			
-		#if self.__valueWidget :
-		#	self.__gtkHBox.pack_start( self.__valueWidget.gtkWidget() )
-
-		#if description :
-		#	self.__tooltips = gtk.Tooltips()
-		#	self.__tooltips.set_tip( labelEventBox, "hi there" )		
-		
