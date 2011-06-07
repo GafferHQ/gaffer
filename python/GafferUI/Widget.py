@@ -409,7 +409,7 @@ class Widget( object ) :
 		}
 
 		QTabBar::tab:hover, QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover,
-		QRadioButton#gafferCollapsibleToggle::hover, QPushButton:pressed {
+		QCheckBox#gafferCollapsibleToggle::hover, QPushButton:pressed {
 
 			color: white;
 			background-color:	$brightColor;
@@ -424,7 +424,7 @@ class Widget( object ) :
 			top: -1px;
 		}
 
-		QRadioButton#gafferCollapsibleToggle::indicator {
+		QCheckBox#gafferCollapsibleToggle::indicator {
 
 			width: 12px;
 			height: 12px;
@@ -432,13 +432,13 @@ class Widget( object ) :
 
 		}
 
-		QRadioButton#gafferCollapsibleToggle::indicator::unchecked {
+		QCheckBox#gafferCollapsibleToggle::indicator:unchecked {
 
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowDown.png);
 
 		}
 
-		QRadioButton#gafferCollapsibleToggle::indicator::checked {
+		QCheckBox#gafferCollapsibleToggle::indicator:checked {
 
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
 

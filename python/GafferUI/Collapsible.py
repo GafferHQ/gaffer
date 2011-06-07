@@ -58,12 +58,12 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		layout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		
-		self.__toggle = QtGui.QRadioButton()
+		self.__toggle = QtGui.QCheckBox()
 		self.__toggle.setObjectName( "gafferCollapsibleToggle" )
 		layout.addWidget( self.__toggle )
 		
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
-		self.__toggle.toggled.connect( Gaffer.WeakMethod( self.__toggled ) )
+		self.__toggle.stateChanged.connect( Gaffer.WeakMethod( self.__toggled ) )
 		
 		self.__child = None
 		self.setChild( child )
@@ -115,7 +115,7 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		return self.__stateChangedSignal
 		
 	def __toggled( self, value ) :
-		
+				
 		if self.__child is not None :
 			self.__child.setVisible( not value )
 			

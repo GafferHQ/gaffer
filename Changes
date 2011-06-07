@@ -32,6 +32,8 @@
 
 * Widgets now have a wheelSignal() for responding to mouse wheel events. The Viewer and GraphEditor use this to implement zooming.
 
+* Fixed bug which prevented Collapsible containers from toggling state correctly when multiple instances shared a parent.
+
 0.9.0
 -----
 

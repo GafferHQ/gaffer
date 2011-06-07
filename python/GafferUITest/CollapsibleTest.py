@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,27 +34,48 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
+import os
+import unittest
 
+import GafferUI
+
+class CollapsibleTest( unittest.TestCase ) :
+
+	def testConstructor( self ) :
+		
+		b = GafferUI.Button( "Hide Me" )
+		c = GafferUI.Collapsible( child = b, collapsed=True )
+	
+		self.failUnless( c.getChild() is b )
+		self.assertEqual( c.getCollapsed(), True )
+
+	def testSetCollapsed( self ) :
+	
+		c = GafferUI.Collapsible( collapsed=True )
+		
+		self.assertEqual( c.getCollapsed(), True )
+		c.setCollapsed( False )	
+		self.assertEqual( c.getCollapsed(), False )
+	
+	def testStateChangedSignal( self ) :
+	
+		self.__states = []
+		def stateChanged( widget ) :
+		
+			self.__states.append( widget.getCollapsed( ) )
+			
+		c = GafferUI.Collapsible( collapsed=True )
+		stateChangedConnection = c.stateChangedSignal().connect( stateChanged )
+		
+		c.setCollapsed( False )
+		self.assertEqual( self.__states, [ False ] )
+		
+		c.setCollapsed( False ) # shouldn't trigger as state is the same
+		self.assertEqual( self.__states, [ False ] )
+		
+		c.setCollapsed( True )
+		self.assertEqual( self.__states, [ False, True ] )
+		
 if __name__ == "__main__":
 	unittest.main()
+	
