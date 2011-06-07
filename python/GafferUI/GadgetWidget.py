@@ -52,8 +52,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.
-# Widgets are UI elements implemented using GTK, whereas
-# Gadgets are implemented on top of the Cortex infrastructure.
 #
 # Camera motion is achieved by holding down Alt and clicking
 # and dragging. Use the left button for tumbling, the middle mouse button
@@ -74,16 +72,14 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		GLWidget.__init__( self, bufferOptions )
 				
-## \todo
-#		self.gtkWidget().connect( "scroll_event", self.__scroll )
-
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
-	
+		self.__wheelConnection = self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ) )
+		
 		self.__camera = IECore.Camera()
 		self.__cameraController = IECore.CameraController( self.__camera )
 				
@@ -454,22 +450,19 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__cameraInMotion = False
 		return True
 		
-	def __scroll( self, widget, event ) :
+	def __wheel( self, widget, event ) :
 	
-		if event.direction in (gtk.gdk.SCROLL_UP, gtk.gdk.SCROLL_DOWN) :
+		position = IECore.V2i( int( event.line.p0.x ), int( event.line.p0.y ) )
+		self.__cameraController.motionStart( IECore.CameraController.MotionType.Dolly, position )
+
+		position.x += int( event.wheelRotation * self.size().x / 200.0  )
 		
-			position = IECore.V2i( int(event.x), int(event.y) )
-			self.__cameraController.motionStart( IECore.CameraController.MotionType.Dolly, position )
-			
-			if event.direction==gtk.gdk.SCROLL_UP :
-				position.x += 20
-			else :
-				position.x -= 20
-			self.__cameraController.motionUpdate( position )
-			
-			self.__cameraController.motionEnd( position )
-			self.gtkWidget().queue_draw()
-	
+		self.__cameraController.motionUpdate( position )
+
+		self.__cameraController.motionEnd( position )
+		
+		self._redraw()
+
 	## Converts event coordinates from Qt space into Gadget space
 	def __eventToGadgetSpace( self, event ) :
 		
@@ -496,6 +489,7 @@ class _EventFilter( QtCore.QObject ) :
 				IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
 					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
 				),
+				0.0,
 				GafferUI.ButtonEvent.Modifiers.None,
 			)
 			

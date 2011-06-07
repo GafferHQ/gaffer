@@ -103,6 +103,7 @@ class Widget( object ) :
 		self.__buttonPressSignal = GafferUI.WidgetEventSignal()
 		self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
 		self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
+		self.__wheelSignal = GafferUI.WidgetEventSignal()
 		
 		self.setToolTip( toolTip )
 		
@@ -160,6 +161,10 @@ class Widget( object ) :
 	def mouseMoveSignal( self ) :
 	
 		return self.__mouseMoveSignal
+		
+	def wheelSignal( self ) :
+	
+		return self.__wheelSignal
 	
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
@@ -635,6 +640,7 @@ class _EventFilter( QtCore.QObject ) :
 					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
 					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
 				),
+				0.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
@@ -650,6 +656,7 @@ class _EventFilter( QtCore.QObject ) :
 					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
 					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
 				),
+				0.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
@@ -664,10 +671,26 @@ class _EventFilter( QtCore.QObject ) :
 					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
 					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
 				),
+				0.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
 			return widget.mouseMoveSignal()( widget, event )
+			
+		elif qEvent.type()==QtCore.QEvent.Wheel :
+				
+			widget = Widget._owner( qObject )
+			event = GafferUI.ButtonEvent(
+				Widget._buttons( qEvent.buttons() ),
+				IECore.LineSegment3f(
+					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+				),
+				qEvent.delta() / 8.0,
+				Widget._modifiers( qEvent.modifiers() ),
+			)
+
+			return widget.wheelSignal()( widget, event )	
 			
 		elif qEvent.type()==QtCore.QEvent.ToolTip :
 		

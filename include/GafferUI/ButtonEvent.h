@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,8 +46,8 @@ namespace GafferUI
 {
 
 /// A class to represent events involving mouse buttons.
-/// Now this is being used to represent mouse movement, perhaps it should
-/// be called MouseEvent?
+/// \todo Now this is being used to represent mouse movement and the scroll wheel,
+/// it should be called MouseEvent.
 struct ButtonEvent : public ModifiableEvent
 {
 	/// An enum to represent the mouse buttons.
@@ -65,14 +66,16 @@ struct ButtonEvent : public ModifiableEvent
 	ButtonEvent(
 		Buttons b=None,
 		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),
+		float w = 0.0f,
 		Modifiers m = ModifiableEvent::None
 	)
-		:	ModifiableEvent( m ), buttons( b ), line( Line )
+		:	ModifiableEvent( m ), buttons( b ), line( Line ), wheelRotation( w )
 	{
 	};
 	
 	Buttons buttons;
 	IECore::LineSegment3f line;
+	float wheelRotation; // delta in degrees
 	
 };
 
