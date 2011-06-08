@@ -414,7 +414,7 @@ class Widget( object ) :
 		}
 
 		QTabBar::tab:hover, QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover,
-		QCheckBox#gafferCollapsibleToggle::hover, QPushButton:pressed {
+		QPushButton:pressed {
 
 			color: white;
 			background-color:	$brightColor;
@@ -446,6 +446,18 @@ class Widget( object ) :
 		QCheckBox#gafferCollapsibleToggle::indicator:checked {
 
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
+
+		}
+		
+		QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover {
+
+			image: url($GAFFER_ROOT/graphics/collapsibleArrowDownHover.png);
+
+		}
+
+		QCheckBox#gafferCollapsibleToggle::indicator:checked:hover {
+
+			image: url($GAFFER_ROOT/graphics/collapsibleArrowRightHover.png);
 
 		}
 		
