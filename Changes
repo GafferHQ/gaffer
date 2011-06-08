@@ -42,6 +42,15 @@
 
 * OpDialogue has a better default size.
 
+* Added handlers for the following parameter types :
+
+	IECore.V2iParameter
+	IECore.V3iParameter
+	IECore.V2fParameter
+	IECore.V3fParameter
+	IECore.Color3fParameter
+	IECore.Color4fParameter
+
 0.9.0
 -----
 
