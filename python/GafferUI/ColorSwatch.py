@@ -48,31 +48,37 @@ class ColorSwatch( GafferUI.Widget ) :
 
 	def __init__( self, color=IECore.Color4f( 1 ) ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QWidget() )
+		GafferUI.Widget.__init__( self, _ColorSwatch() )
 	
-		self.__color = color
+		self._qtWidget().swatchColor = color
 		
 		## \todo Should this be an option? Should it be an option for all Widgets?
 		self._qtWidget().setMinimumSize( 12, 12 )
-		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 	def setColor( self, color ) :
 	
-		if color!=self.__color :
-			self.__color = color
+		if color!=self._qtWidget().swatchColor :
+			self._qtWidget().swatchColor = color
 			self._qtWidget().update()
 		
 	def getColor( self ) :
 	
 		return self.__color
-
-	def __paintEvent( self, event ) :
 	
-		painter = QtGui.QPainter( self._qtWidget() )
+# Private implementation - a QWidget derived class which does the drawing
+class _ColorSwatch( QtGui.QWidget ) :
+
+	def __init__( self ) :
+	
+		QtGui.QWidget.__init__( self )
+		
+	def paintEvent( self, event ) :
+	
+		painter = QtGui.QPainter( self )
 		rect = event.rect()
 		
 		# draw checkerboard background if necessary
-		if self.__color.dimensions()==4 and self.__color.a < 1 :
+		if self.swatchColor.dimensions()==4 and self.swatchColor.a < 1 :
 			
 			checkSize = 6
 						
@@ -88,9 +94,7 @@ class ColorSwatch( GafferUI.Widget ) :
 
 		# draw colour
 		
-		qColor = self._qtColor( self.__color )
-		if self.__color.dimensions()==4 :
-			qColor.setAlphaF( self.__color.a )
+		qColor = GafferUI.Widget._qtColor( self.swatchColor )
+		if self.swatchColor.dimensions()==4 :
+			qColor.setAlphaF( self.swatchColor.a )
 		painter.fillRect( QtCore.QRectF( rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height() ), qColor )
-		
-		return True

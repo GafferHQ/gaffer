@@ -50,6 +50,8 @@
 	IECore.V3fParameter
 	IECore.Color3fParameter
 	IECore.Color4fParameter
+	
+* Fixed TypeError: invalid argument to sipBadCatcherResult() messages coming from ColorSwatch widget.
 
 0.9.0
 -----
