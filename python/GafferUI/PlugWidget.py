@@ -80,4 +80,4 @@ class PlugWidget( GafferUI.Widget ) :
 	@staticmethod
 	def labelWidth() :
 	
-		return 100
+		return 110
