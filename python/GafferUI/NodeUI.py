@@ -98,18 +98,18 @@ class NodeUI( GafferUI.Widget ) :
 		
 		return ScrollableContext( self )
 								
-	def _collapsible( self, label ) :
+	def _collapsible( self, **kw ) :
 	
 		class CollapsibleContext() :
 		
-			def __init__( self, nodeUI ) :
+			def __init__( self, nodeUI, collapsibleKeywords ) :
 			
 				self.__nodeUI = nodeUI
-				self.__label = label
+				self.__collapsibleKeywords = collapsibleKeywords
 		
 			def __enter__( self ) :
 			
-				cl = GafferUI.Collapsible( self.__label, collapsed=True )
+				cl = GafferUI.Collapsible( **self.__collapsibleKeywords )
 				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=2 )
 				cl.setChild( co )
 				
@@ -122,7 +122,7 @@ class NodeUI( GafferUI.Widget ) :
 			
 				self.__nodeUI._NodeUI__currentColumn = self.__prevColumn
 				
-		return CollapsibleContext( self )
+		return CollapsibleContext( self, kw )
 		
 	def _addWidget( self, widget ) :
 		
@@ -155,7 +155,7 @@ class NodeUI( GafferUI.Widget ) :
 
 			if plug.typeId()==Gaffer.CompoundPlug.staticTypeId() :
 			
-				with self._collapsible( IECore.CamelCase.toSpaced( plug.getName() ) ) :
+				with self._collapsible( label = IECore.CamelCase.toSpaced( plug.getName() ), collapsed=True ) :
 					self.__buildWalk( plug )
 				
 			else :
