@@ -40,10 +40,14 @@ import IECore
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
+QtCore = GafferUI._qtImport( "QtCore" )
 
 class Label( GafferUI.Widget ) :
 
-	def __init__( self, text="", font={}, alignment=IECore.V2f( 0.5, 0.5 ) ) :
+	HorizontalAlignment = IECore.Enum.create( "Left", "Right", "Center" )
+	VerticalAlignment = IECore.Enum.create( "Top", "Bottom", "Center" )
+	
+	def __init__( self, text="", font={}, horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLabel( text ) )
 
@@ -55,15 +59,43 @@ class Label( GafferUI.Widget ) :
 
 		## \todo ??
 		#self.setFont( **font )
-		#self.setAlignment( alignment )
+		
+		self.setAlignment( horizontalAlignment, verticalAlignment )
 
-	#def setAlignment( self, alignment ) :
-#	
-#		self.gtkWidget().set_alignment( alignment[0], alignment[1] )
-#		
-#	def getAlignment( self ) :
-#	
-#		return IECore.V2f( *self.gtkWidget().get_alignment() )
+	def setAlignment( self, horizontalAlignment, verticalAlignment ) :
+		
+		self._qtWidget().setAlignment(
+			QtCore.Qt.AlignRight | 
+			QtCore.Qt.AlignTop
+		)
+				
+	def getAlignment( self ) :
+	
+		a = self._qtWidget().alignment()
+		return (
+			self.__qtAlignmentToGaffer[int(a & QtCore.Qt.AlignHorizontal_Mask)],
+			self.__qtAlignmentToGaffer[int(a & QtCore.Qt.AlignVertical_Mask)],
+		)
+		
+	__qtAlignmentToGaffer = {
+		int( QtCore.Qt.AlignLeft ) : HorizontalAlignment.Left,
+		int( QtCore.Qt.AlignRight ) : HorizontalAlignment.Right,
+		int( QtCore.Qt.AlignHCenter ) : HorizontalAlignment.Center,
+		int( QtCore.Qt.AlignTop ) : VerticalAlignment.Top,
+		int( QtCore.Qt.AlignBottom ) : VerticalAlignment.Bottom,
+		int( QtCore.Qt.AlignVCenter ) : VerticalAlignment.Center,
+	
+	}
+	
+	__gafferAlignmentToQt = {
+		HorizontalAlignment.Left : QtCore.Qt.AlignLeft,
+		HorizontalAlignment.Right : QtCore.Qt.AlignRight,
+		HorizontalAlignment.Center : QtCore.Qt.AlignHCenter,
+		VerticalAlignment.Top : QtCore.Qt.AlignTop,
+		VerticalAlignment.Bottom : QtCore.Qt.AlignBottom,
+		VerticalAlignment.Center : QtCore.Qt.AlignVCenter,
+	}
+	
 #
 #	def setFont( self, **kw ) :
 #	
@@ -75,3 +107,6 @@ class Label( GafferUI.Widget ) :
 #	def getFont( self, **kw ) :
 #	
 #		return self.__font
+
+	
+	

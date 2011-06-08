@@ -36,6 +36,8 @@
 
 * Node UIs now use a ScrolledContainer for their top level container.
 
+* Label widget now allows the alignment to be specified.
+
 0.9.0
 -----
 
