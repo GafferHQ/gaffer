@@ -38,6 +38,10 @@
 
 * Label widget now allows the alignment to be specified.
 
+* Fixed alignment issues in NodeUIs.
+
+* OpDialogue has a better default size.
+
 0.9.0
 -----
 

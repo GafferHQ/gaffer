@@ -65,7 +65,19 @@ class PlugWidget( GafferUI.Widget ) :
 			self.__valueWidget = PlugValueWidget.create( plugOrPlugValueWidget )
 			plug = plugOrPlugValueWidget
 
-		self.__label = GafferUI.Label( label or IECore.CamelCase.toSpaced( plug.getName() ) )
+		self.__label = GafferUI.Label(
+			label or IECore.CamelCase.toSpaced( plug.getName() ),
+			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
+		)
+		## \todo Decide how we allow this sort of tweak using the public
+		# interface. Perhaps we should have a SizeableContainer or something?
+		self.__label._qtWidget().setMinimumWidth( self.labelWidth() )
 		
 		layout.addWidget( self.__label._qtWidget() )
 		layout.addWidget( self.__valueWidget._qtWidget() )
+
+	@staticmethod
+	def labelWidth() :
+	
+		return 100
