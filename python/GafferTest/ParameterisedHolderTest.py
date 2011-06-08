@@ -174,6 +174,41 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		self.assertEqual( ph["parameters"]["i1"].defaultValue(), 1 )
 		self.assertEqual( ph["parameters"]["i1"].getValue(), 10 )
+	
+	def testCompoundNumericTypes( self ) :
+	
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameters(
+		
+			[
+				IECore.V2iParameter( "v2i", "", IECore.V2i( 1, 2 ) ),
+				IECore.V3fParameter( "v3f", "", IECore.V3f( 1, 2, 3 ) ),
+				IECore.Color4fParameter( "color4f", "", IECore.Color4f( 0.25, 0.5, 0.75, 1 ) ),
+			]
+		
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.assertEqual( ph["parameters"]["v2i"].defaultValue(), IECore.V2i( 1, 2 ) )
+		self.assertEqual( ph["parameters"]["v3f"].defaultValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( ph["parameters"]["color4f"].defaultValue(), IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		
+		self.assertEqual( ph["parameters"]["v2i"].getValue(), IECore.V2i( 1, 2 ) )
+		self.assertEqual( ph["parameters"]["v3f"].getValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( ph["parameters"]["color4f"].getValue(), IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		
+		ph["parameters"]["v2i"].setValue( IECore.V2i( 2, 3 ) )
+		ph["parameters"]["v3f"].setValue( IECore.V3f( 4, 5, 6 ) )
+		ph["parameters"]["color4f"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
+		
+		ph.setParameterisedValues()
+
+		self.assertEqual( p["v2i"].getTypedValue(), IECore.V2i( 2, 3 ) )
+		self.assertEqual( p["v3f"].getTypedValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( p["color4f"].getTypedValue(), IECore.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
 		
 if __name__ == "__main__":
 	unittest.main()
