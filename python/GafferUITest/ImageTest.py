@@ -59,6 +59,10 @@ class ImageTest( unittest.TestCase ) :
 	
 		self.assertRaises( Exception, GafferUI.Image, "iAmNotAFile" )
 		
+	def testUnicode( self ) :
+	
+		i = GafferUI.Image( u"info.png" )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -54,7 +54,7 @@ class Image( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtGui.QLabel() )
 		
 		if isinstance( imagePrimitiveOrFileName, basestring ) :
-			pixmap = self._qtPixmapFromFile( imagePrimitiveOrFileName )
+			pixmap = self._qtPixmapFromFile( str( imagePrimitiveOrFileName ) )
 		else :
 			pixmap = self._qtPixmapFromImagePrimitive( imagePrimitiveOrFileName )
 		

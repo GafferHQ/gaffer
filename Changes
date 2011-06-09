@@ -1,3 +1,5 @@
+* GafferUI.Image() constructor now accepts unicode strings.
+
 0.10.0
 ------
 
