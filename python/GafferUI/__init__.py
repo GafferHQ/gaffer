@@ -139,3 +139,4 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 from AboutWindow import AboutWindow
 import ApplicationMenu
 from OpDialogue import OpDialogue
+from ParameterisedHolderNodeUI import ParameterisedHolderNodeUI
