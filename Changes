@@ -1,3 +1,6 @@
+0.10.0
+------
+
 * Fixed flickering in the Viewer - enabled double buffering in same way as GraphEditor.
 
 * The view application has been ported from gtk to Qt.
