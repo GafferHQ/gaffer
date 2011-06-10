@@ -118,6 +118,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// parent doesn't accept the new relationship.
 		/// \todo Add an argument which causes name clashes to be resolved by
 		/// removing the existing child, and use that from the setitem binding.
+		/// Or add a setChild method instead?
 		/// \todo Prevent reparenting from changing the ScriptNode ancestor of the child -
 		/// this would seriously mess up the undo system.
 		/// \undoable
