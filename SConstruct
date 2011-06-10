@@ -854,6 +854,7 @@ manifest = [
 	"lib/libQt*.so*",
 	"startup/gui/menus.py",
 	"startup/gui/layouts.py",
+	"startup/gui/graphs.py",
 	"shaders",
 	"fonts",
 	"graphics/*.png",

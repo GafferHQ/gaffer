@@ -67,10 +67,15 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	LinearContainerPtr outputNoduleRow = new LinearContainer( "outputNoduleRow", LinearContainer::X, LinearContainer::Centre, 2.0f );
 
 	column->addChild( outputNoduleRow );
-	column->addChild( new NameGadget( node ) );
+	
+	IndividualContainerPtr contentsContainer = new IndividualContainer();
+	contentsContainer->setName( "contentsContainer" );
+	
+	column->addChild( contentsContainer );
 	column->addChild( inputNoduleRow );
 
 	setChild( column );
+	setContents( new NameGadget( node ) );
 	
 	Gaffer::ObjectPlugIterator it( node->children().begin(), node->children().end() );
 	while( it!=node->children().end() )
@@ -255,3 +260,19 @@ void StandardNodeGadget::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer:
 		}
 	}	
 }
+
+void StandardNodeGadget::setContents( GadgetPtr contents )
+{
+	getChild<LinearContainer>()->getChild<IndividualContainer>( "contentsContainer" )->setChild( contents );
+}
+
+GadgetPtr StandardNodeGadget::getContents()
+{
+	return getChild<LinearContainer>()->getChild<IndividualContainer>( "contentsContainer" )->getChild<Gadget>();
+}
+
+ConstGadgetPtr StandardNodeGadget::getContents() const
+{
+	return getChild<LinearContainer>()->getChild<IndividualContainer>( "contentsContainer" )->getChild<Gadget>();
+}
+

@@ -4,7 +4,9 @@
 
 * NodeGadget.registerNodeGadget() may now be called from Python, passing a callable for the creation function.
 
-* New GafferUI.ImageGadget class allows icons to be displayed in the GraphEditor and other Gadget based UIs.
+* New GafferUI.ImageGadget class allows images to be displayed in zoomable gadget uis.
+
+* GafferUI.StandardNodeGadget can now be customised using a new setContents() method. This allows the central region of the node to be replaced with custom gadgets on a per-node basis. See startup/gui/graphs.py for example code for customising with an icon (note that this is waiting for a PNGImageReader to be available in cortex).
 
 0.10.0
 ------

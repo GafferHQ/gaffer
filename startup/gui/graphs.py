@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,29 +34,38 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
+## prettify nodes in the graph editor with icons if they are available
+##########################################################################
 
-if __name__ == "__main__":
-	unittest.main()
+def __nodeGadgetCreator( node ) :
+
+	import IECore
+	import GafferUI
+	
+	result = GafferUI.StandardNodeGadget( node )
+	
+	row = GafferUI.LinearContainer(
+		orientation = GafferUI.LinearContainer.Orientation.X,
+		alignment = GafferUI.LinearContainer.Alignment.Centre,
+		spacing = 0.5,
+	)
+
+	image = None
+	for typeId in [ node.typeId() ] + IECore.RunTimeTyped.baseTypeIds( node.typeId() ) :
+		try :
+			image = GafferUI.ImageGadget( "nodeIcon" + IECore.RunTimeTyped.typeNameFromTypeId( typeId ) + ".png" )
+			break
+		except :
+			pass
+	
+	if image is not None :
+		image.setTransform( IECore.M44f.createScaled( IECore.V3f( 2.0 / image.bound().size().y ) ) )
+		row.addChild( GafferUI.IndividualContainer( image ) )
+
+	row.addChild( GafferUI.NameGadget( node ) )
+
+	result.setContents( row )
+	
+	return result
+
+GafferUI.NodeGadget.registerNodeGadget( Gaffer.Node.staticTypeId(), __nodeGadgetCreator )

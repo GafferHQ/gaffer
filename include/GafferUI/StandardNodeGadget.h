@@ -57,6 +57,13 @@ class StandardNodeGadget : public NodeGadget
 		virtual NodulePtr nodule( Gaffer::ConstPlugPtr plug );
 		virtual ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
 		
+		/// The central content of the Gadget may be customised. By default
+		/// the contents is a simple NameGadget for the node, but any Gadget or
+		/// Container can be placed there instead.
+		void setContents( GadgetPtr contents );
+		GadgetPtr getContents();
+		ConstGadgetPtr getContents() const;
+		
 		Imath::Box3f bound() const;
 
 	protected :
@@ -77,7 +84,7 @@ class StandardNodeGadget : public NodeGadget
 		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
 		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
 		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-
+		
 };
 
 } // namespace GafferUI

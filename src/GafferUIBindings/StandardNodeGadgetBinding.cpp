@@ -69,5 +69,7 @@ void GafferUIBindings::bindStandardNodeGadget()
 	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
 		.def( init<Gaffer::NodePtr>() )
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
+		.def( "setContents", &StandardNodeGadget::setContents )
+		.def( "getContents", (GadgetPtr (StandardNodeGadget::*)())&StandardNodeGadget::getContents )
 	;
 }
