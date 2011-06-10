@@ -34,6 +34,9 @@
 #  
 ##########################################################################
 
+import Gaffer
+import GafferUI
+
 ## prettify nodes in the graph editor with icons if they are available
 ##########################################################################
 
