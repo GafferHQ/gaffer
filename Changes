@@ -1,3 +1,6 @@
+0.11.0
+------
+
 * GafferUI.Image() constructor now accepts unicode strings.
 
 * Gadget, NodeGadget and StandardNodeGadget may now be derived from in Python.
