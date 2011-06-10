@@ -56,6 +56,7 @@ class Nodule : public Gadget
 	public :
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Nodule, NoduleTypeId, Gadget );
+		virtual ~Nodule();
 		
 		Gaffer::PlugPtr plug();
 		Gaffer::ConstPlugPtr plug() const;
@@ -76,7 +77,6 @@ class Nodule : public Gadget
 	protected :
 
 		Nodule( Gaffer::PlugPtr plug );
-		virtual ~Nodule();
 		
 		/// Creating a static one of these is a convenient way of registering a Nodule type.
 		template<class T>
