@@ -61,6 +61,7 @@ enum TypeId
 	SplinePlugGadgetTypeId = 410015,
 	StandardNoduleTypeId = 410016,
 	ArrayNoduleTypeId = 410017,
+	ImageGadgetTypeId = 410018,
 	
 	LastTypeId = 419999
 };

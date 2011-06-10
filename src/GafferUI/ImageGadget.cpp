@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,59 +34,52 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "IECore/CachedReader.h"
+#include "IECore/Exception.h"
 
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUIBindings/EventBinding.h"
-#include "GafferUIBindings/ModifiableEventBinding.h"
-#include "GafferUIBindings/KeyEventBinding.h"
-#include "GafferUIBindings/ButtonEventBinding.h"
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/ContainerGadgetBinding.h"
-#include "GafferUIBindings/GraphGadgetBinding.h"
-#include "GafferUIBindings/RenderableGadgetBinding.h"
-#include "GafferUIBindings/IndividualContainerBinding.h"
-#include "GafferUIBindings/FrameBinding.h"
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/NameGadgetBinding.h"
-#include "GafferUIBindings/LinearContainerBinding.h"
-#include "GafferUIBindings/NoduleBinding.h"
-#include "GafferUIBindings/DragDropEventBinding.h"
-#include "GafferUIBindings/ConnectionGadgetBinding.h"
-#include "GafferUIBindings/WidgetSignalBinding.h"
-#include "GafferUIBindings/StandardNodeGadgetBinding.h"
-#include "GafferUIBindings/SplinePlugGadgetBinding.h"
-#include "GafferUIBindings/StandardNoduleBinding.h"
-#include "GafferUIBindings/ArrayNoduleBinding.h"
-#include "GafferUIBindings/ImageGadgetBinding.h"
+#include "GafferUI/ImageGadget.h"
 
-using namespace GafferUIBindings;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+IE_CORE_DEFINERUNTIMETYPED( ImageGadget );
+
+ImageGadget::ImageGadget( const std::string &fileName )
+	:	Gadget( staticTypeName() )
 {
+	static IECore::CachedReaderPtr g_cachedReader = 0;
+	if( !g_cachedReader )
+	{
+		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
+		g_cachedReader = new IECore::CachedReader(
+			IECore::SearchPath( s ? s : "", ":" ),
+			100 * 1024 * 1024 // 100 megs
+		);
+	}
 
-	bindGadget();
-	bindEvent();
-	bindModifiableEvent();
-	bindKeyEvent();
-	bindButtonEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindIndividualContainer();
-	bindFrame();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindLinearContainer();
-	bindNodule();
-	bindDragDropEvent();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindStandardNodeGadget();
-	bindSplinePlugGadget();
-	bindStandardNodule();
-	bindArrayNodule();
-	bindImageGadget();
-	
+	m_image = IECore::runTimeCast<const IECore::ImagePrimitive>( g_cachedReader->read( fileName ) );
+	if( !m_image )
+	{
+		throw IECore::Exception( boost::str( boost::format( "File \"%s\" did not contain an image." ) % fileName ) );
+	}
 }
+
+ImageGadget::ImageGadget( IECore::ConstImagePrimitivePtr image )
+	:	Gadget( staticTypeName() ), m_image( image->copy() )
+{
+}
+
+ImageGadget::~ImageGadget()
+{
+}
+
+void ImageGadget::doRender( IECore::RendererPtr renderer ) const
+{
+	m_image->render( renderer );
+}
+
+Imath::Box3f ImageGadget::bound() const
+{
+	return m_image->bound();
+}
+
+

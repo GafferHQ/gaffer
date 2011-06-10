@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,57 +36,21 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUIBindings/EventBinding.h"
-#include "GafferUIBindings/ModifiableEventBinding.h"
-#include "GafferUIBindings/KeyEventBinding.h"
-#include "GafferUIBindings/ButtonEventBinding.h"
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/ContainerGadgetBinding.h"
-#include "GafferUIBindings/GraphGadgetBinding.h"
-#include "GafferUIBindings/RenderableGadgetBinding.h"
-#include "GafferUIBindings/IndividualContainerBinding.h"
-#include "GafferUIBindings/FrameBinding.h"
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/NameGadgetBinding.h"
-#include "GafferUIBindings/LinearContainerBinding.h"
-#include "GafferUIBindings/NoduleBinding.h"
-#include "GafferUIBindings/DragDropEventBinding.h"
-#include "GafferUIBindings/ConnectionGadgetBinding.h"
-#include "GafferUIBindings/WidgetSignalBinding.h"
-#include "GafferUIBindings/StandardNodeGadgetBinding.h"
-#include "GafferUIBindings/SplinePlugGadgetBinding.h"
-#include "GafferUIBindings/StandardNoduleBinding.h"
-#include "GafferUIBindings/ArrayNoduleBinding.h"
 #include "GafferUIBindings/ImageGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferUI/ImageGadget.h"
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
+using namespace boost::python;
 using namespace GafferUIBindings;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+void GafferUIBindings::bindImageGadget()
 {
-
-	bindGadget();
-	bindEvent();
-	bindModifiableEvent();
-	bindKeyEvent();
-	bindButtonEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindIndividualContainer();
-	bindFrame();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindLinearContainer();
-	bindNodule();
-	bindDragDropEvent();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindStandardNodeGadget();
-	bindSplinePlugGadget();
-	bindStandardNodule();
-	bindArrayNodule();
-	bindImageGadget();
-	
+	IECorePython::RunTimeTypedClass<ImageGadget>()
+		.def( init<const std::string &>() )
+		.def( init<IECore::ConstImagePrimitivePtr>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ImageGadget )
+	;
 }

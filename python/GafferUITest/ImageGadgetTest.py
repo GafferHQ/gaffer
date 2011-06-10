@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,28 +34,32 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
+import os
+import unittest
 
+import IECore
+
+import GafferUI
+
+class ImageGadgetTest( unittest.TestCase ) :
+
+	def testConstructFromImagePrimitive( self ) :
+	
+		window = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255 ) )
+		imagePrimitive = IECore.ImagePrimitive.createRGBFloat( IECore.Color3f( 0.25, .5, .75 ), window, window )
+	
+		i = GafferUI.ImageGadget( imagePrimitive )
+		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -128, -128, 0 ), IECore.V3f( 128, 128, 0 ) ) )
+		
+	def testConstructFromFile( self ) :
+	
+		## \todo When Cortex has a PNGImageReader we should implement a test here.
+		raise NotImplementedError	
+			
+	def testMissingFiles( self ) :
+	
+		self.assertRaises( Exception, GafferUI.ImageGadget, "iDonNotExist" )
+		
 if __name__ == "__main__":
 	unittest.main()
+	

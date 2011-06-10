@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,59 +34,46 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUI_IMAGEGADGET_H
+#define GAFFERUI_IMAGEGADGET_H
 
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUIBindings/EventBinding.h"
-#include "GafferUIBindings/ModifiableEventBinding.h"
-#include "GafferUIBindings/KeyEventBinding.h"
-#include "GafferUIBindings/ButtonEventBinding.h"
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/ContainerGadgetBinding.h"
-#include "GafferUIBindings/GraphGadgetBinding.h"
-#include "GafferUIBindings/RenderableGadgetBinding.h"
-#include "GafferUIBindings/IndividualContainerBinding.h"
-#include "GafferUIBindings/FrameBinding.h"
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/NameGadgetBinding.h"
-#include "GafferUIBindings/LinearContainerBinding.h"
-#include "GafferUIBindings/NoduleBinding.h"
-#include "GafferUIBindings/DragDropEventBinding.h"
-#include "GafferUIBindings/ConnectionGadgetBinding.h"
-#include "GafferUIBindings/WidgetSignalBinding.h"
-#include "GafferUIBindings/StandardNodeGadgetBinding.h"
-#include "GafferUIBindings/SplinePlugGadgetBinding.h"
-#include "GafferUIBindings/StandardNoduleBinding.h"
-#include "GafferUIBindings/ArrayNoduleBinding.h"
-#include "GafferUIBindings/ImageGadgetBinding.h"
+#include "IECore/ImagePrimitive.h"
 
-using namespace GafferUIBindings;
+#include "GafferUI/Gadget.h"
 
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace GafferUI
 {
 
-	bindGadget();
-	bindEvent();
-	bindModifiableEvent();
-	bindKeyEvent();
-	bindButtonEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindIndividualContainer();
-	bindFrame();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindLinearContainer();
-	bindNodule();
-	bindDragDropEvent();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindStandardNodeGadget();
-	bindSplinePlugGadget();
-	bindStandardNodule();
-	bindArrayNodule();
-	bindImageGadget();
+class ImageGadget : public Gadget
+{
+
+	public :
+
+		/// Images are searched for on the paths defined by
+		/// the GAFFERUI_IMAGE_PATHS environment variable.
+		/// Throws if the file cannot be loaded.
+		ImageGadget( const std::string &fileName );
+		/// A copy of the image is taken.
+		ImageGadget( const IECore::ConstImagePrimitivePtr image );
+		virtual ~ImageGadget();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageGadget, ImageGadgetTypeId, Gadget );
+
+		virtual Imath::Box3f bound() const;
+			
+	protected :
 	
-}
+		virtual void doRender( IECore::RendererPtr renderer ) const;
+
+	private :
+	
+		// deliberately not providing accessors for this, as it may
+		// well be better to hold an IECoreGL::Texture at some point
+		// in the future (for speed of drawing).
+		IECore::ConstImagePrimitivePtr m_image;
+		
+};
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_IMAGEGADGET_H

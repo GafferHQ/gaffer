@@ -4,6 +4,8 @@
 
 * NodeGadget.registerNodeGadget() may now be called from Python, passing a callable for the creation function.
 
+* New GafferUI.ImageGadget class allows icons to be displayed in the GraphEditor and other Gadget based UIs.
+
 0.10.0
 ------
 

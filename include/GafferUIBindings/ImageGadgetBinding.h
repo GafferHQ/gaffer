@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,59 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUIBINDINGS_IMAGEGADGETBINDING_H
+#define GAFFERUIBINDINGS_IMAGEGADGETBINDING_H
 
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUIBindings/EventBinding.h"
-#include "GafferUIBindings/ModifiableEventBinding.h"
-#include "GafferUIBindings/KeyEventBinding.h"
-#include "GafferUIBindings/ButtonEventBinding.h"
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/ContainerGadgetBinding.h"
-#include "GafferUIBindings/GraphGadgetBinding.h"
-#include "GafferUIBindings/RenderableGadgetBinding.h"
-#include "GafferUIBindings/IndividualContainerBinding.h"
-#include "GafferUIBindings/FrameBinding.h"
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/NameGadgetBinding.h"
-#include "GafferUIBindings/LinearContainerBinding.h"
-#include "GafferUIBindings/NoduleBinding.h"
-#include "GafferUIBindings/DragDropEventBinding.h"
-#include "GafferUIBindings/ConnectionGadgetBinding.h"
-#include "GafferUIBindings/WidgetSignalBinding.h"
-#include "GafferUIBindings/StandardNodeGadgetBinding.h"
-#include "GafferUIBindings/SplinePlugGadgetBinding.h"
-#include "GafferUIBindings/StandardNoduleBinding.h"
-#include "GafferUIBindings/ArrayNoduleBinding.h"
-#include "GafferUIBindings/ImageGadgetBinding.h"
-
-using namespace GafferUIBindings;
-
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace GafferUIBindings
 {
 
-	bindGadget();
-	bindEvent();
-	bindModifiableEvent();
-	bindKeyEvent();
-	bindButtonEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindIndividualContainer();
-	bindFrame();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindLinearContainer();
-	bindNodule();
-	bindDragDropEvent();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindStandardNodeGadget();
-	bindSplinePlugGadget();
-	bindStandardNodule();
-	bindArrayNodule();
-	bindImageGadget();
-	
-}
+void bindImageGadget();
+
+} // namespace GafferUIBindings
+
+#endif // GAFFERUIBINDINGS_IMAGEGADGETBINDING_H
