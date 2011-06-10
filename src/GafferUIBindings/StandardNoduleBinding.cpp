@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/StandardNoduleBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/StandardNodule.h"
 
 #include "Gaffer/Plug.h"
@@ -51,5 +52,6 @@ void GafferUIBindings::bindStandardNodule()
 {
 	IECorePython::RunTimeTypedClass<StandardNodule>()
 		.def( init<Gaffer::PlugPtr>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( StandardNodule )
 	;
 }

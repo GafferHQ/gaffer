@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,20 +38,64 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/NodeGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Nodule.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+class NodeGadgetWrapper : public NodeGadget, public IECorePython::Wrapper<NodeGadget>
+{
+	
+	public :
+
+		NodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
+			:	NodeGadget( node ), IECorePython::Wrapper<NodeGadget>( self, this )
+		{
+		}
+				
+		GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( NodeGadget )
+		
+};
+
+IE_CORE_DECLAREPTR( NodeGadgetWrapper );
+
+struct NodeGadgetCreator
+{
+	NodeGadgetCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+	
+	NodeGadgetPtr operator()( Gaffer::NodePtr node )
+	{
+		IECorePython::ScopedGILLock gilLock;
+		NodeGadgetPtr result = extract<NodeGadgetPtr>( m_fn( node ) );
+		return result;
+	}
+	
+	private :
+	
+		object m_fn;
+
+};
+
+static void registerNodeGadget( IECore::TypeId nodeType, object creator )
+{
+	NodeGadget::registerNodeGadget( nodeType, NodeGadgetCreator( creator ) );
+}
+
 void GafferUIBindings::bindNodeGadget()
 {
-	IECorePython::RunTimeTypedClass<NodeGadget>()
+	IECorePython::RunTimeTypedClass<NodeGadget, NodeGadgetWrapperPtr>()
+		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( NodeGadget )
 		.def( "node", (Gaffer::NodePtr (NodeGadget::*)())&NodeGadget::node )
-		.def( "nodule", (NodulePtr (NodeGadget::*)( Gaffer::ConstPlugPtr ))&NodeGadget::nodule )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )
+		.def( "registerNodeGadget", &registerNodeGadget ).staticmethod( "registerNodeGadget" )
 	;
 }

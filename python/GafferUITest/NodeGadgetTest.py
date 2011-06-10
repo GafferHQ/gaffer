@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -78,6 +79,30 @@ class NodeGadgetTest( unittest.TestCase ) :
 		self.assert_( g.nodule( n["op2"] ) )
 		self.assert_( g.nodule( n["sum"] ) )
 		self.assert_( not g.nodule( d ) )
+	
+	def testFactoryRegistration( self ) :
+	
+		class MyNode( Gaffer.Node ) :
+		
+			def __init__( self ) :
+			
+				Gaffer.Node.__init__( self )
+				
+		IECore.registerRunTimeTyped( MyNode )
+		
+		def creator( node ) :
+		
+			result = GafferUI.StandardNodeGadget( node )
+			result.origin = "lovinglyHandCraftedInCreator"
+			
+			return result
+		
+		GafferUI.NodeGadget.registerNodeGadget( MyNode.staticTypeId(), creator )
+		
+		n = MyNode()
+		g = GafferUI.NodeGadget.create( n )
+		self.failUnless( g.node() is n )
+		self.assertEqual( g.origin, "lovinglyHandCraftedInCreator" )
 	
 if __name__ == "__main__":
 	unittest.main()

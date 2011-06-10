@@ -46,7 +46,7 @@ namespace GafferBindings
 #define GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 	IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( CLASSNAME )\
 \
-	virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const\
+	virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "acceptsChild" ) )\
@@ -54,13 +54,13 @@ namespace GafferBindings
 			override f = this->get_override( "acceptsChild" );\
 			if( f )\
 			{\
-				return f( IECore::constPointerCast<GraphComponent>( potentialChild ) );\
+				return f( IECore::constPointerCast<Gaffer::GraphComponent>( potentialChild ) );\
 			}\
 		}\
 		return CLASSNAME::acceptsChild( potentialChild );\
 	}\
 \
-	virtual bool acceptsParent( const GraphComponent *potentialParent ) const\
+	virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "acceptsParent" ) )\
@@ -68,7 +68,7 @@ namespace GafferBindings
 			override f = this->get_override( "acceptsParent" );\
 			if( f ) \
 			{\
-				return f( GraphComponentPtr( const_cast<GraphComponent *>( potentialParent ) ) );\
+				return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialParent ) ) );\
 			}\
 		}\
 		return CLASSNAME::acceptsParent( potentialParent );\
@@ -77,8 +77,8 @@ namespace GafferBindings
 /// This must be used in /every/ GraphComponent binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.
 #define GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
-	def( "acceptsChild", &acceptsChild<CLASSNAME> )\
-	.def( "acceptsParent", &acceptsParent<CLASSNAME> )
+	def( "acceptsChild", &GafferBindings::acceptsChild<CLASSNAME> )\
+	.def( "acceptsParent", &GafferBindings::acceptsParent<CLASSNAME> )
 
 template<typename T>
 static bool acceptsChild( const T &p, Gaffer::ConstGraphComponentPtr potentialChild )

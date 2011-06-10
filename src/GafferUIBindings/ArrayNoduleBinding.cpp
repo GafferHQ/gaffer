@@ -41,6 +41,7 @@
 #include "Gaffer/CompoundPlug.h"
 
 #include "GafferUIBindings/ArrayNoduleBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/ArrayNodule.h"
 
 using namespace boost::python;
@@ -51,5 +52,6 @@ void GafferUIBindings::bindArrayNodule()
 {
 	IECorePython::RunTimeTypedClass<ArrayNodule>()
 		.def( init<Gaffer::CompoundPlugPtr>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ArrayNodule )
 	;
 }

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/ConnectionGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/Nodule.h"
 
@@ -52,5 +54,6 @@ void GafferUIBindings::bindConnectionGadget()
 {
 	IECorePython::RunTimeTypedClass<ConnectionGadget>()
 		.def( init<GafferUI::NodulePtr, GafferUI::NodulePtr>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ConnectionGadget )
 	;
 }

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/LinearContainerBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/LinearContainer.h"
 
 #include "Gaffer/Node.h"
@@ -57,6 +59,7 @@ void GafferUIBindings::bindLinearContainer()
 		.def( "getAlignment", &LinearContainer::getAlignment )
 		.def( "setSpacing", &LinearContainer::setSpacing )
 		.def( "getSpacing", &LinearContainer::getSpacing )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( LinearContainer )
 	;
 	
 	scope s = c;

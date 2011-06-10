@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/ContainerGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/ContainerGadget.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
@@ -48,5 +50,6 @@ using namespace GafferUI;
 void GafferUIBindings::bindContainerGadget()
 {
 	IECorePython::RunTimeTypedClass<ContainerGadget>()
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ContainerGadget )
 	;
 }

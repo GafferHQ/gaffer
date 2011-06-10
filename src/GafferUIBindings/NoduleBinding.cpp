@@ -38,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/NoduleBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/Nodule.h"
 
 #include "Gaffer/Plug.h"
@@ -81,6 +82,7 @@ static void registerNodule2( IECore::TypeId nodeType, const std::string &plugPat
 void GafferUIBindings::bindNodule()
 {
 	IECorePython::RunTimeTypedClass<Nodule>()
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Nodule )
 		.def( "create", &Nodule::create ).staticmethod( "create" )
 		.def( "registerNodule", &registerNodule1 )
 		.def( "registerNodule", &registerNodule2 ).staticmethod( "registerNodule" )

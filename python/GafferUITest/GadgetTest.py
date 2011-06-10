@@ -72,6 +72,30 @@ class GadgetTest( unittest.TestCase ) :
 		g.setToolTip( "hi" )
 		self.assertEqual( g.getToolTip(), "hi" )
 	
+	def testDerivationInPython( self ) :
+
+		class MyGadget( GafferUI.Gadget ) :
+		
+			def __init__( self ) :
+			
+				GafferUI.Gadget.__init__( self )
+				
+			def bound( self ) :
+			
+				return IECore.Box3f( IECore.V3f( -20, 10, 2 ), IECore.V3f( 10, 15, 5 ) )
+				
+		mg = MyGadget()
+		
+		# we can't call the methods of the gadget directly in python to test the
+		# bindings, as that doesn't prove anything (we're no exercising the virtual
+		# method override code in the wrapper). instead cause c++ to call through
+		# for us by adding our gadget to a parent and making calls to the parent.
+		
+		c = GafferUI.IndividualContainer()
+		c.addChild( mg )
+		
+		self.assertEqual( c.bound().size(), mg.bound().size() )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

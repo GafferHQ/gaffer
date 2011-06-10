@@ -45,11 +45,28 @@
 #include "GafferBindings/CatchingSlotCaller.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferBindings;
 using namespace GafferUI;
+
+class GadgetWrapper : public Gadget, public IECorePython::Wrapper<Gadget>
+{
+	
+	public :
+
+		GadgetWrapper( PyObject *self, const std::string &name=staticTypeName() )
+			:	Gadget( name ), IECorePython::Wrapper<Gadget>( self, this )
+		{
+		}
+		
+		GAFFERUIBINDINGS_GADGETWRAPPERFNS( Gadget )
+		
+};
+
+IE_CORE_DECLAREPTR( GadgetWrapper );
 
 struct RenderRequestSlotCaller
 {
@@ -64,18 +81,19 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0
 
 void GafferUIBindings::bindGadget()
 {
-	scope s = IECorePython::RunTimeTypedClass<Gadget>()
+	scope s = IECorePython::RunTimeTypedClass<Gadget, GadgetWrapperPtr>()
+		.def( init<>() )
+		.def( init<const std::string &>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Gadget )
 		.def( "getStyle", &Gadget::getStyle )
 		.def( "setStyle", &Gadget::setStyle )
 		.def( "getTransform", &Gadget::getTransform, return_value_policy<copy_const_reference>() )
 		.def( "setTransform", &Gadget::setTransform )
 		.def( "fullTransform", &Gadget::fullTransform, fullTransformOverloads() )
-		.def( "render",&Gadget::render )
-		.def( "bound", &Gadget::bound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)( ConstGadgetPtr ) const)&Gadget::transformedBound )
+		.def( "render",&Gadget::render )
 		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
-		.def( "getToolTip", &Gadget::getToolTip )
 		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &Gadget::buttonReleaseSignal, return_internal_reference<1>() )

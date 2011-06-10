@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,8 +38,67 @@
 #ifndef GAFFERUIBINDINGS_GADGETBINDING_H
 #define GAFFERUIBINDINGS_GADGETBINDING_H
 
+#include "GafferUI/Gadget.h"
+
+#include "GafferBindings/GraphComponentBinding.h"
+
 namespace GafferUIBindings
 {
+
+#define GAFFERUIBINDINGS_GADGETWRAPPERFNS( CLASSNAME )\
+	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME)\
+\
+	virtual Imath::Box3f bound() const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		override f = this->get_override( "bound" );\
+		if( f )\
+		{\
+			return f();\
+		}\
+		return CLASSNAME::bound();\
+	}\
+\
+	virtual std::string getToolTip() const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		override f = this->get_override( "getToolTip" );\
+		if( f )\
+		{\
+			return f();\
+		}\
+		return CLASSNAME::getToolTip();\
+	}\
+	\
+	virtual void doRender( IECore::RendererPtr renderer ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		override f = this->get_override( "doRender" );\
+		if( f )\
+		{\
+			f( renderer );\
+		}\
+		CLASSNAME::doRender( renderer );\
+	}\
+
+/// This must be used in /every/ Gadget binding. See the lengthy comments in
+/// IECorePython/ParameterBinding.h for an explanation.
+#define GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CLASSNAME )\
+	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
+	.def( "bound", &bound<CLASSNAME> )\
+	.def( "getToolTip", &getToolTip<CLASSNAME> )\
+
+template<typename T>
+static Imath::Box3f bound( const T &p )
+{
+	return p.T::bound();
+}
+
+template<typename T>
+static std::string getToolTip( const T &p )
+{
+	return p.T::getToolTip();
+}
 
 void bindGadget();
 

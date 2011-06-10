@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/TextGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/TextGadget.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
@@ -49,6 +51,7 @@ void GafferUIBindings::bindTextGadget()
 {
 	IECorePython::RunTimeTypedClass<TextGadget>()
 		.def( init<const std::string &>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( TextGadget )
 		.def( "getFont", &TextGadget::getFont )
 		.def( "setFont", &TextGadget::setFont )
 		.def( "getText", &TextGadget::getText, return_value_policy<copy_const_reference>() )

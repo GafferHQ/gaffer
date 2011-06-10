@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,17 +38,36 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/StandardNodeGadgetBinding.h"
+#include "GafferUIBindings/NodeGadgetBinding.h"
 #include "GafferUI/StandardNodeGadget.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+class StandardNodeGadgetWrapper : public StandardNodeGadget, public IECorePython::Wrapper<StandardNodeGadget>
+{
+	
+	public :
+
+		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
+			:	StandardNodeGadget( node ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
+		{
+		}
+				
+		GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( StandardNodeGadget )
+		
+};
+
+IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
+
 void GafferUIBindings::bindStandardNodeGadget()
 {
-	IECorePython::RunTimeTypedClass<StandardNodeGadget>()
+	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
 		.def( init<Gaffer::NodePtr>() )
+		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 	;
 }

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferUIBindings/IndividualContainerBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/IndividualContainer.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
@@ -48,7 +50,9 @@ using namespace GafferUI;
 void GafferUIBindings::bindIndividualContainer()
 {
 	IECorePython::RunTimeTypedClass<IndividualContainer>()
+		.def( init<>() )
 		.def( init<GadgetPtr>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( IndividualContainer )
 		.def( "setChild", &IndividualContainer::setChild )
 		.def( "getChild", (GadgetPtr (IndividualContainer::*)())&IndividualContainer::getChild<Gadget> )
 		// we also have to redefine the GraphComponent level getChild binding so that we don't override it completely

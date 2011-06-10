@@ -54,6 +54,8 @@ class NodeGadget : public IndividualContainer
 
 	public :
 
+		virtual ~NodeGadget();
+		
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( NodeGadget, NodeGadgetTypeId, ContainerGadget );
 		
 		Gaffer::NodePtr node();
@@ -77,7 +79,6 @@ class NodeGadget : public IndividualContainer
 	protected :
 
 		NodeGadget( Gaffer::NodePtr node );
-		virtual ~NodeGadget();
 	
 		/// Creating a static one of these is a convenient way of registering a NodeGadget type.
 		template<class T>
