@@ -46,7 +46,6 @@ class TabbedContainerTest( unittest.TestCase ) :
 	def test( self ) :
 	
 		t = GafferUI.TabbedContainer()
-		self.assert_( t )
 		self.assertEqual( len( t ), 0 )
 		
 		self.assertEqual( t.getCurrent(), None )
