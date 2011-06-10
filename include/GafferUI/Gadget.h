@@ -79,6 +79,8 @@ IE_CORE_FORWARDDECLARE( Style );
 ///   it gets slightly ugly.
 ///
 /// \todo Why not traverse up from the leaf like Qt does?
+/// \todo I'm not sure I like having the transform on the Gadget - perhaps ContainerGadget
+/// should have a virtual childTransform() method instead?
 class Gadget : public Gaffer::GraphComponent
 {
 
