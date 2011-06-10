@@ -49,7 +49,6 @@ class IndividualContainer : public ContainerGadget
 
 	public :
 
-		/// \todo Pass the gadget name in. Make this consistent for all classes.
 		IndividualContainer( GadgetPtr child=0 );
 		virtual ~IndividualContainer();
 
