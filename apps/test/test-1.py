@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -86,3 +87,5 @@ class test( Gaffer.Application ) :
 		testResult = testRunner.run( testSuite )
 		
 		return 0 if testResult.wasSuccessful() else 1
+
+IECore.registerRunTimeTyped( test )

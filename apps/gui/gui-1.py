@@ -93,3 +93,6 @@ class gui( Gaffer.Application ) :
 		GafferUI.EventLoop.mainEventLoop().start()		
 				
 		return 0
+
+IECore.registerRunTimeTyped( gui )
+

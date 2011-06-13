@@ -113,3 +113,5 @@ class op( Gaffer.Application ) :
 	def __dialogueClosed( self, dialogue ) :
 	
 		GafferUI.EventLoop.mainEventLoop().stop()
+
+IECore.registerRunTimeTyped( op )

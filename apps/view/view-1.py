@@ -99,3 +99,5 @@ class view( Gaffer.Application ) :
 	def __closed( self, window ) :
 	
 		GafferUI.EventLoop.mainEventLoop().stop()
+
+IECore.registerRunTimeTyped( view )
