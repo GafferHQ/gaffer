@@ -77,6 +77,7 @@ namespace GafferUIBindings
 		if( f )\
 		{\
 			f( renderer );\
+			return;\
 		}\
 		CLASSNAME::doRender( renderer );\
 	}\

@@ -1,5 +1,7 @@
 * All gaffer applications now include a call to IECore.registerRunTimeTyped.
 
+* Fixed bug which would cause the base class doRender() method to be called in addition to the overridden one when subclassing from Gadget in python.
+
 0.11.0
 ------
 
