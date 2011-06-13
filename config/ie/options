@@ -88,6 +88,13 @@ LOCATE_DEPENDENCY_CPPPATH = [
 
 ]
 
+if getOption( "RELEASE", "0" )=="0" :
+
+	LOCATE_DEPENDENCY_CPPPATH.insert(
+		0,
+		os.path.join( os.path.expanduser( "~" ), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion )
+	)
+	
 ##########################################################################
 # get lib locations right
 ##########################################################################
@@ -98,6 +105,13 @@ LOCATE_DEPENDENCY_LIBPATH = [
 
 ]
 
+if getOption( "RELEASE", "0" )=="0" :
+
+	LOCATE_DEPENDENCY_LIBPATH.insert(
+		0,
+		os.path.join( os.path.expanduser( "~" ), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
+	)
+	
 ##########################################################################
 # figure out the lib suffixes
 ##########################################################################
