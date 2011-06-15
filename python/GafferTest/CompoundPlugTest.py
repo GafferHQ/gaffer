@@ -281,6 +281,11 @@ class CompoundPlugTest( unittest.TestCase ) :
 		n["p"] = p
 		
 		self.failUnless( n["p"] is p )
+
+	def testAcceptsNoneInput( self ) :
+	
+		p = Gaffer.CompoundPlug( "hello" )
+		self.failUnless( p.acceptsInput( None ) )
 		
 if __name__ == "__main__":
 	unittest.main()

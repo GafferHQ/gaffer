@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -71,22 +72,24 @@ bool CompoundPlug::acceptsInput( ConstPlugPtr input ) const
 	{
 		return false;
 	}
-	
-	ConstCompoundPlugPtr p = IECore::runTimeCast<const CompoundPlug>( input );
-	if( !p )
+	if( input )
 	{
-		return false;
-	}
-	if( children().size()!=p->children().size() )
-	{
-		return false;
-	}
-	ChildContainer::const_iterator it1, it2;
-	for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
-	{
-		if( !IECore::staticPointerCast<Plug>( *it1 )->acceptsInput( IECore::staticPointerCast<Plug>( *it2 ) ) )
+		ConstCompoundPlugPtr p = IECore::runTimeCast<const CompoundPlug>( input );
+		if( !p )
 		{
 			return false;
+		}
+		if( children().size()!=p->children().size() )
+		{
+			return false;
+		}
+		ChildContainer::const_iterator it1, it2;
+		for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
+		{
+			if( !IECore::staticPointerCast<Plug>( *it1 )->acceptsInput( IECore::staticPointerCast<Plug>( *it2 ) ) )
+			{
+				return false;
+			}
 		}
 	}
 	return true;

@@ -82,6 +82,11 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	def testRunTimeTyped( self ) :
 	
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( Gaffer.ObjectPlug.staticTypeId() ), Gaffer.ValuePlug.staticTypeId() )
+	
+	def testAcceptsNoneInput( self ) :
+	
+		p = Gaffer.ObjectPlug( "hello" )
+		self.failUnless( p.acceptsInput( None ) )
 				
 if __name__ == "__main__":
 	unittest.main()

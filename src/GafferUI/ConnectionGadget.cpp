@@ -163,8 +163,11 @@ IECore::RunTimeTypedPtr ConnectionGadget::dragBegin( GadgetPtr gadget, const Dra
 		}
 		else
 		{
-			m_dragEnd = Gaffer::Plug::In;
-			return m_srcNodule->plug();
+			if( m_dstNodule->plug()->acceptsInput( 0 ) )
+			{
+				m_dragEnd = Gaffer::Plug::In;
+				return m_srcNodule->plug();
+			}
 		}
 	}
 	
@@ -189,9 +192,12 @@ bool ConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( !event.destination )
 	{
-		// noone wanted the drop so we'll disconnect
-		Gaffer::UndoContext undoEnabler( m_dstNodule->plug()->ancestor<Gaffer::ScriptNode>() );
-		m_dstNodule->plug()->setInput( 0 );
+		// noone wanted the drop so we'll disconnect if the destination plug allows it
+		if( m_dstNodule->plug()->acceptsInput( 0 ) )
+		{
+			Gaffer::UndoContext undoEnabler( m_dstNodule->plug()->ancestor<Gaffer::ScriptNode>() );
+			m_dstNodule->plug()->setInput( 0 );
+		}
 	}
 	else
 	{

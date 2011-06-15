@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -66,6 +67,11 @@ class TypedPlugTest( unittest.TestCase ) :
 		self.assert_( p2.getInput().isSame( p1 ) )
 		p2.setInput( None )
 		self.assert_( p2.getInput() is None )
+
+	def testAcceptsNoneInput( self ) :
+	
+		p = Gaffer.StringPlug( "hello" )
+		self.failUnless( p.acceptsInput( None ) )
 				
 if __name__ == "__main__":
 	unittest.main()

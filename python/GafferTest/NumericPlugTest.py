@@ -106,6 +106,11 @@ class NumericPlugTest( unittest.TestCase ) :
 		
 		self.failUnless( i.acceptsInput( o ) )
 		self.failIf( i.acceptsInput( s ) )
+	
+	def testAcceptsNoneInput( self ) :
+	
+		p = Gaffer.IntPlug( "hello" )
+		self.failUnless( p.acceptsInput( None ) )
 		
 if __name__ == "__main__":
 	unittest.main()

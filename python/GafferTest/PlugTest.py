@@ -195,6 +195,41 @@ class PlugTest( unittest.TestCase ) :
 		
 		p2 = TestPlug()
 		self.assertRaises( RuntimeError, Gaffer.CompoundPlug().addChild, p2 )
+	
+	def testAcceptsInputForInputRemoval( self ) :
+	
+		class NoDisconnectionPlug( Gaffer.Plug ) :
+		
+			def __init__( self, name = "NoDisconnectionPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
+			
+				Gaffer.Plug.__init__( self, name, direction, flags )
+				
+			def acceptsInput( self, plug ) :
+			
+				if not Gaffer.Plug.acceptsInput( self, plug ) :
+					return False
+				
+				if plug is None :
+					return False
+					
+				return True
+
+		IECore.registerRunTimeTyped( NoDisconnectionPlug )
+		
+		n1 = Gaffer.Node()
+		n1.addChild( NoDisconnectionPlug( "testIn" ) )
+				
+		n2 = Gaffer.Node()
+		n2.addChild( Gaffer.IntPlug( name = "intOut", direction = Gaffer.Plug.Direction.Out ) )
+		
+		self.failUnless( n1["testIn"].acceptsInput( n2["intOut"] ) )
+		self.failIf( n1["testIn"].acceptsInput( None ) )
+		
+		n1["testIn"].setInput( n2["intOut"] )
+		self.failUnless( n1["testIn"].getInput().isSame( n2["intOut"] ) )
+						
+		self.assertRaises( Exception, n1["testIn"].setInput, None )
+		self.failUnless( n1["testIn"].getInput().isSame( n2["intOut"] ) )
 				
 if __name__ == "__main__":
 	unittest.main()

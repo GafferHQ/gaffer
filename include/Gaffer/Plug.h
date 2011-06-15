@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -118,9 +119,19 @@ class Plug : public GraphComponent
 		///////////////////////////////////////////////////////////////////////
 		//@{
 		typedef std::list<Plug *> OutputContainer;
-		/// Accepts any input, provided that direction()==In.
+		/// Plugs may accept or reject a potential input by
+		/// implementing this method to return true for
+		/// acceptance and false for rejection. Implementations
+		/// should call their base class and only accept an
+		/// input if their base class does too. The default
+		/// implementation accepts any input, provided that 
+		/// direction()==In. Note that this method will be
+		/// called with input==0 to check that the existing
+		/// input may be removed.
 		virtual bool acceptsInput( ConstPlugPtr input ) const;
-		/// Pass input as 0 to remove any existing inputs.
+		/// Sets the input to this plug if acceptsInput( input )
+		/// returns true, otherwise throws an IECore::Exception.
+		/// Pass 0 to remove the current input.
 		/// \undoable
 		virtual void setInput( PlugPtr input );
 		template<typename T>

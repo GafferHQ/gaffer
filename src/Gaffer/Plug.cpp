@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -129,9 +130,13 @@ void Plug::setInput( PlugPtr input )
 	{
 		return;
 	}
-	if( input && !acceptsInput( input ) )
+	if( !acceptsInput( input ) )
 	{
-		std::string what = boost::str( boost::format( "Plug \"%s\" rejects input \"%s\"." ) % fullName() % input->fullName() );
+		std::string what = boost::str(
+			boost::format( "Plug \"%s\" rejects input \"%s\"." )
+			% fullName()
+			% ( input ? input->fullName() : "none" )
+		);
 		throw IECore::Exception( what );
 	}
 	if( refCount() )

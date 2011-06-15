@@ -72,7 +72,11 @@ bool TypedObjectPlug<T>::acceptsInput( ConstPlugPtr input ) const
 	{
 		return false;
 	}
-	return input->isInstanceOf( staticTypeId() );
+	if( input )
+	{
+		return input->isInstanceOf( staticTypeId() );
+	}
+	return true;
 }
 
 template<class T>
