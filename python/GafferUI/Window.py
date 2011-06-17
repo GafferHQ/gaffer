@@ -42,7 +42,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Window( GafferUI.ContainerWidget ) :
 
-	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=True ) :
+	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=True, child=None ) :
 	
 		GafferUI.ContainerWidget.__init__(
 			self, QtGui.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ) )
@@ -62,6 +62,8 @@ class Window( GafferUI.ContainerWidget ) :
 		self.setResizeable( resizeable )
 
 		self.__closedSignal = GafferUI.WidgetSignal()
+		
+		self.setChild( child )
 				
 	def setTitle( self, title ) :
 	

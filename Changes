@@ -5,6 +5,8 @@
 
 * Plug::setInput() now calls acceptsInput() even when the new input is null. This allows plugs to reject the removal of existing connections. The connection gadget has been updated to respect the new rejection possibility, preventing the dragging of the destination end of a connection to a plug whose acceptsInput( 0 ) returns false, and not attempting to set the input if the source end of source a connection is dragged off into space. Currently no Gaffer plug type returns false from acceptsInput( 0 ), but custom plugs are free to do so and Gaffer plugs may return false in the future based on the content of a ReadOnly or Locked flag on the plug.
 
+* Window constructor now accepts an additional "child" keyword argument which is passed to a call to setChild().
+
 0.11.0
 ------
 
