@@ -119,6 +119,10 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.assertEqual( ph["parameters"]["fv"].defaultValue(), IECore.FloatVectorData() )
 		self.assertEqual( ph["parameters"]["sv"].defaultValue(), IECore.StringVectorData() )
 		
+		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData() )
+		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData() )
+		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData() )
+		
 		with ph.parameterModificationContext() as parameters :
 		
 			parameters["iv"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
