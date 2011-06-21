@@ -107,6 +107,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 				IECore.IntVectorParameter( "iv", "", IECore.IntVectorData() ),
 				IECore.FloatVectorParameter( "fv", "", IECore.FloatVectorData() ),
 				IECore.StringVectorParameter( "sv", "", IECore.StringVectorData() ),
+				IECore.V3fVectorParameter( "vv", "", IECore.V3fVectorData() ),
 		
 			]
 			
@@ -118,30 +119,36 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.assertEqual( ph["parameters"]["iv"].defaultValue(), IECore.IntVectorData() )
 		self.assertEqual( ph["parameters"]["fv"].defaultValue(), IECore.FloatVectorData() )
 		self.assertEqual( ph["parameters"]["sv"].defaultValue(), IECore.StringVectorData() )
+		self.assertEqual( ph["parameters"]["vv"].defaultValue(), IECore.V3fVectorData() )
 		
 		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData() )
 		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData() )
 		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData() )
+		self.assertEqual( ph["parameters"]["vv"].getValue(), IECore.V3fVectorData() )
 		
 		with ph.parameterModificationContext() as parameters :
 		
 			parameters["iv"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
 			parameters["fv"].setValue( IECore.FloatVectorData( [ 1 ] ) )
 			parameters["sv"].setValue( IECore.StringVectorData( [ "a" ] ) )
+			parameters["vv"].setValue( IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ) )
 		
 		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 1, 2, 3 ] ) )
 		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 1 ] ) )
 		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "a" ] ) )	
+		self.assertEqual( ph["parameters"]["vv"].getValue(), IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ) )
 		
 		ph["parameters"]["iv"].setValue( IECore.IntVectorData( [ 2, 3, 4 ] ) )
 		ph["parameters"]["fv"].setValue( IECore.FloatVectorData( [ 2 ] ) )
 		ph["parameters"]["sv"].setValue( IECore.StringVectorData( [ "b" ] ) )
+		ph["parameters"]["vv"].setValue( IECore.V3fVectorData( [ IECore.V3f( 10, 20, 30 ) ] ) )
 		
 		ph.setParameterisedValues()
 		
-		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 2, 3, 4 ] ) )
-		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 2 ] ) )
-		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )
+		self.assertEqual( parameters["iv"].getValue(), IECore.IntVectorData( [ 2, 3, 4 ] ) )
+		self.assertEqual( parameters["fv"].getValue(), IECore.FloatVectorData( [ 2 ] ) )
+		self.assertEqual( parameters["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )
+		self.assertEqual( parameters["vv"].getValue(), IECore.V3fVectorData( [ IECore.V3f( 10, 20, 30 ) ] ) )
 		
 	def testNoHostMapping( self ) :
 	
