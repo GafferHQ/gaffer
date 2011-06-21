@@ -1,3 +1,4 @@
+* Added a V3fVectorDataPlug and a V3fVectorDataParameter handler.
 
 * All gaffer applications now include a call to IECore.registerRunTimeTyped.
 

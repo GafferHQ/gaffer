@@ -103,11 +103,13 @@ typedef TypedObjectPlug<IECore::Object> ObjectPlug;
 typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
 typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
 typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
+typedef TypedObjectPlug<IECore::V3fVectorData> V3fVectorDataPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
 IE_CORE_DECLAREPTR( IntVectorDataPlug );
 IE_CORE_DECLAREPTR( FloatVectorDataPlug );
 IE_CORE_DECLAREPTR( StringVectorDataPlug );
+IE_CORE_DECLAREPTR( V3fVectorDataPlug );
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
@@ -124,6 +126,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, FloatVectorDataPlug> > Ou
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, StringVectorDataPlug> > StringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, StringVectorDataPlug> > InputStringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringVectorDataPlug> > OutputStringVectorDataPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3fVectorDataPlug> > V3fVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, V3fVectorDataPlug> > InputV3fVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fVectorDataPlug> > OutputV3fVectorDataPlugIterator;
 
 } // namespace Gaffer
 

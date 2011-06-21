@@ -72,6 +72,7 @@ enum TypeId
 	IntVectorDataPlugTypeId = 400025,
 	FloatVectorDataPlugTypeId = 400026,
 	StringVectorDataPlugTypeId = 400027,
+	V3fVectorDataPlugTypeId = 400028,
 	
 	FirstPythonTypeId = 405000,
 	
