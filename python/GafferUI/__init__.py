@@ -105,6 +105,7 @@ from Spacer import Spacer
 from CheckBox import CheckBox
 from Image import Image
 from ErrorDialogue import ErrorDialogue
+from VectorDataWidget import VectorDataWidget
 
 # then stuff specific to graph uis
 
@@ -113,6 +114,7 @@ from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget
 from BoolPlugValueWidget import BoolPlugValueWidget
 #from FileNamePlugValueWidget import FileNamePlugValueWidget
+from VectorDataPlugValueWidget import VectorDataPlugValueWidget
 from PlugWidget import PlugWidget
 from EditorWidget import EditorWidget
 from ScriptEditor import ScriptEditor

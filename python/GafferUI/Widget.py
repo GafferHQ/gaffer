@@ -617,6 +617,23 @@ class Widget( object ) :
 
 		}
 
+		QTableView#vectorDataWidget {
+			border: 0px solid transparent;
+			padding: 0px;
+		}
+		
+		QTableView#vectorDataWidgetEditable {
+			border: 0px solid transparent;
+			padding: 0px;
+			background-color: $backgroundLighter;
+			gridline-color: $backgroundMid;
+		}
+		
+		QHeaderView::section#vectorDataWidgetVerticalHeader {
+			background-color: transparent;
+			border: 0px solid transparent;
+		}
+		
 		"""
 		
 	).substitute( {

@@ -1,3 +1,5 @@
+* Added a VectorDataWidget and a VectorDataPlugValueWidget, handling plugs of type StringVectorPlug, IntVectorPlug, FloatVectorPlug and V3fVectorPlug. Still needs file selector support.
+
 * Added a V3fVectorDataPlug and a V3fVectorDataParameter handler.
 
 * All gaffer applications now include a call to IECore.registerRunTimeTyped.
