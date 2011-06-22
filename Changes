@@ -10,6 +10,8 @@
 
 * Window constructor now accepts an additional "child" keyword argument which is passed to a call to setChild().
 
+* Fixed problem whereby the hover colour for the SplitContainer handles wouldn't work on all platforms.
+
 0.11.0
 ------
 

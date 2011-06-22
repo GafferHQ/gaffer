@@ -412,6 +412,18 @@ class Widget( object ) :
 			background-color: $backgroundDark;
 
 		}
+		
+		QSplitter::handle:horizontal {
+			width: 4px;
+		}
+
+		QSplitter::handle:vertical {
+			height: 4px;
+		}
+		
+		/* I'm not sure why this is necessary, but it works around a problem where the */
+		/* style for QSplitter::handle:hover isn't always accepted.                    */
+		QSplitterHandle:hover {}
 
 		QTabBar::tab:hover, QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover,
 		QPushButton:pressed {
