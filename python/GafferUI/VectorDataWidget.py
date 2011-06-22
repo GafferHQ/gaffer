@@ -60,6 +60,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self._qtWidget().setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self._qtWidget().setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed ) )
+		
+		self._qtWidget().setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
+		
+		self._qtWidget().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		self._qtWidget().customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
 	
@@ -109,6 +114,50 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		self.dataChangedSignal()( self )
 		
+	def __contextMenu( self, pos ) :
+	
+		m = IECore.MenuDefinition()
+		
+		m.append( "/Select All", { "command" : self.__selectAll } )
+		m.append( "/Clear Selection", { "command" : self.__clearSelection } )
+		
+		m.append( "/divider", { "divider" : True } )
+		
+		m.append( "/Remove Selection", { "command" : self.__removeSelection } )
+		
+		m = GafferUI.Menu( m )
+		m.popup( self )
+			
+	def __selectAll( self ) :
+	
+		self._qtWidget().selectAll()
+		
+	def __clearSelection( self ) :
+	
+		self._qtWidget().clearSelection()
+	
+	def __removeSelection( self ) :
+	
+		# decide what to delete
+		rows = [ x.row() for x in self._qtWidget().selectedIndexes() ]
+		rows = list( set( rows ) ) # remove duplicates
+		rows.sort()
+		
+		data = self.getData()
+		
+		# remove the "Add..." row which can't be deleted as it doesn't
+		# exist in the data.
+		if rows[-1] >= len( data ) :
+			del rows[-1]
+		
+		# delete the rows from data
+		for i in range( len( rows )-1, -1, -1 ) :
+			del data[rows[i]]
+		
+		# tell the world
+		self.setData( data )
+		self.__dataChanged()
+	
 ## Private implementation - a QTableView which is much more forceful about
 # requesting enough height if the vertical scrollbar is always off.
 class _TableView( QtGui.QTableView ) :
