@@ -112,7 +112,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		scriptNode = self.getScriptNode()
 		selection = scriptNode.selection()
 		result = IECore.Box3f()
-		for node in selection.members() :
+		for node in selection :
 			nodeGadget = graphGadget.nodeGadget( node )
 			if nodeGadget :
 				result.extendBy( nodeGadget.transformedBound( graphGadget ) )

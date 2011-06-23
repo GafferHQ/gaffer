@@ -75,9 +75,9 @@ class GraphEditorTest( unittest.TestCase ) :
 		n = GafferTest.AddNode()
 		s["add1"] = n
 		
-		self.failUnless( g.nodeGadget() is not None )
+		self.failUnless( g.nodeGadget( n ) is not None )
 		
-		s.deleteNodes( Gaffer.Set( [ n ] ) )
+		s.deleteNodes( Gaffer.StandardSet( [ n ] ) )
 
 		self.failUnless( g.nodeGadget( n ) is None )
 		

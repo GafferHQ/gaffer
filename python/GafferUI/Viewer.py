@@ -92,7 +92,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			# we're being called during construction
 			return
 		
-		node = self.getNodeSet().lastAdded()
+		node = self._lastAddedNode()
 		if node :
 			self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 		else :
@@ -103,7 +103,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def __update( self ) :
 	
 		renderable = None			
-		node = self.getNodeSet().lastAdded()
+		node = self._lastAddedNode()
 		if node and "output" in node :
 			renderable = node["output"].getValue()
 				

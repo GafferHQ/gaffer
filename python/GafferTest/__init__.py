@@ -44,7 +44,7 @@ from PlugTest import PlugTest
 from NumericPlugTest import NumericPlugTest
 from TypedPlugTest import TypedPlugTest
 from ScriptNodeTest import ScriptNodeTest
-from SetTest import SetTest
+from StandardSetTest import StandardSetTest
 from FileSystemPathTest import FileSystemPathTest
 from PathTest import PathTest
 from PathFilterTest import PathFilterTest

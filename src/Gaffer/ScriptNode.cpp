@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -57,7 +58,7 @@ GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 
 ScriptNode::ScriptNode( const std::string &name )
-	:	Node( name ), m_selection( new Set ), m_undoIterator( m_undoList.end() )
+	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() )
 {
 	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "" );
 	addChild( m_fileNamePlug );
@@ -96,12 +97,12 @@ bool ScriptNode::selectionSetAcceptor( Set::ConstPtr s, Set::ConstMemberPtr m )
 	return n->parent<ScriptNode>()==this;
 }
 
-SetPtr ScriptNode::selection()
+StandardSetPtr ScriptNode::selection()
 {
 	return m_selection;
 }
 
-ConstSetPtr ScriptNode::selection() const
+ConstStandardSetPtr ScriptNode::selection() const
 {
 	return m_selection;
 }
@@ -161,16 +162,19 @@ void ScriptNode::paste()
 	IECore::ConstStringDataPtr s = IECore::runTimeCast<const IECore::StringData>( app->getClipboardContents() );
 	if( s )
 	{
-		// set up something catch all the newly created nodes
-		SetPtr newNodes = new Set;
-		childAddedSignal().connect( boost::bind( (bool (Set::*)( IECore::RunTimeTypedPtr ) )&Set::add, newNodes.get(), ::_2 ) );
+		// set up something to catch all the newly created nodes
+		StandardSetPtr newNodes = new StandardSet;
+		childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newNodes.get(), ::_2 ) );
 			
 			// do the paste
 			execute( s->readable() );
 
 		// transfer the newly created nodes into the selection
 		selection()->clear();
-		selection()->add( newNodes->sequencedMembers().begin(), newNodes->sequencedMembers().end() );
+		for( size_t i = 0, e = newNodes->size(); i < e; i++ )
+		{
+			selection()->add( newNodes->member( i ) );
+		}
 	}
 }
 

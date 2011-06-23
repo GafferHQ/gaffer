@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,18 +43,18 @@ import IECore
 
 import Gaffer
 
-class SetTest( unittest.TestCase ) :
+class StandardSetTest( unittest.TestCase ) :
 
 	def testRunTimeTyped( self ) :
 	
-		s = Gaffer.Set()
-		self.assertEqual( s.typeName(), "Set" )
-		self.assertEqual( s.staticTypeName(), "Set" )
+		s = Gaffer.StandardSet()
+		self.assertEqual( s.typeName(), "StandardSet" )
+		self.assertEqual( s.staticTypeName(), "StandardSet" )
 		self.assert_( s.isInstanceOf, IECore.TypeId.RunTimeTyped )
 	
 	def testBasicMethods( self ) :
 	
-		s = Gaffer.Set()
+		s = Gaffer.StandardSet()
 		self.assertEqual( len( s ), 0 )
 		self.assertEqual( s.size(), 0 )
 		
@@ -106,51 +107,47 @@ class SetTest( unittest.TestCase ) :
 		self.assertEqual( len( s ), 0 )
 		self.assertEqual( s.size(), 0 )
 	
-	def testMembers( self ) :
+	def testGetItem( self ) :
 	
-		s = Gaffer.Set()
-		n = Gaffer.Node()
-		s.add( n )
+		s = Gaffer.StandardSet()
 		
-		m = s.members()
-		self.assert_( isinstance( m, set ) )
-		self.assertEqual( len( m ), 1 )
-		self.assert_( n in m )
+		n1 = Gaffer.Node()
+		n2 = Gaffer.Node()
 		
-		w = weakref.ref( m )
-		del m
-		while gc.collect() :
-			pass
-			
-		self.assert_( w() is None )
+		s.add( n1 )
+		s.add( n2 )
+		
+		self.failUnless( s[0] is n1 )
+		self.failUnless( s[1] is n2 )
+		self.failUnless( s[-1] is n2 )
+		self.failUnless( s[-2] is n1 )
+		
+		self.assertRaises( IndexError, s.__getitem__, 2 )
+		self.assertRaises( IndexError, s.__getitem__, -3 )
+		
+	def testMemberOrdering( self ) :
 	
-	def testSequencedMembers( self ) :
-	
-		s = Gaffer.Set()
+		s = Gaffer.StandardSet()
 		
-		l = []
 		for i in range( 0, 1000 ) :
 			n = Gaffer.Node()
 			n.setName( "s" + str( i ) )
-			l.append( n )
 			s.add( n )
 			
-		m = s.sequencedMembers()
-		self.assert_( isinstance( m, tuple ) )
-		self.assertEqual( len( m ), s.size() )
-		for i in range( 0, len( m ) ) :
-			self.assertEqual( m[i].getName(), "s" + str( i ) )
+		self.assertEqual( len( s ), 1000 )
+		for i in range( 0, len( s ) ) :
+			self.assertEqual( s[i].getName(), "s" + str( i ) )
 	
 	def testLastAdded( self ) :
 	
-		s = Gaffer.Set()
+		s = Gaffer.StandardSet()
 		
 		for i in range( 0, 1000 ) :
 		
 			n = Gaffer.Node()
 			s.add( n )
 			
-			self.assert_( s.lastAdded().isSame( n ) )
+			self.assert_( s[-1].isSame( n ) )
 		
 	def testSignals( self ) :
 	
@@ -163,7 +160,7 @@ class SetTest( unittest.TestCase ) :
 		
 			ps.remove( member )
 			
-		s = Gaffer.Set()
+		s = Gaffer.StandardSet()
 		
 		c1 = s.memberAddedSignal().connect( added )
 		c2 = s.memberRemovedSignal().connect( removed )
@@ -176,18 +173,18 @@ class SetTest( unittest.TestCase ) :
 		s.add( n2 )
 		s.add( n3 )
 		
-		self.assertEqual( ps, s.members() )
+		self.assertEqual( ps, set( s ) )
 		
 		s.remove( n1 )
 		s.remove( n2 )
 
-		self.assertEqual( ps, s.members() )
+		self.assertEqual( ps, set( s ) )
 		
 		s.add( n1 )
 		s.add( n2 )
 		s.clear()
 		
-		self.assertEqual( ps, s.members() )
+		self.assertEqual( ps, set( s ) )
 		
 	def testConstructFromSequence( self ) :
 	
@@ -195,7 +192,7 @@ class SetTest( unittest.TestCase ) :
 		n2 = Gaffer.Node()
 		n3 = Gaffer.Node()
 		
-		s = Gaffer.Set( ( n1, n2 ) )
+		s = Gaffer.StandardSet( ( n1, n2 ) )
 		self.assert_( n1 in s )
 		self.assert_( n2 in s )
 		self.assert_( not n3 in s )
@@ -204,18 +201,19 @@ class SetTest( unittest.TestCase ) :
 	
 		n = ( Gaffer.Node(), Gaffer.Node(), Gaffer.Node() )
 		
-		s = Gaffer.Set()
+		s = Gaffer.StandardSet()
 		s.add( n )
 		
-		self.assertEqual( set( n ), s.members() )
+		self.assertEqual( set( n ), set( s ) )
 		
 		s.remove( n )
 		
-		self.assertEqual( set(), s.members() )
+		self.assertEqual( len( s ), 0 )
+		self.assertEqual( set(), set( s ) )
 	
 	def testMemberAcceptanceSignals( self ) :
 	
-		s = Gaffer.Set()
+		s = Gaffer.StandardSet()
 		
 		def f( s, m ) :
 				
@@ -233,6 +231,22 @@ class SetTest( unittest.TestCase ) :
 		s.add( p )
 		
 		self.failUnless( p in s )
+	
+	def testMembershipQueries( self ) :
+	
+		members = [ Gaffer.Node(), Gaffer.Node(), Gaffer.Node() ]
+		notMembers = [ Gaffer.Node(), Gaffer.Node(), Gaffer.Node() ]
+		
+		s = Gaffer.StandardSet( members )
+		
+		for m in members :
+			self.failUnless( m in s )
+			self.failUnless( s.contains( m ) )
+			
+		for m in notMembers :
+			self.failIf( m in s )
+			self.failIf( s.contains( m ) )
+			
 		
 if __name__ == "__main__":
 	unittest.main()

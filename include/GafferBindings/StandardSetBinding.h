@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,40 +35,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SET_INL
-#define GAFFER_SET_INL
+#ifndef GAFFERBINDINGS_STANDARDSETBINDING_H
+#define GAFFERBINDINGS_STANDARDSETBINDING_H
 
-namespace Gaffer
+namespace GafferBindings
 {
 
-template<typename I>
-size_t Set::add( I first, I last )
-{
-	size_t numAdded = 0;
-	for( I it=first; it!=last; it++ )
-	{
-		numAdded += add( *it );
-	}
-	return numAdded;
-}
+void bindStandardSet();
 
-template<typename I>
-size_t Set::remove( I first, I last )
-{
-	size_t numRemoved = 0;
-	for( I it=first; it!=last; it++ )
-	{
-		numRemoved += remove( *it );
-	}
-	return numRemoved;
-}
+} // namespace GafferBindings
 
-template<typename T>
-bool Set::typedMemberAcceptor( Ptr set, ConstMemberPtr potentialMember )
-{
-	return potentialMember->isInstanceOf( T::staticTypeId() );
-}
-					
-} // namespace Gaffer
-
-#endif // GAFFER_CONTAINER_INL
+#endif // GAFFERBINDINGS_STANDARDSETBINDING_H

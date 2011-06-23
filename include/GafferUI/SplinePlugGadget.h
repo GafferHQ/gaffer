@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,11 +41,12 @@
 #include "GafferUI/Gadget.h"
 
 #include "Gaffer/SplinePlug.h"
-#include "Gaffer/Set.h"
+#include "Gaffer/StandardSet.h"
 
 namespace GafferUI
 {
 
+/// \todo I think this should work with any sort of Set for the splines.
 class SplinePlugGadget : public Gadget
 {
 
@@ -56,12 +58,12 @@ class SplinePlugGadget : public Gadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SplinePlugGadget, SplinePlugGadgetTypeId, Gadget );
 
 		/// The splines to be edited
-		Gaffer::SetPtr splines();
-		Gaffer::ConstSetPtr splines() const;
+		Gaffer::StandardSetPtr splines();
+		Gaffer::ConstStandardSetPtr splines() const;
 
 		/// The selected spline points
-		Gaffer::SetPtr selection();
-		Gaffer::ConstSetPtr selection() const;
+		Gaffer::StandardSetPtr selection();
+		Gaffer::ConstStandardSetPtr selection() const;
 
 		virtual Imath::Box3f bound() const;
 		
@@ -74,13 +76,13 @@ class SplinePlugGadget : public Gadget
 		void splineAdded( Gaffer::SetPtr splineSet, IECore::RunTimeTypedPtr splinePlug );
 		void splineRemoved( Gaffer::SetPtr splineSet, IECore::RunTimeTypedPtr splinePlug );
 		void plugSet( Gaffer::PlugPtr plug );
-		Gaffer::SetPtr m_splines;
-		Gaffer::SetPtr m_selection;
+		Gaffer::StandardSetPtr m_splines;
+		Gaffer::StandardSetPtr m_selection;
 		
 		void pointAdded( Gaffer::GraphComponentPtr spline, Gaffer::GraphComponentPtr point );
 		void pointRemoved( Gaffer::GraphComponentPtr spline, Gaffer::GraphComponentPtr point );
 		
-		bool selectionAcceptance( Gaffer::ConstSetPtr selection, IECore::ConstRunTimeTypedPtr point );
+		bool selectionAcceptance( Gaffer::ConstStandardSetPtr selection, IECore::ConstRunTimeTypedPtr point );
 		
 		struct UI;
 		typedef std::map<Gaffer::Plug *, UI> SplineUIMap;

@@ -36,11 +36,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/CatchingSlotCaller.h"
+#include "GafferBindings/StandardSetBinding.h"
 
-#include "Gaffer/Set.h"
+#include "Gaffer/StandardSet.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -49,38 +51,65 @@ using namespace Gaffer;
 namespace GafferBindings
 {
 
-static IECore::RunTimeTypedPtr getItem( Set &s, long index )
+namespace Detail
 {
-	long size = s.size();
 
-	if( index < 0 )
-	{
-		index += size;
-	}
-
-	if( index >= size || index < 0 )
-	{
-		PyErr_SetString( PyExc_IndexError, "Index out of range" );
-		boost::python::throw_error_already_set();
-	}
-
-	return s.member( index );
+SetPtr setConstructor( boost::python::object o )
+{
+	StandardSetPtr result = new StandardSet;
+	std::vector<Set::MemberPtr> members;
+	boost::python::container_utils::extend_container( members, o );
+	result->add( members.begin(), members.end() );
+	return result;
 }
 
-void bindSet()
+static size_t addFromSequence( StandardSet &s, boost::python::object o )
+{
+	std::vector<Set::MemberPtr> members;
+	boost::python::container_utils::extend_container( members, o );
+	return s.add( members.begin(), members.end() );
+}
+
+static size_t removeFromSequence( StandardSet &s, boost::python::object o )
+{
+	std::vector<Set::MemberPtr> members;
+	boost::python::container_utils::extend_container( members, o );
+	return s.remove( members.begin(), members.end() );
+}
+
+struct MemberAcceptanceSlotCaller
+{
+	bool operator()( boost::python::object slot, ConstSetPtr s, IECore::ConstRunTimeTypedPtr m )
+	{
+		try
+		{
+			return slot( IECore::constPointerCast<Set>( s ), IECore::constPointerCast<IECore::RunTimeTyped>( m ) );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return false;
+	}
+};
+
+} // namespace Detail
+
+void bindStandardSet()
 {
 	
-	boost::python::scope s = IECorePython::RunTimeTypedClass<Set>()
-		.def( "contains", &Set::contains )
-		.def( "size", &Set::size )
-		.def( "__contains__", &Set::contains )
-		.def( "__len__", &Set::size )
-		.def( "__getitem__", &getItem )
-		.def( "memberAddedSignal", &Set::memberAddedSignal, boost::python::return_internal_reference<1>() )
-		.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
+	boost::python::scope s = IECorePython::RunTimeTypedClass<StandardSet>()
+		.def( boost::python::init<>() )
+		.def( "__init__", boost::python::make_constructor( Detail::setConstructor ) )
+		.def( "add", &Detail::addFromSequence )
+		.def( "add", (bool (StandardSet::*)( Set::MemberPtr ) )&StandardSet::add )
+		.def( "remove", &Detail::removeFromSequence )
+		.def( "remove", (bool (StandardSet::*)( Set::MemberPtr ) )&StandardSet::remove )
+		.def( "clear", &StandardSet::clear )
+		.def( "memberAcceptanceSignal", &StandardSet::memberAcceptanceSignal, boost::python::return_internal_reference<1>() )
 	;	
 
-	SignalBinder<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, CatchingSlotCaller<Set::MemberSignal> >::bind( "MemberSignal" );
+	SignalBinder<StandardSet::MemberAcceptanceSignal, DefaultSignalCaller<StandardSet::MemberAcceptanceSignal>, Detail::MemberAcceptanceSlotCaller>::bind( "MemberAcceptanceSignal" );
 	
 }
 

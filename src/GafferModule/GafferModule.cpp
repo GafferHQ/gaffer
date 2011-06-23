@@ -54,6 +54,7 @@
 #include "GafferBindings/SplinePlugBinding.h"
 #include "GafferBindings/ParameterisedHolderBinding.h"
 #include "GafferBindings/ParameterHandlerBinding.h"
+#include "GafferBindings/StandardSetBinding.h"
 
 using namespace GafferBindings;
 
@@ -78,6 +79,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSplinePlug();
 	bindParameterisedHolder();
 	bindParameterHandler();
+	bindStandardSet();
 	
 	typedef boost::signal<int ( float )> TestSignal;
 	SignalBinder<TestSignal>::bind( "TestSignal" );

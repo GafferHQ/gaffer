@@ -58,7 +58,7 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		if scriptNode :
 			self.setNodeSet( scriptNode.selection() )
 		else :
-			self.setNodeSet( Gaffer.Set() )
+			self.setNodeSet( Gaffer.StandardSet() )
 			
 	def setNodeSet( self, nodeSet ) :
 	
@@ -70,6 +70,13 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	def getNodeSet( self ) :
 	
 		return self.__nodeSet
+	
+	def _lastAddedNode( self ) :
+	
+		if len( self.__nodeSet ) :
+			return self.__nodeSet[-1]
+		
+		return None
 		
 	def _updateFromSet( self ) :
 	

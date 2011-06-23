@@ -35,53 +35,77 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "Gaffer/StandardSet.h"
 
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/CatchingSlotCaller.h"
-
-#include "Gaffer/Set.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECore/Exception.h"
 
 using namespace Gaffer;
 
-namespace GafferBindings
+StandardSet::StandardSet()
 {
-
-static IECore::RunTimeTypedPtr getItem( Set &s, long index )
-{
-	long size = s.size();
-
-	if( index < 0 )
-	{
-		index += size;
-	}
-
-	if( index >= size || index < 0 )
-	{
-		PyErr_SetString( PyExc_IndexError, "Index out of range" );
-		boost::python::throw_error_already_set();
-	}
-
-	return s.member( index );
 }
 
-void bindSet()
+StandardSet::~StandardSet()
 {
-	
-	boost::python::scope s = IECorePython::RunTimeTypedClass<Set>()
-		.def( "contains", &Set::contains )
-		.def( "size", &Set::size )
-		.def( "__contains__", &Set::contains )
-		.def( "__len__", &Set::size )
-		.def( "__getitem__", &getItem )
-		.def( "memberAddedSignal", &Set::memberAddedSignal, boost::python::return_internal_reference<1>() )
-		.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
-	;	
-
-	SignalBinder<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, CatchingSlotCaller<Set::MemberSignal> >::bind( "MemberSignal" );
-	
 }
 
-} // namespace GafferBindings
+StandardSet::MemberAcceptanceSignal &StandardSet::memberAcceptanceSignal()
+{
+	return m_memberAcceptanceSignal;
+}
+
+bool StandardSet::add( MemberPtr member )
+{
+	if( !m_memberAcceptanceSignal( this, member ) )
+	{
+		throw IECore::Exception( "Member is not eligible for inclusion in StandardSet." );
+	}
+	
+	bool result = m_members.insert( member ).second;
+	if( result )
+	{
+		memberAddedSignal()( this, member );
+	}
+	return result;
+}
+
+bool StandardSet::remove( MemberPtr member )
+{
+	bool result = m_members.erase( member );
+	if( result )
+	{
+		memberRemovedSignal()( this, member );
+	}
+	return result;
+}
+
+void StandardSet::clear()
+{
+	while( m_members.size() )
+	{
+		remove( *(m_members.begin()) );
+	}
+}
+
+bool StandardSet::contains( ConstMemberPtr object ) const
+{
+	// const cast is ugly but safe and it allows us to present the
+	// appropriate public interface (you should be able to query membership
+	// without non-const access to an object).
+	return m_members.find( const_cast<IECore::RunTimeTyped *>( object.get() ) )!=m_members.end();
+}
+
+Set::MemberPtr StandardSet::member( size_t index )
+{
+	return m_members.get<1>()[index];
+}
+
+Set::ConstMemberPtr StandardSet::member( size_t index ) const
+{
+	return m_members.get<1>()[index];
+}
+		
+size_t StandardSet::size() const
+{
+	return m_members.size();
+}

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -61,7 +62,7 @@ struct SplinePlugGadget::UI
 };
 
 SplinePlugGadget::SplinePlugGadget( const std::string &name )
-	:	Gadget( name ), m_splines( new Set ), m_selection( new Set )
+	:	Gadget( name ), m_splines( new StandardSet ), m_selection( new StandardSet )
 {
 	m_splines->memberAddedSignal().connect( boost::bind( &SplinePlugGadget::splineAdded, this, ::_1,  ::_2 ) );
 	m_splines->memberRemovedSignal().connect( boost::bind( &SplinePlugGadget::splineRemoved, this, ::_1,  ::_2 ) );
@@ -79,22 +80,22 @@ SplinePlugGadget::~SplinePlugGadget()
 {
 }
 
-SetPtr SplinePlugGadget::splines()
+StandardSetPtr SplinePlugGadget::splines()
 {
 	return m_splines;
 }
 
-ConstSetPtr SplinePlugGadget::splines() const
+ConstStandardSetPtr SplinePlugGadget::splines() const
 {
 	return m_splines;
 }
 
-SetPtr SplinePlugGadget::selection()
+StandardSetPtr SplinePlugGadget::selection()
 {
 	return m_selection;
 }
 
-ConstSetPtr SplinePlugGadget::selection() const
+ConstStandardSetPtr SplinePlugGadget::selection() const
 {
 	return m_selection;
 }
@@ -103,10 +104,9 @@ Imath::Box3f SplinePlugGadget::bound() const
 {
 	Box3f result;
 	
-	Set::SequencedIndex::iterator it;
-	for( it=m_splines->sequencedMembers().begin(); it!=m_splines->sequencedMembers().end(); it++ )
+	for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
 	{
-		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( *it );
+		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( i ) );
 		if( spline )
 		{
 			unsigned n = spline->numPoints();
@@ -124,10 +124,9 @@ Imath::Box3f SplinePlugGadget::bound() const
 
 void SplinePlugGadget::doRender( IECore::RendererPtr renderer ) const
 {
-	Set::SequencedIndex::iterator it;
-	for( it=m_splines->sequencedMembers().begin(); it!=m_splines->sequencedMembers().end(); it++ )
+	for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
 	{
-		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( *it );
+		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( i ) );
 		if( spline )
 		{
 			{
@@ -169,7 +168,7 @@ void SplinePlugGadget::doRender( IECore::RendererPtr renderer ) const
 	}
 }
 
-void SplinePlugGadget::splineAdded( SetPtr splineSet, IECore::RunTimeTypedPtr splinePlug )
+void SplinePlugGadget::splineAdded( SetPtr splineStandardSet, IECore::RunTimeTypedPtr splinePlug )
 {
 	SplineffPlugPtr s = IECore::runTimeCast<SplineffPlug>( splinePlug );
 	if( s )
@@ -196,7 +195,7 @@ void SplinePlugGadget::pointRemoved( GraphComponentPtr spline, GraphComponentPtr
 	renderRequestSignal()( this );
 }
 
-bool SplinePlugGadget::selectionAcceptance( ConstSetPtr selection, IECore::ConstRunTimeTypedPtr point )
+bool SplinePlugGadget::selectionAcceptance( ConstStandardSetPtr selection, IECore::ConstRunTimeTypedPtr point )
 {
 	ConstPlugPtr p = IECore::runTimeCast<const Plug>( point );
 	if( !p )
@@ -211,7 +210,7 @@ bool SplinePlugGadget::selectionAcceptance( ConstSetPtr selection, IECore::Const
 	return m_splines->contains( pp );
 }
 
-void SplinePlugGadget::splineRemoved( SetPtr splineSet, IECore::RunTimeTypedPtr splinePlug )
+void SplinePlugGadget::splineRemoved( SetPtr splineStandardSet, IECore::RunTimeTypedPtr splinePlug )
 {
 	m_uis.erase( static_cast<Plug *>( splinePlug.get() ) );
 	
@@ -286,7 +285,7 @@ bool SplinePlugGadget::buttonPress( GadgetPtr, const ButtonEvent &event )
 		{
 			return false;
 		}
-		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->lastAdded() );
+		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( m_splines->size() - 1 ) );
 		if( !spline )
 		{
 			return false;
@@ -308,10 +307,9 @@ bool SplinePlugGadget::buttonPress( GadgetPtr, const ButtonEvent &event )
 		bool clearedOnce = false;
 		bool handled = false;
 		bool shiftHeld = event.modifiers && ButtonEvent::Shift;
-		Set::SequencedIndex::iterator it;
-		for( it=m_splines->sequencedMembers().begin(); it!=m_splines->sequencedMembers().end(); it++ )
+		for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
 		{
-			SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( *it );
+			SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( i ) );
 			if( spline )
 			{
 				unsigned n = spline->numPoints();
@@ -389,9 +387,9 @@ bool SplinePlugGadget::dragUpdate( GadgetPtr gadget, const ButtonEvent &event )
 		V2f pos = V2f( i.x, i.y );
 		V2f delta = pos - m_lastDragPosition;
 	
-		for( Set::OrderedIndex::iterator it=m_selection->members().begin(); it!=m_selection->members().end(); it++ )
+		for( size_t i = 0, e = m_selection->size(); i < e ; i++ )
 		{
-			PlugPtr plug = IECore::runTimeCast<Plug>( *it );
+			PlugPtr plug = IECore::runTimeCast<Plug>( m_selection->member( i ) );
 			FloatPlugPtr xPlug = plug->getChild<FloatPlug>( "x" );
 			FloatPlugPtr yPlug = plug->getChild<FloatPlug>( "y" );
 			xPlug->setValue( xPlug->getValue() + delta.x );
@@ -408,12 +406,12 @@ bool SplinePlugGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 {
 	if( event.key=="BackSpace" && m_selection->size() )
 	{
-		Plug *firstPlug = static_cast<Plug *>( (*(m_selection->members().begin())).get() );
+		Plug *firstPlug = static_cast<Plug *>( m_selection->member( 0 ).get() );
 		UndoContext undoEnabler( firstPlug->ancestor<ScriptNode>() );
 		
-		for( Set::OrderedIndex::iterator it=m_selection->members().begin(); it!=m_selection->members().end(); it++ )
+		for( size_t i = 0, e = m_selection->size(); i < e ; i++ )
 		{
-			Plug *pointPlug = static_cast<Plug *>( (*it).get() );
+			Plug *pointPlug = static_cast<Plug *>( m_selection->member( i ).get() );
 			GraphComponentPtr parent = pointPlug->parent<GraphComponent>();
 			if( parent )
 			{

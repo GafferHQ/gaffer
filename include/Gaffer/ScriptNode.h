@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,7 +43,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Container.h"
-#include "Gaffer/Set.h"
+#include "Gaffer/StandardSet.h"
 #include "Gaffer/UndoContext.h"
 
 typedef struct _object PyObject;
@@ -85,8 +86,8 @@ class ScriptNode : public Node
 		/// selection any way they see fit.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		SetPtr selection();
-		ConstSetPtr selection() const;
+		StandardSetPtr selection();
+		ConstStandardSetPtr selection() const;
 		//@}
 		
 		//! @name History and undo
@@ -184,7 +185,7 @@ class ScriptNode : public Node
 	private :
 		
 		bool selectionSetAcceptor( Set::ConstPtr s, Set::ConstMemberPtr m );
-		SetPtr m_selection;
+		StandardSetPtr m_selection;
 
 		friend class Action;
 		friend class UndoContext;

@@ -52,7 +52,7 @@ void GafferUIBindings::bindSplinePlugGadget()
 	IECorePython::RunTimeTypedClass<SplinePlugGadget>()
 		.def( init<>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( SplinePlugGadget )
-		.def( "splines", (Gaffer::SetPtr (SplinePlugGadget::*)())&SplinePlugGadget::splines )
-		.def( "selection", (Gaffer::SetPtr (SplinePlugGadget::*)())&SplinePlugGadget::selection )
+		.def( "splines", (Gaffer::StandardSetPtr (SplinePlugGadget::*)())&SplinePlugGadget::splines )
+		.def( "selection", (Gaffer::StandardSetPtr (SplinePlugGadget::*)())&SplinePlugGadget::selection )
 	;
 }

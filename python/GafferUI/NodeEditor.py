@@ -64,7 +64,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		
 		del self.__column[:]
 		
-		node = self.getNodeSet().lastAdded()
+		node = self._lastAddedNode()
 		if not node :
 			return
 		

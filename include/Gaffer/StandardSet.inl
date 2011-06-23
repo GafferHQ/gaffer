@@ -35,53 +35,40 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFER_STANDARDSET_INL
+#define GAFFER_STANDARDSET_INL
 
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/CatchingSlotCaller.h"
-
-#include "Gaffer/Set.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
-
-using namespace Gaffer;
-
-namespace GafferBindings
+namespace Gaffer
 {
 
-static IECore::RunTimeTypedPtr getItem( Set &s, long index )
+template<typename I>
+size_t StandardSet::add( I first, I last )
 {
-	long size = s.size();
-
-	if( index < 0 )
+	size_t numAdded = 0;
+	for( I it=first; it!=last; it++ )
 	{
-		index += size;
+		numAdded += add( *it );
 	}
-
-	if( index >= size || index < 0 )
-	{
-		PyErr_SetString( PyExc_IndexError, "Index out of range" );
-		boost::python::throw_error_already_set();
-	}
-
-	return s.member( index );
+	return numAdded;
 }
 
-void bindSet()
+template<typename I>
+size_t StandardSet::remove( I first, I last )
 {
-	
-	boost::python::scope s = IECorePython::RunTimeTypedClass<Set>()
-		.def( "contains", &Set::contains )
-		.def( "size", &Set::size )
-		.def( "__contains__", &Set::contains )
-		.def( "__len__", &Set::size )
-		.def( "__getitem__", &getItem )
-		.def( "memberAddedSignal", &Set::memberAddedSignal, boost::python::return_internal_reference<1>() )
-		.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
-	;	
-
-	SignalBinder<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, CatchingSlotCaller<Set::MemberSignal> >::bind( "MemberSignal" );
-	
+	size_t numRemoved = 0;
+	for( I it=first; it!=last; it++ )
+	{
+		numRemoved += remove( *it );
+	}
+	return numRemoved;
 }
 
-} // namespace GafferBindings
+template<typename T>
+bool StandardSet::typedMemberAcceptor( Ptr set, ConstMemberPtr potentialMember )
+{
+	return potentialMember->isInstanceOf( T::staticTypeId() );
+}
+					
+} // namespace Gaffer
+
+#endif // GAFFER_STANDARDSET_INL
