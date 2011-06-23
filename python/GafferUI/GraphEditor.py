@@ -78,6 +78,12 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			gadget = GraphGadget( scriptNode )
 			
 		self.__gadgetWidget.setGadget( gadget )
+	
+	## Returns the internal Gadget used to draw the graph. This may be
+	# modified directly to set up appropriate filters etc.
+	def graphGadget( self ) :
+	
+		return self.__gadgetWidget.getGadget()
 			
 	def __repr__( self ) :
 

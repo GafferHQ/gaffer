@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -54,7 +55,32 @@ class GraphEditorTest( unittest.TestCase ) :
 		s["add1"]["op1"].setInput( s["add2"]["sum"] )
 		
 		g = GafferUI.GraphEditor( s )
+		
+		self.assertEqual( g.graphGadget().getFilter(), None )
 	
+	def testGraphGadgetAccess( self ) :
+	
+		s = Gaffer.ScriptNode()
+		ge = GafferUI.GraphEditor( s )
+		
+		g = ge.graphGadget()
+		
+		self.failUnless( isinstance( g, GafferUI.GraphGadget ) )
+	
+	def testRemovedNodesDontHaveGadgets( self ) :
+	
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+		
+		n = GafferTest.AddNode()
+		s["add1"] = n
+		
+		self.failUnless( g.nodeGadget() is not None )
+		
+		s.deleteNodes( Gaffer.Set( [ n ] ) )
+
+		self.failUnless( g.nodeGadget( n ) is None )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -12,6 +12,8 @@
 
 * Fixed problem whereby the hover colour for the SplitContainer handles wouldn't work on all platforms.
 
+* The GraphEditor now provides access to its internal GraphGadget with the graphGadget() method.
+
 0.11.0
 ------
 
