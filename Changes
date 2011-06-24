@@ -18,6 +18,8 @@
 
 * Added a ChildSet class whose membership tracks the children of a given GraphComponent.
 
+* Added python bindings for Nodule::plug and Connection::srcNodule() and Connection::dstNodule().
+
 0.11.0
 ------
 

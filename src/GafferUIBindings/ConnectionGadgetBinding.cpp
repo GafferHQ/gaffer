@@ -55,5 +55,7 @@ void GafferUIBindings::bindConnectionGadget()
 	IECorePython::RunTimeTypedClass<ConnectionGadget>()
 		.def( init<GafferUI::NodulePtr, GafferUI::NodulePtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ConnectionGadget )
+		.def( "srcNodule", &ConnectionGadget::srcNodule )
+		.def( "dstNodule", &ConnectionGadget::dstNodule )
 	;
 }

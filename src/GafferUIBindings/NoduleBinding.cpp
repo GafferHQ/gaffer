@@ -83,6 +83,7 @@ void GafferUIBindings::bindNodule()
 {
 	IECorePython::RunTimeTypedClass<Nodule>()
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Nodule )
+		.def( "plug", (Gaffer::PlugPtr (Nodule::*)())&Nodule::plug )
 		.def( "create", &Nodule::create ).staticmethod( "create" )
 		.def( "registerNodule", &registerNodule1 )
 		.def( "registerNodule", &registerNodule2 ).staticmethod( "registerNodule" )
