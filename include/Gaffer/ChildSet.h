@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,53 +34,46 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#ifndef GAFFER_CHILDSET_H
+#define GAFFER_CHILDSET_H
+
+#include "Gaffer/Set.h"
 
 namespace Gaffer
 {
 
-enum TypeId
+/// The ChildSet is a Set implementation where the membership automatically
+/// tracks the children of a GraphComponent.
+class ChildSet : public Gaffer::Set
 {
 
-	GraphComponentTypeId = 400000,
-	NodeTypeId = 400001,
-	PlugTypeId = 400002,
-	ValuePlugTypeId = 400003,
-	FloatPlugTypeId = 400004,
-	IntPlugTypeId = 400005,
-	StringPlugTypeId = 400006,
-	ScriptNodeTypeId = 400007,
-	ApplicationRootTypeId = 400008,
-	ScriptContainerTypeId = 400009,
-	SetTypeId = 400010,
-	ObjectPlugTypeId = 400011,
-	CompoundPlugTypeId = 400012,
-	V2fPlugTypeId = 400013,
-	V3fPlugTypeId = 400014,
-	V2iPlugTypeId = 400015,
-	V3iPlugTypeId = 400016,
-	Color3fPlugTypeId = 400017,
-	Color4fPlugTypeId = 400018,
-	SplineffPlugTypeId = 400019,
-	SplinefColor3fPlugTypeId = 400020,
-	M33fPlugTypeId = 400021,
-	M44fPlugTypeId = 400022,
-	BoolPlugTypeId = 400023,
-	ParameterisedHolderNodeTypeId = 400024,
-	IntVectorDataPlugTypeId = 400025,
-	FloatVectorDataPlugTypeId = 400026,
-	StringVectorDataPlugTypeId = 400027,
-	V3fVectorDataPlugTypeId = 400028,
-	StandardSetTypeId = 400029,
-	ChildSetTypeId = 400030,
-	
-	FirstPythonTypeId = 405000,
-	
-	LastTypeId = 409999
-	
+	public :
+
+		ChildSet( GraphComponentPtr parent );
+		virtual ~ChildSet();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChildSet, ChildSetTypeId, Gaffer::Set );
+		
+		/// @name Implementation of the Set interface
+		////////////////////////////////////////////////////////////////////
+		//@{
+		virtual bool contains( ConstMemberPtr object ) const;
+		virtual MemberPtr member( size_t index );
+		virtual ConstMemberPtr member( size_t index ) const;
+		virtual size_t size() const;
+		//@}
+
+	private :
+
+		ConstGraphComponentPtr m_parent;
+
+		void childAdded( GraphComponent *parent, GraphComponent *child );
+		void childRemoved( GraphComponent *parent, GraphComponent *child );
+		
 };
 
+IE_CORE_DECLAREPTR( ChildSet );
+	
 } // namespace Gaffer
 
-#endif // GAFFER_TYPEIDS_H
+#endif // GAFFER_CHILDSET_H

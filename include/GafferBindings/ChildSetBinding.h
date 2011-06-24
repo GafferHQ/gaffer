@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,53 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#ifndef GAFFERBINDINGS_CHILDSETBINDING_H
+#define GAFFERBINDINGS_CHILDSETBINDING_H
 
-namespace Gaffer
+namespace GafferBindings
 {
 
-enum TypeId
-{
+void bindChildSet();
 
-	GraphComponentTypeId = 400000,
-	NodeTypeId = 400001,
-	PlugTypeId = 400002,
-	ValuePlugTypeId = 400003,
-	FloatPlugTypeId = 400004,
-	IntPlugTypeId = 400005,
-	StringPlugTypeId = 400006,
-	ScriptNodeTypeId = 400007,
-	ApplicationRootTypeId = 400008,
-	ScriptContainerTypeId = 400009,
-	SetTypeId = 400010,
-	ObjectPlugTypeId = 400011,
-	CompoundPlugTypeId = 400012,
-	V2fPlugTypeId = 400013,
-	V3fPlugTypeId = 400014,
-	V2iPlugTypeId = 400015,
-	V3iPlugTypeId = 400016,
-	Color3fPlugTypeId = 400017,
-	Color4fPlugTypeId = 400018,
-	SplineffPlugTypeId = 400019,
-	SplinefColor3fPlugTypeId = 400020,
-	M33fPlugTypeId = 400021,
-	M44fPlugTypeId = 400022,
-	BoolPlugTypeId = 400023,
-	ParameterisedHolderNodeTypeId = 400024,
-	IntVectorDataPlugTypeId = 400025,
-	FloatVectorDataPlugTypeId = 400026,
-	StringVectorDataPlugTypeId = 400027,
-	V3fVectorDataPlugTypeId = 400028,
-	StandardSetTypeId = 400029,
-	ChildSetTypeId = 400030,
-	
-	FirstPythonTypeId = 405000,
-	
-	LastTypeId = 409999
-	
-};
+} // namespace GafferBindings
 
-} // namespace Gaffer
-
-#endif // GAFFER_TYPEIDS_H
+#endif // GAFFERBINDINGS_CHILDSETBINDING_H

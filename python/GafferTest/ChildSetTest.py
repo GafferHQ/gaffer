@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,34 +34,58 @@
 #  
 ##########################################################################
 
-from AddNode import AddNode
-from SignalsTest import SignalsTest
-from GCTest import GCTest
-from GraphComponentTest import GraphComponentTest
-from NodeTest import NodeTest
-from PlugTest import PlugTest
-from NumericPlugTest import NumericPlugTest
-from TypedPlugTest import TypedPlugTest
-from ScriptNodeTest import ScriptNodeTest
-from StandardSetTest import StandardSetTest
-from FileSystemPathTest import FileSystemPathTest
-from PathTest import PathTest
-from PathFilterTest import PathFilterTest
-from UndoTest import UndoTest
-from SpeedTest import SpeedTest
-from KeywordPlugNode import KeywordPlugNode
-from CompoundNumericPlugTest import CompoundNumericPlugTest
-from CompoundNumericNode import CompoundNumericNode
-from CompoundPlugTest import CompoundPlugTest
-from CompoundPlugNode import CompoundPlugNode
-from TypedObjectPlugTest import TypedObjectPlugTest
-from SplinePlugTest import SplinePlugTest
-from AboutTest import AboutTest
-from ParameterisedHolderTest import ParameterisedHolderTest
-from ParameterHandlerTest import ParameterHandlerTest
-from ChildSetTest import ChildSetTest
+import unittest
 
+import Gaffer
+
+class ChildSetTest( unittest.TestCase ) :
+
+	def test( self ) :
+	
+		p = Gaffer.GraphComponent()
+		s = Gaffer.ChildSet( p )
+		
+		self.assertEqual( len( s ), 0 )
+		
+		g1 = Gaffer.GraphComponent()
+		p.addChild( g1 )
+		
+		self.assertEqual( len( s ), 1 )
+		self.failUnless( s.contains( g1 ) )
+		self.failUnless( s[0] is g1 )
+		
+		p.removeChild( g1 )
+		self.assertEqual( len( s ), 0 )
+		self.failIf( s.contains( g1 ) )
+		
+	def testSignals( self ) :
+	
+		mirrorSet = set()
+		
+		def added( s, member ) :
+			
+			mirrorSet.add( member )
+			
+		def removed( s, member ) :
+		
+			mirrorSet.remove( member )
+			
+		p = Gaffer.GraphComponent()
+		s = Gaffer.ChildSet( p )
+		
+		addedConnection = s.memberAddedSignal().connect( added )
+		removedConnection = s.memberRemovedSignal().connect( removed )
+		
+		p["one"] = Gaffer.GraphComponent()
+		
+		self.assertEqual( len( s ), 1 )
+		self.assertEqual( mirrorSet, set( s ) )
+		
+		del p["one"]
+		
+		self.assertEqual( len( s ), 0 )
+		self.assertEqual( mirrorSet, set( s ) )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
 	

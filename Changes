@@ -16,6 +16,8 @@
 
 * Refactored the Set class into an abstract base class and a StandardSet class containing the previous functionality. The members() and sequencedMembers() methods have been removed as they didn't generalise well to other potential Set subclasses (such as a NameFilteredSet). Instead a new member( i ) method provides ordered access and the contains( member ) method provides membership queries.
 
+* Added a ChildSet class whose membership tracks the children of a given GraphComponent.
+
 0.11.0
 ------
 

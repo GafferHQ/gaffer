@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,53 +34,71 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
-namespace Gaffer
+#include "Gaffer/ChildSet.h"
+
+using namespace Gaffer;
+
+ChildSet::ChildSet( GraphComponentPtr parent )
+	:	m_parent( parent )
 {
+	parent->childAddedSignal().connect( boost::bind( &ChildSet::childAdded, this, ::_1,  ::_2 ) );
+	parent->childRemovedSignal().connect( boost::bind( &ChildSet::childRemoved, this, ::_1,  ::_2 ) );
+}
 
-enum TypeId
+ChildSet::~ChildSet()
 {
+}
 
-	GraphComponentTypeId = 400000,
-	NodeTypeId = 400001,
-	PlugTypeId = 400002,
-	ValuePlugTypeId = 400003,
-	FloatPlugTypeId = 400004,
-	IntPlugTypeId = 400005,
-	StringPlugTypeId = 400006,
-	ScriptNodeTypeId = 400007,
-	ApplicationRootTypeId = 400008,
-	ScriptContainerTypeId = 400009,
-	SetTypeId = 400010,
-	ObjectPlugTypeId = 400011,
-	CompoundPlugTypeId = 400012,
-	V2fPlugTypeId = 400013,
-	V3fPlugTypeId = 400014,
-	V2iPlugTypeId = 400015,
-	V3iPlugTypeId = 400016,
-	Color3fPlugTypeId = 400017,
-	Color4fPlugTypeId = 400018,
-	SplineffPlugTypeId = 400019,
-	SplinefColor3fPlugTypeId = 400020,
-	M33fPlugTypeId = 400021,
-	M44fPlugTypeId = 400022,
-	BoolPlugTypeId = 400023,
-	ParameterisedHolderNodeTypeId = 400024,
-	IntVectorDataPlugTypeId = 400025,
-	FloatVectorDataPlugTypeId = 400026,
-	StringVectorDataPlugTypeId = 400027,
-	V3fVectorDataPlugTypeId = 400028,
-	StandardSetTypeId = 400029,
-	ChildSetTypeId = 400030,
-	
-	FirstPythonTypeId = 405000,
-	
-	LastTypeId = 409999
-	
-};
+bool ChildSet::contains( ConstMemberPtr object ) const
+{
+	const GraphComponent *g = IECore::runTimeCast<const GraphComponent>( object );
+	if( g )
+	{
+		return g->parent<GraphComponent>() == m_parent;
+	}
+	return false;
+}
 
-} // namespace Gaffer
+Set::MemberPtr ChildSet::member( size_t index )
+{
+	/// \todo This desperately needs the GraphComponent to provide random access to children
+	/// by index - there's a todo in GraphComponent about this already.
+	GraphComponent::ChildIterator it = m_parent->children().begin();
+	while( index )
+	{
+		it++;
+		index--;
+	}
+	return *it;
+}
 
-#endif // GAFFER_TYPEIDS_H
+Set::ConstMemberPtr ChildSet::member( size_t index ) const
+{
+	/// \todo This desperately needs the GraphComponent to provide random access to children
+	/// by index - there's a todo in GraphComponent about this already.
+	GraphComponent::ChildIterator it = m_parent->children().begin();
+	while( index )
+	{
+		it++;
+		index--;
+	}
+	return *it;
+}
+		
+size_t ChildSet::size() const
+{
+	return m_parent->children().size();
+}
+
+void ChildSet::childAdded( GraphComponent *parent, GraphComponent *child )
+{
+	memberAddedSignal()( this, child );
+}
+
+void ChildSet::childRemoved( GraphComponent *parent, GraphComponent *child )
+{
+	memberRemovedSignal()( this, child );
+}
