@@ -20,6 +20,8 @@
 
 * Added python bindings for Nodule::plug and Connection::srcNodule() and Connection::dstNodule().
 
+* Added CompoundEditor.editors() method, which returns all the child editors, optionally filtered by type.
+
 0.11.0
 ------
 
