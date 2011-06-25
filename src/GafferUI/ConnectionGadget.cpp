@@ -87,24 +87,6 @@ NodulePtr ConnectionGadget::dstNodule()
 	return m_dstNodule;
 }
 
-void ConnectionGadget::setSrcPos( const Imath::V3f &p )
-{
-	if( m_srcPos!=p )
-	{
-		m_srcPos = p;
-		renderRequestSignal()( this );
-	}
-}
-		
-void ConnectionGadget::setDstPos( const Imath::V3f &p )
-{
-	if( m_dstPos!=p )
-	{
-		m_dstPos = p;
-		renderRequestSignal()( this );
-	}
-}
-
 void ConnectionGadget::setPositionsFromNodules()
 {
 	const Gadget *p = parent<Gadget>();

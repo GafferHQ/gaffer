@@ -63,15 +63,17 @@ class ConnectionGadget : public Gadget
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		
 		virtual Imath::Box3f bound() const;
 		
+		/// Returns the Nodule representing the source plug in the connection.
+		/// Note that this may be 0 if the source plug belongs to a node which
+		/// has been hidden.
 		NodulePtr srcNodule();
+		/// Returns the Nodule representing the destination plug in the connection.
 		NodulePtr dstNodule();
 
 		virtual std::string getToolTip() const;
 		
 	protected :
 
-		void setSrcPos( const Imath::V3f &p );
-		void setDstPos( const Imath::V3f &p );
 		void setPositionsFromNodules();
 		
 		void doRender( IECore::RendererPtr renderer ) const;
