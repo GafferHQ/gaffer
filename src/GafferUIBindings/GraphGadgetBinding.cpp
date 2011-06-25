@@ -41,6 +41,7 @@
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/ConnectionGadget.h"
 
 #include "Gaffer/Node.h"
 
@@ -54,7 +55,11 @@ void GafferUIBindings::bindGraphGadget()
 {
 	IECorePython::RunTimeTypedClass<GraphGadget>()
 		.def( init<Gaffer::NodePtr>() )
+		.def( init<Gaffer::SetPtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( GraphGadget )
+		.def( "getGraphSet", (Gaffer::SetPtr (GraphGadget::*)())&GraphGadget::getGraphSet )
+		.def( "setGraphSet", &GraphGadget::setGraphSet )
 		.def( "nodeGadget", (NodeGadgetPtr (GraphGadget::*)( Gaffer::ConstNodePtr ))&GraphGadget::nodeGadget )
+		.def( "connectionGadget", (ConnectionGadgetPtr (GraphGadget::*)( Gaffer::ConstPlugPtr ))&GraphGadget::connectionGadget )
 	;
 }

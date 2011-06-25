@@ -56,8 +56,11 @@ class GraphEditorTest( unittest.TestCase ) :
 		
 		g = GafferUI.GraphEditor( s )
 		
-		self.assertEqual( g.graphGadget().getFilter(), None )
+		self.failUnless( g.graphGadget().nodeGadget( s["add1"] ).node() is s["add1"] )
+		self.failUnless( g.graphGadget().nodeGadget( s["add2"] ).node() is s["add2"] )
 	
+		self.failUnless( g.graphGadget().connectionGadget( s["add1"]["op1"] ).dstNodule().plug().isSame( s["add1"]["op1"] ) )
+				
 	def testGraphGadgetAccess( self ) :
 	
 		s = Gaffer.ScriptNode()
@@ -80,6 +83,306 @@ class GraphEditorTest( unittest.TestCase ) :
 		s.deleteNodes( Gaffer.StandardSet( [ n ] ) )
 
 		self.failUnless( g.nodeGadget( n ) is None )
+	
+	def testRemovedNodesDontHaveConnections( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		n = GafferTest.AddNode()
+		s["add1"] = n
+		s["add2"] = GafferTest.AddNode()
+		
+		s["add1"]["op1"].setInput( s["add2"]["sum"] )
+		
+		g = GafferUI.GraphEditor( s )
+
+		s.deleteNodes( Gaffer.StandardSet( [ s["add1"] ] ) )
+		
+		self.failIf( g.graphGadget().connectionGadget( n["op1"] ) )
+
+	def testCreateWithFilter( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
+		
+		g = GafferUI.GraphGadget( graphSet )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+	
+	def testEditFilter( self ) :
+		
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+
+		graphSet = Gaffer.StandardSet( script.children() )
+		
+		g = GafferUI.GraphGadget( graphSet )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+			
+		graphSet.remove( script["add1"] )
+			
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		
+		graphSet.remove( script["add2"] )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		
+		graphSet.add( script["add1"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+
+		graphSet.add( script["add2"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+	
+	def testUnhidingConnectedDstNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		graphSet = Gaffer.StandardSet( [ script["add1"] ] )
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		self.failIf( g.connectionGadget( script["add2"]["op1"] ) )
+		
+		graphSet.add( script["add2"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		self.failUnless( g.connectionGadget( script["add2"]["op1"] ) )
+	
+	def testCreatingWithHiddenSrcNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
+		
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+				
+		c = g.connectionGadget( script["add2"]["op1"] )
+		self.failUnless( c )
+		
+		self.failUnless( c.dstNodule().plug().isSame( script["add2"]["op1"] ) )
+		self.assertEqual( c.srcNodule(), None )
+		
+	def testHidingConnectedDstNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		graphSet = Gaffer.StandardSet( script.children() )
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		self.failUnless( g.connectionGadget( script["add2"]["op1"] ) )
+		
+		graphSet.remove( script["add2"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		self.failIf( g.connectionGadget( script["add2"]["op1"] ) )
+		
+	def testHidingConnectedSrcNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		graphSet = Gaffer.StandardSet( [ script["add1"], script["add2"] ] )
+		
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+				
+		c = g.connectionGadget( script["add2"]["op1"] )
+		self.failUnless( c )
+		
+		self.failUnless( c.srcNodule().plug().isSame( script["add1"]["sum"] ) )
+		self.failUnless( c.dstNodule().plug().isSame( script["add2"]["op1"] ) )
+		
+		graphSet.remove( script["add1"] )
+
+		self.failIf( g.nodeGadget( script["add1"] ) )
+	
+		c = g.connectionGadget( script["add2"]["op1"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule() is None )
+		self.failUnless( c.dstNodule().plug().isSame( script["add2"]["op1"] ) )
+	
+	def testConnectingInvisibleDstNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet( [ script["add1"] ] )
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )		
+				
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		self.failIf( g.connectionGadget( script["add2"]["op1"] ) )
+		
+	def testConnectingHiddenDstNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet( script.children() )
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )		
+		
+		graphSet.remove( script["add2"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )		
+				
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		self.failIf( g.connectionGadget( script["add2"]["op1"] ) )	
+		
+	def testConnectingHiddenSrcNodes( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
+		g = GafferUI.GraphGadget( graphSet )
+	
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		
+		c = g.connectionGadget( script["add2"]["op1"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule() is None )
+		
+	def testConnectingHiddenSrcNodesAndReshowing( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
+		g = GafferUI.GraphGadget( graphSet )
+	
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		
+		c = g.connectionGadget( script["add2"]["op1"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule() is None )
+	
+		graphSet.add( script["add1"] )
+		
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+	
+		c = g.connectionGadget( script["add2"]["op1"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule().plug().isSame( script["add1"]["sum"] ) )
+		
+	def testChangingSet( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet( [ script["add1"] ] )
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failUnless( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		
+		graphSet2 = Gaffer.StandardSet( [ script["add2"] ] )
+		g.setGraphSet( graphSet2 )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+		
+	def testChangingSetAndEditingOriginal( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		
+		graphSet = Gaffer.StandardSet()
+		g = GafferUI.GraphGadget( graphSet )
+
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failIf( g.nodeGadget( script["add2"] ) )
+		
+		graphSet2 = Gaffer.StandardSet( [ script["add2"] ] )
+		g.setGraphSet( graphSet2 )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )	
+		
+		graphSet.add( script["add1"] )
+		
+		self.failIf( g.nodeGadget( script["add1"] ) )
+		self.failUnless( g.nodeGadget( script["add2"] ) )	
 		
 if __name__ == "__main__":
 	unittest.main()

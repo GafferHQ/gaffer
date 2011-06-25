@@ -35,6 +35,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
+#include "OpenEXR/ImathRandom.h"
+#include "OpenEXR/ImathPlane.h"
+
+#include "IECore/SimpleTypedData.h"
+#include "IECore/MessageHandler.h"
+
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/ChildSet.h"
+
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ButtonEvent.h"
@@ -42,34 +55,34 @@
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/Style.h"
 
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/Set.h"
-
-#include "IECore/SimpleTypedData.h"
-
-#include "OpenEXR/ImathRandom.h"
-#include "OpenEXR/ImathPlane.h"
-
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
-
 using namespace GafferUI;
 using namespace Imath;
 using namespace IECore;
 using namespace std;
 
+//////////////////////////////////////////////////////////////////////////
+// GraphGadget implementation
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
-GraphGadget::GraphGadget( Gaffer::NodePtr graphRoot )
-	:
-		m_graphRoot( graphRoot.get() ),
-		m_dragStartPosition( 0 ),
-		m_lastDragPosition( 0 ),
-		m_dragSelecting( false )
+GraphGadget::GraphGadget( Gaffer::SetPtr graphSet )
 {
-	graphRoot->childAddedSignal().connect( boost::bind( &GraphGadget::childAdded, this, ::_1,  ::_2 ) );
-	graphRoot->childRemovedSignal().connect( boost::bind( &GraphGadget::childRemoved, this, ::_1,  ::_2 ) );
+	constructCommon( graphSet );
+}
+		
+GraphGadget::GraphGadget( Gaffer::NodePtr graphRoot )
+{
+	constructCommon( new Gaffer::ChildSet( graphRoot ) );
+}
+
+void GraphGadget::constructCommon( Gaffer::SetPtr graphSet )
+{
+	m_scriptNode = 0; // we'll fill this in when we get our first node
+		
+	m_dragStartPosition = V2f( 0 );
+	m_lastDragPosition = V2f( 0 );
+	m_dragSelecting = false;
 
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -77,24 +90,35 @@ GraphGadget::GraphGadget( Gaffer::NodePtr graphRoot )
 	dragBeginSignal().connect( boost::bind( &GraphGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragUpdateSignal().connect( boost::bind( &GraphGadget::dragUpdate, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
-	
-	// make gadgets for each node
-	for( Gaffer::ChildNodeIterator cIt = graphRoot->childrenBegin<Gaffer::Node>(); cIt!=cIt.end(); cIt++ )
-	{
-		addNodeGadget( (*cIt).get() );
-	}
-	// and then make gadgets for each connection
-	for( Gaffer::ChildNodeIterator cIt = graphRoot->childrenBegin<Gaffer::Node>(); cIt!=cIt.end(); cIt++ )
-	{
-		for( Gaffer::InputPlugIterator pIt( (*cIt)->children().begin(), (*cIt)->children().end() ); pIt!=pIt.end(); pIt++ )
-		{
-			addConnectionGadget( pIt->get() );
-		}
-	}
+
+	setGraphSet( graphSet );
 }
 
 GraphGadget::~GraphGadget()
 {
+}
+
+	
+Gaffer::SetPtr GraphGadget::getGraphSet()
+{
+	return m_graphSet;
+}
+
+Gaffer::ConstSetPtr GraphGadget::getGraphSet() const
+{
+	return m_graphSet;
+}
+
+void GraphGadget::setGraphSet( Gaffer::SetPtr graphSet )
+{
+	if( graphSet==m_graphSet )
+	{
+		return;
+	}
+	m_graphSet = graphSet;
+	m_graphSetMemberAddedConnection = m_graphSet->memberAddedSignal().connect( boost::bind( &GraphGadget::memberAdded, this, ::_1,  ::_2 ) );
+	m_graphSetMemberRemovedConnection = m_graphSet->memberRemovedSignal().connect( boost::bind( &GraphGadget::memberRemoved, this, ::_1,  ::_2 ) );
+	updateGraph();
 }
 
 NodeGadgetPtr GraphGadget::nodeGadget( Gaffer::ConstNodePtr node )
@@ -107,6 +131,16 @@ ConstNodeGadgetPtr GraphGadget::nodeGadget( Gaffer::ConstNodePtr node ) const
 	return findNodeGadget( node.get() );
 }
 
+ConnectionGadgetPtr GraphGadget::connectionGadget( Gaffer::ConstPlugPtr dstPlug )
+{
+	return findConnectionGadget( dstPlug.get() );
+}
+
+ConstConnectionGadgetPtr GraphGadget::connectionGadget( Gaffer::ConstPlugPtr dstPlug ) const
+{
+	return findConnectionGadget( dstPlug.get() );
+}
+		
 void GraphGadget::doRender( IECore::RendererPtr renderer ) const
 {
 	renderer->attributeBegin();
@@ -150,42 +184,28 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 	return false;
 }
 
-void GraphGadget::childAdded( GraphComponent *parent, GraphComponent *child )
+void GraphGadget::memberAdded( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member )
 {
-	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( child );
+	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( member );
 	if( node )
 	{
 		addNodeGadget( node );
-
-		// make gadgets for each connection
-		for( Gaffer::InputPlugIterator pIt( node->children().begin(), node->children().end() ); pIt!=pIt.end(); pIt++ )
-		{
-			addConnectionGadget( pIt->get() );
-		}
+		addConnectionGadgets( node );
 	}
 }
 
-void GraphGadget::childRemoved( GraphComponent *parent, GraphComponent *child )
+void GraphGadget::memberRemoved( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member )
 {
-	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( child );
+	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( member );
 	if( node )
 	{
-		NodeGadget *g = findNodeGadget( node );
-		if( g )
-		{
-			removeChild( g );
-		}
+		removeNodeGadget( node );
 	}
 }
 
 void GraphGadget::inputChanged( Gaffer::PlugPtr dstPlug )
 {
-	ConnectionGadget *oldConnection = connectionGadget( dstPlug.get() );
-	if( oldConnection )
-	{
-		m_connectionGadgets.erase( dstPlug.get() );
-		removeChild( oldConnection );
-	}
+	removeConnectionGadget( dstPlug );
 
 	Gaffer::PlugPtr srcPlug = dstPlug->getInput<Gaffer::Plug>();
 	if( !srcPlug )
@@ -228,8 +248,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	{
 		// selection/deselection
 		
-		Gaffer::ScriptNodePtr scriptNode = script();
-		if( !scriptNode )
+		if( !m_scriptNode )
 		{
 			return false;
 		}
@@ -237,7 +256,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		if( gadget==this )
 		{
 			// background click - clear the current selection
-			scriptNode->selection()->clear();
+			m_scriptNode->selection()->clear();
 			return true;
 		}
 		else
@@ -251,22 +270,22 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			{				
 				Gaffer::NodePtr node = nodeGadget->node();
 				bool shiftHeld = event.modifiers && ButtonEvent::Shift;
-				bool nodeSelected = scriptNode->selection()->contains( node );
+				bool nodeSelected = m_scriptNode->selection()->contains( node );
 
 				if( nodeSelected )
 				{
 					if( shiftHeld )
 					{
-						scriptNode->selection()->remove( node );
+						m_scriptNode->selection()->remove( node );
 					}
 				}
 				else
 				{
 					if( !shiftHeld )
 					{
-						scriptNode->selection()->clear();
+						m_scriptNode->selection()->clear();
 					}
-					scriptNode->selection()->add( node );			
+					m_scriptNode->selection()->add( node );			
 				}
 
 				return true;
@@ -284,8 +303,7 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 		return 0;
 	}
 	
-	Gaffer::ScriptNodePtr scriptNode = script();
-	if( !scriptNode )
+	if( !m_scriptNode )
 	{
 		return 0;
 	}
@@ -297,9 +315,9 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 	}
 	
 	m_dragStartPosition = m_lastDragPosition = V2f( i.x, i.y );
-	if( scriptNode->selection()->size() )
+	if( m_scriptNode->selection()->size() )
 	{
-		return scriptNode->selection();
+		return m_scriptNode->selection();
 	}
 	else
 	{
@@ -310,8 +328,7 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 
 bool GraphGadget::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
 {
-	Gaffer::ScriptNodePtr scriptNode = script();
-	if( !scriptNode )
+	if( !m_scriptNode )
 	{
 		return false;
 	}
@@ -333,7 +350,7 @@ bool GraphGadget::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
 			if( nodeGadget )
 			{
 				Gaffer::NodePtr node = nodeGadget->node();
-				if( scriptNode->selection()->contains( node ) )
+				if( m_scriptNode->selection()->contains( node ) )
 				{
 					Gaffer::FloatPlugPtr xp = node->getChild<Gaffer::FloatPlug>( "__uiX" );
 					Gaffer::FloatPlugPtr yp = node->getChild<Gaffer::FloatPlug>( "__uiY" );
@@ -362,8 +379,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragSelecting = false;
 	
-	Gaffer::ScriptNodePtr scriptNode = script();
-	if( !scriptNode )
+	if( !m_scriptNode )
 	{
 		return false;
 	}
@@ -389,7 +405,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 				Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
 				if( selectionBound.intersects( nodeBound2 ) )
 				{
-					scriptNode->selection()->add( nodeGadget->node() );
+					m_scriptNode->selection()->add( nodeGadget->node() );
 				}
 			}
 		}
@@ -400,25 +416,74 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	return true;
 }
 
-Gaffer::ScriptNodePtr GraphGadget::script()
+void GraphGadget::updateGraph()
 {
-	Gaffer::ScriptNodePtr script = runTimeCast<Gaffer::ScriptNode>( m_graphRoot );
-	if( !script )
+	
+	// first remove any gadgets we don't need any more
+	for( NodeGadgetMap::iterator it = m_nodeGadgets.begin(); it != m_nodeGadgets.end(); )
 	{
-		script = m_graphRoot->scriptNode();
+		const Gaffer::Node *node = it->first;
+		it++; // increment now as the iterator will be invalidated by removeNodeGadget()
+		if( !m_graphSet->contains( node ) )
+		{
+			removeNodeGadget( node );
+		}
 	}
-	return script;
+		
+	// now make sure we have gadgets for all the nodes we're meant to display
+	for( size_t i = 0, e = m_graphSet->size(); i < e; i++ )
+	{
+		Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_graphSet->member( i ) );
+		if( node && !findNodeGadget( node ) )
+		{
+			addNodeGadget( node );
+		}
+	}
+	
+	// and that we have gadgets for each connection
+	
+	for( size_t i = 0, e = m_graphSet->size(); i < e; i++ )
+	{
+		Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_graphSet->member( i ) );
+		if( node )
+		{
+			addConnectionGadgets( node );
+		}
+	}
+	
 }
 
 void GraphGadget::addNodeGadget( Gaffer::Node *node )
 {	
-	node->plugInputChangedSignal().connect( boost::bind( &GraphGadget::inputChanged, this, ::_1 ) );
-	node->plugSetSignal().connect( boost::bind( &GraphGadget::plugSet, this, ::_1 ) );
+
+	if( !node->scriptNode() )
+	{
+		IECore::msg( IECore::Msg::Error, "GraphGadget::addNodeGadget", boost::format( "Node \"%s\" does not belong to a script." ) % node->getName() );
+		return;
+	}
 	
+	if( !m_scriptNode )
+	{
+		m_scriptNode = node->scriptNode();
+	}
+	else
+	{
+		if( node->scriptNode() != m_scriptNode )
+		{
+			IECore::msg( IECore::Msg::Error, "GraphGadget::addNodeGadget", boost::format( "Node \"%s\" does not belong to the same script as the existing nodes." ) % node->getName() );
+			return;
+		}
+	}
+
 	NodeGadgetPtr nodeGadget = NodeGadget::create( node );
-	
 	addChild( nodeGadget );
-	m_nodeGadgets[node] = nodeGadget.get();
+	
+	NodeGadgetEntry nodeGadgetEntry;
+	nodeGadgetEntry.inputChangedConnection = node->plugInputChangedSignal().connect( boost::bind( &GraphGadget::inputChanged, this, ::_1 ) );
+	nodeGadgetEntry.plugSetConnection = node->plugSetSignal().connect( boost::bind( &GraphGadget::plugSet, this, ::_1 ) );	
+	nodeGadgetEntry.gadget = nodeGadget.get();
+	
+	m_nodeGadgets[node] = nodeGadgetEntry;
 	
 	// place it if it's not placed already.
 	/// \todo we need to do this intelligently rather than randomly!!
@@ -447,8 +512,41 @@ void GraphGadget::addNodeGadget( Gaffer::Node *node )
 	}
 	
 	updateNodeGadgetTransform( nodeGadget.get() );
+	
 }
 
+void GraphGadget::removeNodeGadget( const Gaffer::Node *node )
+{
+	NodeGadgetMap::iterator it = m_nodeGadgets.find( node );
+	if( it!=m_nodeGadgets.end() )
+	{
+		removeChild( it->second.gadget );
+		it->second.inputChangedConnection.disconnect();
+		it->second.plugSetConnection.disconnect();
+		
+		m_nodeGadgets.erase( it );
+		
+		// remove input connection gadgets
+		for( Gaffer::InputPlugIterator pIt( node->children().begin(), node->children().end() ); pIt!=pIt.end(); pIt++ )
+		{
+			removeConnectionGadget( pIt->get() );
+		}
+
+		// make output connection gadgets dangle
+		for( Gaffer::OutputPlugIterator pIt( node->children().begin(), node->children().end() ); pIt!=pIt.end(); pIt++ )
+		{
+			for( Gaffer::Plug::OutputContainer::const_iterator oIt( (*pIt)->outputs().begin() ); oIt!= (*pIt)->outputs().end(); oIt++ )
+			{
+				ConnectionGadget *connection = findConnectionGadget( *oIt );
+				if( connection )
+				{
+					connection->setNodules( 0, connection->dstNodule() );
+				}
+			}
+		}
+	}
+}
+		
 NodeGadget *GraphGadget::findNodeGadget( const Gaffer::Node *node ) const
 {
 	NodeGadgetMap::const_iterator it = m_nodeGadgets.find( node );
@@ -456,7 +554,7 @@ NodeGadget *GraphGadget::findNodeGadget( const Gaffer::Node *node ) const
 	{
 		return 0;
 	}
-	return it->second;
+	return it->second.gadget;
 }
 
 void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
@@ -480,23 +578,63 @@ void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 	nodeGadget->setTransform( m );
 }
 
+void GraphGadget::addConnectionGadgets( Gaffer::Node *node )
+{
+	/// \todo I think this could be faster if we could iterator over just the nodules rather than all the plugs
+
+	// add connections for input plugs
+	for( Gaffer::InputPlugIterator pIt( node->children().begin(), node->children().end() ); pIt!=pIt.end(); pIt++ )
+	{
+		if( !findConnectionGadget( pIt->get() ) )
+		{
+			addConnectionGadget( pIt->get() );
+		}
+	}
+	
+	// reconnect any old output connections which may have been dangling
+	NodeGadget *nodeGadget = findNodeGadget( node );
+	for( Gaffer::OutputPlugIterator pIt( node->children().begin(), node->children().end() ); pIt!=pIt.end(); pIt++ )
+	{
+		Nodule *srcNodule = nodeGadget->nodule( *pIt );
+		if( srcNodule )
+		{
+			for( Gaffer::Plug::OutputContainer::const_iterator oIt( (*pIt)->outputs().begin() ); oIt!= (*pIt)->outputs().end(); oIt++ )
+			{
+				ConnectionGadget *connection = findConnectionGadget( *oIt );
+				if( connection && !connection->srcNodule() )
+				{
+					assert( connection->dstNodule()->plug()->getInput<Plug>() == *pIt ); 
+					connection->setNodules( srcNodule, connection->dstNodule() );
+				}
+			}
+		}
+	}
+}
+		
 void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 {
-	Gaffer::NodePtr dstNode = dstPlug->node();
 	Gaffer::PlugPtr srcPlug = dstPlug->getInput<Gaffer::Plug>();
 	if( !srcPlug )
 	{
+		// there is no connection
 		return;
 	}
 	
-	Gaffer::NodePtr srcNode = srcPlug->node();
-	
-	NodulePtr srcNodule = findNodeGadget( srcNode.get() )->nodule( srcPlug );
+	Gaffer::NodePtr dstNode = dstPlug->node();
 	NodulePtr dstNodule = findNodeGadget( dstNode.get() )->nodule( dstPlug );
-	
-	if( !(srcNodule && dstNodule ) )
+	if( !dstNodule )
 	{
+		// the destination connection point is not represented in the graph
 		return;
+	}
+	
+	// find the input nodule for the connection if there is one
+	Gaffer::NodePtr srcNode = srcPlug->node();
+	NodeGadgetPtr srcNodeGadget = findNodeGadget( srcNode.get() );
+	NodulePtr srcNodule = 0;
+	if( srcNodeGadget )
+	{
+		srcNodule = srcNodeGadget->nodule( srcPlug );
 	}
 		
 	ConnectionGadgetPtr connection = new ConnectionGadget( srcNodule, dstNodule );
@@ -505,9 +643,19 @@ void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 	m_connectionGadgets[dstPlug] = connection.get();
 }
 
-ConnectionGadget *GraphGadget::connectionGadget( Gaffer::Plug *plug )
+void GraphGadget::removeConnectionGadget( const Gaffer::Plug *dstPlug )
 {
-	ConnectionGadgetMap::iterator it = m_connectionGadgets.find( plug );
+	ConnectionGadget *connection = findConnectionGadget( dstPlug );
+	if( connection )
+	{
+		m_connectionGadgets.erase( dstPlug );
+		removeChild( connection );
+	}
+}
+	
+ConnectionGadget *GraphGadget::findConnectionGadget( const Gaffer::Plug *plug ) const
+{
+	ConnectionGadgetMap::const_iterator it = m_connectionGadgets.find( plug );
 	if( it==m_connectionGadgets.end() )
 	{
 		return 0;

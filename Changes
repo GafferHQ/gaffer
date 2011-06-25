@@ -22,6 +22,8 @@
 
 * Added CompoundEditor.editors() method, which returns all the child editors, optionally filtered by type.
 
+* GraphGadget can now show arbitrary Sets of nodes, specified using the GraphGadget::setGraphSet() method.
+
 0.11.0
 ------
 

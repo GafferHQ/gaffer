@@ -35,6 +35,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
+#include "IECore/Exception.h"
+
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -43,9 +48,6 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/Nodule.h"
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
-
 using namespace GafferUI;
 using namespace Imath;
 using namespace std;
@@ -53,10 +55,9 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( ConnectionGadget );
 
 ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	Gadget( staticTypeName() ), m_srcNodule( srcNodule ), m_dstNodule( dstNodule ),
-		m_dragEnd( Gaffer::Plug::Invalid )
+	:	Gadget( staticTypeName() ), m_dragEnd( Gaffer::Plug::Invalid )
 {
-	setPositionsFromNodules();
+	setNodules( srcNodule, dstNodule );
 	
 	buttonPressSignal().connect( boost::bind( &ConnectionGadget::buttonPress, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &ConnectionGadget::dragBegin, this, ::_1, ::_2 ) );
@@ -87,19 +88,64 @@ NodulePtr ConnectionGadget::dstNodule()
 	return m_dstNodule;
 }
 
+void ConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
+{
+	if( !dstNodule )
+	{
+		// we must have a destination
+		throw IECore::Exception( "No destination Nodule." );
+	}
+	if( srcNodule )
+	{
+		// if we have a source nodule then it must be connected to the destination
+		if( srcNodule->plug() != dstNodule->plug()->getInput<Gaffer::Plug>() )
+		{
+			throw IECore::Exception( "Source plug not connected to destination plug." );
+		}
+	}
+	else
+	{
+		// if we have no source nodule (because it isn't visible) then our destination
+		// plug must at least have an input for us to represent as a dangler.
+		if( !dstNodule->plug()->getInput<Gaffer::Plug>() )
+		{
+			throw IECore::Exception( "Destination plug has no input." );
+		}
+	}
+	
+	m_srcNodule = srcNodule;
+	m_dstNodule = dstNodule;
+	
+	setPositionsFromNodules();
+}
+
 void ConnectionGadget::setPositionsFromNodules()
 {
 	const Gadget *p = parent<Gadget>();
-	if( m_srcNodule && m_dragEnd!=Gaffer::Plug::Out )
+	if( !p )
 	{
-		M44f m = m_srcNodule->fullTransform( p );
-		m_srcPos = V3f( 0 ) * m;
+		return; // we have no parent during construction
 	}
+	
 	if( m_dstNodule && m_dragEnd!=Gaffer::Plug::In )
 	{
 		M44f m = m_dstNodule->fullTransform( p );
 		m_dstPos = V3f( 0 ) * m;
 	}
+	
+	if( m_srcNodule && m_dragEnd!=Gaffer::Plug::Out )
+	{
+		M44f m = m_srcNodule->fullTransform( p );
+		m_srcPos = V3f( 0 ) * m;
+	}
+	else if( m_dragEnd != Gaffer::Plug::Out )
+	{
+		// not dragging and don't have a source nodule.
+		// we're a dangling connection because the source
+		// node is hidden.
+		m_srcPos = m_dstPos + V3f( 0, 4, 0 );
+	}
+	
 }
 		
 Imath::Box3f ConnectionGadget::bound() const
@@ -148,7 +194,7 @@ IECore::RunTimeTypedPtr ConnectionGadget::dragBegin( GadgetPtr gadget, const Dra
 			if( m_dstNodule->plug()->acceptsInput( 0 ) )
 			{
 				m_dragEnd = Gaffer::Plug::In;
-				return m_srcNodule->plug();
+				return m_dstNodule->plug()->getInput<Gaffer::Plug>();
 			}
 		}
 	}
@@ -199,13 +245,13 @@ std::string ConnectionGadget::getToolTip() const
 		return result;
 	}
 	
-	if( !m_srcNodule || !m_dstNodule )
+	if( !m_dstNodule )
 	{
 		return result;
 	}
 	
-	Gaffer::Plug *srcPlug = m_srcNodule->plug();
 	Gaffer::Plug *dstPlug = m_dstNodule->plug();
+	Gaffer::Plug *srcPlug = dstPlug->getInput<Gaffer::Plug>();
 	const Gaffer::GraphComponent *ancestor = srcPlug->commonAncestor<Gaffer::GraphComponent>( dstPlug );
 
 	std::string srcName;

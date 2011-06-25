@@ -57,5 +57,6 @@ void GafferUIBindings::bindConnectionGadget()
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ConnectionGadget )
 		.def( "srcNodule", &ConnectionGadget::srcNodule )
 		.def( "dstNodule", &ConnectionGadget::dstNodule )
+		.def( "setNodules", &ConnectionGadget::setNodules )
 	;
 }

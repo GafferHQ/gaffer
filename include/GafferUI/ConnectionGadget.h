@@ -69,6 +69,8 @@ class ConnectionGadget : public Gadget
 		NodulePtr srcNodule();
 		/// Returns the Nodule representing the destination plug in the connection.
 		NodulePtr dstNodule();
+		/// May be called to change the connection represented by this gadget.
+		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 
 		virtual std::string getToolTip() const;
 		
