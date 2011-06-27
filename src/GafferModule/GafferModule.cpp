@@ -63,6 +63,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 {
 
 	bindConnection();
+	bindSignal();
 	bindGraphComponent();
 	bindNode();
 	bindPlug();
@@ -83,8 +84,10 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindStandardSet();
 	bindChildSet();
 	
-	typedef boost::signal<int ( float )> TestSignal;
-	SignalBinder<TestSignal>::bind( "TestSignal" );
+	typedef boost::signal<int ()> TestSignal0;
+	SignalBinder<TestSignal0>::bind( "TestSignal0" );
+	typedef boost::signal<int ( float )> TestSignal1;
+	SignalBinder<TestSignal1>::bind( "TestSignal1" );
 	typedef boost::signal<float ( float, float )> TestSignal2;
 	SignalBinder<TestSignal2>::bind( "TestSignal2" );
 
