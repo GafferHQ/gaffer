@@ -24,6 +24,8 @@
 
 * GraphGadget can now show arbitrary Sets of nodes, specified using the GraphGadget::setGraphSet() method.
 
+* GafferBindings::SignalBinder now supports signals of arity 0.
+
 0.11.0
 ------
 

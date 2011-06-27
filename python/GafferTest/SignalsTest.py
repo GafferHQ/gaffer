@@ -53,7 +53,7 @@ class SignalsTest( unittest.TestCase ) :
 		
 			return int( a )
 	
-		s = Gaffer.TestSignal()
+		s = Gaffer.TestSignal1()
 		c = s.connect( f )
 		self.assertEqual( c.blocked(), False )
 		self.assertEqual( c.connected(), True )
@@ -74,7 +74,7 @@ class SignalsTest( unittest.TestCase ) :
 			
 			return int( a )
 			
-		s = Gaffer.TestSignal()
+		s = Gaffer.TestSignal1()
 		c = s.connect( f )
 		self.assert_( c.connected() )
 		del s
@@ -101,7 +101,7 @@ class SignalsTest( unittest.TestCase ) :
 			def __init__( self ) :
 			
 				IECore.V3f.__init__( self )
-				self.signal = Gaffer.TestSignal()
+				self.signal = Gaffer.TestSignal1()
 				
 			def f( self, n ) :
 				
@@ -138,7 +138,7 @@ class SignalsTest( unittest.TestCase ) :
 		# should have died.
 		self.assert_( not a2.c.connected() )
 			
-	def deletionOfConnectionDisconnects( self ) :
+	def testDeletionOfConnectionDisconnects( self ) :
 	
 		def default( a ) :
 		
@@ -146,9 +146,9 @@ class SignalsTest( unittest.TestCase ) :
 	
 		def f( a ) :
 		
-			return int( f * 10 )
+			return int( a * 10 )
 	
-		s = Gaffer.TestSignal()
+		s = Gaffer.TestSignal1()
 		dc = s.connect( default )
 		self.assertEqual( s( 1 ), -1 )
 		
@@ -172,7 +172,7 @@ class SignalsTest( unittest.TestCase ) :
 			
 				self.children = []
 				self.numConnections = 0
-				self.signal = Gaffer.TestSignal()
+				self.signal = Gaffer.TestSignal1()
 				if parent :
 					self.c = parent.signal.connect( self.f )
 					parent.numConnections += 1
@@ -236,6 +236,18 @@ class SignalsTest( unittest.TestCase ) :
 		self.assert_( w() is None )
 		self.assert_( "Exception" in sio.getvalue() )
 		
+	def test0Arity( self ) :
+	
+		def one() :
+		
+			return 1
+	
+		s = Gaffer.TestSignal0()
+	
+		c = s.connect( one )
+		
+		self.assertEqual( s(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
 	

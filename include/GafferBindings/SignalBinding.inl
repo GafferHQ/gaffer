@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -44,6 +45,15 @@ namespace GafferBindings
 
 template<int Arity, typename Signal>
 struct DefaultSignalCallerBase;
+
+template<typename Signal>
+struct DefaultSignalCallerBase<0, Signal>
+{
+	static typename Signal::result_type call( Signal &s )
+	{
+		return s();
+	}
+};
 
 template<typename Signal>
 struct DefaultSignalCallerBase<1, Signal>

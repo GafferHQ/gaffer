@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -59,6 +60,15 @@ template<int Arity, typename Signal>
 struct DefaultSlotCallerBase;
 
 template<typename Signal>
+struct DefaultSlotCallerBase<0, Signal>
+{
+	typename Signal::slot_result_type operator()( boost::python::object slot )
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot() )();
+	}
+};
+
+template<typename Signal>
 struct DefaultSlotCallerBase<1, Signal>
 {
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1 )
@@ -92,6 +102,20 @@ struct DefaultSlotCaller : public DefaultSlotCallerBase<Signal::slot_function_ty
 
 template<int Arity, typename Signal, typename Caller>
 struct SlotBase;
+
+template<typename Signal, typename Caller>
+struct SlotBase<0, Signal, Caller>
+{
+	SlotBase( Connection *connection )
+		:	m_connection( connection )
+	{
+	}
+	typename Signal::slot_result_type operator()()
+	{
+		return Caller()( m_connection->slot() );
+	}
+	Connection *m_connection;
+};
 
 template<typename Signal, typename Caller>
 struct SlotBase<1, Signal, Caller>
