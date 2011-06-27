@@ -138,6 +138,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		return self.__backgroundColor
 	
+	## Returns a list of Gadgets below the specified position.
+	# The first Gadget in the list will be the frontmost, determined either by the
+	# depth buffer if it exists or the drawing order if it doesn't.
+	def gadgetsAt( self, position ) :
+	
+		assert( isinstance( position, ( IECore.V2f, IECore.V2i ) ) )
+	
+		return self.__select( position )
+	
 	## Returns the bounding box which will be framed when "f" is pressed. This
 	# may be overridden in derived classes to implement more intelligent framing.
 	def _framingBound( self ) :
@@ -368,10 +377,10 @@ class GadgetWidget( GafferUI.GLWidget ) :
 				
 		return None, None
 
-	## Returns a list of Gadgets under the screen x,y position specified by event.
+	## Returns a list of Gadgets under the screen x,y position specified by eventOrPosition.
 	# The first Gadget in the list will be the frontmost, determined either by the
 	# depth buffer if it exists or the drawing order if it doesn't.
-	def __select( self, event ) :
+	def __select( self, eventOrPosition ) :
 	
 		if not self.__scene :
 			return []
@@ -379,7 +388,10 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self._qtWidget().context().makeCurrent()
 				
 		viewportSize = IECore.V2f( self._qtWidget().width(), self._qtWidget().height() )
-		regionCentre = IECore.V2f( event.line.p1.x, event.line.p1.y ) / viewportSize
+		if isinstance( eventOrPosition, GafferUI.Event ) :
+			regionCentre = IECore.V2f( eventOrPosition.line.p1.x, eventOrPosition.line.p1.y ) / viewportSize
+		else :
+			regionCentre = IECore.V2f( eventOrPosition[0], eventOrPosition[1] ) / viewportSize
 		regionSize = IECore.V2f( 2 ) / viewportSize
 		
 		region = IECore.Box2f( regionCentre - regionSize/2, regionCentre + regionSize/2 )

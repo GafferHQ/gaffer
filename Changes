@@ -26,6 +26,10 @@
 
 * GafferBindings::SignalBinder now supports signals of arity 0.
 
+* GafferBindings::SignalBinder now returns the class that was bound, so that additional method bindings may be added by calling code.
+
+* A generic set of python signals are now bound as Signal0, Signal1, Signal2 and Signal3, where the number denotes the number of arguments the Signal takes. Python callables may be used to provide custom result combiners - see GafferTest.SignalsTest for examples.
+
 0.11.0
 ------
 

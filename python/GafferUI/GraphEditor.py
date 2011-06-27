@@ -93,9 +93,21 @@ class GraphEditor( GafferUI.EditorWidget ) :
 				
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Right :
 						
-			# right click
+			# right click - display either the node creation popup menu
+			# or a menu specific to the node under the mouse if possible.
 			
-			self.__m = GafferUI.Menu( GafferUI.NodeMenu.definition() )
+			menuDefinition = GafferUI.NodeMenu.definition()
+			
+			gadgets = self.__gadgetWidget.gadgetsAt( IECore.V2f( event.line.p1.x, event.line.p1.y ) )
+			if len( gadgets ) :
+				nodeGadget = gadgets[0].ancestor( GafferUI.NodeGadget.staticTypeId() )		
+				if nodeGadget :
+					nodeMenuDefinition = IECore.MenuDefinition()
+					self.nodeContextMenuSignal()( self, nodeGadget.node(), nodeMenuDefinition )
+					if len( nodeMenuDefinition.items() ) :
+						menuDefinition = nodeMenuDefinition
+			
+			self.__m = GafferUI.Menu( menuDefinition )
 			self.__m.popup( self )
 						
 			return True

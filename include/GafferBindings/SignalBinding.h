@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -61,9 +62,14 @@ struct SignalBinder
 {
 	/// Binds the boost::signal type T under the given
 	/// class name, using the SignalCaller and SlotCaller defined
-	/// by the template parameters.
-	static void bind( const char *className );
+	/// by the template parameters. Returns the class so that
+	/// additional method bindings may be added if required.
+	static boost::python::class_<Signal, boost::noncopyable> bind( const char *className );
 };
+
+/// This function binds a series of generic signals taking and returning python objects, with
+/// combiners being provided as python callables.
+void bindSignal();
 
 } // namespace GafferBindings
 

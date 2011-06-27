@@ -247,7 +247,73 @@ class SignalsTest( unittest.TestCase ) :
 		c = s.connect( one )
 		
 		self.assertEqual( s(), 1 )
-
+	
+	def testGenericPythonSignals( self ) :
+	
+		def one() :
+			return "one"
+			
+		def two() :
+			return "two"
+			
+		s = Gaffer.Signal0()
+		c1 = s.connect( one )
+		c2 = s.connect( two )
+		
+		self.assertEqual( s(), "two" )
+	
+	def testGenericPythonSignalsWithCombiner( self ) :
+		
+		def myCombiner( slotResults ) :
+		
+			l = []
+			for r in slotResults :
+				l.append( r )
+				
+			return l
+				
+		def add( a, b ) :
+			
+			return a + b
+			
+		def mult( a, b ) :
+		
+			return a * b
+			
+		s = Gaffer.Signal2( myCombiner )
+		addConnection = s.connect( add )
+		multConnection = s.connect( mult )
+		
+		self.assertEqual( s( 2, 4 ), [ 6, 8 ] )
+		
+	def testPythonResultCombinersCanSkipSlots( self ) :
+	
+		def myCombiner( slotResults ) :
+		
+			for r in slotResults :
+				if r :
+					return r
+					
+			return False
+	
+		def slot1() :
+		
+			self.numCalls += 1
+			return True
+			
+		def slot2() :
+		
+			self.numCalls += 1
+			return False
+			
+		s = Gaffer.Signal0( myCombiner )
+		c1 = s.connect( slot1 )
+		c2 = s.connect( slot2 )
+		
+		self.numCalls = 0
+		self.assertEqual( s(), True )
+		self.assertEqual( self.numCalls, 1 )	
+			
 if __name__ == "__main__":
 	unittest.main()
 	

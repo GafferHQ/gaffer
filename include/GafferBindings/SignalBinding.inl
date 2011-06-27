@@ -89,14 +89,16 @@ struct DefaultSignalCaller : public DefaultSignalCallerBase<Signal::slot_functio
 };
 
 template<typename Signal, typename SignalCaller, typename SlotCaller>
-void SignalBinder<Signal, SignalCaller, SlotCaller>::bind( const char *className )
+boost::python::class_<Signal, boost::noncopyable> SignalBinder<Signal, SignalCaller, SlotCaller>::bind( const char *className )
 {
 
-	boost::python::class_<Signal, boost::noncopyable>( className )
-		.def( "connect", &Connection::create<Signal, SlotCaller> )
+	boost::python::class_<Signal, boost::noncopyable> c( className );
+		c.def( "connect", &Connection::create<Signal, SlotCaller> )
 		.def( "__call__", &SignalCaller::call )
 	;
 
+	return c;
+	
 }
 
 } // namespace GafferBindings
