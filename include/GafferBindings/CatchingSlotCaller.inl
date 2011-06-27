@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,6 +43,23 @@ namespace GafferBindings
 
 template<int Arity, typename Signal>
 struct CatchingSlotCallerBase;
+
+template<typename Signal>
+struct CatchingSlotCallerBase<0, Signal>
+{
+	typename Signal::slot_result_type operator()( boost::python::object slot )
+	{
+		try
+		{
+			return boost::python::extract<typename Signal::slot_result_type>( slot() )();
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // also clears the python error status
+			return typename Signal::slot_result_type();
+		}
+	}
+};
 
 template<typename Signal>
 struct CatchingSlotCallerBase<1, Signal>
