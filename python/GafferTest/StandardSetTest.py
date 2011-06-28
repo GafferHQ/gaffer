@@ -247,6 +247,15 @@ class StandardSetTest( unittest.TestCase ) :
 			self.failIf( m in s )
 			self.failIf( s.contains( m ) )
 			
+	def testIteration( self ) :
+	
+		members = [ Gaffer.Node(), Gaffer.Node(), Gaffer.Node() ]
+		s = Gaffer.StandardSet( members )
+		
+		i = 0
+		for m in s :
+			self.failUnless( m is members[i] )
+			i += 1
 		
 if __name__ == "__main__":
 	unittest.main()
