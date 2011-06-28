@@ -64,7 +64,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 	
 		self.setScriptNode( scriptNode )
-	
+			
 	def setScriptNode( self, scriptNode ) :
 	
 		if not hasattr( self, "_GraphEditor__gadgetWidget" ) :
@@ -84,6 +84,18 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	def graphGadget( self ) :
 	
 		return self.__gadgetWidget.getGadget()
+	
+	__nodeContextMenuSignal = Gaffer.Signal2()
+	## Returns a signal which is emitted to create a context menu for a
+	# node in the graph. Slots may connect to this signal to edit the
+	# menu definition on the fly - the signature for the signal is
+	# ( node, menuDefinition ) and the menu definition should just be
+	# edited in place. Typically you would add slots to this signal
+	# as part of a startup script.
+	@classmethod
+	def nodeContextMenuSignal( cls ) :
+	
+		return cls.__nodeContextMenuSignal
 			
 	def __repr__( self ) :
 
@@ -100,10 +112,12 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			
 			gadgets = self.__gadgetWidget.gadgetsAt( IECore.V2f( event.line.p1.x, event.line.p1.y ) )
 			if len( gadgets ) :
-				nodeGadget = gadgets[0].ancestor( GafferUI.NodeGadget.staticTypeId() )		
+				nodeGadget = gadgets[0]
+				if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
+					nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget.staticTypeId() )		
 				if nodeGadget :
 					nodeMenuDefinition = IECore.MenuDefinition()
-					self.nodeContextMenuSignal()( self, nodeGadget.node(), nodeMenuDefinition )
+					self.nodeContextMenuSignal()( nodeGadget.node(), nodeMenuDefinition )
 					if len( nodeMenuDefinition.items() ) :
 						menuDefinition = nodeMenuDefinition
 			
