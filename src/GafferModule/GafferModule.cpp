@@ -47,7 +47,6 @@
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/ApplicationRootBinding.h"
 #include "GafferBindings/SetBinding.h"
-#include "GafferBindings/ObjectSignalBinding.h"
 #include "GafferBindings/UndoContextBinding.h"
 #include "GafferBindings/CompoundPlugBinding.h"
 #include "GafferBindings/CompoundNumericPlugBinding.h"
@@ -74,7 +73,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindScriptNode();
 	bindApplicationRoot();
 	bindSet();
-	bindObjectSignal();
 	bindUndoContext();
 	bindCompoundPlug();
 	bindCompoundNumericPlug();

@@ -69,7 +69,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__executeButton = self._addButton( "Execute" )
 		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
-		self.__opExecutedSignal = Gaffer.ObjectSignal()
+		self.__opExecutedSignal = Gaffer.Signal1()
 			
 	## A signal called when the user has pressed the execute button
 	# and the Op has been successfully executed. This is passed the

@@ -55,7 +55,7 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton = self._addButton( confirmLabel )
 		self.__confirmButtonConnection = self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
-		self.__pathSelectedSignal = Gaffer.ObjectSignal()
+		self.__pathSelectedSignal = Gaffer.Signal1()
 	
 	## A signal called when a path has been selected. Slots for this signal
 	# should accept a single argument which will be the PathChooserDialogue instance.	
