@@ -1,3 +1,5 @@
+* Fixed a bug whereby a a node would be offset from the mouse position when dragging if starting the drag was delayed while other uis (particularly the NodeEditor) were updating.
+
 0.12.0
 ------
 

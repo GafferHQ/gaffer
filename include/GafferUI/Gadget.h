@@ -169,10 +169,20 @@ class Gadget : public Gaffer::GraphComponent
 		
 		typedef boost::signal<IECore::RunTimeTypedPtr ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal; 
 		typedef boost::signal<bool ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal; 
-		/// \todo Document me!
+		
+		/// This signal is emitted if a previous buttonPressSignal() returned true, and the
+		/// user has subsequently moved the mouse with the button down. To initiate a drag
+		/// a Gadget must return an IECore::RunTimeTypedPtr representing the data being
+		/// dragged.
 		DragBeginSignal &dragBeginSignal();
+		/// Upon initiation of a drag with dragBeginSignal(), this signal will be triggered
+		/// to update the drag with the new mouse position.
 		DragDropSignal &dragUpdateSignal();
+		/// This signal is emitted when a drag has been released over this Gadget.
 		DragDropSignal &dropSignal();
+		/// After the dropSignal() has been emitted on the destination of the drag, the
+		/// dragEndSignal() is emitted on the Gadget which provided the source of the
+		/// drag.
 		DragDropSignal &dragEndSignal();
 		
 		/// A signal used to represent key related events.

@@ -88,6 +88,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.setGadget( gadget )
 		
 		self.__lastButtonPressGadget = None
+		self.__lastButtonPressEvent = None
 		self.__dragDropEvent = None
 		
 		self.__cameraInMotion = False
@@ -222,6 +223,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		gadget, result = self.__dispatchEvent( gadgets, "buttonPressSignal", event )
 		if result :
 			self.__lastButtonPressGadget = gadget
+			self.__lastButtonPressEvent = event
 			return True
 		else :
 			self.__lastButtonPressGadget = None
@@ -269,8 +271,10 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		if self.__lastButtonPressGadget and not self.__dragDropEvent :
 						
-			# try to start a new drag
-			dragDropEvent = DragDropEvent( event.buttons, event.line, event.modifiers )
+			# try to start a new drag. we do this using the position at which the button was initially pressed rather
+			# than the current position. if starting the drag succeeds then we'll immediately send a drag update
+			# with the current position.
+			dragDropEvent = DragDropEvent( event.buttons, self.__lastButtonPressEvent.line, event.modifiers )
 			dragDropEvent.source = self.__lastButtonPressGadget
 			g, d = self.__dispatchEvent( self.__lastButtonPressGadget, "dragBeginSignal", dragDropEvent, dispatchToAncestors=False )
 			if d :
@@ -278,8 +282,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 				self.__dragDropEvent = dragDropEvent
 				
 			self.__lastButtonPressGadget = None
+			self.__lastButtonPressEvent = None
 			
-		elif self.__dragDropEvent :
+		if self.__dragDropEvent :
 		
 			# update an existing drag
 			
