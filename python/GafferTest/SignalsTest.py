@@ -53,7 +53,7 @@ class SignalsTest( unittest.TestCase ) :
 		
 			return int( a )
 	
-		s = Gaffer.TestSignal1()
+		s = Gaffer.Signal1()
 		c = s.connect( f )
 		self.assertEqual( c.blocked(), False )
 		self.assertEqual( c.connected(), True )
@@ -74,7 +74,7 @@ class SignalsTest( unittest.TestCase ) :
 			
 			return int( a )
 			
-		s = Gaffer.TestSignal1()
+		s = Gaffer.Signal1()
 		c = s.connect( f )
 		self.assert_( c.connected() )
 		del s
@@ -86,7 +86,7 @@ class SignalsTest( unittest.TestCase ) :
 		
 			return a * b
 	
-		s = Gaffer.TestSignal2()
+		s = Gaffer.Signal2()
 		c = s.connect( f )
 		self.assertEqual( s( 2.0, 4.0 ), 8.0 )
 	
@@ -101,7 +101,7 @@ class SignalsTest( unittest.TestCase ) :
 			def __init__( self ) :
 			
 				IECore.V3f.__init__( self )
-				self.signal = Gaffer.TestSignal1()
+				self.signal = Gaffer.Signal1()
 				
 			def f( self, n ) :
 				
@@ -148,7 +148,7 @@ class SignalsTest( unittest.TestCase ) :
 		
 			return int( a * 10 )
 	
-		s = Gaffer.TestSignal1()
+		s = Gaffer.Signal1()
 		dc = s.connect( default )
 		self.assertEqual( s( 1 ), -1 )
 		
@@ -172,7 +172,7 @@ class SignalsTest( unittest.TestCase ) :
 			
 				self.children = []
 				self.numConnections = 0
-				self.signal = Gaffer.TestSignal1()
+				self.signal = Gaffer.Signal1()
 				if parent :
 					self.c = parent.signal.connect( self.f )
 					parent.numConnections += 1
@@ -242,7 +242,7 @@ class SignalsTest( unittest.TestCase ) :
 		
 			return 1
 	
-		s = Gaffer.TestSignal0()
+		s = Gaffer.Signal0()
 	
 		c = s.connect( one )
 		
