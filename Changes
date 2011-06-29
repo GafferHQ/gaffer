@@ -1,4 +1,4 @@
-* Fixed a bug whereby a a node would be offset from the mouse position when dragging if starting the drag was delayed while other uis (particularly the NodeEditor) were updating.
+* Fixed a bug whereby a node would be offset from the mouse position when dragging if starting the drag was delayed while other uis (particularly the NodeEditor) were updating.
 
 * Fixed a bug which meant that connections were not correctly represented in the GraphEditor for children of the ArrayNodule.
 
