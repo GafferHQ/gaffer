@@ -119,8 +119,9 @@ class GraphGadget : public ContainerGadget
 		NodeGadget *findNodeGadget( const Gaffer::Node *node ) const;
 		void updateNodeGadgetTransform( NodeGadget *nodeGadget );
 		
-		void addConnectionGadgets( Gaffer::Node *dstNode );
+		void addConnectionGadgets( Gaffer::GraphComponent *plugParent );
 		void addConnectionGadget( Gaffer::Plug *dstPlug );
+		void removeConnectionGadgets( const Gaffer::GraphComponent *plugParent );
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
 	

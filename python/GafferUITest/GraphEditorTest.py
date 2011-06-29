@@ -43,6 +43,15 @@ import Gaffer
 import GafferUI
 import GafferTest
 
+class NestedPlugTestNode( Gaffer.Node ) :
+		
+		def __init__( self ) :
+			
+			Gaffer.Node.__init__( self )
+	
+IECore.registerRunTimeTyped( NestedPlugTestNode )
+GafferUI.Nodule.registerNodule( NestedPlugTestNode.staticTypeId(), "c", GafferUI.ArrayNodule )
+
 class GraphEditorTest( unittest.TestCase ) :
 
 	def testCreateWithExistingGraph( self ) :
@@ -382,8 +391,63 @@ class GraphEditorTest( unittest.TestCase ) :
 		graphSet.add( script["add1"] )
 		
 		self.failIf( g.nodeGadget( script["add1"] ) )
-		self.failUnless( g.nodeGadget( script["add2"] ) )	
+		self.failUnless( g.nodeGadget( script["add2"] ) )
+	
+	def testConnectionsForNestedPlugs( self ) :
+	
+		script = Gaffer.ScriptNode()
 		
+		script["n"] = NestedPlugTestNode()
+		script["n"]["c"] = Gaffer.CompoundPlug()
+		script["n"]["c"]["i"] = Gaffer.IntPlug()
+		
+		script["n2"] = NestedPlugTestNode()
+		script["n2"]["c"] = Gaffer.CompoundPlug(  direction = Gaffer.Plug.Direction.Out )
+		script["n2"]["c"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		script["n"]["c"]["i"].setInput( script["n2"]["c"]["o"] )
+		
+		s = Gaffer.StandardSet( script.children() )
+		g = GafferUI.GraphGadget( s )
+				
+		c = g.connectionGadget( script["n"]["c"]["i"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule().plug().isSame( script["n2"]["c"]["o"] ) )
+		self.failUnless( c.dstNodule().plug().isSame( script["n"]["c"]["i"] ) )
+		
+		s.remove( script["n2"] )
+		
+		self.failUnless( g.nodeGadget( script["n2"] ) is None )
+		
+		c = g.connectionGadget( script["n"]["c"]["i"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule() is None )
+		self.failUnless( c.dstNodule().plug().isSame( script["n"]["c"]["i"] ) )
+		
+		s.add( script["n2"] )
+		
+		self.failUnless( g.nodeGadget( script["n2"] ) )
+		
+		c = g.connectionGadget( script["n"]["c"]["i"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule().plug().isSame( script["n2"]["c"]["o"] ) )
+		self.failUnless( c.dstNodule().plug().isSame( script["n"]["c"]["i"] ) )
+		
+		s.remove( script["n"] )
+		
+		self.failUnless( g.nodeGadget( script["n"] ) is None )
+		
+		self.failUnless( g.connectionGadget( script["n"]["c"]["i"] ) is None )
+
+		s.add( script["n"] )
+
+		self.failUnless( g.nodeGadget( script["n"] ) )
+		
+		c = g.connectionGadget( script["n"]["c"]["i"] )
+		self.failUnless( c )
+		self.failUnless( c.srcNodule().plug().isSame( script["n2"]["c"]["o"] ) )
+		self.failUnless( c.dstNodule().plug().isSame( script["n"]["c"]["i"] ) )
+			
 if __name__ == "__main__":
 	unittest.main()
 	
