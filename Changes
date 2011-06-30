@@ -14,6 +14,8 @@
 
 * The Image widget no longer expands to fill space if it is available.
 
+* The Label widget now has setText() and getText() methods.
+
 0.12.0
 ------
 

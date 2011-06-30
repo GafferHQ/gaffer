@@ -62,6 +62,14 @@ class Label( GafferUI.Widget ) :
 		
 		self.setAlignment( horizontalAlignment, verticalAlignment )
 
+	def setText( self, text ) :
+	
+		self._qtWidget().setText( text )
+
+	def getText( self ) :
+	
+		return str( self._qtWidget.text() )
+	
 	def setAlignment( self, horizontalAlignment, verticalAlignment ) :
 		
 		self._qtWidget().setAlignment(
