@@ -49,12 +49,16 @@ class TypedParameterHandler : public ParameterHandler
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( TypedParameterHandler<T> );
+
 		typedef IECore::TypedParameter<T> ParameterType;
 		typedef TypedPlug<T> PlugType;
 
 		TypedParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
 		virtual ~TypedParameterHandler();
 				
+		virtual Gaffer::PlugPtr plug();
+		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
 				

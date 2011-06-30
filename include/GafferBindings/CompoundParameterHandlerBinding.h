@@ -34,60 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NumericParameter.h"
+#ifndef GAFFERBINDINGS_COMPOUNDPARAMETERHANDLERBINDING_H
+#define GAFFERBINDINGS_COMPOUNDPARAMETERHANDLERBINDING_H
 
-#include "Gaffer/NumericParameterHandler.h"
-#include "Gaffer/NumericPlug.h"
-
-using namespace Gaffer;
-
-template<typename T>
-ParameterHandler::ParameterHandlerDescription<NumericParameterHandler<T>, IECore::NumericParameter<T> > NumericParameterHandler<T>::g_description;
-
-template<typename T>
-NumericParameterHandler<T>::NumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+namespace GafferBindings
 {
-	m_plug = plugParent->getChild<PlugType>( parameter->name() );
-	if( !m_plug )
-	{
-		m_plug = new PlugType( parameter->name(), Plug::In, parameter->numericDefaultValue(), parameter->minValue(), parameter->maxValue() );
-	}
-	plugParent->addChild( m_plug );
-}
-
-template<typename T>
-NumericParameterHandler<T>::~NumericParameterHandler()
-{
-}
-
-template<typename T>
-Gaffer::PlugPtr NumericParameterHandler<T>::plug()
-{
-	return m_plug;
-}
-
-template<typename T>
-Gaffer::ConstPlugPtr NumericParameterHandler<T>::plug() const
-{
-	return m_plug;
-}
 		
-template<typename T>
-void NumericParameterHandler<T>::setParameterValue()
-{
-	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	p->setNumericValue( m_plug->getValue() );
-}
+void bindCompoundParameterHandler();
 
-template<typename T>
-void NumericParameterHandler<T>::setPlugValue()
-{
-	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	m_plug->setValue( p->getNumericValue() );
-}
-		
-// explicit instantiations
+} // namespace GafferBindings
 
-template class NumericParameterHandler<float>;
-template class NumericParameterHandler<int>;
+#endif // GAFFERBINDINGS_COMPOUNDPARAMETERHANDLERBINDING_H

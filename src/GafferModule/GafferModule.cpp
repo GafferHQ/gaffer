@@ -53,6 +53,7 @@
 #include "GafferBindings/SplinePlugBinding.h"
 #include "GafferBindings/ParameterisedHolderBinding.h"
 #include "GafferBindings/ParameterHandlerBinding.h"
+#include "GafferBindings/CompoundParameterHandlerBinding.h"
 #include "GafferBindings/StandardSetBinding.h"
 #include "GafferBindings/ChildSetBinding.h"
 
@@ -79,6 +80,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSplinePlug();
 	bindParameterisedHolder();
 	bindParameterHandler();
+	bindCompoundParameterHandler();
 	bindStandardSet();
 	bindChildSet();
 

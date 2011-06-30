@@ -124,6 +124,7 @@ void GafferBindings::bindParameterisedHolder()
 		.def( "setParameterised", (void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr ))&ParameterisedHolderNode::setParameterised )
 		.def( "setParameterised", (void (ParameterisedHolderNode::*)( const std::string &, int, const std::string & ))&ParameterisedHolderNode::setParameterised )
 		.def( "getParameterised", getParameterised )
+		.def( "parameterHandler", (CompoundParameterHandlerPtr (ParameterisedHolderNode::*)())&ParameterisedHolderNode::parameterHandler )
 		.def( "parameterModificationContext", &parameterModificationContext, return_value_policy<manage_new_object>() )
 		.def( "setParameterisedValues", &ParameterisedHolderNode::setParameterisedValues )
 	;

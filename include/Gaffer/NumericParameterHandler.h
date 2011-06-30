@@ -49,18 +49,19 @@ class NumericParameterHandler : public ParameterHandler
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( NumericParameterHandler<T> );
+
 		typedef IECore::NumericParameter<T> ParameterType;
 		typedef NumericPlug<T> PlugType;
 
 		NumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
 		virtual ~NumericParameterHandler();
 		
+		virtual Gaffer::PlugPtr plug();
+		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
-		
-	protected :
-		
-		
+				
 	private :
 	
 		typename PlugType::Ptr m_plug;

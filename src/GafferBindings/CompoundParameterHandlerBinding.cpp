@@ -34,60 +34,25 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/NumericParameter.h"
+#include "boost/python.hpp"
 
-#include "Gaffer/NumericParameterHandler.h"
-#include "Gaffer/NumericPlug.h"
+#include "IECorePython/RefCountedBinding.h"
 
+#include "Gaffer/CompoundParameterHandler.h"
+#include "Gaffer/GraphComponent.h"
+
+#include "GafferBindings/CompoundParameterHandlerBinding.h"
+
+using namespace boost::python;
+using namespace GafferBindings;
 using namespace Gaffer;
 
-template<typename T>
-ParameterHandler::ParameterHandlerDescription<NumericParameterHandler<T>, IECore::NumericParameter<T> > NumericParameterHandler<T>::g_description;
-
-template<typename T>
-NumericParameterHandler<T>::NumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+void GafferBindings::bindCompoundParameterHandler()
 {
-	m_plug = plugParent->getChild<PlugType>( parameter->name() );
-	if( !m_plug )
-	{
-		m_plug = new PlugType( parameter->name(), Plug::In, parameter->numericDefaultValue(), parameter->minValue(), parameter->maxValue() );
-	}
-	plugParent->addChild( m_plug );
-}
-
-template<typename T>
-NumericParameterHandler<T>::~NumericParameterHandler()
-{
-}
-
-template<typename T>
-Gaffer::PlugPtr NumericParameterHandler<T>::plug()
-{
-	return m_plug;
-}
-
-template<typename T>
-Gaffer::ConstPlugPtr NumericParameterHandler<T>::plug() const
-{
-	return m_plug;
-}
+	
+	IECorePython::RefCountedClass<CompoundParameterHandler, ParameterHandler>( "CompoundParameterHandler" )
+		.def( init<IECore::CompoundParameterPtr, GraphComponentPtr>() )
+		.def( "childParameterHandler", (ParameterHandlerPtr (CompoundParameterHandler::*)( IECore::ParameterPtr ))&CompoundParameterHandler::childParameterHandler )
+	;
 		
-template<typename T>
-void NumericParameterHandler<T>::setParameterValue()
-{
-	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	p->setNumericValue( m_plug->getValue() );
 }
-
-template<typename T>
-void NumericParameterHandler<T>::setPlugValue()
-{
-	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	m_plug->setValue( p->getNumericValue() );
-}
-		
-// explicit instantiations
-
-template class NumericParameterHandler<float>;
-template class NumericParameterHandler<int>;

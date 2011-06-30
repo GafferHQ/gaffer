@@ -79,6 +79,10 @@ class ParameterHandlerTest( unittest.TestCase ) :
 					)
 					
 				plugParent[parameter.name] = self.__plug
+			
+			def plug( self ) :
+			
+				return self.__plug
 				
 			def setParameterValue( self ) :
 			
@@ -119,7 +123,38 @@ class ParameterHandlerTest( unittest.TestCase ) :
 		ph.setParameterisedValues()
 		
 		self.assertEqual( p["i"].getNumericValue(), 10000 )
+	
+	def testPlugMethod( self ) :
+
+		p = IECore.IntParameter( "i", "d", 10 )
 		
+		n = Gaffer.Node()
+		h = Gaffer.ParameterHandler.create( p, n )
+		
+		self.assertEqual( h.plug().getName(), "i" )
+		self.failUnless( h.plug().parent() is n )
+		
+	def testCompoundParameterHandler( self ) :
+		
+		c = IECore.CompoundParameter(
+			
+			"c",
+			"",
+			
+			[
+				IECore.IntParameter( "i", "" ),
+				IECore.FloatParameter( "f", "" )			
+			]
+	
+		)
+		
+		n = Gaffer.Node()
+		
+		h = Gaffer.CompoundParameterHandler( c, n )
+		
+		self.failUnless( h.childParameterHandler( c["i"] ).parameter().isSame( c["i"] ) )
+		self.failUnless( h.childParameterHandler( c["f"] ).parameter().isSame( c["f"] ) )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

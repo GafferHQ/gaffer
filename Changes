@@ -2,6 +2,16 @@
 
 * Fixed a bug which meant that connections were not correctly represented in the GraphEditor for children of the ArrayNodule.
 
+* The ParameterHandler classes now correctly define the Ptr and ConstPtr member typedefs required for all IECore::RefCounted subclasses.
+
+* The ParameterHandler classes now have a plug() method which returns the plug which was created to represent the parameter().
+
+* The ParameterisedHolder class now exposes the internal ParameterHandler with a parameterHandler() method.
+
+* The CompoundParameterHandler class now provides access to the handlers it uses for child parameters using the childParameterHandler() method.
+
+* The CompoundParameterHandler now has python bindings.
+
 0.12.0
 ------
 

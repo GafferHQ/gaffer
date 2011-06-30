@@ -51,12 +51,16 @@ class CompoundNumericParameterHandler : public ParameterHandler
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( CompoundNumericParameterHandler<T> );
+
 		typedef IECore::TypedParameter<T> ParameterType;
 		typedef CompoundNumericPlug<T> PlugType;
 
 		CompoundNumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
 		virtual ~CompoundNumericParameterHandler();
 		
+		virtual Gaffer::PlugPtr plug();
+		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
 		

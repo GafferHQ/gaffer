@@ -98,6 +98,18 @@ IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::getParameterised( std::st
 }
 
 template<typename BaseType>
+CompoundParameterHandlerPtr ParameterisedHolder<BaseType>::parameterHandler()
+{
+	return m_parameterHandler;
+}
+
+template<typename BaseType>
+ConstCompoundParameterHandlerPtr ParameterisedHolder<BaseType>::parameterHandler() const
+{
+	return m_parameterHandler;
+}
+
+template<typename BaseType>
 void ParameterisedHolder<BaseType>::setParameterisedValues()
 {
 	if( m_parameterHandler )

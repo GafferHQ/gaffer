@@ -221,6 +221,19 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.assertEqual( p["v3f"].getTypedValue(), IECore.V3f( 4, 5, 6 ) )
 		self.assertEqual( p["color4f"].getTypedValue(), IECore.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
 		
+	def testParameterHandlerMethod( self ) :
+	
+		p = IECore.Parameterised( "" )
+		p.parameters().addParameter( IECore.IntParameter( "i1", "", 1, ) )
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		h = ph.parameterHandler()
+		self.failUnless( isinstance( h, Gaffer.CompoundParameterHandler ) )
+		self.failUnless( h.parameter().isSame( p.parameters() ) )
+		self.failUnless( h.plug().isSame( ph["parameters"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

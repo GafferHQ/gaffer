@@ -49,6 +49,8 @@ class VectorTypedParameterHandler : public ParameterHandler
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( VectorTypedParameterHandler<T> );
+
 		typedef IECore::TypedParameter<std::vector<T> > ParameterType;
 		typedef IECore::TypedData<std::vector<T> > DataType;
 		typedef TypedObjectPlug<IECore::TypedData<std::vector<T> > > PlugType;
@@ -56,6 +58,8 @@ class VectorTypedParameterHandler : public ParameterHandler
 		VectorTypedParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
 		virtual ~VectorTypedParameterHandler();
 				
+		virtual Gaffer::PlugPtr plug();
+		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
 				

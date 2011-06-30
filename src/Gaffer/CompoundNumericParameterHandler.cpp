@@ -57,6 +57,18 @@ template<typename T>
 CompoundNumericParameterHandler<T>::~CompoundNumericParameterHandler()
 {
 }
+
+template<typename T>
+Gaffer::PlugPtr CompoundNumericParameterHandler<T>::plug()
+{
+	return m_plug;
+}
+
+template<typename T>
+Gaffer::ConstPlugPtr CompoundNumericParameterHandler<T>::plug() const
+{
+	return m_plug;
+}
 		
 template<typename T>
 void CompoundNumericParameterHandler<T>::setParameterValue()

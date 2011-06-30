@@ -60,6 +60,18 @@ template<typename T>
 TypedParameterHandler<T>::~TypedParameterHandler()
 {
 }
+
+template<typename T>
+Gaffer::PlugPtr TypedParameterHandler<T>::plug()
+{
+	return m_plug;
+}
+
+template<typename T>
+Gaffer::ConstPlugPtr TypedParameterHandler<T>::plug() const
+{
+	return m_plug;
+}
 		
 template<typename T>
 void TypedParameterHandler<T>::setParameterValue()

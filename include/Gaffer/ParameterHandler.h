@@ -48,6 +48,8 @@ IE_CORE_FORWARDDECLARE( Plug );
 IE_CORE_FORWARDDECLARE( GraphComponent );
 IE_CORE_FORWARDDECLARE( ParameterHandler );
 
+/// ParameterHandlers manage a mapping between IECore::Parameter objects
+/// and Plugs on a Node.
 class ParameterHandler : public IECore::RefCounted
 {
 
@@ -60,6 +62,9 @@ class ParameterHandler : public IECore::RefCounted
 		IECore::ParameterPtr parameter();
 		IECore::ConstParameterPtr parameter() const;
 
+		virtual Gaffer::PlugPtr plug() = 0;
+		virtual Gaffer::ConstPlugPtr plug() const = 0;
+		
 		virtual void setParameterValue() = 0;
 		virtual void setPlugValue() = 0;
 		

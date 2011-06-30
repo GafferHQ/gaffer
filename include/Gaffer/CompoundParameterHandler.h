@@ -51,20 +51,24 @@ class CompoundParameterHandler : public ParameterHandler
 
 	public :
 
+		IE_CORE_DECLAREMEMBERPTR( CompoundParameterHandler );
+
 		CompoundParameterHandler( IECore::CompoundParameterPtr parameter, GraphComponentPtr plugParent );
 		virtual ~CompoundParameterHandler();
 				
+		virtual Gaffer::PlugPtr plug();
+		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
 		
-	protected :
-		
-		
+		ParameterHandlerPtr childParameterHandler( IECore::ParameterPtr childParameter );
+		ConstParameterHandlerPtr childParameterHandler( IECore::ParameterPtr childParameter ) const;
+					
 	private :
 	
 		CompoundPlugPtr m_plug;
 	
-		ParameterHandlerPtr handler( const IECore::ParameterPtr child );
+		ParameterHandlerPtr handler( const IECore::ParameterPtr child, bool createIfMissing = false );
 		typedef std::map<IECore::InternedString, ParameterHandlerPtr> HandlerMap;
 		HandlerMap m_handlers;
 	

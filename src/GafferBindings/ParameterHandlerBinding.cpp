@@ -41,7 +41,7 @@
 #include "IECorePython/Wrapper.h"
 
 #include "Gaffer/ParameterHandler.h"
-#include "Gaffer/GraphComponent.h"
+#include "Gaffer/Plug.h"
 #include "GafferBindings/ParameterHandlerBinding.h"
 
 using namespace boost::python;
@@ -58,6 +58,20 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 		{
 		}
 
+		virtual PlugPtr plug()
+		{
+			IECorePython::ScopedGILLock gilLock;
+			override o = this->get_override( "plug" );
+			return o();
+		}
+		
+		virtual ConstPlugPtr plug() const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			override o = this->get_override( "plug" );
+			return o();
+		}
+		
 		virtual void setParameterValue()
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -107,6 +121,7 @@ void GafferBindings::bindParameterHandler()
 	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapperPtr>( "ParameterHandler" )
 		.def( init<IECore::ParameterPtr>() )
 		.def( "parameter", (IECore::ParameterPtr (ParameterHandler::*)())&ParameterHandler::parameter )
+		.def( "plug", (PlugPtr (ParameterHandler::*)())&ParameterHandler::plug )
 		.def( "setParameterValue", &ParameterHandler::setParameterValue )
 		.def( "setPlugValue", &ParameterHandler::setPlugValue )
 		.def( "create", &ParameterHandler::create ).staticmethod( "create" )

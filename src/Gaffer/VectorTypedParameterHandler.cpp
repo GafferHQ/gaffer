@@ -59,6 +59,18 @@ template<typename T>
 VectorTypedParameterHandler<T>::~VectorTypedParameterHandler()
 {
 }
+
+template<typename T>
+Gaffer::PlugPtr VectorTypedParameterHandler<T>::plug()
+{
+	return m_plug;
+}
+
+template<typename T>
+Gaffer::ConstPlugPtr VectorTypedParameterHandler<T>::plug() const
+{
+	return m_plug;
+}
 		
 template<typename T>
 void VectorTypedParameterHandler<T>::setParameterValue()

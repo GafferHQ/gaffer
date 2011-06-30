@@ -59,6 +59,11 @@ class ParameterisedHolder : public BaseType
 		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar );
 		IECore::RunTimeTypedPtr getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
 		
+		CompoundParameterHandlerPtr parameterHandler();
+		ConstCompoundParameterHandlerPtr parameterHandler() const;
+		
+		/// \todo Do we need this now we have parameterHandler()? Do we keep this so that
+		/// we're consistent with the interface provided in IECoreMaya?
 		void setParameterisedValues();
 		
 		/// \todo Is this even needed? Can we just use an UndoContext instead?

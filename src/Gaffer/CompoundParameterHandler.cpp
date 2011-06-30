@@ -68,13 +68,23 @@ CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr
 	const CompoundParameter::ParameterVector &children = parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		handler( *it );
+		handler( *it, true );
 	}
 	
 }
 
 CompoundParameterHandler::~CompoundParameterHandler()
 {
+}
+
+Gaffer::PlugPtr CompoundParameterHandler::plug()
+{
+	return m_plug;
+}
+
+Gaffer::ConstPlugPtr CompoundParameterHandler::plug() const
+{
+	return m_plug;
 }
 
 void CompoundParameterHandler::setParameterValue()
@@ -105,7 +115,18 @@ void CompoundParameterHandler::setPlugValue()
 	}
 }
 
-ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child  )
+ParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore::ParameterPtr childParameter )
+{
+	return handler( childParameter );
+}
+
+ConstParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore::ParameterPtr childParameter ) const
+{
+	// cast is ok, as when passing createIfMissing==false to handler() we don't modify any member data
+	return const_cast<CompoundParameterHandler *>( this )->handler( childParameter );
+}
+
+ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child, bool createIfMissing )
 {
 	HandlerMap::const_iterator it = m_handlers.find( child->internedName() );
 	if( it!=m_handlers.end() )
@@ -114,13 +135,16 @@ ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child 
 	}
 	
 	ParameterHandlerPtr h = 0;
-	IECore::ConstBoolDataPtr noHostMapping = child->userData()->member<BoolData>( "noHostMapping" );
-	if( !noHostMapping || !noHostMapping->readable() )
-	{	
-		h = ParameterHandler::create( child, m_plug );
-		if( !h )
-		{
-			IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", boost::format(  "Unable to create handler for parameter \"%s\" of type \"%s\"" ) % child->name() % child->typeName() );
+	if( createIfMissing )
+	{
+		IECore::ConstBoolDataPtr noHostMapping = child->userData()->member<BoolData>( "noHostMapping" );
+		if( !noHostMapping || !noHostMapping->readable() )
+		{	
+			h = ParameterHandler::create( child, m_plug );
+			if( !h )
+			{
+				IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", boost::format(  "Unable to create handler for parameter \"%s\" of type \"%s\"" ) % child->name() % child->typeName() );
+			}
 		}
 	}
 	
