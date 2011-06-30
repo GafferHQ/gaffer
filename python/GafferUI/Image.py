@@ -53,6 +53,10 @@ class Image( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLabel() )
 		
+		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
+		# the same size.
+		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+		
 		if isinstance( imagePrimitiveOrFileName, basestring ) :
 			pixmap = self._qtPixmapFromFile( str( imagePrimitiveOrFileName ) )
 		else :

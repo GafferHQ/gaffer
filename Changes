@@ -12,6 +12,8 @@
 
 * The CompoundParameterHandler now has python bindings.
 
+* The Image widget no longer expands to fill space if it is available.
+
 0.12.0
 ------
 
