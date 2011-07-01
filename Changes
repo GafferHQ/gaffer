@@ -16,6 +16,8 @@
 
 * The Label widget now has setText() and getText() methods.
 
+* The PathWidget class now has a path() method returning the path being displayed.
+
 0.12.0
 ------
 

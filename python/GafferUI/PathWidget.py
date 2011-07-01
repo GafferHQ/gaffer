@@ -55,6 +55,10 @@ class PathWidget( GafferUI.TextWidget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		
 		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
+	
+	def path( self ) :
+	
+		return self.__path
 				
 	def __keyPress( self, widget, event ) :
 				
