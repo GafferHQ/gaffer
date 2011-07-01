@@ -24,6 +24,8 @@
 
 * Fixed bug in PathWidget which meant that the path display would be incorrect until the path changed for the first time.
 
+* Fixed bug in PathListingWidget that caused an error when double clicking an item.
+
 0.12.0
 ------
 

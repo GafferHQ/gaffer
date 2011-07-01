@@ -136,6 +136,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __activated( self, modelIndex ) :
 		
 		selectedName = self.__itemModel.data( self.__itemModel.index( modelIndex.row(), 0 ) )
+		selectedName = str( selectedName.toString() )
 	
 		newPath = self.__currentDir.copy()
 		newPath.append( selectedName )
