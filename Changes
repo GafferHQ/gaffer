@@ -18,6 +18,8 @@
 
 * The PathWidget class now has a path() method returning the path being displayed.
 
+* The Window.addChildWindow( window ) call now results in the parent window holding a reference to the python object representing the child. This avoids situations whereby the child python object would die but the QWidget representing the child on the C++ side would continue to live. Use Window.removeChild() to remove a child window when you wish to destroy it, or use setVisible( False ) to hide the child until you need it again.
+
 0.12.0
 ------
 

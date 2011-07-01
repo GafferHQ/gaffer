@@ -49,6 +49,7 @@ class Window( GafferUI.ContainerWidget ) :
 		)
 		
 		self.__child = None
+		self.__childWindows = set()
 		self.__qtLayout = QtGui.QGridLayout()
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
@@ -75,10 +76,13 @@ class Window( GafferUI.ContainerWidget ) :
 	
 	def removeChild( self, child ) :
 	
-		assert( child is self.__child )
+		assert( child is self.__child or child in self.__childWindows )
 		child._qtWidget().setParent( None )
-		self.__child = None
-		
+		if child is self.__child :
+			self.__child = None
+		else :
+			self.__childWindows.remove( child )
+			
 	def setChild( self, child ) :
 	
 		oldChild = self.getChild()
@@ -101,14 +105,17 @@ class Window( GafferUI.ContainerWidget ) :
 	## Adding a child window causes the child to stay
 	# on top of the parent at all times. This is useful for
 	# preventing dialogues and the like from disappearing behind
-	# the main window.
+	# the main window. Note that the parent will keep the child
+	# window alive until it is removed using removeChild().
 	def addChildWindow( self, childWindow ) :
 
 		assert( isinstance( childWindow, Window ) )
 		
-		# i think it's ok for this window to not own a reference to the GafferUI.Window which is becoming
-		# a child, on the assumption that the thing that created the window will maintain a reference.
-		# this may or may not turn out to be the case. 
+		oldParent = childWindow.parent()
+		if oldParent is not None :
+			oldParent.removeChild( childWindow ) 
+		
+		self.__childWindows.add( childWindow )
 		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() )
 		
 	def setResizeable( self, resizeable ) :

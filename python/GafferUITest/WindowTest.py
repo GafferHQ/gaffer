@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import IECore
 
@@ -103,15 +104,49 @@ class WindowTest( unittest.TestCase ) :
 	
 	def testWindowParent( self ) :
 	
-		w1 = GafferUI.Window()
-		w2 = GafferUI.Window()
+		parentWindow1 = GafferUI.Window()
+		parentWindow2 = GafferUI.Window()
+		childWindow = GafferUI.Window()
+		childWindowWeakRef = weakref.ref( childWindow )
 		
-		self.failUnless( w1.parent() is None )
-		self.failUnless( w2.parent() is None )
+		self.failUnless( parentWindow1.parent() is None )
+		self.failUnless( parentWindow2.parent() is None )
+		self.failUnless( childWindow.parent() is None )
 		
-		w1.addChildWindow( w2 )
-		self.failUnless( w1.parent() is None )
-		self.failUnless( w2.parent() is w1 )
+		parentWindow1.addChildWindow( childWindow )
+		self.failUnless( parentWindow1.parent() is None )
+		self.failUnless( parentWindow2.parent() is None )
+		self.failUnless( childWindow.parent() is parentWindow1 )
+		
+		parentWindow2.addChildWindow( childWindow )
+		self.failUnless( parentWindow1.parent() is None )
+		self.failUnless( parentWindow2.parent() is None )
+		self.failUnless( childWindow.parent() is parentWindow2 )
+		
+		parentWindow2.removeChild( childWindow )
+		self.failUnless( parentWindow1.parent() is None )
+		self.failUnless( parentWindow2.parent() is None )
+		self.failUnless( childWindow.parent() is None )
+		
+		del childWindow
+		
+		self.failUnless( childWindowWeakRef() is None )
+		
+	def testWindowHoldsReferenceToChildWindows( self ) :
+
+		parentWindow = GafferUI.Window()
+		childWindow = GafferUI.Window()
+		childWindowWeakRef = weakref.ref( childWindow )
+			
+		parentWindow.addChildWindow( childWindow )
+		
+		del childWindow
+		
+		self.failUnless( childWindowWeakRef() is not None )
+		
+		del parentWindow
+		
+		self.failUnless( childWindowWeakRef() is None )
 		
 	def testCloseMethod( self ) :
 	

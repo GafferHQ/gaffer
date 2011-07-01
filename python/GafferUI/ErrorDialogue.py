@@ -89,8 +89,12 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 			message = message,
 			details = details,
 		)
-		
+				
 		if parentWindow is not None :
 			parentWindow.addChildWindow( dialogue )
 		
 		dialogue.waitForButton()
+		
+		if parentWindow is not None :
+			parentWindow.removeChild( dialogue )
+		

@@ -70,9 +70,7 @@ def open( menu ) :
 	path.addFilter( Gaffer.FileNamePathFilter( [ "*.gfr" ] ) )
 	path.addFilter( Gaffer.FileNamePathFilter( [ re.compile( "^[^.].*" ) ], leafOnly=False ) )
 	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open" )
-	scriptWindow.addChildWindow( dialogue )
 	path = dialogue.waitForPath()
-	dialogue.setVisible( False )
 
 	if not path :
 		return
@@ -114,9 +112,7 @@ def saveAs( menu ) :
 	path.addFilter( Gaffer.FileNamePathFilter( [ re.compile( "^[^.].*" ) ], leafOnly=False ) )
 
 	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save" )
-	scriptWindow.addChildWindow( dialogue )
 	path = dialogue.waitForPath()
-	dialogue.setVisible( False )
 
 	if not path :
 		return
