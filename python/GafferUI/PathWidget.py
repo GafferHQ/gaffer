@@ -46,7 +46,7 @@ class PathWidget( GafferUI.TextWidget ) :
 
 	def __init__( self, path ) :
 	
-		GafferUI.TextWidget.__init__( self )
+		GafferUI.TextWidget.__init__( self, str( path ) )
 		
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )

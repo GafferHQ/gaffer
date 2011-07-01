@@ -22,6 +22,8 @@
 
 * Removed parentWindow keyword argument from ErrorDialogue.displayException(), as the dialogue being modal keeps it on top of everything anyway.
 
+* Fixed bug in PathWidget which meant that the path display would be incorrect until the path changed for the first time.
+
 0.12.0
 ------
 
