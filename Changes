@@ -24,7 +24,12 @@
 
 * Fixed bug in PathWidget which meant that the path display would be incorrect until the path changed for the first time.
 
-* Fixed bug in PathListingWidget that caused an error when double clicking an item.
+* PathListingWidget fixes :
+
+	* Error when double clicking an item.
+	* Selection was not being cleared when the current path wasn't valid.
+	* Path wasn't being set when a leaf item was selected, which meant that hitting Enter in the PathChooserDialogue chose the wrong path.
+	* Double clicking a directory when the current path wasn't valid created another invalid path, rather than replacing the invalid section.	
 
 0.12.0
 ------

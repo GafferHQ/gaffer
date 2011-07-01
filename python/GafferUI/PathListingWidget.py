@@ -55,8 +55,10 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		self._qtWidget().setAlternatingRowColors( True )
 		self._qtWidget().setModel( self.__itemModel )
-		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
+		
+		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
+		self._qtWidget().selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 				
 		self.__path = path
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
@@ -100,16 +102,18 @@ class PathListingWidget( GafferUI.Widget ) :
 
 			self.__currentDir = dirPath
 		
-		# update the selection if necessary
+		# update the selection
 			
 		rowIndex = None
 		with IECore.IgnoredExceptions( ValueError ) :
 			rowIndex = dirPath.children().index( self.__path )
 		
+		sm = self._qtWidget().selectionModel()
 		if rowIndex is not None :
-			sm = self._qtWidget().selectionModel()
 			sm.select( self.__itemModel.index( rowIndex, 0 ), sm.Select | sm.Rows )
-		
+		else :
+			sm.clear()
+			
 	def __dirPath( self ) :
 	
 		p = self.__path.copy()
@@ -134,18 +138,37 @@ class PathListingWidget( GafferUI.Widget ) :
 		return p
 
 	def __activated( self, modelIndex ) :
-		
-		selectedName = self.__itemModel.data( self.__itemModel.index( modelIndex.row(), 0 ) )
-		selectedName = str( selectedName.toString() )
-	
-		newPath = self.__currentDir.copy()
-		newPath.append( selectedName )
-		self.__path[:] = newPath[:]
-		
+				
+		activatedPath = self.__appendedPath( modelIndex )
+		self.__path[:] = activatedPath[:]
+				
 		if self.__path.isLeaf() :
 			self.pathSelectedSignal()( self )
 			
 		return True
+		
+	def __selectionChanged( self, selected, deselected ) :
+			
+		selectedIndices = selected.indexes()
+		if len( selectedIndices ) :
+			selectedPath = self.__appendedPath( selectedIndices[0] )
+			if selectedPath.isLeaf() :
+				self.__path[:] = selectedPath[:]			
+			
+		return True
+	
+	def __appendedPath( self, modelIndexToAppend ) :
+	
+		path = self.__dirPath()
+	
+		name = self.__itemModel.data( self.__itemModel.index( modelIndexToAppend.row(), 0 ) )
+		if not isinstance( name, basestring ) :
+			# PyQt returns a QVariant but PySide returns a string
+			name = str( name.toString() )
+	
+		path.append( name )
+		
+		return path
 		
 	def __pathChanged( self, path ) :
 		
