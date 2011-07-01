@@ -73,7 +73,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 	
 	## Displays the last raised exception in a modal dialogue.	
 	@staticmethod
-	def displayException( title="Error", messagePrefix=None, withDetails=True, parentWindow=None ) :
+	def displayException( title="Error", messagePrefix=None, withDetails=True ) :
 	
 		message = str( sys.exc_info()[1] )
 		if messagePrefix :
@@ -89,12 +89,5 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 			message = message,
 			details = details,
 		)
-				
-		if parentWindow is not None :
-			parentWindow.addChildWindow( dialogue )
-		
+					
 		dialogue.waitForButton()
-		
-		if parentWindow is not None :
-			parentWindow.removeChild( dialogue )
-		
