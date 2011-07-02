@@ -1,7 +1,6 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,35 +34,29 @@
 #  
 ##########################################################################
 
-from AddNode import AddNode
-from SignalsTest import SignalsTest
-from GCTest import GCTest
-from GraphComponentTest import GraphComponentTest
-from NodeTest import NodeTest
-from PlugTest import PlugTest
-from NumericPlugTest import NumericPlugTest
-from TypedPlugTest import TypedPlugTest
-from ScriptNodeTest import ScriptNodeTest
-from StandardSetTest import StandardSetTest
-from FileSystemPathTest import FileSystemPathTest
-from PathTest import PathTest
-from PathFilterTest import PathFilterTest
-from UndoTest import UndoTest
-from SpeedTest import SpeedTest
-from KeywordPlugNode import KeywordPlugNode
-from CompoundNumericPlugTest import CompoundNumericPlugTest
-from CompoundNumericNode import CompoundNumericNode
-from CompoundPlugTest import CompoundPlugTest
-from CompoundPlugNode import CompoundPlugNode
-from TypedObjectPlugTest import TypedObjectPlugTest
-from SplinePlugTest import SplinePlugTest
-from AboutTest import AboutTest
-from ParameterisedHolderTest import ParameterisedHolderTest
-from ParameterHandlerTest import ParameterHandlerTest
-from ChildSetTest import ChildSetTest
-from PythonApplicationTest import PythonApplicationTest
+import os
+import subprocess
+import unittest
 
+class PythonApplicationTest( unittest.TestCase ) :
+
+	def testVariableScope( self ) :
+	
+		s = os.system( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/variableScope.py" )
+		self.assertEqual( s, 0 )
+	
+	def testErrorReturnStatus( self ) :
+		
+		p = subprocess.Popen(
+			"gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/exception.py",
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+		
+		self.failUnless( "RuntimeError" in "".join( p.stderr.readlines() ) )
+		self.failUnless( p.returncode )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
 	

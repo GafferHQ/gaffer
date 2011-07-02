@@ -1,7 +1,6 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,35 +34,46 @@
 #  
 ##########################################################################
 
-from AddNode import AddNode
-from SignalsTest import SignalsTest
-from GCTest import GCTest
-from GraphComponentTest import GraphComponentTest
-from NodeTest import NodeTest
-from PlugTest import PlugTest
-from NumericPlugTest import NumericPlugTest
-from TypedPlugTest import TypedPlugTest
-from ScriptNodeTest import ScriptNodeTest
-from StandardSetTest import StandardSetTest
-from FileSystemPathTest import FileSystemPathTest
-from PathTest import PathTest
-from PathFilterTest import PathFilterTest
-from UndoTest import UndoTest
-from SpeedTest import SpeedTest
-from KeywordPlugNode import KeywordPlugNode
-from CompoundNumericPlugTest import CompoundNumericPlugTest
-from CompoundNumericNode import CompoundNumericNode
-from CompoundPlugTest import CompoundPlugTest
-from CompoundPlugNode import CompoundPlugNode
-from TypedObjectPlugTest import TypedObjectPlugTest
-from SplinePlugTest import SplinePlugTest
-from AboutTest import AboutTest
-from ParameterisedHolderTest import ParameterisedHolderTest
-from ParameterHandlerTest import ParameterHandlerTest
-from ChildSetTest import ChildSetTest
-from PythonApplicationTest import PythonApplicationTest
+import traceback
+import IECore
+import Gaffer
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+class python( Gaffer.Application ) :
+
+	def __init__( self ) :
 	
+		Gaffer.Application.__init__( self )
+		
+		self.parameters().addParameters(
+		
+			[
+				
+				IECore.FileNameParameter(
+					name = "file",
+					description = "The python script to execute",
+					defaultValue = "",
+					extensions = "py",
+					allowEmptyString = False,
+					check = IECore.FileNameParameter.CheckType.MustExist,
+				),
+				
+			]
+		
+		)
+		
+		self.parameters().userData()["parser"] = IECore.CompoundObject(
+			{
+				"flagless" : IECore.StringVectorData( [ "file" ] )
+			}
+		)
+		
+	def doRun( self, args ) :
+
+		try :
+			execfile( args["file"].value, {} )
+			return 0
+		except :
+			traceback.print_exc()
+			return 1
+
+IECore.registerRunTimeTyped( python )

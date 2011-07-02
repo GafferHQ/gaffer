@@ -491,7 +491,7 @@ if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install" )
@@ -662,8 +662,10 @@ env.Alias( "build", gafferUIModuleInstall )
 
 for module in ( "GafferTest", "GafferUITest", "GafferRI", "GafferRIUI" ) :
 
-	moduleInstall = env.Install( "$BUILD_DIR/lib/python2.6/site-packages/" + module, glob.glob( "python/%s/*.py" % module ) )
-	env.Alias( "build", moduleInstall ) 
+	moduleFiles = glob.glob( "python/%s/*.py" % module ) + glob.glob( "python/%s/*/*.py" % module )
+	for moduleFile in moduleFiles :
+		moduleFileInstall = env.InstallAs( "$BUILD_DIR/lib/python2.6/site-packages/" + moduleFile.partition( "/" )[2], moduleFile )
+		env.Alias( "build", moduleFileInstall ) 
 
 ###############################################################################################
 # Scripts and apps and stuff
@@ -672,7 +674,7 @@ for module in ( "GafferTest", "GafferUITest", "GafferRI", "GafferRIUI" ) :
 scriptsInstall = env.Install( "$BUILD_DIR/bin", [ "bin/gaffer", "bin/gaffer.py" ] )
 env.Alias( "build", scriptsInstall )
 
-for app in ( "gui", "view", "test", "cli", "license", "op" ) :
+for app in ( "gui", "view", "test", "cli", "license", "op", "python" ) :
 	appInstall = env.Install( "$BUILD_DIR/apps/%s" % app, "apps/%s/%s-1.py" % ( app, app ) )
 	env.Alias( "build", appInstall )
 

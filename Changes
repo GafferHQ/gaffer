@@ -31,6 +31,8 @@
 	* Path wasn't being set when a leaf item was selected, which meant that hitting Enter in the PathChooserDialogue chose the wrong path.
 	* Double clicking a directory when the current path wasn't valid created another invalid path, rather than replacing the invalid section.	
 
+* Added a "python" application which simply executes a python file in the Gaffer environment.
+
 0.12.0
 ------
 
