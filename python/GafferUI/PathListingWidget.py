@@ -162,10 +162,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		path = self.__dirPath()
 	
 		name = self.__itemModel.data( self.__itemModel.index( modelIndexToAppend.row(), 0 ) )
-		if not isinstance( name, basestring ) :
-			# PyQt returns a QVariant but PySide returns a string
-			name = str( name.toString() )
-	
+		name = GafferUI._Variant.fromVariant( name )
+		
 		path.append( name )
 		
 		return path

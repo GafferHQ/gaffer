@@ -105,6 +105,7 @@ from Spacer import Spacer
 from CheckBox import CheckBox
 from Image import Image
 from ErrorDialogue import ErrorDialogue
+from _Variant import _Variant
 from VectorDataWidget import VectorDataWidget
 
 # then stuff specific to graph uis

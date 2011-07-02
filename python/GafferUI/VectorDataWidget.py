@@ -213,15 +213,10 @@ class _Model( QtCore.QAbstractTableModel ) :
 		self.__editable = editable
 		
 		self.__toVariant = self.__toVariantSimple
+		self.__fromVariant = self.__fromVariantSimple
 		self.__numColumns = 1
-		if isinstance( data, IECore.StringVectorData ) :
-			self.__fromVariant = self.__fromVariantStr
-		elif isinstance( data, IECore.IntVectorData ) :
-			self.__fromVariant = self.__fromVariantInt
-		elif isinstance( data, IECore.FloatVectorData ) :
-			self.__fromVariant = self.__fromVariantFloat
-		elif isinstance( data, IECore.V3fVectorData ) :
-			self.__fromVariant = self.__fromVariantCompoundFloat
+		if isinstance( data, IECore.V3fVectorData ) :
+			self.__fromVariant = self.__fromVariantCompound
 			self.__toVariant = self.__toVariantCompound
 			self.__numColumns = 3
 						
@@ -266,11 +261,11 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
 				## \todo
-				return QtCore.QVariant( "X" )
+				return GafferUI._Variant.toVariant( "X" )
 			else :
-				return QtCore.QVariant( section )
+				return GafferUI._Variant.toVariant( section )
 		
-		return QtCore.QVariant()	
+		return GafferUI._Variant.toVariant( None )	
 
 	def flags( self, index ) :
 	
@@ -294,9 +289,9 @@ class _Model( QtCore.QAbstractTableModel ) :
 			if index.row() < len( self.__data ) :
 				return self.__toVariant( self.__data, index )
 			else :
-				return QtCore.QVariant( self.__addValueText )
+				return GafferUI._Variant.toVariant( self.__addValueText )
 			
-		return QtCore.QVariant()
+		return GafferUI._Variant.toVariant( None )
 
 	def setData( self, index, value, role ) :
 	
@@ -315,35 +310,25 @@ class _Model( QtCore.QAbstractTableModel ) :
 	@staticmethod
 	def __toVariantSimple( data, index ) :
 	
-		return QtCore.QVariant( data[index.row()] )
+		return GafferUI._Variant.toVariant( data[index.row()] )
 
 	@staticmethod
-	def __fromVariantStr( variant, data, index ) :
+	def __fromVariantSimple( variant, data, index ) :
 	
-		return str( variant.toString() )
-		
-	@staticmethod
-	def __fromVariantInt( variant, data, index ) :
-	
-		return variant.toInt()[0]
-		
-	@staticmethod
-	def __fromVariantFloat( variant, data, index ) :
-	
-		return variant.toFloat()[0]
+		return GafferUI._Variant.fromVariant( variant )
 
 	@staticmethod
 	def __toVariantCompound( data, index ) :
 		
-		return QtCore.QVariant( data[index.row()][index.column()] )
+		return GafferUI._Variant.toVariant( data[index.row()][index.column()] )
 
 	@staticmethod
-	def __fromVariantCompoundFloat( variant, data, index ) :
+	def __fromVariantCompound( variant, data, index ) :
 	
 		if index.row() < len( data ) :
 			result = data[index.row()]
 		else :
 			result = IECore.DataTraits.valueTypeFromSequenceType( type( data ) )( 0 )
 		
-		result[index.column()] = variant.toFloat()[0]
+		result[index.column()] = GafferUI._Variant.fromVariant( variant )
 		return result
