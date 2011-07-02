@@ -33,6 +33,10 @@
 
 * Added a "python" application which simply executes a python file in the Gaffer environment.
 
+* Added a GafferUI._Variant class which has helper function for dealing with differences in PySide and PyQt4 with respect to QVariant handling.
+
+* Fixed VectorDataWidget to work with PySide.
+
 0.12.0
 ------
 
