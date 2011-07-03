@@ -121,6 +121,11 @@ static int length( GraphComponent &g )
 	return g.children().size();
 }
 
+static bool nonZero( GraphComponent &g )
+{
+	return true;
+}
+
 static bool contains( GraphComponent &g, const char *n )
 {
 	return g.getChild<GraphComponent>( n );
@@ -189,6 +194,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "__delitem__", delItem )
 		.def( "__contains__", contains )
 		.def( "__len__", &length )
+		.def( "__nonzero__", &nonZero )
 		.def( "children", &children )
 		.def( "parent", &parent )
 		.def( "ancestor", &ancestor )

@@ -39,7 +39,7 @@
 
 * Added a BoxParameterHandler covering Box2i, Box2f, Box3i and Box3f parameter types.
 
-* GraphComponent now supports the len() function in python.
+* GraphComponent now supports the len() function in python, returning the number of children for the instance. The __nonzero__ method is also implemented so that queries of the type "if graphComponent : " will return True as before, even if there are no children.
 
 0.12.0
 ------
