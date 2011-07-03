@@ -281,6 +281,35 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), IECore.V3i( -2, -4, -6 ) )
 		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), IECore.V3i( 2, 4, 6 ) )
 		
+	def testAddAndRemoveParameters( self ) :
+	
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameter(
+		
+			IECore.IntParameter(
+				"a",
+				"",
+				1
+			)
+		
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
+		self.failUnless( isinstance( ph["parameters"]["a"], Gaffer.IntPlug ) )
+		self.assertEqual( len( ph["parameters"] ), 1 )
+		
+		with ph.parameterModificationContext() :
+		
+			p.parameters().removeParameter( p.parameters()["a"] )
+			p.parameters().addParameter( IECore.IntParameter( "b", "", 2 ) )
+			
+		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
+		self.failUnless( isinstance( ph["parameters"]["b"], Gaffer.IntPlug ) )
+		self.assertEqual( len( ph["parameters"] ), 1 )		
 		
 if __name__ == "__main__":
 	unittest.main()
