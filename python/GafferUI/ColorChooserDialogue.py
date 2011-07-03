@@ -58,9 +58,9 @@ class ColorChooserDialogue( GafferUI.Dialogue ) :
 		
 	## Causes the dialogue to enter a modal state, returning the color once it has been
 	# selected by the user. Returns None if the dialogue is cancelled.
-	def waitForColor( self ) :
+	def waitForColor( self, **kw ) :
 	
-		button = self.waitForButton()
+		button = self.waitForButton( **kw )
 		if button is self.__confirmButton :
 			return self.colorChooser().getColor()
 			

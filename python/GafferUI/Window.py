@@ -126,6 +126,17 @@ class Window( GafferUI.ContainerWidget ) :
 	
 		return self.__qtLayout.sizeConstraint() == QtGui.QLayout.SetDefaultConstraint
 
+	def setFullScreen( self, fullScreen ) :
+	
+		if fullScreen :
+			self._qtWidget().showFullScreen()
+		else :
+			self._qtWidget().showNormal()
+	
+	def getFullScreen( self ) :
+	
+		return self._qtWidget().isFullScreen()
+
 	## Requests that this window be closed - this function may either be called
 	# directly or in response to the user attempting to close the window.
 	# If successful, setVisible( False ) will be called on the window and True will

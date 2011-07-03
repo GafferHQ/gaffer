@@ -65,8 +65,7 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not self.__colorChooserDialogue :	
 			self.__colorChooserDialogue = GafferUI.ColorChooserDialogue()
 		
-		## \todo
-		#self.ancestor( GafferUI.Window ).addChildWindow( self.__colorChooserDialogue )
+		self.ancestor( GafferUI.Window ).addChildWindow( self.__colorChooserDialogue )
 		self.__colorChooserDialogue.setTitle( self.getPlug().relativeName( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) )
 		self.__colorChooserDialogue.colorChooser().setColor( self.getPlug().getValue() )
 		self.__colorChooserDialogue.colorChooser().setInitialColor( self.getPlug().getValue() )
@@ -89,7 +88,8 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		if button is self.__colorChooserDialogue.cancelButton :
 			self.getPlug().setValue( self.__colorChooserDialogue.colorChooser().getInitialColor() )
-			
+		
+		self.__colorChooserDialogue.parent().removeChild( self.__colorChooserDialogue )	
 		self.__colorChooserDialogue = None
 		
 	def __dialogueClosed( self, dialogue ) :

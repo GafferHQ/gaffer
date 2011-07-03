@@ -20,8 +20,6 @@
 
 * The Window.addChildWindow( window ) call now results in the parent window holding a reference to the python object representing the child. This avoids situations whereby the child python object would die but the QWidget representing the child on the C++ side would continue to live. Use Window.removeChild() to remove a child window when you wish to destroy it, or use setVisible( False ) to hide the child until you need it again.
 
-* Removed parentWindow keyword argument from ErrorDialogue.displayException(), as the dialogue being modal keeps it on top of everything anyway.
-
 * Fixed bug in PathWidget which meant that the path display would be incorrect until the path changed for the first time.
 
 * PathListingWidget fixes :
@@ -46,6 +44,8 @@
 * GafferUI.Menu now optionally passes a "menu" argument to the checkBox callback of a menu item, in the same way as it does for the command callback.
 
 * Fixed bug in GafferUI.ColorSwatch.getColor().
+
+* Added Window.[gs]etFullScreen() methods, and added a menu item to the Layout menu to use them. Added a parentWindow argument to the Dialogue*.waitFor*() methods, and used it appropriately to keep dialogues on top even when in full screen mode.
 
 0.12.0
 ------

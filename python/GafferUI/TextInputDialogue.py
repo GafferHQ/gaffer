@@ -53,9 +53,9 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 		
 		self.setResizeable( False )
 		
-	def waitForText( self ) :
+	def waitForText( self, **kw ) :
 	
-		button = self.waitForButton()
+		button = self.waitForButton( **kw )
 		if button is self.__confirmButton :
 			return self.__textWidget.getText()
 		

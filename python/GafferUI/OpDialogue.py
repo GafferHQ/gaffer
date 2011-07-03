@@ -82,12 +82,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 	# of executing the Op, None if the user cancelled the operation, or
 	# an Exception if an Exception was thrown (in this case the Exception
 	# will already have been reported to the user).
-	def waitForResult( self ) :
+	def waitForResult( self, **kw ) :
 	
 		# block our button connection so we don't end up executing twice
 		with Gaffer.BlockedConnection( self.__executeButtonConnection ) :
 		
-			button = self.waitForButton()
+			button = self.waitForButton( **kw )
 					
 			if button is self.__executeButton :
 				
@@ -110,7 +110,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 		except Exception, e :
 			
-			GafferUI.ErrorDialogue.displayException()
+			GafferUI.ErrorDialogue.displayException( parentWindow=self )
 			return e
 	
 	def __buttonClicked( self, button ) :

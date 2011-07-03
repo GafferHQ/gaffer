@@ -66,6 +66,8 @@ def delete( name ) :
 # a menu which has a ScriptWindow in its ancestry. 
 def save( menu ) :
 
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
+
 	layoutNames = GafferUI.Layouts.names()
 	i = 1
 	while True :
@@ -75,13 +77,12 @@ def save( menu ) :
 			break  
 
 	d = GafferUI.TextInputDialogue( initialText=layoutName, title="Save Layout", confirmLabel="Save" )
-	t = d.waitForText()
+	t = d.waitForText( parentWindow = scriptWindow )
 	d.setVisible( False )
 	
 	if t is None :
 		return
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
 	layout = scriptWindow.getLayout()
 	
 	GafferUI.Layouts.add( "user:" + t, layout )
@@ -103,6 +104,16 @@ def __saveLayouts() :
 	f.write( "import GafferUI\n\n" )
 	
 	GafferUI.Layouts.save( f, re.compile( "user:.*" ) )
+
+def fullScreen( menu, checkBox ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
+	scriptWindow.setFullScreen( checkBox )
+	
+def fullScreenCheckBox( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
+	return scriptWindow.getFullScreen()	
 	
 def __layoutMenu() :
 
@@ -137,5 +148,9 @@ def __layoutMenu() :
 			menuDefinition.append( "/Delete/%s" % name[5:], { "command" : deleteWrapper( name ) } )
 
 	menuDefinition.append( "/Save...", { "command" : save } )
+
+	menuDefinition.append( "/SaveDivider", { "divider" : True } )
+	
+	menuDefinition.append( "/Full Screen", { "command" : fullScreen, "checkBox" : fullScreenCheckBox } )
 	
 	return menuDefinition

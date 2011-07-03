@@ -56,11 +56,20 @@ class Dialogue( GafferUI.Window ) :
 		self.__column.append( self.__buttonRow )
 		
 		self.setChild( self.__column )
-			
-	def waitForButton( self ) :
+	
+	## Enters a modal state	and returns the button the user pressed to exit
+	# that state, or None if the dialogue was closed instead. If parentWindow
+	# is specified then the dialogue will be temporarily parented on top of the
+	# window for the duration of the call. Note that if parentWindow is being
+	# shown fullscreen, it is critical to use the parentWindow argument to avoid
+	# the dialogue disappearing in strange ways.
+	def waitForButton( self, parentWindow=None ) :
 	
 		assert( len( self.__buttonRow ) )
 	
+		if parentWindow is not None :
+			parentWindow.addChildWindow( self )
+		
 		self.setVisible( False )
 		self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
 		self.setVisible( True )
@@ -78,7 +87,10 @@ class Dialogue( GafferUI.Window ) :
 		self.__eventLoop = None
 		
 		self._qtWidget().setWindowModality( QtCore.Qt.NonModal )
-						
+		
+		if parentWindow is not None :
+			parentWindow.removeChild( self )
+							
 		return self.__resultOfWait
 		
 	def _setWidget( self, widget ) :
