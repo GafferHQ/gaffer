@@ -37,6 +37,8 @@
 
 * Fixed VectorDataWidget to work with PySide.
 
+* Added a BoxParameterHandler covering Box2i, Box2f, Box3i and Box3f parameter types.
+
 0.12.0
 ------
 

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -233,6 +234,53 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.failUnless( isinstance( h, Gaffer.CompoundParameterHandler ) )
 		self.failUnless( h.parameter().isSame( p.parameters() ) )
 		self.failUnless( h.plug().isSame( ph["parameters"] ) )
+	
+	def testBoxTypes( self ) :
+	
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameters(
+		
+			[
+				IECore.Box3iParameter(
+					"b",
+					"",
+					IECore.Box3i(
+						IECore.V3i( -1, -2, -3 ), 
+						IECore.V3i( 2, 1, 3 ), 
+					),
+				)			
+			]
+		
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.failUnless( isinstance( ph["parameters"]["b"], Gaffer.CompoundPlug ) )
+		self.failUnless( isinstance( ph["parameters"]["b"]["min"], Gaffer.V3iPlug ) )
+		self.failUnless( isinstance( ph["parameters"]["b"]["max"], Gaffer.V3iPlug ) )
+		
+		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), IECore.V3i( -1, -2, -3 ) )
+		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), IECore.V3i( 2, 1, 3 ) )
+		
+		ph["parameters"]["b"]["min"].setValue( IECore.V3i( -10, -20, -30 ) )
+		ph["parameters"]["b"]["max"].setValue( IECore.V3i( 10, 20, 30 ) )
+		
+		ph.parameterHandler().setParameterValue()
+		
+		self.assertEqual(
+			p["b"].getTypedValue(),
+			IECore.Box3i( IECore.V3i( -10, -20, -30 ), IECore.V3i( 10, 20, 30 ) )
+		)
+		
+		with ph.parameterModificationContext() :
+		
+			p["b"].setTypedValue( IECore.Box3i( IECore.V3i( -2, -4, -6 ), IECore.V3i( 2, 4, 6 ) ) )
+		
+		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), IECore.V3i( -2, -4, -6 ) )
+		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), IECore.V3i( 2, 4, 6 ) )
+		
 		
 if __name__ == "__main__":
 	unittest.main()
