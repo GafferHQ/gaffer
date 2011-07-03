@@ -63,7 +63,7 @@ class ColorSwatch( GafferUI.Widget ) :
 		
 	def getColor( self ) :
 	
-		return self.__color
+		return self._qtWidget().swatchColor
 	
 # Private implementation - a QWidget derived class which does the drawing
 class _ColorSwatch( QtGui.QWidget ) :

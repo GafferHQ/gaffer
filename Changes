@@ -45,6 +45,8 @@
 
 * GafferUI.Menu now optionally passes a "menu" argument to the checkBox callback of a menu item, in the same way as it does for the command callback.
 
+* Fixed bug in GafferUI.ColorSwatch.getColor().
+
 0.12.0
 ------
 
