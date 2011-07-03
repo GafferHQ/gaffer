@@ -129,7 +129,10 @@ class Menu( GafferUI.Widget ) :
 
 					if item.checkBox is not None :
 						qtAction.setCheckable( True )
-						qtAction.setChecked( item.checkBox() )
+						kwArgs = {}
+						if "menu" in inspect.getargspec( item.checkBox )[0] :
+							kwArgs["menu"] = self
+						qtAction.setChecked( item.checkBox( **kwArgs ) )
 						
 					if item.divider :
 						qtAction.setSeparator( True )

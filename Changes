@@ -43,6 +43,8 @@
 
 * The sizing behaviour of the PathListingWidget is no longer quite as annoying.
 
+* GafferUI.Menu now optionally passes a "menu" argument to the checkBox callback of a menu item, in the same way as it does for the command callback.
+
 0.12.0
 ------
 
