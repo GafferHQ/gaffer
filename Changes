@@ -39,6 +39,8 @@
 
 * Added a BoxParameterHandler covering Box2i, Box2f, Box3i and Box3f parameter types.
 
+* GraphComponent now supports the len() function in python.
+
 0.12.0
 ------
 

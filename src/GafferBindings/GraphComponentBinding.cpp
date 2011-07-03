@@ -116,6 +116,11 @@ static void delItem( GraphComponent &g, const char *n )
 	throw_error_already_set();
 }
 
+static int length( GraphComponent &g )
+{
+	return g.children().size();
+}
+
 static bool contains( GraphComponent &g, const char *n )
 {
 	return g.getChild<GraphComponent>( n );
@@ -183,6 +188,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "__setitem__", setItem )
 		.def( "__delitem__", delItem )
 		.def( "__contains__", contains )
+		.def( "__len__", &length )
 		.def( "children", &children )
 		.def( "parent", &parent )
 		.def( "ancestor", &ancestor )

@@ -354,6 +354,20 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.assertRaises( RuntimeError, Gaffer.GraphComponent().addChild, g1 )
 		self.assertEqual( g1.acceptsChildCalled, True )
 		self.assertEqual( g1.acceptsParentCalled, True )
+	
+	def testLen( self ) :
+	
+		g = Gaffer.GraphComponent()
+		self.assertEqual( len( g ), 0 )
+		
+		g["a"] = Gaffer.GraphComponent()
+		self.assertEqual( len( g ), 1 )
+		
+		g["b"] = Gaffer.GraphComponent()
+		self.assertEqual( len( g ), 2 )
+		
+		del g["a"]
+		self.assertEqual( len( g ), 1 )
 		
 if __name__ == "__main__":
 	unittest.main()
