@@ -49,16 +49,17 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __init__( self, path ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QTreeView() )
+		GafferUI.Widget.__init__( self, _TreeView() )
 		
 		self.__itemModel = QtGui.QStandardItemModel()
 		
 		self._qtWidget().setAlternatingRowColors( True )
 		self._qtWidget().setModel( self.__itemModel )
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
-		
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self._qtWidget().header().setMovable( False )
+		self._qtWidget().header().setResizeMode( QtGui.QHeaderView.ResizeToContents )
 				
 		self.__path = path
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
@@ -171,3 +172,23 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __pathChanged( self, path ) :
 		
 		self.__update()
+
+## Private implementation - a QTreeView with some specific size behaviour
+class _TreeView( QtGui.QTreeView ) :
+
+	def __init__( self ) :
+	
+		QtGui.QTreeView.__init__( self )
+		
+		self.header().geometriesChanged.connect( self.updateGeometry )
+		
+	def sizeHint( self ) :
+	
+		result = QtGui.QTreeView.sizeHint( self )
+		
+		margins = self.contentsMargins()
+		result.setWidth( self.header().length() + margins.left() + margins.right() )
+
+		result.setHeight( max( result.width() * .5, result.height() ) )
+		
+		return result

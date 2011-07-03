@@ -41,6 +41,8 @@
 
 * GraphComponent now supports the len() function in python, returning the number of children for the instance. The __nonzero__ method is also implemented so that queries of the type "if graphComponent : " will return True as before, even if there are no children.
 
+* The sizing behaviour of the PathListingWidget is no longer quite as annoying.
+
 0.12.0
 ------
 
