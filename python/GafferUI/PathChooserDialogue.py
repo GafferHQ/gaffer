@@ -65,11 +65,11 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 	
 	## Causes the dialogue to enter a modal state, returning the path once it has been
 	# selected by the user. Returns None if the dialogue is cancelled.
-	def waitForPath( self ) :
+	def waitForPath( self, **kw ) :
 	
 		self.__pathChooserWidget.pathWidget().grabFocus()
 	
-		button = self.waitForButton()
+		button = self.waitForButton( **kw )
 		
 		if button is self.__confirmButton :
 			return self.__path.copy()
