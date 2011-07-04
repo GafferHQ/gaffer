@@ -47,6 +47,8 @@
 
 * Added Window.[gs]etFullScreen() methods, and added a menu item to the Layout menu to use them. Added a parentWindow argument to the Dialogue*.waitFor*() methods, and used it appropriately to keep dialogues on top even when in full screen mode.
 
+* The Image class now uses the Cortex PNGImageReader for loading png files, and correctly converts linear data to sRGB for display.
+
 0.12.0
 ------
 

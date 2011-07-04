@@ -46,7 +46,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## The Image widget displays an image. This can be specified
 # as either a filename, in which case the image is loaded using
 # the IECore.Reader mechanism, or an IECore.ImagePrimitive.
-## \todo Consider colorspace issues.
 class Image( GafferUI.Widget ) :
 
 	def __init__( self, imagePrimitiveOrFileName ) :
@@ -73,7 +72,12 @@ class Image( GafferUI.Widget ) :
 	def _qtPixmapFromImagePrimitive( image ) :
 		
 		assert( image.arePrimitiveVariablesValid() )
-	
+			
+		image = IECore.LinearToSRGBOp()(
+			input = image,
+			channels = IECore.StringVectorData( [ c for c in image.keys() if c != "A" ] ),
+		)
+
 		y = image["Y"].data if "Y" in image else None
 		r = image["R"].data if "R" in image else None
 		g = image["G"].data if "G" in image else None
@@ -121,22 +125,13 @@ class Image( GafferUI.Widget ) :
 		if not resolvedFileName :
 			raise Exception( "Unable to find file \"%s\"" % fileName )
 							
-		try :
-			reader = IECore.Reader.create( resolvedFileName )
-		except : 
-			reader = None
+		reader = IECore.Reader.create( resolvedFileName )
 		
-		if reader is not None :	
-			
-			image = reader.read()
-			if not isinstance( image, IECore.ImagePrimitive ) :
-				raise Exception( "File \"%s\" is not an image file" % resolvedFileName )
+		image = reader.read()
+		if not isinstance( image, IECore.ImagePrimitive ) :
+			raise Exception( "File \"%s\" is not an image file" % resolvedFileName )
 		
-			result = cls._qtPixmapFromImagePrimitive( image )
-		
-		else :
-		
-			result = QtGui.QPixmap( resolvedFileName, "png" )
+		result = cls._qtPixmapFromImagePrimitive( image )
 			
 		cost = result.width() * result.height() * ( 4 if result.hasAlpha() else 3 )
 		
