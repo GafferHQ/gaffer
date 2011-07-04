@@ -45,7 +45,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## \todo Useful popup menu on label - connect, disconnect, expressions etc
 ## Or does that belong on the PlugValueWidget? It probably belongs on the PlugValueWidget
 ## so that compound plugs can have a different menu for each child - for the x y z of
-## a V3fPlug for instance.
+## a V3fPlug for instance. I'm not even sure this class is necessary - perhaps the
+## NodeUI should just make an appropriate label itself when needed. Perhaps we should
+## also be using a non-editable NameWidget so that the name updates if the plug name
+## changes.
 class PlugWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugOrPlugValueWidget, label=None, description=None ) :
