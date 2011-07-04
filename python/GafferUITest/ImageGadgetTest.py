@@ -53,8 +53,9 @@ class ImageGadgetTest( unittest.TestCase ) :
 		
 	def testConstructFromFile( self ) :
 	
-		## \todo When Cortex has a PNGImageReader we should implement a test here.
-		raise NotImplementedError	
+		i = GafferUI.ImageGadget( "arrowRight10.png" )
+
+		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -5, -5, 0 ), IECore.V3f( 5, 5, 0 ) ) )
 			
 	def testMissingFiles( self ) :
 	
