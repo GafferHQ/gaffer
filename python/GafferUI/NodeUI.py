@@ -47,9 +47,11 @@ import GafferUI
 # each Plug.
 class NodeUI( GafferUI.Widget ) :
 
+	_columnSpacing = 4
+
 	def __init__( self, node ) :
 	
-		self.__currentColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=2 )
+		self.__currentColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=self._columnSpacing )
 		
 		GafferUI.Widget.__init__( self, self.__currentColumn )
 	
@@ -82,7 +84,7 @@ class NodeUI( GafferUI.Widget ) :
 					borderWidth = 8
 				)
 				
-				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=2 )
+				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=NodeUI._columnSpacing )
 				sc.setChild( co )
 				
 				self.__prevColumn = self.__nodeUI._NodeUI__currentColumn
@@ -108,7 +110,7 @@ class NodeUI( GafferUI.Widget ) :
 			def __enter__( self ) :
 			
 				cl = GafferUI.Collapsible( **self.__collapsibleKeywords )
-				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=2 )
+				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=NodeUI._columnSpacing )
 				cl.setChild( co )
 				
 				self.__prevColumn = self.__nodeUI._NodeUI__currentColumn
