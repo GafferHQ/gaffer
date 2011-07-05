@@ -47,6 +47,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		self.setText( text )
 		
+		self._qtWidget().setTabStopWidth( 20 ) # pixels
 		self._qtWidget().setReadOnly( not editable )
 
 	def getText( self ) :
