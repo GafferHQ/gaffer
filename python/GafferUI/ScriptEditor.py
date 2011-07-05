@@ -69,10 +69,6 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__splittable.append( self.__inputWidget )
 	
 		self.__inputWidgetKeyPressConnection = self.__inputWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-	
-## \todo ?
-#		self.__gtkOutputWidget.connect( "button-press-event", self.__buttonPress )
-#		self.__gtkInputWidget.connect( "button-press-event", self.__buttonPress )
 
 	def setScriptNode( self, scriptNode ) :
 	
@@ -125,35 +121,5 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			return True
 			
 		return False
-
-#	def __buttonPress( self, widget, event ) :
-#		
-#		if event.button == 3 :
-#		
-#			haveSelection = False
-#			if widget.get_buffer().get_selection_bounds() :
-#				haveSelection = True
-#			editable = widget.get_editable()
-#			clipboard = gtk.Clipboard()
-#						
-#			m = IECore.MenuDefinition()
-#			
-#			if editable :
-#				m.append( "/Cut", { "command" : IECore.curry( widget.get_buffer().cut_clipboard, clipboard, editable ), "active" : haveSelection } )	
-#			m.append( "/Copy", { "command" : IECore.curry( widget.get_buffer().copy_clipboard, clipboard ), "active" : haveSelection } )	
-#			if editable :
-#				if clipboard.wait_for_text() :
-#					pasteActive = True
-#				else :
-#					pasteActive = False
-#				m.append( "/Paste", { "command" : IECore.curry( widget.get_buffer().paste_clipboard, clipboard, None, editable ), "active" : pasteActive } )	
-#				m.append( "/Delete", { "command" : IECore.curry( widget.get_buffer().cut_clipboard, clipboard, editable ), "active" : haveSelection } )	
-#			
-#			m = Menu( m )
-#			m.popup()
-#			
-#			return True
-#			
-#		return False
 		
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
