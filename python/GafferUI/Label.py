@@ -47,7 +47,7 @@ class Label( GafferUI.Widget ) :
 	HorizontalAlignment = IECore.Enum.create( "Left", "Right", "Center" )
 	VerticalAlignment = IECore.Enum.create( "Top", "Bottom", "Center" )
 	
-	def __init__( self, text="", font={}, horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center ) :
+	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLabel( text ) )
 
@@ -57,9 +57,6 @@ class Label( GafferUI.Widget ) :
 		# among all the labels.
 		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
 
-		## \todo ??
-		#self.setFont( **font )
-		
 		self.setAlignment( horizontalAlignment, verticalAlignment )
 
 	def setText( self, text ) :
@@ -92,7 +89,6 @@ class Label( GafferUI.Widget ) :
 		int( QtCore.Qt.AlignTop ) : VerticalAlignment.Top,
 		int( QtCore.Qt.AlignBottom ) : VerticalAlignment.Bottom,
 		int( QtCore.Qt.AlignVCenter ) : VerticalAlignment.Center,
-	
 	}
 	
 	__gafferAlignmentToQt = {
@@ -103,18 +99,3 @@ class Label( GafferUI.Widget ) :
 		VerticalAlignment.Bottom : QtCore.Qt.AlignBottom,
 		VerticalAlignment.Center : QtCore.Qt.AlignVCenter,
 	}
-	
-#
-#	def setFont( self, **kw ) :
-#	
-#		text = self.gtkWidget().get_text()
-#		font = self._pangoFont( **kw )
-#		self.gtkWidget().set_markup( "<span %s>%s</span>" % ( font, text ) )
-#		self.__font = font
-#		
-#	def getFont( self, **kw ) :
-#	
-#		return self.__font
-
-	
-	
