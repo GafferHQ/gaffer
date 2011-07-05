@@ -46,6 +46,8 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, topLevelWidget )
 		
 		self.__parameterHandler = parameterHandler
+		
+		self.__buttonPressConnections = []
 	
 	def plug( self ) :
 	
@@ -58,6 +60,31 @@ class ParameterValueWidget( GafferUI.Widget ) :
 	def parameterHandler( self ) :
 	
 		return self.__parameterHandler
+	
+	def _addPopupMenu( self, widget = None, buttons = GafferUI.ButtonEvent.Buttons.Right ) :
+	
+		if widget is None :
+			widget = self
+	
+		self.__buttonPressConnections.append(
+			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
+		)
+	
+	## Returns a definition for the popup menu - this is called each time the menu is displayed
+	# to allow for dynamic menus. Subclasses may override this method to customise the menu, but
+	# should call the base class implementation first.
+	def _popupMenuDefinition( self ) :
+	
+		menuDefinition = IECore.MenuDefinition()
+		for name in self.parameter().presetNames() :
+			menuDefinition.append( "/" + name, { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), name ) } )
+
+		if len( self.parameter().presetNames() ) :
+			menuDefinition.append( "/PresetDivider", { "divider" : True } ) 
+
+		menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.parameter().defaultValue ) } )
+
+		return menuDefinition
 		
 	@classmethod
 	def create( cls, parameterHandler ) :
@@ -81,3 +108,21 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		cls.__typesToCreators[parameterTypeId] = creator
 
 	__typesToCreators = {}
+	
+	def __buttonPress( self, widget, event, buttonMask ) :
+	
+		if event.buttons & buttonMask :
+	
+			menuDefinition = self._popupMenuDefinition()
+			menu = GafferUI.Menu( menuDefinition )
+			menu.popup()
+			
+			return True
+			
+		return False
+
+	def __setValue( self, value ) :
+	
+		self.parameter().setValue( value )
+		with Gaffer.UndoContext( self.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.parameterHandler().setPlugValue()

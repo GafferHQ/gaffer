@@ -64,6 +64,11 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 	
 		self.updateFromPlug()
+	
+	## Returns the PathWidget used to display the path.
+	def pathWidget( self ) :
+	
+		return self.__row[0]
 		
 	def updateFromPlug( self ) :
 

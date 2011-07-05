@@ -53,27 +53,12 @@ class PresetsOnlyParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		self.__label = GafferUI.Label( "" )
 		self.__row.append( self.__label )
 
-		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self._addPopupMenu( buttons = GafferUI.ButtonEvent.Buttons.All )
 		
 		self.__plugSetConnection = self.plug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 		
 		self.__updateFromPlug()
-	
-	def __buttonPress( self, widget, event ) :
-	
-		menuDefinition = IECore.MenuDefinition()
-		for name in self.parameter().presetNames() :
-			menuDefinition.append( "/" + name, { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), name ) } )
-			
-		menu = GafferUI.Menu( menuDefinition )
-		menu.popup()
-	
-	def __setValue( self, name ) :
-	
-		self.parameter().setValue( name )
-		with Gaffer.UndoContext( self.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			self.parameterHandler().setPlugValue()
-	
+		
 	def __plugSet( self, plug ) :
 	
 		if plug.isSame( self.plug() ) :

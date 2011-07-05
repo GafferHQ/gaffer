@@ -42,18 +42,20 @@ import GafferUI
 class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler ) :
+		
+		self.__pathWidget = GafferUI.PathPlugValueWidget(
+			parameterHandler.plug(),
+			Gaffer.FileSystemPath( "/" ),
+		)
 					
 		GafferUI.ParameterValueWidget.__init__(
 			
 			self,
-			
-			GafferUI.PathPlugValueWidget(
-				parameterHandler.plug(),
-				Gaffer.FileSystemPath( "/" ),
-			),
-			
+			self.__pathWidget,
 			parameterHandler
 			
 		)
+		
+		self._addPopupMenu( self.__pathWidget.pathWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
 
 GafferUI.ParameterValueWidget.registerType( IECore.PathParameter.staticTypeId(), PathParameterValueWidget )
