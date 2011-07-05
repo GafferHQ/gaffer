@@ -461,13 +461,13 @@ class Widget( object ) :
 
 		}
 		
-		QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover {
+		QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover, QCheckBox#gafferCollapsibleToggle::indicator:unchecked:focus {
 
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowDownHover.png);
 
 		}
 
-		QCheckBox#gafferCollapsibleToggle::indicator:checked:hover {
+		QCheckBox#gafferCollapsibleToggle::indicator:checked:hover, QCheckBox#gafferCollapsibleToggle::indicator:checked:focus {
 
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowRightHover.png);
 
@@ -597,10 +597,10 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
 		}
 		
-		QCheckBox::indicator:unchecked:hover {
+		QCheckBox::indicator:unchecked:hover, QCheckBox::indicator:unchecked:focus {
 			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);
 		}
-		QCheckBox::indicator:checked:hover {
+		QCheckBox::indicator:checked:hover, QCheckBox::indicator:checked:focus {
 			image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
 		}
 		
