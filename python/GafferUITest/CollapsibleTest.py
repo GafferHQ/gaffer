@@ -75,6 +75,38 @@ class CollapsibleTest( unittest.TestCase ) :
 		
 		c.setCollapsed( True )
 		self.assertEqual( self.__states, [ False, True ] )
+	
+	def testCornerWidget( self ) :
+	
+		c = GafferUI.Collapsible( collapsed = True )
+		self.assertEqual( c.getCornerWidget(), None )
+		
+		b1 = GafferUI.Button()
+		self.assertEqual( b1.parent(), None )
+		
+		b2 = GafferUI.Button()
+		self.assertEqual( b1.parent(), None )
+		
+		c.setCornerWidget( b1 )
+		self.failUnless( c.getCornerWidget() is b1 )
+		self.failUnless( b1.parent() is c )
+		
+		c.setCornerWidget( None )
+		self.failUnless( c.getCornerWidget() is None )
+		self.failUnless( b1.parent() is None )
+		
+		c.setCornerWidget( b1 )
+		self.failUnless( c.getCornerWidget() is b1 )
+		self.failUnless( b1.parent() is c )
+		
+		c.setCornerWidget( b2 )
+		self.failUnless( c.getCornerWidget() is b2 )
+		self.failUnless( b2.parent() is c )
+		self.failUnless( b1.parent() is None )
+		
+		c.removeChild( b2 )
+		self.failUnless( c.getCornerWidget() is None )
+		self.failUnless( b2.parent() is None )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -46,10 +46,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The Collapsible container provides an easy means of controlling the
 # visibility of a child Widget. A labelled heading is always visible
-# and clicking on it reveals or hides the child below.
+# and clicking on it reveals or hides the child below. A corner widget
+# may be provided to add additional functionality to the header.
 class Collapsible( GafferUI.ContainerWidget ) :
 
-	def __init__( self, label="", child=None, collapsed=False, borderWidth=0 ) :
+	def __init__( self, label="", child=None, collapsed=False, borderWidth=0, cornerWidget=None ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
 		
@@ -58,9 +59,17 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		layout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		
+		self.__headerLayout = QtGui.QHBoxLayout()
+		self.__headerLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		self.__headerLayout.setContentsMargins( 0, 0, 0, 0 )
+		 
 		self.__toggle = QtGui.QCheckBox()
 		self.__toggle.setObjectName( "gafferCollapsibleToggle" )
-		layout.addWidget( self.__toggle )
+		self.__headerLayout.addWidget( self.__toggle )
+		
+		self.__headerLayout.addStretch( 1 )
+		
+		layout.addLayout( self.__headerLayout )
 		
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
 		self.__toggle.stateChanged.connect( Gaffer.WeakMethod( self.__toggled ) )
@@ -68,15 +77,21 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		self.__child = None
 		self.setChild( child )
 		
+		self.__cornerWidget = None
+		self.setCornerWidget( cornerWidget )
+		
 		self.setLabel( label )
 		self.setCollapsed( collapsed )
 		
-	def removeChild( self, child ) :
+	def removeChild( self, childOrCornerWidget ) :
 	
-		assert( child is self.__child )
+		assert( childOrCornerWidget is self.__child or childOrCornerWidget is self.__cornerWidget )
 		
-		child._qtWidget().setParent( None )
-		self.__child = None
+		childOrCornerWidget._qtWidget().setParent( None )
+		if childOrCornerWidget is self.__child :
+			self.__child = None
+		else :
+			self.__cornerWidget = None
 		
 	def setChild( self, child ) :
 	
@@ -107,6 +122,19 @@ class Collapsible( GafferUI.ContainerWidget ) :
 	def getCollapsed( self ) :
 	
 		return self.__toggle.isChecked()
+		
+	def setCornerWidget( self, cornerWidget ) :
+	
+		if self.__cornerWidget is not None :
+			self.removeChild( self.__cornerWidget )
+			
+		if cornerWidget is not None :
+			self.__headerLayout.addWidget( cornerWidget._qtWidget() )
+			self.__cornerWidget = cornerWidget
+		
+	def getCornerWidget( self ) :
+	
+		return self.__cornerWidget
 	
 	## A signal emitted whenever the ui is collapsed or
 	# expanded.
@@ -136,7 +164,7 @@ class _VBoxLayout( QtGui.QVBoxLayout ) :
 		
 		maxWidth = 0
 		for i in range( 0, self.count() ) :
-			maxWidth = max( maxWidth, self.itemAt( i ).widget().sizeHint().width() )
+			maxWidth = max( maxWidth, self.itemAt( i ).sizeHint().width() )
 		
 		margins = self.contentsMargins()
 			

@@ -53,6 +53,8 @@
 
 * The MultiLineTextWidget now has much more sensible tab spacing.
 
+* The Collapsible container can now display an optional widget in the top right corner of the header. Use the setCornerWidget() and getCornerWidget() methods to manipulate this widget.
+
 0.12.0
 ------
 
