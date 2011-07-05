@@ -100,7 +100,6 @@ from Slider import Slider
 from ColorChooser import ColorChooser
 from ColorChooserDialogue import ColorChooserDialogue
 from ShowURL import showURL
-#from URLWidget import URLWidget
 from Spacer import Spacer
 from CheckBox import CheckBox
 from Image import Image
