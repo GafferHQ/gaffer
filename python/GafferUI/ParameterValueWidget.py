@@ -34,44 +34,50 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
-
 import IECore
 
 import Gaffer
 import GafferUI
 
-class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
+class ParameterValueWidget( GafferUI.Widget ) :
 
-	def __init__( self, node ) :
+	def __init__( self, topLevelWidget, parameterHandler ) :
 	
-		GafferUI.NodeUI.__init__( self, node )
-
-	def _build( self ) :
+		GafferUI.Widget.__init__( self, topLevelWidget )
 		
-		self._addClassInfoRow()
-		
-		with self._scrollable() :
-			self._addParameterWidgets()
-
-	def _addClassInfoRow( self ) :
+		self.__parameterHandler = parameterHandler
 	
-		infoRow = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
-		
-		infoRow.append( GafferUI.Spacer( IECore.V2i( 10 ) ), expand=True )
-		
-		infoIcon = GafferUI.Image( "info.png" )
-		infoIcon.setToolTip( self._node().getParameterised()[0].description )
-		infoRow.append( infoIcon )
-		
-		self._addWidget( infoRow )
-
-	def _addParameterWidgets( self, collapsible = False ) :
+	def plug( self ) :
 	
-		self._addWidget(
+		return self.__parameterHandler.plug()
 		
-			GafferUI.CompoundParameterValueWidget( self._node().parameterHandler(), collapsible = collapsible )
+	def parameter( self ) :
+	
+		return self.__parameterHandler.parameter()
 		
-		)
-			
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+	def parameterHandler( self ) :
+	
+		return self.__parameterHandler
+		
+	@classmethod
+	def create( cls, parameterHandler ) :
+	
+		parameter = parameterHandler.parameter()
+	
+		if parameter.presetsOnly :
+			return GafferUI.PresetsOnlyParameterValueWidget( parameterHandler )
+	
+		parameterHierarchy = IECore.RunTimeTyped.baseTypeIds( parameter.typeId() )
+		for typeId in [ parameter.typeId() ] + parameterHierarchy :	
+			creator = cls.__typesToCreators.get( typeId, None )
+			if creator is not None :
+				return creator( parameterHandler )
+		
+		return GafferUI.PlugValueWidget.create( parameterHandler.plug() )
+		
+	@classmethod
+	def registerType( cls, parameterTypeId, creator ) :
+	
+		cls.__typesToCreators[parameterTypeId] = creator
+
+	__typesToCreators = {}

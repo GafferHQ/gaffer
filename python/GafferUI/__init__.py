@@ -114,7 +114,7 @@ from PlugValueWidget import PlugValueWidget
 from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget
 from BoolPlugValueWidget import BoolPlugValueWidget
-#from FileNamePlugValueWidget import FileNamePlugValueWidget
+from PathPlugValueWidget import PathPlugValueWidget
 from VectorDataPlugValueWidget import VectorDataPlugValueWidget
 from PlugWidget import PlugWidget
 from EditorWidget import EditorWidget
@@ -143,3 +143,7 @@ from AboutWindow import AboutWindow
 import ApplicationMenu
 from OpDialogue import OpDialogue
 from ParameterisedHolderNodeUI import ParameterisedHolderNodeUI
+from ParameterValueWidget import ParameterValueWidget
+from PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
+from CompoundParameterValueWidget import CompoundParameterValueWidget
+from PathParameterValueWidget import PathParameterValueWidget

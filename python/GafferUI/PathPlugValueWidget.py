@@ -41,37 +41,52 @@ import IECore
 import Gaffer
 import GafferUI
 
-class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
+class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, node ) :
+	## path should be an instance of Gaffer.Path, optionally with
+	# filters applied. It will be updated with the contents of the plug.
+	def __init__( self, plug, path, pathChooserDialogueKeywords={} ) :
 	
-		GafferUI.NodeUI.__init__( self, node )
-
-	def _build( self ) :
-		
-		self._addClassInfoRow()
-		
-		with self._scrollable() :
-			self._addParameterWidgets()
-
-	def _addClassInfoRow( self ) :
-	
-		infoRow = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
-		
-		infoRow.append( GafferUI.Spacer( IECore.V2i( 10 ) ), expand=True )
-		
-		infoIcon = GafferUI.Image( "info.png" )
-		infoIcon.setToolTip( self._node().getParameterised()[0].description )
-		infoRow.append( infoIcon )
-		
-		self._addWidget( infoRow )
-
-	def _addParameterWidgets( self, collapsible = False ) :
-	
-		self._addWidget(
-		
-			GafferUI.CompoundParameterValueWidget( self._node().parameterHandler(), collapsible = collapsible )
-		
-		)
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 			
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+
+		self.__path = path
+		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords
+
+		pathWidget = GafferUI.PathWidget( path )
+		self.__row.append( pathWidget )
+	
+		button = GafferUI.Button( image = "pathChooser.png" )
+		self.__buttonClickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.__row.append( button )
+	
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+	
+		self.updateFromPlug()
+		
+	def updateFromPlug( self ) :
+
+		if not hasattr( self, "_PathPlugValueWidget__path" ) :
+			# still constructing
+			return
+
+		with IECore.IgnoredExceptions( ValueError ) :
+			self.__path.setFromString( self.getPlug().getValue() )
+		
+	def __pathChanged( self, path ) :
+				
+		assert( path is self.__path )
+		
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().setValue( str( self.__path ) )
+
+	def __buttonClicked( self, widget ) :
+	
+		# make a copy so we're not updating the main path (and therefore plug) as users browse
+		pathCopy = self.__path.copy()
+		dialogue = GafferUI.PathChooserDialogue( pathCopy, **self.__pathChooserDialogueKeywords )
+		chosenPath = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
+		
+		if chosenPath is not None :
+			self.__path[:] = chosenPath[:]

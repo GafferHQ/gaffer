@@ -32,16 +32,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.313709"
-     inkscape:cx="166.49585"
-     inkscape:cy="979.3559"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="206.44517"
+     inkscape:cy="982.49369"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1637"
      inkscape:window-height="1004"
-     inkscape:window-x="238"
-     inkscape:window-y="54"
+     inkscape:window-x="487"
+     inkscape:window-y="77"
      inkscape:window-maximized="0"
      inkscape:snap-global="true">
     <inkscape:grid
@@ -77,7 +77,7 @@
        sodipodi:cy="12"
        sodipodi:rx="4"
        sodipodi:ry="4"
-       d="m 178,12 a 4,4 0 1 1 -8,0 4,4 0 1 1 8,0 z"
+       d="m 178,12 c 0,2.209139 -1.79086,4 -4,4 -2.20914,0 -4,-1.790861 -4,-4 0,-2.209139 1.79086,-4 4,-4 2.20914,0 4,1.790861 4,4 z"
        transform="matrix(2.25,0,0,2.25,-212.5,40.362183)"
        inkscape:label="#path2860" />
     <g
@@ -474,5 +474,11 @@
          id="path3635"
          style="stroke:#ffffff;stroke-width:0;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
     </g>
+    <path
+       style="fill:#779cbd;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       d="m 194,63.362183 4,0 c 1,0 1,2 1,2 l 6,0 0,9 -12,0 0,-9 c 0,0 -0.1875,-2.125 1,-2 z"
+       id="forExport:pathChooser"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:label="#rect2859" />
   </g>
 </svg>

@@ -49,6 +49,8 @@
 
 * The Image class now uses the Cortex PNGImageReader for loading png files, and correctly converts linear data to sRGB for display.
 
+* Added a basic framework for parameter-specific uis. Initially there are only specific uis for compound parameters, presets only parameters and path parameters - all others fall back to using the default plug widgets. A UI may be easily instantiated for all the parameters of a ParameterisedHolderNode using the GafferUI.CompoundParameterValueWidget - see GafferUI.ParameterisedHolderNodeUI for an example.
+
 0.12.0
 ------
 

@@ -34,44 +34,26 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
-
 import IECore
 
 import Gaffer
 import GafferUI
 
-class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
+class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, node ) :
-	
-		GafferUI.NodeUI.__init__( self, node )
-
-	def _build( self ) :
-		
-		self._addClassInfoRow()
-		
-		with self._scrollable() :
-			self._addParameterWidgets()
-
-	def _addClassInfoRow( self ) :
-	
-		infoRow = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
-		
-		infoRow.append( GafferUI.Spacer( IECore.V2i( 10 ) ), expand=True )
-		
-		infoIcon = GafferUI.Image( "info.png" )
-		infoIcon.setToolTip( self._node().getParameterised()[0].description )
-		infoRow.append( infoIcon )
-		
-		self._addWidget( infoRow )
-
-	def _addParameterWidgets( self, collapsible = False ) :
-	
-		self._addWidget(
-		
-			GafferUI.CompoundParameterValueWidget( self._node().parameterHandler(), collapsible = collapsible )
-		
-		)
+	def __init__( self, parameterHandler ) :
+					
+		GafferUI.ParameterValueWidget.__init__(
 			
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+			self,
+			
+			GafferUI.PathPlugValueWidget(
+				parameterHandler.plug(),
+				Gaffer.FileSystemPath( "/" ),
+			),
+			
+			parameterHandler
+			
+		)
+
+GafferUI.ParameterValueWidget.registerType( IECore.PathParameter.staticTypeId(), PathParameterValueWidget )

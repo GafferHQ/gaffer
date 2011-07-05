@@ -41,37 +41,48 @@ import IECore
 import Gaffer
 import GafferUI
 
-class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
+class PresetsOnlyParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, node ) :
+	def __init__( self, parameterHandler ) :
 	
-		GafferUI.NodeUI.__init__( self, node )
-
-	def _build( self ) :
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		
-		self._addClassInfoRow()
+		GafferUI.ParameterValueWidget.__init__( self, self.__row, parameterHandler )
 		
-		with self._scrollable() :
-			self._addParameterWidgets()
+		self.__row.append( GafferUI.Image( "collapsibleArrowDownHover.png" ) )
+		self.__label = GafferUI.Label( "" )
+		self.__row.append( self.__label )
 
-	def _addClassInfoRow( self ) :
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		
+		self.__plugSetConnection = self.plug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+		
+		self.__updateFromPlug()
 	
-		infoRow = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
-		
-		infoRow.append( GafferUI.Spacer( IECore.V2i( 10 ) ), expand=True )
-		
-		infoIcon = GafferUI.Image( "info.png" )
-		infoIcon.setToolTip( self._node().getParameterised()[0].description )
-		infoRow.append( infoIcon )
-		
-		self._addWidget( infoRow )
-
-	def _addParameterWidgets( self, collapsible = False ) :
+	def __buttonPress( self, widget, event ) :
 	
-		self._addWidget(
-		
-			GafferUI.CompoundParameterValueWidget( self._node().parameterHandler(), collapsible = collapsible )
-		
-		)
+		menuDefinition = IECore.MenuDefinition()
+		for name in self.parameter().presetNames() :
+			menuDefinition.append( "/" + name, { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), name ) } )
 			
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+		menu = GafferUI.Menu( menuDefinition )
+		menu.popup()
+	
+	def __setValue( self, name ) :
+	
+		self.parameter().setValue( name )
+		with Gaffer.UndoContext( self.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.parameterHandler().setPlugValue()
+	
+	def __plugSet( self, plug ) :
+	
+		if plug.isSame( self.plug() ) :
+			self.__updateFromPlug()
+		
+	def __updateFromPlug( self ) :
+	
+		self.parameterHandler().setParameterValue()
+		
+		text = self.parameter().getCurrentPresetName()
+		
+		self.__label.setText( self.parameter().getCurrentPresetName() )
