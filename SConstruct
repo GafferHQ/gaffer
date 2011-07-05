@@ -179,6 +179,16 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_PNG", "Set this to build the png library.", "$BUILD_DEPENDENCIES" )
+)
+
+options.Add(
+	"PNG_SRC_DIR",
+	"The location of the png source to be used if BUILD_DEPENDENCY_PNG is specified.",
+	"$DEPENDENCIES_SRC_DIR/libpng-1.5.2",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_FREETYPE", "Set this to build freetype.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -457,7 +467,10 @@ if depEnv["BUILD_DEPENDENCY_TIFF"] :
 	runCommand( "cd $TIFF_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 
 if depEnv["BUILD_DEPENDENCY_JPEG"] :
-	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make CFLAGS='-O2 -fPIC' && make install" )
+	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
+
+if depEnv["BUILD_DEPENDENCY_PNG"] :
+	runCommand( "cd $PNG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 		
 if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
