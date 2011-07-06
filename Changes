@@ -57,6 +57,16 @@
 
 * Removed font parameter from GafferUI.Label - it wasn't doing anything anyway. Font control will likely return in the form of some support for text markup.
 
+* Fixed variable scope issues which meant that the following code would fail if executed in a script editor :
+
+		class A() :
+
+			def __init__( self ) :
+
+				print A
+
+		a = A()
+
 0.12.0
 ------
 
