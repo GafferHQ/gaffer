@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,45 +34,19 @@
 #  
 ##########################################################################
 
+import unittest
+
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+class VariantTest( unittest.TestCase ) :
 
-## PyQt and PySide differ in their bindings of functions using the
-# QVariant type. PySide doesn't expose QVariant and instead uses
-# the standard python types, whereas PyQt binds and uses the QVariant type.
-# This class provides functions to help with writing code which works
-# with either set of bindings.
-class _Variant() :
-
-	## Returns value converted to a form which can be passed to a function
-	# expecting a QVariant.
-	@staticmethod
-	def toVariant( value ) :
-	
-		# PyQt uses QVariant
-		if hasattr( QtCore, "QVariant" ) :
-			if value is not None :
-				return QtCore.QVariant( value )
-			else :
-				return QtCore.QVariant()
+	def test( self ) :
 		
-		# whereas PySide just uses python values	
-		return value
+		v = GafferUI._Variant
 	
-	## Converts variant to a standard python object.
-	@staticmethod
-	def fromVariant( variant ) :
+		for value in [ "hi", 10, 10.0 ] :	
+			self.assertEqual( v.fromVariant( v.toVariant( value ) ), value )
 	
-		if hasattr( QtCore, "QVariant" ) and isinstance( variant, QtCore.QVariant ) :
-			t = variant.type()
-			if t == QtCore.QVariant.String :
-				return str( variant.toString() )
-			elif t == QtCore.QVariant.Double :
-				return variant.toDouble()[0]
-			elif t == QtCore.QVariant.Int :	
-				return variant.toInt()[0]
-			else :
-				raise ValueError( "Unsupported QVariant type" )
-		else :
-			return variant
+if __name__ == "__main__":
+	unittest.main()
+	

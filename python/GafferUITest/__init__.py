@@ -59,6 +59,7 @@ from CollapsibleTest import CollapsibleTest
 from ImageGadgetTest import ImageGadgetTest
 from StandardNodeGadgetTest import StandardNodeGadgetTest
 from ColorSwatchTest import ColorSwatchTest
+from VariantTest import VariantTest
 
 if __name__ == "__main__":
 	unittest.main()
