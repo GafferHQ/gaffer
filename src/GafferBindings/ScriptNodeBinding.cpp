@@ -68,39 +68,42 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 		ScriptNodeWrapper( PyObject *self, const std::string &name=staticTypeName() )
 			:	ScriptNode( name ), IECorePython::Wrapper<ScriptNode>( self, this )
 		{
-			dict executionGlobals;
-			dict executionLocals;
+			// this dict will form both the locals and the globals for the execute()
+			// and evaluate() methods. it's not possible to have a separate locals
+			// and globals dictionary and have things work as intended. see
+			// ScriptNodeTest.testClassScope() for an example, and 
+			// http://bugs.python.org/issue991196 for an explanation.
+			dict executionDict;
 			
 			object builtIn = import( "__builtin__" );
-			executionGlobals["__builtins__"] = builtIn;
+			executionDict["__builtins__"] = builtIn;
 			
 			object gafferModule = import( "Gaffer" );
-			executionGlobals["Gaffer"] = gafferModule;
+			executionDict["Gaffer"] = gafferModule;
 			
 			object weakMethod = gafferModule.attr( "WeakMethod" );
 			
 			object selfO( handle<>( borrowed( self ) ) );
 			
-			executionGlobals["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
-			executionGlobals["getChild"] = weakMethod( object( selfO.attr( "getChild" ) ) );
-			executionGlobals["childAddedSignal"] = weakMethod( object( selfO.attr( "childAddedSignal" ) ) );
-			executionGlobals["childRemovedSignal"] = weakMethod( object( selfO.attr( "childRemovedSignal" ) ) );
-			executionGlobals["selection"] = weakMethod( object( selfO.attr( "selection" ) ) );
-			executionGlobals["undo"] = weakMethod( object( selfO.attr( "undo" ) ) );
-			executionGlobals["redo"] = weakMethod( object( selfO.attr( "redo" ) ) );
-			executionGlobals["deleteNodes"] = weakMethod( object( selfO.attr( "deleteNodes" ) ) );
-			executionGlobals["serialise"] = weakMethod( object( selfO.attr( "serialise" ) ) );
-			executionGlobals["save"] = weakMethod( object( selfO.attr( "save" ) ) );
-			executionGlobals["load"] = weakMethod( object( selfO.attr( "load" ) ) );
+			executionDict["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
+			executionDict["getChild"] = weakMethod( object( selfO.attr( "getChild" ) ) );
+			executionDict["childAddedSignal"] = weakMethod( object( selfO.attr( "childAddedSignal" ) ) );
+			executionDict["childRemovedSignal"] = weakMethod( object( selfO.attr( "childRemovedSignal" ) ) );
+			executionDict["selection"] = weakMethod( object( selfO.attr( "selection" ) ) );
+			executionDict["undo"] = weakMethod( object( selfO.attr( "undo" ) ) );
+			executionDict["redo"] = weakMethod( object( selfO.attr( "redo" ) ) );
+			executionDict["deleteNodes"] = weakMethod( object( selfO.attr( "deleteNodes" ) ) );
+			executionDict["serialise"] = weakMethod( object( selfO.attr( "serialise" ) ) );
+			executionDict["save"] = weakMethod( object( selfO.attr( "save" ) ) );
+			executionDict["load"] = weakMethod( object( selfO.attr( "load" ) ) );
 			
-			// ideally we'd just store the execution scopes as normal
-			// c++ member variables but we can't as they may hold
-			// references back to ourselves. by storing them in self.__dict__
-			// we allow them to participate in garbage collection, thus breaking
+			// ideally we'd just store the execution scope as a normal
+			// c++ member variable but we can't as it may hold
+			// references back to us. by storing it in self.__dict__
+			// we allow it to participate in garbage collection, thus breaking
 			// the cycle and allowing the ScriptNode to die.
 			object selfDict = selfO.attr( "__dict__" );
-			selfDict["__executionGlobals"] = executionGlobals;
-			selfDict["__executionLocals"] = executionLocals;
+			selfDict["__executionDict"] = executionDict;
 			
 		}
 
@@ -110,13 +113,15 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 
 		virtual void execute( const std::string &pythonScript )
 		{
-			exec( pythonScript.c_str(), executionGlobals(), executionLocals() );
+			object e = executionDict();
+			exec( pythonScript.c_str(), e, e );
 			scriptExecutedSignal()( this, pythonScript );
 		}
 
 		virtual PyObject *evaluate( const std::string &pythonExpression )
 		{
-			object result = eval( pythonExpression.c_str(), executionGlobals(), executionLocals() );
+			object e = executionDict();
+			object result = eval( pythonExpression.c_str(), e, e );
 			scriptEvaluatedSignal()( this, pythonExpression, result.ptr() );
 			
 			// make a reference to keep the result alive - the caller then
@@ -180,18 +185,11 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 		
 	private :
 	
-		object executionGlobals()
+		object executionDict()
 		{
 			object selfO( handle<>( borrowed( m_pyObject ) ) );
 			object selfDict = selfO.attr( "__dict__" );
-			return selfDict["__executionGlobals"];
-		}
-		
-		object executionLocals()
-		{
-			object selfO( handle<>( borrowed( m_pyObject ) ) );
-			object selfDict = selfO.attr( "__dict__" );
-			return selfDict["__executionLocals"];
+			return selfDict["__executionDict"];
 		}
 		
 };

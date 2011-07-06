@@ -280,6 +280,41 @@ class ScriptNodeTest( unittest.TestCase ) :
 	
 		self.assertRaises( RuntimeError, n.addChild, c2 )
 		self.failUnless( c2.parent() is None )
+	
+	def testExecutionExceptions( self ) :
+	
+		n = Gaffer.ScriptNode()
+		
+		self.assertRaises( ValueError, n.execute, "raise ValueError" )
+
+		self.assertRaises( KeyError, n.evaluate, "{}['a']" )
+		
+	def testVariableScope( self ) :
+	
+		# if a variable gets made in one execution, then it should be available in the next
+	
+		n = Gaffer.ScriptNode()
+		
+		n.execute( "a = 10" )
+		
+		self.assertEqual( n.evaluate( "a" ), 10 )
+	
+	def testClassScope( self ) :
+	
+		# this works in a normal python console, so it damn well better work
+		# in a script editor.
+		
+		s = """
+class A() :
+
+	def __init__( self ) :
+
+		print A
+
+a = A()"""
+
+		n = Gaffer.ScriptNode()
+		n.execute( s )
 							
 if __name__ == "__main__":
 	unittest.main()
