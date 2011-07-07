@@ -159,25 +159,28 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__dataChanged()
 	
 ## Private implementation - a QTableView which is much more forceful about
-# requesting enough height if the vertical scrollbar is always off.
+# requesting enough size if the scrollbars are off in a given direction.
 class _TableView( QtGui.QTableView ) :
 
 	def __init__( self ) :
 	
 		QtGui.QTableView.__init__( self )
+			
+		self.horizontalHeader().sectionResized.connect( self.__sizeShouldChange )
+		self.verticalHeader().sectionResized.connect( self.__sizeShouldChange )
 	
 	def setModel( self, model ) :
 	
 		prevModel = self.model()
 		if prevModel :
-			prevModel.rowsInserted.disconnect( self.__rowsChanged )
-			prevModel.rowsRemoved.disconnect( self.__rowsChanged )
+			prevModel.rowsInserted.disconnect( self.__sizeShouldChange )
+			prevModel.rowsRemoved.disconnect( self.__sizeShouldChange )
 	
 		QtGui.QTableView.setModel( self, model )
 	
 		if model :
-			model.rowsInserted.connect( self.__rowsChanged )
-			model.rowsRemoved.connect( self.__rowsChanged )
+			model.rowsInserted.connect( self.__sizeShouldChange )
+			model.rowsRemoved.connect( self.__sizeShouldChange )
 	
 		self.updateGeometry()
 
@@ -189,16 +192,27 @@ class _TableView( QtGui.QTableView ) :
 		
 		result = QtGui.QTableView.sizeHint( self )
 				
-		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-			margins = self.contentsMargins()		
-			result.setHeight( self.verticalHeader().length()  + margins.top() + margins.bottom() )
+		margins = self.contentsMargins()
+			
+		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
+			w = self.horizontalHeader().length() + margins.left() + margins.right()
+			if self.verticalHeader().isVisible() :
+				w += self.verticalHeader().sizeHint().width()
 				
+			result.setWidth( w )
+
+		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
+			h = self.verticalHeader().length() + margins.top() + margins.bottom()
+			if self.horizontalHeader().isVisible() :
+				h += self.horizontalHeader().sizeHint().height()
+			result.setHeight( h )		
+								
 		return result
 
-	def __rowsChanged( self, *unusedArgs ) :
+	def __sizeShouldChange( self, *unusedArgs ) :
 		
 		self.updateGeometry()
-
+		
 ## Internal implementation detail - a qt model which wraps
 # around the VectorData.		
 class _Model( QtCore.QAbstractTableModel ) :
@@ -215,11 +229,26 @@ class _Model( QtCore.QAbstractTableModel ) :
 		self.__toVariant = self.__toVariantSimple
 		self.__fromVariant = self.__fromVariantSimple
 		self.__numColumns = 1
+		self.__headerLabels = [ "X", "Y", "Z" ]
 		if isinstance( data, IECore.V3fVectorData ) :
 			self.__fromVariant = self.__fromVariantCompound
 			self.__toVariant = self.__toVariantCompound
 			self.__numColumns = 3
-						
+		elif isinstance( data, IECore.IntVectorData ) :
+			self.__fromVariant = self.__fromVariantInt
+		elif isinstance( data, ( IECore.FloatVectorData, IECore.DoubleVectorData ) ) :
+			self.__fromVariant = self.__fromVariantFloat
+		elif isinstance( data, ( IECore.Color3fVectorData ) ) :
+			self.__fromVariant = self.__fromVariantCompound
+			self.__toVariant = self.__toVariantCompound
+			self.__numColumns = 3
+			self.__headerLabels = [ "R", "G", "B" ]
+		elif isinstance( data, ( IECore.Color4fVectorData ) ) :
+			self.__fromVariant = self.__fromVariantCompound
+			self.__toVariant = self.__toVariantCompound
+			self.__numColumns = 4
+			self.__headerLabels = [ "R", "G", "B", "A" ]	
+								
 	## Methods specific to this model first
 	
 	def vectorData( self ) :
@@ -260,8 +289,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 					
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
-				## \todo
-				return GafferUI._Variant.toVariant( "X" )
+				return GafferUI._Variant.toVariant( self.__headerLabels[section] )
 			else :
 				return GafferUI._Variant.toVariant( section )
 		
@@ -316,6 +344,32 @@ class _Model( QtCore.QAbstractTableModel ) :
 	def __fromVariantSimple( variant, data, index ) :
 	
 		return GafferUI._Variant.fromVariant( variant )
+		
+	@staticmethod
+	def __fromVariantInt( variant, data, index ) :
+	
+		value = GafferUI._Variant.fromVariant( variant )
+		if isinstance( value, basestring ) :
+			# we get strings back from the Add... line
+			try :
+				value = int( float( value ) )
+			except ValueError :
+				value = 0
+						
+		return value
+		
+	@staticmethod
+	def __fromVariantFloat( variant, data, index ) :
+	
+		value = GafferUI._Variant.fromVariant( variant )
+		if isinstance( value, basestring ) :
+			# we get strings back from the Add... line
+			try :
+				value = float( value )
+			except ValueError :
+				value = 0
+						
+		return value	
 
 	@staticmethod
 	def __toVariantCompound( data, index ) :
@@ -330,5 +384,13 @@ class _Model( QtCore.QAbstractTableModel ) :
 		else :
 			result = IECore.DataTraits.valueTypeFromSequenceType( type( data ) )( 0 )
 		
-		result[index.column()] = GafferUI._Variant.fromVariant( variant )
+		value = GafferUI._Variant.fromVariant( variant )
+		if isinstance( value, basestring ) :
+			# we get strings back from the Add... line
+			try :
+				value = float( value )
+			except ValueError :
+				value = 0
+				
+		result[index.column()] = value
 		return result
