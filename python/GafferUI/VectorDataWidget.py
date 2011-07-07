@@ -295,6 +295,13 @@ class _Model( QtCore.QAbstractTableModel ) :
 		return self.__numColumns
 		
 	def headerData( self, section, orientation, role ) :
+		
+		if QtCore is None :
+			# it seems that this is sometimes getting called during python shutdown.
+			# during shutdown python makes all module globals reference None, so
+			# QtCore becomes None, and we can't do anything. just return None and
+			# hope for the best.
+			return None
 					
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
