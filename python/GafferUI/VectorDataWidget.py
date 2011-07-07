@@ -50,8 +50,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, _TableView() )
 						
-		self._qtWidget().horizontalHeader().setStretchLastSection( True )
 		self._qtWidget().horizontalHeader().setVisible( header )
+		self._qtWidget().horizontalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
 		
 		self._qtWidget().verticalHeader().setVisible( showIndices )
 		self._qtWidget().verticalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
@@ -59,7 +59,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self._qtWidget().setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed ) )
 		
 		self._qtWidget().setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
 		
@@ -73,6 +72,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 	def setData( self, data ) :
 		
+		# it could be argued that we should early out here if data is self.getData(),
+		# but we can't right now as we're relying on setData() to update everything
+		# when the data has been modified in place by some external process, or
+		# by self.__removeSelection.
+					
 		if data is not None :
 			self.__model = _Model( data, self._qtWidget(), self.getEditable() )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__dataChanged ) )
@@ -82,6 +86,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__model = None
 		
 		self._qtWidget().setModel( self.__model )
+		
+		isStringData = isinstance( data, IECore.StringVectorData )
+		self._qtWidget().horizontalHeader().setStretchLastSection( isStringData )
+		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if isStringData else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+		for i in range( 0, self._qtWidget().horizontalHeader().count() ) :
+			self._qtWidget().horizontalHeader().resizeSection( i, 70 )
+			
+		self._qtWidget().updateGeometry()
 		
 	def getData( self ) :
 	
@@ -165,10 +177,7 @@ class _TableView( QtGui.QTableView ) :
 	def __init__( self ) :
 	
 		QtGui.QTableView.__init__( self )
-			
-		self.horizontalHeader().sectionResized.connect( self.__sizeShouldChange )
-		self.verticalHeader().sectionResized.connect( self.__sizeShouldChange )
-	
+				
 	def setModel( self, model ) :
 	
 		prevModel = self.model()
@@ -196,14 +205,14 @@ class _TableView( QtGui.QTableView ) :
 			
 		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
 			w = self.horizontalHeader().length() + margins.left() + margins.right()
-			if self.verticalHeader().isVisible() :
+			if not self.verticalHeader().isHidden() :
 				w += self.verticalHeader().sizeHint().width()
 				
 			result.setWidth( w )
 
 		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
 			h = self.verticalHeader().length() + margins.top() + margins.bottom()
-			if self.horizontalHeader().isVisible() :
+			if not self.horizontalHeader().isHidden() :
 				h += self.horizontalHeader().sizeHint().height()
 			result.setHeight( h )		
 								
