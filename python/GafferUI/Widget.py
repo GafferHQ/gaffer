@@ -276,7 +276,7 @@ class Widget( object ) :
 			selection-background-color: $brightColor
 		}
 
-		QMenuBar {
+		QMenuBar, QMenuBar::item {
 
 			background-color: $backgroundDarkest;
 
@@ -629,6 +629,19 @@ class Widget( object ) :
 
 		}
 
+		QTreeView::item:selected {
+			background-color: $brightColor;
+		}
+
+		QTableView::item:selected {
+			background-color: $brightColor;
+		}
+
+		QTableView QTableCornerButton::section {
+			background-color: $backgroundMid;
+			border: 1px solid $backgroundMid;
+		}
+	
 		QTableView#vectorDataWidget {
 			border: 0px solid transparent;
 			padding: 0px;
@@ -640,7 +653,7 @@ class Widget( object ) :
 			background-color: $backgroundLighter;
 			gridline-color: $backgroundMid;
 		}
-		
+			
 		QHeaderView::section#vectorDataWidgetVerticalHeader {
 			background-color: transparent;
 			border: 0px solid transparent;

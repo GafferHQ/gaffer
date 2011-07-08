@@ -61,6 +61,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self._qtWidget().setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		
 		self._qtWidget().setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
+		self._qtWidget().setCornerButtonEnabled( False )
 		
 		self._qtWidget().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		self._qtWidget().customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )

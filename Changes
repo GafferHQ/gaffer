@@ -2,6 +2,8 @@
 
 * Fixed failing test GafferTest.ParameterisedHolderTest.testAddAndRemoveParameters. Parameters may now be added or removed within a ParameterisedHolder::ParameterModificationContext.
 
+* Fixed a few stylesheet issues that appeared when running under Gnome.
+
 0.13.0
 ------
 
