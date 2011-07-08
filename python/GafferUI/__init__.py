@@ -106,6 +106,7 @@ from Image import Image
 from ErrorDialogue import ErrorDialogue
 from _Variant import _Variant
 from VectorDataWidget import VectorDataWidget
+from PathVectorDataWidget import PathVectorDataWidget
 
 # then stuff specific to graph uis
 
@@ -115,6 +116,7 @@ from NumericPlugValueWidget import NumericPlugValueWidget
 from BoolPlugValueWidget import BoolPlugValueWidget
 from PathPlugValueWidget import PathPlugValueWidget
 from VectorDataPlugValueWidget import VectorDataPlugValueWidget
+from PathVectorDataPlugValueWidget import PathVectorDataPlugValueWidget
 from PlugWidget import PlugWidget
 from EditorWidget import EditorWidget
 from ScriptEditor import ScriptEditor
@@ -140,9 +142,13 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 #from SplineEditor import SplineEditor
 from AboutWindow import AboutWindow
 import ApplicationMenu
+
+# then stuff specific to parameterised objects
+
 from OpDialogue import OpDialogue
 from ParameterisedHolderNodeUI import ParameterisedHolderNodeUI
 from ParameterValueWidget import ParameterValueWidget
 from PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
 from CompoundParameterValueWidget import CompoundParameterValueWidget
 from PathParameterValueWidget import PathParameterValueWidget
+from PathVectorParameterValueWidget import PathVectorParameterValueWidget

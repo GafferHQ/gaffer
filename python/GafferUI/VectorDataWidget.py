@@ -121,6 +121,23 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def dataChangedSignal( self ) :
 	
 		return self.__dataChangedSignal
+	
+	## Returns a definition for the popup menu - this is called each time
+	# the menu is displayed to allow menus to be built dynamically. May be
+	# overridden in derived classes to modify the menu. 
+	def _contextMenuDefinition( self, selectedIndices ) :
+	
+		m = IECore.MenuDefinition()
+		
+		m.append( "/Select All", { "command" : self.__selectAll } )
+		m.append( "/Clear Selection", { "command" : self.__clearSelection } )
+		
+		if self.getEditable() :
+
+			m.append( "/divider", { "divider" : True } )
+			m.append( "/Remove Selection", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
+		
+		return m
 		
 	def __dataChanged( self, *unusedArgs ) :
 	
@@ -128,15 +145,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 	def __contextMenu( self, pos ) :
 	
-		m = IECore.MenuDefinition()
+		# get the selection
+		selectedIndices = [ x.row() for x in self._qtWidget().selectedIndexes() ]
+		selectedIndices = list( set( selectedIndices ) ) # remove duplicates
+		selectedIndices.sort()
 		
-		m.append( "/Select All", { "command" : self.__selectAll } )
-		m.append( "/Clear Selection", { "command" : self.__clearSelection } )
-		
-		m.append( "/divider", { "divider" : True } )
-		
-		m.append( "/Remove Selection", { "command" : self.__removeSelection } )
-		
+		# build the menu and pop it up
+		m = self._contextMenuDefinition( selectedIndices )
 		m = GafferUI.Menu( m )
 		m.popup( self )
 			
@@ -148,23 +163,18 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		self._qtWidget().clearSelection()
 	
-	def __removeSelection( self ) :
-	
-		# decide what to delete
-		rows = [ x.row() for x in self._qtWidget().selectedIndexes() ]
-		rows = list( set( rows ) ) # remove duplicates
-		rows.sort()
-		
+	def __removeIndices( self, indices ) :
+			
 		data = self.getData()
 		
 		# remove the "Add..." row which can't be deleted as it doesn't
 		# exist in the data.
-		if rows[-1] >= len( data ) :
-			del rows[-1]
-		
+		if indices[-1] >= len( data ) :
+			del indices[-1]
+	
 		# delete the rows from data
-		for i in range( len( rows )-1, -1, -1 ) :
-			del data[rows[i]]
+		for i in range( len( indices )-1, -1, -1 ) :
+			del data[indices[i]]
 		
 		# tell the world
 		self.setData( data )
