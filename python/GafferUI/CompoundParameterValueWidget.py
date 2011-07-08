@@ -39,6 +39,9 @@ import IECore
 import Gaffer
 import GafferUI
 
+## Supported child userData entries :
+#
+# ["UI"]["visible"]
 class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	_columnSpacing = 4
@@ -70,6 +73,11 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		for childPlug in self.plug().children() :
 		
 			childParameter = self.parameter()[childPlug.getName()]
+			
+			with IECore.IgnoredExceptions( KeyError ) :
+				if not childParameter.userData()["UI"]["visible"].value :
+					continue
+			
 			valueWidget = GafferUI.ParameterValueWidget.create( self.parameterHandler().childParameterHandler( childParameter ) )
 			if not valueWidget :
 				continue
