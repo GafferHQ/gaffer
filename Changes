@@ -1,3 +1,5 @@
+* Fixed failing test GafferTest.ParameterisedHolderTest.testAddAndRemoveParameters. Parameters may now be added or removed within a ParameterisedHolder::ParameterModificationContext.
+
 0.13.0
 ------
 

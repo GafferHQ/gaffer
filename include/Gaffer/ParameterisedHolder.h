@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +40,13 @@
 
 #include "Gaffer/Node.h"
 
+namespace IECore
+{
+
+class ParameterisedInterface;
+
+} // namespace IECore
+
 namespace Gaffer
 {
 
@@ -58,7 +66,9 @@ class ParameterisedHolder : public BaseType
 		void setParameterised( IECore::RunTimeTypedPtr parameterised );
 		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar );
 		IECore::RunTimeTypedPtr getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
-		
+		/// Convenience method to return dynamic_cast<const IECore::ParameterisedInterface *>( getParameterised().get() )
+		IECore::ParameterisedInterface *parameterisedInterface( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 );
+
 		CompoundParameterHandlerPtr parameterHandler();
 		ConstCompoundParameterHandlerPtr parameterHandler() const;
 		

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -98,6 +99,13 @@ IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::getParameterised( std::st
 }
 
 template<typename BaseType>
+IECore::ParameterisedInterface *ParameterisedHolder<BaseType>::parameterisedInterface( std::string *className, int *classVersion, std::string *searchPathEnvVar )
+{
+	return dynamic_cast<IECore::ParameterisedInterface *>( getParameterised( className, classVersion, searchPathEnvVar ).get() );
+}
+
+
+template<typename BaseType>
 CompoundParameterHandlerPtr ParameterisedHolder<BaseType>::parameterHandler()
 {
 	return m_parameterHandler;
@@ -131,8 +139,9 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::ParameterModificati
 template<typename BaseType>
 ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificationContext()
 {
-	if( m_parameterisedHolder->m_parameterHandler )
+	if( IECore::ParameterisedInterface *interface = m_parameterisedHolder->parameterisedInterface() )
 	{
+		m_parameterisedHolder->m_parameterHandler = new CompoundParameterHandler( interface->parameters(), m_parameterisedHolder );
 		m_parameterisedHolder->m_parameterHandler->setPlugValue();
 	}
 }

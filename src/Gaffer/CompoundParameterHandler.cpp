@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +40,7 @@
 
 #include "Gaffer/CompoundParameterHandler.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/PlugIterator.h"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -49,6 +51,8 @@ CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr
 	:	ParameterHandler( parameter )
 {
 	
+	// decide what name our compound plug should have
+	
 	std::string plugName = parameter->name();
 	if( plugName=="" )
 	{
@@ -58,12 +62,32 @@ CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr
 		plugName = "parameters";
 	}
 	
+	// create the compound plug if necessary
+	
 	m_plug = plugParent->getChild<CompoundPlug>( plugName );
 	if( !m_plug )
 	{
 		m_plug = new CompoundPlug( plugName );
 		plugParent->addChild( m_plug ); /// \todo need to be able to replace what's already there
 	}
+	
+	// remove any child plugs we don't need
+	
+	std::vector<PlugPtr> toRemove;
+	for( PlugIterator pIt( m_plug->children().begin(), m_plug->children().end() ); pIt!=pIt.end(); pIt++ )
+	{
+		if( !parameter->parameter<Parameter>( (*pIt)->getName() ) )
+		{
+			toRemove.push_back( *pIt );
+		}
+	}
+	
+	for( std::vector<PlugPtr>::const_iterator pIt = toRemove.begin(), eIt = toRemove.end(); pIt != eIt; pIt++ )
+	{
+		m_plug->removeChild( *pIt );
+	}
+
+	// and add or update the child plug for each child parameter
 	
 	const CompoundParameter::ParameterVector &children = parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
