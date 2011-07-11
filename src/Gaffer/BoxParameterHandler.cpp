@@ -48,8 +48,8 @@ BoxParameterHandler<T>::BoxParameterHandler( typename ParameterType::Ptr paramet
 	m_plug = plugParent->getChild<CompoundPlug>( parameter->name() );
 	if( !m_plug )
 	{
-		m_plug = new CompoundPlug( parameter->name() );
-		plugParent->addChild( m_plug );
+		m_plug = new CompoundPlug();
+		plugParent->setChild( parameter->name(), m_plug );
 	}
 	
 	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );

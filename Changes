@@ -8,6 +8,8 @@
 
 * Fixed a bug whereby GraphComponent::getChild( "" ) would return the GraphComponent itself rather than nothing.
 
+* Fixed a bug dealing with parameters changing type within a ParameterisedHolder::ParameterModificationContext.
+
 0.13.0
 ------
 

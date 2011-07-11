@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -52,8 +53,8 @@ NumericParameterHandler<T>::NumericParameterHandler( typename ParameterType::Ptr
 	if( !m_plug )
 	{
 		m_plug = new PlugType( parameter->name(), Plug::In, parameter->numericDefaultValue(), parameter->minValue(), parameter->maxValue() );
+		plugParent->setChild( parameter->name(), m_plug );
 	}
-	plugParent->addChild( m_plug );
 }
 
 template<typename T>

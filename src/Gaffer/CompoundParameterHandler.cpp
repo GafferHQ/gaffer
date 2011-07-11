@@ -67,8 +67,8 @@ CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr
 	m_plug = plugParent->getChild<CompoundPlug>( plugName );
 	if( !m_plug )
 	{
-		m_plug = new CompoundPlug( plugName );
-		plugParent->addChild( m_plug ); /// \todo need to be able to replace what's already there
+		m_plug = new CompoundPlug();
+		plugParent->setChild( plugName, m_plug );
 	}
 	
 	// remove any child plugs we don't need
