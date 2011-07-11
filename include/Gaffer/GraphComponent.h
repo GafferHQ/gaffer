@@ -131,10 +131,12 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// \todo Do we need acceptsRemoval()?
 		/// \undoable
 		void removeChild( GraphComponentPtr child );
-		/// Get a child by name, performing a runTimeCast to T.
+		/// Get a child by name, performing a runTimeCast to T. The name
+		/// may consist of "." delimited names to get a distant child-of-a-child.
 		template<typename T>
 		typename T::Ptr getChild( const std::string &name );
-		/// Get a child by name, performing a runTimeCast to T.
+		/// Get a child by name, performing a runTimeCast to T. The name
+		/// may consist of "." delimited names to get a distant child-of-a-child.
 		template<typename T>
 		typename T::ConstPtr getChild( const std::string &name ) const;
 		/// Read only access to the internal container of children. This
