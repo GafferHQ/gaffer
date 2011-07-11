@@ -116,13 +116,16 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// will first be removed from it. Note that the child may be renamed to
 		/// preserve uniqueness, and an exception is thrown if the child or
 		/// parent doesn't accept the new relationship.
-		/// \todo Add an argument which causes name clashes to be resolved by
-		/// removing the existing child, and use that from the setitem binding.
-		/// Or add a setChild method instead?
 		/// \todo Prevent reparenting from changing the ScriptNode ancestor of the child -
 		/// this would seriously mess up the undo system.
 		/// \undoable
 		void addChild( GraphComponentPtr child );
+		/// Adds a child to this component, giving it the specified name. If a child
+		/// of that name already exists then it will be replaced. If the
+		/// child already has a parent then it is first removed from it. Am exception is
+		/// thrown if the child or parent doesn't accept the new relationship.
+		/// \undoable
+		void setChild( const std::string &name, GraphComponentPtr child );
 		/// Removes a child. Throws an Exception if the passed component is
 		/// not a child of this component.
 		/// \todo Do we need acceptsRemoval()?

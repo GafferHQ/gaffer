@@ -227,6 +227,18 @@ void GraphComponent::addChild( GraphComponentPtr child )
 	}
 }
 
+void GraphComponent::setChild( const std::string &name, GraphComponentPtr child )
+{
+	GraphComponentPtr existingChild = getChild<GraphComponent>( name );
+	if( existingChild )
+	{
+		removeChild( existingChild );
+	}
+	
+	child->setName( name );
+	addChild( child );
+}
+
 void GraphComponent::addChildInternal( GraphComponentPtr child )
 {
 	if( child->m_parent )

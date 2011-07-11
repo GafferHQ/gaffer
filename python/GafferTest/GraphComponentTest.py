@@ -369,6 +369,38 @@ class GraphComponentTest( unittest.TestCase ) :
 		del g["a"]
 		self.assertEqual( len( g ), 1 )
 		
+	def testSetChild( self ) :
+	
+		p1 = Gaffer.GraphComponent()
+		p2 = Gaffer.GraphComponent()
+		
+		c1 = Gaffer.GraphComponent()
+		c2 = Gaffer.GraphComponent()
+		
+		self.assertEqual( len( p1 ), 0 )
+		self.assertEqual( len( p2 ), 0 )
+		
+		self.assertEqual( c1.parent(), None )
+		self.assertEqual( c2.parent(), None )
+		
+		p1.setChild( "a", c1 )
+		self.assertEqual( c1.getName(), "a" )
+		self.assertEqual( c1.parent(), p1 )
+		self.assertEqual( len( p1 ), 1 )
+		
+		p1.setChild( "a", c2 )
+		self.assertEqual( c1.getName(), "a" )
+		self.assertEqual( c2.getName(), "a" )
+		self.assertEqual( c1.parent(), None )
+		self.assertEqual( c2.parent(), p1 )
+		self.assertEqual( len( p1 ), 1 )
+			
+		p2.setChild( "b", c2 )
+		self.assertEqual( c2.getName(), "b" )
+		self.assertEqual( c2.parent(), p2 )
+		self.assertEqual( len( p1 ), 0 )
+		self.assertEqual( len( p2 ), 1 )		
+		
 if __name__ == "__main__":
 	unittest.main()
 	
