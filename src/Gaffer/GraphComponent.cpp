@@ -232,6 +232,10 @@ void GraphComponent::setChild( const std::string &name, GraphComponentPtr child 
 	GraphComponentPtr existingChild = getChild<GraphComponent>( name );
 	if( existingChild )
 	{
+		if( existingChild == child )
+		{
+			return;
+		}
 		removeChild( existingChild );
 	}
 	

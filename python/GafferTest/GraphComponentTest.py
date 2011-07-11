@@ -400,7 +400,32 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.assertEqual( c2.parent(), p2 )
 		self.assertEqual( len( p1 ), 0 )
 		self.assertEqual( len( p2 ), 1 )
+	
+	def testSetChildAgain( self ) :
+	
+		# Setting a child to the same thing should
+		# cause nothing to happen and no signals to
+		# be triggered.
+	
+		parent = Gaffer.GraphComponent()
+		child = Gaffer.GraphComponent()
+		
+		parent.setChild( "c", child )
+		self.assert_( child.parent().isSame( parent ) )
+		
+		GraphComponentTest.numSignals = 0
+		def f( *args ) :
+			GraphComponentTest.numSignals += 1
 			
+		c1 = child.parentChangedSignal().connect( f )
+		c2 = parent.childAddedSignal().connect( f )
+		c3 = parent.childRemovedSignal().connect( f )
+		c4 = child.nameChangedSignal().connect( f )
+		
+		parent.setChild( "c", child )	
+		
+		self.assertEqual( GraphComponentTest.numSignals, 0 )
+		
 	def testEmptyName( self ) :
 	
 		g = Gaffer.GraphComponent()
