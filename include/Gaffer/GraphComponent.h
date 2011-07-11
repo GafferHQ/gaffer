@@ -184,8 +184,11 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// A signal emitted when a child is removed from this component. Slot format
 		/// is as above.
 		BinarySignal &childRemovedSignal();
-		/// A signal emitted when the parent of this component changes.
-		UnarySignal &parentChangedSignal();
+		/// A signal emitted when the parent of this component changes. Slots should
+		/// be of the form void ( child, oldParent ). Note that in the special case
+		/// of a child being removed from the destructor of the parent, oldParent
+		/// will be 0 as it is no longer available.
+		BinarySignal &parentChangedSignal();
 		//@}
 		
 	private :
@@ -194,7 +197,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 
 		void setNameInternal( const IECore::InternedString &name );
 		void addChildInternal( GraphComponentPtr child );
-		void removeChildInternal( GraphComponentPtr child );
+		void removeChildInternal( GraphComponentPtr child, bool emitParentChanged );
 
 		/// \todo The memory overhead of all these signals may become too great.
 		/// At this point we need to reimplement the signal returning functions to
@@ -205,7 +208,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		UnarySignal m_nameChangedSignal;
 		BinarySignal m_childAddedSignal;
 		BinarySignal m_childRemovedSignal;
-		UnarySignal m_parentChangedSignal;
+		BinarySignal m_parentChangedSignal;
 		
 		IECore::InternedString m_name;
 		GraphComponent *m_parent;

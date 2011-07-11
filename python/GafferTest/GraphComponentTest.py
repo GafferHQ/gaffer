@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import gc
+import weakref
 import unittest
 
 import IECore
@@ -110,9 +112,10 @@ class GraphComponentTest( unittest.TestCase ) :
 		parent = Gaffer.GraphComponent()
 		child = Gaffer.GraphComponent()
 		
-		def f( c ) :
+		def f( c, oldParent ) :
 		
 			GraphComponentTest.newParent = c.parent()
+			GraphComponentTest.oldParent = oldParent
 		
 		def ff( p, c ) :
 		
@@ -122,20 +125,81 @@ class GraphComponentTest( unittest.TestCase ) :
 		c2 = parent.childAddedSignal().connect( ff )
 		
 		GraphComponentTest.newParent = None
+		GraphComponentTest.oldParent = None
 		GraphComponentTest.parenting = None
 		parent.addChild( child )
 		self.assert_( GraphComponentTest.newParent.isSame( parent ) )
+		self.assert_( GraphComponentTest.oldParent is None )
 		self.assert_( GraphComponentTest.parenting[0].isSame( parent ) )
 		self.assert_( GraphComponentTest.parenting[1].isSame( child ) )
 		
 		GraphComponentTest.newParent = "xxx"
+		GraphComponentTest.oldParent = None
 		GraphComponentTest.parenting = None
 		c2 = parent.childRemovedSignal().connect( ff )
 		parent.removeChild( child )
 		self.assert_( GraphComponentTest.newParent is None )
+		self.assert_( GraphComponentTest.oldParent.isSame( parent ) )
 		self.assert_( GraphComponentTest.parenting[0].isSame( parent ) )
 		self.assert_( GraphComponentTest.parenting[1].isSame( child ) )
+		
+	def testReparentingEmitsOnlyOneParentChangedSignal( self ) :
 	
+		p1 = Gaffer.GraphComponent()
+		p2 = Gaffer.GraphComponent()
+		
+		c = Gaffer.GraphComponent()
+		
+		def f( child, previousParent ) :
+		
+			GraphComponentTest.newParent = child.parent()
+			GraphComponentTest.oldParent = previousParent
+			GraphComponentTest.child = child
+			GraphComponentTest.numSignals += 1
+			
+		GraphComponentTest.newParent = None
+		GraphComponentTest.oldParent = None
+		GraphComponentTest.child = None
+		GraphComponentTest.numSignals = 0
+		
+		p1["c"] = c
+		
+		connection = c.parentChangedSignal().connect( f )
+		
+		p2["c"] = c
+		
+		self.failUnless( GraphComponentTest.newParent.isSame( p2 ) )
+		self.failUnless( GraphComponentTest.oldParent.isSame( p1 ) )
+		self.failUnless( GraphComponentTest.child.isSame( c ) )
+		self.assertEqual( GraphComponentTest.numSignals, 1 )
+	
+	def testParentChangedBecauseParentDied( self ) :
+	
+		parent = Gaffer.GraphComponent()
+		child = Gaffer.GraphComponent()
+		parent["child"] = child
+		
+		def f( child, previousParent ) :
+				
+			GraphComponentTest.newParent = child.parent()
+			GraphComponentTest.previousParent = previousParent
+			
+		c = child.parentChangedSignal().connect( f )
+		
+		GraphComponentTest.newParent = "XXX"
+		GraphComponentTest.previousParent = "XXX"
+		
+		w = weakref.ref( parent )
+		del parent
+		while gc.collect() :
+			pass
+		IECore.RefCounted.collectGarbage()
+		
+		self.assertEqual( w(), None )
+				
+		self.failUnless( GraphComponentTest.newParent is None )
+		self.failUnless( GraphComponentTest.previousParent is None )
+		
 	def testReparentingDoesntSignal( self ) :
 	
 		"""Adding a child to a parent who already owns that child should do nothing."""

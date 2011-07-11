@@ -65,7 +65,7 @@ GraphComponent::~GraphComponent()
 	for( ChildContainer::iterator it=m_children.begin(); it!=m_children.end(); it++ )
 	{
 		(*it)->m_parent = 0;
-		(*it)->parentChangedSignal()( (*it).get() );
+		(*it)->parentChangedSignal()( (*it).get(), 0 );
 	}	
 }
 
@@ -214,7 +214,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 			Action::enact(
 				this,
 				boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child ),
-				boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child )		
+				boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child, true )	
 			);
 		}
 	}
@@ -245,15 +245,19 @@ void GraphComponent::setChild( const std::string &name, GraphComponentPtr child 
 
 void GraphComponent::addChildInternal( GraphComponentPtr child )
 {
-	if( child->m_parent )
+	GraphComponent *previousParent = child->m_parent;
+	if( previousParent )
 	{
-		child->m_parent->removeChildInternal( child );
+		// remove the child from the previous parent, but don't emit parentChangedSignal.
+		// this prevents a parent changed signal with new parent 0 followed by a parent
+		// changed signal with the new parent.
+		previousParent->removeChildInternal( child, false );
 	}
 	m_children.push_back( child );
 	child->m_parent = this;
 	child->setName( child->m_name.value() ); // to force uniqueness
 	childAddedSignal()( this, child.get() );
-	child->parentChangedSignal()( child.get() );
+	child->parentChangedSignal()( child.get(), previousParent );
 }
 
 void GraphComponent::removeChild( GraphComponentPtr child )
@@ -264,17 +268,20 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 	}
 	Action::enact(
 		this,
-		boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child ),
+		boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child, true ),
 		boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child )		
 	);
 }
 
-void GraphComponent::removeChildInternal( GraphComponentPtr child )
+void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitParentChanged )
 {
 	m_children.remove( child );
 	child->m_parent = 0;
 	childRemovedSignal()( this, child.get() );
-	child->parentChangedSignal()( child.get() );
+	if( emitParentChanged )
+	{	
+		child->parentChangedSignal()( child.get(), this );
+	}
 }
 
 const GraphComponent::ChildContainer &GraphComponent::children() const
@@ -359,7 +366,7 @@ GraphComponent::BinarySignal &GraphComponent::childRemovedSignal()
 	return m_childRemovedSignal;
 }
 
-GraphComponent::UnarySignal &GraphComponent::parentChangedSignal()
+GraphComponent::BinarySignal &GraphComponent::parentChangedSignal()
 {
 	return m_parentChangedSignal;
 }
