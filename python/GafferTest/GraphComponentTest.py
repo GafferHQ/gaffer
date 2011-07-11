@@ -399,7 +399,18 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.assertEqual( c2.getName(), "b" )
 		self.assertEqual( c2.parent(), p2 )
 		self.assertEqual( len( p1 ), 0 )
-		self.assertEqual( len( p2 ), 1 )		
+		self.assertEqual( len( p2 ), 1 )
+			
+	def testEmptyName( self ) :
+	
+		g = Gaffer.GraphComponent()
+		self.assertRaises( RuntimeError, g.setName, "" )
+		
+	def testGetChildWithEmptyName( self ) :
+	
+		g = Gaffer.GraphComponent()
+		self.assertEqual( g.getChild( "" ), None )
+		self.assertRaises( KeyError, g.__getitem__, "" )
 		
 if __name__ == "__main__":
 	unittest.main()

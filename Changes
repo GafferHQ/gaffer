@@ -4,6 +4,10 @@
 
 * Fixed a few stylesheet issues that appeared when running under Gnome.
 
+* Added a GraphComponent::setChild() method - this operates in the same way as the __setitem__ python method. See documentation for the distinction between addChild() and setChild().
+
+* Fixed a bug whereby GraphComponent::getChild( "" ) would return the GraphComponent itself rather than nothing.
+
 0.13.0
 ------
 

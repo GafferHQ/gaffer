@@ -53,6 +53,11 @@ typename T::Ptr GraphComponent::getChild( const std::string &name )
 template<typename T>
 typename T::ConstPtr GraphComponent::getChild( const std::string &name ) const
 {
+	if( !name.size() )
+	{
+		return 0;
+	}
+	
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 
 	Tokenizer t( name, boost::char_separator<char>( "." ) );
