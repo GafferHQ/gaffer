@@ -78,6 +78,7 @@ from ContainerWidget import ContainerWidget
 from Window import Window
 from SplitContainer import SplitContainer
 from ListContainer import ListContainer
+from GridContainer import GridContainer
 from MenuBar import MenuBar
 from EventLoop import EventLoop
 from TabbedContainer import TabbedContainer
