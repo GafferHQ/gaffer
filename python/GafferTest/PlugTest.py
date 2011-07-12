@@ -144,7 +144,7 @@ class PlugTest( unittest.TestCase ) :
 				if not Gaffer.Plug.acceptsInput( self, plug ) :
 					return False
 					
-				return isinstance( plug, TestPlug )
+				return isinstance( plug, ( TestPlug, type( None ) ) )
 				
 			def setInput( self, plug ) :
 			
@@ -195,42 +195,69 @@ class PlugTest( unittest.TestCase ) :
 		
 		p2 = TestPlug()
 		self.assertRaises( RuntimeError, Gaffer.CompoundPlug().addChild, p2 )
-	
-	def testAcceptsInputForInputRemoval( self ) :
-	
-		class NoDisconnectionPlug( Gaffer.Plug ) :
 		
-			def __init__( self, name = "NoDisconnectionPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
-			
-				Gaffer.Plug.__init__( self, name, direction, flags )
-				
-			def acceptsInput( self, plug ) :
-			
-				if not Gaffer.Plug.acceptsInput( self, plug ) :
-					return False
-				
-				if plug is None :
-					return False
-					
-				return True
+	def testRemovePlugRemovesInputs( self ) :
 
-		IECore.registerRunTimeTyped( NoDisconnectionPlug )
+		s = Gaffer.ScriptNode()
 		
-		n1 = Gaffer.Node()
-		n1.addChild( NoDisconnectionPlug( "testIn" ) )
-				
-		n2 = Gaffer.Node()
-		n2.addChild( Gaffer.IntPlug( name = "intOut", direction = Gaffer.Plug.Direction.Out ) )
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
 		
-		self.failUnless( n1["testIn"].acceptsInput( n2["intOut"] ) )
-		self.failIf( n1["testIn"].acceptsInput( None ) )
+		s["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		
-		n1["testIn"].setInput( n2["intOut"] )
-		self.failUnless( n1["testIn"].getInput().isSame( n2["intOut"] ) )
+		s["n2"]["i"] = Gaffer.IntPlug()
+		s["n2"]["c"] = Gaffer.CompoundPlug()
+		s["n2"]["c"]["i"] = Gaffer.IntPlug()
+		
+		s["n2"]["i"].setInput( s["n1"]["o"] )
+		s["n2"]["c"]["i"].setInput( s["n1"]["o"] )
+
+		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 2 )
+		
+		with Gaffer.UndoContext( s ) :
+		
+			del s["n2"]["i"]
+			del s["n2"]["c"]["i"]
+			
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 0 )
+
+		s.undo()
+		
+		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 2 )
+		
+	def testRemovePlugRemovesOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		
+		s["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		s["n2"]["i"] = Gaffer.IntPlug()
+		
+		s["n2"]["i"].setInput( s["n1"]["o"] )
+		
+		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
+		
+		with Gaffer.UndoContext( s ) :
+		
+			removedPlug = s["n1"]["o"]
+			del s["n1"]["o"]
+			
+		self.assertEqual( len( removedPlug.outputs() ), 0 )
+
+		s.undo()
+		
+		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
+		self.failUnless( s["n1"]["o"].isSame( removedPlug ) )
 						
-		self.assertRaises( Exception, n1["testIn"].setInput, None )
-		self.failUnless( n1["testIn"].getInput().isSame( n2["intOut"] ) )
-				
 if __name__ == "__main__":
 	unittest.main()
 	

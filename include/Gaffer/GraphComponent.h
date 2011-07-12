@@ -190,6 +190,27 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// will be 0 as it is no longer available.
 		BinarySignal &parentChangedSignal();
 		//@}
+	
+	protected :
+	
+		/// Called just /before/ the parent of this GraphComponent is
+		/// changed to newParent. This is an opportunity to do things
+		/// in preparation for the new relationship - currently it allows
+		/// Plugs to remove their connections if they're about to have no parent.
+		/// In the special case of a child being removed from the destructor of the
+		/// parent, parent() will already be 0 in addition to newParent
+		/// being 0 - this is to avoid the temptation to access the dying parent.
+		///
+		/// Implementations should call the base class implementation
+		/// before doing their own thing.
+		///
+		/// The rationale for not having this as a public signal is that
+		/// outside observers don't need the priviledge of knowing events
+		/// beforehand - they should just react to them afterwards. The
+		/// rationale for having this as a virtual function rather than
+		/// a protected signal is that there is less overhead in the virtual
+		/// function. 
+		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 		
 	private :
 

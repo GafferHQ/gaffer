@@ -141,10 +141,16 @@ class Plug : public GraphComponent
 		void removeOutputs();
 		const OutputContainer &outputs() const;
 		//@}
+	
+	protected :
+	
+		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 					
 	private :
 
 		void setInputInternal( PlugPtr input, bool emit );
+		
+		static void parentChanged( GraphComponent *child, GraphComponent *previousParent );
 
 		Direction m_direction;
 		Plug *m_input;

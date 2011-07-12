@@ -14,6 +14,10 @@
 
 * Fixed a bug where transferring a child from one parent to another would emit parentChangedSignal() twice, once with the child unparented from the old parent, and once with the child reparented to the new parent. Now the singal is only emitted once, omitting the bogus temporary unparenting signal.
 
+* Plugs now automatically disconnect their inputs and outputs when they are removed from their parent.
+
+* Plugs may no longer implement acceptsInput( 0 ) to return false - this was illogical as it prevents the undoing of a connection made by the user.
+
 0.13.0
 ------
 

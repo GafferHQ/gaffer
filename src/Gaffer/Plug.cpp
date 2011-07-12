@@ -86,7 +86,6 @@ Node *Plug::node()
 	return ancestor<Node>();
 }
 
-
 const Node *Plug::node() const
 {
 	return ancestor<Node>();
@@ -130,12 +129,12 @@ void Plug::setInput( PlugPtr input )
 	{
 		return;
 	}
-	if( !acceptsInput( input ) )
+	if( input && !acceptsInput( input ) )
 	{
 		std::string what = boost::str(
 			boost::format( "Plug \"%s\" rejects input \"%s\"." )
 			% fullName()
-			% ( input ? input->fullName() : "none" )
+			% input->fullName()
 		);
 		throw IECore::Exception( what );
 	}
@@ -192,3 +191,18 @@ const Plug::OutputContainer &Plug::outputs() const
 {
 	return m_outputs;
 }
+
+void Plug::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	// if we're losing our parent then remove all our connections first.
+	// this must be done here (rather than in a parentChangedSignal() slot)
+	// because we need a current parent for the operation to be undoable.
+
+	if( !newParent )
+	{
+		setInput( 0 );
+		removeOutputs();
+	}
+
+}
+

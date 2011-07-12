@@ -447,7 +447,60 @@ class GraphEditorTest( unittest.TestCase ) :
 		self.failUnless( c )
 		self.failUnless( c.srcNodule().plug().isSame( script["n2"]["c"]["o"] ) )
 		self.failUnless( c.dstNodule().plug().isSame( script["n"]["c"]["i"] ) )
+
+	def testRemovePlugWithInputConnection( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["n1"] = Gaffer.Node()
+		script["n2"] = Gaffer.Node()
+		
+		script["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		script["n2"]["i"] = Gaffer.IntPlug()
+		
+		script["n2"]["i"].setInput( script["n1"]["o"] )
+		
+		g = GafferUI.GraphGadget( script )
+		
+		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )
+		
+		with Gaffer.UndoContext( script ) :
 			
+			removedPlug = script["n2"]["i"]
+			del script["n2"]["i"]
+			
+		self.failUnless( g.connectionGadget( removedPlug ) is None )
+
+		script.undo()
+		
+		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )		
+	
+	def testRemovePlugWithOutputConnection( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["n1"] = Gaffer.Node()
+		script["n2"] = Gaffer.Node()
+		
+		script["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		script["n2"]["i"] = Gaffer.IntPlug()
+		
+		script["n2"]["i"].setInput( script["n1"]["o"] )
+		
+		g = GafferUI.GraphGadget( script )
+		
+		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )
+		
+		with Gaffer.UndoContext( script ) :
+		
+			del script["n1"]["o"]
+			
+		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is None )
+
+		script.undo()
+		
+		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )		
+				
 if __name__ == "__main__":
 	unittest.main()
 	
