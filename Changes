@@ -15,7 +15,7 @@
 
 * GraphComponent::parentChangedSignal() now also provides the previous parent to connected slots in addition to the child argument.
 
-* Fixed a bug where transferring a child from one parent to another would emit parentChangedSignal() twice, once with the child unparented from the old parent, and once with the child reparented to the new parent. Now the singal is only emitted once, omitting the bogus temporary unparenting signal.
+* Fixed a bug where transferring a child from one parent to another would emit parentChangedSignal() twice, once with the child unparented from the old parent, and once with the child reparented to the new parent. Now the signal is only emitted once, omitting the bogus temporary unparenting signal.
 
 * Plugs now automatically disconnect their inputs and outputs when they are removed from their parent.
 
