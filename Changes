@@ -1,5 +1,7 @@
 * Added a GridContainer class.
 
+* Fixed bug which meant that connections were temporarily offset from their endpoint if a nodule was added to a node immediately after them being made (as the Group node does).
+
 0.14.0
 ------
 
