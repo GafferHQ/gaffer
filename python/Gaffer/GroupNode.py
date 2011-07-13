@@ -76,10 +76,11 @@ class GroupNode( Gaffer.Node ) :
 
 	def dirty( self, plug ) :
 	
-		self["output"].setDirty()
+		if plug.getName().startswith( "in" ) or plug.parent().getName() in ( "translate", "rotate", "scale" ) :
+			self["output"].setDirty()
 				
 	def compute( self, plug ) :
-	
+				
 		assert( plug.isSame( self["output"] ) )
 	
 		inputs = self.__inputs()
@@ -87,9 +88,9 @@ class GroupNode( Gaffer.Node ) :
 		for i in inputs :
 			if i.getInput() :
 				v = i.getValue()
-				if v.isInstanceOf( IECore.VisibleRenderable.staticTypeId() ) :
+				if isinstance( v, IECore.VisibleRenderable ) :
 					result.addChild( v )
-				elif v.isInstanceOf( IECore.StateRenderable.staticTypeId() ) :
+				elif isinstance( v, IECore.StateRenderable ) :
 					result.addState( v )
 		
 		result.setTransform( IECore.MatrixTransform( self.matrix() ) )			

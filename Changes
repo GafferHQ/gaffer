@@ -2,6 +2,8 @@
 
 * Fixed bug which meant that connections were temporarily offset from their endpoint if a nodule was added to a node immediately after them being made (as the Group node does).
 
+* Fixed bugs in the GroupNode which meant that compute() was called each time the node was moved in the GraphEditor, and that compute() could error if an input plug contained None.
+
 0.14.0
 ------
 
