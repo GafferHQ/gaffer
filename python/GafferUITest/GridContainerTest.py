@@ -118,6 +118,26 @@ class GridContainerTest( unittest.TestCase ) :
 		self.failUnless( b1.parent() is c2 )
 		self.failUnless( c1[0,0] is None )
 		self.failUnless( c2[0,0] is b1 )
+	
+	def testReplaceItem( self ) :
+	
+		c = GafferUI.GridContainer()
+		
+		b1 = GafferUI.Button()
+		b2 = GafferUI.Button()
+		
+		self.failUnless( b1.parent() is None )
+		self.failUnless( b2.parent() is None )
+		
+		c[0,0] = b1
+		
+		self.failUnless( b1.parent() is c )
+		self.failUnless( b2.parent() is None )
+		
+		c[0,0] = b2
+		
+		self.failUnless( b1.parent() is None )
+		self.failUnless( b2.parent() is c )
 		
 	def testRemoveChild( self ) :
 	
@@ -226,6 +246,104 @@ class GridContainerTest( unittest.TestCase ) :
 				
 		self.failUnless( g[0,0] is b10 )
 		self.failUnless( g[0,1] is b11 )
+	
+	def testDeleteMultipleCells( self ) :
+	
+		b00 = GafferUI.Button( "00" )
+		b01 = GafferUI.Button( "01" )
+		b11 = GafferUI.Button( "11" )
+		b10 = GafferUI.Button( "10" )
+		
+		g = GafferUI.GridContainer()
+		
+		g[0,0] = b00
+		g[0,1] = b01
+		g[1,1] = b11
+		g[1,0] = b10
+		
+		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		
+		del g[0:2,0]
+		
+		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+
+		self.failUnless( g[0,0] is None )
+		self.failUnless( g[1,0] is None )
+		self.failUnless( g[0,1] is b01 )
+		self.failUnless( g[1,1] is b11 )
+		self.failUnless( b00.parent() is None )
+		self.failUnless( b10.parent() is None )
+					
+	def testMultiCellChild( self ) :
+	
+		g = GafferUI.GridContainer()
+		
+		b1 = GafferUI.Button()
+		
+		g[0:2,0:2] = b1
+
+		self.failUnless( b1.parent() is g )
+		
+		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		
+		self.failUnless( g[0,0] is b1 )
+		self.failUnless( g[0,1] is b1 )
+		self.failUnless( g[1,0] is b1 )
+		self.failUnless( g[1,1] is b1 )
+		
+		del g[0,0]
+		
+		self.failUnless( b1.parent() is None )
+		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )
+	
+	def testSetChildOnTopOfMultiCellChild( self ) :
+	
+		g = GafferUI.GridContainer()
+		
+		b1 = GafferUI.Button()
+		b2 = GafferUI.Button()
+		
+		g[0:2,0:2] = b1
+
+		self.failUnless( b1.parent() is g )
+		
+		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		
+		g[0,0] = b2
+		
+		self.failUnless( b1.parent() is None )
+		self.failUnless( b2.parent() is g )
+		self.assertEqual( g.gridSize(), IECore.V2i( 1, 1 ) )
+	
+	def testRemoveRowContainingMultiCellChild( self ) :
+	
+		g = GafferUI.GridContainer()
+		
+		b1 = GafferUI.Button()
+		
+		g[0:2,0:2] = b1
+		
+		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		
+		g.removeRow( 0 )
+		
+		self.failUnless( b1.parent() is None )
+		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )
+		
+	def testRemoveColumnContainingMultiCellChild( self ) :
+	
+		g = GafferUI.GridContainer()
+		
+		b1 = GafferUI.Button()
+		
+		g[0:2,0:2] = b1
+		
+		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		
+		g.removeColumn( 0 )
+		
+		self.failUnless( b1.parent() is None )
+		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )	
 		
 if __name__ == "__main__":
 	unittest.main()
