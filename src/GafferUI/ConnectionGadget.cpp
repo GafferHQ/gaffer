@@ -129,12 +129,33 @@ void ConnectionGadget::setPositionsFromNodules()
 	
 	if( m_dstNodule && m_dragEnd!=Gaffer::Plug::In )
 	{
+		Gadget *dstNoduleParent = m_dstNodule->parent<Gadget>();
+		if( dstNoduleParent )
+		{
+			/// \todo
+			/// this is a hack. we're calling bound() to trigger
+			/// recomputation of the child positions within
+			/// the nodule row - this is currently necessary when a
+			/// nodule has just been added as connections are
+			/// rendered before nodules and the nodule transforms
+			/// would otherwise not be updated in time. see the todo item
+			/// in Gadget.h which suggests that transforms are returned from
+			/// a childTransform() virtual method - this would mean the
+			/// container could update the transform as we request it.
+			dstNoduleParent->bound();
+		}
 		M44f m = m_dstNodule->fullTransform( p );
 		m_dstPos = V3f( 0 ) * m;
 	}
 	
 	if( m_srcNodule && m_dragEnd!=Gaffer::Plug::Out )
 	{
+		Gadget *dstNoduleParent = m_dstNodule->parent<Gadget>();
+		if( dstNoduleParent )
+		{
+			/// \todo See above.
+			dstNoduleParent->bound();
+		}
 		M44f m = m_srcNodule->fullTransform( p );
 		m_srcPos = V3f( 0 ) * m;
 	}
