@@ -36,7 +36,12 @@
 ##########################################################################
 
 import os
+import logging
 
+# the OpenGL module loves spewing things into logs, and for some reason
+# when running in maya 2012 the default log level allows info messages through.
+# so we set a specific log level on the OpenGL logger to keep it quiet.
+logging.getLogger( "OpenGL" ).setLevel( logging.WARNING )
 from OpenGL.GL import *
 
 import IECoreGL
