@@ -4,6 +4,8 @@
 
 * Fixed bugs in the GroupNode which meant that compute() was called each time the node was moved in the GraphEditor, and that compute() could error if an input plug contained None.
 
+* Gaffer can now be run embedded in maya versions which use Qt natively.
+
 0.14.0
 ------
 

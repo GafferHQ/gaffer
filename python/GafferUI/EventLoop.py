@@ -38,6 +38,8 @@
 import time
 import threading
 
+import IECore
+
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -45,6 +47,8 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 ## This class provides the event loops used to run GafferUI based applications.
 class EventLoop() :
+	
+	__RunStyle = IECore.Enum.create( "Normal", "PumpThread", "AlreadyRunning" )
 	
 	## Creates a new EventLoop. Note that if you are creating the primary
 	# EventLoop for an application then you should use mainEventLoop() instead.
@@ -56,6 +60,17 @@ class EventLoop() :
 			self.__qtEventLoop = QtCore.QEventLoop()
 		else :
 			self.__qtEventLoop = __qtEventLoop
+		
+		self.__runStyle = self.__RunStyle.Normal
+		if isinstance( self.__qtEventLoop, QtGui.QApplication ) :
+			try :
+				import maya.OpenMaya
+				if maya.OpenMaya.MGlobal.apiVersion() < 201100 :
+					self.__runStyle = self.__RunStyle.PumpThread
+				else :
+					self.__runStyle = self.__RunStyle.AlreadyRunning
+			except ImportError :
+				pass				
 			
 		self.__startCount = 0
 		self.__pumpThread = None
@@ -65,35 +80,38 @@ class EventLoop() :
 	# mainEventLoop() for exceptions to this rule.
 	def start( self ) :
 			
-		if self.__needPumpThread() :
+		self.__startCount += 1
 		
+		if self.__runStyle == self.__RunStyle.Normal :
+			assert( self.__startCount == 1 )
+			self.__qtEventLoop.exec_()
+		elif self.__runStyle == self.__RunStyle.PumpThread :
 			if self.__pumpThread is None :
 				self.__pumpThread = threading.Thread( target = self.__pumpThreadFn )
 				self.__pumpThread.start()
-			
-			self.__startCount += 1
-				
 		else :
-		
-			# we're just a bog standard event loop
-			assert( self.__startCount == 0 )
-			self.__startCount += 1
-			self.__qtEventLoop.exec_()
+			# RunStyle.AlreadyRunning
+			# host application is using qt natively, no need to do anything.
+			pass
 				
 	## Stops the event loop last started using start().
 	def stop( self ) :
+		
+		assert( self.__startCount > 0 )
 			
-		if self.__pumpThread is not None :
-			assert( self.__startCount > 0 )
+		if self.__runStyle == self.__RunStyle.Normal :
+			assert( self.__startCount == 1 )
+			self.__qtEventLoop.exit()
+		elif self.__runStyle == self.__RunStyle.PumpThread :
 			## \todo Should we try to stop the pump thread
 			# when self.__startCount hits 0? Right not we're
 			# just keeping it running on the assumption we'll
 			# need it again soon.
+			pass
 		else :
-			# we're just a bog standard event loop
-			assert( self.__startCount == 1 )
-			self.__qtEventLoop.exit()
-
+			# RunStyle.AlreadyRunning
+			pass
+			
 		self.__startCount -= 1
 	
 	## Returns true if this event loop is currently running.	
@@ -101,7 +119,9 @@ class EventLoop() :
 	
 		return self.__startCount > 0
 	
-	__qtApplication = QtGui.QApplication( [] )
+	# if we're running embedded in an application which already uses qt (like maya 2011 or later)
+	# then there'll already be an application, which we'll share. if not we'll make our own.
+	__qtApplication = QtGui.QApplication.instance() if QtGui.QApplication.instance() else QtGui.QApplication( [] )	
 	__mainEventLoop = None
 	## Returns the main event loop for the application. This should always
 	# be started before running any other nested event loops. In the standalone
@@ -160,18 +180,6 @@ class EventLoop() :
 		for c in toRemove :
 			cls.removeIdleCallback( c )
 				
-	def __needPumpThread( self ) :
-	
-		if not isinstance( self.__qtEventLoop, QtGui.QApplication ) :
-			# not the main event loop
-			return False
-			
-		try :
-			import maya.cmds
-			return True
-		except ImportError :
-			return False
-
 	def __pumpThreadFn( self ) :
 	
 		import maya.utils
