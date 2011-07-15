@@ -38,6 +38,7 @@ import IECore
 
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The GridContainer holds a series of Widgets in a grid format, and provides
@@ -60,7 +61,7 @@ class GridContainer( GafferUI.ContainerWidget ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
 	
-		self.__qtLayout = QtGui.QGridLayout( self._qtWidget() )
+		self.__qtLayout = _GridLayout( self._qtWidget() )
 		self.__qtLayout.setSpacing( spacing )
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
@@ -209,3 +210,18 @@ class GridContainer( GafferUI.ContainerWidget ) :
 				child = self[x,y]
 				if child is not None :
 					self.removeChild( child )
+
+# Private implementation. A QGridLayout derived class which fixes problems
+# whereby maximumSize() would come out less than sizeHint().
+class _GridLayout( QtGui.QGridLayout ) :
+
+	def __init__( self, parent ) :
+	
+		QtGui.QGridLayout.__init__( self, parent )
+
+	def maximumSize( self ) :
+	
+		ms = QtGui.QGridLayout.maximumSize( self )
+		sh = QtGui.QGridLayout.sizeHint( self )
+		
+		return QtCore.QSize( max( ms.width(), sh.width() ), max( ms.height(), sh.height() ) )

@@ -1,3 +1,5 @@
+* Fixed layout problems caused by adding larger items into existing rows of a GridLayout.
+
 0.15.0
 ------
 
