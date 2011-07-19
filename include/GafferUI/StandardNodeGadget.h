@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +40,12 @@
 
 #include "GafferUI/NodeGadget.h"
 
+namespace GafferUIBindings
+{
+// forward declaration for friend statement below
+void bindStandardNodeGadget();
+}; 
+
 namespace GafferUI
 {
 
@@ -68,9 +75,26 @@ class StandardNodeGadget : public NodeGadget
 
 	protected :
 	
-		virtual void doRender( IECore::RendererPtr renderer ) const;
+		/// This form of the constructor can be called by derived classes,
+		/// passing deferNoduleCreation==true. The derived class may then
+		/// call addNodules() at the end of it's constructor, so that nodules
+		/// are added at a time when addNodules() may be called successfully
+		/// (addNodules() will not behave like a virtual function until the
+		/// derived class is fully constructed).
+		StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation );
+		
+		/// Should be called once from the end of a derived class constructor
+		/// if deferNoduleCreation==true was passed to the base class constructor.
+		void addNodules();
+		/// May be reimplemented by child classes to determine whether
+		/// or not a Nodule will be created for the specified Plug.
+		virtual bool acceptsNodule( const Gaffer::Plug *plug ) const;
 
+		virtual void doRender( IECore::RendererPtr renderer ) const;
+		
 	private :
+	
+		void constructCommon( bool deferNoduleCreation );
 	
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 	
@@ -80,10 +104,14 @@ class StandardNodeGadget : public NodeGadget
 		
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
+		bool m_addNodulesCalled;
 				
 		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
 		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
 		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		
+		// because we need to bind addNodules() which is protected
+		friend void GafferUIBindings::bindStandardNodeGadget();
 		
 };
 

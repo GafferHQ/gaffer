@@ -53,13 +53,23 @@ class StandardNodeGadgetWrapper : public StandardNodeGadget, public IECorePython
 	
 	public :
 
-		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
-			:	StandardNodeGadget( node ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
+		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node, bool deferNoduleCreation )
+			:	StandardNodeGadget( node, deferNoduleCreation ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
 		{
 		}
 				
 		GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( StandardNodeGadget )
 		
+		virtual bool acceptsNodule( const Gaffer::Plug *plug ) const
+		{
+			override f = this->get_override( "acceptsNodule" );\
+			if( f )
+			{
+				return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) );
+			}
+			return StandardNodeGadget::acceptsNodule( plug );
+		}
+				
 };
 
 IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
@@ -67,9 +77,10 @@ IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
 void GafferUIBindings::bindStandardNodeGadget()
 {
 	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
-		.def( init<Gaffer::NodePtr>() )
+		.def( init<Gaffer::NodePtr, bool>( ( arg( "node" ), arg( "deferNoduleCreation" ) = false ) ) )
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", (GadgetPtr (StandardNodeGadget::*)())&StandardNodeGadget::getContents )
+		.def( "addNodules", &StandardNodeGadget::addNodules )
 	;
 }

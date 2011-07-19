@@ -54,6 +54,42 @@ class StandardNodeGadgetTest( unittest.TestCase ) :
 		g.setContents( t )
 		
 		self.failUnless( g.getContents().isSame( t ) )
+	
+	def testSubClassing( self ) :
+	
+		class MyNodeGadget( GafferUI.StandardNodeGadget ) :
+		
+			def __init__( self, node ) :
+			
+				GafferUI.StandardNodeGadget.__init__( self, node, deferNoduleCreation = True )
+				
+				self.addNodules()
+				
+			def acceptsNodule( self, plug ) :
+			
+				return isinstance( plug, Gaffer.IntPlug )
+				
+		n = Gaffer.Node()
+		n.addChild( Gaffer.IntPlug( "i" ) )
+		n.addChild( Gaffer.FloatPlug( "f" ) )
+		
+		g = MyNodeGadget( n )
+		
+		self.failUnless( g.nodule( n["i"] ) is not None )
+		self.failUnless( g.nodule( n["f"] ) is None )
+	
+	def testBadSubclassingRaises( self ) :
+	
+		class MyBrokenNodeGadget( GafferUI.StandardNodeGadget ) :
+			
+			def __init__( self, node ) :
+			
+				# oops! not passing deferNoduleCreation = True
+				GafferUI.StandardNodeGadget.__init__( self, node )
+				
+				self.addNodules()
+				
+		self.assertRaises( RuntimeError, MyBrokenNodeGadget, Gaffer.Node() )
 		
 if __name__ == "__main__":
 	unittest.main()

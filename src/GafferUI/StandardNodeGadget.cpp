@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -59,7 +60,18 @@ static const float g_minWidth = 10.0f;
 static const float g_verticalSpacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
-	:	NodeGadget( node ), m_nodeHasObjectPlugs( false )
+	:	NodeGadget( node ), m_nodeHasObjectPlugs( false ), m_addNodulesCalled( false )
+{
+	constructCommon( false );
+}
+
+StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation )
+	:	NodeGadget( node ), m_nodeHasObjectPlugs( false ), m_addNodulesCalled( false )
+{
+	constructCommon( deferNoduleCreation );
+}
+
+void StandardNodeGadget::constructCommon( bool deferNoduleCreation )
 {
 	LinearContainerPtr column = new LinearContainer( "column", LinearContainer::Y, LinearContainer::Centre, g_verticalSpacing );
 
@@ -75,28 +87,28 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	column->addChild( inputNoduleRow );
 
 	setChild( column );
-	setContents( new NameGadget( node ) );
+	setContents( new NameGadget( node() ) );
 	
-	Gaffer::ObjectPlugIterator it( node->children().begin(), node->children().end() );
-	while( it!=node->children().end() )
+	Gaffer::ObjectPlugIterator it( node()->children().begin(), node()->children().end() );
+	while( it!=node()->children().end() )
 	{
 		m_nodeHasObjectPlugs = true;
 		break;
 	}
 	
-	Gaffer::ScriptNodePtr script = node->scriptNode();
+	Gaffer::ScriptNodePtr script = node()->scriptNode();
 	if( script )
 	{
 		script->selection()->memberAddedSignal().connect( boost::bind( &StandardNodeGadget::selectionChanged, this, ::_1,  ::_2 ) );
 		script->selection()->memberRemovedSignal().connect( boost::bind( &StandardNodeGadget::selectionChanged, this, ::_1,  ::_2 ) );
 	}
 	
-	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
-	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
+	node()->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
+	node()->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
 	
-	for( Gaffer::PlugIterator it=node->plugsBegin(); it!=node->plugsEnd(); it++ )
+	if( !deferNoduleCreation )
 	{
-		addNodule( *it );
+		addNodules();
 	}
 }
 
@@ -198,14 +210,38 @@ ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 	return it->second;
 }
 
-NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
+bool StandardNodeGadget::acceptsNodule( const Gaffer::Plug *plug ) const
 {
 	if( plug->getName().compare( 0, 2, "__" )==0 )
 	{
-		return 0;
+		return false;
 	}
 
 	if( m_nodeHasObjectPlugs && !plug->isInstanceOf( Gaffer::ObjectPlug::staticTypeId() ) )
+	{
+		return false;
+	}
+
+	return true;
+}	
+
+void StandardNodeGadget::addNodules()
+{
+	if( m_addNodulesCalled )
+	{
+		throw IECore::Exception( "StandardNodeGadget::addNodules has already been called. Perhaps you need to specify deferNoduleCreation as false to the constructor?" );
+	}
+	
+	for( Gaffer::PlugIterator it=node()->plugsBegin(); it!=node()->plugsEnd(); it++ )
+	{
+		addNodule( *it );
+	}
+	m_addNodulesCalled = true;
+}
+	
+NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
+{
+	if( !acceptsNodule( plug ) )
 	{
 		return 0;
 	}
