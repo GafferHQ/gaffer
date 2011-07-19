@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,64 +34,26 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
+import IECore
 
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
-## User docs :
+## Supported userData entries :
 #
-# Return commits any changes onto the plug.
-#
-# \todo Right click menu for cut and paste
-# \todo Stop editing for non editable plugs.
-class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
+# ["UI"]["password"]
+class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, parameterHandler ) :
 	
-		self.__textWidget = GafferUI.TextWidget()
-			
-		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug )
-
-		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
-
-		self.updateFromPlug()
-
-	def textWidget( self ) :
+		self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
 	
-		return self.__textWidget
-
-	def updateFromPlug( self ) :
-
-		if not hasattr( self, "_StringPlugValueWidget__textWidget" ) :
-			# we're still constructing
-			return
-
-		self.__textWidget.setText( self.getPlug().getValue() )
-
-	def __keyPress( self, widget, event ) :
-	
-		assert( widget is self.__textWidget )
-	
-		if not self.__textWidget.getEditable() :
-			return False
-				
-		# escape abandons everything
-		if event.key=="Escape" :
-			self.updateFromPlug()
-			return True
-
-		return False
+		GafferUI.ParameterValueWidget.__init__( self, self.__stringPlugValueWidget, parameterHandler )
 		
-	def __textChanged( self, textWidget ) :
-			
-		assert( textWidget is self.__textWidget )
+		with IECore.IgnoredExceptions( KeyError ) :
+			if parameterHandler.parameter().userData()["UI"]["password"].value :
+				self.__stringPlugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
+		
+		self._addPopupMenu( self.__stringPlugValueWidget.textWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
 	
-		text = self.__textWidget.getText()
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			self.getPlug().setValue( text )
-
-GafferUI.PlugValueWidget.registerType( Gaffer.StringPlug.staticTypeId(), StringPlugValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), StringParameterValueWidget )

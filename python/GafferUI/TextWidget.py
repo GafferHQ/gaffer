@@ -45,7 +45,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class TextWidget( GafferUI.Widget ) :
 
-	def __init__( self, text="", editable=True ) :
+	DisplayMode = IECore.Enum.create( "Normal", "Password" )
+
+	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLineEdit() )
 
@@ -55,6 +57,7 @@ class TextWidget( GafferUI.Widget ) :
 
 		self.setText( text )
 		self.setEditable( editable )
+		self.setDisplayMode( displayMode )
 		
 	def setText( self, text ) :
 	
@@ -71,6 +74,22 @@ class TextWidget( GafferUI.Widget ) :
 	def getEditable( self ) :
 		
 		return not self._qtWidget().isReadOnly()
+		
+	def setDisplayMode( self, displayMode ) :
+	
+		self._qtWidget().setEchoMode(
+			{
+				self.DisplayMode.Normal : QtGui.QLineEdit.Normal,
+				self.DisplayMode.Password : QtGui.QLineEdit.Password,
+			}[displayMode]
+		)
+		
+	def getDisplayMode( self ) :
+	
+		return {
+			QtGui.QLineEdit.Normal : self.DisplayMode.Normal,
+			QtGui.QLineEdit.PasswordEchoOnEdit : self.DisplayMode.Password,
+		}[self._qtWidget().echoMode()]
 	
 	def setCursorPosition( self, position ) :
 	

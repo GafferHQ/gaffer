@@ -66,6 +66,17 @@ class TextWidgetTest( unittest.TestCase ) :
 		self.assertEqual( w.getText(), "hello" )		
 		
 		self.assertEqual( self.emissions, 1 )
+	
+	def testDisplayMode( self ) :
+	
+		w = GafferUI.TextWidget()
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Normal )
+		
+		w = GafferUI.TextWidget( displayMode = GafferUI.TextWidget.DisplayMode.Password )
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Password )		
+		
+		w.setDisplayMode( GafferUI.TextWidget.DisplayMode.Normal )
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Normal )		
 		
 if __name__ == "__main__":
 	unittest.main()
