@@ -6,6 +6,8 @@
 
 * New StringParameterValueWidget supports ["UI"]["password"] parameter userData.
 
+* The appearance of disabled buttons is now less confusing.
+
 0.15.1
 ------
 

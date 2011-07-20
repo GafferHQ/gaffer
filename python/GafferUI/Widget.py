@@ -273,7 +273,9 @@ class Widget( object ) :
 			color: $foreground;
 			background-color: $backgroundMid;
 			alternate-background-color: $backgroundLighter;
-			selection-background-color: $brightColor
+			selection-background-color: $brightColor;
+			etch-disabled-text: 0;
+
 		}
 
 		QMenuBar, QMenuBar::item {
@@ -287,7 +289,6 @@ class Widget( object ) :
 			border: 1px solid $backgroundDarkest;
 			padding-bottom: 5px;
 			padding-top: 5px;
-			etch-disabled-text: 0;
 
 		}
 
@@ -380,7 +381,13 @@ class Widget( object ) :
 
 		QPushButton:hover {
 
-			background-color: $backgroundLight;
+			border: 2px solid $brightColor;
+			
+		}
+
+		QPushButton:disabled {
+
+			color: $foregroundFaded;
 
 		}
 

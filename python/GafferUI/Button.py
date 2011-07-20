@@ -42,6 +42,8 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Button( GafferUI.Widget ) :
 
+	__palette = None
+
 	def __init__( self, text="", image=None ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPushButton() )
@@ -55,6 +57,15 @@ class Button( GafferUI.Widget ) :
 		
 		self.__clickedSignal = GafferUI.WidgetSignal()
 	
+		# buttons appear to totally ignore the etch-disabled-text stylesheet option,
+		# and we really don't like the etching. the only effective way of disabling it
+		# seems to be to apply this palette which makes the etched text transparent.
+		if Button.__palette is None :
+			Button.__palette = QtGui.QPalette( QtGui.QApplication.instance().palette() )
+			Button.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
+
+		self._qtWidget().setPalette( Button.__palette )
+
 	def setText( self, text ) :
 	
 		assert( isinstance( text, basestring ) )
@@ -93,4 +104,4 @@ class Button( GafferUI.Widget ) :
 		
 	def __clicked( self, *unusedArgs ) : # currently PyQt passes a "checked" argument and PySide doesn't
 				
-		self.clickedSignal()( self )
+		self.clickedSignal()( self )	
