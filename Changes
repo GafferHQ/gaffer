@@ -1,3 +1,6 @@
+0.16.0
+------
+
 * Added a StandardNodeGadget::acceptsNodule() method which may be reimplemented by derived classes to control exactly which plugs are represented by the gadget. See GafferUITest.StandardNodeGadgetTest.testSubclassing() for an example.
 
 * GafferUI.StringPlugValueWidget now exposes the internal TextWidget with a textWidget() method.
