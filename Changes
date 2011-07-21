@@ -7,6 +7,10 @@
 
 See python/GafferTest/ParameterhHandlerTest.py for an example.
 
+* The path argument to the PathPlugValueWidget is now optional, with a FileSystemPath being used if no path is specified.
+
+* The ReadNode now exposes the parameters of the IECore::Readers it uses as plugs on the node.
+
 0.16.0
 ------
 
