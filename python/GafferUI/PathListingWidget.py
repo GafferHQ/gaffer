@@ -67,7 +67,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime ),
 	)
 
-	def __init__( self, path, columns = defaultFileSystemColumns ) :
+	def __init__( self, path, columns = defaultFileSystemColumns, allowMultipleSelection=False ) :
 	
 		GafferUI.Widget.__init__( self, _TreeView() )
 		
@@ -80,6 +80,9 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		self._qtWidget().header().setMovable( False )
 		self._qtWidget().header().setResizeMode( QtGui.QHeaderView.ResizeToContents )
+		
+		if allowMultipleSelection :
+			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )			
 				
 		self.__path = path
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
@@ -92,6 +95,20 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 	
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
+	
+	## Returns a list of all currently selected paths.
+	def selectedPaths( self ) :
+	
+		result = []
+		selectedRows = self._qtWidget().selectionModel().selectedRows()
+				
+		for k, v in self.__pathsToItems.items() :
+			if v.index() in selectedRows :
+				p = self.__path.copy()
+				p.setFromString( k )
+				result.append( p )
+				
+		return result
 	
 	## This signal is emitted when the user double clicks on a leaf path.
 	def pathSelectedSignal( self ) :
