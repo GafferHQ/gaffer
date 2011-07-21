@@ -126,11 +126,17 @@ void ValuePlug::valueSet()
 	NodePtr n = node();
 	if( n )
 	{
+		// it is important that we emit the plug set signal before
+		// we emit dirty signals for any dependent plugs. this is
+		// because the node may wish to perform some internal setup when plugs
+		// are set, and listeners on output plugs may pull to get new
+		// output values as soon as the dirty signal is emitted. 
+		n->plugSetSignal()( this );
+		
 		if( direction()==In )
 		{
 			n->dirty( this );
 		}
-		n->plugSetSignal()( this );
 	}
 	for( OutputContainer::const_iterator it=outputs().begin(); it!=outputs().end(); it++ )
 	{
