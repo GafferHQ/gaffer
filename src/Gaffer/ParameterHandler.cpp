@@ -40,8 +40,7 @@
 using namespace Gaffer;
 using namespace IECore;
 
-ParameterHandler::ParameterHandler( IECore::ParameterPtr parameter )
-	:	m_parameter( parameter )
+ParameterHandler::ParameterHandler()
 {
 }
 
@@ -49,17 +48,7 @@ ParameterHandler::~ParameterHandler()
 {
 }
 
-IECore::ParameterPtr ParameterHandler::parameter()
-{
-	return m_parameter;
-}
-
-IECore::ConstParameterPtr ParameterHandler::parameter() const
-{
-	return m_parameter;
-}
-	
-ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter, GraphComponentPtr plugParent )
+ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter )
 {
 	const CreatorMap &c = creators();
 	IECore::TypeId typeId = parameter->typeId();
@@ -68,7 +57,7 @@ ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter, Gr
 		CreatorMap::const_iterator it = c.find( typeId );
 		if( it!=c.end() )
 		{
-			return it->second( parameter, plugParent );
+			return it->second( parameter );
 		}	
 		typeId = RunTimeTyped::baseTypeId( typeId );
 	}

@@ -45,20 +45,39 @@ template<typename T>
 ParameterHandler::ParameterHandlerDescription<VectorTypedParameterHandler<T>, IECore::TypedParameter<std::vector<T> > > VectorTypedParameterHandler<T>::g_description;
 
 template<typename T>
-VectorTypedParameterHandler<T>::VectorTypedParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+VectorTypedParameterHandler<T>::VectorTypedParameterHandler( typename ParameterType::Ptr parameter )
+	:	m_parameter( parameter )
 {
-	m_plug = plugParent->getChild<PlugType>( parameter->name() );
-	if( !m_plug )
-	{
-		m_plug = new PlugType( parameter->name(), Plug::In, static_cast<const DataType *>( parameter->defaultValue() ) );
-		plugParent->setChild( parameter->name(), m_plug );
-	}
 }
 
 template<typename T>
 VectorTypedParameterHandler<T>::~VectorTypedParameterHandler()
 {
+}
+
+template<typename T>
+IECore::ParameterPtr VectorTypedParameterHandler<T>::parameter()
+{
+	return m_parameter;
+}
+
+template<typename T>
+IECore::ConstParameterPtr VectorTypedParameterHandler<T>::parameter() const
+{
+	return m_parameter;
+}
+
+template<typename T>
+Gaffer::PlugPtr VectorTypedParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+{
+	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
+	if( !m_plug )
+	{
+		m_plug = new PlugType( m_parameter->name(), Plug::In, static_cast<const DataType *>( m_parameter->defaultValue() ) );
+		plugParent->setChild( m_parameter->name(), m_plug );
+	}
+	
+	return m_plug;
 }
 
 template<typename T>
@@ -76,15 +95,13 @@ Gaffer::ConstPlugPtr VectorTypedParameterHandler<T>::plug() const
 template<typename T>
 void VectorTypedParameterHandler<T>::setParameterValue()
 {
-	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	p->setValue( m_plug->getValue()->copy() );
+	m_parameter->setValue( m_plug->getValue()->copy() );
 }
 
 template<typename T>
 void VectorTypedParameterHandler<T>::setPlugValue()
 {
-	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	m_plug->setValue( static_cast<const DataType *>( p->getValue() ) );
+	m_plug->setValue( static_cast<const DataType *>( m_parameter->getValue() ) );
 }
 		
 // explicit instantiations

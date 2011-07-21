@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,7 +48,8 @@ class ParameterHandlerTest( unittest.TestCase ) :
 		p = IECore.IntParameter( "i", "d", 10 )
 		
 		n = Gaffer.Node()
-		h = Gaffer.ParameterHandler.create( p, n )
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
 		
 		self.failUnless( isinstance( h, Gaffer.ParameterHandler ) )
 		self.failUnless( isinstance( n["i"], Gaffer.IntPlug ) )
@@ -64,21 +66,31 @@ class ParameterHandlerTest( unittest.TestCase ) :
 				
 		class CustomHandler( Gaffer.ParameterHandler ) :
 		
-			def __init__( self, parameter, plugParent ) :
+			def __init__( self, parameter ) :
 						
-				Gaffer.ParameterHandler.__init__( self, parameter )
+				Gaffer.ParameterHandler.__init__( self )
 				
-				self.__plug = plugParent.getChild( parameter.name )
+				self.__parameter = parameter
+				self.__plug = None
+				
+			def parameter( self ) :
+			
+				return self.__parameter
+			
+			def setupPlug( self, plugParent ) :
+				
+				self.__plug = plugParent.getChild( self.__parameter.name )
 				if not isinstance( self.__plug, Gaffer.IntPlug ) :
 					self.__plug = Gaffer.IntPlug(
-						parameter.name,
+						self.__parameter.name,
 						Gaffer.Plug.Direction.In,
-						parameter.numericDefaultValue,
-						parameter.minValue,
-						parameter.maxValue
+						self.__parameter.numericDefaultValue,
+						self.__parameter.minValue,
+						self.__parameter.maxValue
 					)
 					
-				plugParent[parameter.name] = self.__plug
+				plugParent[self.__parameter.name] = self.__plug
+			
 			
 			def plug( self ) :
 			
@@ -86,11 +98,11 @@ class ParameterHandlerTest( unittest.TestCase ) :
 				
 			def setParameterValue( self ) :
 			
-				self.parameter().setValue( self.__plug.getValue() * 10 )
+				self.__parameter.setValue( self.__plug.getValue() * 10 )
 				
 			def setPlugValue( self ) :
 							
-				self.__plug.setValue( self.parameter().getNumericValue() / 10 )
+				self.__plug.setValue( self.__parameter.getNumericValue() / 10 )
 						
 		Gaffer.ParameterHandler.registerParameterHandler( CustomParameter.staticTypeId(), CustomHandler )
 		
@@ -129,7 +141,8 @@ class ParameterHandlerTest( unittest.TestCase ) :
 		p = IECore.IntParameter( "i", "d", 10 )
 		
 		n = Gaffer.Node()
-		h = Gaffer.ParameterHandler.create( p, n )
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
 		
 		self.assertEqual( h.plug().getName(), "i" )
 		self.failUnless( h.plug().parent() is n )
@@ -150,7 +163,8 @@ class ParameterHandlerTest( unittest.TestCase ) :
 		
 		n = Gaffer.Node()
 		
-		h = Gaffer.CompoundParameterHandler( c, n )
+		h = Gaffer.CompoundParameterHandler( c )
+		h.setupPlug( n )
 		
 		self.failUnless( h.childParameterHandler( c["i"] ).parameter().isSame( c["i"] ) )
 		self.failUnless( h.childParameterHandler( c["f"] ).parameter().isSame( c["f"] ) )

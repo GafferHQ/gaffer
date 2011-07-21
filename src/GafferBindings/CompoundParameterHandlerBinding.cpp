@@ -51,7 +51,7 @@ void GafferBindings::bindCompoundParameterHandler()
 {
 	
 	IECorePython::RefCountedClass<CompoundParameterHandler, ParameterHandler>( "CompoundParameterHandler" )
-		.def( init<IECore::CompoundParameterPtr, GraphComponentPtr>() )
+		.def( init<IECore::CompoundParameterPtr>() )
 		.def( "childParameterHandler", (ParameterHandlerPtr (CompoundParameterHandler::*)( IECore::ParameterPtr ))&CompoundParameterHandler::childParameterHandler )
 	;
 		

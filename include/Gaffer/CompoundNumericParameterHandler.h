@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -56,9 +57,12 @@ class CompoundNumericParameterHandler : public ParameterHandler
 		typedef IECore::TypedParameter<T> ParameterType;
 		typedef CompoundNumericPlug<T> PlugType;
 
-		CompoundNumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
+		CompoundNumericParameterHandler( typename ParameterType::Ptr parameter );
 		virtual ~CompoundNumericParameterHandler();
 		
+		virtual IECore::ParameterPtr parameter();
+		virtual IECore::ConstParameterPtr parameter() const;
+		virtual Gaffer::PlugPtr setupPlug( GraphComponentPtr plugParent );
 		virtual Gaffer::PlugPtr plug();
 		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
@@ -66,6 +70,7 @@ class CompoundNumericParameterHandler : public ParameterHandler
 		
 	private :
 	
+		typename ParameterType::Ptr m_parameter;
 		typename PlugType::Ptr m_plug;
 	
 		static ParameterHandlerDescription<CompoundNumericParameterHandler<T>, ParameterType> g_description;

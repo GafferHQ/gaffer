@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,11 +54,32 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 
 	public :
 	
-		ParameterHandlerWrapper( PyObject *self, IECore::ParameterPtr parameter )
-			:	ParameterHandler( parameter ), IECorePython::Wrapper<ParameterHandler>( self, this )
+		ParameterHandlerWrapper( PyObject *self )
+			:	ParameterHandler(), IECorePython::Wrapper<ParameterHandler>( self, this )
 		{
 		}
 
+		virtual IECore::ParameterPtr parameter()
+		{
+			IECorePython::ScopedGILLock gilLock;
+			override o = this->get_override( "parameter" );
+			return o();
+		}
+		
+		virtual IECore::ConstParameterPtr parameter() const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			override o = this->get_override( "parameter" );
+			return o();
+		}
+		
+		virtual PlugPtr setupPlug( GraphComponentPtr plugParent )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			override o = this->get_override( "setupPlug" );
+			return o( plugParent );
+		}
+		
 		virtual PlugPtr plug()
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -97,10 +119,10 @@ struct ParameterHandlerCreator
 	{
 	}
 	
-	ParameterHandlerPtr operator()( IECore::ParameterPtr parameter, GraphComponentPtr plugParent )
+	ParameterHandlerPtr operator()( IECore::ParameterPtr parameter )
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ParameterHandlerPtr result = extract<ParameterHandlerPtr>( m_fn( parameter, plugParent ) );
+		ParameterHandlerPtr result = extract<ParameterHandlerPtr>( m_fn( parameter ) );
 		return result;
 	}
 	
@@ -119,8 +141,9 @@ void GafferBindings::bindParameterHandler()
 {
 	
 	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapperPtr>( "ParameterHandler" )
-		.def( init<IECore::ParameterPtr>() )
+		.def( init<>() )
 		.def( "parameter", (IECore::ParameterPtr (ParameterHandler::*)())&ParameterHandler::parameter )
+		.def( "setupPlug", &ParameterHandler::setupPlug )
 		.def( "plug", (PlugPtr (ParameterHandler::*)())&ParameterHandler::plug )
 		.def( "setParameterValue", &ParameterHandler::setParameterValue )
 		.def( "setPlugValue", &ParameterHandler::setPlugValue )

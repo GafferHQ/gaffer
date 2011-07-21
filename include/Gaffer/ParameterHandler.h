@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -59,8 +60,10 @@ class ParameterHandler : public IECore::RefCounted
 
 		virtual ~ParameterHandler();
 		
-		IECore::ParameterPtr parameter();
-		IECore::ConstParameterPtr parameter() const;
+		virtual IECore::ParameterPtr parameter() = 0;
+		virtual IECore::ConstParameterPtr parameter() const = 0;
+
+		virtual Gaffer::PlugPtr setupPlug( GraphComponentPtr plugParent ) = 0;
 
 		virtual Gaffer::PlugPtr plug() = 0;
 		virtual Gaffer::ConstPlugPtr plug() const = 0;
@@ -68,17 +71,17 @@ class ParameterHandler : public IECore::RefCounted
 		virtual void setParameterValue() = 0;
 		virtual void setPlugValue() = 0;
 		
-		/// Returns a handler for the specified parameter, creating plugs on the plugParent.
-		static ParameterHandlerPtr create( IECore::ParameterPtr parameter, GraphComponentPtr plugParent );
+		/// Returns a handler for the specified parameter.
+		static ParameterHandlerPtr create( IECore::ParameterPtr parameter );
 		/// A function for creating ParameterHandlers which will represent a Parameter with a plug on a given
 		/// parent.
-		typedef boost::function<ParameterHandlerPtr ( IECore::ParameterPtr, GraphComponentPtr plugParent )> Creator;	
+		typedef boost::function<ParameterHandlerPtr ( IECore::ParameterPtr )> Creator;	
 		/// Registers a function which can return a ParameterHandler for a given Parameter type.
 		static void registerParameterHandler( IECore::TypeId parameterType, Creator creator );
 		
 	protected :
 		
-		ParameterHandler( IECore::ParameterPtr parameter );
+		ParameterHandler();
 		
 		/// Create a static instance of this to automatically register a derived class
 		/// with the factory mechanism. Derived class must have a constructor of the form
@@ -88,7 +91,7 @@ class ParameterHandler : public IECore::RefCounted
 		{
 				ParameterHandlerDescription() { ParameterHandler::registerParameterHandler( ParameterType::staticTypeId(), &creator ); };
 			private :
-				static ParameterHandlerPtr creator( IECore::ParameterPtr parameter, GraphComponentPtr plugParent ) { return new HandlerType( IECore::staticPointerCast<ParameterType>( parameter ), plugParent ); };
+				static ParameterHandlerPtr creator( IECore::ParameterPtr parameter ) { return new HandlerType( IECore::staticPointerCast<ParameterType>( parameter ) ); };
 		};
 		
 	private :
@@ -96,8 +99,6 @@ class ParameterHandler : public IECore::RefCounted
 		typedef std::map<IECore::TypeId, Creator> CreatorMap;
 		static CreatorMap &creators();
 		
-		IECore::ParameterPtr m_parameter;
-
 };
 
 } // namespace Gaffer

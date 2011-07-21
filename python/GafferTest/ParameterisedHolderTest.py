@@ -338,7 +338,25 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
 		self.failUnless( isinstance( ph["parameters"]["a"], Gaffer.FloatPlug ) )
-		self.assertEqual( len( ph["parameters"] ), 1 )		
+		self.assertEqual( len( ph["parameters"] ), 1 )
+		
+	def testParameterHandlerIsConstant( self ) :
+	
+		# We need the ParameterisedHolder to keep using the same ParameterHandler,
+		# as otherwise the ui code would become much more complex, having to track
+		# the addition and removal of different parameter handlers.
+		
+		p = IECore.Parameterised( "" )
+		
+		phn = Gaffer.ParameterisedHolderNode()
+		phn.setParameterised( p )
+
+		ph = phn.parameterHandler()
+		
+		with phn.parameterModificationContext() :
+			p.parameters().addParameter( IECore.FloatParameter( "a", "", 2 ) )
+		
+		self.failUnless( ph.isSame( phn.parameterHandler() ) )					
 		
 if __name__ == "__main__":
 	unittest.main()

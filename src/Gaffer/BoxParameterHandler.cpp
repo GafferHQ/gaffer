@@ -42,35 +42,53 @@ template<typename T>
 ParameterHandler::ParameterHandlerDescription<BoxParameterHandler<T>, IECore::TypedParameter<T> > BoxParameterHandler<T>::g_description;
 
 template<typename T>
-BoxParameterHandler<T>::BoxParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+BoxParameterHandler<T>::BoxParameterHandler( typename ParameterType::Ptr parameter )
+	:	m_parameter( parameter )
 {
-	m_plug = plugParent->getChild<CompoundPlug>( parameter->name() );
+}
+
+template<typename T>
+BoxParameterHandler<T>::~BoxParameterHandler()
+{
+}
+
+template<typename T>
+IECore::ParameterPtr BoxParameterHandler<T>::parameter()
+{
+	return m_parameter;
+}
+
+template<typename T>
+IECore::ConstParameterPtr BoxParameterHandler<T>::parameter() const
+{
+	return m_parameter;
+}
+
+template<typename T>
+Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+{
+	m_plug = plugParent->getChild<CompoundPlug>( m_parameter->name() );
 	if( !m_plug )
 	{
 		m_plug = new CompoundPlug();
-		plugParent->setChild( parameter->name(), m_plug );
+		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 	
 	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
 	if( !minPlug )
 	{
-		minPlug = new PointPlugType( "min", Plug::In, parameter->typedDefaultValue().min );
+		minPlug = new PointPlugType( "min", Plug::In, m_parameter->typedDefaultValue().min );
 		m_plug->addChild( minPlug );
 	}
 	
 	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );
 	if( !maxPlug )
 	{
-		maxPlug = new PointPlugType( "max", Plug::In, parameter->typedDefaultValue().max );
+		maxPlug = new PointPlugType( "max", Plug::In, m_parameter->typedDefaultValue().max );
 		m_plug->addChild( maxPlug );
 	}
 	
-}
-
-template<typename T>
-BoxParameterHandler<T>::~BoxParameterHandler()
-{
+	return m_plug;
 }
 
 template<typename T>
@@ -88,19 +106,16 @@ Gaffer::ConstPlugPtr BoxParameterHandler<T>::plug() const
 template<typename T>
 void BoxParameterHandler<T>::setParameterValue()
 {
-	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-
 	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
 	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );
 	
-	p->setTypedValue( T( minPlug->getValue(), maxPlug->getValue() ) );
+	m_parameter->setTypedValue( T( minPlug->getValue(), maxPlug->getValue() ) );
 }
 
 template<typename T>
 void BoxParameterHandler<T>::setPlugValue()
 {
-	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	T v = p->getTypedValue();
+	T v = m_parameter->getTypedValue();
 	
 	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
 	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );

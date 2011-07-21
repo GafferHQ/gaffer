@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -54,9 +55,12 @@ class TypedParameterHandler : public ParameterHandler
 		typedef IECore::TypedParameter<T> ParameterType;
 		typedef TypedPlug<T> PlugType;
 
-		TypedParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
+		TypedParameterHandler( typename ParameterType::Ptr parameter );
 		virtual ~TypedParameterHandler();
 				
+		virtual IECore::ParameterPtr parameter();
+		virtual IECore::ConstParameterPtr parameter() const;
+		virtual Gaffer::PlugPtr setupPlug( GraphComponentPtr plugParent );
 		virtual Gaffer::PlugPtr plug();
 		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
@@ -64,6 +68,7 @@ class TypedParameterHandler : public ParameterHandler
 				
 	private :
 
+		typename ParameterType::Ptr m_parameter;
 		typename PlugType::Ptr m_plug;
 	
 		static ParameterHandlerDescription<TypedParameterHandler<T>, ParameterType> g_description;

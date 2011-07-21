@@ -47,13 +47,30 @@ using namespace IECore;
 
 ParameterHandler::ParameterHandlerDescription<CompoundParameterHandler, IECore::CompoundParameter> CompoundParameterHandler::g_description;
 
-CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr parameter )
+	:	m_parameter( parameter )
 {
-	
+}
+
+CompoundParameterHandler::~CompoundParameterHandler()
+{
+}
+
+IECore::ParameterPtr CompoundParameterHandler::parameter()
+{
+	return m_parameter;
+}
+
+IECore::ConstParameterPtr CompoundParameterHandler::parameter() const
+{
+	return m_parameter;
+}
+
+Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParent )
+{
 	// decide what name our compound plug should have
-	
-	std::string plugName = parameter->name();
+		
+	std::string plugName = m_parameter->name();
 	if( plugName=="" )
 	{
 		// the top level compound parameter on Parameterised classes usually has an empty name.
@@ -76,7 +93,7 @@ CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr
 	std::vector<PlugPtr> toRemove;
 	for( PlugIterator pIt( m_plug->children().begin(), m_plug->children().end() ); pIt!=pIt.end(); pIt++ )
 	{
-		if( !parameter->parameter<Parameter>( (*pIt)->getName() ) )
+		if( !m_parameter->parameter<Parameter>( (*pIt)->getName() ) )
 		{
 			toRemove.push_back( *pIt );
 		}
@@ -89,16 +106,29 @@ CompoundParameterHandler::CompoundParameterHandler( IECore::CompoundParameterPtr
 
 	// and add or update the child plug for each child parameter
 	
-	const CompoundParameter::ParameterVector &children = parameter->orderedParameters();
+	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		handler( *it, true );
+		ParameterHandlerPtr h = handler( *it, true );
+		if( h )
+		{
+			h->setupPlug( m_plug );
+		}
 	}
 	
-}
-
-CompoundParameterHandler::~CompoundParameterHandler()
-{
+	// remove any old child handlers we don't need any more
+	
+	for( HandlerMap::iterator it = m_handlers.begin(), eIt = m_handlers.end(); it!=eIt; )
+	{
+		HandlerMap::iterator nextIt = it; nextIt++; // increment now because removing will invalidate iterator
+		if( it->first != m_parameter->parameter<Parameter>( it->first->name() ) )
+		{
+			m_handlers.erase( it );
+		}
+		it = nextIt;
+	}
+	
+	return m_plug;
 }
 
 Gaffer::PlugPtr CompoundParameterHandler::plug()
@@ -113,8 +143,7 @@ Gaffer::ConstPlugPtr CompoundParameterHandler::plug() const
 
 void CompoundParameterHandler::setParameterValue()
 {
-	const CompoundParameter *p = static_cast<const CompoundParameter *>( parameter().get() );
-	const CompoundParameter::ParameterVector &children = p->orderedParameters();
+	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
 		ParameterHandlerPtr h = handler( *it );
@@ -127,8 +156,7 @@ void CompoundParameterHandler::setParameterValue()
 
 void CompoundParameterHandler::setPlugValue()
 {
-	const CompoundParameter *p = static_cast<const CompoundParameter *>( parameter().get() );
-	const CompoundParameter::ParameterVector &children = p->orderedParameters();
+	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
 		ParameterHandlerPtr h = handler( *it );
@@ -152,7 +180,7 @@ ConstParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore
 
 ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child, bool createIfMissing )
 {
-	HandlerMap::const_iterator it = m_handlers.find( child->internedName() );
+	HandlerMap::const_iterator it = m_handlers.find( child );
 	if( it!=m_handlers.end() )
 	{
 		return it->second;
@@ -164,7 +192,7 @@ ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child,
 		IECore::ConstBoolDataPtr noHostMapping = child->userData()->member<BoolData>( "noHostMapping" );
 		if( !noHostMapping || !noHostMapping->readable() )
 		{	
-			h = ParameterHandler::create( child, m_plug );
+			h = ParameterHandler::create( child );
 			if( !h )
 			{
 				IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", boost::format(  "Unable to create handler for parameter \"%s\" of type \"%s\"" ) % child->name() % child->typeName() );
@@ -172,6 +200,6 @@ ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child,
 		}
 	}
 	
-	m_handlers[child->internedName()] = h;
+	m_handlers[child] = h;
 	return h;
 }

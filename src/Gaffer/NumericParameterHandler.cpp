@@ -46,20 +46,39 @@ template<typename T>
 ParameterHandler::ParameterHandlerDescription<NumericParameterHandler<T>, IECore::NumericParameter<T> > NumericParameterHandler<T>::g_description;
 
 template<typename T>
-NumericParameterHandler<T>::NumericParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+NumericParameterHandler<T>::NumericParameterHandler( typename ParameterType::Ptr parameter )
+	:	m_parameter( parameter )
 {
-	m_plug = plugParent->getChild<PlugType>( parameter->name() );
-	if( !m_plug )
-	{
-		m_plug = new PlugType( parameter->name(), Plug::In, parameter->numericDefaultValue(), parameter->minValue(), parameter->maxValue() );
-		plugParent->setChild( parameter->name(), m_plug );
-	}
 }
 
 template<typename T>
 NumericParameterHandler<T>::~NumericParameterHandler()
 {
+}
+
+template<typename T>
+IECore::ParameterPtr NumericParameterHandler<T>::parameter()
+{
+	return m_parameter;
+}
+
+template<typename T>
+IECore::ConstParameterPtr NumericParameterHandler<T>::parameter() const
+{
+	return m_parameter;
+}
+
+template<typename T>
+Gaffer::PlugPtr NumericParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+{
+	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
+	if( !m_plug )
+	{
+		m_plug = new PlugType( m_parameter->name(), Plug::In, m_parameter->numericDefaultValue(), m_parameter->minValue(), m_parameter->maxValue() );
+		plugParent->setChild( m_parameter->name(), m_plug );
+	}
+	
+	return m_plug;
 }
 
 template<typename T>
@@ -77,15 +96,13 @@ Gaffer::ConstPlugPtr NumericParameterHandler<T>::plug() const
 template<typename T>
 void NumericParameterHandler<T>::setParameterValue()
 {
-	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	p->setNumericValue( m_plug->getValue() );
+	m_parameter->setNumericValue( m_plug->getValue() );
 }
 
 template<typename T>
 void NumericParameterHandler<T>::setPlugValue()
 {
-	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	m_plug->setValue( p->getNumericValue() );
+	m_plug->setValue( m_parameter->getNumericValue() );
 }
 		
 // explicit instantiations

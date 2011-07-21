@@ -46,20 +46,39 @@ template<typename T>
 ParameterHandler::ParameterHandlerDescription<TypedParameterHandler<T>, IECore::TypedParameter<T> > TypedParameterHandler<T>::g_description;
 
 template<typename T>
-TypedParameterHandler<T>::TypedParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent )
-	:	ParameterHandler( parameter )
+TypedParameterHandler<T>::TypedParameterHandler( typename ParameterType::Ptr parameter )
+	:	m_parameter( parameter )
 {
-	m_plug = plugParent->getChild<PlugType>( parameter->name() );
-	if( !m_plug )
-	{
-		m_plug = new PlugType( parameter->name(), Plug::In, parameter->typedDefaultValue() );
-		plugParent->setChild( parameter->name(), m_plug );
-	}
 }
 
 template<typename T>
 TypedParameterHandler<T>::~TypedParameterHandler()
 {
+}
+
+template<typename T>
+IECore::ParameterPtr TypedParameterHandler<T>::parameter()
+{
+	return m_parameter;
+}
+
+template<typename T>
+IECore::ConstParameterPtr TypedParameterHandler<T>::parameter() const
+{
+	return m_parameter;
+}
+
+template<typename T>
+Gaffer::PlugPtr TypedParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+{
+	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
+	if( !m_plug )
+	{
+		m_plug = new PlugType( m_parameter->name(), Plug::In, m_parameter->typedDefaultValue() );
+		plugParent->setChild( m_parameter->name(), m_plug );
+	}
+	
+	return m_plug;
 }
 
 template<typename T>
@@ -77,15 +96,13 @@ Gaffer::ConstPlugPtr TypedParameterHandler<T>::plug() const
 template<typename T>
 void TypedParameterHandler<T>::setParameterValue()
 {
-	ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	p->setTypedValue( m_plug->getValue() );
+	m_parameter->setTypedValue( m_plug->getValue() );
 }
 
 template<typename T>
 void TypedParameterHandler<T>::setPlugValue()
 {
-	const ParameterType *p = static_cast<ParameterType *>( parameter().get() );
-	m_plug->setValue( p->getTypedValue() );
+	m_plug->setValue( m_parameter->getTypedValue() );
 }
 		
 // explicit instantiations

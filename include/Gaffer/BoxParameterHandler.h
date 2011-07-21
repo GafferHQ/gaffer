@@ -57,9 +57,12 @@ class BoxParameterHandler : public ParameterHandler
 		typedef IECore::TypedParameter<T> ParameterType;
 		typedef CompoundNumericPlug<typename IECore::BoxTraits<T>::BaseType> PointPlugType;
 
-		BoxParameterHandler( typename ParameterType::Ptr parameter, GraphComponentPtr plugParent );
+		BoxParameterHandler( typename ParameterType::Ptr parameter );
 		virtual ~BoxParameterHandler();
 		
+		virtual IECore::ParameterPtr parameter();
+		virtual IECore::ConstParameterPtr parameter() const;
+		virtual Gaffer::PlugPtr setupPlug( GraphComponentPtr plugParent );
 		virtual Gaffer::PlugPtr plug();
 		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
@@ -67,6 +70,7 @@ class BoxParameterHandler : public ParameterHandler
 		
 	private :
 	
+		typename ParameterType::Ptr m_parameter;
 		typename CompoundPlug::Ptr m_plug;
 	
 		static ParameterHandlerDescription<BoxParameterHandler<T>, ParameterType> g_description;
