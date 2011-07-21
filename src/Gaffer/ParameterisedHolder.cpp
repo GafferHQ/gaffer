@@ -66,7 +66,8 @@ void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr pa
 	}
 	
 	m_parameterised = parameterised;
-	m_parameterHandler = new CompoundParameterHandler( interface->parameters(), this );
+	m_parameterHandler = new CompoundParameterHandler( interface->parameters() );
+	m_parameterHandler->setupPlug( this );
 	m_parameterHandler->setPlugValue();
 }
 
@@ -139,9 +140,9 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::ParameterModificati
 template<typename BaseType>
 ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificationContext()
 {
-	if( IECore::ParameterisedInterface *interface = m_parameterisedHolder->parameterisedInterface() )
+	if( m_parameterisedHolder->m_parameterHandler )
 	{
-		m_parameterisedHolder->m_parameterHandler = new CompoundParameterHandler( interface->parameters(), m_parameterisedHolder );
+		m_parameterisedHolder->m_parameterHandler->setupPlug( m_parameterisedHolder );
 		m_parameterisedHolder->m_parameterHandler->setPlugValue();
 	}
 }
