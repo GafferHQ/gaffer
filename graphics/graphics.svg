@@ -32,16 +32,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="206.44517"
-     inkscape:cy="982.49369"
+     inkscape:zoom="8"
+     inkscape:cx="45.753621"
+     inkscape:cy="963.23847"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1637"
-     inkscape:window-height="1004"
-     inkscape:window-x="487"
-     inkscape:window-y="77"
+     inkscape:window-width="1007"
+     inkscape:window-height="807"
+     inkscape:window-x="571"
+     inkscape:window-y="330"
      inkscape:window-maximized="0"
      inkscape:snap-global="true">
     <inkscape:grid
@@ -480,5 +480,19 @@
        id="forExport:pathChooser"
        sodipodi:nodetypes="cccccccc"
        inkscape:label="#rect2859" />
+    <path
+       sodipodi:nodetypes="ccccccc"
+       inkscape:connector-curvature="0"
+       id="forExport:headerSortDown"
+       d="m 43.999997,87.362183 -3,0 -3,3.625 -3,-3.625 -2.999997,0 5.999997,7 z"
+       style="fill:#000000;fill-opacity:1;stroke:none"
+       inkscape:label="#path2860" />
+    <path
+       inkscape:label="#path2860"
+       style="fill:#000000;fill-opacity:1;stroke:none"
+       d="m 56.999997,94.362183 -3,0 -3,-3.625 -3,3.625 -2.999997,0 5.999997,-7 z"
+       id="forExport:headerSortUp"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccc" />
   </g>
 </svg>

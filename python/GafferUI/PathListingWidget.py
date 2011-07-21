@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import operator
 import time
 
 import IECore
@@ -42,12 +43,31 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## \todo Make columns configurable.
 class PathListingWidget( GafferUI.Widget ) :
 
-	def __init__( self, path ) :
+	## This simple class defines the content of a column.
+	class Column( object ) :
+	
+		__slots__ = ( "infoField", "label", "displayFunction", "lessThanFunction" )
+		
+		def __init__( self, infoField, label, displayFunction=str, lessThanFunction=operator.lt ) :
+		
+			self.infoField = infoField
+			self.label = label
+			self.displayFunction = displayFunction
+			self.lessThanFunction = lessThanFunction
+	
+	## A sensible set of columns to display for FileSystemPaths
+	defaultFileSystemColumns = (
+		Column( infoField = "name", label = "Name" ),
+		Column( infoField = "fileSystem:owner", label = "Owner" ),
+		Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime ),
+	)
+
+	def __init__( self, path, columns = defaultFileSystemColumns ) :
 	
 		GafferUI.Widget.__init__( self, _TreeView() )
 		
@@ -65,7 +85,10 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 				
 		self.__currentDir = None
+		self.__columns = columns
 		self.__update()
+		
+		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 	
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 	
@@ -84,25 +107,34 @@ class PathListingWidget( GafferUI.Widget ) :
 			children = dirPath.children()
 			self.__itemModel.clear()
 
-			self.__itemModel.setHorizontalHeaderItem( 0, QtGui.QStandardItem( "Name" ) )
-			self.__itemModel.setHorizontalHeaderItem( 1, QtGui.QStandardItem( "Owner" ) )
-			self.__itemModel.setHorizontalHeaderItem( 2, QtGui.QStandardItem( "Modified" ) )
+			# qt manual suggests its best to edit the model with sorting disabled
+			# for performance reasons.
+			self._qtWidget().setSortingEnabled( False )
+			sortingColumn = self._qtWidget().header().sortIndicatorSection()
+			sortingOrder = self._qtWidget().header().sortIndicatorOrder()
+			
+			for index, column in enumerate( self.__columns ) :
+				self.__itemModel.setHorizontalHeaderItem( index, QtGui.QStandardItem( column.label ) )
 
 			for child in children :
 
 				info = child.info() or {}
 
 				row = []
-				row.append( QtGui.QStandardItem( child[-1] ) )
-				row.append( QtGui.QStandardItem( info.get( "fileSystem:owner", "" ) ) )
-
-				mTime = info.get( "fileSystem:modificationTime", 0 )
-				row.append( QtGui.QStandardItem( time.ctime( mTime ) ) )
-
+				for column in self.__columns :
+					if column.infoField == "name" :
+						value = child[-1]
+					else :
+						value = info.get( column.infoField, None )
+					row.append( _Item( value, column.displayFunction, column.lessThanFunction ) )
+				
 				self.__itemModel.appendRow( row )
 
+			self._qtWidget().setSortingEnabled( True )
+			self._qtWidget().header().setSortIndicator( sortingColumn, sortingOrder )
+
 			self.__currentDir = dirPath
-		
+				
 		# update the selection
 			
 		rowIndex = None
@@ -173,7 +205,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		self.__update()
 
-## Private implementation - a QTreeView with some specific size behaviour
+# Private implementation - a QTreeView with some specific size behaviour
 class _TreeView( QtGui.QTreeView ) :
 
 	def __init__( self ) :
@@ -192,3 +224,17 @@ class _TreeView( QtGui.QTreeView ) :
 		result.setHeight( max( result.width() * .5, result.height() ) )
 		
 		return result
+
+# Private implementation - the items being displayed
+class _Item( QtGui.QStandardItem ) :
+
+	def __init__( self, value, displayFunction, lessThanFunction ) :
+	
+		QtGui.QStandardItem.__init__( self, displayFunction( value ) )
+		
+		self.__value = value
+		self.__lessThanFunction = lessThanFunction
+		
+	def __lt__( self, other ) :
+		
+		return self.__lessThanFunction( self.__value, other.__value )

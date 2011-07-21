@@ -13,6 +13,8 @@ See python/GafferTest/ParameterhHandlerTest.py for an example.
 
 * The ReadNode now exposes the parameters of the IECore::Readers it uses as plugs on the node.
 
+* The PathListingWidget contents can now be customised by passing a column specification to the constructor. See PathListingWidget.defaultFileSystemColumns for an example. Also added support for sorting the listing by clicking on the headers, and allowed the column specification to provide a sorting function to be used in this case.
+
 0.16.0
 ------
 

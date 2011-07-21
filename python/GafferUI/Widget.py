@@ -488,6 +488,18 @@ class Widget( object ) :
 		
 		}
 		
+		QHeaderView::down-arrow {
+			
+			image: url($GAFFER_ROOT/graphics/headerSortDown.png);
+		
+		}
+		
+		QHeaderView::up-arrow {
+			
+			image: url($GAFFER_ROOT/graphics/headerSortUp.png);
+		
+		}
+
 		QScrollBar {
 		
 			border: 1px solid $backgroundDarkest;
