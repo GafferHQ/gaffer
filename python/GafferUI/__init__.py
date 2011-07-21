@@ -154,3 +154,7 @@ from CompoundParameterValueWidget import CompoundParameterValueWidget
 from PathParameterValueWidget import PathParameterValueWidget
 from PathVectorParameterValueWidget import PathVectorParameterValueWidget
 from StringParameterValueWidget import StringParameterValueWidget
+
+# and specific node uis
+
+from ReadNodeUI import ReadNodeUI
