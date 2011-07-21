@@ -1,3 +1,5 @@
+* Fixed a bug in NumericPlug::setValue() which meant it was possible to set value outside the Plug's min/max range.
+
 0.16.0
 ------
 

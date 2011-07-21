@@ -111,6 +111,19 @@ class NumericPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.IntPlug( "hello" )
 		self.failUnless( p.acceptsInput( None ) )
+	
+	def testAppliesMinMaxInSetValue( self ) :
+	
+		i = Gaffer.IntPlug( "i", defaultValue = 1, minValue = 0, maxValue = 10 )
+		
+		i.setValue( 5 )
+		self.assertEqual( i.getValue(), 5 )
+		
+		i.setValue( -1 )
+		self.assertEqual( i.getValue(), 0 )
+		
+		i.setValue( 11 )
+		self.assertEqual( i.getValue(), 10 )
 		
 if __name__ == "__main__":
 	unittest.main()

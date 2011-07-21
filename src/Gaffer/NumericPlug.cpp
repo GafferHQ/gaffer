@@ -125,8 +125,8 @@ T NumericPlug<T>::maxValue() const
 template<class T>
 void NumericPlug<T>::setValue( T value )
 {
-	T v = Imath::clamp( value, m_minValue, m_maxValue );
-	if( v!=m_value || getDirty() )
+	value = Imath::clamp( value, m_minValue, m_maxValue );
+	if( value!=m_value || getDirty() )
 	{
 		Action::enact(
 			this,
