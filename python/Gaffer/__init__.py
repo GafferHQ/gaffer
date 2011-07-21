@@ -48,6 +48,5 @@ from UndoContext import UndoContext
 from ReadNode import ReadNode
 from WriteNode import WriteNode
 from SphereNode import SphereNode
-from PlaneNode import PlaneNode
 from GroupNode import GroupNode
 
