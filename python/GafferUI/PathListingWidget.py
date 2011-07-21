@@ -86,6 +86,7 @@ class PathListingWidget( GafferUI.Widget ) :
 				
 		self.__currentDir = None
 		self.__columns = columns
+		self.__pathsToItems = {}
 		self.__update()
 		
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
@@ -105,6 +106,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		if self.__currentDir!=dirPath :
 						
 			children = dirPath.children()
+			self.__pathsToItems.clear()
 			self.__itemModel.clear()
 
 			# qt manual suggests its best to edit the model with sorting disabled
@@ -129,6 +131,8 @@ class PathListingWidget( GafferUI.Widget ) :
 					row.append( _Item( value, column.displayFunction, column.lessThanFunction ) )
 				
 				self.__itemModel.appendRow( row )
+				
+				self.__pathsToItems[str(child)] = row[0]
 
 			self._qtWidget().setSortingEnabled( True )
 			self._qtWidget().header().setSortIndicator( sortingColumn, sortingOrder )
@@ -137,13 +141,11 @@ class PathListingWidget( GafferUI.Widget ) :
 				
 		# update the selection
 			
-		rowIndex = None
-		with IECore.IgnoredExceptions( ValueError ) :
-			rowIndex = dirPath.children().index( self.__path )
-		
 		sm = self._qtWidget().selectionModel()
-		if rowIndex is not None :
-			sm.select( self.__itemModel.index( rowIndex, 0 ), sm.Select | sm.Rows )
+		itemToSelect = self.__pathsToItems.get( str(self.__path), None )
+		if itemToSelect is not None :
+			sm.select( itemToSelect.index(), sm.ClearAndSelect | sm.Rows )
+			self._qtWidget().scrollTo( itemToSelect.index(), self._qtWidget().PositionAtCenter )
 		else :
 			sm.clear()
 			
