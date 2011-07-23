@@ -88,7 +88,7 @@ class TextWidget( GafferUI.Widget ) :
 	
 		return {
 			QtGui.QLineEdit.Normal : self.DisplayMode.Normal,
-			QtGui.QLineEdit.PasswordEchoOnEdit : self.DisplayMode.Password,
+			QtGui.QLineEdit.Password : self.DisplayMode.Password,
 		}[self._qtWidget().echoMode()]
 	
 	def setCursorPosition( self, position ) :
