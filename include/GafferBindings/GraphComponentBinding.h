@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 #define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "Gaffer/GraphComponent.h"
 
 namespace GafferBindings
@@ -51,7 +53,7 @@ namespace GafferBindings
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "acceptsChild" ) )\
 		{\
-			override f = this->get_override( "acceptsChild" );\
+			boost::python::override f = this->get_override( "acceptsChild" );\
 			if( f )\
 			{\
 				return f( IECore::constPointerCast<Gaffer::GraphComponent>( potentialChild ) );\
@@ -65,7 +67,7 @@ namespace GafferBindings
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "acceptsParent" ) )\
 		{\
-			override f = this->get_override( "acceptsParent" );\
+			boost::python::override f = this->get_override( "acceptsParent" );\
 			if( f ) \
 			{\
 				return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialParent ) ) );\

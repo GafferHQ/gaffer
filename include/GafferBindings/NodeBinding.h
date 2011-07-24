@@ -50,23 +50,23 @@ namespace GafferBindings
 #define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 \
-	virtual void dirty( ConstPlugPtr dirty ) const\
+	virtual void dirty( Gaffer::ConstPlugPtr dirty ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "dirty" ) )\
 		{\
-			override f = this->get_override( "dirty" );\
-			f( IECore::constPointerCast<Plug>( dirty ) );\
+			boost::python::override f = this->get_override( "dirty" );\
+			f( IECore::constPointerCast<Gaffer::Plug>( dirty ) );\
 		}\
 	}\
 \
-	virtual void compute( PlugPtr output ) const\
+	virtual void compute( Gaffer::PlugPtr output ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
 		{\
-			override f = this->get_override( "compute" );\
-			f( IECore::constPointerCast<Plug>( output ) );\
+			boost::python::override f = this->get_override( "compute" );\
+			f( IECore::constPointerCast<Gaffer::Plug>( output ) );\
 		}\
 	}
 
