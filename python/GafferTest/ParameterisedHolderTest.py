@@ -357,6 +357,18 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 			p.parameters().addParameter( IECore.FloatParameter( "a", "", 2 ) )
 		
 		self.failUnless( ph.isSame( phn.parameterHandler() ) )					
+	
+	def testClassLoading( self ) :
+	
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "common/fileSystem/seqLs", 1, "IECORE_OP_PATHS" )
+		
+		p = ph.getParameterised()
+		self.assertEqual( p[0].typeName(), "SequenceLsOp" )
+		self.assertEqual( p[1], "common/fileSystem/seqLs" )
+		self.assertEqual( p[2], 1 )
+		self.assertEqual( p[3], "IECORE_OP_PATHS" )
+		
 		
 if __name__ == "__main__":
 	unittest.main()

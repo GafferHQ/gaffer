@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,9 +38,28 @@
 #ifndef GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 #define GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 
+#include "IECorePython/Wrapper.h"
+
+#include "GafferBindings/NodeBinding.h"
+
 namespace GafferBindings
 {
 
+#define GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( CLASSNAME )\
+	GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
+\
+	virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const\
+	{\
+		std::string toExecute = boost::str(\
+			boost::format(\
+				"IECore.ClassLoader.defaultLoader( \"%s\" ).load( \"%s\", %d )()\n"\
+			) % searchPathEnvVar % className % classVersion\
+		);\
+		IECorePython::ScopedGILLock gilLock;\
+		boost::python::object result = boost::python::eval( toExecute.c_str() );\
+		return boost::python::extract<IECore::RunTimeTypedPtr>( result );\
+	}\
+	
 void bindParameterisedHolder();
 
 } // namespace GafferBindings

@@ -74,10 +74,13 @@ void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr pa
 template<typename BaseType>
 void ParameterisedHolder<BaseType>::setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar )
 {
-	/// \todo How do we load a class without introducing a python dependency into the main library?
-	/// Make this function virtual and only implement it in the wrapper class?
-	/// Give IECore::ClassLoader a C++ base class and implement it in python somehow?
-	assert( 0 );
+	IECore::RunTimeTypedPtr p = loadClass( className, classVersion, searchPathEnvVar );
+
+	GraphComponent::getChild<StringPlug>( "__className" )->setValue( className );
+	GraphComponent::getChild<IntPlug>( "__classVersion" )->setValue( classVersion );
+	GraphComponent::getChild<StringPlug>( "__searchPathEnvVar" )->setValue( searchPathEnvVar );
+
+	setParameterised( p );
 }
 
 template<typename BaseType>
@@ -125,6 +128,12 @@ void ParameterisedHolder<BaseType>::setParameterisedValues()
 	{
 		m_parameterHandler->setParameterValue();
 	}
+}
+
+template<typename BaseType>
+IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const
+{
+	throw IECore::Exception( "Cannot load classes on a ParameterisedHolder not created in Python." );
 }
 
 //////////////////////////////////////////////////////////////////////////

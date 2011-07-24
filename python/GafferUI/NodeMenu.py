@@ -84,12 +84,7 @@ def __parameterisedHolderCreator( parameterisedHolderType, className, classVersi
 
 	nodeName = className.rpartition( "/" )[-1]
 	node = parameterisedHolderType( nodeName )
-
-	## \todo Use node.setParameterised( className, classVersion, searchPathEnvVar ) when
-	# it has been implemented.
-	cl = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
-	c = cl.load( className, classVersion )()
-	node.setParameterised( c )
+	node.setParameterised( className, classVersion, searchPathEnvVar )
 
 	return node
 

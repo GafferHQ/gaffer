@@ -85,7 +85,14 @@ class ParameterisedHolder : public BaseType
 			private :
 				Ptr m_parameterisedHolder;
 		};
-		
+	
+	protected :
+	
+		/// Returns a new instance of the specified class. This is implemented to throw an
+		/// Exception in libGaffer, but the libGafferBindings library implements it
+		/// by using the IECore.ClassLoader in python. This allows us to keep libGaffer from
+		/// having a python dependency.
+		virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const;	
 		
 	private :
 	
