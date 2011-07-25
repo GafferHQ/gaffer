@@ -38,7 +38,7 @@
 #ifndef GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 #define GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 
-#include "IECorePython/Wrapper.h"
+#include "boost/format.hpp"
 
 #include "GafferBindings/NodeBinding.h"
 
