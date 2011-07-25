@@ -146,7 +146,6 @@ void ArrayNodule::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphC
 	}	
 }
 
-
 void ArrayNodule::childRenderRequest( Gadget *child )
 {
 	renderRequestSignal()( this );
