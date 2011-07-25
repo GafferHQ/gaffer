@@ -66,7 +66,7 @@ IECore::ConstParameterPtr CompoundParameterHandler::parameter() const
 	return m_parameter;
 }
 
-Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParent )
+Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
 {
 	// decide what name our compound plug should have
 		
@@ -82,9 +82,9 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParen
 	// create the compound plug if necessary
 	
 	m_plug = plugParent->getChild<CompoundPlug>( plugName );
-	if( !m_plug )
+	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new CompoundPlug();
+		m_plug = new CompoundPlug( plugName, direction );
 		plugParent->setChild( plugName, m_plug );
 	}
 	
@@ -112,7 +112,7 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParen
 		ParameterHandlerPtr h = handler( *it, true );
 		if( h )
 		{
-			h->setupPlug( m_plug );
+			h->setupPlug( m_plug, direction );
 		}
 	}
 	

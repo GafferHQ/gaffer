@@ -68,12 +68,12 @@ IECore::ConstParameterPtr VectorTypedParameterHandler<T>::parameter() const
 }
 
 template<typename T>
-Gaffer::PlugPtr VectorTypedParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+Gaffer::PlugPtr VectorTypedParameterHandler<T>::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
-	if( !m_plug )
+	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new PlugType( m_parameter->name(), Plug::In, static_cast<const DataType *>( m_parameter->defaultValue() ) );
+		m_plug = new PlugType( m_parameter->name(), direction, static_cast<const DataType *>( m_parameter->defaultValue() ) );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 	

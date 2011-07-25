@@ -77,10 +77,10 @@ class ParameterHandlerTest( unittest.TestCase ) :
 			
 				return self.__parameter
 			
-			def setupPlug( self, plugParent ) :
+			def setupPlug( self, plugParent, direction ) :
 				
 				self.__plug = plugParent.getChild( self.__parameter.name )
-				if not isinstance( self.__plug, Gaffer.IntPlug ) :
+				if not isinstance( self.__plug, Gaffer.IntPlug ) or self.__plug.direction() != direction :
 					self.__plug = Gaffer.IntPlug(
 						self.__parameter.name,
 						Gaffer.Plug.Direction.In,
@@ -90,7 +90,6 @@ class ParameterHandlerTest( unittest.TestCase ) :
 					)
 					
 				plugParent[self.__parameter.name] = self.__plug
-			
 			
 			def plug( self ) :
 			

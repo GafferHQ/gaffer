@@ -66,12 +66,12 @@ IECore::ConstParameterPtr CompoundNumericParameterHandler<T>::parameter() const
 }
 
 template<typename T>
-Gaffer::PlugPtr CompoundNumericParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+Gaffer::PlugPtr CompoundNumericParameterHandler<T>::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
-	if( !m_plug )
+	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new PlugType( m_parameter->name(), Plug::In, m_parameter->typedDefaultValue() );
+		m_plug = new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 	

@@ -21,6 +21,8 @@ See python/GafferTest/ParameterhHandlerTest.py for an example.
 
 * Fixed a bug in the Node bindings which meant that the C++ base class implementations weren't called when a python class didn't provide overrides.
 
+* ParameterHandler::setupPlug now takes an argument specifying the plug direction required.
+
 0.16.0
 ------
 

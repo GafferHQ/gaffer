@@ -65,26 +65,26 @@ IECore::ConstParameterPtr BoxParameterHandler<T>::parameter() const
 }
 
 template<typename T>
-Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponentPtr plugParent )
+Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<CompoundPlug>( m_parameter->name() );
-	if( !m_plug )
+	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new CompoundPlug();
+		m_plug = new CompoundPlug( m_parameter->name(), direction );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 	
 	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
-	if( !minPlug )
+	if( !minPlug || minPlug->direction()!=direction )
 	{
-		minPlug = new PointPlugType( "min", Plug::In, m_parameter->typedDefaultValue().min );
+		minPlug = new PointPlugType( "min", direction, m_parameter->typedDefaultValue().min );
 		m_plug->addChild( minPlug );
 	}
 	
 	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );
-	if( !maxPlug )
+	if( !maxPlug || maxPlug->direction()!=direction )
 	{
-		maxPlug = new PointPlugType( "max", Plug::In, m_parameter->typedDefaultValue().max );
+		maxPlug = new PointPlugType( "max", direction, m_parameter->typedDefaultValue().max );
 		m_plug->addChild( maxPlug );
 	}
 	

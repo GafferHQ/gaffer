@@ -73,11 +73,11 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 			return o();
 		}
 		
-		virtual PlugPtr setupPlug( GraphComponentPtr plugParent )
+		virtual PlugPtr setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "setupPlug" );
-			return o( plugParent );
+			return o( plugParent, direction );
 		}
 		
 		virtual PlugPtr plug()
@@ -143,7 +143,7 @@ void GafferBindings::bindParameterHandler()
 	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapperPtr>( "ParameterHandler" )
 		.def( init<>() )
 		.def( "parameter", (IECore::ParameterPtr (ParameterHandler::*)())&ParameterHandler::parameter )
-		.def( "setupPlug", &ParameterHandler::setupPlug )
+		.def( "setupPlug", &ParameterHandler::setupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In ) )
 		.def( "plug", (PlugPtr (ParameterHandler::*)())&ParameterHandler::plug )
 		.def( "setParameterValue", &ParameterHandler::setParameterValue )
 		.def( "setPlugValue", &ParameterHandler::setPlugValue )

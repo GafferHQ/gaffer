@@ -62,7 +62,7 @@ class BoxParameterHandler : public ParameterHandler
 		
 		virtual IECore::ParameterPtr parameter();
 		virtual IECore::ConstParameterPtr parameter() const;
-		virtual Gaffer::PlugPtr setupPlug( GraphComponentPtr plugParent );
+		virtual Gaffer::PlugPtr setupPlug( GraphComponentPtr plugParent, Plug::Direction direction=Plug::In );
 		virtual Gaffer::PlugPtr plug();
 		virtual Gaffer::ConstPlugPtr plug() const;
 		virtual void setParameterValue();
