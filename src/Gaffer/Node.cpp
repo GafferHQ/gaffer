@@ -122,3 +122,11 @@ bool Node::acceptsParent( const GraphComponent *potentialParent ) const
 	}
 	return potentialParent->isInstanceOf( (IECore::TypeId)NodeTypeId );
 }
+
+void Node::dirty( ConstPlugPtr dirty ) const
+{
+}
+
+void Node::compute( PlugPtr output ) const
+{
+}

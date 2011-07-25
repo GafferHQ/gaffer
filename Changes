@@ -19,6 +19,8 @@ See python/GafferTest/ParameterhHandlerTest.py for an example.
 
 * Implemented the ParameterisedHolder::setParameterised( className, classVersion, searchPathEnvVar ) overload. Still needs some work so nodes can be serialised to a script and reloaded properly.
 
+* Fixed a bug in the Node bindings which meant that the C++ base class implementations weren't called when a python class didn't provide overrides.
+
 0.16.0
 ------
 

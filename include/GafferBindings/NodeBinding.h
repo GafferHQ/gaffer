@@ -56,8 +56,13 @@ namespace GafferBindings
 		if( PyObject_HasAttrString( m_pyObject, "dirty" ) )\
 		{\
 			boost::python::override f = this->get_override( "dirty" );\
-			f( IECore::constPointerCast<Gaffer::Plug>( dirty ) );\
+			if( f )\
+			{\
+				f( IECore::constPointerCast<Gaffer::Plug>( dirty ) );\
+				return;\
+			}\
 		}\
+		CLASSNAME::dirty( dirty );\
 	}\
 \
 	virtual void compute( Gaffer::PlugPtr output ) const\
@@ -66,8 +71,13 @@ namespace GafferBindings
 		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
 		{\
 			boost::python::override f = this->get_override( "compute" );\
-			f( IECore::constPointerCast<Gaffer::Plug>( output ) );\
+			if( f )\
+			{\
+				f( IECore::constPointerCast<Gaffer::Plug>( output ) );\
+				return;\
+			}\
 		}\
+		CLASSNAME::compute( output );\
 	}
 
 #define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
