@@ -23,6 +23,8 @@ See python/GafferTest/ParameterhHandlerTest.py for an example.
 
 * ParameterHandler::setupPlug now takes an argument specifying the plug direction required.
 
+* Added an ObjectParameterHandler.
+
 0.16.0
 ------
 
