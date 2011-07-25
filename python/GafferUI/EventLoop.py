@@ -169,16 +169,18 @@ class EventLoop() :
 		if len( cls.__idleCallbacks )==0 :
 			cls.__idleTimer.stop()
 	
-	@classmethod
-	def __qtIdleCallback( cls ) :
+	# This is a staticmethod rather than a classmethod because PySide 1.0.5
+	# doesn't support classmethods as slots.
+	@staticmethod
+	def __qtIdleCallback() :
 	
 		toRemove = []
-		for c in cls.__idleCallbacks :
+		for c in EventLoop.__idleCallbacks :
 			if not c() :
 				toRemove.append( c )
 				
 		for c in toRemove :
-			cls.removeIdleCallback( c )
+			EventLoop.removeIdleCallback( c )
 				
 	def __pumpThreadFn( self ) :
 	
