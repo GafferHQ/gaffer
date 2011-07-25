@@ -673,7 +673,7 @@ gafferUIModuleInstall = env.Install( "$BUILD_DIR/lib/python2.6/site-packages/Gaf
 gafferUIModuleInstall += env.Install( "$BUILD_DIR/lib/python2.6/site-packages/GafferUI", glob.glob( "python/GafferUI/*.py" ) )
 env.Alias( "build", gafferUIModuleInstall )
 
-for module in ( "GafferTest", "GafferUITest", "GafferRI", "GafferRIUI" ) :
+for module in ( "GafferTest", "GafferUITest" ) :
 
 	moduleFiles = glob.glob( "python/%s/*.py" % module ) + glob.glob( "python/%s/*/*" % module )
 	for moduleFile in moduleFiles :
@@ -815,7 +815,7 @@ for v in ( "BUILD_DIR", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_
 docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "doxygen doc/config/Doxyfile" )
 env.NoCache( docs )
 
-for modulePath in ( "python/Gaffer", "python/GafferRI", "python/GafferUI", "python/GafferRIUI" ) :
+for modulePath in ( "python/Gaffer", "python/GafferUI" ) :
 
 	module = os.path.basename( modulePath )
 	mungedModule = docEnv.Command( "doc/python/" + module, modulePath + "/__init__.py", createDoxygenPython )

@@ -54,13 +54,3 @@ GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
 GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.ParameterisedHolderNode, "IECORE_OP_PATHS" )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ParameterisedHolderNode, "IECORE_PROCEDURAL_PATHS" )
-
-haveRI = False
-try :
-	import GafferRIUI
-	haveRI = True
-except ImportError :
-	pass
-
-if haveRI :	
-	GafferUI.NodeMenu.definition().append( "/Shader/", { "subMenu" : GafferRIUI.SLOMenu.definition() } )
