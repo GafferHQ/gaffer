@@ -25,6 +25,8 @@ See python/GafferTest/ParameterhHandlerTest.py for an example.
 
 * Added an ObjectParameterHandler.
 
+* Added Widget setEnabled(), getEnabled() and enabled( relativeTo ) methods - see documentation for details. Signals are not emitted for Widgets which have been disabled.
+
 0.16.0
 ------
 

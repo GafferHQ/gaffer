@@ -115,10 +115,39 @@ class Widget( object ) :
 	def setVisible( self, visible ) :
 	
 		self.__qtWidget.setVisible( visible )
-		
+	
+	## \todo Make these functions consistent with the enabled ones below,
+	# and document them.
 	def getVisible( self ) :
 	
 		return self.__qtWidget.isVisible()
+
+	## Sets whether or not this Widget is enabled - when
+	# not enabled Widgets are typically greyed out and signals
+	# will not be emitted for them. Disabling a Widget disables
+	# all children too.
+	def setEnabled( self, enabled ) :
+	
+		self.__qtWidget.setEnabled( enabled )
+	
+	## Returns False if this Widget has been explicitly disabled using
+	# setEnabled( False ), and True otherwise. Note that if a parent
+	# Widget has been disabled, then this function may still return
+	# True even though the child is effectively disabled. Use the
+	# enabled() method to determine enabled state taking into account
+	# parent Widgets.
+	def getEnabled( self ) :
+	
+		return not self.__qtWidget.testAttribute( QtCore.Qt.WA_ForceDisabled )
+	
+	## Returns True if neither this Widget nor all its parents up to the specified
+	# ancestor have been disabled with setEnabled( False ).
+	def enabled( self, relativeTo=None ) :
+	
+		if relativeTo is not None :
+			relativeTo = relativeTo.__qtWidget
+			
+		return self.__qtWidget.isEnabledTo( relativeTo )
 
 	## Returns the GafferUI.Widget which is the parent for this
 	# Widget, or None if it has no parent.
@@ -702,7 +731,18 @@ class _EventFilter( QtCore.QObject ) :
 		QtCore.QObject.__init__( self )
 		
 	def eventFilter( self, qObject, qEvent ) :
-	
+		
+		# we display tooltips even on disabled widgets
+		if qEvent.type()==QtCore.QEvent.ToolTip :
+		
+			widget = Widget._owner( qObject )
+			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
+			return True
+		
+		# but for anything else we ignore disabled widgets
+		if not qObject.isEnabled() :
+			return False
+			
 		if qEvent.type()==QtCore.QEvent.KeyPress :
 						
 			widget = Widget._owner( qObject )
@@ -773,12 +813,6 @@ class _EventFilter( QtCore.QObject ) :
 			)
 
 			return widget.wheelSignal()( widget, event )	
-			
-		elif qEvent.type()==QtCore.QEvent.ToolTip :
-		
-			widget = Widget._owner( qObject )
-			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
-			return True
 			
 		return False
 

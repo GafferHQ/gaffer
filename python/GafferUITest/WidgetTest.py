@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 class TestWidget( GafferUI.Widget ) :
@@ -113,7 +114,46 @@ class WidgetTest( unittest.TestCase ) :
 		
 		w.setToolTip( "a" )
 		self.assertEqual( w.getToolTip(), "a" )
+	
+	def testEnabledState( self ) :
+	
+		w = TestWidget()
+		self.assertEqual( w.getEnabled(), True )
+		self.assertEqual( w.enabled(), True )
 		
+		w.setEnabled( False )
+		self.assertEqual( w.getEnabled(), False )
+		self.assertEqual( w.enabled(), False )
+		
+		w.setEnabled( True )
+		self.assertEqual( w.getEnabled(), True )
+		self.assertEqual( w.enabled(), True )
+	
+	def testDisabledWidgetsDontGetSignals( self ) :
+	
+		w = TestWidget()
+		
+		def f( w, event ) :
+		
+			WidgetTest.signalsEmitted += 1
+	
+		c = w.buttonPressSignal().connect( f )
+		
+		WidgetTest.signalsEmitted = 0
+		
+		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 0, 0 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+		
+		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
+		self.assertEqual( WidgetTest.signalsEmitted, 1 )
+		
+		w.setEnabled( False )
+		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
+		self.assertEqual( WidgetTest.signalsEmitted, 1 )
+
+		w.setEnabled( True )
+		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
+ 		self.assertEqual( WidgetTest.signalsEmitted, 2 )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

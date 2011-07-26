@@ -159,7 +159,36 @@ class ListContainerTest( unittest.TestCase ) :
 		self.assert_( cb.parent() is None )
 		self.assert_( cc.parent() is c )
 		
+	def testEnabled( self ) :
+			
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		w = TestWidget( "a" )
+		c.append( w )
 		
+		self.assertEqual( c.getEnabled(), True )
+		self.assertEqual( c.enabled(), True )
+		self.assertEqual( w.getEnabled(), True )
+		self.assertEqual( w.enabled(), True )
+	
+		c.setEnabled( False )
+		
+		self.assertEqual( c.getEnabled(), False )
+		self.assertEqual( c.enabled(),False )
+		
+		self.assertEqual( w.enabled(), False )
+		self.assertEqual( w.getEnabled(), True ) # because it's not explicitly disabled
+		
+		w.setEnabled( True ) # changes nothing because the disabled state is on the parent
+		self.assertEqual( w.enabled(), False )
+		self.assertEqual( w.getEnabled(), True )
+		
+		c.setEnabled( True )
+		
+		self.assertEqual( c.enabled(), True )
+		self.assertEqual( c.getEnabled(), True )
+		self.assertEqual( w.enabled(), True )
+		self.assertEqual( w.getEnabled(), True )
+				
 if __name__ == "__main__":
 	unittest.main()
 	
