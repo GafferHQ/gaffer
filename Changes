@@ -1,3 +1,6 @@
+0.17.0
+------
+
 * Fixed a bug in NumericPlug::setValue() which meant it was possible to set value outside the Plug's min/max range.
 
 * Changed ParameterHandler interface to allow the same ParameterHandler instance to be used repeatedly even when Parameters are being added and remove or are changing type. This should be more efficient but more importantly will be necessary to allow the CompoundParameterValueWidget to adjust the ui when Parameters are edited in this way. The following changes need to be made to a ParameterHandler implementation :
