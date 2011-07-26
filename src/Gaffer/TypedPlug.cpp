@@ -45,6 +45,9 @@
 using namespace Gaffer;
 
 template<class T>
+const IECore::RunTimeTyped::TypeDescription<TypedPlug<T> > TypedPlug<T>::g_typeDescription;
+
+template<class T>
 TypedPlug<T>::TypedPlug(
 	const std::string &name,
 	Direction direction,

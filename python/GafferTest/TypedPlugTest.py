@@ -72,7 +72,15 @@ class TypedPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.StringPlug( "hello" )
 		self.failUnless( p.acceptsInput( None ) )
-				
+		
+	def testRunTimeTyped( self ) :
+	
+		p = Gaffer.BoolPlug( "b" )
+		
+		self.assertEqual( p.typeName(), "BoolPlug" )
+		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( p.typeId() ), "BoolPlug" )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
+						
 if __name__ == "__main__":
 	unittest.main()
 	
