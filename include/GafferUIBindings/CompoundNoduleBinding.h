@@ -34,60 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_ARRAYNODULE_H
-#define GAFFERUI_ARRAYNODULE_H
+#ifndef GAFFERUIBINDINGS_COMPOUNDNODULEBINDING_H
+#define GAFFERUIBINDINGS_COMPOUNDNODULEBINDING_H
 
-#include "GafferUI/Nodule.h"
-
-namespace Gaffer
+namespace GafferUIBindings
 {
 
-IE_CORE_FORWARDDECLARE( CompoundPlug )
+void bindCompoundNodule();
 
-} // namespace Gaffer
+} // namespace GafferUIBindings
 
-namespace GafferUI
-{
-
-IE_CORE_FORWARDDECLARE( LinearContainer );
-
-class ArrayNodule : public Nodule
-{
-
-	public :
-
-		ArrayNodule( Gaffer::CompoundPlugPtr plug );
-		virtual ~ArrayNodule();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArrayNodule, ArrayNoduleTypeId, Nodule );
-
-		virtual Imath::Box3f bound() const;
-
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
-
-		/// Returns a Nodule for a child of the CompoundPlug being represented.
-		NodulePtr nodule( Gaffer::ConstPlugPtr plug );
-		ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
-		
-	protected :
-
-		void doRender( IECore::RendererPtr renderer ) const;
-	
-	private :
-	
-		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-		void childRenderRequest( Gadget *child );
-
-		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
-		NoduleMap m_nodules;
-		
-		LinearContainerPtr m_row;
-				
-};
-
-IE_CORE_DECLAREPTR( ArrayNodule );
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_ARRAYNODULE_H
+#endif // GAFFERUIBINDINGS_COMPOUNDNODULEBINDING_H

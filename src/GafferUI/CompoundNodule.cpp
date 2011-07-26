@@ -37,7 +37,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/PlugIterator.h"
 
-#include "GafferUI/ArrayNodule.h"
+#include "GafferUI/CompoundNodule.h"
 #include "GafferUI/LinearContainer.h"
 
 #include "boost/bind.hpp"
@@ -47,16 +47,16 @@ using namespace GafferUI;
 using namespace Imath;
 using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( ArrayNodule );
+IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 
-ArrayNodule::ArrayNodule( Gaffer::CompoundPlugPtr plug )
+CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug )
 	:	Nodule( plug )
 {
 	m_row = new LinearContainer( "row", LinearContainer::X, LinearContainer::Centre, 0.0f );
 	addChild( m_row );
 
-	plug->childAddedSignal().connect( boost::bind( &ArrayNodule::childAdded, this, ::_1,  ::_2 ) );
-	plug->childRemovedSignal().connect( boost::bind( &ArrayNodule::childRemoved, this, ::_1,  ::_2 ) );
+	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );
+	plug->childRemovedSignal().connect( boost::bind( &CompoundNodule::childRemoved, this, ::_1,  ::_2 ) );
 
 	Gaffer::PlugIterator it = Gaffer::PlugIterator( plug->children().begin(), plug->children().end() );
 	Gaffer::PlugIterator end = Gaffer::PlugIterator( plug->children().end(), plug->children().end() );
@@ -69,29 +69,29 @@ ArrayNodule::ArrayNodule( Gaffer::CompoundPlugPtr plug )
 		}
 	}
 	
-	m_row->renderRequestSignal().connect( boost::bind( &ArrayNodule::childRenderRequest, this, ::_1 ) );
+	m_row->renderRequestSignal().connect( boost::bind( &CompoundNodule::childRenderRequest, this, ::_1 ) );
 }
 
-ArrayNodule::~ArrayNodule()
+CompoundNodule::~CompoundNodule()
 {
 }
 
-Imath::Box3f ArrayNodule::bound() const
+Imath::Box3f CompoundNodule::bound() const
 {
 	return m_row->bound();
 }
 
-void ArrayNodule::doRender( IECore::RendererPtr renderer ) const
+void CompoundNodule::doRender( IECore::RendererPtr renderer ) const
 {
 	m_row->render( renderer );
 }
 
-bool ArrayNodule::acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const
+bool CompoundNodule::acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const
 {
 	return children().size()==0;
 }
 
-NodulePtr ArrayNodule::nodule( Gaffer::ConstPlugPtr plug )
+NodulePtr CompoundNodule::nodule( Gaffer::ConstPlugPtr plug )
 {
 	ChildNoduleIterator it = ChildNoduleIterator( m_row->children().begin(), m_row->children().end() );
 	ChildNoduleIterator end = ChildNoduleIterator( m_row->children().end(), m_row->children().end() );
@@ -105,13 +105,13 @@ NodulePtr ArrayNodule::nodule( Gaffer::ConstPlugPtr plug )
 	return 0;
 }
 
-ConstNodulePtr ArrayNodule::nodule( Gaffer::ConstPlugPtr plug ) const
+ConstNodulePtr CompoundNodule::nodule( Gaffer::ConstPlugPtr plug ) const
 {
 	// preferring the nasty casts over mainaining two nearly identical implementations
-	return const_cast<ArrayNodule *>( this )->nodule( plug );
+	return const_cast<CompoundNodule *>( this )->nodule( plug );
 }
 		
-void ArrayNodule::childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
+void CompoundNodule::childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
 {
 	Gaffer::PlugPtr plug = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( !plug )
@@ -126,7 +126,7 @@ void ArrayNodule::childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphCom
 	}
 }
 
-void ArrayNodule::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
+void CompoundNodule::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
 {
 	Gaffer::PlugPtr plug = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( !plug )
@@ -146,7 +146,7 @@ void ArrayNodule::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphC
 	}	
 }
 
-void ArrayNodule::childRenderRequest( Gadget *child )
+void CompoundNodule::childRenderRequest( Gadget *child )
 {
 	renderRequestSignal()( this );
 }

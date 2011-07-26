@@ -75,3 +75,5 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 		)
 			
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )

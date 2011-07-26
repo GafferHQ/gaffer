@@ -60,7 +60,7 @@ enum TypeId
 	StandardNodeGadgetTypeId = 410014,
 	SplinePlugGadgetTypeId = 410015,
 	StandardNoduleTypeId = 410016,
-	ArrayNoduleTypeId = 410017,
+	CompoundNoduleTypeId = 410017,
 	ImageGadgetTypeId = 410018,
 	
 	LastTypeId = 419999

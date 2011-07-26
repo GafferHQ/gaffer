@@ -34,14 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_ARRAYNODULEBINDING_H
-#define GAFFERUIBINDINGS_ARRAYNODULEBINDING_H
+#include "boost/python.hpp"
 
-namespace GafferUIBindings
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "Gaffer/CompoundPlug.h"
+
+#include "GafferUIBindings/CompoundNoduleBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferUI/CompoundNodule.h"
+
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
+
+void GafferUIBindings::bindCompoundNodule()
 {
-
-void bindArrayNodule();
-
-} // namespace GafferUIBindings
-
-#endif // GAFFERUIBINDINGS_ARRAYNODULEBINDING_H
+	IECorePython::RunTimeTypedClass<CompoundNodule>()
+		.def( init<Gaffer::CompoundPlugPtr>() )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CompoundNodule )
+	;
+}

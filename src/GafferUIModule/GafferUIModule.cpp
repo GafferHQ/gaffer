@@ -58,7 +58,7 @@
 #include "GafferUIBindings/StandardNodeGadgetBinding.h"
 #include "GafferUIBindings/SplinePlugGadgetBinding.h"
 #include "GafferUIBindings/StandardNoduleBinding.h"
-#include "GafferUIBindings/ArrayNoduleBinding.h"
+#include "GafferUIBindings/CompoundNoduleBinding.h"
 #include "GafferUIBindings/ImageGadgetBinding.h"
 
 using namespace GafferUIBindings;
@@ -87,7 +87,7 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindStandardNodeGadget();
 	bindSplinePlugGadget();
 	bindStandardNodule();
-	bindArrayNodule();
+	bindCompoundNodule();
 	bindImageGadget();
 	
 }

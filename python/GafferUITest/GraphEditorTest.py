@@ -45,12 +45,12 @@ import GafferTest
 
 class NestedPlugTestNode( Gaffer.Node ) :
 		
-		def __init__( self ) :
+	def __init__( self ) :
 			
-			Gaffer.Node.__init__( self )
+		Gaffer.Node.__init__( self )
 	
 IECore.registerRunTimeTyped( NestedPlugTestNode )
-GafferUI.Nodule.registerNodule( NestedPlugTestNode.staticTypeId(), "c", GafferUI.ArrayNodule )
+GafferUI.Nodule.registerNodule( NestedPlugTestNode.staticTypeId(), "c", GafferUI.CompoundNodule )
 
 class GraphEditorTest( unittest.TestCase ) :
 

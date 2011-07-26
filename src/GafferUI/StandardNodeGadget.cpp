@@ -46,7 +46,7 @@
 #include "GafferUI/NameGadget.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Style.h"
-#include "GafferUI/ArrayNodule.h"
+#include "GafferUI/CompoundNodule.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -182,16 +182,16 @@ NodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug )
 	{
 		/// \todo This needs to be generalised so other compound nodule types
 		/// are possible, and so we can do nested compounds too.
-		Gaffer::ConstCompoundPlugPtr arrayParent = plug->parent<Gaffer::CompoundPlug>();
-		if( arrayParent )
+		Gaffer::ConstCompoundPlugPtr compoundParent = plug->parent<Gaffer::CompoundPlug>();
+		if( compoundParent )
 		{
-			it = m_nodules.find( arrayParent.get() );
+			it = m_nodules.find( compoundParent.get() );
 			if( it!=m_nodules.end() )
 			{
-				ArrayNodulePtr arrayNodule = IECore::runTimeCast<ArrayNodule>( it->second );
-				if( arrayNodule )
+				CompoundNodulePtr compoundNodule = IECore::runTimeCast<CompoundNodule>( it->second );
+				if( compoundNodule )
 				{
-					return arrayNodule->nodule( plug );
+					return compoundNodule->nodule( plug );
 				}
 			}
 		}

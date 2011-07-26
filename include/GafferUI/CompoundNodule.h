@@ -34,24 +34,65 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUI_COMPOUNDNODULE_H
+#define GAFFERUI_COMPOUNDNODULE_H
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUI/Nodule.h"
 
-#include "Gaffer/CompoundPlug.h"
-
-#include "GafferUIBindings/ArrayNoduleBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUI/ArrayNodule.h"
-
-using namespace boost::python;
-using namespace GafferUIBindings;
-using namespace GafferUI;
-
-void GafferUIBindings::bindArrayNodule()
+namespace Gaffer
 {
-	IECorePython::RunTimeTypedClass<ArrayNodule>()
-		.def( init<Gaffer::CompoundPlugPtr>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ArrayNodule )
-	;
-}
+
+IE_CORE_FORWARDDECLARE( CompoundPlug )
+
+} // namespace Gaffer
+
+namespace GafferUI
+{
+
+IE_CORE_FORWARDDECLARE( LinearContainer );
+
+/// A Nodule subclass to represent the child plugs of a CompoundPlug. This
+/// is not registered automatically with the Nodule factory on the assumption
+/// that generally individual connections within a CompoundPlug do not need
+/// to be displayed to the user. Use Nodule::registerNodule( nodeType, plugPath, creator )
+/// to cause the use of the CompoundNodule for specific plugs.
+class CompoundNodule : public Nodule
+{
+
+	public :
+
+		CompoundNodule( Gaffer::CompoundPlugPtr plug );
+		virtual ~CompoundNodule();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundNodule, CompoundNoduleTypeId, Nodule );
+
+		virtual Imath::Box3f bound() const;
+
+		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+
+		/// Returns a Nodule for a child of the CompoundPlug being represented.
+		NodulePtr nodule( Gaffer::ConstPlugPtr plug );
+		ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		
+	protected :
+
+		void doRender( IECore::RendererPtr renderer ) const;
+	
+	private :
+	
+		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		void childRenderRequest( Gadget *child );
+
+		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
+		NoduleMap m_nodules;
+		
+		LinearContainerPtr m_row;
+				
+};
+
+IE_CORE_DECLAREPTR( CompoundNodule );
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_COMPOUNDNODULE_H
