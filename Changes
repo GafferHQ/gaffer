@@ -1,5 +1,7 @@
 * Renamed ArrayNodule to CompoundNodule.
 
+* Bug fix for PathListingWidget with allowMultipleSelection==True. When selecting more than one item, the path being edited is now always set the current directory. This avoids problems where setting the path to the last selected leaf could cause the current selection to be destroyed.
+
 0.17.0
 ------
 

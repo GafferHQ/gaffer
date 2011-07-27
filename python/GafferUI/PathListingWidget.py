@@ -162,7 +162,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		itemToSelect = self.__pathsToItems.get( str(self.__path), None )
 		if itemToSelect is not None :
 			sm.select( itemToSelect.index(), sm.ClearAndSelect | sm.Rows )
-			self._qtWidget().scrollTo( itemToSelect.index(), self._qtWidget().PositionAtCenter )
+			self._qtWidget().scrollTo( itemToSelect.index(), self._qtWidget().EnsureVisible )
 		else :
 			sm.clear()
 			
@@ -200,12 +200,19 @@ class PathListingWidget( GafferUI.Widget ) :
 		return True
 		
 	def __selectionChanged( self, selected, deselected ) :
-			
-		selectedIndices = selected.indexes()
-		if len( selectedIndices ) :
-			selectedPath = self.__appendedPath( selectedIndices[0] )
-			if selectedPath.isLeaf() :
-				self.__path[:] = selectedPath[:]			
+					
+		currentlySelectedRows = self._qtWidget().selectionModel().selectedRows( 0 )
+		if len( currentlySelectedRows )==1 and self.__appendedPath( currentlySelectedRows[0] ).isLeaf() :
+			# we only have a single selected item, and it's a leaf. update the path
+			# to reflect this selection.
+			self.__path[:] = self.__appendedPath( currentlySelectedRows[0] )[:]
+		else :
+			# either we have a multiple selection, a single selection of a non-leaf node
+			# or no selection at all. set the path back to be the current directory only,
+			# and do this without calling __update() so the current selection isn't
+			# destroyed.
+			with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+				self.__path[:] = self.__dirPath()[:]	
 			
 		return True
 	
