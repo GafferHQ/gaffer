@@ -237,6 +237,24 @@ class NodeTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["p1"].defaultValue(), "default" )
 		self.assertEqual( s["n"]["p1"].getValue(), "value" )
+	
+	def testSerialiseDynamicBoolPlugs( self ) :
+	
+		n = Gaffer.Node()
+		
+		n["p1"] = Gaffer.BoolPlug( defaultValue = True, flags = Gaffer.Plug.Flags.Dynamic )
+		n["p1"].setValue( False )
+		
+		s = Gaffer.ScriptNode()
+		s["n"] = n
+		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertEqual( s["n"]["p1"].defaultValue(), True )
+		self.assertEqual( s["n"]["p1"].getValue(), False )
 									
 if __name__ == "__main__":
 	unittest.main()
