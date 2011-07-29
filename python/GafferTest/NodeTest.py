@@ -219,7 +219,25 @@ class NodeTest( unittest.TestCase ) :
 		self.assertEqual( s["n"].children()[0].getName(), "p1" )
 		self.assertEqual( s["n"].children()[1].getName(), "p2" )
 		self.assertEqual( s["n"].children()[2].getName(), "p3" )
-										
+	
+	def testSerialiseDynamicStringPlugs( self ) :
+	
+		n = Gaffer.Node()
+		
+		n["p1"] = Gaffer.StringPlug( defaultValue = "default", flags = Gaffer.Plug.Flags.Dynamic )
+		n["p1"].setValue( "value" )
+		
+		s = Gaffer.ScriptNode()
+		s["n"] = n
+		
+		ss = s.serialise()
+
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertEqual( s["n"]["p1"].defaultValue(), "default" )
+		self.assertEqual( s["n"]["p1"].getValue(), "value" )
+									
 if __name__ == "__main__":
 	unittest.main()
 	
