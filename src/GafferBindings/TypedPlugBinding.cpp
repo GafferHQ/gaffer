@@ -37,14 +37,15 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/Wrapper.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/IECoreBinding.h"
+
 #include "GafferBindings/TypedPlugBinding.h"
 #include "GafferBindings/Serialiser.h"
 #include "GafferBindings/PlugBinding.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Node.h"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -61,9 +62,10 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
 	}
 	
-	if( plug->defaultValue()!=typename T::ValueType() )
+	typename T::ValueType defaultValue = plug->defaultValue();
+	if( defaultValue!=typename T::ValueType() )
 	{
-		result += "defaultValue = " + boost::lexical_cast<std::string>( plug->defaultValue() ) + ", ";
+		result += "defaultValue = " + IECorePython::repr( defaultValue ) + ", ";
 	}
 	
 	if( plug->getFlags() )
@@ -89,7 +91,7 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 		typename T::ValueType value = p->getValue();
 		if( value!=plug->defaultValue() )
 		{
-			result += "value = \"" + boost::lexical_cast<std::string>( value ) + "\", ";
+			result += "value = " + IECorePython::repr( value ) + ", ";
 		}
 	}
 	
