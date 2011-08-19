@@ -1,5 +1,7 @@
 * Added a BoolVectorDataPlug and a BoolVectorDataParameterHandler.
 
+* GafferUI._Variant.fromVariant() now supports booleans.
+
 0.18.0
 ------
 

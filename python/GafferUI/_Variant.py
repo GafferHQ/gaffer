@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -72,6 +73,8 @@ class _Variant() :
 				return variant.toDouble()[0]
 			elif t == QtCore.QVariant.Int :	
 				return variant.toInt()[0]
+			elif t == QtCore.QVariant.Bool :
+				return variant.toBool()
 			else :
 				raise ValueError( "Unsupported QVariant type" )
 		else :
