@@ -130,6 +130,7 @@ namespace Gaffer
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectPlug, ObjectPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( BoolVectorDataPlug, BoolVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( IntVectorDataPlug, IntVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FloatVectorDataPlug, FloatVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVectorDataPlugTypeId )
@@ -139,6 +140,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fVectorDataPlug, V3fVectorDa
 
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
+template class TypedObjectPlug<IECore::BoolVectorData>;
 template class TypedObjectPlug<IECore::IntVectorData>;
 template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;

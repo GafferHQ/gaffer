@@ -100,12 +100,14 @@ class TypedObjectPlug : public ValuePlug
 };
 
 typedef TypedObjectPlug<IECore::Object> ObjectPlug;
+typedef TypedObjectPlug<IECore::BoolVectorData> BoolVectorDataPlug;
 typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
 typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
 typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
 typedef TypedObjectPlug<IECore::V3fVectorData> V3fVectorDataPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
+IE_CORE_DECLAREPTR( BoolVectorDataPlug );
 IE_CORE_DECLAREPTR( IntVectorDataPlug );
 IE_CORE_DECLAREPTR( FloatVectorDataPlug );
 IE_CORE_DECLAREPTR( StringVectorDataPlug );
@@ -114,6 +116,10 @@ IE_CORE_DECLAREPTR( V3fVectorDataPlug );
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectPlug> > OutputObjectPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, BoolVectorDataPlug> > BoolVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, BoolVectorDataPlug> > InputBoolVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, BoolVectorDataPlug> > OutputBoolVectorDataPlugIterator;
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntVectorDataPlug> > IntVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, IntVectorDataPlug> > InputIntVectorDataPlugIterator;

@@ -147,6 +147,7 @@ static void bind()
 void GafferBindings::bindTypedObjectPlug()
 {
 	bind<ObjectPlug>();
+	bind<BoolVectorDataPlug>();
 	bind<IntVectorDataPlug>();
 	bind<FloatVectorDataPlug>();
 	bind<StringVectorDataPlug>();

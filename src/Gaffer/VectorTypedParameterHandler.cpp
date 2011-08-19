@@ -106,6 +106,7 @@ void VectorTypedParameterHandler<T>::setPlugValue()
 		
 // explicit instantiations
 
+template class VectorTypedParameterHandler<bool>;
 template class VectorTypedParameterHandler<int>;
 template class VectorTypedParameterHandler<float>;
 template class VectorTypedParameterHandler<std::string>;

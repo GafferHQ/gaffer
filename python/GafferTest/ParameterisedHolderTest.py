@@ -105,6 +105,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 			
 			[
 		
+				IECore.BoolVectorParameter( "bv", "", IECore.BoolVectorData() ),
 				IECore.IntVectorParameter( "iv", "", IECore.IntVectorData() ),
 				IECore.FloatVectorParameter( "fv", "", IECore.FloatVectorData() ),
 				IECore.StringVectorParameter( "sv", "", IECore.StringVectorData() ),
@@ -117,11 +118,13 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph = Gaffer.ParameterisedHolderNode()
 		ph.setParameterised( p )
 		
+		self.assertEqual( ph["parameters"]["bv"].defaultValue(), IECore.BoolVectorData() )
 		self.assertEqual( ph["parameters"]["iv"].defaultValue(), IECore.IntVectorData() )
 		self.assertEqual( ph["parameters"]["fv"].defaultValue(), IECore.FloatVectorData() )
 		self.assertEqual( ph["parameters"]["sv"].defaultValue(), IECore.StringVectorData() )
 		self.assertEqual( ph["parameters"]["vv"].defaultValue(), IECore.V3fVectorData() )
 		
+		self.assertEqual( ph["parameters"]["bv"].getValue(), IECore.BoolVectorData() )
 		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData() )
 		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData() )
 		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData() )
@@ -129,16 +132,19 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		with ph.parameterModificationContext() as parameters :
 		
+			parameters["bv"].setValue( IECore.BoolVectorData( [ True, False ] ) )
 			parameters["iv"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
 			parameters["fv"].setValue( IECore.FloatVectorData( [ 1 ] ) )
 			parameters["sv"].setValue( IECore.StringVectorData( [ "a" ] ) )
 			parameters["vv"].setValue( IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ) )
 		
+		self.assertEqual( ph["parameters"]["bv"].getValue(), IECore.BoolVectorData( [ True, False ] ) )
 		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 1, 2, 3 ] ) )
 		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 1 ] ) )
 		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "a" ] ) )	
 		self.assertEqual( ph["parameters"]["vv"].getValue(), IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ) )
 		
+		ph["parameters"]["bv"].setValue( IECore.BoolVectorData( [ True, True ] ) )
 		ph["parameters"]["iv"].setValue( IECore.IntVectorData( [ 2, 3, 4 ] ) )
 		ph["parameters"]["fv"].setValue( IECore.FloatVectorData( [ 2 ] ) )
 		ph["parameters"]["sv"].setValue( IECore.StringVectorData( [ "b" ] ) )
@@ -146,6 +152,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		ph.setParameterisedValues()
 		
+		self.assertEqual( parameters["bv"].getValue(), IECore.BoolVectorData( [ True, True ] ) )
 		self.assertEqual( parameters["iv"].getValue(), IECore.IntVectorData( [ 2, 3, 4 ] ) )
 		self.assertEqual( parameters["fv"].getValue(), IECore.FloatVectorData( [ 2 ] ) )
 		self.assertEqual( parameters["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )

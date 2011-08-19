@@ -87,6 +87,18 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.ObjectPlug( "hello" )
 		self.failUnless( p.acceptsInput( None ) )
+		
+	def testBoolVectorDataPlug( self ) :
+	
+		p = Gaffer.BoolVectorDataPlug( "p", defaultValue = IECore.BoolVectorData( [ True, False ] ) )
+		
+		self.assertEqual( p.defaultValue(), IECore.BoolVectorData( [ True, False ] ) )
+		self.assertEqual( p.getValue(), IECore.BoolVectorData( [ True, False ] ) )
+		
+		p.setValue( IECore.BoolVectorData( [ False ] ) )
+		self.assertEqual( p.getValue(), IECore.BoolVectorData( [ False ] ) )
+				
+		self.assertRaises( Exception, p.setValue, IECore.IntData( 10 ) )
 				
 if __name__ == "__main__":
 	unittest.main()

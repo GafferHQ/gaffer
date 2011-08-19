@@ -75,6 +75,7 @@ enum TypeId
 	V3fVectorDataPlugTypeId = 400028,
 	StandardSetTypeId = 400029,
 	ChildSetTypeId = 400030,
+	BoolVectorDataPlugTypeId = 400031,
 	
 	FirstPythonTypeId = 405000,
 	
