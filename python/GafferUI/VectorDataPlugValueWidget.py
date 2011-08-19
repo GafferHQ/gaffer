@@ -66,6 +66,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 						
 			self.getPlug().setValue( self.__dataWidget.getData() )
 	
+GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.StringVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )

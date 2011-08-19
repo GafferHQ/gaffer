@@ -254,6 +254,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 			self.__fromVariant = self.__fromVariantCompound
 			self.__toVariant = self.__toVariantCompound
 			self.__numColumns = 3
+		elif isinstance( data, IECore.BoolVectorData ) :
+			self.__fromVariant = self.__fromVariantBool	
 		elif isinstance( data, IECore.IntVectorData ) :
 			self.__fromVariant = self.__fromVariantInt
 		elif isinstance( data, ( IECore.FloatVectorData, IECore.DoubleVectorData ) ) :
@@ -372,6 +374,18 @@ class _Model( QtCore.QAbstractTableModel ) :
 	
 		return GafferUI._Variant.fromVariant( variant )
 		
+	@staticmethod
+	def __fromVariantBool( variant, data, index ) :
+	
+		value = GafferUI._Variant.fromVariant( variant )
+		if isinstance( value, basestring ) :
+			if value == "0" :
+				value = False
+			else :
+				value = True
+						
+		return value
+			
 	@staticmethod
 	def __fromVariantInt( variant, data, index ) :
 	
