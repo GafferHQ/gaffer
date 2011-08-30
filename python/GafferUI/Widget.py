@@ -707,6 +707,22 @@ class Widget( object ) :
 			border: 0px solid transparent;
 		}
 		
+		QTableView::indicator {
+			width: 20px;
+			height: 20px;
+			background-color: transparent;
+			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
+		}
+		
+		QTableView::indicator:checked {
+			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
+		}
+		
+		QTableView::indicator:unchecked {
+			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
+		}
+		
+		
 		"""
 		
 	).substitute( {

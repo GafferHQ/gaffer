@@ -94,6 +94,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 		for i in range( 0, self._qtWidget().horizontalHeader().count() ) :
 			self._qtWidget().horizontalHeader().resizeSection( i, 70 )
 			
+		if isinstance( data, IECore.BoolVectorData ) :
+			self._qtWidget().setItemDelegate( _CheckBoxDelegate( self._qtWidget() ) )
+
 		self._qtWidget().updateGeometry()
 		
 	def getData( self ) :
@@ -435,3 +438,37 @@ class _Model( QtCore.QAbstractTableModel ) :
 				
 		result[index.column()] = value
 		return result
+
+class _CheckBoxDelegate( QtGui.QStyledItemDelegate ) :
+
+	def __init__( self, parent ) :
+	
+		QtGui.QStyledItemDelegate.__init__( self, parent )
+	
+	def paint( self, painter, option, index ) :
+			
+		styleOption = QtGui.QStyleOptionButton()
+		
+		styleOption.state |= QtGui.QStyle.State_Enabled
+		if index.model().data( index, QtCore.Qt.DisplayRole ).toBool() :
+			styleOption.state |= QtGui.QStyle.State_On
+		else :
+			styleOption.state |= QtGui.QStyle.State_Off
+		
+		styleOption.rect = option.rect
+		
+		widget = self.parent()		
+		widget.style().drawControl( QtGui.QStyle.CE_CheckBox, styleOption, painter, widget )
+
+	def editorEvent( self, event, model, option, index ) :
+		
+		if event.type()==QtCore.QEvent.MouseButtonDblClick :
+			# eat event so an editor doesn't get created
+			return True
+		if event.type()==QtCore.QEvent.MouseButtonRelease :
+			# toggle the data value
+			checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+			model.setData( index, not checked, QtCore.Qt.EditRole )
+			return True
+
+		return False
