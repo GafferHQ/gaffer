@@ -64,7 +64,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 					
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 						
-			self.getPlug().setValue( self.__dataWidget.getData() )
+			self.getPlug().setValue( self.__dataWidget.getData()[0] )
 	
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )

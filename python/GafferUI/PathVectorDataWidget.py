@@ -70,7 +70,7 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 		
 	def __editPath( self, index ) :
 		
-		data = self.getData()
+		data = self.getData()[0]
 		
 		path = self.__path.copy()
 		if index < len( data ) :

@@ -42,10 +42,12 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## The VectorDataWidget provides a list view for the contents of
-# the IECore VectorData classes.
+## The VectorDataWidget provides a table view for the contents of
+# one or more IECore VectorData instances.
 class VectorDataWidget( GafferUI.Widget ) :
 
+	## data may either be a VectorData instance or a list of VectorData instances
+	# of identical length.
 	def __init__( self, data=None, editable=True, header=False, showIndices=True ) :
 	
 		GafferUI.Widget.__init__( self, _TableView() )
@@ -79,6 +81,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# by self.__removeSelection.
 					
 		if data is not None :
+			if not isinstance( data, list ) :
+				data = [ data ]
 			self.__model = _Model( data, self._qtWidget(), self.getEditable() )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__dataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__dataChanged ) )
@@ -88,17 +92,30 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		self._qtWidget().setModel( self.__model )
 		
-		isStringData = isinstance( data, IECore.StringVectorData )
-		self._qtWidget().horizontalHeader().setStretchLastSection( isStringData )
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if isStringData else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
-		for i in range( 0, self._qtWidget().horizontalHeader().count() ) :
-			self._qtWidget().horizontalHeader().resizeSection( i, 70 )
-			
-		if isinstance( data, IECore.BoolVectorData ) :
-			self._qtWidget().setItemDelegate( _CheckBoxDelegate( self._qtWidget() ) )
-
-		self._qtWidget().updateGeometry()
+		if self.__model :
 		
+			columnIndex = 0
+			columnWidths = []
+			for accessor in self.__model.vectorDataAccessors() :
+				for i in range( 0, accessor.numColumns() ) :
+					delegate = _Delegate.create( accessor.data() )
+					delegate.setParent( self.__model )
+					self._qtWidget().setItemDelegateForColumn( columnIndex, delegate )
+					columnWidths.append( delegate.columnWidth() )
+					canStretch = delegate.canStretch()
+					columnIndex += 1
+
+			self._qtWidget().horizontalHeader().setStretchLastSection( canStretch )
+			self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+
+			# we have to call resizeSection after setStretchLastSection as otherwise it doesn't work
+			for i in range( 0, len( columnWidths ) ) :
+				self._qtWidget().horizontalHeader().resizeSection( i, columnWidths[i] )
+		
+		self._qtWidget().updateGeometry()
+	
+	## Returns the data being displayed. This is always returned as a list of
+	# VectorData instances, even if only one instance was passd to setData().	
 	def getData( self ) :
 	
 		return self.__model.vectorData()
@@ -178,13 +195,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		# delete the rows from data
 		for i in range( len( indices )-1, -1, -1 ) :
-			del data[indices[i]]
+			for d in data :
+				del d[indices[i]]
 		
 		# tell the world
 		self.setData( data )
 		self.__dataChanged()
 	
-## Private implementation - a QTableView which is much more forceful about
+# Private implementation - a QTableView which is much more forceful about
 # requesting enough size if the scrollbars are off in a given direction.
 class _TableView( QtGui.QTableView ) :
 
@@ -229,14 +247,14 @@ class _TableView( QtGui.QTableView ) :
 			if not self.horizontalHeader().isHidden() :
 				h += self.horizontalHeader().sizeHint().height()
 			result.setHeight( h )		
-								
+										
 		return result
 
 	def __sizeShouldChange( self, *unusedArgs ) :
 		
 		self.updateGeometry()
 		
-## Internal implementation detail - a qt model which wraps
+# Internal implementation detail - a qt model which wraps
 # around the VectorData.		
 class _Model( QtCore.QAbstractTableModel ) :
 
@@ -248,37 +266,25 @@ class _Model( QtCore.QAbstractTableModel ) :
 				
 		self.__data = data
 		self.__editable = editable
-		
-		self.__toVariant = self.__toVariantSimple
-		self.__fromVariant = self.__fromVariantSimple
-		self.__numColumns = 1
-		self.__headerLabels = [ "X", "Y", "Z" ]
-		if isinstance( data, IECore.V3fVectorData ) :
-			self.__fromVariant = self.__fromVariantCompound
-			self.__toVariant = self.__toVariantCompound
-			self.__numColumns = 3
-		elif isinstance( data, IECore.BoolVectorData ) :
-			self.__fromVariant = self.__fromVariantBool	
-		elif isinstance( data, IECore.IntVectorData ) :
-			self.__fromVariant = self.__fromVariantInt
-		elif isinstance( data, ( IECore.FloatVectorData, IECore.DoubleVectorData ) ) :
-			self.__fromVariant = self.__fromVariantFloat
-		elif isinstance( data, ( IECore.Color3fVectorData ) ) :
-			self.__fromVariant = self.__fromVariantCompound
-			self.__toVariant = self.__toVariantCompound
-			self.__numColumns = 3
-			self.__headerLabels = [ "R", "G", "B" ]
-		elif isinstance( data, ( IECore.Color4fVectorData ) ) :
-			self.__fromVariant = self.__fromVariantCompound
-			self.__toVariant = self.__toVariantCompound
-			self.__numColumns = 4
-			self.__headerLabels = [ "R", "G", "B", "A" ]	
-								
+
+		self.__columns = []
+		self.__accessors = []
+		for d in self.__data :
+			accessor = _DataAccessor.create( d )
+			assert( accessor is not None ) 
+			for i in range( 0, accessor.numColumns() ) :
+				self.__columns.append( IECore.Struct( accessor=accessor, relativeColumnIndex=i ) )
+			self.__accessors.append( accessor )
+							
 	## Methods specific to this model first
 	
 	def vectorData( self ) :
 	
 		return self.__data
+		
+	def vectorDataAccessors( self ) :
+	
+		return self.__accessors
 		
 	def setEditable( self, editable ) :
 	
@@ -298,17 +304,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if parent.isValid() :
 			return 0
 		
-		if self.__editable :
-			return len( self.__data ) + 1
-		else :
-			return len( self.__data )
+		return len( self.__data[0] )
 		
 	def columnCount( self, parent ) :
 	
 		if parent.isValid() :
 			return 0
 			
-		return self.__numColumns
+		return len( self.__columns )
 		
 	def headerData( self, section, orientation, role ) :
 		
@@ -321,7 +324,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 					
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
-				return GafferUI._Variant.toVariant( self.__headerLabels[section] )
+				column = self.__columns[section]
+				return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
 			else :
 				return GafferUI._Variant.toVariant( section )
 		
@@ -346,105 +350,167 @@ class _Model( QtCore.QAbstractTableModel ) :
 			role == QtCore.Qt.DisplayRole or 
 			role == QtCore.Qt.EditRole
 		) :
-			if index.row() < len( self.__data ) :
-				return self.__toVariant( self.__data, index )
-			else :
-				return GafferUI._Variant.toVariant( self.__addValueText )
+			column = self.__columns[index.column()]
+			return column.accessor.getElement( index.row(), column.relativeColumnIndex )
 			
 		return GafferUI._Variant.toVariant( None )
 
 	def setData( self, index, value, role ) :
 	
 		if role == QtCore.Qt.EditRole :
-			if index.row() < len( self.__data ) :
-				self.__data[index.row()] = self.__fromVariant( value, self.__data, index )
-				self.dataChanged.emit( index, index )
-			else :
-				if value!=self.__addValueText :
-					self.beginInsertRows( index.parent(), len( self.__data ) + 1, len( self.__data ) + 1 )
-					self.__data.append( self.__fromVariant( value, self.__data, index ) )
-					self.endInsertRows()
+			column = self.__columns[index.column()]
+			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
+			self.dataChanged.emit( index, index )
 
 		return True
 
-	@staticmethod
-	def __toVariantSimple( data, index ) :
-	
-		return GafferUI._Variant.toVariant( data[index.row()] )
+# The _DataAccessor classes are responsible for converting from the Cortex data representation to the
+# Qt (QVariant) representation.
+class _DataAccessor() :
 
-	@staticmethod
-	def __fromVariantSimple( variant, data, index ) :
-	
-		return GafferUI._Variant.fromVariant( variant )
-		
-	@staticmethod
-	def __fromVariantBool( variant, data, index ) :
-	
-		value = GafferUI._Variant.fromVariant( variant )
-		if isinstance( value, basestring ) :
-			if value == "0" :
-				value = False
-			else :
-				value = True
-						
-		return value
+	def __init__( self, data ) :
 			
-	@staticmethod
-	def __fromVariantInt( variant, data, index ) :
+		self.__data = data
 	
-		value = GafferUI._Variant.fromVariant( variant )
-		if isinstance( value, basestring ) :
-			# we get strings back from the Add... line
-			try :
-				value = int( float( value ) )
-			except ValueError :
-				value = 0
-						
-		return value
+	def data( self ) :
+	
+		return self.__data
 		
-	@staticmethod
-	def __fromVariantFloat( variant, data, index ) :
+	def numColumns( self ) :
 	
-		value = GafferUI._Variant.fromVariant( variant )
-		if isinstance( value, basestring ) :
-			# we get strings back from the Add... line
-			try :
-				value = float( value )
-			except ValueError :
-				value = 0
-						
-		return value	
-
-	@staticmethod
-	def __toVariantCompound( data, index ) :
+		return 1
+	
+	def headerLabel( self, columnIndex ) :
+	
+		return [ "X", "Y", "Z" ][columnIndex]
 		
-		return GafferUI._Variant.toVariant( data[index.row()][index.column()] )
-
-	@staticmethod
-	def __fromVariantCompound( variant, data, index ) :
+	def setElement( self, rowIndex, columnIndex, value ) :
 	
-		if index.row() < len( data ) :
-			result = data[index.row()]
+		self.data()[rowIndex] = GafferUI._Variant.fromVariant( value )
+		
+	def getElement( self, rowIndex, columnIndex ) :
+	
+		return GafferUI._Variant.toVariant( self.data()[rowIndex] )
+
+	# Factory methods
+	#################################
+
+	@classmethod
+	def create( cls, data ) :
+	
+		typeIds = [ data.typeId() ] + IECore.RunTimeTyped.baseTypeIds( data.typeId() )
+		for typeId in typeIds :	
+			creator = cls.__typesToCreators.get( typeId, None )
+			if creator is not None :
+				return creator( data )
+		
+		return None
+		
+	@classmethod
+	def registerType( cls, typeId, creator ) :
+	
+		cls.__typesToCreators[typeId] = creator
+
+	__typesToCreators = {}
+
+_DataAccessor.registerType( IECore.StringVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.IntVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.BoolVectorData.staticTypeId(), _DataAccessor )
+
+class _CompoundDataAccessor( _DataAccessor ) :
+
+	def __init__( self, data ) :
+		
+		_DataAccessor.__init__( self, data )
+		
+	def numColumns( self ) :
+	
+		v = IECore.DataTraits.valueTypeFromSequenceType( type( self.data() ) )
+		return v.dimensions()
+	
+	def headerLabel( self, columnIndex ) :
+	
+		if isinstance( self.data(), ( IECore.Color3fVectorData, IECore.Color4fVectorData ) ) :
+			return [ "R", "G", "B", "A" ][columnIndex]
 		else :
-			result = IECore.DataTraits.valueTypeFromSequenceType( type( data ) )( 0 )
+			return [ "X", "Y", "Z", "W" ][columnIndex]
 		
-		value = GafferUI._Variant.fromVariant( variant )
-		if isinstance( value, basestring ) :
-			# we get strings back from the Add... line
-			try :
-				value = float( value )
-			except ValueError :
-				value = 0
-				
-		result[index.column()] = value
-		return result
-
-class _CheckBoxDelegate( QtGui.QStyledItemDelegate ) :
-
-	def __init__( self, parent ) :
+	def setElement( self, rowIndex, columnIndex, value ) :
 	
-		QtGui.QStyledItemDelegate.__init__( self, parent )
+		element = self.data()[rowIndex]
+		element[columnIndex] = GafferUI._Variant.fromVariant( value )
+		self.data()[rowIndex] = element
 	
+	def getElement( self, rowIndex, columnIndex ) :
+	
+		return GafferUI._Variant.toVariant( self.data()[rowIndex][columnIndex] )
+
+_DataAccessor.registerType( IECore.Color3fVectorData.staticTypeId(), _CompoundDataAccessor )
+_DataAccessor.registerType( IECore.Color4fVectorData.staticTypeId(), _CompoundDataAccessor )
+_DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
+
+# The _Delegate classes are used to decide how the different types of data are
+# displayed. They derive from QStyledItemDelegate for drawing and event handling,
+# but also have additional methods to specify sizing.
+class _Delegate( QtGui.QStyledItemDelegate ) :
+
+	def __init__( self ) :
+			
+		QtGui.QStyledItemDelegate.__init__( self )
+	
+	def columnWidth( self ) :
+	
+		return 70
+		
+	def canStretch( self ) :
+	
+		return False
+	
+	# Factory methods
+	#################################
+
+	@classmethod
+	def create( cls, data ) :
+	
+		typeIds = [ data.typeId() ] + IECore.RunTimeTyped.baseTypeIds( data.typeId() )
+		for typeId in typeIds :	
+			creator = cls.__typesToCreators.get( typeId, None )
+			if creator is not None :
+				return creator()
+		
+		return None
+		
+	@classmethod
+	def registerType( cls, typeId, creator ) :
+	
+		cls.__typesToCreators[typeId] = creator
+
+	__typesToCreators = {}
+	
+_Delegate.registerType( IECore.StringVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.IntVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _Delegate )
+
+class _BoolDelegate( _Delegate ) :
+
+	def __init__( self ) :
+	
+		_Delegate.__init__( self )
+		
+	def columnWidth( self ) :
+	
+		return 30
+		
+	def canStretch( self ) :
+	
+		return False
+
 	def paint( self, painter, option, index ) :
 			
 		styleOption = QtGui.QStyleOptionButton()
@@ -457,7 +523,7 @@ class _CheckBoxDelegate( QtGui.QStyledItemDelegate ) :
 		
 		styleOption.rect = option.rect
 		
-		widget = self.parent()		
+		widget = option.widget	
 		widget.style().drawControl( QtGui.QStyle.CE_CheckBox, styleOption, painter, widget )
 
 	def editorEvent( self, event, model, option, index ) :
@@ -472,3 +538,17 @@ class _CheckBoxDelegate( QtGui.QStyledItemDelegate ) :
 			return True
 
 		return False
+
+_Delegate.registerType( IECore.BoolVectorData.staticTypeId(), _BoolDelegate )
+
+class _StringDelegate( _Delegate ) :
+
+	def __init__( self ) :
+	
+		_Delegate.__init__( self )
+				
+	def canStretch( self ) :
+	
+		return True
+
+_Delegate.registerType( IECore.StringVectorData.staticTypeId(), _StringDelegate )

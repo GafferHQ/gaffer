@@ -2,6 +2,8 @@
 
 * GafferUI._Variant.fromVariant() now supports booleans.
 
+* VectorDataWidget now accepts a list of VectorData objects to the constructor and in setData(). This allows larger tables to be constructed consisting of columns from several VectorData objects. As a result VectorData.getData() always returns a list of objects, even when operating on only a single object.
+
 0.18.0
 ------
 
