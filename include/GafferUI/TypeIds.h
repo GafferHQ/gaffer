@@ -43,27 +43,27 @@ namespace GafferUI
 
 enum TypeId
 {
-	GadgetTypeId = 410000,
-	NodeGadgetTypeId = 410001,
-	GraphGadgetTypeId = 410002,
-	ContainerGadgetTypeId = 410003,
-	RenderableGadgetTypeId = 410004,
-	TextGadgetTypeId = 410005,
-	NameGadgetTypeId = 410006,
-	IndividualContainerTypeId = 410007,
-	FrameTypeId = 410008,
-	StyleTypeId = 410009,
-	StandardStyleTypeId = 410010,
-	NoduleTypeId = 410011,
-	LinearContainerTypeId = 410012,
-	ConnectionGadgetTypeId = 410013,
-	StandardNodeGadgetTypeId = 410014,
-	SplinePlugGadgetTypeId = 410015,
-	StandardNoduleTypeId = 410016,
-	CompoundNoduleTypeId = 410017,
-	ImageGadgetTypeId = 410018,
+	GadgetTypeId = 110501,
+	NodeGadgetTypeId = 110502,
+	GraphGadgetTypeId = 110503,
+	ContainerGadgetTypeId = 110504,
+	RenderableGadgetTypeId = 110505,
+	TextGadgetTypeId = 110506,
+	NameGadgetTypeId = 110507,
+	IndividualContainerTypeId = 110508,
+	FrameTypeId = 110509,
+	StyleTypeId = 110510,
+	StandardStyleTypeId = 110511,
+	NoduleTypeId = 110512,
+	LinearContainerTypeId = 110513,
+	ConnectionGadgetTypeId = 110514,
+	StandardNodeGadgetTypeId = 110515,
+	SplinePlugGadgetTypeId = 110516,
+	StandardNoduleTypeId = 110517,
+	CompoundNoduleTypeId = 110518,
+	ImageGadgetTypeId = 110519,
 	
-	LastTypeId = 419999
+	LastTypeId = 110999
 };
 
 } // namespace GafferUI
