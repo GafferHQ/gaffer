@@ -24,6 +24,13 @@
        inkscape:vp_z="744.09448 : 526.18109 : 1"
        inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
        id="perspective10" />
+    <inkscape:perspective
+       id="perspective2929"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -32,16 +39,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="8"
-     inkscape:cx="45.753621"
-     inkscape:cy="963.23847"
+     inkscape:zoom="8.0609347"
+     inkscape:cx="108.2994"
+     inkscape:cy="984.44458"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="false"
-     inkscape:window-width="1007"
-     inkscape:window-height="807"
-     inkscape:window-x="571"
-     inkscape:window-y="330"
+     showgrid="true"
+     inkscape:window-width="1311"
+     inkscape:window-height="730"
+     inkscape:window-x="1925"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:snap-global="true">
     <inkscape:grid
@@ -341,21 +348,15 @@
        y="6"
        transform="matrix(0,1,1,0,0,0)"
        inkscape:label="#rect3946" />
-    <path
-       sodipodi:nodetypes="cccccccccc"
-       inkscape:connector-curvature="0"
-       d="m 107,59.362183 16,0 0,16 -16,0 z m 1,1 14,0 0,14 -14,0 z"
-       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none"
-       id="path3948" />
     <rect
        inkscape:label="#rect3931"
        transform="matrix(0,1,1,0,0,0)"
-       y="105.02723"
-       x="57.389313"
+       y="106"
+       x="57.362183"
        height="19.972771"
        width="19.97287"
        id="forExport:checkBoxUnchecked"
-       style="fill:none;stroke:none" />
+       style="fill:none;fill-opacity:1;stroke:none" />
     <path
        id="path3954"
        style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none"
@@ -429,7 +430,7 @@
        inkscape:rounded="0"
        inkscape:randomized="0"
        d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
-       transform="matrix(-0.65333366,0,0,0.646633,154.86671,-311.44114)"
+       transform="matrix(-0.65333366,0,0,0.646633,155.86671,-311.44114)"
        inkscape:label="#forExport:collapsibleArrowRightHover" />
     <rect
        transform="matrix(0,1,1,0,0,0)"
@@ -494,5 +495,35 @@
        id="forExport:headerSortUp"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccc" />
+    <path
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.80000000000000004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 66,31 0,5 -5,0 0,6 5,0 0,5 6,0 0,-5 5,0 0,-6 -5,0 0,-5 -6,0 z"
+       transform="translate(0,52.362183)"
+       id="forExport:plus"
+       sodipodi:nodetypes="ccccccccccccc"
+       inkscape:label="#rect3638" />
+    <path
+       id="path3651"
+       transform="translate(0,52.362183)"
+       d="m 67,32 0,5 -5,0 0,4 5,0 0,5 4,0 0,-5 5,0 0,-4 -5,0 0,-5 -4,0 z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.80000000000000004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:nodetypes="ccccccccccccc" />
+    <path
+       inkscape:label="#rect3638"
+       sodipodi:nodetypes="ccccc"
+       id="forExport:minus"
+       d="m 81,88.362183 0,6 16,0 0,-6 -16,0 z"
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" />
+    <path
+       sodipodi:nodetypes="ccccc"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       d="m 82,89.362183 0,4 14,0 0,-4 -14,0 z"
+       id="path2865" />
+    <path
+       sodipodi:nodetypes="cccccccccc"
+       inkscape:connector-curvature="0"
+       d="m 108,59.362183 16,0 0,16 -16,0 z m 1,1 14,0 0,14 -14,0 z"
+       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       id="path3948" />
   </g>
 </svg>

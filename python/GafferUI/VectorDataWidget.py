@@ -50,26 +50,53 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# of identical length.
 	def __init__( self, data=None, editable=True, header=False, showIndices=True ) :
 	
-		GafferUI.Widget.__init__( self, _TableView() )
-						
-		self._qtWidget().horizontalHeader().setVisible( header )
-		self._qtWidget().horizontalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
-		
-		self._qtWidget().verticalHeader().setVisible( showIndices )
-		self._qtWidget().verticalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
-		self._qtWidget().verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
-
-		self._qtWidget().setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self._qtWidget().setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		
-		self._qtWidget().setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
-		self._qtWidget().setCornerButtonEnabled( False )
-		
-		self._qtWidget().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
-		self._qtWidget().customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
-
-		self.__dataChangedSignal = GafferUI.WidgetSignal()
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 	
+		GafferUI.Widget.__init__( self, self.__column )
+		
+		# table view
+		
+		self.__tableView = _TableView()
+						
+		self.__tableView.horizontalHeader().setVisible( header )
+		self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
+		
+		self.__tableView.verticalHeader().setVisible( showIndices )
+		self.__tableView.verticalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
+		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
+
+		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		
+		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
+		self.__tableView.setCornerButtonEnabled( False )
+		
+		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
+
+		self.__column.append( GafferUI.Widget( self.__tableView ) )
+		
+		# buttons
+		
+		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		
+		addButton = GafferUI.Button( image="plus.png" )
+		self.__addButtonConnection = addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRow ) )
+		self.__buttonRow.append( addButton )
+		
+		removeButton = GafferUI.Button( image="minus.png" )
+		self.__removeButtonConnection = removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeSelection ) )
+		self.__buttonRow.append( removeButton )
+		
+		self.__buttonRow.append( GafferUI.Spacer( size = IECore.V2i( 0 ) ), expand=1 )
+		## \todo Update spacer so it has the flexibility we need without hacking it like this
+		self.__buttonRow[-1]._qtWidget().setMaximumHeight( 1 )
+		self.__column.append( self.__buttonRow )
+		
+		# final setup
+		
+		self.__dataChangedSignal = GafferUI.WidgetSignal()
+		
 		self.setData( data )
 		self.setEditable( editable )
 	
@@ -83,14 +110,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self._qtWidget(), self.getEditable() )
+			self.__model = _Model( data, self.__tableView, self.getEditable() )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__dataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__dataChanged ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__dataChanged ) )
 		else :
 			self.__model = None
 		
-		self._qtWidget().setModel( self.__model )
+		self.__tableView.setModel( self.__model )
 		
 		if self.__model :
 		
@@ -100,19 +127,19 @@ class VectorDataWidget( GafferUI.Widget ) :
 				for i in range( 0, accessor.numColumns() ) :
 					delegate = _Delegate.create( accessor.data() )
 					delegate.setParent( self.__model )
-					self._qtWidget().setItemDelegateForColumn( columnIndex, delegate )
+					self.__tableView.setItemDelegateForColumn( columnIndex, delegate )
 					columnWidths.append( delegate.columnWidth() )
 					canStretch = delegate.canStretch()
 					columnIndex += 1
 
-			self._qtWidget().horizontalHeader().setStretchLastSection( canStretch )
-			self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
+			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
 
 			# we have to call resizeSection after setStretchLastSection as otherwise it doesn't work
 			for i in range( 0, len( columnWidths ) ) :
-				self._qtWidget().horizontalHeader().resizeSection( i, columnWidths[i] )
+				self.__tableView.horizontalHeader().resizeSection( i, columnWidths[i] )
 		
-		self._qtWidget().updateGeometry()
+		self.__tableView.updateGeometry()
 	
 	## Returns the data being displayed. This is always returned as a list of
 	# VectorData instances, even if only one instance was passd to setData().	
@@ -123,11 +150,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def setEditable( self, editable ) :
 	
 		# set object name so stylesheet can differentiate editable from
-		# non editable in terms of the style.
+		# non editable in terms of the style. hide the add/remove buttons
+		# if not editable.
 		if editable :
-			self._qtWidget().setObjectName( "vectorDataWidgetEditable" )
+			self.__tableView.setObjectName( "vectorDataWidgetEditable" )
+			self.__buttonRow.setVisible( True )
 		else :
-			self._qtWidget().setObjectName( "vectorDataWidget" )
+			self.__tableView.setObjectName( "vectorDataWidget" )
+			self.__buttonRow.setVisible( False )
 		
 		# update the model
 		if self.__model is not None :
@@ -135,7 +165,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 	def getEditable( self ) :
 	
-		return self._qtWidget().objectName()=="vectorDataWidgetEditable"
+		return self.__tableView.objectName()=="vectorDataWidgetEditable"
 	
 	## Returns a signal which is emitted whenever the data is edited.
 	# The signal is /not/ emitted when setData() is called.
@@ -164,35 +194,37 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		self.dataChangedSignal()( self )
 		
-	def __contextMenu( self, pos ) :
-	
-		# get the selection
-		selectedIndices = [ x.row() for x in self._qtWidget().selectedIndexes() ]
-		selectedIndices = list( set( selectedIndices ) ) # remove duplicates
-		selectedIndices.sort()
+	def __contextMenu( self, pos ) :		
 		
 		# build the menu and pop it up
-		m = self._contextMenuDefinition( selectedIndices )
+		m = self._contextMenuDefinition( self.__selectedIndices() )
 		m = GafferUI.Menu( m )
 		m.popup( self )
 			
 	def __selectAll( self ) :
 	
-		self._qtWidget().selectAll()
+		self.__tableView.selectAll()
 		
 	def __clearSelection( self ) :
 	
-		self._qtWidget().clearSelection()
+		self.__tableView.clearSelection()
+	
+	def __selectedIndices( self ) :
+	
+		selectedIndices = [ x.row() for x in self.__tableView.selectedIndexes() ]
+		selectedIndices = list( set( selectedIndices ) ) # remove duplicates
+		selectedIndices.sort()
+		
+		return selectedIndices
+	
+	def __removeSelection( self, button ) :
+	
+		self.__removeIndices( self.__selectedIndices() )
 	
 	def __removeIndices( self, indices ) :
 			
 		data = self.getData()
-		
-		# remove the "Add..." row which can't be deleted as it doesn't
-		# exist in the data.
-		if indices[-1] >= len( data ) :
-			del indices[-1]
-	
+			
 		# delete the rows from data
 		for i in range( len( indices )-1, -1, -1 ) :
 			for d in data :
@@ -201,7 +233,20 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# tell the world
 		self.setData( data )
 		self.__dataChanged()
+		
+	def __addRow( self, button ) :
 	
+		if self.__model is None :
+			return
+	
+		data = self.getData()
+		accessors = self.__model.vectorDataAccessors()
+		for d, a in zip( data, accessors ) :
+			d.append( a.defaultElement() )
+			
+		self.setData( data )
+		self.__dataChanged()
+		
 # Private implementation - a QTableView which is much more forceful about
 # requesting enough size if the scrollbars are off in a given direction.
 class _TableView( QtGui.QTableView ) :
@@ -383,6 +428,11 @@ class _DataAccessor() :
 	def headerLabel( self, columnIndex ) :
 	
 		return [ "X", "Y", "Z" ][columnIndex]
+	
+	def defaultElement( self ) :
+	
+		elementType = IECore.DataTraits.valueTypeFromSequenceType( type( self.data() ) )
+		return elementType( 0 )
 		
 	def setElement( self, rowIndex, columnIndex, value ) :
 	
@@ -413,7 +463,6 @@ class _DataAccessor() :
 
 	__typesToCreators = {}
 
-_DataAccessor.registerType( IECore.StringVectorData.staticTypeId(), _DataAccessor )
 _DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
 _DataAccessor.registerType( IECore.IntVectorData.staticTypeId(), _DataAccessor )
 _DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
@@ -450,6 +499,18 @@ class _CompoundDataAccessor( _DataAccessor ) :
 _DataAccessor.registerType( IECore.Color3fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.Color4fVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V3fVectorData.staticTypeId(), _CompoundDataAccessor )
+
+class _StringDataAccessor( _DataAccessor ) :
+
+	def __init__( self, data ) :
+		
+		_DataAccessor.__init__( self, data )
+
+	def defaultElement( self ) :
+	
+		return ""
+	
+_DataAccessor.registerType( IECore.StringVectorData.staticTypeId(), _StringDataAccessor )
 
 # The _Delegate classes are used to decide how the different types of data are
 # displayed. They derive from QStyledItemDelegate for drawing and event handling,
@@ -513,16 +574,18 @@ class _BoolDelegate( _Delegate ) :
 
 	def paint( self, painter, option, index ) :
 			
+		# draw the checkbox.
+					
 		styleOption = QtGui.QStyleOptionButton()
-		
+		styleOption.state = option.state
 		styleOption.state |= QtGui.QStyle.State_Enabled
+		
 		if index.model().data( index, QtCore.Qt.DisplayRole ).toBool() :
 			styleOption.state |= QtGui.QStyle.State_On
 		else :
 			styleOption.state |= QtGui.QStyle.State_Off
-		
-		styleOption.rect = option.rect
-		
+
+		styleOption.rect = option.rect		
 		widget = option.widget	
 		widget.style().drawControl( QtGui.QStyle.CE_CheckBox, styleOption, painter, widget )
 
@@ -531,7 +594,10 @@ class _BoolDelegate( _Delegate ) :
 		if event.type()==QtCore.QEvent.MouseButtonDblClick :
 			# eat event so an editor doesn't get created
 			return True
-		if event.type()==QtCore.QEvent.MouseButtonRelease :
+		elif event.type()==QtCore.QEvent.MouseButtonPress :
+			# eat event so row isn't selected
+			return True
+		elif event.type()==QtCore.QEvent.MouseButtonRelease :
 			# toggle the data value
 			checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
 			model.setData( index, not checked, QtCore.Qt.EditRole )

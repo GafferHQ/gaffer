@@ -684,7 +684,7 @@ class Widget( object ) :
 		QTableView::item:selected {
 			background-color: $brightColor;
 		}
-
+		
 		QTableView QTableCornerButton::section {
 			background-color: $backgroundMid;
 			border: 1px solid $backgroundMid;
@@ -708,20 +708,30 @@ class Widget( object ) :
 		}
 		
 		QTableView::indicator {
-			width: 20px;
-			height: 20px;
+			width: 29px; /* this is a bit hacky */
+			height: 29px;
 			background-color: transparent;
-			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
+		}
+		
+		QTableView::indicator:unchecked {
+			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);		
+		}
+		
+		QTableView::indicator:unchecked:hover {
+			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);		
 		}
 		
 		QTableView::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
 		}
 		
-		QTableView::indicator:unchecked {
-			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
+		QTableView::indicator:checked:hover {
+			image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
 		}
 		
+		QTableView::indicator:selected {
+			background-color: $brightColor;
+		}
 		
 		"""
 		
