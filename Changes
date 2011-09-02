@@ -2,9 +2,13 @@
 
 * GafferUI._Variant.fromVariant() now supports booleans.
 
-* VectorDataWidget now accepts a list of VectorData objects to the constructor and in setData(). This allows larger tables to be constructed consisting of columns from several VectorData objects. As a result VectorData.getData() always returns a list of objects, even when operating on only a single object.
+* VectorDataWidget now accepts a list of VectorData objects to the constructor and in setData(). This allows larger tables to be constructed consisting of columns from several VectorData objects. As a result VectorData.getData() always returns a list of objects, even when operating on only a single object. VectorDataWidget now accepts custom header labels specified by passing a list of strings to the header parameter in the constructor.
 
 * Using an officially allocated TypeId range, and not one that might conflict with internal projects.
+
+* CompoundValueParameterWidget can now be usefully subclassed, and the _buildChildParameterUIs method reimplemented to change behaviour.
+
+* Added a CompoundVectorParameterValueWidget.
 
 0.18.0
 ------

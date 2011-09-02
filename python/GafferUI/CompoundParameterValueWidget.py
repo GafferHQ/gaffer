@@ -61,15 +61,14 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		GafferUI.ParameterValueWidget.__init__( self, topLevelWidget, parameterHandler )
 		
 		if collapsible :
-			self.__collapsibleStateChangedConnection = topLevelWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__buildChildUIs ) )
+			self.__collapsibleStateChangedConnection = topLevelWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapsibleStateChanged ) )
 		else :
-			self.__buildChildUIs()
+			self._buildChildParameterUIs( self.__column )
 
-	def __buildChildUIs( self, *unusedArgs ) :
+	## May be overridden by derived classes to customise the creation of the UI to represent child parameters.
+	# The UI elements created should be placed in the ListContainer passed as column.
+	def _buildChildParameterUIs( self, column ) :
 	
-		if len( self.__column ) :
-			return
-			
 		for childPlug in self.plug().children() :
 		
 			childParameter = self.parameter()[childPlug.getName()]
@@ -110,5 +109,12 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 				row.append( valueWidget )
 				
 				self.__column.append( row )
+
+	def __collapsibleStateChanged( self, *unusedArgs ) :
+	
+		if len( self.__column ) :
+			return
+			
+		self._buildChildParameterUIs( self.__column )
 
 GafferUI.ParameterValueWidget.registerType( IECore.CompoundParameter.staticTypeId(), CompoundParameterValueWidget )

@@ -708,8 +708,6 @@ class Widget( object ) :
 		}
 		
 		QTableView::indicator {
-			width: 29px; /* this is a bit hacky */
-			height: 29px;
 			background-color: transparent;
 		}
 		

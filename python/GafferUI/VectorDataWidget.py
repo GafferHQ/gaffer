@@ -48,6 +48,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 	## data may either be a VectorData instance or a list of VectorData instances
 	# of identical length.
+	#
+	# header may be False for no header, True for a default header, or a list of
+	# strings to specify a custom header per column.
 	def __init__( self, data=None, editable=True, header=False, showIndices=True ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
@@ -58,7 +61,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		self.__tableView = _TableView()
 						
-		self.__tableView.horizontalHeader().setVisible( header )
+		self.__tableView.horizontalHeader().setVisible( bool( header ) )
 		self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
 		
 		self.__tableView.verticalHeader().setVisible( showIndices )
@@ -97,6 +100,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
 		
+		if isinstance( header, list ) :
+			self.__headerOverride = header
+		else :
+			self.__headerOverride = None
+		
 		self.setData( data )
 		self.setEditable( editable )
 	
@@ -110,7 +118,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable() )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__dataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__dataChanged ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__dataChanged ) )
@@ -136,8 +144,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
 
 			# we have to call resizeSection after setStretchLastSection as otherwise it doesn't work
+			horizontalHeader = self.__tableView.horizontalHeader()
 			for i in range( 0, len( columnWidths ) ) :
-				self.__tableView.horizontalHeader().resizeSection( i, columnWidths[i] )
+				horizontalHeader.resizeSection( i, max( columnWidths[i], horizontalHeader.sectionSizeHint( i ) ) )
 		
 		self.__tableView.updateGeometry()
 	
@@ -305,12 +314,13 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	__addValueText = "Add..."
 
-	def __init__( self, data, parent=None, editable=True ) :
+	def __init__( self, data, parent=None, editable=True, header=None ) :
 	
 		QtCore.QAbstractTableModel.__init__( self, parent )
 				
 		self.__data = data
 		self.__editable = editable
+		self.__header = header
 
 		self.__columns = []
 		self.__accessors = []
@@ -369,8 +379,11 @@ class _Model( QtCore.QAbstractTableModel ) :
 					
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal :
-				column = self.__columns[section]
-				return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
+				if self.__header is not None :
+					return GafferUI._Variant.toVariant( self.__header[section] )
+				else :
+					column = self.__columns[section]
+					return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
 			else :
 				return GafferUI._Variant.toVariant( section )
 		
@@ -573,6 +586,11 @@ class _BoolDelegate( _Delegate ) :
 		return False
 
 	def paint( self, painter, option, index ) :
+		
+		# draw the background
+		
+		widget = option.widget	
+		widget.style().drawControl( QtGui.QStyle.CE_ItemViewItem, option, painter, widget )
 			
 		# draw the checkbox.
 					
@@ -585,9 +603,12 @@ class _BoolDelegate( _Delegate ) :
 		else :
 			styleOption.state |= QtGui.QStyle.State_Off
 
-		styleOption.rect = option.rect		
-		widget = option.widget	
+		styleOption.rect = self.__checkBoxRect( widget, option.rect )
 		widget.style().drawControl( QtGui.QStyle.CE_CheckBox, styleOption, painter, widget )
+
+	def createEditor( self, parent, option, index ) :
+	
+		return None
 
 	def editorEvent( self, event, model, option, index ) :
 		
@@ -604,6 +625,16 @@ class _BoolDelegate( _Delegate ) :
 			return True
 
 		return False
+
+	def __checkBoxRect( self, widget, viewItemRect ) :
+	
+		checkBoxStyleOption = QtGui.QStyleOptionButton()
+		r = widget.style().subElementRect( QtGui.QStyle.SE_CheckBoxIndicator, checkBoxStyleOption )
+		
+		return QtCore.QRect(
+			viewItemRect.center() - ( QtCore.QPoint( r.width(), r.height() ) / 2 ),
+			r.size()
+		)
 
 _Delegate.registerType( IECore.BoolVectorData.staticTypeId(), _BoolDelegate )
 
