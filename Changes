@@ -12,6 +12,8 @@
 
 * Fixed a bug in GafferUI.Menu which prevented dynamically generated submenus from displaying correctly.
 
+* Plugs representing parameters are now correctly identified as being dynamic, and an therefore be saved and loaded to scripts. Custom ParameterHandler classes should now call setupPlugFlags() in their setupPlug() implementation to support this behaviour.
+
 0.18.0
 ------
 

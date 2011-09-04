@@ -375,8 +375,28 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.assertEqual( p[1], "common/fileSystem/seqLs" )
 		self.assertEqual( p[2], 1 )
 		self.assertEqual( p[3], "IECORE_OP_PATHS" )
+
+	def testRunTimeTyped( self ) :
+	
+		n = Gaffer.ParameterisedHolderNode()
 		
+		self.assertEqual( n.typeName(), "ParameterisedHolderNode" )
+		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "ParameterisedHolderNode" )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.Node.staticTypeId() )
+	
+	def testSerialisation( self ) :
+	
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "common/colorSpace/grade", 1, "IECORE_OP_PATHS" )
+			
+		s = Gaffer.ScriptNode()
+		s["n"] = ph
 		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+				
 if __name__ == "__main__":
 	unittest.main()
 	

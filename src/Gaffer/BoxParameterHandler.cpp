@@ -73,6 +73,8 @@ Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponentPtr plugParent,
 		m_plug = new CompoundPlug( m_parameter->name(), direction );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
+
+	setupPlugFlags( m_plug );
 	
 	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
 	if( !minPlug || minPlug->direction()!=direction )

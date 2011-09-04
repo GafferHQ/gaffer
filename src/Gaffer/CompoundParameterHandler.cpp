@@ -87,6 +87,8 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParen
 		m_plug = new CompoundPlug( plugName, direction );
 		plugParent->setChild( plugName, m_plug );
 	}
+
+	setupPlugFlags( m_plug );
 	
 	// remove any child plugs we don't need
 	

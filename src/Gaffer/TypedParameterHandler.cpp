@@ -77,6 +77,8 @@ Gaffer::PlugPtr TypedParameterHandler<T>::setupPlug( GraphComponentPtr plugParen
 		m_plug = new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
+
+	setupPlugFlags( m_plug );
 	
 	return m_plug;
 }

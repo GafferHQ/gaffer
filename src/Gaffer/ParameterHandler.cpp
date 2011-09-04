@@ -48,6 +48,11 @@ ParameterHandler::~ParameterHandler()
 {
 }
 
+void ParameterHandler::setupPlugFlags( Plug *plug )
+{
+	plug->setFlags( Plug::Dynamic, true );
+}
+
 ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter )
 {
 	const CreatorMap &c = creators();

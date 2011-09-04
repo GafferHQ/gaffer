@@ -77,6 +77,8 @@ Gaffer::PlugPtr VectorTypedParameterHandler<T>::setupPlug( GraphComponentPtr plu
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 	
+	setupPlugFlags( m_plug );
+	
 	return m_plug;
 }
 

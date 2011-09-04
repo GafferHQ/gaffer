@@ -83,6 +83,9 @@ class ParameterHandler : public IECore::RefCounted
 		
 		ParameterHandler();
 		
+		/// Should be called by derived classes in setupPlug().
+		void setupPlugFlags( Plug *plug );
+		
 		/// Create a static instance of this to automatically register a derived class
 		/// with the factory mechanism. Derived class must have a constructor of the form
 		/// Derived( ParameterType::Ptr parameter, GraphComponentPtr plugParent ).
