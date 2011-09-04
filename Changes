@@ -10,6 +10,8 @@
 
 * Added a CompoundVectorParameterValueWidget.
 
+* Fixed a bug in GafferUI.Menu which prevented dynamically generated submenus from displaying correctly.
+
 0.18.0
 ------
 
