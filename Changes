@@ -12,7 +12,9 @@
 
 * Fixed a bug in GafferUI.Menu which prevented dynamically generated submenus from displaying correctly.
 
-* Plugs representing parameters are now correctly identified as being dynamic, and an therefore be saved and loaded to scripts. Custom ParameterHandler classes should now call setupPlugFlags() in their setupPlug() implementation to support this behaviour.
+* Plugs representing parameters are now correctly identified as being dynamic, and can therefore be saved and loaded to scripts. Custom ParameterHandler classes should now call setupPlugFlags() in their setupPlug() implementation to support this behaviour.
+
+* Added OpHolder and ProceduralHoldr node types. The ui still needs work to make these useable.
 
 0.18.0
 ------
