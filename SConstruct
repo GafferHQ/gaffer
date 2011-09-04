@@ -229,26 +229,6 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_GRAPHVIZ", "Set this to build the graphviz library.", "$BUILD_DEPENDENCIES" )
-)
-
-options.Add(
-	"GRAPHVIZ_SRC_DIR",
-	"The location of the graphviz source to be used if BUILD_DEPENDENCY_GRAPHVIZ is specified.",
-	"$DEPENDENCIES_SRC_DIR/graphviz-2.24.0",
-)
-
-options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_DOXYGEN", "Set this to build doxygen.", "$BUILD_DEPENDENCIES" )
-)
-
-options.Add(
-	"DOXYGEN_SRC_DIR",
-	"The location of the doxygen source to be used if BUILD_DEPENDENCY_DOXYGEN is specified.",
-	"$DEPENDENCIES_SRC_DIR/doxygen-1.7.2",
-)
-
-options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_GL", "Set this to build PyOpenGL.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -256,22 +236,6 @@ options.Add(
 	"PYOPENGL_SRC_DIR",
 	"The location of the PyOpenGL source to be used if BUILD_DEPENDENCY_GL is specified.",
 	"$DEPENDENCIES_SRC_DIR/PyOpenGL-3.0.0",
-)
-
-options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_GOOGLEPERFTOOLS", "Set this to build the google perftools.", "$BUILD_DEPENDENCIES" )
-)
-
-options.Add(
-	"GOOGLEPERFTOOLS_SRC_DIR",
-	"The location of the google performance tools source if BUILD_DEPENDENCY_GOOGLEPERFTOOLS is specified.",
-	"$DEPENDENCIES_SRC_DIR/google-perftools-1.6",
-)
-
-options.Add(
-	"LIBUNWIND_SRC_DIR",
-	"The location of the libunwind source if BUILD_DEPENDENCY_GOOGLEPERFTOOLS is specified.",
-	"$DEPENDENCIES_SRC_DIR/libunwind-0.99-beta",
 )
 
 options.Add(
@@ -510,8 +474,12 @@ if depEnv["BUILD_DEPENDENCY_GL"] :
 
 if depEnv["BUILD_DEPENDENCY_QT"] :
 
-	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -sdk /Developer/SDKs/MacOSX10.6.sdk && make clean && make -j 4 && make install" )
-
+	if depEnv["PLATFORM"]=="darwin" :
+		runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -sdk /Developer/SDKs/MacOSX10.6.sdk && make clean && make -j 4 && make install" )
+	else :
+		runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle && make clean && make -j 4 && make install" )
+	
+	
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py && make && make install" )
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py --confirm-license && make && make install" )
@@ -521,9 +489,13 @@ del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
 if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
-	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
-	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make VERBOSE=1 && make install" )
-
+	if depEnv["PLATFORM"]=="darwin" :
+		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
+		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make VERBOSE=1 && make install" )
+	else :
+		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/include/python2.7 -DCMAKE_USE_PYTHON_VERSION=$PYTHON_VERSION && make clean && make && make install" )
+		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
+		
 ###############################################################################################
 # Gaffer libraries
 ###############################################################################################
@@ -868,6 +840,7 @@ manifest = [
 	
 	"lib/libpython*$SHLIBSUFFIX*",
 	"lib/Python.framework",
+	"lib/python$PYTHON_VERSION",
 	
 	"lib/libGLEW*$SHLIBSUFFIX*",
 	"lib/libtbb*$SHLIBSUFFIX*",
