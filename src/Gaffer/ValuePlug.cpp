@@ -123,7 +123,7 @@ bool ValuePlug::getDirty() const
 void ValuePlug::valueSet()
 {
 	m_dirty = false;
-	NodePtr n = node();
+	Node *n = node();
 	if( n )
 	{
 		// it is important that we emit the plug set signal before
