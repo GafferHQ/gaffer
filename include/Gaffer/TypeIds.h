@@ -76,6 +76,8 @@ enum TypeId
 	StandardSetTypeId = 110029,
 	ChildSetTypeId = 110030,
 	BoolVectorDataPlugTypeId = 110031,
+	OpHolderTypeId = 110032,
+	ProceduralHolderTypeId = 110033,
 	
 	LastTypeId = 110500,
 	

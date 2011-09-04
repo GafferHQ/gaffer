@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,57 +34,53 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/SetBinding.h"
-#include "GafferBindings/UndoContextBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/SplinePlugBinding.h"
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ParameterHandlerBinding.h"
-#include "GafferBindings/CompoundParameterHandlerBinding.h"
-#include "GafferBindings/StandardSetBinding.h"
-#include "GafferBindings/ChildSetBinding.h"
-#include "GafferBindings/OpHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
+#ifndef GAFFER_OPHOLDER_H
+#define GAFFER_OPHOLDER_H
 
-using namespace GafferBindings;
+#include "Gaffer/ParameterisedHolder.h"
 
-BOOST_PYTHON_MODULE( _Gaffer )
+namespace IECore
 {
 
-	bindConnection();
-	bindSignal();
-	bindGraphComponent();
-	bindNode();
-	bindPlug();
-	bindValuePlug();
-	bindNumericPlug();
-	bindTypedPlug();
-	bindTypedObjectPlug();
-	bindScriptNode();
-	bindApplicationRoot();
-	bindSet();
-	bindUndoContext();
-	bindCompoundPlug();
-	bindCompoundNumericPlug();
-	bindSplinePlug();
-	bindParameterisedHolder();
-	bindParameterHandler();
-	bindCompoundParameterHandler();
-	bindStandardSet();
-	bindChildSet();
-	bindOpHolder();
-	bindProceduralHolder();
+IE_CORE_FORWARDDECLARE( Op )
 
-}
+} // namespace IECore
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( ParameterHandler )
+
+class OpHolder : public ParameterisedHolderNode
+{
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpHolder, OpHolderTypeId, ParameterisedHolderNode );
+
+		OpHolder( const std::string &name=staticTypeName() );
+			
+		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised );
+		
+		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS" )
+		void setOp( const std::string &className, int classVersion );
+		/// Convenience function which returns runTimeCast<Op>( getParameterised() );
+		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
+		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
+	
+	protected :
+	
+		virtual void dirty( ConstPlugPtr dirty ) const;
+		virtual void compute( PlugPtr output ) const;
+		
+	private :
+	
+		ParameterHandlerPtr m_resultParameterHandler;
+		
+};
+
+IE_CORE_DECLAREPTR( OpHolder )
+
+} // namespace Gaffer
+
+#endif // GAFFER_OPHOLDER_H

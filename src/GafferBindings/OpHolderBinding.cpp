@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,57 +34,61 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/SetBinding.h"
-#include "GafferBindings/UndoContextBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/SplinePlugBinding.h"
+#include "boost/python.hpp"
+
+#include "IECore/Op.h"
+
+#include "IECorePython/Wrapper.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "Gaffer/OpHolder.h"
+#include "Gaffer/CompoundParameterHandler.h"
+
 #include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ParameterHandlerBinding.h"
-#include "GafferBindings/CompoundParameterHandlerBinding.h"
-#include "GafferBindings/StandardSetBinding.h"
-#include "GafferBindings/ChildSetBinding.h"
 #include "GafferBindings/OpHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
 
+using namespace boost::python;
 using namespace GafferBindings;
+using namespace Gaffer;
 
-BOOST_PYTHON_MODULE( _Gaffer )
+class OpHolderWrapper : public OpHolder, public IECorePython::Wrapper<OpHolder>
 {
 
-	bindConnection();
-	bindSignal();
-	bindGraphComponent();
-	bindNode();
-	bindPlug();
-	bindValuePlug();
-	bindNumericPlug();
-	bindTypedPlug();
-	bindTypedObjectPlug();
-	bindScriptNode();
-	bindApplicationRoot();
-	bindSet();
-	bindUndoContext();
-	bindCompoundPlug();
-	bindCompoundNumericPlug();
-	bindSplinePlug();
-	bindParameterisedHolder();
-	bindParameterHandler();
-	bindCompoundParameterHandler();
-	bindStandardSet();
-	bindChildSet();
-	bindOpHolder();
-	bindProceduralHolder();
+	public :
+		
+		OpHolderWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
+			:	OpHolder( name ), IECorePython::Wrapper<OpHolder>( self, this )
+		{
+			initNode( this, inputs, dynamicPlugs );
+		}		
+		
+		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( OpHolder )
 
+};
+
+IE_CORE_DECLAREPTR( OpHolderWrapper );
+
+static IECore::OpPtr getOp( OpHolder &n )
+{
+	return n.getOp();
+}
+
+void GafferBindings::bindOpHolder()
+{
+	
+	IECorePython::RunTimeTypedClass<OpHolder, OpHolderWrapperPtr>()
+		.def( 	init< const std::string &, const dict &, const tuple & >
+				(
+					(
+						arg( "name" ) = OpHolder::staticTypeName(),
+						arg( "inputs" ) = dict(),
+						arg( "dynamicPlugs" ) = tuple()
+					)
+				)
+		)
+		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( OpHolder )
+		.def( "setOp", &OpHolder::setOp )
+		.def( "getOp", &getOp )
+	;
+			
 }

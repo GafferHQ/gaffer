@@ -62,8 +62,10 @@ class ParameterisedHolder : public BaseType
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ParameterisedHolder<BaseType> );		
 
 		ParameterisedHolder( const std::string &name=staticTypeName() );
-			
-		void setParameterised( IECore::RunTimeTypedPtr parameterised );
+		
+		/// May be overridden by derived classes, but they must call the base class implementation
+		/// first.
+		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised );
 		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar );
 		IECore::RunTimeTypedPtr getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
 		/// Convenience method to return dynamic_cast<const IECore::ParameterisedInterface *>( getParameterised().get() )

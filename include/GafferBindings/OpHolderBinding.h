@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,57 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/SetBinding.h"
-#include "GafferBindings/UndoContextBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/SplinePlugBinding.h"
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ParameterHandlerBinding.h"
-#include "GafferBindings/CompoundParameterHandlerBinding.h"
-#include "GafferBindings/StandardSetBinding.h"
-#include "GafferBindings/ChildSetBinding.h"
-#include "GafferBindings/OpHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
+#ifndef GAFFERBINDINGS_OPHOLDERBINDING_H
+#define GAFFERBINDINGS_OPHOLDERBINDING_H
 
-using namespace GafferBindings;
-
-BOOST_PYTHON_MODULE( _Gaffer )
+namespace GafferBindings
 {
 
-	bindConnection();
-	bindSignal();
-	bindGraphComponent();
-	bindNode();
-	bindPlug();
-	bindValuePlug();
-	bindNumericPlug();
-	bindTypedPlug();
-	bindTypedObjectPlug();
-	bindScriptNode();
-	bindApplicationRoot();
-	bindSet();
-	bindUndoContext();
-	bindCompoundPlug();
-	bindCompoundNumericPlug();
-	bindSplinePlug();
-	bindParameterisedHolder();
-	bindParameterHandler();
-	bindCompoundParameterHandler();
-	bindStandardSet();
-	bindChildSet();
-	bindOpHolder();
-	bindProceduralHolder();
+void bindOpHolder();
 
-}
+} // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_OPHOLDERBINDING_H

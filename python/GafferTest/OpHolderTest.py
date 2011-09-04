@@ -1,7 +1,6 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,38 +34,66 @@
 #  
 ##########################################################################
 
-from AddNode import AddNode
-from SignalsTest import SignalsTest
-from GCTest import GCTest
-from GraphComponentTest import GraphComponentTest
-from NodeTest import NodeTest
-from PlugTest import PlugTest
-from NumericPlugTest import NumericPlugTest
-from TypedPlugTest import TypedPlugTest
-from ScriptNodeTest import ScriptNodeTest
-from StandardSetTest import StandardSetTest
-from FileSystemPathTest import FileSystemPathTest
-from PathTest import PathTest
-from PathFilterTest import PathFilterTest
-from UndoTest import UndoTest
-from SpeedTest import SpeedTest
-from KeywordPlugNode import KeywordPlugNode
-from CompoundNumericPlugTest import CompoundNumericPlugTest
-from CompoundNumericNode import CompoundNumericNode
-from CompoundPlugTest import CompoundPlugTest
-from CompoundPlugNode import CompoundPlugNode
-from TypedObjectPlugTest import TypedObjectPlugTest
-from SplinePlugTest import SplinePlugTest
-from AboutTest import AboutTest
-from ParameterisedHolderTest import ParameterisedHolderTest
-from ParameterHandlerTest import ParameterHandlerTest
-from ChildSetTest import ChildSetTest
-from PythonApplicationTest import PythonApplicationTest
-from ReadNodeTest import ReadNodeTest
-from OpHolderTest import OpHolderTest
-from ProceduralHolderTest import ProceduralHolderTest
+import unittest
 
+import IECore
+
+import Gaffer
+
+class OpHolderTest( unittest.TestCase ) :
+
+	def testType( self ) :
+	
+		n = Gaffer.OpHolder()
+		self.assertEqual( n.typeName(), "OpHolder" )
+		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
+		
+	def testCompute( self ) :
+	
+		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		self.failUnless( "P" in m )
+		self.failUnless( "renamed" not in m )
+		
+		n = Gaffer.OpHolder()
+		n.setOp( "common/primitive/renameVariables", 1 )
+		
+		n["parameters"]["input"].setValue( m )
+		n["parameters"]["names"].setValue( IECore.StringVectorData( [ "P renamed" ] ) )
+		
+		m2 = n["result"].getValue()
+				
+		self.failUnless( "P" not in m2 )
+		self.failUnless( "renamed" in m2 )
+		
+	def testDirty( self ) :
+	
+		n = Gaffer.OpHolder()
+		n.setOp( "common/primitive/renameVariables", 1 )
+		
+		self.failUnless( n["result"].getDirty() )
+		
+		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		n["parameters"]["input"].setValue( m )
+		n["result"].getValue()
+		
+		self.failIf( n["result"].getDirty() )
+		
+		m2 = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -10 ), IECore.V2f( 10 ) ) )
+		n["parameters"]["input"].setValue( m )		
+		self.failUnless( n["result"].getDirty() )
+
+		n["result"].getValue()
+		self.failIf( n["result"].getDirty() )		
+	
+	def testRunTimeTyped( self ) :
+	
+		n = Gaffer.OpHolder()
+		
+		self.assertEqual( n.typeName(), "OpHolder" )
+		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "OpHolder" )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.ParameterisedHolderNode.staticTypeId() )
+								
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
 	
