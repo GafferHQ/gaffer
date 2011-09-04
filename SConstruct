@@ -399,6 +399,8 @@ env = Environment(
 	GAFFER_MINOR_VERSION = "18",
 	GAFFER_PATCH_VERSION = "0",
 	
+	PYTHON_VERSION = "2.7", # \todo need some way of getting this magically
+
 )
 
 for e in env["ENV_VARS_TO_IMPORT"].split() :
@@ -437,18 +439,21 @@ depEnv = env.Clone()
 depEnv["ENV"].update(
 	{
 		"PATH" : depEnv.subst( "$BUILD_DIR/bin:" + os.environ["PATH"] ),
-		"LD_LIBRARY_PATH" : depEnv.subst( "$BUILD_DIR/lib" ),
 		"M4PATH" : depEnv.subst( "$BUILD_DIR/share/aclocal" ),
 		"PKG_CONFIG_PATH" : depEnv.subst( "$BUILD_DIR/lib/pkgconfig" ),
-		"MACOSX_DEPLOYMENT_TARGET" : "10.4",
 		"HOME" : os.environ["HOME"],
 	}
 )
 
+if depEnv["PLATFORM"]=="darwin" :
+	depEnv["ENV"]["DYLD_LIBRARY_PATH"] = depEnv.subst( "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources:$BUILD_DIR/lib" )
+	depEnv["ENV"]["DYLD_FALLBACK_FRAMEWORK_PATH"] = depEnv.subst( "$BUILD_DIR/lib" )
+else :
+	depEnv["ENV"]["LD_LIBRARY_PATH"] = depEnv.subst( "$BUILD_DIR/lib" )
+
 def runCommand( command ) :
 
 	command = depEnv.subst( command )
-
 	sys.stderr.write( command + "\n" )
 	subprocess.check_call( command, shell=True, env=depEnv["ENV"] )
 
@@ -458,8 +463,8 @@ if depEnv["BUILD_DEPENDENCY_PKGCONFIG"] :
 if depEnv["BUILD_DEPENDENCY_PYTHON"] :
 	
 	if depEnv["PLATFORM"]=="darwin" :
-		runCommand( "cd $PYTHON_SRC_DIR; ./configure --enable-framework=$BUILD_DIR/frameworks --prefix=$BUILD_DIR && make clean && make && make install" )
-		runCommand( "cd $BUILD_DIR/bin && ln -fsh python2.6 python" )
+		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-framework=$BUILD_DIR/lib --enable-unicode=ucs4 && make clean && make && make install" )
+		runCommand( "cd $BUILD_DIR/bin && ln -fsh ../lib/Python.framework/Versions/Current/bin/python python" )
 	else :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make -j 4 && make install" )
 
@@ -474,20 +479,14 @@ if depEnv["BUILD_DEPENDENCY_PNG"] :
 		
 if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
-		
-if depEnv["BUILD_DEPENDENCY_GRAPHVIZ"] :
-	runCommand( "cd $GRAPHVIZ_SRC_DIR && ./configure --enable-perl=no --prefix=$BUILD_DIR && make clean && make && make install" )
-
-if depEnv["BUILD_DEPENDENCY_DOXYGEN"] :
-	runCommand( "cd $DOXYGEN_SRC_DIR && ./configure --prefix $BUILD_DIR && make && make install" )
-	
+			
 if depEnv["BUILD_DEPENDENCY_BOOST"] :
-	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python2.6 --with-python-root=$BUILD_DIR && ./bjam install" )
+	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam install" )
 
 if depEnv["BUILD_DEPENDENCY_TBB"] :
 	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
 	if depEnv["PLATFORM"]=="darwin" :
-		runCommand( "cd $TBB_SRC_DIR; cp build/macos_intel64_gcc_cc4.2.1_os10.6.2_release/*.dylib $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
+		runCommand( "cd $TBB_SRC_DIR; cp build/macos_*_release/*.dylib $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 	else :
 		runCommand( "cd $TBB_SRC_DIR; cp build/*_release/*.so* $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 
@@ -504,29 +503,26 @@ if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR DOXYGEN=$BUILD_DIR/bin/doxygen INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/lib/python2.6/site-packages PYTHON_CONFIG=$BUILD_DIR/bin/python2.6-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH'" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
-	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install" )
+	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
 
 if depEnv["BUILD_DEPENDENCY_QT"] :
 
-	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle && make clean && make -j 4 && make install" )
-
-if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
-	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
-	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
-	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
-	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -sdk /Developer/SDKs/MacOSX10.6.sdk && make clean && make -j 4 && make install" )
 
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py && make && make install" )
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py --confirm-license && make && make install" )
 
-if depEnv["BUILD_DEPENDENCY_GOOGLEPERFTOOLS"] :
-
-	runCommand( "cd $LIBUNWIND_SRC_DIR && ./configure --prefix=$BUILD_DIR CFLAGS=-U_FORTIFY_SOURCE && make clean && make && make install" )	
-	runCommand( "cd $GOOGLEPERFTOOLS_SRC_DIR && ./configure --prefix=$BUILD_DIR CPPFLAGS=-I$BUILD_DIR/include LDFLAGS=-L$BUILD_DIR/lib && make clean && make && make install" )
+# having MACOS_DEPLOYMENT_TARGET set breaks the pyside build for some reason
+del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
+if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
+	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
+	runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
+	runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make VERBOSE=1 && make install" )
 
 ###############################################################################################
 # Gaffer libraries
@@ -538,14 +534,19 @@ else :
 	boostLibSuffix = env["BOOST_LIB_SUFFIX"]
 
 libEnv = env.Clone()
+
 libEnv.Append(
 
 	CPPPATH = [
 		"include",
 		"$BUILD_DIR/include",
-		"$BUILD_DIR/include/python2.6",
+		"$BUILD_DIR/include/python$PYTHON_VERSION",
 		"$BUILD_DIR/include/OpenEXR",
 		"$LOCATE_DEPENDENCY_CPPPATH",
+	],
+	
+	CPPFLAGS = [
+		"-DBOOST_FILESYSTEM_VERSION=2",
 	],
 	
 	LIBPATH = [
@@ -608,15 +609,16 @@ pythonEnv.Append(
 	
 )
 
-if buildingDependencies :
+pythonLinkFlags = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --ldflags" ) ).read().strip()
+pythonLinkFlags = pythonLinkFlags.replace( "Python.framework/Versions/" + pythonEnv["PYTHON_VERSION"] + "/Python", "" )
 	
-	env.Append(
-	
-		CPPFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python2.6-config --includes" ) ).read().split(),
-	
-		SHLINKFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python2.6-config --ldflags" ) ).read().split(),
-	
-	)
+pythonEnv.Append(
+
+	CPPFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --includes" ) ).read().split(),
+
+	SHLINKFLAGS = pythonLinkFlags,
+
+)
 
 if pythonEnv["PLATFORM"]=="darwin" :
 	pythonEnv.Append( SHLINKFLAGS = "-single_module" )
@@ -652,13 +654,13 @@ pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 gafferModule = pythonModuleEnv.SharedLibrary( "python/Gaffer/_Gaffer", glob.glob( "src/GafferModule/*.cpp" ) )
 pythonModuleEnv.Default( gafferModule )
 
-gafferModuleInstall = env.Install( "$BUILD_DIR/lib/python2.6/site-packages/Gaffer", gafferModule )
+gafferModuleInstall = env.Install( "$BUILD_DIR/python/Gaffer", gafferModule )
 sedSubstitutions = "s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
 sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
 sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
 
 for f in glob.glob( "python/Gaffer/*.py" ) :
-	gafferModuleInstall += env.Command( "$BUILD_DIR/lib/python2.6/site-packages/Gaffer/" + os.path.basename( f ), f, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+	gafferModuleInstall += env.Command( "$BUILD_DIR/python/Gaffer/" + os.path.basename( f ), f, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 
 env.Alias( "build", gafferModuleInstall )
 
@@ -669,15 +671,15 @@ pythonUIModuleEnv.Append(
 gafferUIModule = pythonUIModuleEnv.SharedLibrary( "python/GafferUI/_GafferUI", glob.glob( "src/GafferUIModule/*.cpp" ) )
 pythonUIModuleEnv.Default( gafferUIModule )
 
-gafferUIModuleInstall = env.Install( "$BUILD_DIR/lib/python2.6/site-packages/GafferUI", gafferUIModule )
-gafferUIModuleInstall += env.Install( "$BUILD_DIR/lib/python2.6/site-packages/GafferUI", glob.glob( "python/GafferUI/*.py" ) )
+gafferUIModuleInstall = env.Install( "$BUILD_DIR/python/GafferUI", gafferUIModule )
+gafferUIModuleInstall += env.Install( "$BUILD_DIR/python/GafferUI", glob.glob( "python/GafferUI/*.py" ) )
 env.Alias( "build", gafferUIModuleInstall )
 
 for module in ( "GafferTest", "GafferUITest" ) :
 
 	moduleFiles = glob.glob( "python/%s/*.py" % module ) + glob.glob( "python/%s/*/*" % module )
 	for moduleFile in moduleFiles :
-		moduleFileInstall = env.InstallAs( "$BUILD_DIR/lib/python2.6/site-packages/" + moduleFile.partition( "/" )[2], moduleFile )
+		moduleFileInstall = env.InstallAs( "$BUILD_DIR/python/" + moduleFile.partition( "/" )[2], moduleFile )
 		env.Alias( "build", moduleFileInstall ) 
 
 ###############################################################################################
@@ -833,51 +835,75 @@ docEnv.Alias( "build", docInstall )
 #########################################################################################################
 
 manifest = [
+
 	"bin/gaffer",
 	"bin/gaffer.py",
 	"bin/python",
-	"apps/cli/cli-1.py",
-	"apps/gui/gui-1.py",
-	"apps/test/test-1.py",
-	"apps/view/view-1.py",
-	"apps/op/op-1.py",
-	"apps/license/license-1.py",
-	"lib/libboost_signals" + boostLibSuffix + "*",
-	"lib/libboost_thread" + boostLibSuffix + "*",
-	"lib/libboost_wave" + boostLibSuffix + "*",
-	"lib/libboost_regex" + boostLibSuffix + "*",
-	"lib/libboost_python" + boostLibSuffix + "*",
-	"lib/libboost_date_time" + boostLibSuffix + "*",
-	"lib/libboost_filesystem" + boostLibSuffix + "*",
-	"lib/libboost_iostreams" + boostLibSuffix + "*",
-	"lib/libboost_system" + boostLibSuffix + "*",
-	"lib/libIECore*",
-	"lib/libGaffer*",
-	"lib/libIex.*",
-	"lib/libHalf.*",
-	"lib/libImath.*",
-	"lib/libIlmImf.*",
-	"lib/libIlmThread.*",
-	"lib/libtiff.*",
-	"lib/libfreetype.*",
-	"lib/libpython*",
-	"lib/libGLEW.*",
-	"lib/libtbb.*",
-	"lib/libjpeg.so*",
-	"lib/libpyside*",
-	"lib/libshiboken*",
-	"lib/libQt*.so*",
+
+	"apps/*/*-1.py",
+
+	"lib/libboost_signals" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_thread" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_wave" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_regex" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_python" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_date_time" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_filesystem" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_iostreams" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_system" + boostLibSuffix + "$SHLIBSUFFIX*",
+
+	"lib/libIECore*$SHLIBSUFFIX",
+	"lib/libGaffer*$SHLIBSUFFIX",
+	
+	"lib/libIex*$SHLIBSUFFIX*",
+	"lib/libHalf*$SHLIBSUFFIX*",
+	"lib/libImath*$SHLIBSUFFIX*",
+	"lib/libIlmImf*$SHLIBSUFFIX*",
+	"lib/libIlmThread*$SHLIBSUFFIX*",
+	
+	"lib/libtiff*$SHLIBSUFFIX*",
+	"lib/libfreetype*$SHLIBSUFFIX*",
+	"lib/libjpeg*$SHLIBSUFFIX*",
+	"lib/libpng*$SHLIBSUFFIX*",
+	
+	"lib/libpython*$SHLIBSUFFIX*",
+	"lib/Python.framework",
+	
+	"lib/libGLEW*$SHLIBSUFFIX*",
+	"lib/libtbb*$SHLIBSUFFIX*",
+	"lib/libpyside*$SHLIBSUFFIX*",
+	"lib/libshiboken*$SHLIBSUFFIX*",
+	
+	"lib/libQtCore*",
+	"lib/libQtGui*",
+	"lib/libQtOpenGL*",
+	"lib/QtCore.framework",
+	"lib/QtGui.framework",
+	"lib/QtOpenGL.framework",
+	
 	"startup/gui/menus.py",
 	"startup/gui/layouts.py",
 	"startup/gui/graphs.py",
+
 	"shaders",
 	"fonts",
+	"ops",
+
 	"graphics/*.png",
 	"glsl/IECoreGL",
 	"doc/licenses",
 	"doc/gaffer/html",
 	"doc/cortex/html",
-	"lib/python*",
+
+	"python/IECore*",
+	"python/Gaffer*",
+	"python/PySide/*.py",
+	"python/PySide/QtCore.so",
+	"python/PySide/QtGui.so",
+	"python/PySide/QtOpenGL.so",
+	"python/PyQt*",
+	"python/OpenGL",
+
 	"include/IECore*",
 	"include/boost",
 	"include/GL",
