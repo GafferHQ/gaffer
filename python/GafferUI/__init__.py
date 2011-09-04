@@ -53,7 +53,7 @@ def _qtImport( name ) :
 		else :
 			# no preference stated via environment - see what we shipped with
 			import glob
-			if os.path.exists( os.environ["GAFFER_ROOT"] + "/lib/python2.6/site-packages/PySide" ) :
+			if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PySide" ) :
 				__qtModuleName = "PySide"
 			else :
 				__qtModuleName = "PyQt4"

@@ -65,19 +65,19 @@ export GAFFERUI_IMAGE_PATHS=$GAFFER_ROOT/graphics${GAFFERUI_IMAGE_PATHS:+:}${GAF
 if [[ `uname` = "Linux" ]] ; then
 	export PYTHONHOME=$GAFFER_ROOT
 else
-	export PYTHONHOME=$GAFFER_ROOT/frameworks/Python.framework/Versions/Current
+	export PYTHONHOME=$GAFFER_ROOT/lib/Python.framework/Versions/Current
 fi
 
 # Get python module path set up
 
-export PYTHONPATH=$GAFFER_ROOT/lib/python2.6/site-packages${PYTHONPATH:+:}${PYTHONPATH:-}
+export PYTHONPATH=$GAFFER_ROOT/python${PYTHONPATH:+:}${PYTHONPATH:-}
 
 # Get library paths set up
 
 if [[ `uname` = "Linux" ]] ; then
 	export LD_LIBRARY_PATH=$GAFFER_ROOT/lib/${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH:-}
 else
-	export DYLD_FRAMEWORK_PATH=$GAFFER_ROOT/frameworks${DYLD_FRAMEWORK_PATH:+:}${DYLD_FRAMEWORK_PATH:-}
+	export DYLD_FRAMEWORK_PATH=$GAFFER_ROOT/lib${DYLD_FRAMEWORK_PATH:+:}${DYLD_FRAMEWORK_PATH:-}
 	export DYLD_LIBRARY_PATH=$GAFFER_ROOT/lib/${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH:-}
 	export DYLD_LIBRARY_PATH=/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/:$DYLD_LIBRARY_PATH
 	if [[ -n $DELIGHT ]] ; then
