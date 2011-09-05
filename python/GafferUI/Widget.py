@@ -311,6 +311,7 @@ class Widget( object ) :
 		QMenuBar, QMenuBar::item {
 
 			background-color: $backgroundDarkest;
+			font-weight: bold;
 
 		}
 
@@ -427,6 +428,12 @@ class Widget( object ) :
 
 		}
 
+		QTabBar {
+			
+			font-weight: bold;
+			
+		}
+
 		QTabBar::tab {
 
 			border: 1px solid $backgroundDarkest;
@@ -476,6 +483,11 @@ class Widget( object ) :
 		QTabWidget::pane {
 			border-top: 1px solid $backgroundDarkest;
 			top: -1px;
+		}
+
+		QCheckBox#gafferCollapsibleToggle {
+		
+			font-weight: bold;
 		}
 
 		QCheckBox#gafferCollapsibleToggle::indicator {
