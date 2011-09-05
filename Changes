@@ -18,6 +18,8 @@
 
 * Fixed problem which caused artifacts in GafferUI.Images when using PySide.
 
+* Reduced default font size to fit more on screen.
+
 0.18.0
 ------
 

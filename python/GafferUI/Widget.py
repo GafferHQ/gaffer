@@ -304,6 +304,7 @@ class Widget( object ) :
 			alternate-background-color: $backgroundLighter;
 			selection-background-color: $brightColor;
 			etch-disabled-text: 0;
+			font-size: 11px;
 
 		}
 
