@@ -14,7 +14,9 @@
 
 * Plugs representing parameters are now correctly identified as being dynamic, and can therefore be saved and loaded to scripts. Custom ParameterHandler classes should now call setupPlugFlags() in their setupPlug() implementation to support this behaviour.
 
-* Added OpHolder and ProceduralHoldr node types. The ui still needs work to make these useable.
+* Added OpHolder and ProceduralHolder node types. The ui still needs work to make these useable.
+
+* Fixed problem which caused artifacts in GafferUI.Images when using PySide.
 
 0.18.0
 ------

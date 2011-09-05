@@ -104,7 +104,8 @@ class Image( GafferUI.Widget ) :
 		
 		imageSize = image.dataWindow.size() + IECore.V2i( 1 )
 		
-		image = QtGui.QImage( interleaved.toString(), imageSize.x, imageSize.y, format )
+		s = interleaved.toString()
+		image = QtGui.QImage( s, imageSize.x, imageSize.y, format )
 		
 		return QtGui.QPixmap( image )
 
