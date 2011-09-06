@@ -39,6 +39,7 @@ import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
+QtCore = GafferUI._qtImport( "QtCore" )
 
 class Button( GafferUI.Widget ) :
 
@@ -47,6 +48,8 @@ class Button( GafferUI.Widget ) :
 	def __init__( self, text="", image=None ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPushButton() )
+		
+		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
 		
 		self.setText( text )
 		self.setImage( image )

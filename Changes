@@ -20,6 +20,8 @@
 
 * Reduced default font size to fit more on screen.
 
+* Fixed problem with GafferUI.Button positioning on OS X.
+
 0.18.0
 ------
 
