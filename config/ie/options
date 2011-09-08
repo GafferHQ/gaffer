@@ -53,9 +53,36 @@ def getOption( name, default ) :
 
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
 cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion]
-compiler = getOption( "COMPILER", IEEnv.registry["platformDefaults"][IEEnv.platform()]["compiler"] )
-compilerVersion = getOption( "COMPILER", IEEnv.registry["platformDefaults"][IEEnv.platform()]["compilerVersion"] )
-pythonVersion = cortexReg["preferredPythonVersion"]
+compiler = getOption( "COMPILER", None )
+compilerVersion = getOption( "COMPILER_VERSION", None )
+targetApp = getOption( "APP", None )
+targetAppVersion = None
+
+if targetApp :
+	
+	if targetApp not in ( "nuke", "maya", "houdini" ) :
+		raise RuntimeError( "Check config logic applies to the new app and remove this exception." )
+	
+	if (compiler or compilerVersion) :
+		raise RuntimeError( "Must specify only one of COMPILER or APP" )
+		
+	targetAppVersion = getOption( "APP_VERSION", os.environ.get( targetApp.upper() + "_VERSION" ) )
+		
+	targetAppReg = IEEnv.registry["apps"][targetApp][targetAppVersion][IEEnv.platform()]
+	compiler = targetAppReg["compiler"]
+	compilerVersion = targetAppReg["compilerVersion"]
+	pythonVersion = targetAppReg["pythonVersion"]
+
+else :
+
+	targetApp = "gaffer"
+	targetAppReg = cortexReg
+	pythonVersion = targetAppReg["preferredPythonVersion"]
+	if not compiler :
+		compiler = IEEnv.registry["platformDefaults"][IEEnv.platform()]["compiler"]
+	if not compilerVersion :
+		compilerVersion = IEEnv.registry["platformDefaults"][IEEnv.platform()]["compilerVersion"]
+
 pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
 ##########################################################################
@@ -71,8 +98,13 @@ else :
 	installRoot = os.path.expanduser( "~/gafferTestInstalls" )
 	versionString += "dev"
 
-BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform()
-INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform()
+BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/" + targetApp
+INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/" + targetApp
+
+if targetAppVersion :
+	
+	BUILD_DIR = BUILD_DIR + "/" + targetAppVersion
+	INSTALL_DIR = INSTALL_DIR + "/" + targetAppVersion
 
 ##########################################################################
 # get include locations right
@@ -81,9 +113,9 @@ INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platfo
 LOCATE_DEPENDENCY_CPPPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", "OpenEXR", cortexReg["OpenEXRVersion"] ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", cortexReg["tbbVersion"] ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", cortexReg["boostVersion"] ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", targetAppReg.get( "boostVersion", cortexReg["boostVersion"] ) ),
 	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion )
 
 ]
@@ -105,6 +137,13 @@ LOCATE_DEPENDENCY_LIBPATH = [
 
 ]
 
+if targetAppVersion :
+
+	LOCATE_DEPENDENCY_LIBPATH.insert(
+		0,
+		os.path.join( IEEnv.Environment.rootPath(), "tools", targetApp, targetAppVersion, "lib", IEEnv.platform() ),
+	)
+
 if getOption( "RELEASE", "0" )=="0" :
 
 	LOCATE_DEPENDENCY_LIBPATH.insert(
@@ -117,7 +156,7 @@ if getOption( "RELEASE", "0" )=="0" :
 ##########################################################################
 
 compilerVersionSplit = compilerVersion.split( "." )
-boostVersionSplit = cortexReg["boostVersion"].split( "." )
+boostVersionSplit = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] ).split( "." )
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + "-mt-" + "_".join( boostVersionSplit[0:2] )
 
