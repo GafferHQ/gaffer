@@ -114,7 +114,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 				if not haveSelection :
 					widget.setText( "" )
 			
-			except Exception as e :
+			except Exception, e :
 			
 				self.__outputWidget.appendText( str( e ) )
 			
