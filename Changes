@@ -1,3 +1,5 @@
+* GafferUI.EventLoop supports Houdini using hou.ui.addEventLoopCallback
+
 * Support for boost 1.37.0
 
 * Using future to import with_statement for python 2.5 compatibility

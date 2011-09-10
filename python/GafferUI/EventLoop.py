@@ -48,7 +48,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## This class provides the event loops used to run GafferUI based applications.
 class EventLoop() :
 	
-	__RunStyle = IECore.Enum.create( "Normal", "PumpThread", "AlreadyRunning" )
+	__RunStyle = IECore.Enum.create( "Normal", "PumpThread", "AlreadyRunning", "Houdini" )
 	
 	## Creates a new EventLoop. Note that if you are creating the primary
 	# EventLoop for an application then you should use mainEventLoop() instead.
@@ -70,10 +70,17 @@ class EventLoop() :
 				else :
 					self.__runStyle = self.__RunStyle.AlreadyRunning
 			except ImportError :
-				pass				
+				pass
 			
+			try : 
+				import hou
+				self.__runStyle = self.__RunStyle.Houdini
+			except ImportError :
+				pass
+		
 		self.__startCount = 0
 		self.__pumpThread = None
+		self.__houdiniCallback = None
 		
 	## Starts the event loop, passing control to the UI code. This function returns
 	# when the corresponding stop() method is called. See documentation for
@@ -89,6 +96,11 @@ class EventLoop() :
 			if self.__pumpThread is None :
 				self.__pumpThread = threading.Thread( target = self.__pumpThreadFn )
 				self.__pumpThread.start()
+		elif self.__runStyle == self.__RunStyle.Houdini :
+			if self.__houdiniCallback is None :
+				import hou
+				hou.ui.addEventLoopCallback( self.__pump )
+				self.__houdiniCallback = hou.ui.eventLoopCallbacks()[-1]
 		else :
 			# RunStyle.AlreadyRunning
 			# host application is using qt natively, no need to do anything.
@@ -108,6 +120,11 @@ class EventLoop() :
 			# just keeping it running on the assumption we'll
 			# need it again soon.
 			pass
+		elif self.__runStyle == self.__RunStyle.Houdini :
+			if self.__startCount == 1 and self.__houdiniCallback :
+				import hou
+				hou.ui.removeEventLoopCallback( self.__houdiniCallback )
+				self.__houdiniCallback = None
 		else :
 			# RunStyle.AlreadyRunning
 			pass
