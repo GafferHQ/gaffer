@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_CONNECTIONBINDING_INL
 #define GAFFERBINDINGS_CONNECTIONBINDING_INL
 
+#include "boost/version.hpp"
+
 namespace boost { namespace python {
 
 /// \todo this works for now, but should blatantly be implemented as some rvalue_from_python jobby.
@@ -71,7 +73,11 @@ struct DefaultSlotCallerBase<0, Signal>
 template<typename Signal>
 struct DefaultSlotCallerBase<1, Signal>
 {
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1 )
+#else
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1 )
+#endif
 	{
 		return boost::python::extract<typename Signal::slot_result_type>( slot( a1 ) )();
 	}
@@ -80,7 +86,11 @@ struct DefaultSlotCallerBase<1, Signal>
 template<typename Signal>
 struct DefaultSlotCallerBase<2, Signal>
 {
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2 )
+#else
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+#endif
 	{
 		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2 ) )();
 	}
@@ -89,7 +99,11 @@ struct DefaultSlotCallerBase<2, Signal>
 template<typename Signal>
 struct DefaultSlotCallerBase<3, Signal>
 {
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3 )
+#else
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+#endif
 	{
 		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2, a3 ) )();
 	}
@@ -124,7 +138,11 @@ struct SlotBase<1, Signal, Caller>
 		:	m_connection( connection )
 	{
 	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1 )
+#else
 	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1 )
+#endif
 	{
 		return Caller()( m_connection->slot(), a1 );
 	}
@@ -138,7 +156,11 @@ struct SlotBase<2, Signal, Caller>
 		:	m_connection( connection )
 	{
 	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1, typename Signal::arg3_type a2 )
+#else
 	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+#endif
 	{
 		return Caller()( m_connection->slot(), a1, a2 );
 	}
@@ -152,7 +174,11 @@ struct SlotBase<3, Signal, Caller>
 		:	m_connection( connection )
 	{
 	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3 )
+#else
 	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+#endif
 	{
 		return Caller()( m_connection->slot(), a1, a2, a3 );
 	}

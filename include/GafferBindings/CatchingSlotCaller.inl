@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_CATCHINGSLOTCALLER_INL
 #define GAFFERBINDINGS_CATCHINGSLOTCALLER_INL
 
+#include "boost/version.hpp"
+
 namespace GafferBindings
 {
 
@@ -64,7 +66,11 @@ struct CatchingSlotCallerBase<0, Signal>
 template<typename Signal>
 struct CatchingSlotCallerBase<1, Signal>
 {
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1 )
+#else
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1 )
+#endif
 	{
 		try
 		{
@@ -81,7 +87,11 @@ struct CatchingSlotCallerBase<1, Signal>
 template<typename Signal>
 struct CatchingSlotCallerBase<2, Signal>
 {
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2 )
+#else
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+#endif
 	{
 		try
 		{
@@ -98,7 +108,11 @@ struct CatchingSlotCallerBase<2, Signal>
 template<typename Signal>
 struct CatchingSlotCallerBase<3, Signal>
 {
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3 )
+#else
 	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+#endif
 	{
 		try
 		{

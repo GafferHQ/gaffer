@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_SIGNALBINDING_INL
 #define GAFFERBINDINGS_SIGNALBINDING_INL
 
+#include "boost/version.hpp"
+
 #include "GafferBindings/ConnectionBinding.h"
 
 namespace GafferBindings
@@ -58,7 +60,11 @@ struct DefaultSignalCallerBase<0, Signal>
 template<typename Signal>
 struct DefaultSignalCallerBase<1, Signal>
 {
+#if BOOST_VERSION < 103900
+	static typename Signal::result_type call( Signal &s, typename Signal::arg2_type a1 )
+#else
 	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1 )
+#endif
 	{
 		return s( a1 );
 	}
@@ -67,7 +73,11 @@ struct DefaultSignalCallerBase<1, Signal>
 template<typename Signal>
 struct DefaultSignalCallerBase<2, Signal>
 {
+#if BOOST_VERSION < 103900
+	static typename Signal::result_type call( Signal &s, typename Signal::arg2_type a1, typename Signal::arg3_type a2 )
+#else
 	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+#endif
 	{
 		return s( a1, a2 );
 	}
@@ -76,7 +86,11 @@ struct DefaultSignalCallerBase<2, Signal>
 template<typename Signal>
 struct DefaultSignalCallerBase<3, Signal>
 {
+#if BOOST_VERSION < 103900
+	static typename Signal::result_type call( Signal &s, typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3 )
+#else
 	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+#endif
 	{
 		return s( a1, a2, a3 );
 	}
