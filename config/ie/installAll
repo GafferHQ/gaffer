@@ -1,0 +1,29 @@
+#!/usr/bin/env python2.6
+
+import IEEnv
+import os, sys, subprocess
+
+def build( extraArgs = [] ) :
+	
+	buildArgs = [ "scons", "build" ]
+	buildArgs.extend( extraArgs )
+	buildArgs.extend( sys.argv[1:] )
+	
+	print " ".join( buildArgs )
+	if subprocess.call( buildArgs ) != 0 :
+	
+		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
+
+if IEEnv.platform() == "cent5.x86_64" :
+
+	# standalone build
+	build()
+	
+	# app specific builds
+	build( [ "APP=maya", "APP_VERSION=2010" ] )
+	build( [ "APP=maya", "APP_VERSION=2012" ] )
+	build( [ "APP=houdini", "APP_VERSION=11.1.22" ] )
+
+else :
+
+	raise RuntimeError( "Unknown platform" )
