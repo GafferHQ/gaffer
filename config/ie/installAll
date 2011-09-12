@@ -5,7 +5,8 @@ import os, sys, subprocess
 
 def build( extraArgs = [] ) :
 	
-	buildArgs = [ "scons", "build" ]
+	buildArgs = [ "scons" ]
+	buildArgs.append( "install" if "RELEASE=1" in sys.argv[1:] else "build" )
 	buildArgs.extend( extraArgs )
 	buildArgs.extend( sys.argv[1:] )
 	
