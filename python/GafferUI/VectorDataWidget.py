@@ -83,11 +83,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		
-		addButton = GafferUI.Button( image="plus.png" )
+		addButton = GafferUI.Button( image="plus.png", hasFrame=False )
 		self.__addButtonConnection = addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRow ) )
 		self.__buttonRow.append( addButton )
 		
-		removeButton = GafferUI.Button( image="minus.png" )
+		removeButton = GafferUI.Button( image="minus.png", hasFrame=False )
 		self.__removeButtonConnection = removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeSelection ) )
 		self.__buttonRow.append( removeButton )
 		

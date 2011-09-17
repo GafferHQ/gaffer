@@ -13,7 +13,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.48.0 r9654"
    sodipodi:docname="graphics.svg">
   <defs
      id="defs4">
@@ -41,14 +41,14 @@
      inkscape:pageshadow="2"
      inkscape:zoom="8.0609347"
      inkscape:cx="108.2994"
-     inkscape:cy="984.44458"
+     inkscape:cy="982.66236"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1311"
      inkscape:window-height="730"
-     inkscape:window-x="1925"
-     inkscape:window-y="0"
+     inkscape:window-x="601"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:snap-global="true">
     <inkscape:grid
@@ -94,7 +94,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -150,7 +150,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)" />
       <rect
          style="fill:none;stroke:none"
@@ -180,7 +180,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)" />
       <rect
          style="fill:none;stroke:none"
@@ -198,7 +198,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -238,7 +238,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(-0.65333366,0,0,0.646633,124.86671,-311.44114)" />
       <rect
          transform="matrix(0,1,1,0,0,0)"
@@ -269,7 +269,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)" />
       <rect
          style="fill:none;stroke:none"
@@ -284,7 +284,7 @@
        inkscape:label="#g2871">
       <path
          transform="matrix(0,-0.65333366,-0.646633,0,423.30333,137.72889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -429,7 +429,7 @@
        inkscape:flatsided="true"
        inkscape:rounded="0"
        inkscape:randomized="0"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
        transform="matrix(-0.65333366,0,0,0.646633,155.86671,-311.44114)"
        inkscape:label="#forExport:collapsibleArrowRightHover" />
     <rect
@@ -443,7 +443,7 @@
        inkscape:label="#rect2914" />
     <path
        transform="matrix(0,-0.65333366,-0.646633,0,443.30333,137.72889)"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
        inkscape:randomized="0"
        inkscape:rounded="0"
        inkscape:flatsided="true"
@@ -511,19 +511,28 @@
     <path
        inkscape:label="#rect3638"
        sodipodi:nodetypes="ccccc"
-       id="forExport:minus"
+       id="fsdsf"
        d="m 81,88.362183 0,6 16,0 0,-6 -16,0 z"
        style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" />
     <path
        sodipodi:nodetypes="ccccc"
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        d="m 82,89.362183 0,4 14,0 0,-4 -14,0 z"
-       id="path2865" />
+       id="path2865"
+       inkscape:connector-curvature="0" />
     <path
        sodipodi:nodetypes="cccccccccc"
        inkscape:connector-curvature="0"
        d="m 108,59.362183 16,0 0,16 -16,0 z m 1,1 14,0 0,14 -14,0 z"
        style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none"
        id="path3948" />
+    <rect
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       id="forExport:minus"
+       width="16"
+       height="17"
+       x="81"
+       y="82.362183"
+       inkscape:label="#rect3043" />
   </g>
 </svg>
