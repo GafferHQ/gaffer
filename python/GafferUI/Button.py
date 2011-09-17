@@ -69,13 +69,6 @@ class Button( GafferUI.Widget ) :
 			Button.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
 
 		self._qtWidget().setPalette( Button.__palette )
-
-		#self.effect = QtGui.QGraphicsDropShadowEffect( self._qtWidget() )
-		#self.effect.setBlurRadius( 5 )
-		#self.effect.setOffset( 3, 3 )
-		#self.effect.setColor( QtGui.QColor( 0, 0, 0, 150 ) )
-		
-		#self._qtWidget().setGraphicsEffect( self.effect )
 	
 	def setText( self, text ) :
 	
