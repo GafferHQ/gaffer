@@ -76,20 +76,6 @@ static boost::python::tuple children( GraphComponent &c )
 	return boost::python::tuple( l );
 }
 
-/// \todo Document the different semantics of addChild and setItem in a scripting
-/// reference somewhere.
-static void setItem( GraphComponent &g, const char *n, GraphComponentPtr c )
-{
-	GraphComponentPtr existingChild = g.getChild<GraphComponent>( n );
-	if( existingChild )
-	{
-		g.removeChild( existingChild );
-	}
-	
-	c->setName( n );
-	g.addChild( c );
-}
-
 static GraphComponentPtr getItem( GraphComponent &g, const char *n )
 {
 	GraphComponentPtr c = g.getChild<GraphComponent>( n );
