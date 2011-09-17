@@ -72,6 +72,11 @@ class ButtonTest( unittest.TestCase ) :
 		b.setImage( None )
 		self.assertEqual( b.getImage(), None )
 		
+		self.assertEqual( b.getHasFrame(), True )
+		
+		b.setHasFrame( False )
+		self.assertEqual( b.getHasFrame(), False )
+		
 	def testAccessorTypeChecking( self ) :
 	
 		b = GafferUI.Button()

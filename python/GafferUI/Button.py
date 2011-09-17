@@ -45,7 +45,7 @@ class Button( GafferUI.Widget ) :
 
 	__palette = None
 
-	def __init__( self, text="", image=None ) :
+	def __init__( self, text="", image=None, hasFrame=True ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPushButton() )
 		
@@ -53,6 +53,7 @@ class Button( GafferUI.Widget ) :
 		
 		self.setText( text )
 		self.setImage( image )
+		self.setHasFrame( hasFrame )
 		
 		# using a WeakMethod to avoid circular references which would otherwise
 		# never be broken.		
@@ -69,6 +70,13 @@ class Button( GafferUI.Widget ) :
 
 		self._qtWidget().setPalette( Button.__palette )
 
+		#self.effect = QtGui.QGraphicsDropShadowEffect( self._qtWidget() )
+		#self.effect.setBlurRadius( 5 )
+		#self.effect.setOffset( 3, 3 )
+		#self.effect.setColor( QtGui.QColor( 0, 0, 0, 150 ) )
+		
+		#self._qtWidget().setGraphicsEffect( self.effect )
+	
 	def setText( self, text ) :
 	
 		assert( isinstance( text, basestring ) )
@@ -100,6 +108,14 @@ class Button( GafferUI.Widget ) :
 	def getImage( self ) :
 	
 		return self.__image
+	
+	def setHasFrame( self, hasFrame ) :
+	
+		self._qtWidget().setObjectName( "gafferWithFrame" if hasFrame else "gafferWithoutFrame" )
+		
+	def getHasFrame( self ) :
+	
+		return self._qtWidget().objectName() == "gafferWithFrame"
 		
 	def clickedSignal( self ) :
 	

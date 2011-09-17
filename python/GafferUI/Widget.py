@@ -379,7 +379,7 @@ class Widget( object ) :
 
 		QLineEdit, QPlainTextEdit[readOnly="false"] {
 
-			border: 1px solid transparent;
+			border: 1px solid $backgroundDark;
 			padding: 1px;
 			margin: 0px;
 
@@ -399,23 +399,34 @@ class Widget( object ) :
 		}
 
 		QPushButton {
+		
+			font-weight: bold;
+		
+		}
 
-			border: 1px solid $backgroundDarkest;
+		QPushButton#gafferWithFrame {
+
+			border: 1px solid $backgroundDark;
 			border-radius: 3px;
 			padding: 4px;
-			padding-left: 8px;
-			padding-right: 8px;
-			min-height: 16px;
-			min-width: 16px;
 
 		}
 
-		QPushButton:hover {
+		QPushButton#gafferWithFrame:hover {
 
 			border: 2px solid $brightColor;
 			
 		}
-
+		
+		QPushButton#gafferWithoutFrame {
+			
+			border: 0px solid transparent;
+			border-radius: 3px;
+			padding: 0px;
+			background-color: none;
+			
+		}
+		
 		QPushButton:disabled {
 
 			color: $foregroundFaded;
@@ -527,6 +538,7 @@ class Widget( object ) :
 			border: 1px solid transparent;
 			border-bottom: 1px solid $backgroundDarkest;
 			padding: 4px;
+			font-weight: bold;
 		
 		}
 		
@@ -544,7 +556,7 @@ class Widget( object ) :
 
 		QScrollBar {
 		
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			background-color: $backgroundDark;
 			
 		}
@@ -570,7 +582,7 @@ class Widget( object ) :
 		
 		QScrollBar::add-line, QScrollBar::sub-line {
 			background-color: $backgroundLight;
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 		}
 		
 		QScrollBar::add-line:vertical {
@@ -619,7 +631,7 @@ class Widget( object ) :
 
 		QScrollBar::handle {
 			background-color: $backgroundLight;			
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 		}
 		
 		QScrollBar::handle:vertical {
@@ -636,7 +648,7 @@ class Widget( object ) :
 			margin-left: -1px;		
 		}
 		
-		QScrollBar::handle:hover {
+		QScrollBar::handle:hover, QScrollBar::add-line:hover, QScrollBar::sub-line:hover {
 			background-color: $brightColor;
 		}
 		
@@ -688,6 +700,11 @@ class Widget( object ) :
 			border: 1px solid $backgroundDarkest;
 			padding: 2px;
 
+		}
+
+		QTreeView {
+			border: 1px solid $backgroundDark;
+			padding: 0px;
 		}
 
 		QTreeView::item:selected {
