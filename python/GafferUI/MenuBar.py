@@ -47,6 +47,9 @@ class MenuBar( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QMenuBar() )
 		
+		# disable menu merging on mac
+		self._qtWidget().setNativeMenuBar( False )
+		
 		self.definition = definition
 		
 	def __setattr__( self, key, value ) :
