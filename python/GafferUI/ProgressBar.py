@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,34 +34,44 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
-from ColorSwatchTest import ColorSwatchTest
-from VariantTest import VariantTest
-from GridContainerTest import GridContainerTest
-from NoduleTest import NoduleTest
-from ProgressBarTest import ProgressBarTest
+import IECore
 
-if __name__ == "__main__":
-	unittest.main()
+import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
+
+class ProgressBar( GafferUI.Widget ) :
+	
+	def __init__( self, progress = 0, range = ( 0, 100 ), text = "%p%" ) :
+	
+		GafferUI.Widget.__init__( self, QtGui.QProgressBar() )
+
+		self._qtWidget().setRange( range[0], range[1] )
+		
+		self.setRange( range )
+		self.setProgress( progress )
+		self.setText( text )
+
+	def setRange( self, range ) :
+	
+		self._qtWidget().setRange( range[0], range[1] )
+		
+	def getRange( self ) :
+	
+		return ( self._qtWidget().minimum(), self._qtWidget().maximum() )
+
+	def setProgress( self, progress ) :
+	
+		self._qtWidget().setValue( progress )
+		
+	def getProgress( self ) :
+	
+		return self._qtWidget().value()
+
+	def setText( self, text ) :
+	
+		self._qtWidget().setFormat( text )
+		
+	def getText( self ) :
+	
+		return self._qtWidget().format()

@@ -761,6 +761,21 @@ class Widget( object ) :
 			background-color: $brightColor;
 		}
 		
+		QProgressBar {
+		
+			border: 1px solid $backgroundDark;
+			background: $backgroundLighter;
+			padding: 1px;
+			text-align: center;
+			
+		}
+		
+		QProgressBar::chunk:horizontal {
+		
+			background-color: $brightColor;
+		
+		}
+		
 		"""
 		
 	).substitute( {

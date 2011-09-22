@@ -4,6 +4,8 @@
 
 * Disabled Qt's automatic merging of menubars with the OS X system menu. This was causing crashes and wasn't compatible with fullscreen mode either.
 
+* Added a simple ProgressBar widget.
+
 0.20.0
 ------
 
