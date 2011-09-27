@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import gc
 import unittest
 import weakref
 
@@ -153,6 +154,22 @@ class WidgetTest( unittest.TestCase ) :
 		w.setEnabled( True )
 		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
  		self.assertEqual( WidgetTest.signalsEmitted, 2 )
+
+	def testCanDieAfterUsingSignals( self ) :
+	
+		w = TestWidget()
+		
+		wr1 = weakref.ref( w )
+		wr2 = weakref.ref( w._qtWidget() )
+		
+		w.buttonPressSignal()
+		w.buttonReleaseSignal()
+		w.mouseMoveSignal()
+		w.wheelSignal()
+		
+		del w
+		self.assert_( wr1() is None )
+		self.assert_( wr2() is None )
 	
 if __name__ == "__main__":
 	unittest.main()
