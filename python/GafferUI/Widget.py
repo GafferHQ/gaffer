@@ -258,17 +258,19 @@ class Widget( object ) :
 			self.wheelSignal()( self, event )
 		)
 		
-	def __keyPressEvent(self, qEvent) :
-		
+	def __keyPressEvent( self, qEvent ) :
+				
 		event = GafferUI.KeyEvent(
 			Widget._key( qEvent.key() ),
 			Widget._modifiers( qEvent.modifiers() ),
 		)
 
-		qEvent.setAccepted(
-			self.keyPressSignal()( self, event )
-		)
-		
+		if not self.keyPressSignal()( self, event ) :
+			# must call base class implementation if we don't want
+			# the key ourselves. no need to call setAccepted() as it's already
+			# True on entry, and the base class function will set it now.
+			self._qtWidget().__class__.keyPressEvent( self._qtWidget(), qEvent )
+					
 	def __resizeEvent(self, event) :
 		
 		qEvent.setAccepted(
