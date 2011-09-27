@@ -106,8 +106,8 @@ class Widget( object ) :
 		self.__buttonPressSignal = None
 		self.__buttonReleaseSignal = None
 		self.__mouseMoveSignal = None
-		self.__mouseOverSignal = None
-		self.__mouseOutSignal = None
+		self.__enterSignal = None
+		self.__leaveSignal = None
 		self.__resizeSignal = None
 		self.__wheelSignal = None
 		
@@ -181,13 +181,17 @@ class Widget( object ) :
 		return IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
 	
 	# qt events 
-	def __mouseOverEvent( self, event ) :
+	def __enterEvent( self, qEvent ) :
 		
-		self.mouseOverSignal()( self )
+		qEvent.setAccepted(
+			self.enterSignal()( self )
+		)
 		
-	def __mouseOutEvent( self, event ) :
+	def __leaveEvent( self, qEvent ) :
 		
-		self.mouseOutSignal()( self )
+		qEvent.setAccepted(
+			self.leaveSignal()( self )
+		)
 
 	def __mousePressEvent( self, qEvent ) :
 		
@@ -202,7 +206,9 @@ class Widget( object ) :
 		)
 
 		if event.buttons:
-			self.buttonPressSignal()( self, event )
+			qEvent.setAccepted(
+				self.buttonPressSignal()( self, event )
+			)
 
 	def __mouseMoveEvent( self, qEvent ) :
 		
@@ -216,7 +222,9 @@ class Widget( object ) :
 			Widget._modifiers( qEvent.modifiers() ),
 		)
 
-		self.mouseMoveSignal()( self, event )		
+		qEvent.setAccepted(
+			self.mouseMoveSignal()( self, event )
+		)		
 			
 	def __mouseReleaseEvent( self, qEvent ) :
 		
@@ -230,7 +238,9 @@ class Widget( object ) :
 			Widget._modifiers( qEvent.modifiers() ),
 		)
 
-		self.buttonReleaseSignal()( self, event )
+		qEvent.setAccepted(
+			self.buttonReleaseSignal()( self, event )
+		)
 		
 	def __wheelEvent( self, qEvent ) :
 		
@@ -244,7 +254,9 @@ class Widget( object ) :
 			Widget._modifiers( qEvent.modifiers() ),
 		)
 
-		self.wheelSignal()( self, event )
+		qEvent.setAccepted(
+			self.wheelSignal()( self, event )
+		)
 		
 	def __keyPressEvent(self, qEvent) :
 		
@@ -253,18 +265,22 @@ class Widget( object ) :
 			Widget._modifiers( qEvent.modifiers() ),
 		)
 
-		self.keyPressSignal()( self, event )
+		qEvent.setAccepted(
+			self.keyPressSignal()( self, event )
+		)
 		
 	def __resizeEvent(self, event) :
 		
- 		self.resizeSignal()(self)
+		qEvent.setAccepted(
+ 			self.resizeSignal()(self)
+ 		)
  		
  	# gaffer signals
 	def keyPressSignal( self ) :
 		
 		if self.__keyPressSignal is None :
 			self.__keyPressSignal = GafferUI.WidgetEventSignal()
-			self.__qtWidget.keyPressEvent  = self.__keyPressEvent
+			self.__qtWidget.keyPressEvent  = Gaffer.WeakMethod( self.__keyPressEvent )
 		
 		return self.__keyPressSignal
 		
@@ -272,7 +288,7 @@ class Widget( object ) :
 		
 		if self.__buttonPressSignal is None :
 			self.__buttonPressSignal = GafferUI.WidgetEventSignal()
-			self.__qtWidget.mousePressEvent = self.__mousePressEvent
+			self.__qtWidget.mousePressEvent = Gaffer.WeakMethod( self.__mousePressEvent )
 		
 		return self.__buttonPressSignal
 	
@@ -280,7 +296,7 @@ class Widget( object ) :
 		
 		if self.__buttonReleaseSignal is None :
 			self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
-			self.__qtWidget.mouseReleaseEvent = self.__mouseReleaseEvent
+			self.__qtWidget.mouseReleaseEvent = Gaffer.WeakMethod( self.__mouseReleaseEvent)
 	
 		return self.__buttonReleaseSignal
 	
@@ -288,31 +304,31 @@ class Widget( object ) :
 		
 		if self.__mouseMoveSignal is None :
 			self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
-			self.__qtWidget.mouseMoveEvent = self.__mouseMoveEvent		
+			self.__qtWidget.mouseMoveEvent = Gaffer.WeakMethod( self.__mouseMoveEvent )		
 	
 		return self.__mouseMoveSignal
 	
-	def mouseOverSignal( self ) :
+	def enterSignal( self ) :
 		
-		if self.__mouseOverSignal is None :
-			self.__mouseOverSignal = GafferUI.WidgetSignal()
-			self.__qtWidget.enterEvent = self.__mouseOverEvent	
+		if self.__enterSignal is None :
+			self.__enterSignal = GafferUI.WidgetSignal()
+			self.__qtWidget.enterEvent = Gaffer.WeakMethod( self.__enterEvent )	
 		
-		return self.__mouseOverSignal
+		return self.__enterSignal
 	
-	def mouseOutSignal( self ) :
+	def leaveSignal( self ) :
 		
-		if self.__mouseOutSignal is None :
-			self.__mouseOutSignal = GafferUI.WidgetSignal()
-			self.__qtWidget.leaveEvent = self.__mouseOutEvent	
+		if self.__leaveSignal is None :
+			self.__leaveSignal = GafferUI.WidgetSignal()
+			self.__qtWidget.leaveEvent =  Gaffer.WeakMethod( self.__leaveEvent )	
 		
-		return self.__mouseOutSignal
+		return self.__leaveSignal
 	
 	def resizeSignal( self ) :
 		
 		if self.__resizeSignal is None :
 			self.__resizeSignal = GafferUI.WidgetSignal()
-			self.__qtWidget.resizeEvent = self.__resizeEvent	
+			self.__qtWidget.resizeEvent = Gaffer.WeakMethod( self.__resizeEvent )	
 		
 		return self.__resizeSignal
 		
@@ -320,7 +336,7 @@ class Widget( object ) :
 		
 		if self.__wheelSignal is None :
 			self.__wheelSignal = GafferUI.WidgetEventSignal()
-			self.__qtWidget.wheelEvent = self.__wheelEvent		
+			self.__qtWidget.wheelEvent = Gaffer.WeakMethod( self.__wheelEvent )		
 		
 		return self.__wheelSignal
 	
