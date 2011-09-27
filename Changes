@@ -1,3 +1,5 @@
+* Changed event handling, now events are installed on demand and switched eventFilter for QWidget default events (performance improved) 
+
 * Buttons can optionally have the frame removed using the setHasFrame() method or the hasFrame argument to the constructor. Additionally they no longer have minimum sizes defined by the stylesheet.
 
 * Minor style changes.

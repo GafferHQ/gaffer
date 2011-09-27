@@ -102,13 +102,14 @@ class Widget( object ) :
 		
 		self.__qtWidget.setStyleSheet( self.__styleSheet )
 		
-		self.__qtWidget.installEventFilter( _eventFilter )
-		
-		self.__keyPressSignal = GafferUI.WidgetEventSignal()
-		self.__buttonPressSignal = GafferUI.WidgetEventSignal()
-		self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
-		self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
-		self.__wheelSignal = GafferUI.WidgetEventSignal()
+		self.__keyPressSignal = None
+		self.__buttonPressSignal = None
+		self.__buttonReleaseSignal = None
+		self.__mouseMoveSignal = None
+		self.__mouseOverSignal = None
+		self.__mouseOutSignal = None
+		self.__resizeSignal = None
+		self.__wheelSignal = None
 		
 		self.setToolTip( toolTip )
 		
@@ -178,26 +179,149 @@ class Widget( object ) :
 	def size( self ) :
 	
 		return IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
+	
+	# qt events 
+	def __mouseOverEvent( self, event ) :
+		
+		self.mouseOverSignal()( self )
+		
+	def __mouseOutEvent( self, event ) :
+		
+		self.mouseOutSignal()( self )
 
+	def __mousePressEvent( self, qEvent ) :
+		
+		event = GafferUI.ButtonEvent(
+			Widget._buttons( qEvent.buttons() ),
+			IECore.LineSegment3f(
+				IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+				IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+			),
+			0.0,
+			Widget._modifiers( qEvent.modifiers() ),
+		)
+
+		if event.buttons:
+			self.buttonPressSignal()( self, event )
+
+	def __mouseMoveEvent( self, qEvent ) :
+		
+		event = GafferUI.ButtonEvent(
+			Widget._buttons( qEvent.buttons() ),
+			IECore.LineSegment3f(
+				IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+				IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+			),
+			0.0,
+			Widget._modifiers( qEvent.modifiers() ),
+		)
+
+		self.mouseMoveSignal()( self, event )		
+			
+	def __mouseReleaseEvent( self, qEvent ) :
+		
+		event = GafferUI.ButtonEvent(
+			Widget._buttons( qEvent.buttons() ),
+			IECore.LineSegment3f(
+				IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+				IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+			),
+			0.0,
+			Widget._modifiers( qEvent.modifiers() ),
+		)
+
+		self.buttonReleaseSignal()( self, event )
+		
+	def __wheelEvent( self, qEvent ) :
+		
+		event = GafferUI.ButtonEvent(
+			Widget._buttons( qEvent.buttons() ),
+			IECore.LineSegment3f(
+				IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+				IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+			),
+			qEvent.delta() / 8.0,
+			Widget._modifiers( qEvent.modifiers() ),
+		)
+
+		self.wheelSignal()( self, event )
+		
+	def __keyPressEvent(self, qEvent) :
+		
+		event = GafferUI.KeyEvent(
+			Widget._key( qEvent.key() ),
+			Widget._modifiers( qEvent.modifiers() ),
+		)
+
+		self.keyPressSignal()( self, event )
+		
+	def __resizeEvent(self, event) :
+		
+ 		self.resizeSignal()(self)
+ 		
+ 	# gaffer signals
 	def keyPressSignal( self ) :
-	
+		
+		if self.__keyPressSignal is None :
+			self.__keyPressSignal = GafferUI.WidgetEventSignal()
+			self.__qtWidget.keyPressEvent  = self.__keyPressEvent
+		
 		return self.__keyPressSignal
-	
-	## \todo Should these be renamed to mousePressSignal and mouseReleaseSignal?	
+		
 	def buttonPressSignal( self ) :
-	
+		
+		if self.__buttonPressSignal is None :
+			self.__buttonPressSignal = GafferUI.WidgetEventSignal()
+			self.__qtWidget.mousePressEvent = self.__mousePressEvent
+		
 		return self.__buttonPressSignal
 	
 	def buttonReleaseSignal( self ) :
+		
+		if self.__buttonReleaseSignal is None :
+			self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
+			self.__qtWidget.mouseReleaseEvent = self.__mouseReleaseEvent
 	
 		return self.__buttonReleaseSignal
 	
 	def mouseMoveSignal( self ) :
+		
+		if self.__mouseMoveSignal is None :
+			self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
+			self.__qtWidget.mouseMoveEvent = self.__mouseMoveEvent		
 	
 		return self.__mouseMoveSignal
+	
+	def mouseOverSignal( self ) :
+		
+		if self.__mouseOverSignal is None :
+			self.__mouseOverSignal = GafferUI.WidgetSignal()
+			self.__qtWidget.enterEvent = self.__mouseOverEvent	
+		
+		return self.__mouseOverSignal
+	
+	def mouseOutSignal( self ) :
+		
+		if self.__mouseOutSignal is None :
+			self.__mouseOutSignal = GafferUI.WidgetSignal()
+			self.__qtWidget.leaveEvent = self.__mouseOutEvent	
+		
+		return self.__mouseOutSignal
+	
+	def resizeSignal( self ) :
+		
+		if self.__resizeSignal is None :
+			self.__resizeSignal = GafferUI.WidgetSignal()
+			self.__qtWidget.resizeEvent = self.__resizeEvent	
+		
+		return self.__resizeSignal
 		
 	def wheelSignal( self ) :
-	
+		
+		if self.__wheelSignal is None :
+			self.__wheelSignal = GafferUI.WidgetEventSignal()
+			self.__qtWidget.wheelEvent = self.__wheelEvent		
+		
 		return self.__wheelSignal
 	
 	## Returns the tooltip to be displayed. This may be overriden
@@ -792,98 +916,3 @@ class Widget( object ) :
 		"foregroundFaded" : "#999999",
 	
 	} )
-	
-class _EventFilter( QtCore.QObject ) :
-
-	def __init__( self ) :
-	
-		QtCore.QObject.__init__( self )
-		
-	def eventFilter( self, qObject, qEvent ) :
-		
-		# we display tooltips even on disabled widgets
-		if qEvent.type()==QtCore.QEvent.ToolTip :
-		
-			widget = Widget._owner( qObject )
-			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
-			return True
-		
-		# but for anything else we ignore disabled widgets
-		if not qObject.isEnabled() :
-			return False
-			
-		if qEvent.type()==QtCore.QEvent.KeyPress :
-						
-			widget = Widget._owner( qObject )
-			event = GafferUI.KeyEvent(
-				Widget._key( qEvent.key() ),
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			return widget.keyPressSignal()( widget, event )
-		
-		elif qEvent.type()==QtCore.QEvent.MouseButtonPress :
-					
-			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			if event.buttons :
-				return widget.buttonPressSignal()( widget, event )
-			
-		elif qEvent.type()==QtCore.QEvent.MouseButtonRelease :
-				
-			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			return widget.buttonReleaseSignal()( widget, event )
-			
-		elif qEvent.type()==QtCore.QEvent.MouseMove :
-				
-			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			return widget.mouseMoveSignal()( widget, event )
-			
-		elif qEvent.type()==QtCore.QEvent.Wheel :
-				
-			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				qEvent.delta() / 8.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			return widget.wheelSignal()( widget, event )	
-			
-		return False
-
-# this single instance is used by all widgets
-_eventFilter = _EventFilter()
