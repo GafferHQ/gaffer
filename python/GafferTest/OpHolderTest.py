@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class OpHolderTest( unittest.TestCase ) :
 
@@ -56,7 +58,8 @@ class OpHolderTest( unittest.TestCase ) :
 		self.failUnless( "renamed" not in m )
 		
 		n = Gaffer.OpHolder()
-		n.setOp( "common/primitive/renameVariables", 1 )
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		n.setOp( *opSpec )
 		
 		n["parameters"]["input"].setValue( m )
 		n["parameters"]["names"].setValue( IECore.StringVectorData( [ "P renamed" ] ) )
@@ -69,7 +72,8 @@ class OpHolderTest( unittest.TestCase ) :
 	def testDirty( self ) :
 	
 		n = Gaffer.OpHolder()
-		n.setOp( "common/primitive/renameVariables", 1 )
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		n.setOp( *opSpec )
 		
 		self.failUnless( n["result"].getDirty() )
 		

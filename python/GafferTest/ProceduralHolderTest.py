@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class ProceduralHolderTest( unittest.TestCase ) :
 
@@ -52,7 +54,8 @@ class ProceduralHolderTest( unittest.TestCase ) :
 	def testCompute( self ) :
 	
 		n = Gaffer.ProceduralHolder()
-		n.setProcedural( "read", 1 )
+		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		n.setProcedural( *classSpec )
 		
 		p = n["output"].getValue()
 				
@@ -62,7 +65,8 @@ class ProceduralHolderTest( unittest.TestCase ) :
 	def testDirty( self ) :
 	
 		n = Gaffer.ProceduralHolder()
-		n.setProcedural( "read", 1 )
+		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		n.setProcedural( *classSpec )
 		
 		self.failUnless( n["output"].getDirty() )
 		

@@ -10,6 +10,8 @@
 
 * Removing a node from a parent using removeChild() now automatically disconnects the node from the graph. Fixes issue #38.
 
+* Fixed a number of test failures which occurred only in the Image Engine build, due to the fact that we install the cortex ops with different version numbers than a standard install.
+
 0.20.0
 ------
 

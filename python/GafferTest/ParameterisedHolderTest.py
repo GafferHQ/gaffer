@@ -45,6 +45,20 @@ import Gaffer
 
 class ParameterisedHolderTest( unittest.TestCase ) :
 
+	## Different installations of cortex might have different version numbers
+	# for the classes we're trying to load as part of the tests. This function
+	# finds an appropriate version number. This is only really an issue because
+	# Image Engine internal builds don't include cortex directly but instead
+	# reference the central cortex install.
+	@staticmethod
+	def classSpecification( className, searchPathEnvVar ) :
+	
+		return (
+			className,
+			IECore.ClassLoader.defaultLoader( searchPathEnvVar ).versions( className )[-1],
+			searchPathEnvVar
+		)
+
 	def testCreateEmpty( self ) :
 	
 		n = Gaffer.ParameterisedHolderNode()
@@ -370,12 +384,13 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 	def testClassLoading( self ) :
 	
 		ph = Gaffer.ParameterisedHolderNode()
-		ph.setParameterised( "common/fileSystem/seqLs", 1, "IECORE_OP_PATHS" )
+		classSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )
+		ph.setParameterised( *classSpec )
 		
 		p = ph.getParameterised()
 		self.assertEqual( p[0].typeName(), "SequenceLsOp" )
 		self.assertEqual( p[1], "common/fileSystem/seqLs" )
-		self.assertEqual( p[2], 1 )
+		self.assertEqual( p[2], classSpec[1] )
 		self.assertEqual( p[3], "IECORE_OP_PATHS" )
 
 	def testRunTimeTyped( self ) :
@@ -389,7 +404,8 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 	def testSerialisation( self ) :
 	
 		ph = Gaffer.ParameterisedHolderNode()
-		ph.setParameterised( "common/colorSpace/grade", 1, "IECORE_OP_PATHS" )
+		classSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )
+		ph.setParameterised( *classSpec )
 			
 		s = Gaffer.ScriptNode()
 		s["n"] = ph
