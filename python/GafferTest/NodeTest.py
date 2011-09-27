@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -255,7 +256,33 @@ class NodeTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["p1"].defaultValue(), True )
 		self.assertEqual( s["n"]["p1"].getValue(), False )
-									
+		
+	def testUnparentingRemovesConnections( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		n1 = GafferTest.AddNode( "n1" )
+		n2 = GafferTest.AddNode( "n2" )
+		
+		s.addChild( n1 )
+		s.addChild( n2 )
+		
+		n2["op1"].setInput( n1["sum"] )
+		self.failUnless( n2["op1"].getInput().isSame( n1["sum"] ) )
+		
+		del s["n2"]
+		
+		self.assertEqual( n2["op1"].getInput(), None )
+		
+		s.addChild( n2 )
+
+		n2["op1"].setInput( n1["sum"] )
+		self.failUnless( n2["op1"].getInput().isSame( n1["sum"] ) )
+
+		del s["n1"]
+		
+		self.assertEqual( n2["op1"].getInput(), None )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -8,6 +8,8 @@
 
 * Added a simple ProgressBar widget.
 
+* Removing a node from a parent using removeChild() now automatically disconnects the node from the graph. Fixes issue #38.
+
 0.20.0
 ------
 

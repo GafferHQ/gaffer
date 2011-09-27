@@ -118,7 +118,10 @@ class ScriptNode : public Node
 		void paste();
 		/// Removes Nodes from the script, making sure they are
 		/// disconnected from the remaining Nodes and removed from the current
-		/// selection. If specified then filter limits what is deleted.
+		/// selection. If specified then filter limits what is deleted. Note
+		/// that it is also possible to call removeChild( node ) to remove
+		/// nodes, and that the node will still be properly disconnected
+		/// and unselected - this function is just a convenience method.
 		/// \undoable
 		void deleteNodes( ConstSetPtr filter=0 );
 		//@}
@@ -175,7 +178,6 @@ class ScriptNode : public Node
 		/// Saves the script to the file specified by the filename plug.
 		virtual void save() const;
 		//@}
-		
 
 	protected :
 	

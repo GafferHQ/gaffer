@@ -185,20 +185,8 @@ void ScriptNode::deleteNodes( ConstSetPtr filter )
 	{
 	
 		ChildNodeIterator next = nIt; next++;
-		
 		if( !filter || filter->contains( *nIt ) )
 		{
-			
-			for( InputPlugIterator it=(*nIt)->inputPlugsBegin(); it!=(*nIt)->inputPlugsEnd(); it++ )
-			{
-				(*it)->setInput( 0 );
-			}
-
-			for( OutputPlugIterator it=(*nIt)->outputPlugsBegin(); it!=(*nIt)->outputPlugsEnd(); it++ )
-			{
-				(*it)->removeOutputs();
-			}
-
 			(*nIt)->parent<GraphComponent>()->removeChild( (*nIt) );
 		}
 		

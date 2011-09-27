@@ -119,6 +119,10 @@ class Node : public GraphComponent
 		/// Called when getValue() is called on an output plug which is dirty. Must
 		/// be implemented to calculate and set the value for this Plug.
 		virtual void compute( PlugPtr output ) const = 0;
+
+		/// Implemented to remove all connections when the node is being
+		/// unparented.
+		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 		
 	private :
 		

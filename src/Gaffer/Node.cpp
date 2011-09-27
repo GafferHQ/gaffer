@@ -130,3 +130,24 @@ void Node::dirty( ConstPlugPtr dirty ) const
 void Node::compute( PlugPtr output ) const
 {
 }
+
+void Node::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	// if we're losing our parent then remove all connections first.
+	// this must be done here rather than from parentChangedSignal()
+	// because we need a current parent for the operation to be
+	// undoable.
+	
+	if( !newParent )
+	{
+		for( InputPlugIterator it=inputPlugsBegin(); it!=inputPlugsEnd(); it++ )
+		{
+			(*it)->setInput( 0 );
+		}
+
+		for( OutputPlugIterator it=outputPlugsBegin(); it!=outputPlugsEnd(); it++ )
+		{
+			(*it)->removeOutputs();
+		}
+	}
+}

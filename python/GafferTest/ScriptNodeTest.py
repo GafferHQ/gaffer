@@ -315,6 +315,23 @@ a = A()"""
 
 		n = Gaffer.ScriptNode()
 		n.execute( s )
+	
+	def testDeselectionOnDelete( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+		
+		s["n1"] = n1
+		s["n2"] = n2
+		
+		s.selection().add( n1 )
+		self.failUnless( n1 in s.selection() )
+		
+		del s["n1"]
+		
+		self.failUnless( n1 not in s.selection() )
 							
 if __name__ == "__main__":
 	unittest.main()
