@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,6 +53,8 @@ class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget 
 		self.__plugSetConnection = parameterHandler.plug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugChanged ) )
 			
 	def _buildChildParameterUIs( self, column ) :
+	
+		del column[:]
 	
 		header = [ IECore.CamelCase.toSpaced( x ) for x in self.parameterHandler().parameter().keys() ]
 	

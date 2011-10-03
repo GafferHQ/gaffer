@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,24 +53,34 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 	def __init__( self, parameterHandler, collapsible=True ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = self._columnSpacing )
+		self.__collapsible = None
 		
 		if collapsible :
 			collapsibleLabel = IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
-			topLevelWidget = GafferUI.Collapsible( label = collapsibleLabel, collapsed = True )
-			topLevelWidget.setChild( self.__column )
+			self.__collapsible = GafferUI.Collapsible( label = collapsibleLabel, collapsed = True )
+			self.__collapsible.setChild( self.__column )
+			topLevelWidget = self.__collapsible
 		else :
 			topLevelWidget = self.__column
 			
 		GafferUI.ParameterValueWidget.__init__( self, topLevelWidget, parameterHandler )
 		
+		self.__plugAddedConnection = parameterHandler.plug().childAddedSignal().connect( self.__childAddedOrRemoved )
+		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( self.__childAddedOrRemoved )
+		self.__childrenChangedPending = False
+		
 		if collapsible :
-			self.__collapsibleStateChangedConnection = topLevelWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapsibleStateChanged ) )
+			self.__collapsibleStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapsibleStateChanged ) )
 		else :
 			self._buildChildParameterUIs( self.__column )
 
 	## May be overridden by derived classes to customise the creation of the UI to represent child parameters.
-	# The UI elements created should be placed in the ListContainer passed as column.
+	# The UI elements created should be placed in the ListContainer passed as column. Note that this may be 
+	# called multiple times, as it will be called again when plugs are added or removed. In this case you are
+	# responsible for removing any previous ui from column as appropriate.
 	def _buildChildParameterUIs( self, column ) :
+	
+		del column[:]
 	
 		for childPlug in self.plug().children() :
 		
@@ -118,5 +129,32 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			return
 			
 		self._buildChildParameterUIs( self.__column )
+
+	def __childAddedOrRemoved( self, *unusedArgs ) :
+	
+		# typically many children are added and removed at once. we don't want to be rebuilding the
+		# ui for each individual event, so we add an idle callback to do the rebuild once the
+		# upheaval is over.
+	
+		if not self.__childrenChangedPending :
+			GafferUI.EventLoop.addIdleCallback( self.__childrenChanged )
+			self.__childrenChangedPending = True
+			
+	def __childrenChanged( self ) :
+	
+		if self.__collapsible is not None and not self.__collapsible.getCollapsed() :
+			return
+	
+		try :
+			self._buildChildParameterUIs( self.__column )
+		except :
+			# catching errors because not returning False from this
+			# function causes the callback to not be removed, the error
+			# to be repeated etc...
+			pass
+			
+		self.__childrenChangedPending = False
+		
+		return False # removes the callback
 
 GafferUI.ParameterValueWidget.registerType( IECore.CompoundParameter.staticTypeId(), CompoundParameterValueWidget )
