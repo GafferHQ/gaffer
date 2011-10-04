@@ -58,6 +58,8 @@ class Window( GafferUI.ContainerWidget ) :
 
 		self._qtWidget().installEventFilter( _windowEventFilter )
 		
+		self._setStyleSheet()
+		
 		self.setTitle( title )
 		
 		self.setResizeable( resizeable )

@@ -53,6 +53,8 @@ class Menu( GafferUI.Widget ) :
 			
 		self._qtWidget().aboutToShow.connect( curry( self.__show, self._qtWidget(), definition ) )
 		
+		self._setStyleSheet()
+		
 		self.__popupParent = None
 		
 	## Displays the menu at the current pointer position, and attached to

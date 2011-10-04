@@ -99,9 +99,7 @@ class Widget( object ) :
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
 			
 		Widget.__qtWidgetOwners[self.__qtWidget] = weakref.ref( self )
-		
-		self.__qtWidget.setStyleSheet( self.__styleSheet )
-		
+				
 		self.__qtWidget.installEventFilter( _eventFilter )
 		
 		self.__keyPressSignal = GafferUI.WidgetEventSignal()
@@ -111,6 +109,9 @@ class Widget( object ) :
 		self.__wheelSignal = GafferUI.WidgetEventSignal()
 		
 		self.setToolTip( toolTip )
+		
+	def _setStyleSheet(self):
+		self.__qtWidget.setStyleSheet( self.__styleSheet )
 		
 	def setVisible( self, visible ) :
 	
@@ -305,7 +306,7 @@ class Widget( object ) :
 			selection-background-color: $brightColor;
 			etch-disabled-text: 0;
 			font-size: 10px;
-
+			outline: none;
 		}
 
 		QMenuBar, QMenuBar::item {
