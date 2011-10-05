@@ -84,7 +84,14 @@ class Window( GafferUI.ContainerWidget ) :
 			self.__child = None
 		else :
 			self.__childWindows.remove( child )
+	
+	def addChild( self, child ) :
+	
+		if self.getChild() is not None :
+			raise Exception( "Window can only hold one child" )
 			
+		self.setChild( child )
+	
 	def setChild( self, child ) :
 	
 		oldChild = self.getChild()

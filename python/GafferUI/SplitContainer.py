@@ -97,6 +97,10 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	
 		return self.__widgets.index( child )
 	
+	def addChild( self, child ) :
+	
+		self.append( child )
+			
 	def removeChild( self, child ) :
 	
 		assert( child in self.__widgets )

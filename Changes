@@ -18,6 +18,14 @@
 
 * File browser now has a button to go up one directory level.
 
+* Containers may now be used in the python with statement to make the creation of nested layouts more straightforward. For example :
+
+	with GafferUI.Collapsible() :	
+		with GafferUI.ScrolledContainer() :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical ) :
+				GafferUI.TextWidget( "Making uis is easier now" )
+				GafferUI.Button()
+			
 0.20.0
 ------
 

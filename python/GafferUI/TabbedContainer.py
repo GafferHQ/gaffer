@@ -94,7 +94,11 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def __len__( self ) :
 	
 		return len( self.__widgets )
-		
+	
+	def addChild( self, child ) :
+	
+		self.append( child )
+	
 	def removeChild( self, child ) :
 	
 		self._qtWidget().removeTab( self.__widgets.index( child ) )

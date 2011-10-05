@@ -63,6 +63,7 @@ from VariantTest import VariantTest
 from GridContainerTest import GridContainerTest
 from NoduleTest import NoduleTest
 from ProgressBarTest import ProgressBarTest
+from ContainerWidgetTest import ContainerWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

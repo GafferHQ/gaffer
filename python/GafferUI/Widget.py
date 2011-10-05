@@ -109,6 +109,9 @@ class Widget( object ) :
 		self.__wheelSignal = GafferUI.WidgetEventSignal()
 		
 		self.setToolTip( toolTip )
+		
+		if len( self.__parentStack ) :
+			self.__parentStack[-1].addChild( self )
 				
 	def setVisible( self, visible ) :
 	
@@ -235,6 +238,22 @@ class Widget( object ) :
 		return None
 	
 	__qtWidgetOwners = weakref.WeakKeyDictionary()
+	
+	## Used by the ContainerWidget classes to implement the automatic parenting
+	# using the with statement.
+	@classmethod
+	def _pushParent( cls, container ) :
+	
+		assert( isinstance( container, GafferUI.ContainerWidget ) )
+	
+		cls.__parentStack.append( container )
+	
+	@classmethod
+	def _popParent( cls ) :
+	
+		return cls.__parentStack.pop()
+	
+	__parentStack = []
 	
 	## Converts a Qt key code into a string
 	@classmethod

@@ -44,9 +44,28 @@ class ContainerWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, topLevelWidget )
 	
+	## Must be implemented in subclasses to add a child.
+	# This is used by the automatic parenting mechanism.
+	# In the case of a Container with a limited number of
+	# children, this function should throw an exception when
+	# no more children may be added.
+	def addChild( self, child ) :
+	
+		raise NotImplementedError
+	
 	## Must be implemented in subclasses to remove
 	# any references to the specified child. This allows
 	# reparenting of that child into another ContainerWidget.
 	def removeChild( self, child ) :
 	
 		raise NotImplementedError
+		
+	def __enter__( self ) :
+	
+		GafferUI.Widget._pushParent( self )
+		
+		return self
+		
+	def __exit__( self, type, value, traceBack ) :
+	
+		assert( GafferUI.Widget._popParent() is self )

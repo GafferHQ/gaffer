@@ -73,6 +73,13 @@ class Frame( GafferUI.ContainerWidget ) :
 		
 		child.setParent( None )
 		self.__child = None
+
+	def addChild( self, child ) :
+	
+		if self.getChild() is not None :
+			raise Exception( "Frame can only hold one child" )
+			
+		self.setChild( child )
 		
 	def setChild( self, child ) :
 	

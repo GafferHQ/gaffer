@@ -82,7 +82,14 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		
 		self.setLabel( label )
 		self.setCollapsed( collapsed )
-		
+	
+	def addChild( self, child ) :
+	
+		if self.getChild() is not None :
+			raise Exception( "Collapsible can only hold one child" )
+			
+		self.setChild( child )
+	
 	def removeChild( self, childOrCornerWidget ) :
 	
 		assert( childOrCornerWidget is self.__child or childOrCornerWidget is self.__cornerWidget )

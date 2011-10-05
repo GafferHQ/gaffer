@@ -58,6 +58,13 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 						
 		self.__child = None
 		
+	def addChild( self, child ) :
+	
+		if self.getChild() is not None :
+			raise Exception( "ScrolledContainer can only hold one child" )
+			
+		self.setChild( child )
+
 	def removeChild( self, child ) :
 	
 		assert( child is self.__child )
