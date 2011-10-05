@@ -12,6 +12,12 @@
 
 * Fixed a number of test failures which occurred only in the Image Engine build, due to the fact that we install the cortex ops with different version numbers than a standard install.
 
+* CompoundParameterValueWidget now updates the ui appropriately when plugs are added and removed. This can be seen in the Read node when switching between different file types.
+
+* File menu items now open file browsers in a more sensible location.
+
+* File browser now has a button to go up one directory level.
+
 0.20.0
 ------
 
