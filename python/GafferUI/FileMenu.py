@@ -35,6 +35,7 @@
 ##########################################################################
 
 import re
+import os
 
 import Gaffer
 import GafferUI
@@ -65,8 +66,14 @@ def new( menu ) :
 def open( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	currentScript = scriptWindow.getScript()
+	currentFileName = currentScript["fileName"].getValue()
 	
-	path = Gaffer.FileSystemPath( "/" )
+	if currentFileName :
+		path = Gaffer.FileSystemPath( os.path.dirname( os.path.abspath( currentFileName ) ) )		
+	else :
+		path = Gaffer.FileSystemPath( os.getcwd() )
+	
 	path.addFilter( Gaffer.FileNamePathFilter( [ "*.gfr" ] ) )
 	path.addFilter( Gaffer.FileNamePathFilter( [ re.compile( "^[^.].*" ) ], leafOnly=False ) )
 	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open" )
@@ -75,8 +82,7 @@ def open( menu ) :
 	if not path :
 		return
 
-	currentScript = scriptWindow.getScript()
-	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = currentScript.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 	
 	currentNodes = [ n for n in currentScript.children() if n.isInstanceOf( Gaffer.Node.staticTypeId() ) ]
 	if not currentNodes and not currentScript["fileName"].getValue() :
@@ -106,8 +112,13 @@ def saveAs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.getScript()
+	currentFileName = script["fileName"].getValue()
+	
+	if currentFileName :
+		path = Gaffer.FileSystemPath( currentFileName )		
+	else :
+		path = Gaffer.FileSystemPath( os.getcwd() )
 
-	path = Gaffer.FileSystemPath( script["fileName"].getValue() )
 	path.addFilter( Gaffer.FileNamePathFilter( [ "*.gfr" ] ) )
 	path.addFilter( Gaffer.FileNamePathFilter( [ re.compile( "^[^.].*" ) ], leafOnly=False ) )
 

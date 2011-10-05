@@ -53,8 +53,16 @@ class PathChooserWidget( GafferUI.Widget ) :
 		self.__directoryListing = GafferUI.PathListingWidget( self.__path )
 		self.__column.append( self.__directoryListing, True )
 		
+		pathWidgetRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		
+		upButton = GafferUI.Button( image = "pathUpArrow.png" )
+		self.__upButtonClickedConnection = upButton.clickedSignal().connect( self.__upButtonClicked )
+		pathWidgetRow.append( upButton )
+		
 		self.__pathWidget = GafferUI.PathWidget( self.__path )
-		self.__column.append( self.__pathWidget )
+		pathWidgetRow.append( self.__pathWidget )
+		
+		self.__column.append( pathWidgetRow )
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 
@@ -76,3 +84,10 @@ class PathChooserWidget( GafferUI.Widget ) :
 	def __pathSelected( self, childWidget ) :
 		
 		self.pathSelectedSignal()( self )
+
+	def __upButtonClicked( self, button ) :
+	
+		if not len( self.__path ) :
+			return
+	
+		del self.__path[-1]
