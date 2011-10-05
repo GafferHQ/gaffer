@@ -109,10 +109,7 @@ class Widget( object ) :
 		self.__wheelSignal = GafferUI.WidgetEventSignal()
 		
 		self.setToolTip( toolTip )
-		
-	def _setStyleSheet(self):
-		self.__qtWidget.setStyleSheet( self.__styleSheet )
-		
+				
 	def setVisible( self, visible ) :
 	
 		self.__qtWidget.setVisible( visible )
@@ -293,8 +290,11 @@ class Widget( object ) :
 			min( 255, max( 0, color.b ) ),
 		)
 	
-	## \todo Unify with GafferUI.Style for colours at least. Also set once at application level
-	# rather than on each Widget.
+	def _setStyleSheet( self ):
+
+		self.__qtWidget.setStyleSheet( self.__styleSheet )
+
+	## \todo Unify with GafferUI.Style for colours at least.
 	__styleSheet = string.Template( 
 
 		"""
