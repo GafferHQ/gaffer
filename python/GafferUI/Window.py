@@ -57,6 +57,8 @@ class Window( GafferUI.ContainerWidget ) :
 		self._qtWidget().setLayout( self.__qtLayout )
 
 		self._qtWidget().installEventFilter( _windowEventFilter )
+
+		self._qtWidget().setObjectName("gafferWindow")
 		
 		self._setStyleSheet()
 		

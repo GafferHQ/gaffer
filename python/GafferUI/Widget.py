@@ -317,15 +317,30 @@ class Widget( object ) :
 	__styleSheet = string.Template( 
 
 		"""
-		QWidget {
+		QWidget#gafferWindow {
 
 			color: $foreground;
+			font-size: 10px;
+			etch-disabled-text: 0;
 			background-color: $backgroundMid;
+			border: 1px solid #555555;
+		}
+
+		QWidget {
+		
+			background-color: transparent;
+			
+		}
+		
+		QLabel, QCheckBox, QPushButton, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
+		
+			color: $foreground;
+			font-size: 10px;
+			etch-disabled-text: 0;
 			alternate-background-color: $backgroundLighter;
 			selection-background-color: $brightColor;
-			etch-disabled-text: 0;
-			font-size: 10px;
 			outline: none;
+			
 		}
 
 		QMenuBar, QMenuBar::item {
@@ -461,7 +476,9 @@ class Widget( object ) :
 
 		QTabBar {
 			
+			color: $foreground;
 			font-weight: bold;
+			outline:none;
 			
 		}
 
