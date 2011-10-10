@@ -33,6 +33,10 @@
 * StandardNodeGadget::acceptsNodule is deprecated. Use Nodule::registerNodule in preference. Default implementation of StandardNodeGadget::acceptsNodule now always returns true.
 
 * Graph editor ui for ParameterisedHolders now only shows connections for ObjectPlugs, this prevents the interface being cluttered with connections for all the other parameter types.
+
+* Viewer is no longer hardcoded to display the result of the "output" plug - it now displays the result of the first output ObjectPlug. This allows it to view the results of procedurals and ops.
+
+* The node creation menus for Ops and Procedurals now create OpHolder and ProceduralHolder nodes rather than generic ParameterisedHolder nodes. Ops and procedurals may now be run in Gaffer.
 			
 0.20.0
 ------

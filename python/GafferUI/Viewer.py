@@ -69,7 +69,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
 		
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-				
+		
+		self.__viewedPlug = None		
 		self._updateFromSet()
 	
 	## Returns an IECore.MenuDefinition which is used to define the right click menu for all Viewers.
@@ -93,26 +94,33 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			return
 		
 		node = self._lastAddedNode()
+		
+		self.__viewedPlug = None
+		self.__plugDirtiedConnection = None
 		if node :
-			self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-		else :
-			self.__plugDirtiedConnection = None
+		
+			for plug in node.children() :
+				if plug.direction() == Gaffer.Plug.Direction.Out and isinstance( plug, Gaffer.ObjectPlug ):
+					self.__viewedPlug = plug
+					break
 			
+			if self.__viewedPlug is not None :
+				self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+
 		self.__update()	
 		
 	def __update( self ) :
-	
-		renderable = None			
-		node = self._lastAddedNode()
-		if node and "output" in node :
-			renderable = node["output"].getValue()
-				
+
+		renderable = None		
+		if self.__viewedPlug is not None :
+			renderable = self.__viewedPlug.getValue()
+			
 		self.__renderableGadget.setRenderable( renderable )
 		self.__gadgetWidget.setGadget( self.__renderableGadget )
 	
 	def __plugDirtied( self, plug ) :
 	
-		if plug.getName()=="output" :
+		if plug.isSame( self.__viewedPlug ) :
 			self.__update()
 			
 	def __buttonPress( self, widget, event ) :
