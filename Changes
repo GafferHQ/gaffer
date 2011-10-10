@@ -27,6 +27,12 @@
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical ) :
 				GafferUI.TextWidget( "Making uis is easier now" )
 				GafferUI.Button()
+
+* Nodule::registerNodule now accepts regular expressions for plug names.
+
+* StandardNodeGadget::acceptsNodule is deprecated. Use Nodule::registerNodule in preference. Default implementation of StandardNodeGadget::acceptsNodule now always returns true.
+
+* Graph editor ui for ParameterisedHolders now only shows connections for ObjectPlugs, this prevents the interface being cluttered with connections for all the other parameter types.
 			
 0.20.0
 ------

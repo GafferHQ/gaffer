@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import fnmatch
 
 import IECore
 
@@ -89,6 +90,71 @@ class NoduleTest( unittest.TestCase ) :
 		nc2 = GafferUI.Nodule.create( n2["c"] )
 		self.failUnless( isinstance( nc2, GafferUI.CompoundNodule ) )
 	
+	def testPlugNameRegexes( self ) :
+	
+		class RegexNoduleTestNode( Gaffer.Node ) :
+		
+			def __init__( self ) :
+			
+				Gaffer.Node.__init__( self )
+				
+				self.addChild( 
+				
+					Gaffer.IntPlug( "i" )
+				
+				)
+				
+				self.addChild( 
+				
+					Gaffer.IntPlug( "r1" )
+				
+				)
+				
+				self.addChild( 
+				
+					Gaffer.IntPlug( "r2" )
+				
+				)
+				
+				self.addChild( 
+				
+					Gaffer.IntPlug( "da" )
+				
+				)
+				
+				self.addChild( 
+				
+					Gaffer.IntPlug( "db" )
+				
+				)
+
+		IECore.registerRunTimeTyped( RegexNoduleTestNode )
+		
+		node = RegexNoduleTestNode()
+		
+		self.failUnless( isinstance( GafferUI.Nodule.create( node["i"] ), GafferUI.Nodule ) )
+		self.assertEqual( GafferUI.Nodule.create( node["i"] ).getName(), "Nodule" )
+	
+		def rCreator( plug ) :
+		
+			n = GafferUI.StandardNodule( plug )
+			n.setName( "r" )
+			return n
+			
+		GafferUI.Nodule.registerNodule( RegexNoduleTestNode.staticTypeId(), fnmatch.translate( "r[0-9]" ), rCreator )
+		
+		self.assertEqual( GafferUI.Nodule.create( node["r1"] ).getName(), "r" )
+		self.assertEqual( GafferUI.Nodule.create( node["r2"] ).getName(), "r" )
+		
+		def dCreator( plug ) :
+		
+			return None
+			
+		GafferUI.Nodule.registerNodule( RegexNoduleTestNode.staticTypeId(), fnmatch.translate( "d*" ), dCreator )
+			
+		self.failUnless( GafferUI.Nodule.create( node["da"] ) is None )
+		self.failUnless( GafferUI.Nodule.create( node["db"] ) is None )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

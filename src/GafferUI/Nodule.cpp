@@ -87,10 +87,17 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 		IECore::TypeId t = node->typeId();
 		while( t!=IECore::InvalidTypeId )
 		{
-			NamedCreatorMap::const_iterator it = m.find( TypeAndPath( t, plugPath ) );
+			NamedCreatorMap::const_iterator it = m.find( t );
 			if( it!=m.end() )
 			{
-				return it->second( plug );
+				//return it->second( plug );
+				for( RegexAndCreatorVector::const_reverse_iterator nIt = it->second.rbegin(); nIt!=it->second.rend(); nIt++ )
+				{
+					if( boost::regex_match( plugPath, nIt->first ) )
+					{
+						return nIt->second( plug );
+					}
+				}
 			}
 			t = IECore::RunTimeTyped::baseTypeId( t );
 		}
@@ -118,7 +125,7 @@ void Nodule::registerNodule( IECore::TypeId plugType, NoduleCreator creator )
 
 void Nodule::registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator )
 {
-	namedCreators()[TypeAndPath( nodeType, plugPath )] = creator;
+	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
 }
 
 std::string Nodule::getToolTip() const

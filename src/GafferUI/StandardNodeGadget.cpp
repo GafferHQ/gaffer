@@ -60,13 +60,13 @@ static const float g_minWidth = 10.0f;
 static const float g_verticalSpacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
-	:	NodeGadget( node ), m_nodeHasObjectPlugs( false ), m_addNodulesCalled( false )
+	:	NodeGadget( node ), m_addNodulesCalled( false )
 {
 	constructCommon( false );
 }
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation )
-	:	NodeGadget( node ), m_nodeHasObjectPlugs( false ), m_addNodulesCalled( false )
+	:	NodeGadget( node ), m_addNodulesCalled( false )
 {
 	constructCommon( deferNoduleCreation );
 }
@@ -88,13 +88,6 @@ void StandardNodeGadget::constructCommon( bool deferNoduleCreation )
 
 	setChild( column );
 	setContents( new NameGadget( node() ) );
-	
-	Gaffer::ObjectPlugIterator it( node()->children().begin(), node()->children().end() );
-	while( it!=node()->children().end() )
-	{
-		m_nodeHasObjectPlugs = true;
-		break;
-	}
 	
 	Gaffer::ScriptNodePtr script = node()->scriptNode();
 	if( script )
@@ -213,11 +206,6 @@ ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 bool StandardNodeGadget::acceptsNodule( const Gaffer::Plug *plug ) const
 {
 	if( plug->getName().compare( 0, 2, "__" )==0 )
-	{
-		return false;
-	}
-
-	if( m_nodeHasObjectPlugs && !plug->isInstanceOf( Gaffer::ObjectPlug::staticTypeId() ) )
 	{
 		return false;
 	}

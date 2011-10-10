@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_NODULE_H
 #define GAFFERUI_NODULE_H
 
+#include "boost/regex.hpp"
+
 #include "GafferUI/Gadget.h"
 
 namespace Gaffer
@@ -68,9 +70,10 @@ class Nodule : public Gadget
 		/// Registers a function which will return a Nodule instance for a plug of a specific
 		/// type.
 		static void registerNodule( IECore::TypeId plugType, NoduleCreator creator );
-		/// Registers a function which will return a Nodule instance for a specific plug on
+		/// Registers a function which will return a Nodule instance for plugs with specific names on
 		/// a specific type of node. Nodules registered in this way will take precedence over those registered above.
-		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator );
+		/// Note that a creator may return 0 to suppress the creation of a Nodule.
+		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPathRegex, NoduleCreator creator );
 		
 		virtual std::string getToolTip() const;
 
@@ -93,8 +96,9 @@ class Nodule : public Gadget
 		typedef std::map<IECore::TypeId, NoduleCreator> CreatorMap;
 		static CreatorMap &creators();
 
-		typedef std::pair<IECore::TypeId, std::string> TypeAndPath;
-		typedef std::map<TypeAndPath, NoduleCreator> NamedCreatorMap;
+		typedef std::pair<boost::regex, NoduleCreator> RegexAndCreator;
+		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;
+		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
 		static NamedCreatorMap &namedCreators();
 
 

@@ -88,6 +88,9 @@ class StandardNodeGadget : public NodeGadget
 		void addNodules();
 		/// May be reimplemented by child classes to determine whether
 		/// or not a Nodule will be created for the specified Plug.
+		/// \deprecated
+		/// \todo Remove this, and rely entirely on the Nodule::registerNodule()
+		/// functionality instead.
 		virtual bool acceptsNodule( const Gaffer::Plug *plug ) const;
 
 		virtual void doRender( IECore::RendererPtr renderer ) const;
@@ -99,9 +102,7 @@ class StandardNodeGadget : public NodeGadget
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 	
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
-		
-		bool m_nodeHasObjectPlugs;
-		
+				
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
 		bool m_addNodulesCalled;

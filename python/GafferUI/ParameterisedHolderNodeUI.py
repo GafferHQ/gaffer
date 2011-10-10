@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +36,8 @@
 ##########################################################################
 
 from __future__ import with_statement
+
+import fnmatch
 
 import IECore
 
@@ -76,4 +79,15 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 			
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
 
+def __parameterNoduleCreator( plug ) :
+	
+	if isinstance( plug, Gaffer.ObjectPlug ) :
+	
+		return GafferUI.StandardNodule( plug )
+		
+	else :
+	
+		return None
+
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
