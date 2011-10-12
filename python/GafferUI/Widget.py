@@ -479,6 +479,7 @@ class Widget( object ) :
 			color: $foreground;
 			font-weight: bold;
 			outline:none;
+			background-color: $backgroundMid;
 			
 		}
 
