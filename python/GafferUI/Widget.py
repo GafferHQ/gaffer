@@ -332,7 +332,7 @@ class Widget( object ) :
 			
 		}
 		
-		QLabel, QCheckBox, QPushButton, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
+		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
 		
 			color: $foreground;
 			font-size: 10px;
@@ -392,6 +392,7 @@ class Widget( object ) :
 			padding: 0px 0px 0px 3px;
 		}
 		
+		
 		QMenu::indicator:non-exclusive:checked {
 			image: url($GAFFER_ROOT/graphics/menuChecked.png);
 		}
@@ -400,7 +401,7 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/arrowRight10.png);
 		}
 		
-		QMenu, QTabBar::tab:selected, QPushButton, QHeaderView::section {
+		QMenu, QTabBar::tab:selected, QPushButton, QHeaderView::section, QComboBox {
 
 			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLight, stop: 1 $backgroundMid);
 
@@ -433,13 +434,13 @@ class Widget( object ) :
 
 		}
 
-		QPushButton {
+		QPushButton, QComboBox {
 		
 			font-weight: bold;
 		
 		}
 
-		QPushButton#gafferWithFrame {
+		QPushButton#gafferWithFrame, QComboBox {
 
 			border: 1px solid $backgroundDark;
 			border-radius: 3px;
@@ -447,7 +448,7 @@ class Widget( object ) :
 
 		}
 
-		QPushButton#gafferWithFrame:hover {
+		QPushButton#gafferWithFrame:hover, QComboBox:hover {
 
 			border: 2px solid $brightColor;
 			
@@ -462,10 +463,40 @@ class Widget( object ) :
 			
 		}
 		
-		QPushButton:disabled {
+		QPushButton:disabled, QComboBox:disabled {
 
 			color: $foregroundFaded;
 
+		}
+		
+		QComboBox {
+		
+			padding: 0;
+			padding-left:3px;
+			
+		}
+		
+		QComboBox::drop-down {
+			width: 15px;
+			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		}
+		
+		QComboBox QAbstractItemView {
+					
+			border: 1px solid $backgroundDarkest;
+			selection-background-color: $backgroundLighter;
+			background-color: $backgroundMid;
+			margin:2px;
+			height:40px;
+			
+		}
+		
+		QComboBox QAbstractItemView::item {
+		
+			border: none;
+			padding: 2px;
+			font-weight: bold;
+			
 		}
 
 		QTabWidget::tab-bar {
@@ -519,7 +550,7 @@ class Widget( object ) :
 		QSplitterHandle:hover {}
 
 		QTabBar::tab:hover, QMenu::item:selected, QMenuBar::item:selected, QSplitter::handle:hover,
-		QPushButton:pressed {
+		QPushButton:pressed, QComboBox QAbstractItemView::item:hover {
 
 			color: white;
 			background-color:	$brightColor;

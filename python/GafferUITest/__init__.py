@@ -64,6 +64,7 @@ from GridContainerTest import GridContainerTest
 from NoduleTest import NoduleTest
 from ProgressBarTest import ProgressBarTest
 from ContainerWidgetTest import ContainerWidgetTest
+from ComboBoxTest import ComboBoxTest
 
 if __name__ == "__main__":
 	unittest.main()

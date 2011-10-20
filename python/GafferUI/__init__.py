@@ -109,6 +109,7 @@ from _Variant import _Variant
 from VectorDataWidget import VectorDataWidget
 from PathVectorDataWidget import PathVectorDataWidget
 from ProgressBar import ProgressBar
+from ComboBox import ComboBox
 
 # then stuff specific to graph uis
 
