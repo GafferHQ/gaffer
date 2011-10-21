@@ -1,3 +1,6 @@
+0.21.0
+------
+
 * Added a selectionMenu widget.
 
 * Stylesheet restructured, enabling style overrides in widgets.
