@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,36 +34,31 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
-from ColorSwatchTest import ColorSwatchTest
-from VariantTest import VariantTest
-from GridContainerTest import GridContainerTest
-from NoduleTest import NoduleTest
-from ProgressBarTest import ProgressBarTest
-from ContainerWidgetTest import ContainerWidgetTest
-from SelectionMenuTest import SelectionMenuTest
+import unittest
 
+import GafferUI
+
+class SelectionMenuTest( unittest.TestCase ) :
+
+	def test( self ) :
+				
+		s = GafferUI.SelectionMenu()
+		
+		# adding new items
+		s.addItem ("Test1")
+		s.addItem ("Test2")
+		s.addItem ("Test3")
+		self.assertEqual (s.getCount(), 3)
+					
+		# changing and checking the current item
+		s.setCurrentIndex(1)
+		self.assertEqual (s.getCurrentItem(), "Test2")
+		self.assertEqual (s.getItem(s.getCurrentIndex()), "Test2")
+		
+		# removing item
+		s.removeIndex(0)
+		self.assertEqual (s.getCount(), 2)
+		
 if __name__ == "__main__":
 	unittest.main()
+	
