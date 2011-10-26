@@ -1,3 +1,16 @@
+* Collapsible Widget now supports corner widget expanded
+
+* Changed Error Window to be reziable as default
+
+* Added selectedSignal in SelectionMenu
+
+* Added CurrentIndexChangedSignal test in SelectionMenuTest
+
+* Fixed StringParameterValueWidget to create a PlugValueWidget using the registered Type
+
+* Added enterSignal and leaveSignal in Widget
+
+
 0.21.0
 ------
 

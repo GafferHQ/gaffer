@@ -47,8 +47,8 @@ import GafferUI
 class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler ) :
-	
-		self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
+		
+		self.__stringPlugValueWidget = GafferUI.PlugValueWidget.create( parameterHandler.plug() )
 	
 		GafferUI.ParameterValueWidget.__init__( self, self.__stringPlugValueWidget, parameterHandler )
 		

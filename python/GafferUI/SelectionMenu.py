@@ -45,26 +45,34 @@ class SelectionMenu( GafferUI.Widget ) :
 
 	def __init__( self ) :
 		GafferUI.Widget.__init__( self, QtGui.QComboBox() )
-		self._qtWidget().currentIndexChanged.connect(Gaffer.WeakMethod( self.__changed ))
+		self._qtWidget().currentIndexChanged.connect( Gaffer.WeakMethod( self.__changed ) )
+		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__selected ) )
 		self.__currentIndexChangedSignal = GafferUI.WidgetSignal()
+		self.__selectedSignal = GafferUI.WidgetSignal()
 		
 		# removing the annoying checkbox and setting a nice selection menu popup behavior
-		self._qtWidget().setStyle(QtGui.QStyleFactory.create("plastique"))
-		self._qtWidget().setView(QtGui.QListView())	 
+		self._qtWidget().setStyle( QtGui.QStyleFactory.create("plastique") )
+		self._qtWidget().setView( QtGui.QListView() )
 		
-	def currentIndexChangedSignal(self):
+	def selectedSignal( self ):	 
+		return self.__selectedSignal
+	
+	def currentIndexChangedSignal( self ):
 		return self.__currentIndexChangedSignal
 	
-	def __changed(self, index):
+	def __changed( self, index ):
 		self.currentIndexChangedSignal()( self )
 		
-	def addItem(self, itemName, imageOrImageFileName=None):		
+	def __selected( self, index ):
+		self.selectedSignal()( self )
+		
+	def addItem( self, itemName, imageOrImageFileName=None ):		
 		self._qtWidget().addItem(itemName)
 		
 		if not imageOrImageFileName is None:
-			self.setIcon(self.getCount()-1, imageOrImageFileName)
+			self.setIcon( self.getTotal()-1, imageOrImageFileName )
 			
-	def setIcon(self, index, imageOrImageFileName ):			
+	def setIcon( self, index, imageOrImageFileName ):
 		icon = None
 		
 		assert( isinstance( imageOrImageFileName, ( basestring, GafferUI.Image, type( None ) ) ) )
@@ -75,31 +83,31 @@ class SelectionMenu( GafferUI.Widget ) :
 			icon = imageOrImageFileName
 		
 		if icon is not None :
-			self._qtWidget().setItemIcon(index, QtGui.QIcon(icon._qtPixmap()))
-			self._qtWidget().setIconSize(icon._qtPixmap().size())
+			self._qtWidget().setItemIcon( index, QtGui.QIcon(icon._qtPixmap() ) )
+			self._qtWidget().setIconSize( icon._qtPixmap().size() )
 			
 			
-	def getIcon(self, index):
-		return self._qtWidget().itemIcon(index)
+	def getIcon( self, index ):
+		return self._qtWidget().itemIcon( index )
 							
-	def getCurrentIndex(self):
+	def getCurrentIndex( self ):
 		return self._qtWidget().currentIndex()
 	
-	def getCurrentItem(self):
+	def getCurrentItem( self ):
 		return self._qtWidget().currentText()
 		
-	def getCount(self):
+	def getTotal( self ):
 		return self._qtWidget().count()
 		
-	def setCurrentIndex(self, index):
-		self._qtWidget().setCurrentIndex(index)
+	def setCurrentIndex( self, index ):
+		self._qtWidget().setCurrentIndex( index )
 		
-	def getItem(self, index):
-		return self._qtWidget().itemText(index)
+	def getItem( self, index ):
+		return self._qtWidget().itemText( index )
 	
-	def removeIndex(self, index):
-		self._qtWidget().removeItem(index)
+	def removeIndex( self, index ):
+		self._qtWidget().removeItem( index )
 			
-	def insertSeparator(self, index):
-		self._qtWidget().insertSeparator(index)
+	def insertSeparator( self, index ):
+		self._qtWidget().insertSeparator( index )
 	

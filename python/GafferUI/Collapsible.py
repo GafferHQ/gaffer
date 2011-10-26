@@ -50,7 +50,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # may be provided to add additional functionality to the header.
 class Collapsible( GafferUI.ContainerWidget ) :
 
-	def __init__( self, label="", child=None, collapsed=False, borderWidth=0, cornerWidget=None ) :
+	def __init__( self, label="", child=None, collapsed=False, borderWidth=0, cornerWidget=None, cornerWidgetExpanded=False ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
 		
@@ -62,10 +62,11 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		self.__headerLayout = QtGui.QHBoxLayout()
 		self.__headerLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		self.__headerLayout.setContentsMargins( 0, 0, 0, 0 )
+		self.__headerLayout.setSpacing(0)
 		 
 		self.__toggle = QtGui.QCheckBox()
 		self.__toggle.setObjectName( "gafferCollapsibleToggle" )
-		self.__headerLayout.addWidget( self.__toggle )
+		self.__headerLayout.addWidget( self.__toggle)
 		
 		self.__headerLayout.addStretch( 1 )
 		
@@ -78,7 +79,7 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		self.setChild( child )
 		
 		self.__cornerWidget = None
-		self.setCornerWidget( cornerWidget )
+		self.setCornerWidget( cornerWidget, cornerWidgetExpanded )
 		
 		self.setLabel( label )
 		self.setCollapsed( collapsed )
@@ -130,13 +131,21 @@ class Collapsible( GafferUI.ContainerWidget ) :
 	
 		return self.__toggle.isChecked()
 		
-	def setCornerWidget( self, cornerWidget ) :
+	def setCornerWidget( self, cornerWidget, cornerWidgetExpanded=False ) :
 	
 		if self.__cornerWidget is not None :
 			self.removeChild( self.__cornerWidget )
 			
-		if cornerWidget is not None :
-			self.__headerLayout.addWidget( cornerWidget._qtWidget() )
+		if cornerWidget is not None :			
+			if cornerWidgetExpanded and self.__headerLayout.stretch(1) == 1:
+				self.__headerLayout.setStretch(1, 0)
+				
+			elif self.__headerLayout.stretch(1) == 0:
+				self.__headerLayout.setStretch(1, 1)
+				
+			stretch = 1 if cornerWidgetExpanded else 0
+			
+			self.__headerLayout.addWidget( cornerWidget._qtWidget(), stretch )
 			self.__cornerWidget = cornerWidget
 		
 	def getCornerWidget( self ) :

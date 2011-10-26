@@ -40,25 +40,40 @@ import GafferUI
 
 class SelectionMenuTest( unittest.TestCase ) :
 
-	def test( self ) :
+	def testAccessors( self ) :
 				
 		s = GafferUI.SelectionMenu()
 		
 		# adding new items
-		s.addItem ("Test1")
-		s.addItem ("Test2")
-		s.addItem ("Test3")
-		self.assertEqual (s.getCount(), 3)
+		s.addItem( "Test1" )
+		s.addItem( "Test2" )
+		s.addItem( "Test3" )
+		self.assertEqual( s.getTotal(), 3 )
 					
 		# changing and checking the current item
-		s.setCurrentIndex(1)
-		self.assertEqual (s.getCurrentItem(), "Test2")
-		self.assertEqual (s.getItem(s.getCurrentIndex()), "Test2")
+		s.setCurrentIndex( 1 )
+		self.assertEqual( s.getCurrentItem(), "Test2" )
+		self.assertEqual( s.getItem(s.getCurrentIndex()), "Test2" )
 		
 		# removing item
-		s.removeIndex(0)
-		self.assertEqual (s.getCount(), 2)
+		s.removeIndex( 0 )
+		self.assertEqual ( s.getTotal(), 2 )
 		
+	def testCurrentIndexChangedSignal( self ):
+		s = GafferUI.SelectionMenu()
+		
+		self.emissions = 0
+		def f( w ) :
+			self.emissions += 1
+		
+		c = s.currentIndexChangedSignal().connect(f)
+		
+		s.addItem("Test1")
+		s.addItem("Test2")
+		
+		self.assertEqual(self.emissions, 1)
+	
+	
 if __name__ == "__main__":
 	unittest.main()
 	

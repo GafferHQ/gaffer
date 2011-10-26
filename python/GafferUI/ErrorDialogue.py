@@ -46,7 +46,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 
 	def __init__( self, title, message, details=None ) :
 
-		GafferUI.Dialogue.__init__( self, title, resizeable=False )
+		GafferUI.Dialogue.__init__( self, title, resizeable=True )
 		
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
 		messageWidget = GafferUI.Label( IECore.StringUtil.wrap( message, 60 ) )

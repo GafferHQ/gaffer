@@ -106,6 +106,8 @@ class Widget( object ) :
 		self.__buttonPressSignal = GafferUI.WidgetEventSignal()
 		self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
 		self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
+		self.__enterSignal = GafferUI.WidgetSignal()
+		self.__leaveSignal = GafferUI.WidgetSignal()
 		self.__wheelSignal = GafferUI.WidgetEventSignal()
 		
 		self.setToolTip( toolTip )
@@ -196,6 +198,14 @@ class Widget( object ) :
 	def mouseMoveSignal( self ) :
 	
 		return self.__mouseMoveSignal
+	
+	def enterSignal( self ) :
+	
+		return self.__enterSignal
+		
+	def leaveSignal( self ) :
+	
+		return self.__leaveSignal
 		
 	def wheelSignal( self ) :
 	
@@ -486,8 +496,8 @@ class Widget( object ) :
 			border: 1px solid $backgroundDarkest;
 			selection-background-color: $backgroundLighter;
 			background-color: $backgroundMid;
-			margin:2px;
 			height:40px;
+			margin:0;
 			
 		}
 		
@@ -936,6 +946,19 @@ class _EventFilter( QtCore.QObject ) :
 			)
 
 			return widget.mouseMoveSignal()( widget, event )
+		
+		elif qEvent.type()==QtCore.QEvent.Enter :
+				
+			widget = Widget._owner( qObject )
+
+			return widget.enterSignal()( widget)
+			
+			
+		elif qEvent.type()==QtCore.QEvent.Leave :
+				
+			widget = Widget._owner( qObject )
+
+			return widget.leaveSignal()( widget)
 			
 		elif qEvent.type()==QtCore.QEvent.Wheel :
 				
