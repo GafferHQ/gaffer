@@ -1,3 +1,7 @@
+0.22.1
+------
+* Changed events keyPress and textChanged to be protected
+
 0.22.0
 ------
 
