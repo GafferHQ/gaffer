@@ -309,9 +309,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			return True
 				
 		# pass the key to the gadget
-		self.__dispatchEvent( self.getGadget(), "keyPressSignal", event )
+		result = self.__dispatchEvent( self.getGadget(), "keyPressSignal", event )
 		
-		return True
+		return True if result[1] else False
 	
 	## Dispatches an event to a named signal on a Gadget, returning a tuple containing the
 	# gadget that handled the event and the return value from the handler. A list of Gadgets
