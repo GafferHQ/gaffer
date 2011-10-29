@@ -1,5 +1,7 @@
 * Fixed a bug which prevented keypresses in GadgetWidget from being propagated to the parent widget if they were not processed by the GadgetWidget.
 
+* Can now exit full screen mode by hitting Escape
+
 0.22.1
 ------
 

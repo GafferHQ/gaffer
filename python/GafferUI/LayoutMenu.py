@@ -105,10 +105,19 @@ def __saveLayouts() :
 	
 	GafferUI.Layouts.save( f, re.compile( "user:.*" ) )
 
+def __fullScreenKeyPress( scriptWindow, event ) :
+
+	if event.key=="Escape" and scriptWindow.getFullScreen() :
+		scriptWindow.setFullScreen( False )
+		return True
+		
+	return False
+	
 def fullScreen( menu, checkBox ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
 	scriptWindow.setFullScreen( checkBox )
+	scriptWindow.__fullScreenKeyPressConnection = scriptWindow.keyPressSignal().connect( __fullScreenKeyPress )
 	
 def fullScreenCheckBox( menu ) :
 
