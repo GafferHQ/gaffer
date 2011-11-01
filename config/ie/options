@@ -156,9 +156,13 @@ if getOption( "RELEASE", "0" )=="0" :
 ##########################################################################
 
 compilerVersionSplit = compilerVersion.split( "." )
-boostVersionSplit = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] ).split( "." )
+# figure out the suffix for boost libraries
+boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
+boostVersionSuffix = "-mt-" + boostVersion.replace( ".", "_" )
+while boostVersionSuffix.endswith( "_0" ) :
+	boostVersionSuffix = boostVersionSuffix[:-2]
 
-BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + "-mt-" + "_".join( boostVersionSplit[0:2] )
+BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
 CORTEX_LIB_SUFFIX = "-" + cortexMajorVersion
 CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
