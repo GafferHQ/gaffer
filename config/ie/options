@@ -52,7 +52,7 @@ def getOption( name, default ) :
 	return result	
 
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
-cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion]
+cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion].get( IEEnv.platform(), IEEnv.registry["libraries"]["cortex"][cortexMajorVersion] )
 compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
 targetApp = getOption( "APP", None )
@@ -113,7 +113,8 @@ if targetAppVersion :
 LOCATE_DEPENDENCY_CPPPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ), "OpenEXR" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", targetAppReg.get( "boostVersion", cortexReg["boostVersion"] ) ),
 	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion )
