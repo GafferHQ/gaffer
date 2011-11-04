@@ -79,21 +79,22 @@ class OpDialogue( GafferUI.Dialogue ) :
 		return self.__opExecutedSignal
 	
 	## Causes the dialogue to enter a modal state, returning the result
-	# of executing the Op, None if the user cancelled the operation, or
-	# an Exception if an Exception was thrown (in this case the Exception
-	# will already have been reported to the user).
+	# of executing the Op, or None if the user cancelled the operation. Any
+	# validation or execution errors will be reported to the user and return
+	# to the dialogue for them to cancel or try again.
 	def waitForResult( self, **kw ) :
 	
 		# block our button connection so we don't end up executing twice
 		with Gaffer.BlockedConnection( self.__executeButtonConnection ) :
 		
-			button = self.waitForButton( **kw )
-					
-			if button is self.__executeButton :
-				
-				return self.__execute()
-				
-		return None
+			while 1 :
+				button = self.waitForButton( **kw )					
+				if button is self.__executeButton :
+					result = self.__execute()
+					if not isinstance( result, Exception ) :
+						return result
+				else :
+					return None
 
 	def __execute( self ) :
 				

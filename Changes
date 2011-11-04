@@ -1,6 +1,8 @@
 * Fixed a bug which prevented keypresses in GadgetWidget from being propagated to the parent widget if they were not processed by the GadgetWidget.
 
-* Can now exit full screen mode by hitting Escape
+* Can now exit full screen mode by hitting Escape.
+
+* OpDialogue.waitForResult() now never returns Exceptions if execution fails. Instead it gives the user the chance to try again or cancel.
 
 0.22.1
 ------
