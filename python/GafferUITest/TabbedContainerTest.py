@@ -57,6 +57,12 @@ class TabbedContainerTest( unittest.TestCase ) :
 		self.assert_( t[0] is c )
 		self.assert_( t.getCurrent() is c )
 		
+	def testOwner( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		
+		self.failUnless( GafferUI.Widget._owner( t._qtWidget() ) is t )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

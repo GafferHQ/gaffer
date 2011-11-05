@@ -243,7 +243,7 @@ class Widget( object ) :
 	@classmethod
 	def _owner( cls, qtWidget ) :
 		
-		while qtWidget :
+		while qtWidget is not None :
 	
 			if qtWidget in cls.__qtWidgetOwners :
 				return cls.__qtWidgetOwners[qtWidget]()
@@ -966,7 +966,6 @@ class _EventFilter( QtCore.QObject ) :
 			widget = Widget._owner( qObject )
 
 			return widget.enterSignal()( widget)
-			
 			
 		elif qEvent.type()==QtCore.QEvent.Leave :
 				
