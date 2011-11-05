@@ -481,8 +481,8 @@ if depEnv["BUILD_DEPENDENCY_QT"] :
 	
 	
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
-	runCommand( "cd $SIP_SRC_DIR && python configure.py && make && make install" )
-	runCommand( "cd $PYQT_SRC_DIR && python configure.py --confirm-license && make && make install" )
+	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make && make install" )
+	runCommand( "cd $PYQT_SRC_DIR && python configure.py -d $BUILD_DIR/python  --confirm-license && make && make install" )
 
 # having MACOS_DEPLOYMENT_TARGET set breaks the pyside build for some reason
 del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
