@@ -101,6 +101,11 @@ class Widget( object ) :
 		Widget.__qtWidgetOwners[self.__qtWidget] = weakref.ref( self )
 				
 		self.__qtWidget.installEventFilter( _eventFilter )
+
+		# disable different focus appearance on os x
+		## \todo If we have a style class for Widget at some point, then perhaps
+		# this should go in there.
+		self.__qtWidget.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
 		
 		self.__keyPressSignal = GafferUI.WidgetEventSignal()
 		self.__buttonPressSignal = GafferUI.WidgetEventSignal()
@@ -272,11 +277,11 @@ class Widget( object ) :
 		if not cls.__keyMapping :
 			for k in dir( QtCore.Qt ) :
 				if k.startswith( "Key_" ) :
-					keyValue = getattr( QtCore.Qt, k )
+					keyValue = int( getattr( QtCore.Qt, k ) )
 					keyString = k[4:]
 					cls.__keyMapping[keyValue] = keyString
 	
-		return cls.__keyMapping[qtKey]
+		return cls.__keyMapping[int(qtKey)]
 	
 	__keyMapping = {}
 	
@@ -353,11 +358,20 @@ class Widget( object ) :
 			
 		}
 
-		QMenuBar, QMenuBar::item {
-
+		QMenuBar {
+		
 			background-color: $backgroundDarkest;
 			font-weight: bold;
+			padding: 0px;
+			margin: 0px;
+			
+		}
 
+		QMenuBar::item {
+
+			background-color: $backgroundDarkest;
+			padding: 5px 8px 5px 8px;
+			
 		}
 
 		QMenu {
