@@ -672,6 +672,10 @@ for d in ( "ui", "" ) :
 	shaderInstall = env.Install( "$BUILD_DIR/shaders/%s/" % d, glob.glob( "shaders/%s/*" % d ) )
 	env.Alias( "build", shaderInstall )
 
+for d in ( "LICENSE", ) :
+	miscInstall = env.InstallAs( "$BUILD_DIR/" + d, d )
+	env.Alias( "build", miscInstall )
+	
 #########################################################################################################
 # Graphics
 #########################################################################################################
@@ -811,6 +815,8 @@ manifest = [
 	"bin/gaffer",
 	"bin/gaffer.py",
 	"bin/python",
+	
+	"LICENSE",
 
 	"apps/*/*-1.py",
 
