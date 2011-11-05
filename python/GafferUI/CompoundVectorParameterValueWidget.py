@@ -44,7 +44,7 @@ import GafferUI
 
 class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, collapsible=True ) :
+	def __init__( self, parameterHandler, collapsible=None ) :
 		
 		self.__vectorDataWidget = None
 			

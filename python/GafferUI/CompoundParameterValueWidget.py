@@ -42,7 +42,12 @@ import IECore
 import Gaffer
 import GafferUI
 
-## Supported child userData entries :
+## Supported parameter userData entries :
+#
+# ["UI"]["collapsible"]
+# ["UI"]["collapsed"]
+#
+# Supported child userData entries :
 #
 # ["UI"]["visible"]
 class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
@@ -50,11 +55,17 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 	_columnSpacing = 4
 	_labelWidth = 110
 
-	def __init__( self, parameterHandler, collapsible=True ) :
-	
-		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = self._columnSpacing )
-		self.__collapsible = None
+	## If collapsible is not None then it overrides any ["UI]["collapsible"] userData the parameter might have.
+	def __init__( self, parameterHandler, collapsible=None ) :
 		
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = self._columnSpacing )
+		
+		if collapsible is None :
+			collapsible = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				collapsible = parameterHandler.parameter().userData()["UI"]["collapsible"].value
+		
+		self.__collapsible = None
 		if collapsible :
 			collapsibleLabel = IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
 			self.__collapsible = GafferUI.Collapsible( label = collapsibleLabel, collapsed = True )
@@ -70,7 +81,11 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		self.__childrenChangedPending = False
 		
 		if collapsible :
+			collapsed = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				collapsed = parameterHandler.parameter().userData()["UI"]["collapsed"].value
 			self.__collapsibleStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapsibleStateChanged ) )
+			self.__collapsible.setCollapsed( collapsed )
 		else :
 			self._buildChildParameterUIs( self.__column )
 

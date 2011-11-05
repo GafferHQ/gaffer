@@ -4,6 +4,8 @@
 
 * OpDialogue.waitForResult() now never returns Exceptions if execution fails. Instead it gives the user the chance to try again or cancel.
 
+* CompoundParameterValueWidget and CompoundVectorParameterValueWidget now support the ["UI"]["collapsible"] and ["UI"]["collapsed"] parameter userData. The collapsible argument to the constructor now defaults to None, it can be specified explicitly as True or False to override the userData request.
+
 0.22.1
 ------
 
