@@ -48,7 +48,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 	Orientation = Enum.create( "Vertical", "Horizontal" )
 
-	def __init__( self, orientation, spacing=0, borderWidth=0 ) :
+	def __init__( self, orientation=Orientation.Vertical, spacing=0, borderWidth=0 ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
 	

@@ -12,6 +12,8 @@
 
 * Added SplitContainer getSizes(), setSizes() and handle() methods. See documentation for details.
 
+* ListContainer.__init__() orientation parameter now defaults to vertical.
+
 0.22.1
 ------
 
