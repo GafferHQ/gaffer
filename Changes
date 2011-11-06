@@ -10,6 +10,8 @@
 
 * The Widget.setVisible() and Widget.getVisible() methods have been modified to match the behaviour of Widget.setEnabled() and Widget.getEnabled(), and an addition Widget.visible() method has been introduced to query visibility relative to an ancestor. See documentation for further details.
 
+* Added SplitContainer getSizes(), setSizes() and handle() methods. See documentation for details.
+
 0.22.1
 ------
 

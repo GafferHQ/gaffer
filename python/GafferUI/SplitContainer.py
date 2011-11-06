@@ -43,16 +43,16 @@ QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Support other list operations for child access
-## \todo Can this share things with ListContainer?
 class SplitContainer( GafferUI.ContainerWidget ) :
 	
 	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
 	
 	def __init__( self, orientation=Orientation.Vertical ) :
 		
-		GafferUI.ContainerWidget.__init__( self, QtGui.QSplitter() )
+		GafferUI.ContainerWidget.__init__( self, _Splitter() )
 		
 		self.__widgets = []
+		self.__handleWidgets = {}
 		
 		self.setOrientation( orientation )
 	
@@ -107,6 +107,62 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		child._qtWidget().setParent( None )
 		self.__widgets.remove( child )
 	
+	## Returns a list of actual pixel sizes for each of the children.
+	# These do not include the space taken up by the handles.
+	def getSizes( self ) :
+	
+		return self._qtWidget().sizes()
+	
+	## Sets the sizes of the children. Note that this will not change
+	# the overall size of the SplitContainer - instead the sizes are
+	# adjusted to take up all the space available. Therefore it is only
+	# the relative differences in sizes which are important.
+	# If animationDuration is non-zero then it specifies a period
+	# in milliseconds over which to adjust the sizes.
+	def setSizes( self, sizes, animationDuration=0 ) :
+	
+		assert( len( sizes ) == len( self ) )
+		
+		if self.getOrientation() == self.Orientation.Vertical :
+			availableSize = self.size().y
+		else :
+			availableSize = self.size().x
+			
+		if len( self ) > 1 :
+			handleSize = 0
+			if self.getOrientation() == self.Orientation.Vertical :
+				handleSize = self.handle( 0 ).size().y
+			else :
+				handleSize = self.handle( 0 ).size().x	
+			availableSize -= (len( self ) - 1) * handleSize
+				
+		scaleFactor = availableSize / sum( sizes )
+		sizes = [ scaleFactor * x for x in sizes ]
+		
+		if animationDuration == 0 :
+			self._qtWidget().setSizes( sizes )
+		else :
+			animation = _SizeAnimation( self._qtWidget(), sizes )
+			animation.setDuration( animationDuration )
+			self._qtWidget().__sizeAnimation = animation
+			animation.start()
+	
+	## Returns the handle to the right/bottom of the specified child index.
+	# Note that you should not attempt to reparent the handles, and you will
+	# be unable to access them after the SplitContainer itself has been destroyed.
+	def handle( self, index ) :
+	
+		if index < 0 or index >= len( self ) - 1 :
+			raise IndexError()
+	
+		qtHandle = self._qtWidget().handle( index + 1 )
+		handle = self.__handleWidgets.get( qtHandle, None )
+		if handle is None :
+			handle = GafferUI.Widget( qtHandle )
+			self.__handleWidgets[qtHandle] = handle
+			
+		return handle
+	
 	def __getitem__( self, index ) :
 	
 		return self.__widgets[index]
@@ -126,5 +182,35 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	def __len__( self ) :
 		
 		return len( self.__widgets )
-			
+
+# We inherit from QSplitter purely so that the handles can be created
+# in Python rather than C++. This seems to help PyQt and PySide in tracking
+# the lifetimes of the splitter and handles.
+class _Splitter( QtGui.QSplitter ) :
+
+	def __init__( self ) :
 	
+		QtGui.QSplitter.__init__( self )
+		
+	def createHandle( self ) :
+			
+		return QtGui.QSplitterHandle( self.orientation(), self )
+
+class _SizeAnimation( QtCore.QVariantAnimation ) :
+
+	def __init__( self, qSplitter, newSizes ) :
+	
+		QtCore.QVariantAnimation.__init__( self, None )
+		
+		self.__splitter = qSplitter
+		self.__sizes = zip( qSplitter.sizes(), newSizes )
+		self.setStartValue( 0.0 )
+		self.setEndValue( 1.0 )
+		self.setEasingCurve( QtCore.QEasingCurve( QtCore.QEasingCurve.OutCubic ) )
+		
+	def updateCurrentValue( self, value ) :
+
+		value = GafferUI._Variant.fromVariant( value )
+		sizes = [ x[0] + ( x[1] - x[0] ) * value for x in self.__sizes ]
+				
+		self.__splitter.setSizes( sizes )

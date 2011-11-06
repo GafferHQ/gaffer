@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import GafferUI
 
@@ -77,7 +78,89 @@ class SplitContainerTest( unittest.TestCase ) :
 		self.assertEqual( len( p1 ), 0 )
 		self.assertEqual( len( p2 ), 1 )
 		self.failUnless( b.parent() is p2 )
+
+	def testHandle( self ) :
+	
+		c = GafferUI.SplitContainer()
 		
+		c.append( GafferUI.Frame() )
+		c.append( GafferUI.Frame() )
+		
+		self.assertRaises( IndexError, c.handle, -1 )
+		self.assertRaises( IndexError, c.handle, 1 )
+	
+		self.failUnless( isinstance( c.handle( 0 ), GafferUI.Widget ) )
+	
+	def testGetHandleTwice( self ) :
+	
+		c = GafferUI.SplitContainer()
+		
+		c.append( GafferUI.Frame() )
+		c.append( GafferUI.Frame() )
+		
+		self.failUnless( c.handle( 0 ) is c.handle( 0 ) )
+
+	def testCanDieAfterGetHandle( self ) :
+	
+		c = GafferUI.SplitContainer()
+		
+		c.append( GafferUI.Frame() )
+		c.append( GafferUI.Frame() )
+		
+		w = weakref.ref( c )
+		
+		h = c.handle( 0 )
+		
+		del c
+		
+		self.assertEqual( w(), None )
+	
+	def testAccessHandleAfterContainerDeleted( self ) :
+	
+		c = GafferUI.SplitContainer()
+		
+		c.append( GafferUI.Frame() )
+		c.append( GafferUI.Frame() )
+				
+		h = c.handle( 0 )
+		
+		del c
+		
+		# the internal handle has been deleted. there's not much we can do
+		# except make sure that we get exceptions rather than crashes.		
+		self.assertRaises( RuntimeError, h.size )
+		
+	def testGetSizes( self ) :
+	
+		c = GafferUI.SplitContainer()
+		
+		c.append( GafferUI.Frame() )
+		c.append( GafferUI.Frame() )
+		
+		c.setVisible( True )
+		
+		sizes = c.getSizes()
+		self.assertEqual( sum( sizes ) + c.handle( 0 ).size().y, c.size().y )
+		
+	def testSetSizes( self ) :
+	
+		c = GafferUI.SplitContainer()
+		
+		c.append( GafferUI.Frame() )
+		c.append( GafferUI.Frame() )
+		
+		c.setVisible( True )
+		originalSize = c.size()
+		
+		c.setSizes( [ 0.25, 0.75 ] )
+		
+		self.assertEqual( c.size(), originalSize )
+		self.assertEqual( sum( c.getSizes() ) + c.handle( 0 ).size().y, originalSize.y )
+		
+		s = c.getSizes()
+		self.assertAlmostEqual( float( s[0] ) / s[1], 1/3.0, 1 )
+		
+	
 if __name__ == "__main__":
 	unittest.main()
 	
