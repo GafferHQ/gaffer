@@ -119,16 +119,32 @@ class Widget( object ) :
 		
 		if len( self.__parentStack ) :
 			self.__parentStack[-1].addChild( self )
-				
+	
+	## Sets whether or not this Widget is visible. Widgets are
+	# visible by default, except for Windows which need to be made
+	# visible explicitly after creation.		
 	def setVisible( self, visible ) :
 	
 		self.__qtWidget.setVisible( visible )
 	
-	## \todo Make these functions consistent with the enabled ones below,
-	# and document them.
+	## Returns False if this Widget has been explicitly hidden
+	# using setVisible( False ), and True otherwise. Note that if
+	# a parent Widget has been hidden, then this function may still
+	# return True even though the child is actually hidden. Use the
+	# visible() method to determine visibility taking into account
+	# parent Widgets.
 	def getVisible( self ) :
 	
-		return self.__qtWidget.isVisible()
+		return not self.__qtWidget.isHidden()
+	
+	## Returns True if this Widget and all its parents up to the specified
+	# ancestor are visible.
+	def visible( self, relativeTo=None ) :
+	
+		if relativeTo is not None :
+			relativeTo = relativeTo.__qtWidget
+			
+		return self.__qtWidget.isVisibleTo( relativeTo )
 
 	## Sets whether or not this Widget is enabled - when
 	# not enabled Widgets are typically greyed out and signals

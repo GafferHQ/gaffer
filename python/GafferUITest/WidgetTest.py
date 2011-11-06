@@ -169,7 +169,44 @@ class WidgetTest( unittest.TestCase ) :
 		del w
 		self.assert_( wr1() is None )
 		self.assert_( wr2() is None )
+		
+	def testVisibility( self ) :
 	
+		with GafferUI.Window() as w :
+			with GafferUI.ListContainer() as l :
+				t = TestWidget()
+	
+		self.assertEqual( w.getVisible(), False )
+		self.assertEqual( l.getVisible(), True )
+		self.assertEqual( t.getVisible(), True )
+		self.assertEqual( w.visible(), False )
+		self.assertEqual( l.visible(), False )
+		self.assertEqual( t.visible(), False )
+		
+		w.setVisible( True )
+		self.assertEqual( w.getVisible(), True )
+		self.assertEqual( l.getVisible(), True )
+		self.assertEqual( t.getVisible(), True )
+		self.assertEqual( w.visible(), True )
+		self.assertEqual( l.visible(), True )
+		self.assertEqual( t.visible(), True )
+		
+		w.setVisible( False )
+		self.assertEqual( w.getVisible(), False )
+		self.assertEqual( l.getVisible(), True )
+		self.assertEqual( t.getVisible(), True )
+		self.assertEqual( w.visible(), False )
+		self.assertEqual( l.visible(), False )
+		self.assertEqual( t.visible(), False )
+		self.assertEqual( t.visible( relativeTo = l ), True )
+		self.assertEqual( t.visible( relativeTo = w ), True )
+		
+		w.setVisible( True )
+		t.setVisible( False )
+		self.assertEqual( t.getVisible(), False )
+		self.assertEqual( t.visible(), False )
+		self.assertEqual( t.visible( relativeTo = l ), False )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

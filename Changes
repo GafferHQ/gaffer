@@ -8,6 +8,8 @@
 
 * Fixed a bug which prevented the GafferUI.Widget owner for empty QTabWidgets from being found with PyQt4. This caused errors during event handling.
 
+* The Widget.setVisible() and Widget.getVisible() methods have been modified to match the behaviour of Widget.setEnabled() and Widget.getEnabled(), and an addition Widget.visible() method has been introduced to query visibility relative to an ancestor. See documentation for further details.
+
 0.22.1
 ------
 
