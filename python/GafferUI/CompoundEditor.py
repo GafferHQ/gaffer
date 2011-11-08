@@ -44,10 +44,13 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## \todo Implement an option to float in a new window, and an option to anchor back - drag and drop of tabs?
 class CompoundEditor( GafferUI.EditorWidget ) :
+
+	__transitionDuration = 400
 
 	def __init__( self, scriptNode=None, children=None ) :
 		
@@ -57,7 +60,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
 		
-		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )					
+		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		if children :		
 			self.__addChildren( self.__splitContainer, children )
@@ -156,6 +160,72 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		m.popup()
 		
 		return True
+		
+	def __keyPress( self, unused, event ) :
+	
+		if event.key == "Space" :
+			
+			# we receive the event for whichever SplitContainer has keyboard focus, but that's not
+			# necessarily the one we want to modify. examine the splitter hierarchy and find
+			# the target container we want to modify, and the new state we want to put it in.
+			## \todo Decide how and where we provide this widget-under-the-cursor functionality in
+			# the public api.
+			qWidget = QtGui.QApplication.instance().widgetAt( QtGui.QCursor.pos() )
+			widget = GafferUI.Widget._owner( qWidget )
+						
+			State = IECore.Enum.create( "None", "Open", "Closed", "Opening", "Closing" )
+					
+			targetContainer, targetState, targetIndex = None, State.None, -1
+			prevContainer, prevState, prevIndex = None, State.None, -1
+			while widget is not None :
+				widgetParent = widget.parent()
+				if isinstance( widgetParent, GafferUI.SplitContainer ) and hasattr( widgetParent, "_CompoundEditor__preferredHandlePosition" ) :
+					currentContainer = widgetParent
+					currentIndex = 1 - currentContainer.index( widget )
+					currentDestSizes = currentContainer.targetSizes()
+					if len( currentContainer ) == 1 :
+						currentState = State.None
+					elif 0 in currentContainer.getSizes() :
+						currentState = State.Closed
+					elif currentDestSizes is not None :
+						if currentDestSizes[currentIndex] == 0 :
+							currentState = State.Closing
+						else :
+							currentState = State.Opening
+					else :
+						currentState = State.Open
+
+					if prevState in ( State.Closing, State.None ) and currentState in ( State.Open, State.Opening ) :
+						targetContainer, targetState, targetIndex = currentContainer, State.Closing, currentIndex
+						break
+					if prevState == State.Closed and currentState in ( State.Open, State.Opening ) :
+						targetContainer, targetState, targetIndex = prevContainer, State.Opening, prevIndex
+						break
+					elif currentState == State.Closed and currentContainer.parent() is self :
+						targetContainer, targetState, targetIndex = currentContainer, State.Opening, currentIndex
+						break
+
+					prevContainer, prevState, prevIndex = currentContainer, currentState, currentIndex
+
+				widget = widgetParent
+
+			if targetContainer is None :
+				return False
+
+			if targetState == State.Closing :
+				newSizes = [ 0, 1 ]
+				if targetIndex :
+					newSizes.reverse()
+			else :
+				newSizes = [ targetContainer.__preferredHandlePosition, 1 - targetContainer.__preferredHandlePosition ]
+
+			targetContainer.setSizes( newSizes, self.__transitionDuration )
+			for child in targetContainer :
+				child.__enterConnection = None
+
+			return True
+			
+		return False
 
 	def __addChildren( self, splitContainer, children ) :
 		
@@ -209,6 +279,11 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			
 		assert( len( splitContainer ) == 2 )
 		
+		handle = splitContainer.handle( 0 )
+		splitContainer.__handleEnterConnection = handle.enterSignal().connect( self.__handleEnter )
+		splitContainer.__handleButtonReleaseConnection = handle.buttonReleaseSignal().connect( self.__handleButtonRelease )
+		splitContainer.__preferredHandlePosition = 0.5 # where the user put it last
+		
 		splitContainer.setOrientation( orientation )
 		
 	def __join( self, splitContainer, subPanelIndex ) :
@@ -231,6 +306,52 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		# way in case the menu we're called from is holding on to references to the ui elements
 		# which are going to die.
 		GafferUI.EventLoop.addIdleCallback( self.__collect )
+
+	@staticmethod
+	def __handlePosition( splitContainer ) :
+	
+		assert( len( splitContainer ) == 2 )
+		
+		sizes = splitContainer.getSizes()
+		return float( sizes[0] ) / sum( sizes )
+
+	## Used to remember where people like the handle to be.
+	@staticmethod
+	def __handleButtonRelease( handle, event ) :
+	
+		splitContainer = handle.parent()
+		handlePosition = CompoundEditor.__handlePosition( splitContainer )
+		if handlePosition != 0 and handlePosition != 1 :
+			splitContainer.__preferredHandlePosition = handlePosition
+		for child in splitContainer :
+			child.__enterConnection = None
+
+		return False
+		
+	## Used to dynamically show collapsed editors when the handle is entered
+	@staticmethod
+	def __handleEnter( handle ) :
+	
+		splitContainer = handle.parent()
+		sizes = splitContainer.getSizes()
+		if 0 in sizes :
+			preferredContainer = splitContainer[ 1 - sizes.index( 0 ) ]
+			preferredContainer.__enterConnection = preferredContainer.enterSignal().connect( CompoundEditor.__preferredIndexEnter )
+			sizes = [ splitContainer.__preferredHandlePosition, 1 - splitContainer.__preferredHandlePosition ]
+			splitContainer.setSizes( sizes, CompoundEditor.__transitionDuration )
+	
+		return False
+	
+	## Used to dynamically hide editors automatically after being dynamically shown	
+	@staticmethod
+	def __preferredIndexEnter( splitContainer ) :
+		
+		parent = splitContainer.parent()
+		index = parent.index( splitContainer )
+		sizes = [ 1 if index==0 else 0, 0 if index==0 else 1 ]
+		parent.setSizes( sizes, CompoundEditor.__transitionDuration )
+		
+		splitContainer.__enterConnection = None
 
 	@staticmethod
 	def __collect() :

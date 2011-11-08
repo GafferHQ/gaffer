@@ -14,6 +14,8 @@
 
 * ListContainer.__init__() orientation parameter now defaults to vertical.
 
+* CompoundEditor now provides dynamic behaviour for expanding and collapsing child editors. Hit space to expand the current editor one level, double space for two levels and so on. Space then collapses back one level, double space two levels and so on. When an editor is fully collapsed, hovering over the splitter handle will dynamically show it.
+
 0.22.1
 ------
 

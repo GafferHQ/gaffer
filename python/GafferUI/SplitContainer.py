@@ -53,6 +53,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		
 		self.__widgets = []
 		self.__handleWidgets = {}
+		self.__sizeAnimation = None
 		
 		self.setOrientation( orientation )
 	
@@ -144,8 +145,18 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		else :
 			animation = _SizeAnimation( self._qtWidget(), sizes )
 			animation.setDuration( animationDuration )
-			self._qtWidget().__sizeAnimation = animation
+			self.__sizeAnimation = animation
 			animation.start()
+			
+	## If a size animation is currently in progress, then returns the
+	# final sizes of the animation, otherwise returns None.
+	def targetSizes( self ) :
+	
+		if self.__sizeAnimation is not None :
+			if self.__sizeAnimation.state() == _SizeAnimation.Running :
+				return self.__sizeAnimation.targetSizes()
+		
+		return None
 	
 	## Returns the handle to the right/bottom of the specified child index.
 	# Note that you should not attempt to reparent the handles, and you will
@@ -203,14 +214,18 @@ class _SizeAnimation( QtCore.QVariantAnimation ) :
 		QtCore.QVariantAnimation.__init__( self, None )
 		
 		self.__splitter = qSplitter
-		self.__sizes = zip( qSplitter.sizes(), newSizes )
+		self.sizes = zip( qSplitter.sizes(), newSizes )
 		self.setStartValue( 0.0 )
 		self.setEndValue( 1.0 )
 		self.setEasingCurve( QtCore.QEasingCurve( QtCore.QEasingCurve.OutCubic ) )
-		
+	
+	def targetSizes( self ) :
+	
+		return ( self.sizes[0][1], self.sizes[1][1] )
+	
 	def updateCurrentValue( self, value ) :
 
 		value = GafferUI._Variant.fromVariant( value )
-		sizes = [ x[0] + ( x[1] - x[0] ) * value for x in self.__sizes ]
+		sizes = [ x[0] + ( x[1] - x[0] ) * value for x in self.sizes ]
 				
 		self.__splitter.setSizes( sizes )
