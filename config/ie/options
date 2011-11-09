@@ -72,6 +72,7 @@ if targetApp :
 	compiler = targetAppReg["compiler"]
 	compilerVersion = targetAppReg["compilerVersion"]
 	pythonVersion = targetAppReg["pythonVersion"]
+	targetAppMajorVersion = targetAppReg.get( "majorVersion", targetAppVersion )
 
 else :
 
@@ -103,8 +104,8 @@ INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platfo
 
 if targetAppVersion :
 	
-	BUILD_DIR = BUILD_DIR + "/" + targetAppVersion
-	INSTALL_DIR = INSTALL_DIR + "/" + targetAppVersion
+	BUILD_DIR = BUILD_DIR + "/" + targetAppMajorVersion
+	INSTALL_DIR = INSTALL_DIR + "/" + targetAppMajorVersion
 
 ##########################################################################
 # get include locations right
