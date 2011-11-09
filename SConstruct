@@ -360,8 +360,8 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "22",
-	GAFFER_PATCH_VERSION = "1",
+	GAFFER_MINOR_VERSION = "23",
+	GAFFER_PATCH_VERSION = "0",
 	
 	PYTHON_VERSION = "2.7", # \todo need some way of getting this magically
 
