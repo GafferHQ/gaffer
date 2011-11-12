@@ -62,6 +62,22 @@ class TabbedContainerTest( unittest.TestCase ) :
 		t = GafferUI.TabbedContainer()
 		
 		self.failUnless( GafferUI.Widget._owner( t._qtWidget() ) is t )
+	
+	def testCornerWidget( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		self.failUnless( t.getCornerWidget() is None )
+		
+		b = GafferUI.Button( "baby" )
+		t.setCornerWidget( b )
+		self.failUnless( t.getCornerWidget() is b )
+		self.failUnless( b.parent() is t )
+		
+		b2 = GafferUI.Button( "b" )
+		t.setCornerWidget( b2 )
+		self.failUnless( t.getCornerWidget() is b2 )
+		self.failUnless( b2.parent() is t )
+		self.failUnless( b.parent() is None )
 		
 if __name__ == "__main__":
 	unittest.main()

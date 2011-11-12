@@ -6,6 +6,9 @@ an optional keepExistingValues parameter which defaults to false. Passing
 true preserves existing plug values in preference to the values in the
 incoming Parameterised object.
 
+* TabbedContainer now allows the addition of a custom Widget to the top
+right corner using the setCornerWidget() and getCornerWidget() methods.
+
 0.23.0
 ------
 

@@ -43,13 +43,16 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
-	def __init__( self ) :
+	def __init__( self, cornerWidget=None ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QTabWidget() )
 		
 		self._qtWidget().setUsesScrollButtons( False )
 		
 		self.__widgets = []
+		
+		self.__cornerWidget = None
+		self.setCornerWidget( cornerWidget )
 								
 	def append( self, child, label="" ) :
 	
@@ -101,6 +104,28 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	
 	def removeChild( self, child ) :
 	
-		self._qtWidget().removeTab( self.__widgets.index( child ) )
-		self.__widgets.remove( child )
+		assert( child is self.__cornerWidget or child in self.__widgets )
+		
+		if child is self.__cornerWidget :
+			self._qtWidget().setCornerWidget( None )
+			child._qtWidget().setParent( None )
+			self.__cornerWidget = None
+		else :
+			self._qtWidget().removeTab( self.__widgets.index( child ) )
+			self.__widgets.remove( child )
 
+	def setCornerWidget( self, cornerWidget ) :
+	
+		if self.__cornerWidget is not None :
+			self.removeChild( self.__cornerWidget )
+			
+		if cornerWidget is not None :
+			self._qtWidget().setCornerWidget( cornerWidget._qtWidget() )
+		else :
+			self._qtWidget().setCornerWidget( None )
+			
+		self.__cornerWidget = cornerWidget
+		
+	def getCornerWidget( self ) :
+	
+		return self.__cornerWidget
