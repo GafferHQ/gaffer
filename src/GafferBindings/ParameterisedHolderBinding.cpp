@@ -58,6 +58,7 @@ class ParameterisedHolderNodeWrapper : public ParameterisedHolderNode, public IE
 			:	ParameterisedHolderNode( name ), IECorePython::Wrapper<ParameterisedHolderNode>( self, this )
 		{
 			initNode( this, inputs, dynamicPlugs );
+			loadParameterised();
 		}		
 		
 		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( ParameterisedHolderNode )
@@ -122,8 +123,24 @@ void GafferBindings::bindParameterisedHolder()
 				)
 		)
 		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( ParameterisedHolderNode )
-		.def( "setParameterised", (void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr ))&ParameterisedHolderNode::setParameterised )
-		.def( "setParameterised", (void (ParameterisedHolderNode::*)( const std::string &, int, const std::string & ))&ParameterisedHolderNode::setParameterised )
+		.def(
+			"setParameterised",
+			(void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr, bool ))&ParameterisedHolderNode::setParameterised,
+			(
+				boost::python::arg_( "parameterised" ),
+				boost::python::arg_( "keepExistingValues" ) = false
+			)
+		)
+		.def(
+			"setParameterised",
+			(void (ParameterisedHolderNode::*)( const std::string &, int, const std::string &, bool ))&ParameterisedHolderNode::setParameterised,
+			(
+				boost::python::arg_( "className" ),
+				boost::python::arg_( "classVersion" ),
+				boost::python::arg_( "searchPathEnvVar" ),
+				boost::python::arg_( "keepExistingValues" ) = false
+			)
+		)
 		.def( "getParameterised", getParameterised )
 		.def( "parameterHandler", (CompoundParameterHandlerPtr (ParameterisedHolderNode::*)())&ParameterisedHolderNode::parameterHandler )
 		.def( "parameterModificationContext", &parameterModificationContext, return_value_policy<manage_new_object>() )

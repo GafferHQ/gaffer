@@ -61,7 +61,7 @@ IECore::ConstParameterPtr ObjectParameterHandler::parameter() const
 	return m_parameter;
 }
 
-Gaffer::PlugPtr ObjectParameterHandler::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
+Gaffer::PlugPtr ObjectParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<ObjectPlug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )

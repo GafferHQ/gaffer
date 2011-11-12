@@ -50,14 +50,14 @@ OpHolder::OpHolder( const std::string &name )
 {
 }
 			
-void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
+void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues )
 {
 	OpPtr op = runTimeCast<Op>( parameterised );
 	if( !op )
 	{
 		throw IECore::Exception( "Parameterised object is not an IECore::Op" );
 	}
-	ParameterisedHolderNode::setParameterised( parameterised );
+	ParameterisedHolderNode::setParameterised( parameterised, keepExistingValues );
 		
 	m_resultParameterHandler = ParameterHandler::create( const_cast<Parameter *>( op->resultParameter() ) );
 	if( !m_resultParameterHandler )
@@ -73,9 +73,9 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
 	resultPlug->setDirty();
 }
 
-void OpHolder::setOp( const std::string &className, int classVersion )
+void OpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
 {
-	ParameterisedHolderNode::setParameterised( className, classVersion, "IECORE_OP_PATHS" );
+	ParameterisedHolderNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
 }
 
 IECore::OpPtr OpHolder::getOp( std::string *className, int *classVersion )

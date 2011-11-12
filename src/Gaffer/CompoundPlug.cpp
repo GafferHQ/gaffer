@@ -178,7 +178,7 @@ void CompoundPlug::plugSet( PlugPtr plug )
 	// the CompoundPlug immediately below the Node takes on the task
 	// of emitting the plugSet signals for all CompoundPlugs between
 	// the plug and the Node.
-	NodePtr n = node();
+	Node *n = node();
 	if( !n )
 	{
 		return;

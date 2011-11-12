@@ -57,7 +57,12 @@ ParameterisedHolder<BaseType>::ParameterisedHolder( const std::string &name )
 }
 
 template<typename BaseType>
-void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr parameterised )
+ParameterisedHolder<BaseType>::~ParameterisedHolder()
+{
+}
+
+template<typename BaseType>
+void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues )
 {
 	IECore::ParameterisedInterface *interface = dynamic_cast<IECore::ParameterisedInterface *>( parameterised.get() );
 	if( !interface )
@@ -68,11 +73,14 @@ void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr pa
 	m_parameterised = parameterised;
 	m_parameterHandler = new CompoundParameterHandler( interface->parameters() );
 	m_parameterHandler->setupPlug( this );
-	m_parameterHandler->setPlugValue();
+	if( !keepExistingValues )
+	{
+		m_parameterHandler->setPlugValue();
+	}
 }
 
 template<typename BaseType>
-void ParameterisedHolder<BaseType>::setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar )
+void ParameterisedHolder<BaseType>::setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar, bool keepExistingValues )
 {
 	IECore::RunTimeTypedPtr p = loadClass( className, classVersion, searchPathEnvVar );
 
@@ -80,7 +88,7 @@ void ParameterisedHolder<BaseType>::setParameterised( const std::string &classNa
 	GraphComponent::getChild<IntPlug>( "__classVersion" )->setValue( classVersion );
 	GraphComponent::getChild<StringPlug>( "__searchPathEnvVar" )->setValue( searchPathEnvVar );
 
-	setParameterised( p );
+	setParameterised( p, keepExistingValues );
 }
 
 template<typename BaseType>
@@ -127,6 +135,18 @@ void ParameterisedHolder<BaseType>::setParameterisedValues()
 	if( m_parameterHandler )
 	{
 		m_parameterHandler->setParameterValue();
+	}
+}
+
+template<typename BaseType>
+void ParameterisedHolder<BaseType>::loadParameterised()
+{
+	std::string className = GraphComponent::getChild<StringPlug>( "__className" )->getValue();
+	int classVersion = GraphComponent::getChild<IntPlug>( "__classVersion" )->getValue();
+	std::string searchPathEnvVar = GraphComponent::getChild<StringPlug>( "__searchPathEnvVar" )->getValue();
+	if( className.size() && searchPathEnvVar.size() )
+	{
+		setParameterised( className, classVersion, searchPathEnvVar, true );
 	}
 }
 

@@ -66,7 +66,7 @@ IECore::ConstParameterPtr CompoundParameterHandler::parameter() const
 	return m_parameter;
 }
 
-Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
+Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	// decide what name our compound plug should have
 		

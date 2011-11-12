@@ -60,6 +60,7 @@ class OpHolderWrapper : public OpHolder, public IECorePython::Wrapper<OpHolder>
 			:	OpHolder( name ), IECorePython::Wrapper<OpHolder>( self, this )
 		{
 			initNode( this, inputs, dynamicPlugs );
+			loadParameterised();
 		}		
 		
 		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( OpHolder )
@@ -87,7 +88,15 @@ void GafferBindings::bindOpHolder()
 				)
 		)
 		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( OpHolder )
-		.def( "setOp", &OpHolder::setOp )
+		.def(
+			"setOp",
+			&OpHolder::setOp,
+			(
+				boost::python::arg_( "className" ),
+				boost::python::arg_( "classVersion" ),
+				boost::python::arg_( "keepExistingValues" ) = false
+			)
+		)
 		.def( "getOp", &getOp )
 	;
 			

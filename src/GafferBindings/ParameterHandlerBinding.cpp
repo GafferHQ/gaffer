@@ -73,11 +73,11 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 			return o();
 		}
 		
-		virtual PlugPtr setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
+		virtual PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "setupPlug" );
-			return o( plugParent, direction );
+			return o( GraphComponentPtr( plugParent ), direction );
 		}
 		
 		virtual PlugPtr plug()

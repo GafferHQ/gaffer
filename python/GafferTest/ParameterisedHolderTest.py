@@ -409,12 +409,34 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 			
 		s = Gaffer.ScriptNode()
 		s["n"] = ph
+		s["n"]["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
 		
 		ss = s.serialise()
 		
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
-				
+		
+		self.failUnless( "n" in s )
+		parameterised = s["n"].getParameterised()
+		
+		self.assertEqual( parameterised[1:], classSpec )
+		self.assertEqual( parameterised[0].typeName(), "Grade" )
+		self.assertEqual( s["n"]["parameters"]["lift"].getValue(), IECore.Color3f( 1, 0, 0 ) )
+	
+	def testKeepExistingValues( self ) :
+	
+		ph = Gaffer.ParameterisedHolderNode()
+		
+		ph.setParameterised( IECore.Grade() )
+		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		
+		ph.setParameterised( IECore.Grade() )
+		self.assertEqual( ph["parameters"]["lift"].getValue(), IECore.Color3f( 0 ) )
+		
+		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		ph.setParameterised( IECore.Grade(), keepExistingValues=True )
+		self.assertEqual( ph["parameters"]["lift"].getValue(), IECore.Color3f( 1, 0, 0 ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

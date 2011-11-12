@@ -60,10 +60,10 @@ class OpHolder : public ParameterisedHolderNode
 
 		OpHolder( const std::string &name=staticTypeName() );
 			
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised );
+		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
 		
-		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS" )
-		void setOp( const std::string &className, int classVersion );
+		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues )
+		void setOp( const std::string &className, int classVersion, bool keepExistingValues=false );
 		/// Convenience function which returns runTimeCast<Op>( getParameterised() );
 		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
 		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;

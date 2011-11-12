@@ -1,3 +1,11 @@
+* ParameterisedHolder now correctly loads an instance of the held class
+following serialisation.
+
+* ParameterisedHolder::setParameterised() and OpHolder::setOp() now accept
+an optional keepExistingValues parameter which defaults to false. Passing
+true preserves existing plug values in preference to the values in the
+incoming Parameterised object.
+
 0.23.0
 ------
 

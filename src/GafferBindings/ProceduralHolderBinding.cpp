@@ -60,6 +60,7 @@ class ProceduralHolderWrapper : public ProceduralHolder, public IECorePython::Wr
 			:	ProceduralHolder( name ), IECorePython::Wrapper<ProceduralHolder>( self, this )
 		{
 			initNode( this, inputs, dynamicPlugs );
+			loadParameterised();
 		}		
 		
 		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( ProceduralHolder )

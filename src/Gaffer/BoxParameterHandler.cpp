@@ -65,7 +65,7 @@ IECore::ConstParameterPtr BoxParameterHandler<T>::parameter() const
 }
 
 template<typename T>
-Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponentPtr plugParent, Plug::Direction direction )
+Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<CompoundPlug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )

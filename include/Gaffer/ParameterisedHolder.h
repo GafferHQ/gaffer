@@ -62,11 +62,12 @@ class ParameterisedHolder : public BaseType
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ParameterisedHolder<BaseType> );		
 
 		ParameterisedHolder( const std::string &name=staticTypeName() );
+		virtual ~ParameterisedHolder();
 		
 		/// May be overridden by derived classes, but they must call the base class implementation
 		/// first.
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised );
-		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar );
+		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
+		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar, bool keepExistingValues=false );
 		IECore::RunTimeTypedPtr getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
 		/// Convenience method to return dynamic_cast<const IECore::ParameterisedInterface *>( getParameterised().get() )
 		IECore::ParameterisedInterface *parameterisedInterface( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 );
@@ -90,6 +91,10 @@ class ParameterisedHolder : public BaseType
 	
 	protected :
 	
+		/// Should be called in the constructor for the python wrapper class after initNode() has been called.
+		/// This will then call setParameterised() appropriately to restore the class held at the time of
+		/// serialisation.
+		void loadParameterised();
 		/// Returns a new instance of the specified class. This is implemented to throw an
 		/// Exception in libGaffer, but the libGafferBindings library implements it
 		/// by using the IECore.ClassLoader in python. This allows us to keep libGaffer from
