@@ -981,13 +981,13 @@ class _EventFilter( QtCore.QObject ) :
 				
 			widget = Widget._owner( qObject )
 
-			return widget.enterSignal()( widget)
+			return widget.enterSignal()( widget )
 			
 		elif qEvent.type()==QtCore.QEvent.Leave :
 				
 			widget = Widget._owner( qObject )
 
-			return widget.leaveSignal()( widget)
+			return widget.leaveSignal()( widget )
 			
 		elif qEvent.type()==QtCore.QEvent.Wheel :
 				
