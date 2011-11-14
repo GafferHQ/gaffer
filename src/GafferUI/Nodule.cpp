@@ -90,7 +90,6 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 			NamedCreatorMap::const_iterator it = m.find( t );
 			if( it!=m.end() )
 			{
-				//return it->second( plug );
 				for( RegexAndCreatorVector::const_reverse_iterator nIt = it->second.rbegin(); nIt!=it->second.rend(); nIt++ )
 				{
 					if( boost::regex_match( plugPath, nIt->first ) )
