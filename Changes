@@ -12,6 +12,8 @@ right corner using the setCornerWidget() and getCornerWidget() methods.
 * Fixed a bug which meant that the ButtonEvent::line field was incorrectly
 transformed when delivering events to Gadgets.
 
+* Fixed tab sizing issue on OS X.
+
 0.23.0
 ------
 

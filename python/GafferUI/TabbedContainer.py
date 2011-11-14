@@ -39,6 +39,7 @@ import IECore
 
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
@@ -48,6 +49,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		GafferUI.ContainerWidget.__init__( self, QtGui.QTabWidget() )
 		
 		self._qtWidget().setUsesScrollButtons( False )
+		self._qtWidget().setElideMode( QtCore.Qt.ElideNone )
 		
 		self.__widgets = []
 		
