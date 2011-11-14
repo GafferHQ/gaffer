@@ -9,6 +9,9 @@ incoming Parameterised object.
 * TabbedContainer now allows the addition of a custom Widget to the top
 right corner using the setCornerWidget() and getCornerWidget() methods.
 
+* Fixed a bug which meant that the ButtonEvent::line field was incorrectly
+transformed when delivering events to Gadgets.
+
 0.23.0
 ------
 

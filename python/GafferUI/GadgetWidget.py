@@ -362,7 +362,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if hasattr( gadgetEvent, "line" ) :
 				
 			# Transform into Gadget space
-			untransformedLine = gadgetEvent.line
+			untransformedLine = IECore.LineSegment3f( gadgetEvent.line )
 			m = gadget.fullTransform()
 			m.invert( True )
 			gadgetEvent.line *= m
