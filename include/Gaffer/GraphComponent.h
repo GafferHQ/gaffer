@@ -122,7 +122,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		void addChild( GraphComponentPtr child );
 		/// Adds a child to this component, giving it the specified name. If a child
 		/// of that name already exists then it will be replaced. If the
-		/// child already has a parent then it is first removed from it. Am exception is
+		/// child already has a parent then it is first removed from it. An exception is
 		/// thrown if the child or parent doesn't accept the new relationship.
 		/// \undoable
 		void setChild( const std::string &name, GraphComponentPtr child );
