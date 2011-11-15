@@ -87,7 +87,15 @@ Gaffer::ConstPlugPtr ObjectParameterHandler::plug() const
 		
 void ObjectParameterHandler::setParameterValue()
 {
-	m_parameter->setValue( m_plug->getValue()->copy() );
+	IECore::ConstObjectPtr o = m_plug->getValue();
+	if( o )
+	{
+		m_parameter->setValue( o->copy() );
+	}
+	else
+	{
+		m_parameter->setValue( m_parameter->defaultValue()->copy() );
+	}
 }
 
 void ObjectParameterHandler::setPlugValue()

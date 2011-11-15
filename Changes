@@ -14,6 +14,8 @@ transformed when delivering events to Gadgets.
 
 * Fixed tab sizing issue on OS X.
 
+* Fixed crashes in ObjectParameterHandler triggered by plugs with null values.
+
 0.23.0
 ------
 

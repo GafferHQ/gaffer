@@ -436,6 +436,34 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
 		ph.setParameterised( IECore.Grade(), keepExistingValues=True )
 		self.assertEqual( ph["parameters"]["lift"].getValue(), IECore.Color3f( 1, 0, 0 ) )
+	
+	def testObjectPlugNullValues( self ) :
+	
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameters(
+			
+			[
+		
+				IECore.ObjectParameter(
+					name = "o",
+					description = "",
+					defaultValue = IECore.IntVectorData( [ 1, 2, 3 ] ),
+					types = [ IECore.IntVectorData.staticTypeId() ],
+				)
+			]
+			
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.assertEqual( ph["parameters"]["o"].getValue(), p["o"].defaultValue )
+		
+		ph["parameters"]["o"].setValue( None )
+		ph.setParameterisedValues()
+		
+		self.assertEqual( p["o"].getValue(), p["o"].defaultValue )
 		
 if __name__ == "__main__":
 	unittest.main()
