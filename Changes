@@ -16,6 +16,9 @@ transformed when delivering events to Gadgets.
 
 * Fixed crashes in ObjectParameterHandler triggered by plugs with null values.
 
+* Added enterSignal(), leaveSignal(), dragEnterSignal() and dragLeaveSignal() methods to Gadget. Nodules now highlight themselves when entered using this
+new functionality.
+
 0.23.0
 ------
 

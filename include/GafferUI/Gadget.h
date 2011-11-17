@@ -167,6 +167,12 @@ class Gadget : public Gaffer::GraphComponent
 		/// The signal triggered by a button release event.
 		ButtonSignal &buttonReleaseSignal();
 		
+		typedef boost::signal<void ( GadgetPtr, const ButtonEvent &event )> EnterLeaveSignal; 
+		/// The signal triggered when the mouse enters the Gadget.
+		EnterLeaveSignal &enterSignal();
+		/// The signal triggered when the mouse leaves the Gadget.
+		EnterLeaveSignal &leaveSignal();
+		
 		typedef boost::signal<IECore::RunTimeTypedPtr ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal; 
 		typedef boost::signal<bool ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal; 
 		
@@ -178,6 +184,10 @@ class Gadget : public Gaffer::GraphComponent
 		/// Upon initiation of a drag with dragBeginSignal(), this signal will be triggered
 		/// to update the drag with the new mouse position.
 		DragDropSignal &dragUpdateSignal();
+		/// Emitted when a drag enters this Gadget.
+		DragDropSignal &dragEnterSignal();
+		/// Emitted when a drag leaves this Gadget.
+		DragDropSignal &dragLeaveSignal();
 		/// This signal is emitted when a drag has been released over this Gadget.
 		DragDropSignal &dropSignal();
 		/// After the dropSignal() has been emitted on the destination of the drag, the
@@ -216,9 +226,14 @@ class Gadget : public Gaffer::GraphComponent
 			
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;
+		
+		EnterLeaveSignal m_enterSignal;
+		EnterLeaveSignal m_leaveSignal;
 
 		DragBeginSignal m_dragBeginSignal;
 		DragDropSignal m_dragUpdateSignal;
+		DragDropSignal m_dragEnterSignal;
+		DragDropSignal m_dragLeaveSignal;
 		DragDropSignal m_dragEndSignal;
 		DragDropSignal m_dropSignal;
 

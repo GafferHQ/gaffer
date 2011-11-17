@@ -163,6 +163,16 @@ Gadget::ButtonSignal &Gadget::buttonReleaseSignal()
 	return m_buttonReleaseSignal;
 }
 
+Gadget::EnterLeaveSignal &Gadget::enterSignal()
+{
+	return m_enterSignal;
+}
+
+Gadget::EnterLeaveSignal &Gadget::leaveSignal()
+{
+	return m_leaveSignal;
+}
+
 Gadget::DragBeginSignal &Gadget::dragBeginSignal()
 {
 	return m_dragBeginSignal;
@@ -171,6 +181,16 @@ Gadget::DragBeginSignal &Gadget::dragBeginSignal()
 Gadget::DragDropSignal &Gadget::dragUpdateSignal()
 {
 	return m_dragUpdateSignal;
+}
+
+Gadget::DragDropSignal &Gadget::dragEnterSignal()
+{
+	return m_dragEnterSignal;
+}
+
+Gadget::DragDropSignal &Gadget::dragLeaveSignal()
+{
+	return m_dragLeaveSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dropSignal()

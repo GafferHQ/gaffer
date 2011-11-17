@@ -57,11 +57,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # and dragging. Use the left button for tumbling, the middle mouse button
 # for tracking and the right mouse button for dollying.
 #
-## \todo It feels like this could be split into two classes - one that just
-# takes qt events and turns them into GafferUI events, and one that takes
-# those events and forwards them to the Gadgets appropriately, maintaining
-# current drag state etc. The latter class could then be used if implementing
-# other hosts.
 ## \todo The camera movement should be coming from somewhere else - some kind
 # of ViewportGadget or summink?
 class GadgetWidget( GafferUI.GLWidget ) :
@@ -71,6 +66,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __init__( self, gadget=None, bufferOptions=set(), cameraMode=CameraMode.Mode2D ) :
 		
 		GLWidget.__init__( self, bufferOptions )
+		
+		## \todo Decide if/how this goes in the public API
+		self._qtWidget().setMouseTracking( True )		
 				
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
@@ -82,17 +80,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		self.__camera = IECore.Camera()
 		self.__cameraController = IECore.CameraController( self.__camera )
+		self.__cameraInMotion = False
 				
 		self.setCameraMode( cameraMode )
 		self.setBackgroundColor( IECore.Color3f( 0 ) )
 		self.setGadget( gadget )
-		
-		self.__lastButtonPressGadget = None
-		self.__lastButtonPressEvent = None
-		self.__dragDropEvent = None
-		
-		self.__cameraInMotion = False
-		
+				
 		self.__baseState = IECoreGL.State( True )
 		
 		self._qtWidget().installEventFilter( _eventFilter )
@@ -101,6 +94,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		self.__gadget = gadget
 		self.__scene = None
+		self.__lastButtonPressGadget = None
+		self.__lastButtonPressEvent = None
+		self.__dragDropEvent = None
+		self.__enteredGadgets = []
+		self.__dragEnteredGadgets = []
 		
 		if self.__gadget :
 			self.__renderRequestConnection = self.__gadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ) )
@@ -219,7 +217,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		gadgets = self.__select( event )
 		self.__eventToGadgetSpace( event )
-		
+				
 		gadget, result = self.__dispatchEvent( gadgets, "buttonPressSignal", event )
 		if result :
 			self.__lastButtonPressGadget = gadget
@@ -250,6 +248,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__dragDropEvent.destination = dropGadget
 			self.__dragDropEvent.dropResult = result
 			self.__dispatchEvent( self.__dragDropEvent.source, "dragEndSignal", self.__dragDropEvent, dispatchToAncestors=False )
+			self.__dispatchEnterLeaveEvents( gadgets, self.__dragDropEvent )
+			self.__dispatchEnterLeaveEvents( gadgets, event )	
 			self.__dragDropEvent = None
 			
 		elif self.__lastButtonPressGadget :
@@ -263,10 +263,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		if not self.__gadget :
 			return True
-		
+				
 		if self.__cameraInMotion :
 			return self.__cameraMotion( event );
 
+		gadgets = self.__select( event )
 		self.__eventToGadgetSpace( event )
 
 		if self.__lastButtonPressGadget and not self.__dragDropEvent :
@@ -292,6 +293,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__dragDropEvent.buttons = event.buttons
 			self.__dragDropEvent.modifiers = event.modifiers
 			self.__dispatchEvent( self.__dragDropEvent.source, "dragUpdateSignal", self.__dragDropEvent, dispatchToAncestors=False )
+			self.__dispatchEnterLeaveEvents( gadgets, self.__dragDropEvent )
+		
+		else :
+		
+			self.__dispatchEnterLeaveEvents( gadgets, event )			
 		
 		return True
 		
@@ -337,17 +343,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if dispatchToAncestors :
 		
 			gadget = gadgetOrGadgets
-			
-			## \todo It'd be nice to bind an ancestors() method so we get this list more easily. It might
-			# be nice to implement custom iterators on the c++ side to make it easy to traverse the graph too - can
-			# we use boost::graph stuff to help with that?
-			ancestors = []
-			a = gadget
-			while a :
-				ancestors.insert( 0, a )
-				a = a.parent()
-				
-			for a in ancestors :
+			for a in self.__ancestors( gadget ) :
 				
 				handler, result = self.__dispatchEvent( a, signalName, gadgetEvent, dispatchToAncestors=False, _leafGadget=gadget )
 				if result :
@@ -382,6 +378,52 @@ class GadgetWidget( GafferUI.GLWidget ) :
 				
 		return None, None
 
+	def __dispatchEnterLeaveEvents( self, gadgets, event ) :
+		
+		if isinstance( event, GafferUI.DragDropEvent ) :
+			enteredGadgets = self.__dragEnteredGadgets
+			enterSignal = "dragEnterSignal"
+			leaveSignal = "dragLeaveSignal"
+		else :
+			enteredGadgets = self.__enteredGadgets
+			enterSignal = "enterSignal"
+			leaveSignal = "leaveSignal"
+		
+		gadget = gadgets[0] if gadgets else None
+				
+		# emit leave signals for anything previously entered and now no longer
+		# in the hierarchy of the current gadget.
+		for g in reversed( enteredGadgets ) :
+			if not ( g.isSame( gadget ) or g.isAncestorOf( gadget ) ) :
+				self.__dispatchEvent( g, leaveSignal, event, dispatchToAncestors=False )
+		
+		# emit enter signals for anything in the current hierarchy which hasn't
+		# received an enter event yet.
+		ancestors = self.__ancestors( gadget )
+		for ancestor in ancestors :
+			enteredAlready = False
+			for g in enteredGadgets :
+				if g.isSame( ancestor ) :
+					enteredAlready = True
+					break
+			if not enteredAlready :
+				self.__dispatchEvent( ancestor, enterSignal, event, dispatchToAncestors=False )
+		
+		# remember what we've entered
+		enteredGadgets[:] = ancestors
+		
+	def __ancestors( self, gadget ) :
+	
+		## \todo It'd be nice to bind an ancestors() method so we get this list more easily. It might
+		# be nice to implement custom iterators on the c++ side to make it easy to traverse the graph too - can
+		# we use boost::graph stuff to help with that?
+		ancestors = []
+		while gadget :
+			ancestors.insert( 0, gadget )
+			gadget = gadget.parent()
+		
+		return ancestors
+		
 	## Returns a list of Gadgets under the screen x,y position specified by eventOrPosition.
 	# The first Gadget in the list will be the frontmost, determined either by the
 	# depth buffer if it exists or the drawing order if it doesn't.

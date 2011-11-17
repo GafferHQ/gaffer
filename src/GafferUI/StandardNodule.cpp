@@ -55,11 +55,15 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
-	:	Nodule( plug ), m_dragging( false )
+	:	Nodule( plug ), m_hovering( false ), m_dragging( false )
 {
+	enterSignal().connect( boost::bind( &StandardNodule::enter, this, ::_1, ::_2 ) );
+	leaveSignal().connect( boost::bind( &StandardNodule::leave, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &StandardNodule::buttonPress, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &StandardNodule::dragBegin, this, ::_1, ::_2 ) );
 	dragUpdateSignal().connect( boost::bind( &StandardNodule::dragUpdate, this, ::_1, ::_2 ) );
+	dragEnterSignal().connect( boost::bind( &StandardNodule::dragEnter, this, ::_1, ::_2 ) );
+	dragLeaveSignal().connect( boost::bind( &StandardNodule::dragLeave, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &StandardNodule::dragEnd, this, ::_1, ::_2 ) );
 
 	dropSignal().connect( boost::bind( &StandardNodule::drop, this, ::_1, ::_2 ) );
@@ -82,10 +86,38 @@ void StandardNodule::doRender( IECore::RendererPtr renderer ) const
 		// for the gl renderer it shouldn't matter. for others it might - at that
 		// point we'll have to maintain a separate gagdet parented to the graph
 		// just to draw this line. it seems like unecessary effort now though.
+		/// \todo This is preventing the destination Nodule from being highlighted
+		/// appropriately during dragging, as the GadgetWidget thinks the cursor
+		/// is above this Nodule and not the other. Fix it somehow.
 		getStyle()->renderConnection( renderer, V3f( 0 ), m_dragPosition );
 	}
 	
-	getStyle()->renderNodule( renderer, 0.5 );
+	renderer->attributeBegin();
+		
+		if( m_hovering )
+		{
+			renderer->setAttribute( Style::stateAttribute(), Style::stateValueSelected() );
+		}
+		else
+		{
+			renderer->setAttribute( Style::stateAttribute(), Style::stateValueNormal() );		
+		}
+		
+		getStyle()->renderNodule( renderer, 0.5 );
+
+	renderer->attributeEnd();
+}
+
+void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )
+{
+	m_hovering = true;
+	renderRequestSignal()( this );
+}
+
+void StandardNodule::leave( GadgetPtr gadget, const ButtonEvent &event )
+{
+	m_hovering = false;
+	renderRequestSignal()( this );
 }
 
 bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
@@ -109,6 +141,28 @@ bool StandardNodule::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
 	return true;
 }
 
+bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+{
+	Gaffer::PlugPtr input, output;
+	connection( event, input, output );
+	if( plug() == input )
+	{
+		m_hovering = true;
+		renderRequestSignal()( this );
+	}
+	return true;
+}
+
+bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( event.source != this )
+	{
+		m_hovering = false;
+		renderRequestSignal()( this );
+	}
+	return true;
+}
+
 bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragging = false;
@@ -118,14 +172,34 @@ bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
+	Gaffer::PlugPtr input, output;
+	connection( event, input, output );
+	
+	if( input )
+	{	
+		Gaffer::UndoContext undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
+
+			ConnectionGadgetPtr connection = IECore::runTimeCast<ConnectionGadget>( event.source );
+			if( connection && plug()->direction()==Gaffer::Plug::In )
+			{
+				connection->dstNodule()->plug()->setInput( 0 );
+			}
+
+			input->setInput( output );
+			
+		return true;
+	}
+	return false;
+}
+
+void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &input, Gaffer::PlugPtr &output )
+{	
 	Gaffer::PlugPtr dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data );
 	if( dropPlug )
 	{
 		Gaffer::PlugPtr thisPlug = plug();
 		if( thisPlug->direction()!=dropPlug->direction() )
 		{
-			Gaffer::PlugPtr input = 0;
-			Gaffer::PlugPtr output = 0;
 			if( thisPlug->direction()==Gaffer::Plug::In )
 			{
 				input = thisPlug;
@@ -139,19 +213,13 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 						
 			if( input->acceptsInput( output ) )
 			{
-				Gaffer::UndoContext undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
-
-					ConnectionGadgetPtr connection = IECore::runTimeCast<ConnectionGadget>( event.source );
-					if( connection && thisPlug->direction()==Gaffer::Plug::In )
-					{
-						connection->dstNodule()->plug()->setInput( 0 );
-					}
-
-					input->setInput( output );
-					
-				return true;
+				// success
+				return;
 			}
 		}
 	}
-	return false;
+
+	input = output = 0;
+	return;
 }
+

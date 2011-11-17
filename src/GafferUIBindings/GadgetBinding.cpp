@@ -97,8 +97,12 @@ void GafferUIBindings::bindGadget()
 		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &Gadget::buttonReleaseSignal, return_internal_reference<1>() )
+		.def( "enterSignal", &Gadget::enterSignal, return_internal_reference<1>() )
+		.def( "leaveSignal", &Gadget::leaveSignal, return_internal_reference<1>() )
 		.def( "dragBeginSignal", &Gadget::dragBeginSignal, return_internal_reference<1>() )
 		.def( "dragUpdateSignal", &Gadget::dragUpdateSignal, return_internal_reference<1>() )
+		.def( "dragEnterSignal", &Gadget::dragEnterSignal, return_internal_reference<1>() )
+		.def( "dragLeaveSignal", &Gadget::dragLeaveSignal, return_internal_reference<1>() )
 		.def( "dropSignal", &Gadget::dropSignal, return_internal_reference<1>() )
 		.def( "dragEndSignal", &Gadget::dragEndSignal, return_internal_reference<1>() )
 		.def( "keyPressSignal", &Gadget::keyPressSignal, return_internal_reference<1>() )
@@ -110,5 +114,6 @@ void GafferUIBindings::bindGadget()
 	SignalBinder<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, CatchingSlotCaller<Gadget::KeySignal> >::bind( "KeySignal" );
 	SignalBinder<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, CatchingSlotCaller<Gadget::DragBeginSignal> >::bind( "DragBeginSignal" );
 	SignalBinder<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, CatchingSlotCaller<Gadget::DragDropSignal> >::bind( "DragDropSignal" );
+	SignalBinder<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, CatchingSlotCaller<Gadget::EnterLeaveSignal> >::bind( "EnterLeaveSignal" );	
 
 }

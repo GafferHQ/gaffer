@@ -64,15 +64,22 @@ class StandardNodule : public Nodule
 
 		void doRender( IECore::RendererPtr renderer ) const;
 
+		void enter( GadgetPtr gadget, const ButtonEvent &event );
+		void leave( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
+		
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const ButtonEvent &event );	
 		bool dragUpdate( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
-
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+		
+		void connection( const DragDropEvent &event, Gaffer::PlugPtr &input, Gaffer::PlugPtr &output );
 		
 	private :
 
+		bool m_hovering;
 		bool m_dragging;
 		Imath::V3f m_dragPosition;
 

@@ -106,6 +106,8 @@ void StandardStyle::renderNodule( IECore::RendererPtr renderer, float radius ) c
 	static MeshPrimitivePtr quad = MeshPrimitive::createPlane( Box2f( V2f( -1 ), V2f( 1 ) ) );
 	renderer->attributeBegin();
 	
+		renderer->setAttribute( "color", new Color3fData( backgroundColor( renderer ) ) );
+
 		renderer->shader( "surface", "ui/nodule", CompoundDataMap() );
 	
 		M44f m;
