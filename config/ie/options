@@ -73,7 +73,7 @@ if targetApp :
 	compilerVersion = targetAppReg["compilerVersion"]
 	pythonVersion = targetAppReg["pythonVersion"]
 	targetAppMajorVersion = targetAppReg.get( "majorVersion", targetAppVersion )
-
+	
 else :
 
 	targetApp = "gaffer"
@@ -153,6 +153,13 @@ if getOption( "RELEASE", "0" )=="0" :
 		os.path.join( os.path.expanduser( "~" ), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
 	)
 	
+##########################################################################
+# get compiler set up
+##########################################################################
+
+compilerReg = IEEnv.registry["compilers"][compiler][compilerVersion][IEEnv.platform()]
+CXX = os.path.join( compilerReg["location"], compilerReg["bin"] )
+
 ##########################################################################
 # figure out the lib suffixes
 ##########################################################################
