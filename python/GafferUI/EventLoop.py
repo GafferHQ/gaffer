@@ -77,6 +77,12 @@ class EventLoop() :
 				self.__runStyle = self.__RunStyle.Houdini
 			except ImportError :
 				pass
+				
+			try :
+				import nuke
+				self.__runStyle = self.__RunStyle.AlreadyRunning
+			except ImportError :
+				pass
 		
 		self.__startCount = 0
 		self.__pumpThread = None

@@ -19,6 +19,10 @@ transformed when delivering events to Gadgets.
 * Added enterSignal(), leaveSignal(), dragEnterSignal() and dragLeaveSignal() methods to Gadget. Nodules now highlight themselves when entered using this
 new functionality.
 
+* Fixed GafferUI to work with qt 4.6 as well as 4.7.
+
+* Gaffer can now be run embedded in Nuke.
+
 0.23.0
 ------
 
