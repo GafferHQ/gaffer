@@ -1,3 +1,6 @@
+0.24.0
+------
+
 * ParameterisedHolder now correctly loads an instance of the held class
 following serialisation.
 
