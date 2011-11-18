@@ -368,7 +368,7 @@ class Widget( object ) :
 			color: $foreground;
 			font-size: 10px;
 			etch-disabled-text: 0;
-			alternate-background-color: $backgroundLighter;
+			alternate-background-color: $alternateColor;
 			selection-background-color: $brightColor;
 			outline: none;
 			
@@ -899,6 +899,7 @@ class Widget( object ) :
 		"brightColor2" : "#e5c618",
 		"foreground" : "#f0f0f0",
 		"foregroundFaded" : "#999999",
+		"alternateColor" : "#454545",
 	
 	} )
 	
