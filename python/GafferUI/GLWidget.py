@@ -84,8 +84,9 @@ class GLWidget( GafferUI.Widget ) :
 		format.setAlpha( self.BufferOptions.Alpha in bufferOptions )
 		format.setDepth( self.BufferOptions.Depth in bufferOptions )
 		format.setDoubleBuffer( self.BufferOptions.Double in bufferOptions )
-					
-		format.setVersion( 2, 1 )
+		
+		if hasattr( format, "setVersion" ) : # setVersion doesn't exist in qt prior to 4.7.		
+			format.setVersion( 2, 1 )
 					
 		GafferUI.Widget.__init__( self, QtOpenGL.QGLWidget( format, shareWidget = GLWidget.__sharingWidget ) )
 		

@@ -308,7 +308,7 @@ class Widget( object ) :
 		result = GafferUI.ButtonEvent.Buttons.None
 		if qtButtons & QtCore.Qt.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
-		if qtButtons & QtCore.Qt.MiddleButton :
+		if qtButtons & QtCore.Qt.MidButton :
 			result |= GafferUI.ButtonEvent.Buttons.Middle
 		if qtButtons & QtCore.Qt.RightButton :
 			result |= GafferUI.ButtonEvent.Buttons.Right
