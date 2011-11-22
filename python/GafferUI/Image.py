@@ -114,7 +114,8 @@ class Image( GafferUI.Widget ) :
 	def _qtPixmapFromFile( cls, fileName ) :
 	
 		if cls.__pixmapCache is None :
-			cls.__pixmapCache = IECore.LRUCache( cls.__cacheGetter )
+			cacheSize = int( os.environ.get( "GAFFERUI_IMAGECACHE_MEMORY", 100 ) ) * 1024 * 1024
+			cls.__pixmapCache = IECore.LRUCache( cls.__cacheGetter, cacheSize ) 
 	
 		return cls.__pixmapCache.get( fileName )
 		

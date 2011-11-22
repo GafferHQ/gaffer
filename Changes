@@ -1,5 +1,7 @@
 * Added alternate color as new entry in widget style sheet
 
+* The GafferUI.Image class now uses a more sensible cache size to eliminate thrashing when loading images from disk. The cache size defaults to 100 MB but can be specified directly using the GAFFERUI_IMAGECACHE_MEMORY environment variable, which is also interpreted as being a number in MB.
+
 0.24.0
 ------
 
