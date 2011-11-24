@@ -52,10 +52,13 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug )
 
-		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
+		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
+		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
 						
 		self.updateFromPlug()
+		
+	def numericWidget(self):
+		return self.__numericWidget
 		
 	def updateFromPlug( self ) :
 
@@ -68,7 +71,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 					
 		self.__numericWidget.setEditable( self._editable() )
 	
-	def __keyPress( self, widget, event ) :
+	def _keyPress( self, widget, event ) :
 	
 		assert( widget is self.__numericWidget )
 	
@@ -82,7 +85,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		return False
 		
-	def __textChanged( self, widget ) :
+	def _textChanged( self, widget ) :
 		
 		if self._editable() :
 			self.__setPlugValue()
