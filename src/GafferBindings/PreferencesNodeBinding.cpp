@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,59 +34,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/SetBinding.h"
-#include "GafferBindings/UndoContextBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/SplinePlugBinding.h"
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ParameterHandlerBinding.h"
-#include "GafferBindings/CompoundParameterHandlerBinding.h"
-#include "GafferBindings/StandardSetBinding.h"
-#include "GafferBindings/ChildSetBinding.h"
-#include "GafferBindings/OpHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
+#include "boost/python.hpp"
+
+#include "Gaffer/PreferencesNode.h"
 #include "GafferBindings/PreferencesNodeBinding.h"
 
-using namespace GafferBindings;
+#include "IECorePython/RunTimeTypedBinding.h"
 
-BOOST_PYTHON_MODULE( _Gaffer )
+using namespace Gaffer;
+
+void GafferBindings::bindPreferencesNode()
 {
-
-	bindConnection();
-	bindSignal();
-	bindGraphComponent();
-	bindNode();
-	bindPlug();
-	bindValuePlug();
-	bindNumericPlug();
-	bindTypedPlug();
-	bindTypedObjectPlug();
-	bindScriptNode();
-	bindApplicationRoot();
-	bindSet();
-	bindUndoContext();
-	bindCompoundPlug();
-	bindCompoundNumericPlug();
-	bindSplinePlug();
-	bindParameterisedHolder();
-	bindParameterHandler();
-	bindCompoundParameterHandler();
-	bindStandardSet();
-	bindChildSet();
-	bindOpHolder();
-	bindProceduralHolder();
-	bindPreferencesNode();
-
+	IECorePython::RunTimeTypedClass<PreferencesNode>()
+	;
 }

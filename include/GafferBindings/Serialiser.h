@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,35 +46,16 @@
 namespace GafferBindings
 {
 
-// must be able to
-//
-//	- serialise a script and reload it
-//	- also serialise script nodes embedded in that script
-
-// should this be paired with an ExecutionContext type thing?
-//
-//		ExecutionContext could be like the executionGlobals in
-//		ScriptNodeWrapper
-//
-//		but also act like a context manager for "with" by pushing
-//		it's methods into the current global table in __enter__ 
-//		and then popping them in __exit__
-
-// it could actually serialise the target of the context maybe?
+/// \todo Need to be able to serialise nodes within nodes
 class Serialiser
 {
 
 	public :
 	
-		/// Serialises all the children of context, yielding a string which should
-		/// be executed in an equivalent context to reconstruct it. The filter can be
-		/// used to restrict the set of children which are serialised.
-		static std::string serialise( Gaffer::ConstNodePtr context, Gaffer::ConstSetPtr filter=0 );
-		
-		//! @name Serialiser methods
-		/// These functions are for use within serialisation functions registered
-		/// with registerSerialiser. As a Serialiser cannot be instantiated directly
-		/// they're of no use to anything else.
+		Serialiser( Gaffer::ConstNodePtr context, Gaffer::ConstSetPtr filter=0 );
+
+		//! @name Serialisation methods
+		/// These add objects to the serialisation.
 		/// \todo merge add and serialiseC together? or rename them nicely? make serialiseC
 		/// specific to plugs only?
 		/////////////////////////////////////////////////////////////////////////////////
@@ -91,14 +73,23 @@ class Serialiser
 		/// Returns a serialisation for component - this will not yet have been added
 		/// to the result.
 		std::string serialiseC( Gaffer::ConstGraphComponentPtr o );
+		/// Adds a string to the result. This can be used for adding comments or custom
+		/// serialisations.
+		void add( const std::string &s );
 		//@}
+
+		/// Returns the complete result of the serialisation.
+		std::string result() const;
+
+		/// Convenience function to serialise all the children of context, yielding a string
+		/// which should be executed in an equivalent context to reconstruct it. The filter can be
+		/// used to restrict the set of children which are serialised.
+		static std::string serialise( Gaffer::ConstNodePtr context, Gaffer::ConstSetPtr filter=0 );
 		
 		typedef boost::function<std::string ( Serialiser &s, Gaffer::ConstGraphComponentPtr g )> SerialisationFunction;
 		static void registerSerialiser( IECore::TypeId type, SerialisationFunction serialiser );
 		
 	private :
-
-		Serialiser( Gaffer::ConstNodePtr context, Gaffer::ConstSetPtr filter );
 		
 		std::string m_result;
 		

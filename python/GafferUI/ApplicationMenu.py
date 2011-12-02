@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +36,8 @@
 ##########################################################################
 
 import os
+import weakref
+
 import IECore
 import Gaffer
 import GafferUI
@@ -42,7 +45,7 @@ import GafferUI
 def appendDefinitions( menuDefinition, prefix ) :
 
 	menuDefinition.append( prefix + "/About Gaffer...", { "command" : about } )
-	menuDefinition.append( prefix + "/Preferences...", { } )
+	menuDefinition.append( prefix + "/Preferences...", { "command" : preferences } )
 	menuDefinition.append( prefix + "/Documentation...", { "command" : IECore.curry( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/gaffer/html/index.html" ) ) } )
 	menuDefinition.append( prefix + "/Quit", { "command" : quit } )
 		
@@ -65,4 +68,41 @@ def about( menu ) :
 		
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	scriptWindow.addChildWindow( __aboutWindow )
-	__aboutWindow.show()
+	__aboutWindow.setVisible( True )
+
+__preferencesWindows = weakref.WeakKeyDictionary()
+def preferences( menu ) :
+	
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+
+	global __preferencesWindows
+	window = __preferencesWindows.get( application, None )
+	if window is None :
+	
+		window = GafferUI.Dialogue( "Preferences" )
+		closeButton = window._addButton( "Close" )
+		window.__closeButtonConnection = closeButton.clickedSignal().connect( __closePreferences )
+		saveButton = window._addButton( "Save" )
+		window.__saveButtonConnection = saveButton.clickedSignal().connect( __savePreferences )
+	
+		nodeUI = GafferUI.NodeUI.create( application["preferences"] )
+		window._setWidget( nodeUI )
+	
+		__preferencesWindows[application] = window
+		
+		scriptWindow.addChildWindow( window )
+		
+	window.setVisible( True )
+	
+def __closePreferences( button ) :
+
+	button.ancestor( type=GafferUI.Window ).setVisible( False )
+
+def __savePreferences( button ) :
+
+	scriptWindow = button.ancestor( GafferUI.ScriptWindow )
+	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application.savePreferences()
+	button.ancestor( type=GafferUI.Window ).setVisible( False )
+	

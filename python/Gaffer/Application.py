@@ -49,7 +49,7 @@ class Application( IECore.Parameterised ) :
 		args = self.parameters().getValidatedValue()
 		return self.doRun( args )
 
-	def _executeStartupFiles( self, subdirectories ) :
+	def _executeStartupFiles( self, subdirectories, contextDict = {} ) :
 	
 		sp = os.environ.get( "GAFFER_STARTUP_PATHS", "" )
 		if not sp :
@@ -64,5 +64,5 @@ class Application( IECore.Parameterised ) :
 			paths = [ os.path.join( p, d ) for p in rootPaths ]
 			spd = IECore.SearchPath( ":".join( paths ), ":" )
 			
-			IECore.loadConfig( spd, {} )
+			IECore.loadConfig( spd, contextDict )
 			

@@ -66,8 +66,6 @@ class gui( Gaffer.Application ) :
 		
 	def doRun( self, args ) :
 	
-		self._executeStartupFiles( [ "gui" ] )
-	
 		# we must make the application root a member variable because we need to
 		# make sure it stays alive for as long as the ui is alive.
 		# normally it would be fine to have it as a local variable because
@@ -78,7 +76,10 @@ class gui( Gaffer.Application ) :
 		# we therefore hold onto our application root, and assume that the
 		# invoker of the application will hold a reference to us to keep it
 		# alive.
-		self.__application = Gaffer.ApplicationRoot()
+		self.__application = Gaffer.ApplicationRoot( "gui" )
+
+		self._executeStartupFiles( [ "gui" ], { "application" : self.__application } )
+	
 		GafferUI.ScriptWindow.connect( self.__application )
 		
 		if len( args["scripts"] ) :

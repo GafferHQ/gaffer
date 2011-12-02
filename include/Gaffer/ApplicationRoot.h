@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,12 +43,14 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( PreferencesNode )
+
 class ApplicationRoot : public GraphComponent
 {
 
 	public :
 	
-		ApplicationRoot();
+		ApplicationRoot( const std::string &name = staticTypeName() );
 		virtual ~ApplicationRoot();
 		
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ApplicationRoot, ApplicationRootTypeId, GraphComponent );
@@ -75,11 +78,29 @@ class ApplicationRoot : public GraphComponent
 		void setClipboardContents( IECore::ConstObjectPtr clip );
 		//@}
 		
-		/// \todo Implement
-		//NodePtr preferences();
-		//ConstNodePtr preferences() const;
-
+		//! @name Preferences
+		/// User preferences are represented as Plugs on a centrally
+		/// held Node. During application startup plugs should be added
+		/// to represent all available options. The plugSetSignal() may
+		/// then be used to respond to user changes. The ApplicationRoot
+		/// class provides access to the preferences node and also functions
+		/// for saving the current preferences to disk and reloading them.
+		/// Note that saving and loading is only supported on ApplicationRoots
+		/// created from Python - this allows the main C++ library to avoid
+		/// a python dependency.
+		//@{
+		/// Returns the preferences node.
+		PreferencesNodePtr preferences();
+		ConstPreferencesNodePtr preferences() const;
+		/// Saves the current preferences to ~/gaffer/startup/appName/preferences.py
+		void savePreferences() const;
+		/// Saves the current preferences value to the specified file.
+		virtual void savePreferences( const std::string &fileName ) const;
+		//@}
+		
 	private :
+	
+		std::string defaultPreferencesFileName() const;
 	
 		IECore::ObjectPtr m_clipboardContents;
 	

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,16 +36,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/PreferencesNode.h"
 
 using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( ApplicationRoot );
 
-ApplicationRoot::ApplicationRoot()
+ApplicationRoot::ApplicationRoot( const std::string &name )
+	:	GraphComponent( name )
 {
 	ScriptContainerPtr s = new ScriptContainer;
-	s->setName( "scripts" );
-	addChild( s );
+	setChild( "scripts", s );
+	PreferencesNodePtr p = new PreferencesNode;
+	setChild( "preferences", p );
 }
 
 ApplicationRoot::~ApplicationRoot()
@@ -53,7 +57,7 @@ ApplicationRoot::~ApplicationRoot()
 		
 bool ApplicationRoot::acceptsChild( ConstGraphComponentPtr potentialChild ) const
 {
-	if( children().size()<1 )
+	if( children().size()<2 )
 	{
 		return true;
 	}
@@ -84,3 +88,37 @@ void ApplicationRoot::setClipboardContents( IECore::ConstObjectPtr clip )
 {
 	m_clipboardContents = clip->copy();
 }
+
+PreferencesNodePtr ApplicationRoot::preferences()
+{
+	return getChild<PreferencesNode>( "preferences" );
+}
+
+ConstPreferencesNodePtr ApplicationRoot::preferences() const
+{
+	return getChild<PreferencesNode>( "preferences" );
+}
+
+void ApplicationRoot::savePreferences() const
+{
+	savePreferences( defaultPreferencesFileName() );
+}
+
+void ApplicationRoot::savePreferences( const std::string &fileName ) const
+{
+	throw IECore::Exception( "Cannot save preferences from an ApplicationRoot not created in Python." );
+}
+
+std::string ApplicationRoot::defaultPreferencesFileName() const
+{
+	const char *home = getenv( "HOME" );
+	if( !home )
+	{
+		throw IECore::Exception( "$HOME environment variable not set" );
+	}
+	
+	std::string result = home;
+	result += "/gaffer/startup/" + getName() + "/preferences.py";
+	return result;
+}
+

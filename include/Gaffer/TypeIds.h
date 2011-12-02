@@ -78,6 +78,7 @@ enum TypeId
 	BoolVectorDataPlugTypeId = 110031,
 	OpHolderTypeId = 110032,
 	ProceduralHolderTypeId = 110033,
+	PreferencesNodeTypeId = 110034,
 	
 	LastTypeId = 110500,
 	

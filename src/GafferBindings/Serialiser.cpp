@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -61,14 +62,8 @@ std::string Serialiser::serialise( Gaffer::ConstNodePtr context, Gaffer::ConstSe
 	{
 		s.add( *nIt );
 	}
-	
-	std::string importStatements;
-	for( std::set<std::string>::const_iterator it=s.m_modules.begin(); it!=s.m_modules.end(); it++ )
-	{
-		importStatements += "import " + *it + "\n";
-	}
-	
-	return importStatements + "\n__nodes = {}\n\n" + s.m_result + "\n\ndel __nodes\n";
+
+	return s.result();
 }
 
 std::string Serialiser::modulePath( Gaffer::ConstGraphComponentPtr o )
@@ -163,6 +158,34 @@ std::string Serialiser::serialiseC( Gaffer::ConstGraphComponentPtr o )
 	
 	std::string result = it->second( *this, o );
 	return it->second( *this, o );
+}
+
+void Serialiser::add( const std::string &s )
+{
+	m_result += s;
+}
+
+std::string Serialiser::result() const
+{
+	std::string result;
+	for( std::set<std::string>::const_iterator it=m_modules.begin(); it!=m_modules.end(); it++ )
+	{
+		result += "import " + *it + "\n";
+	}
+	
+	if( m_visited.size() )
+	{
+		result += "\n__nodes = {}\n\n";
+	}
+	
+	result += m_result;
+	
+	if( m_visited.size() )
+	{
+		result += "\n\ndel __nodes\n";
+	}
+	
+	return result;
 }
 	
 void Serialiser::registerSerialiser( IECore::TypeId type, SerialisationFunction serialiser )
