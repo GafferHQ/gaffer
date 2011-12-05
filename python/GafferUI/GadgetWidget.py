@@ -128,7 +128,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		return self.__cameraMode
 	
-	## \todo Should there be a standard way of setting colors for all Widgets?	
+	## \todo Should there be a standard way of setting colors for all Widgets?
+	# Yep. It should be in the Style class, and there should be no methods
+	# like this on any Widgets at all.
 	def setBackgroundColor( self, color ) :
 	
 		self.__backgroundColor = color
