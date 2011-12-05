@@ -73,7 +73,7 @@ class view( Gaffer.Application ) :
 		self.__script = Gaffer.ScriptNode()
 		
 		readNode = Gaffer.ReadNode()
-		readNode["filename"].setValue( args["files"][0] )
+		readNode["fileName"].setValue( args["files"][0] )
 		
 		self.__script.addChild( readNode )
 		self.__script.selection().add( readNode )
@@ -88,7 +88,7 @@ class view( Gaffer.Application ) :
 		
 		## \todo The window doesn't appear without this naughtiness. I think we either need to
 		# add a similar method in the public interface, or maybe make a SizeConstraintContainer
-		# or somethign along those lines.
+		# or something along those lines.
 		self.__window._qtWidget().setMinimumSize( 300, 200 )
 		self.__window.setVisible( True )
 		
