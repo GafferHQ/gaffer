@@ -5,6 +5,8 @@
 * Gaffer.ApplicationRoot now has a preferences() method which returns a node used to represent preferences. It also has a savePreferences() method to save the user preferences into a startup script. The GafferUI.ApplicationMenu
 provides access to this via a menu item.
 
+* Default stylesheet now does a better job of aligning the corner widget for the TabbedContainer.
+
 0.25.0
 ------
 

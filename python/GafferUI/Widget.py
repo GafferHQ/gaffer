@@ -541,7 +541,7 @@ class Widget( object ) :
 
 		QTabWidget::tab-bar {
 
-			left: 10px;
+			left: 0px;
 
 		}
 
@@ -550,7 +550,7 @@ class Widget( object ) :
 			color: $foreground;
 			font-weight: bold;
 			outline:none;
-			background-color: $backgroundMid;
+			background-color: transparent;
 			
 		}
 
@@ -562,12 +562,22 @@ class Widget( object ) :
 			padding-right: 8px;
 			border-top-left-radius: 3px;
 			border-top-right-radius: 3px;
+			margin: 0px;
+			margin-left: -1px; /* share edge with previous tab */
 
+		}
+
+		/* indent the first tab. can't do this using QTabWidget::tab-bar:left */
+		/* as that messes up the alignment of the corner widget (makes it overlap) */
+		QTabBar::tab:first, QTabBar::tab:only-one {
+		
+			margin-left: 10px;
+		
 		}
 
 		QTabBar::tab:selected {
 
-			border-bottom-color: transparent; /* blend into frame below */
+			border-bottom-color: $backgroundMid; /* blend into frame below */
 
 		}
 
