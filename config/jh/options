@@ -47,6 +47,7 @@ def getOption( name, default ) :
 	return result
 	
 BUILD_DIR = os.path.expanduser( "~/dev/build/gaffer" )
+BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" )
 INSTALL_DIR = os.path.expanduser( "~/dev/install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}" )
 DEPENDENCIES_SRC_DIR = os.path.expanduser( "~/dev/gafferDependencies" )
 PYTHON_SRC_DIR = "$DEPENDENCIES_SRC_DIR/Python-2.7.2"
@@ -66,10 +67,10 @@ QT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.7.3"
 PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.8.4"
 RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.4"
 
-APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.8"
-GENERATORRUNNER_SRC_DIR = "$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.14"
-SHIBOKEN_SRC_DIR = "$DEPENDENCIES_SRC_DIR/shiboken-1.0.9"
-PYSIDE_SRC_DIR = "$DEPENDENCIES_SRC_DIR/pyside-qt4.7+1.0.8"
+APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.9"
+GENERATORRUNNER_SRC_DIR = "$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.15"
+SHIBOKEN_SRC_DIR = "$DEPENDENCIES_SRC_DIR/shiboken-1.0.10"
+PYSIDE_SRC_DIR = "$DEPENDENCIES_SRC_DIR/pyside-qt4.7+1.0.9"
 
 FONTS_DIR = "$DEPENDENCIES_SRC_DIR/ttf-bitstream-vera-1.10"
 
