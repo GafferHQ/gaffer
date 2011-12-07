@@ -111,13 +111,18 @@ class Image( GafferUI.Widget ) :
 
 	__pixmapCache = None
 	@classmethod
-	def _qtPixmapFromFile( cls, fileName ) :
-	
+	def _qtPixmapCache( cls ) :
+		
 		if cls.__pixmapCache is None :
 			cacheSize = int( os.environ.get( "GAFFERUI_IMAGECACHE_MEMORY", 100 ) ) * 1024 * 1024
 			cls.__pixmapCache = IECore.LRUCache( cls.__cacheGetter, cacheSize ) 
+		
+		return cls.__pixmapCache
 	
-		return cls.__pixmapCache.get( fileName )
+	@classmethod
+	def _qtPixmapFromFile( cls, fileName ) :
+	
+		return cls._qtPixmapCache().get( fileName )
 		
 	__imageSearchPaths = IECore.SearchPath( os.environ.get( "GAFFERUI_IMAGE_PATHS", "" ), ":" )
 	@classmethod
