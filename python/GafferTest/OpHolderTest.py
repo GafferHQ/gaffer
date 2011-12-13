@@ -90,6 +90,19 @@ class OpHolderTest( unittest.TestCase ) :
 		n["result"].getValue()
 		self.failIf( n["result"].getDirty() )		
 	
+	def testSerialise( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["op"] = Gaffer.OpHolder()
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		s["op"].setOp( *opSpec )
+	
+		ss = s.serialise()
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+	
 	def testRunTimeTyped( self ) :
 	
 		n = Gaffer.OpHolder()

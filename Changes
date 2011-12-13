@@ -1,3 +1,5 @@
+* Fixed bug which caused NameError to be thrown when loading a script containing an OpHolder.
+
 0.26.0
 ------
 

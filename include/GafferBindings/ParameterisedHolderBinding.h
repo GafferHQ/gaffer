@@ -50,13 +50,15 @@ namespace GafferBindings
 \
 	virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const\
 	{\
+		dict scopeDict;\
+		scopeDict["IECore"] = import( "IECore" );\
 		std::string toExecute = boost::str(\
 			boost::format(\
 				"IECore.ClassLoader.defaultLoader( \"%s\" ).load( \"%s\", %d )()\n"\
 			) % searchPathEnvVar % className % classVersion\
 		);\
 		IECorePython::ScopedGILLock gilLock;\
-		boost::python::object result = boost::python::eval( toExecute.c_str() );\
+		boost::python::object result = boost::python::eval( toExecute.c_str(), scopeDict, scopeDict );\
 		return boost::python::extract<IECore::RunTimeTypedPtr>( result );\
 	}\
 	
