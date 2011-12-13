@@ -102,6 +102,21 @@ class ReadNodeTest( unittest.TestCase ) :
 		
 		self.assertEqual( reader.read(), node["output"].getValue() )
 		
+	def testExtraneousPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.ReadNode()
+		s["n"]["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+
+		self.failIf( "parameters1" in s["n"] )
+		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+
+		self.failIf( "parameters1" in s["n"] )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
