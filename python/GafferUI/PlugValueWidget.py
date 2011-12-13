@@ -97,6 +97,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 			
 		return None
 	
+	## Registers a PlugValueWidget type for a specific Plug type. Note
+	# that the NodeUI.registerPlugValueWidget function provides the
+	# opportunity to further customise the type of Widget used by the NodeUI
+	# based on the node type and plug name.
 	@classmethod
 	def registerType( cls, typeId, creator ) :
 	

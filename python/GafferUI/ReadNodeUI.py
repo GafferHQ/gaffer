@@ -34,33 +34,12 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
-
-import IECore
-
 import Gaffer
 import GafferUI
 
-class ReadNodeUI( GafferUI.NodeUI ) :
+def __createParameterWidget( plug ) :
 
-	def __init__( self, node ) :
-	
-		GafferUI.NodeUI.__init__( self, node )
+	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
-	def _build( self ) :
-				
-		with self._scrollable() :
-
-			## \todo Implement NodeUI.registerPlugWidget and use that instead.
-			self._addWidget(
-			
-				GafferUI.PlugWidget(
-					GafferUI.PathPlugValueWidget( self._node()["fileName"] )
-				)
-			)
-
-			self._addWidget(
-				GafferUI.CompoundParameterValueWidget( self._node().parameterHandler(), collapsible = False )
-			)
-			
-GafferUI.NodeUI.registerNodeUI( Gaffer.ReadNode.staticTypeId(), ReadNodeUI )
+GafferUI.NodeUI.registerPlugValueWidget( Gaffer.ReadNode.staticTypeId(), "fileName", GafferUI.PathPlugValueWidget )
+GafferUI.NodeUI.registerPlugValueWidget( Gaffer.ReadNode.staticTypeId(), "parameters", __createParameterWidget )
