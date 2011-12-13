@@ -464,7 +464,34 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph.setParameterisedValues()
 		
 		self.assertEqual( p["o"].getValue(), p["o"].defaultValue )
+	
+	def testVectorTypedParameterHandlerNullValues( self ) :
+	
+		p = IECore.Parameterised( "" )
 		
+		p.parameters().addParameters(
+			
+			[
+		
+				IECore.StringVectorParameter(
+					name = "o",
+					description = "",
+					defaultValue = IECore.StringVectorData( [ "1", "2", "3" ] ),
+				)
+			]
+			
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.assertEqual( ph["parameters"]["o"].getValue(), p["o"].defaultValue )
+		
+		ph["parameters"]["o"].setValue( None )
+		ph.setParameterisedValues()
+		
+		self.assertEqual( p["o"].getValue(), p["o"].defaultValue )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

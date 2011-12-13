@@ -97,7 +97,15 @@ Gaffer::ConstPlugPtr VectorTypedParameterHandler<T>::plug() const
 template<typename T>
 void VectorTypedParameterHandler<T>::setParameterValue()
 {
-	m_parameter->setValue( m_plug->getValue()->copy() );
+	IECore::ConstObjectPtr o = m_plug->getValue();
+	if( o )
+	{
+		m_parameter->setValue( o->copy() );
+	}
+	else
+	{
+		m_parameter->setValue( m_parameter->defaultValue()->copy() );
+	}
 }
 
 template<typename T>

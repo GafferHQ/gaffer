@@ -2,6 +2,8 @@
 
 * NodeUI widgets can now be customised on a per-plug basis using the NodeUI.registerPlugValueWidget call.
 
+* Fixed bug which could cause crashes if a plug managed by VectorTypedParameterHandler had a null value.
+
 0.26.0
 ------
 
