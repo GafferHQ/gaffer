@@ -4,6 +4,8 @@
 
 * Fixed bug which could cause crashes if a plug managed by VectorTypedParameterHandler had a null value.
 
+* Fixed bug which caused additional parameters1, parameters2 etc plugs to be created on the ReadNode. Added an additional test to check that the ReadNode works following serialisation.
+
 0.26.0
 ------
 

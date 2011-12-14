@@ -53,16 +53,16 @@ class ReadNode( Gaffer.Node ) :
 		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out )
 		self.addChild( resultPlug )
 		
+		self._init( inputs, dynamicPlugs )		
+		
 		self.__reader = None
 		self.__exposedParameters = IECore.CompoundParameter()
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
-		self.__parameterHandler.setupPlug( self )
+		self.__ensureReader()
 
-		self._init( inputs, dynamicPlugs )
-		
 	def dirty( self, plug ) :
 		
-		if self["parameters"].isAncestorOf( plug ) or plug.getName()=="fileName" :
+		if ("parameters" in self and self["parameters"].isAncestorOf( plug )) or plug.getName()=="fileName" :
 						
 			self["output"].setDirty()
 
@@ -74,36 +74,41 @@ class ReadNode( Gaffer.Node ) :
 		if self.__reader is not None :
 			self.__parameterHandler.setParameterValue()
 			result = self.__reader.read()
-			
+		
 		plug.setValue( result )
 	
 	def parameterHandler( self ) :
 	
 		return self.__parameterHandler
-	
+		
 	def __plugSet( self, plug ) :
 	
-		if plug.getName() == "fileName" :
-	
-			fileName = self["fileName"].getValue()
-			if fileName :
+		if plug.isSame( self["fileName"] ) and "parameters" in self :
+			self.__ensureReader()
 			
-				if self.__reader is not None and self.__reader.canRead( fileName ) :
-					self.__reader["fileName"].setTypedValue( fileName )
-				else :
-					self.__reader = None
-					self.__exposedParameters.clearParameters()
-					with IECore.IgnoredExceptions( RuntimeError ) :
-						self.__reader = IECore.Reader.create( fileName )
-						
-					if self.__reader is not None :
-						for parameter in self.__reader.parameters().values() :
-							if parameter.name != "fileName" :
-								self.__exposedParameters.addParameter( parameter )
-					self.__parameterHandler.setupPlug( self )
+	def __ensureReader( self ) :
+			
+		fileName = self["fileName"].getValue()
+		if fileName :
+			
+			if self.__reader is not None and self.__reader.canRead( fileName ) :
+				self.__reader["fileName"].setTypedValue( fileName )
 			else :
 				self.__reader = None
 				self.__exposedParameters.clearParameters()
+				with IECore.IgnoredExceptions( RuntimeError ) :
+					self.__reader = IECore.Reader.create( fileName )
+					
+				if self.__reader is not None :
+					for parameter in self.__reader.parameters().values() :
+						if parameter.name != "fileName" :
+							self.__exposedParameters.addParameter( parameter )
 				self.__parameterHandler.setupPlug( self )
-				
+		else :
+		
+			self.__reader = None
+			self.__exposedParameters.clearParameters()
+			self.__parameterHandler.setupPlug( self )
+
+		
 IECore.registerRunTimeTyped( ReadNode )
