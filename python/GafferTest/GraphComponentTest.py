@@ -500,7 +500,52 @@ class GraphComponentTest( unittest.TestCase ) :
 		g = Gaffer.GraphComponent()
 		self.assertEqual( g.getChild( "" ), None )
 		self.assertRaises( KeyError, g.__getitem__, "" )
+	
+	def testKeysAndValuesAndItems( self ) :
+	
+		g = Gaffer.GraphComponent()
+		self.assertEqual( g.keys(), [] )
+		self.assertEqual( g.values(), [] )
 		
+		g["a"] = Gaffer.GraphComponent()
+		g["b"] = Gaffer.GraphComponent()
+		g["c"] = Gaffer.GraphComponent()
+	
+		self.assertEqual( g.keys(), [ "a", "b", "c" ] )
+		self.assertEqual( len( g.values() ), 3 )
+		self.assertEqual( g.values()[0].getName(), "a" )
+		self.assertEqual( g.values()[1].getName(), "b" )
+		self.assertEqual( g.values()[2].getName(), "c" )
+		
+		items = g.items()
+		self.assertEqual( len( items ), 3 )
+		self.assertEqual( items[0][0], "a" )
+		self.assertEqual( items[1][0], "b" )
+		self.assertEqual( items[2][0], "c" )
+		self.assertEqual( items[0][1].getName(), "a" )
+		self.assertEqual( items[1][1].getName(), "b" )
+		self.assertEqual( items[2][1].getName(), "c" )
+		
+	def testIndexByIndex( self ) :
+	
+		g = Gaffer.GraphComponent()
+		
+		g["a"] = Gaffer.GraphComponent()
+		g["b"] = Gaffer.GraphComponent()
+		g["c"] = Gaffer.GraphComponent()
+	
+		self.assertEqual( len( g ), 3 )
+		
+		self.assertRaises( IndexError, g.__getitem__, 3 )
+		self.assertRaises( IndexError, g.__getitem__, -4 )
+		
+		self.assertEqual( g[0].getName(), "a" )
+		self.assertEqual( g[1].getName(), "b" )
+		self.assertEqual( g[2].getName(), "c" )
+		self.assertEqual( g[-1].getName(), "c" )
+		self.assertEqual( g[-2].getName(), "b" )
+		self.assertEqual( g[-3].getName(), "a" )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

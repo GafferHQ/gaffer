@@ -65,6 +65,39 @@ class GraphComponentWrapper : public GraphComponent, public IECorePython::Wrappe
 
 IE_CORE_DECLAREPTR( GraphComponentWrapper );
 
+static boost::python::list items( GraphComponent &c )
+{
+	const GraphComponent::ChildContainer &ch = c.children();
+	boost::python::list l;
+	for( GraphComponent::ChildContainer::const_iterator it=ch.begin(); it!=ch.end(); it++ )
+	{
+		l.append( boost::python::make_tuple( (*it)->getName(), *it ) );
+	}
+	return l;
+}
+
+static boost::python::list keys( GraphComponent &c )
+{
+	const GraphComponent::ChildContainer &ch = c.children();
+	boost::python::list l;
+	for( GraphComponent::ChildContainer::const_iterator it=ch.begin(); it!=ch.end(); it++ )
+	{
+		l.append( (*it)->getName() );
+	}
+	return l;
+}
+
+static boost::python::list values( GraphComponent &c )
+{
+	const GraphComponent::ChildContainer &ch = c.children();
+	boost::python::list l;
+	for( GraphComponent::ChildContainer::const_iterator it=ch.begin(); it!=ch.end(); it++ )
+	{
+		l.append( *it );
+	}
+	return l;
+}
+
 static boost::python::tuple children( GraphComponent &c )
 {
 	const GraphComponent::ChildContainer &ch = c.children();
@@ -87,6 +120,33 @@ static GraphComponentPtr getItem( GraphComponent &g, const char *n )
 	PyErr_SetString( PyExc_KeyError, n );
 	throw_error_already_set();
 	return 0; // shouldn't get here
+}
+
+static GraphComponentPtr getItem( GraphComponent &g, long index )
+{
+	long s = g.children().size();
+	
+	if( index < 0 )
+	{
+		index += s;
+	}
+
+	if( index >= s || index < 0 )
+	{
+		PyErr_SetString( PyExc_IndexError, "GraphComponent index out of range" );
+		throw_error_already_set();
+	}
+	
+	/// \todo This desperately needs us to change the container type
+	/// for g.children() to one with random access indexing.
+	GraphComponent::ChildIterator it = g.children().begin();
+	while( index )
+	{
+		it++;
+		index--;
+	}
+	
+	return *it;
 }
 
 static void delItem( GraphComponent &g, const char *n )
@@ -176,12 +236,16 @@ void GafferBindings::bindGraphComponent()
 		.def( "removeChild", &GraphComponent::removeChild )
 		.def( "setChild", &GraphComponent::setChild )
 		.def( "getChild", (GraphComponentPtr (GraphComponent::*)( const std::string & ))&GraphComponent::getChild<GraphComponent> )
-		.def( "__getitem__", getItem )
+		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const char * ))&getItem )
+		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, long ))&getItem )
 		.def( "__setitem__", &GraphComponent::setChild )
 		.def( "__delitem__", delItem )
 		.def( "__contains__", contains )
 		.def( "__len__", &length )
 		.def( "__nonzero__", &nonZero )
+		.def( "items", &items )
+		.def( "keys", &keys )
+		.def( "values", &values )
 		.def( "children", &children )
 		.def( "parent", &parent )
 		.def( "ancestor", &ancestor )

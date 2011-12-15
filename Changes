@@ -6,6 +6,8 @@
 
 * Fixed bug which caused additional parameters1, parameters2 etc plugs to be created on the ReadNode. Added an additional test to check that the ReadNode works following serialisation.
 
+* Implemented keys(), values(), items() and __getitem__( long ) for GraphComponent bindings.
+
 0.26.0
 ------
 
