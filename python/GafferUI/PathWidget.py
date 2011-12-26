@@ -97,9 +97,9 @@ class PathWidget( GafferUI.TextWidget ) :
 		
 	def __buttonPress( self, widget, event ) :
 				
-		if event.buttons & GafferUI.ButtonEvent.Buttons.Right :
+		if event.modifiers & event.Modifiers.Control :
 		
-			# right click
+			# ctrl click
 			
 			position = self._eventPosition( event )			
 			dirPath = self.__path.copy()
