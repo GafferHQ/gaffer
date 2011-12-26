@@ -8,6 +8,10 @@
 
 * Implemented keys(), values(), items() and __getitem__( long ) for GraphComponent bindings.
 
+* Added a simple Write node.
+
+* Added an execute application which can be used to execute Write nodes, or any other node with an execute() method.
+
 0.26.0
 ------
 

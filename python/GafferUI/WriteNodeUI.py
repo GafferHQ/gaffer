@@ -34,24 +34,32 @@
 #  
 ##########################################################################
 
-import os
-
-import IECore
-
 import Gaffer
 import GafferUI
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
+class WriteNodeUI( GafferUI.NodeUI ) :
 
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
+	def __init__( self, node ) :
+	
+		GafferUI.NodeUI.__init__( self, node )
+		
+	def _build( self ) :
+	
+		GafferUI.NodeUI._build( self )
+		
+		executeButton = GafferUI.Button( "Execute" )
+		self.__executeButtonConnection = executeButton.clickedSignal().connect( self.__executeClicked )
+		
+		self._addWidget( executeButton )
+		
+	def __executeClicked( self, button ) :
+	
+		self._node().execute()
 
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
+def __createParameterWidget( plug ) :
 
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
+
+GafferUI.NodeUI.registerNodeUI( Gaffer.WriteNode.staticTypeId(), WriteNodeUI )
+GafferUI.NodeUI.registerPlugValueWidget( Gaffer.WriteNode.staticTypeId(), "fileName", GafferUI.PathPlugValueWidget )
+GafferUI.NodeUI.registerPlugValueWidget( Gaffer.WriteNode.staticTypeId(), "parameters", __createParameterWidget )

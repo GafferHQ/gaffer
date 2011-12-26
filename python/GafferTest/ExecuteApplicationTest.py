@@ -35,23 +35,65 @@
 ##########################################################################
 
 import os
-
-import IECore
+import subprocess
+import unittest
 
 import Gaffer
-import GafferUI
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
+class ExecuteApplicationTest( unittest.TestCase ) :
 
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
+	__scriptFileName = "/tmp/executeScript.gfr"
+	__outputFileName = "/tmp/sphere.cob"
 
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	def testErrorReturnStatusForMissingScript( self ) :
+		
+		p = subprocess.Popen(
+			"gaffer execute thisScriptDoesNotExist",
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+		
+		self.failUnless( "thisScriptDoesNotExist" in "".join( p.stderr.readlines() ) )
+		self.failUnless( p.returncode )
+	
+	def testExecuteWriteNode( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["sphere"] = Gaffer.SphereNode()
+		s["write"] = Gaffer.WriteNode(
+			inputs = {
+				"in" : s["sphere"]["output"],
+				"fileName" : self.__outputFileName,
+			}
+		)
+		
+		s["fileName"].setValue( self.__scriptFileName )
+		s.save()		
+	
+		self.failIf( os.path.exists( self.__outputFileName ) )
+		p = subprocess.Popen(
+			"gaffer execute " + self.__scriptFileName,
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+	
+		print "".join( p.stderr.readlines() )
+	
+		self.failUnless( os.path.exists( self.__outputFileName ) )
+		self.failIf( p.returncode )
+	
+	def tearDown( self ) :
+	
+		for f in [
+			self.__scriptFileName,
+			self.__outputFileName,
+		] :
+			if os.path.exists( f ) :
+				os.remove( f )
+	
+if __name__ == "__main__":
+	unittest.main()
+	

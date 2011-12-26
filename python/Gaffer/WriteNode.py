@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import os
+
 import IECore
 
 import Gaffer
@@ -47,31 +49,78 @@ class WriteNode( Gaffer.Node ) :
 		inPlug = Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In )
 		self.addChild( inPlug )
 		
-		fileNamePlug = Gaffer.StringPlug( "filename", Gaffer.Plug.Direction.In )
+		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
 		self.addChild( fileNamePlug )
-		
-		resultPlug = Gaffer.StringPlug( "output", Gaffer.Plug.Direction.Out )
-		self.addChild( resultPlug )
-		
+				
 		self._init( inputs, dynamicPlugs )
+
+		self.__writer = None
+		self.__writerExtension = ""
+		self.__exposedParameters = IECore.CompoundParameter()
+		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
+		self.__ensureWriter()
+		
+		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 	def dirty( self, plug ) :
 	
-		if plug.getName()=="filename" or plug.getName()=="in" :
+		pass
 		
-			self["output"].setDirty()
-			
 	def compute( self, plug ) :
 	
-		assert( plug.isSame( self["output"] ) )
+		pass
+
+	def parameterHandler( self ) :
+	
+		return self.__parameterHandler
 		
-		filename = self["filename"].getValue()
-		if filename :
-			
-			writer = IECore.Writer.create( self["in"].getValue(), filename )
-			if writer :
-				writer.write()
+	def execute( self ) :
+	
+		self.__ensureWriter()
+	
+		if self.__writer is None :
+			raise RuntimeError( "No Writer" )
+				
+		self.__writer.write()
 		
-		plug.setValue( filename )
+	def __plugSet( self, plug ) :
+
+		if plug.isSame( self["fileName"] ) or plug.isSame( self["in"] ) :
+			self.__ensureWriter()
+		
+	def __ensureWriter( self ) :
+		
+		fileName = self["fileName"].getValue()
+		if fileName :
+		
+			object = self["in"].getValue()
+			if object is not None :
+				
+				extension = os.path.splitext( fileName )[-1]
+				if self.__writer is not None and extension==self.__writerExtension and self.__writer.canWrite( object, fileName ) :
+				
+					self.__writer["fileName"].setTypedValue( fileName )
+					self.__writer["object"].setValue( object )
+				
+				else :
+
+					self.__writer = None
+					self.__exposedParameters.clearParameters()
+					with IECore.IgnoredExceptions( RuntimeError ) :
+						self.__writer = IECore.Writer.create( object, fileName )
+
+					if self.__writer is not None :
+						self.__writerExtension = extension
+						for parameter in self.__writer.parameters().values() :
+							if parameter.name not in ( "fileName", "object" ) :
+								self.__exposedParameters.addParameter( parameter )
+
+					self.__parameterHandler.setupPlug( self )
+		
+		else :
+		
+			self.__writer = None
+			self.__exposedParameters.clearParameters()
+			self.__parameterHandler.setupPlug( self )		
 
 IECore.registerRunTimeTyped( WriteNode )

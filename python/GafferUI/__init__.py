@@ -161,3 +161,4 @@ from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidge
 # and specific node uis
 
 import ReadNodeUI
+import WriteNodeUI

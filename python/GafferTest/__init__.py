@@ -66,6 +66,8 @@ from ReadNodeTest import ReadNodeTest
 from OpHolderTest import OpHolderTest
 from ProceduralHolderTest import ProceduralHolderTest
 from ApplicationRootTest import ApplicationRootTest
+from WriteNodeTest import WriteNodeTest
+from ExecuteApplicationTest import ExecuteApplicationTest
 
 if __name__ == "__main__":
 	import unittest
