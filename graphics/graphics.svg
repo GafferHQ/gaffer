@@ -39,18 +39,18 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="16"
-     inkscape:cx="194.51908"
-     inkscape:cy="984.85385"
+     inkscape:zoom="4"
+     inkscape:cx="115.26746"
+     inkscape:cy="961.87288"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="true"
+     showgrid="false"
      inkscape:window-width="1440"
      inkscape:window-height="852"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="0"
-     inkscape:snap-global="true">
+     inkscape:window-maximized="1"
+     inkscape:snap-global="false">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
@@ -803,5 +803,35 @@
        d="m 215,63.362183 6,7 -3,0 0,4 -6,0 0,-4 -3,0 z"
        style="fill:#779cbd;fill-opacity:1;fill-rule:evenodd;stroke:none"
        inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:AppleMyungjo;-inkscape-font-specification:AppleMyungjo;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr"
+       x="461.03363"
+       y="60.255089"
+       id="text3085"
+       sodipodi:linespacing="125%"
+       transform="translate(0,52.362183)"><tspan
+         sodipodi:role="line"
+         id="tspan3087"
+         x="461.03363"
+         y="60.255089">gaffer</tspan></text>
+    <path
+       inkscape:label="#path2860"
+       style="fill:#ffffff;fill-opacity:1;stroke:none"
+       d="m 122,87.804125 -9,0 4.5,6 z"
+       id="path3095"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#ffffff;stroke-opacity:1"
+       id="forExport:compoundEditorDropDown"
+       sodipodi:cx="117.5"
+       sodipodi:cy="37.5"
+       sodipodi:rx="7.5"
+       sodipodi:ry="7.5"
+       d="m 125,37.5 a 7.5,7.5 0 1 1 -15,0 7.5,7.5 0 1 1 15,0 z"
+       transform="matrix(0.93295793,0,0,0.93295793,7.9077729,54.906591)"
+       inkscape:label="#path3097" />
   </g>
 </svg>

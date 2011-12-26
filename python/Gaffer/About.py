@@ -67,9 +67,19 @@ class About :
 		return "Copyright (c) 2011 John Haddon"
 		
 	@staticmethod
+	def license() :
+	
+		return "$GAFFER_ROOT/LICENSE"
+		
+	@staticmethod
 	def url() :
 	
 		return "http://code.google.com/p/gaffer"
+		
+	@staticmethod
+	def logo() :
+	
+		return "aboutLogo.png"
 	
 	@staticmethod
 	def dependenciesPreamble() :

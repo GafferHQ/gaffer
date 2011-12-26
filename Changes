@@ -12,6 +12,8 @@
 
 * Added an execute application which can be used to execute Write nodes, or any other node with an execute() method.
 
+* The Gaffer headers are now installed in the include directory in the Gaffer distribution.
+
 0.26.0
 ------
 

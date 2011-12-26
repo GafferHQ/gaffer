@@ -569,6 +569,18 @@ gafferUILibraryInstall = uiEnv.Install( "$BUILD_DIR/lib", gafferUILibrary )
 uiEnv.Alias( "build", gafferUILibraryInstall )
 
 ###############################################################################################
+# Gaffer headers
+###############################################################################################
+
+for headerDir in glob.glob( "include/Gaffer*" ) :
+	headerInstall = libEnv.Install(
+		"$BUILD_DIR/" + headerDir,
+		glob.glob( headerDir + "/*.h" ) +
+		glob.glob( headerDir + "/*.inl" )
+	)
+	libEnv.Alias( "build", headerInstall )
+	
+###############################################################################################
 # Gaffer python modules
 ###############################################################################################
 
@@ -891,6 +903,7 @@ manifest = [
 	"python/OpenGL",
 
 	"include/IECore*",
+	"include/Gaffer*",
 	"include/boost",
 	"include/GL",
 	"include/OpenEXR",

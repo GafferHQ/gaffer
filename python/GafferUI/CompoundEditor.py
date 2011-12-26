@@ -59,6 +59,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode )
 		
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
+		self.__addCornerWidget( self.__splitContainer )
 		
 		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -269,6 +270,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		sc2 = GafferUI.SplitContainer()
 		sc2.append( GafferUI.TabbedContainer() )
 		sc2.__buttonPressConnection = sc2.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )					
+		self.__addCornerWidget( sc2 )
 		
 		if subPanelIndex==1 :
 			splitContainer.append( sc1 )
@@ -285,7 +287,18 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		splitContainer.__preferredHandlePosition = 0.5 # where the user put it last
 		
 		splitContainer.setOrientation( orientation )
+	
+	def __addCornerWidget( self, splitContainer ) :
+	
+		assert( len( splitContainer ) == 1 )
+		assert( isinstance( splitContainer[0], GafferUI.TabbedContainer ) )
 		
+		return
+		
+		button = GafferUI.Button( image="compoundEditorDropDown.png", hasFrame=False )
+
+		splitContainer[0].setCornerWidget( button )
+	
 	def __join( self, splitContainer, subPanelIndex ) :
 	
 		toKeep = splitContainer[subPanelIndex][0]

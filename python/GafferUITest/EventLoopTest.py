@@ -56,6 +56,7 @@ class EventLoopTest( unittest.TestCase ) :
 			
 			if self.__idleCalls==2 :
 				GafferUI.EventLoop.mainEventLoop().stop()
+				return False
 				
 			return True
 			
@@ -64,9 +65,7 @@ class EventLoopTest( unittest.TestCase ) :
 		GafferUI.EventLoop.mainEventLoop().start()
 	
 		self.assertEqual( self.__idleCalls, 2 )
-		
-		GafferUI.EventLoop.removeIdleCallback( stop )
-		
+				
 if __name__ == "__main__":
 	unittest.main()
 	
