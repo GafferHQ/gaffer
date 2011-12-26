@@ -409,7 +409,8 @@ depEnv = env.Clone()
 depEnv["ENV"].update(
 	{
 		"PATH" : depEnv.subst( "$BUILD_DIR/bin:" + os.environ["PATH"] ),
-		"M4PATH" : depEnv.subst( "$BUILD_DIR/share/aclocal" ),
+		"PYTHONPATH" : depEnv.subst( "$BUILD_DIR/python" ),
+ 		"M4PATH" : depEnv.subst( "$BUILD_DIR/share/aclocal" ),
 		"PKG_CONFIG_PATH" : depEnv.subst( "$BUILD_DIR/lib/pkgconfig" ),
 		"HOME" : os.environ["HOME"],
 	}
