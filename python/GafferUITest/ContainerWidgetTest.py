@@ -108,6 +108,13 @@ class ContainerWidgetTest( unittest.TestCase ) :
 				GafferUI.Button()
 				
 		self.assertRaises( Exception, raiser )
+		
+	def testWithContextAndButtonWithImage( self ) :
+	
+		with GafferUI.ListContainer() as l :
+			GafferUI.Button( image="arrowDown10.png" )
+			
+		self.assertEqual( len( l ), 1 )
 			
 if __name__ == "__main__":
 	unittest.main()
