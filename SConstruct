@@ -886,6 +886,7 @@ manifest = [
 	"shaders",
 	"fonts",
 	"ops",
+	"procedurals",
 
 	"graphics/*.png",
 	"glsl/IECoreGL",
