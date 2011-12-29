@@ -79,6 +79,48 @@ class TabbedContainerTest( unittest.TestCase ) :
 		self.failUnless( b2.parent() is t )
 		self.failUnless( b.parent() is None )
 		
+	def testIndex( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		b1 = GafferUI.Button()
+		b2 = GafferUI.Button()
+		
+		t.append( b1 )
+		t.append( b2 )
+		
+		self.assertEqual( t.index( b1 ), 0 )
+		self.assertEqual( t.index( b2 ), 1 )
+		
+		b3 = GafferUI.Button()
+		
+		self.assertRaises( ValueError, t.index, b3 )
+		
+	def testCurrentChangedSignal( self ) :
+	
+		tc = GafferUI.TabbedContainer()
+
+		def s( t, c ) :
+		
+			self.failUnless( t is tc )	
+			self.__current = c
+		
+		c = tc.currentChangedSignal().connect( s )
+		self.__current = None
+		
+		b1 = GafferUI.Button()
+		tc.append( b1 )
+		self.failUnless( self.__current is b1 )
+		self.failUnless( tc.getCurrent() is b1 )
+		
+		b2 = GafferUI.Button()
+		tc.append( b2 )
+		self.failUnless( self.__current is b1 )
+		self.failUnless( tc.getCurrent() is b1 )
+		
+		tc.setCurrent( b2 )
+		self.failUnless( self.__current is b2 )
+		self.failUnless( tc.getCurrent() is b2 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -37,6 +37,7 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -55,7 +56,10 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		
 		self.__cornerWidget = None
 		self.setCornerWidget( cornerWidget )
-								
+		
+		self.__currentChangedSignal = GafferUI.WidgetEventSignal()
+		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
+		
 	def append( self, child, label="" ) :
 	
 		oldParent = child.parent()
@@ -99,6 +103,10 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def __len__( self ) :
 	
 		return len( self.__widgets )
+		
+	def index( self, child ) :
+	
+		return self.__widgets.index( child )
 	
 	def addChild( self, child ) :
 	
@@ -131,3 +139,12 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def getCornerWidget( self ) :
 	
 		return self.__cornerWidget
+		
+	def currentChangedSignal( self ) :
+	
+		return self.__currentChangedSignal
+		
+	def __currentChanged( self, index ) :
+		
+		self.__currentChangedSignal( self, self[index] )
+		

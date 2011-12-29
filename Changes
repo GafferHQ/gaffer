@@ -16,6 +16,8 @@
 
 * The Cortex procedural stubs are now installed as part of the Gaffer distribution.
 
+* GafferUI.TabbedContainer now has an index() method for retrieving the index of a given child, and a currentChangedSignal() method for signalling when the current tab has been changed.
+
 0.26.0
 ------
 
