@@ -67,6 +67,7 @@ QT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.8.0"
 SIP_SRC_DIR = "$DEPENDENCIES_SRC_DIR/sip-4.13.1"
 PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.9"
 RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.4"
+ARNOLD_ROOT = "/Applications/Graphics/Arnold-4.0.0.0"
 
 APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.9"
 GENERATORRUNNER_SRC_DIR = "$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.15"
