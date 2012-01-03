@@ -225,6 +225,12 @@ options.Add(
 )
 
 options.Add(
+	"ARNOLD_ROOT",
+	"The directory in which Arnold is installed. Used to build IECoreArnold",
+	"/usr/local",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_PKGCONFIG", "Set this to build the pkgconfig library.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -357,6 +363,18 @@ options.Add(
 	"",
 )
 
+options.Add(
+       "DOXYGEN",
+       "Where to find the doxygen binary",
+       "doxygen",
+)
+
+options.Add(
+       "INKSCAPE",
+       "Where to find the inkscape binary",
+       "inkscape",
+)
+
 ###############################################################################################
 # Basic environment object. All the other environments will be based on this
 ###############################################################################################
@@ -452,7 +470,7 @@ if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 			
 if depEnv["BUILD_DEPENDENCY_BOOST"] :
-	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam install" )
+	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam -d+2 install" )
 
 if depEnv["BUILD_DEPENDENCY_TBB"] :
 	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
@@ -474,31 +492,26 @@ if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT OPTIONS='' ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH' SAVE_OPTIONS=gaffer.options" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH' SAVE_OPTIONS=gaffer.options" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
 
 if depEnv["BUILD_DEPENDENCY_QT"] :
-
-	if depEnv["PLATFORM"]=="darwin" :
-		runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -sdk /Developer/SDKs/MacOSX10.6.sdk && make clean && make -j 4 && make install" )
-	else :
-		runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle && make clean && make -j 4 && make install" )
-	
+	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -no-qt3support && make -j 4 && make install" )
 	
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
-	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make && make install" )
+	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make clean && make && make install" )
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py -d $BUILD_DIR/python  --confirm-license && make && make install" )
 
 # having MACOS_DEPLOYMENT_TARGET set breaks the pyside build for some reason
 del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
 if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
-	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
-	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
+	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
 	if depEnv["PLATFORM"]=="darwin" :
-		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
-		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_SYSROOT=/Developer/SDKs/MacOSX10.6.sdk -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make VERBOSE=1 && make install" )
+		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
+		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make VERBOSE=1 && make install" )
 	else :
 		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/include/python2.7 -DCMAKE_USE_PYTHON_VERSION=$PYTHON_VERSION && make clean && make && make install" )
 		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
@@ -705,11 +718,11 @@ def buildGraphics( target, source, env ) :
 	if not os.path.isdir( dir ) :
 		os.makedirs( dir )
 	
-	objects, stderr = subprocess.Popen( "inkscape --query-all " + str( source[0] ), stdout=subprocess.PIPE, shell=True ).communicate()
+	objects, stderr = subprocess.Popen( env["INKSCAPE"] + " --query-all " + str( source[0] ), stdout=subprocess.PIPE, shell=True ).communicate()
 	for object in objects.split( "\n" ) :
 		tokens = object.split( "," )
 		if tokens[0].startswith( "forExport:" ) :
-			os.system( "inkscape --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s --export-background-opacity=0" % (
+			os.system( env["INKSCAPE"] + " --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s --export-background-opacity=0" % (
 					dir,
 					tokens[0].split( ":" )[-1],
 					tokens[0],
@@ -809,7 +822,7 @@ docEnv["ENV"]["PATH"] = os.environ["PATH"]
 for v in ( "BUILD_DIR", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
 	docEnv["ENV"][v] = docEnv[v]
 
-docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "doxygen doc/config/Doxyfile" )
+docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "$DOXYGEN doc/config/Doxyfile" )
 env.NoCache( docs )
 
 for modulePath in ( "python/Gaffer", "python/GafferUI" ) :
