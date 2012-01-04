@@ -68,6 +68,7 @@ SIP_SRC_DIR = "$DEPENDENCIES_SRC_DIR/sip-4.13.1"
 PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.9"
 RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.4"
 ARNOLD_ROOT = "/Applications/Graphics/Arnold-4.0.0.0"
+NUKE_ROOT = "/Applications/Nuke6.3v6/Nuke6.3v6.app/Contents/MacOS"
 
 APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.9"
 GENERATORRUNNER_SRC_DIR = "$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.15"
