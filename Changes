@@ -18,6 +18,10 @@
 
 * GafferUI.TabbedContainer now has an index() method for retrieving the index of a given child, and a currentChangedSignal() method for signalling when the current tab has been changed.
 
+* GafferUI.NodeSetEditor now has a nodeSetChangedSignal() method, to notify listeners when the node set the editor is using has changed.
+
+* GafferUI.CompoundEditor now houses a couple of useful buttons alongside the tabs in the layout. One brings up the menu to edit the layout, and the other locks the currently viewed nodes for the current editor.
+
 0.26.0
 ------
 

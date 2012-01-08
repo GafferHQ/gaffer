@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,8 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, topLevelWidget, scriptNode ) :
 	
+		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
+
 		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode )
 		
 		self.__updateScheduled = False
@@ -65,11 +67,18 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		self.__nodeSet = nodeSet
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		
 		self._updateFromSet()
+		
+		self.__nodeSetChangedSignal( self )
 		
 	def getNodeSet( self ) :
 	
 		return self.__nodeSet
+	
+	def nodeSetChangedSignal( self ) :
+	
+		return self.__nodeSetChangedSignal
 	
 	def _lastAddedNode( self ) :
 	

@@ -59,6 +59,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode )
 		
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
+		self.__addCornerWidget( self.__splitContainer )
 		
 		self.__buttonPressConnection = self.__splitContainer.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -127,6 +128,11 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			# Can only do things at the leaf level
 			return False
 
+		self.__popupLayoutMenu( splitContainer )
+		return True
+		
+	def __popupLayoutMenu( self, splitContainer ) :
+	
 		m = IECore.MenuDefinition()
 
 		for c in GafferUI.EditorWidget.types() :
@@ -158,8 +164,6 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		m = GafferUI.Menu( m )
 		m.popup()
-		
-		return True
 		
 	def __keyPress( self, unused, event ) :
 	
@@ -269,6 +273,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		sc2 = GafferUI.SplitContainer()
 		sc2.append( GafferUI.TabbedContainer() )
 		sc2.__buttonPressConnection = sc2.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )					
+		self.__addCornerWidget( sc2 )
 		
 		if subPanelIndex==1 :
 			splitContainer.append( sc1 )
@@ -285,7 +290,30 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		splitContainer.__preferredHandlePosition = 0.5 # where the user put it last
 		
 		splitContainer.setOrientation( orientation )
+	
+	def __addCornerWidget( self, splitContainer ) :
+	
+		assert( len( splitContainer ) == 1 )
+		assert( isinstance( splitContainer[0], GafferUI.TabbedContainer ) )
 		
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 )
+		
+		# node target button
+		row.append( _TargetButton( splitContainer[0] ) )
+		
+		# layout button
+		layoutButton = GafferUI.Button( image="layoutButton.png", hasFrame=False )
+		layoutButton.setToolTip( "Click to modify the layout" )
+		splitContainer.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
+		row.append( layoutButton )
+		
+		splitContainer[0].setCornerWidget( row )
+				
+	def __layoutButtonClicked( self, button ) :
+	
+		splitContainer = button.ancestor( type=GafferUI.SplitContainer )
+		self.__popupLayoutMenu( splitContainer )
+			
 	def __join( self, splitContainer, subPanelIndex ) :
 	
 		toKeep = splitContainer[subPanelIndex][0]
@@ -363,3 +391,59 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			pass
 					
 		return False
+
+# The class that implements the node target button used in the tabbed container corner widget
+class _TargetButton( GafferUI.Button ) :
+
+	def __init__( self, tabbedContainer ) :
+	
+		GafferUI.Button.__init__( self, image="targetNodesLocked.png", hasFrame=False )
+		
+		self.__currentTabChangedConnection = tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+	
+		self.__update( tabbedContainer.getCurrent() )
+	
+	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
+		
+		if isinstance( currentEditor, GafferUI.NodeSetEditor ) :
+			self.__nodeSetChangedConnection = currentEditor.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__update ) )
+		else :
+			self.__nodeSetChangedConnection = None
+		
+		self.__update( currentEditor )
+		
+	def __update( self, editor ) :
+	
+		if isinstance( editor, GafferUI.NodeSetEditor ) and editor.getScriptNode() is not None :
+									 
+			self.setVisible( True )
+			
+			if editor.getNodeSet().isSame( editor.getScriptNode().selection() ) :
+				self.setToolTip( "Click to lock view to current selection" )
+				self.setImage( "targetNodesUnlocked.png" )
+			else :
+				self.setToolTip( "Click to unlock view and follow selection" )
+				self.setImage( "targetNodesLocked.png" )
+		
+		else :
+		
+			self.setVisible( False )
+	
+	def __clicked( self, button ) :
+			
+		splitContainer = self.ancestor( type=GafferUI.SplitContainer )
+		assert( len( splitContainer ) == 1 )
+		assert( isinstance( splitContainer[0], GafferUI.TabbedContainer ) )
+		
+		editor = splitContainer[0].getCurrent()
+		assert( isinstance( editor, GafferUI.NodeSetEditor ) )
+	
+		nodeSet = editor.getNodeSet()
+		selectionSet = editor.getScriptNode().selection()
+		if nodeSet.isSame( selectionSet ) :
+			nodeSet = Gaffer.StandardSet( list( nodeSet ) )
+		else :
+			nodeSet = selectionSet
+		editor.setNodeSet( nodeSet )
+	
