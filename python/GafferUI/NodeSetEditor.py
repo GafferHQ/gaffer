@@ -47,6 +47,7 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, topLevelWidget, scriptNode ) :
 	
+		self.__nodeSet = Gaffer.StandardSet()
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
 
 		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode )
@@ -64,11 +65,21 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 			
 	def setNodeSet( self, nodeSet ) :
 	
+		prevSet = self.__nodeSet
 		self.__nodeSet = nodeSet
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		
-		self._updateFromSet()
+		# only update if the nodes being held have actually changed,
+		# so we don't get unnecessary flicker in any of the uis.
+		needsUpdate = len( prevSet ) != len( self.__nodeSet )
+		if not needsUpdate :
+			for i in range( 0, len( prevSet ) ) :
+				if not prevSet[i].isSame( self.__nodeSet[i] ) :
+					needsUpdate = True
+					break
+		if needsUpdate :
+			self._updateFromSet()
 		
 		self.__nodeSetChangedSignal( self )
 		
