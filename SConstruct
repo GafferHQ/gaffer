@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -476,7 +476,7 @@ if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 			
 if depEnv["BUILD_DEPENDENCY_BOOST"] :
-	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam -d+2 install" )
+	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam -d+2 variant=release link=shared threading=multi install" )
 
 if depEnv["BUILD_DEPENDENCY_TBB"] :
 	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
