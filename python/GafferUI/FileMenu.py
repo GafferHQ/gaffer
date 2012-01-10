@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -143,13 +143,3 @@ def revertToSaved( menu ) :
 	else :
 		## \todo Warn
 		pass
-
-# /File/Exit
-#############################################################################################
-
-## A function suitable as the command for a File/Exit menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
-## \todo Implement me
-def exit( menu ) :
-
-	raise NotImplementedError
