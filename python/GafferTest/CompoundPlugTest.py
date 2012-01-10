@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -75,8 +75,8 @@ class CompoundPlugTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n1"] = Gaffer.Node()
-		s["n1"]["p"] = Gaffer.CompoundPlug( flags = Gaffer.Plug.Flags.Dynamic )
-		s["n1"]["p"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["p"] = Gaffer.CompoundPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["p"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n1"]["p"]["f"].setValue( 10 )
 		
 		ss = s.serialise()
@@ -261,10 +261,10 @@ class CompoundPlugTest( unittest.TestCase ) :
 		self.assertEqual( p.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.None )
 		
-		p = TestCompoundPlug( name = "p", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Dynamic )
+		p = TestCompoundPlug( name = "p", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.assertEqual( p.getName(), "p" )
 		self.assertEqual( p.direction(), Gaffer.Plug.Direction.Out )
-		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		# check that acceptsChild can be overridden
 		

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -79,11 +79,32 @@ std::string GafferBindings::serialisePlugDirection( Plug::Direction direction )
 
 std::string GafferBindings::serialisePlugFlags( unsigned flags )
 {
-	if( flags )
+	if( flags && Plug::Default )
 	{
-		return "Gaffer.Plug.Flags.Dynamic";
+		return "Gaffer.Plug.Flags.Default";
 	}
-	return "Gaffer.Plug.Flags.None";
+	else if( flags && Plug::All )
+	{
+		return "Gaffer.Plug.Flags.All";
+	}
+	
+	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::None };
+	static const char *names[] = { "Dynamic", "Serialisable", 0 };
+	
+	std::string result;
+	for( int i=0; names[i]; i++ )
+	{
+		if( flags & values[i] )
+		{
+			if( result.size() )
+			{
+				result += " | ";
+			}
+			result += std::string( "Gaffer.Plug.Flags." ) + names[i];
+		}
+	}
+	
+	return result;
 }
 
 std::string GafferBindings::serialisePlugInput( Serialiser &s, PlugPtr plug )
@@ -132,6 +153,8 @@ void GafferBindings::bindPlug()
 		enum_<Plug::Flags>( "Flags" )
 			.value( "None", Plug::None )
 			.value( "Dynamic", Plug::Dynamic )
+			.value( "Serialisable", Plug::Serialisable )
+			.value( "Default", Plug::Default )
 			.value( "All", Plug::All )
 		;
 	}
@@ -141,7 +164,7 @@ void GafferBindings::bindPlug()
 				(
 					arg( "name" ) = Plug::staticTypeName(),
 					arg( "direction" ) = Plug::In,
-					arg( "flags" ) = Plug::None
+					arg( "flags" ) = Plug::Default
 				)
 			)	
 		)

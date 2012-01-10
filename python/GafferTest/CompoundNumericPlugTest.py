@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -173,7 +173,7 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		n = Gaffer.Node()
-		n["p"] = Gaffer.V3fPlug( flags=Gaffer.Plug.Flags.Dynamic )
+		n["p"] = Gaffer.V3fPlug( flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p"].setValue( IECore.V3f( 1, 2, 3 ) )
 		s["n"] = n
 		

@@ -22,6 +22,8 @@
 
 * GafferUI.CompoundEditor now houses a couple of useful buttons alongside the tabs in the layout. One brings up the menu to edit the layout, and the other locks the currently viewed nodes for the current editor.
 
+* Added Serialisable flag to Gaffer.Plug, to control whether or not plugs and their values are serialised.
+
 0.26.0
 ------
 

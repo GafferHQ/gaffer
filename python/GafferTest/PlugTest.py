@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class PlugTest( unittest.TestCase ) :
 
@@ -122,7 +123,7 @@ class PlugTest( unittest.TestCase ) :
 	def testFlags( self ) :
 	
 		p = Gaffer.Plug()
-		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.None )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default )
 		
 		p = Gaffer.Plug( flags=Gaffer.Plug.Flags.Dynamic )
 		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Dynamic )
@@ -259,7 +260,39 @@ class PlugTest( unittest.TestCase ) :
 		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
 		self.failUnless( s["n1"]["o"].isSame( removedPlug ) )
-						
+	
+	def testDefaultFlags( self ) :
+		
+		p = Gaffer.Plug()
+		self.failUnless( p.getFlags( Gaffer.Plug.Flags.Serialisable ) )
+	
+	def testSerialisableFlag( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.AddNode()
+		
+		self.failUnless( s["n"]["op1"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
+			
+		s["n"]["op1"].setValue( 20 )
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertEqual( s["n"]["op1"].getValue(), 20 )
+	
+		s["n"]["op1"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+		ss = s.serialise()
+		
+		self.failIf( "op1" in ss )
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertEqual( s["n"]["op1"].getValue(), 0 )
+	
+	
 if __name__ == "__main__":
 	unittest.main()
 	

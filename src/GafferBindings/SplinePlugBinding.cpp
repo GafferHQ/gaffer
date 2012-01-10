@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 		result += "defaultValue = " + value + ", ";
 	}
 	
-	if( plug->getFlags() )
+	if( plug->getFlags() != Plug::Default )
 	{
 		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
 	}
@@ -148,7 +148,7 @@ static void bind()
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
-					boost::python::arg_( "flags" )=Plug::None,
+					boost::python::arg_( "flags" )=Plug::Default,
 					boost::python::arg_( "basisMatrix" )=object(),
 					boost::python::arg_( "basisStep" )=object(),
 					boost::python::arg_( "points" )=object()

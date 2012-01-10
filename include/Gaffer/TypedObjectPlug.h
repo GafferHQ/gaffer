@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,7 @@ class TypedObjectPlug : public ValuePlug
 			const std::string &name = staticTypeName(),
 			Direction direction=In,
 			ConstValuePtr defaultValue = ValuePtr(),
-			unsigned flags = None
+			unsigned flags = Default
 		);
 		virtual ~TypedObjectPlug();
 

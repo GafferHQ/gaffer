@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -202,9 +202,9 @@ class NodeTest( unittest.TestCase ) :
 	
 		n = Gaffer.Node()
 		
-		n["p1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Dynamic )
-		n["p2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Dynamic )
-		n["p3"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Dynamic )
+		n["p1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["p2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["p3"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.assertEqual( n.children()[0].getName(), "p1" )
 		self.assertEqual( n.children()[1].getName(), "p2" )
 		self.assertEqual( n.children()[2].getName(), "p3" )
@@ -225,7 +225,7 @@ class NodeTest( unittest.TestCase ) :
 	
 		n = Gaffer.Node()
 		
-		n["p1"] = Gaffer.StringPlug( defaultValue = "default", flags = Gaffer.Plug.Flags.Dynamic )
+		n["p1"] = Gaffer.StringPlug( defaultValue = "default", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p1"].setValue( "value" )
 		
 		s = Gaffer.ScriptNode()
@@ -243,7 +243,7 @@ class NodeTest( unittest.TestCase ) :
 	
 		n = Gaffer.Node()
 		
-		n["p1"] = Gaffer.BoolPlug( defaultValue = True, flags = Gaffer.Plug.Flags.Dynamic )
+		n["p1"] = Gaffer.BoolPlug( defaultValue = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p1"].setValue( False )
 		
 		s = Gaffer.ScriptNode()

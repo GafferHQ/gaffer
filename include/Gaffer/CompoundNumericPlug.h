@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -63,7 +63,7 @@ class CompoundNumericPlug : public CompoundPlug
 			T defaultValue = T( 0 ),
 			T minValue = T( Imath::limits<typename T::BaseType>::min() ),
 			T maxValue = T( Imath::limits<typename T::BaseType>::max() ),
-			unsigned flags = None
+			unsigned flags = Default
 		);
 		virtual ~CompoundNumericPlug();
 

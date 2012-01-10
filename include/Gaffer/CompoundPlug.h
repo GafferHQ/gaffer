@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -47,7 +47,7 @@ class CompoundPlug : public ValuePlug
 
 	public :
 			
-		CompoundPlug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=None );
+		CompoundPlug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
 		virtual ~CompoundPlug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundPlug, CompoundPlugTypeId, ValuePlug );

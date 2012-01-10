@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -82,10 +82,14 @@ class Plug : public GraphComponent
 			/// a script - instead the full Plug definition is serialised so it can
 			/// be recreated fully upon loading.
 			Dynamic = 0x00000001,
-			All = Dynamic
+			/// Serialisable plugs are saved into scripts, whereas non-serialisable plugs
+			/// are not.
+			Serialisable = 0x00000002,
+			Default = Serialisable,
+			All = Dynamic | Serialisable
 		};
 	
-		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=None );
+		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
 		virtual ~Plug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Plug, PlugTypeId, GraphComponent );

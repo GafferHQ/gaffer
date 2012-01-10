@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
 	}
 		
-	if( plug->getFlags() )
+	if( plug->getFlags() != Plug::Default )
 	{
 		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
 	}
@@ -112,7 +112,7 @@ void GafferBindings::bindCompoundPlug()
 					(
 						arg( "name" ) = CompoundPlug::staticTypeName(),
 						arg( "direction" ) = Plug::In,
-						arg( "flags" ) = Plug::None,
+						arg( "flags" ) = Plug::Default,
 						arg( "children" )=tuple()
 					)
 				)	

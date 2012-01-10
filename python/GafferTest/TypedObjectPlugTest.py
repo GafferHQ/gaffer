@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Dynamic )
+		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		se = s.serialise()
 		
@@ -60,10 +60,10 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Dynamic )
+		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		s["n2"] = Gaffer.Node()
-		s["n2"]["t2"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
+		s["n2"]["t2"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
 		
 		s["n"]["t"].setInput( s["n2"]["t2"] )
 		

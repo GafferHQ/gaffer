@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,7 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 		result += "maxValue = " + serialiseValue( s, plug->maxValue() ) + ", ";
 	}
 	
-	if( plug->getFlags() )
+	if( plug->getFlags() != Plug::Default )
 	{
 		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
 	}
@@ -156,7 +156,7 @@ static void bind()
 					boost::python::arg_( "defaultValue" )=V( 0 ),
 					boost::python::arg_( "minValue" )=V(Imath::limits<typename V::BaseType>::min()),
 					boost::python::arg_( "maxValue" )=V(Imath::limits<typename V::BaseType>::max()),
-					boost::python::arg_( "flags" )=Plug::None,
+					boost::python::arg_( "flags" )=Plug::Default,
 					boost::python::arg_( "value" )=object()
 				)
 			)

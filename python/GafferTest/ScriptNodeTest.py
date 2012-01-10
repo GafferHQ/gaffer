@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -140,11 +140,11 @@ class ScriptNodeTest( unittest.TestCase ) :
 		
 		s1["n1"] = GafferTest.AddNode()
 		s1["n2"] = GafferTest.AddNode()
-		s1["n1"]["dynamicPlug"] = Gaffer.IntPlug( flags=Gaffer.Plug.Flags.Dynamic )
+		s1["n1"]["dynamicPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s1["n1"]["dynamicPlug"].setInput( s1["n2"]["sum"] )
-		s1["n1"]["dynamicPlug2"] = Gaffer.IntPlug( flags=Gaffer.Plug.Flags.Dynamic )
+		s1["n1"]["dynamicPlug2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s1["n1"]["dynamicPlug2"].setValue( 100 )
-		s1["n1"]["dynamicStringPlug"] = Gaffer.StringPlug( flags=Gaffer.Plug.Flags.Dynamic, value="hiThere" )
+		s1["n1"]["dynamicStringPlug"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, value="hiThere" )
 				
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s1.serialise() )

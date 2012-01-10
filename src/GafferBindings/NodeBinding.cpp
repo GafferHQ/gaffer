@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,11 @@ static std::string serialisePlug( Serialiser &s, ConstGraphComponentPtr ancestor
 		InputPlugIterator pIt( cPlug->children().begin(), cPlug->children().end() );
 		while( pIt!=cPlug->children().end() )
 		{
-			result += serialisePlug( s, ancestor, *pIt++ );
+			if( (*pIt)->getFlags( Plug::Serialisable ) )
+			{
+				result += serialisePlug( s, ancestor, *pIt );
+			}
+			pIt++;
 		}
 		return result;
 	}
@@ -95,7 +99,7 @@ static std::string serialiseNode( Serialiser &s, ConstGraphComponentPtr g )
 	for( InputPlugIterator pIt=node->inputPlugsBegin(); pIt!=pIt.end(); pIt++ )
 	{
 		PlugPtr plug = *pIt;
-		if( !plug->getFlags( Plug::Dynamic ) )
+		if( !plug->getFlags( Plug::Dynamic ) && plug->getFlags( Plug::Serialisable ) )
 		{
 			inputs += serialisePlug( s, node, *pIt );
 		}
@@ -111,7 +115,7 @@ static std::string serialiseNode( Serialiser &s, ConstGraphComponentPtr g )
 	for( PlugIterator pIt=node->plugsBegin(); pIt!=pIt.end(); pIt++ )
 	{
 		PlugPtr plug = *pIt;
-		if( plug->getFlags( Plug::Dynamic ) )
+		if( plug->getFlags( Plug::Dynamic ) && plug->getFlags( Plug::Serialisable ) )
 		{
 			dynamicPlugs += s.serialiseC( plug ) + ", ";
 		}	
