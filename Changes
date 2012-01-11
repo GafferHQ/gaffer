@@ -24,6 +24,8 @@
 
 * Added Serialisable flag to Gaffer.Plug, to control whether or not plugs and their values are serialised.
 
+* The gui app now has a fullScreen command line flag.
+
 0.26.0
 ------
 

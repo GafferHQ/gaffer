@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -52,8 +52,14 @@ class gui( Gaffer.Application ) :
 				IECore.StringVectorParameter(
 					name = "scripts",
 					description = "A list of scripts to edit.",
-					defaultValue = IECore.StringVectorData()
-				)
+					defaultValue = IECore.StringVectorData(),
+				),
+				
+				IECore.BoolParameter(
+					name = "fullScreen",
+					description = "Opens the UI in full screen mode.",
+					defaultValue = False,
+				),
 			]
 			
 		)
@@ -90,7 +96,12 @@ class gui( Gaffer.Application ) :
 				self.__application["scripts"].addChild( scriptNode )
 		else :
 			self.__application["scripts"]["script1"] = Gaffer.ScriptNode()
-								
+		
+		if args["fullScreen"].value :
+			primaryScript = self.__application["scripts"][-1]
+			primaryWindow = GafferUI.ScriptWindow.acquire( primaryScript )
+			primaryWindow.setFullScreen( True )
+			
 		GafferUI.EventLoop.mainEventLoop().start()		
 				
 		return 0
