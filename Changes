@@ -26,6 +26,8 @@
 
 * The gui app now has a fullScreen command line flag.
 
+* NodeEditor now displays the node type.
+
 0.26.0
 ------
 

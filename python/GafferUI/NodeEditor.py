@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,10 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		if not node :
 			return
 		
-		self.__column.append( GafferUI.NameWidget( node ) )
+		with self.__column :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) :
+				GafferUI.Label( node.typeName() )
+				GafferUI.NameWidget( node )
 						
 		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None )
 		self.__column.append( frame, expand=True )
