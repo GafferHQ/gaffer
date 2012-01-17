@@ -28,6 +28,10 @@
 
 * NodeEditor now displays the node type.
 
+* The Plug base class may now be serialised.
+
+* Fixed bug which meant that plug flags were not correctly serialised.
+
 0.26.0
 ------
 

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -79,11 +79,11 @@ std::string GafferBindings::serialisePlugDirection( Plug::Direction direction )
 
 std::string GafferBindings::serialisePlugFlags( unsigned flags )
 {
-	if( flags && Plug::Default )
+	if( flags == Plug::Default )
 	{
 		return "Gaffer.Plug.Flags.Default";
 	}
-	else if( flags && Plug::All )
+	else if( flags == Plug::All )
 	{
 		return "Gaffer.Plug.Flags.All";
 	}
@@ -107,10 +107,10 @@ std::string GafferBindings::serialisePlugFlags( unsigned flags )
 	return result;
 }
 
-std::string GafferBindings::serialisePlugInput( Serialiser &s, PlugPtr plug )
+std::string GafferBindings::serialisePlugInput( Serialiser &s, ConstPlugPtr plug )
 {
 	std::string result = "";
-	PlugPtr srcPlug = plug->getInput<Plug>();
+	ConstPlugPtr srcPlug = plug->getInput<Plug>();
 	if( srcPlug && srcPlug->node() )
 	{
 		std::string srcNodeName = s.add( srcPlug->node() );
@@ -119,6 +119,32 @@ std::string GafferBindings::serialisePlugInput( Serialiser &s, PlugPtr plug )
 			result = srcNodeName + "[\"" + srcPlug->relativeName( srcPlug->node() ) + "\"]";
 		}
 	}
+
+	return result;
+}
+
+static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
+{
+	ConstPlugPtr plug = IECore::staticPointerCast<const Plug>( g );
+	std::string result = s.modulePath( g ) + ".Plug( \"" + g->getName() + "\", ";
+	
+	if( plug->direction()!=Plug::In )
+	{
+		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
+	}
+		
+	if( plug->getFlags() != Plug::Default )
+	{
+		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
+	}
+	
+	std::string input = serialisePlugInput( s, plug );
+	if( input.size() )
+	{
+		result += "input = " + input + ", ";
+	}
+		
+	result += ")";
 
 	return result;
 }
@@ -179,5 +205,7 @@ void GafferBindings::bindPlug()
 		.def( "removeOutputs", &Plug::removeOutputs )
 		.def( "outputs", &outputs )
 	;
+
+	Serialiser::registerSerialiser( Plug::staticTypeId(), serialise );
 	
 }

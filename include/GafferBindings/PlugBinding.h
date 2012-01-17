@@ -101,7 +101,7 @@ void bindPlug();
 
 std::string serialisePlugDirection( Gaffer::Plug::Direction direction );
 std::string serialisePlugFlags( unsigned flags );
-std::string serialisePlugInput( Serialiser &s, Gaffer::PlugPtr plug );
+std::string serialisePlugInput( Serialiser &s, Gaffer::ConstPlugPtr plug );
 
 } // namespace GafferBindings
 
