@@ -118,7 +118,7 @@ class GroupNode( Gaffer.Node ) :
 				lastConnected = i
 						
 		if lastConnected == len( inputs ) - 1 :
-			newInput = Gaffer.ObjectPlug( "in1", flags = Gaffer.Plug.Flags.Dynamic )
+			newInput = Gaffer.ObjectPlug( "in1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			self.addChild( newInput )
 		else :
 			for plug in inputs[lastConnected + 2:] :
