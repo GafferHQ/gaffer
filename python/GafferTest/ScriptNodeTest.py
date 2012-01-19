@@ -332,7 +332,17 @@ a = A()"""
 		del s["n1"]
 		
 		self.failUnless( n1 not in s.selection() )
-							
+		
+	def testContext( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		c = s.context()
+		c.setFrame( 10.0 )
+		
+		self.assertEqual( s.context().getFrame(), 10.0 )
+		self.failUnless( s.context().isSame( c ) )					
+	
 if __name__ == "__main__":
 	unittest.main()
 	

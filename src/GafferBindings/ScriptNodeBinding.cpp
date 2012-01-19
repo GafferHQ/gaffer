@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,20 +35,21 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "boost/python.hpp" // must be the first include
+
+#include <fstream>
+
+#include "boost/tokenizer.hpp"
+
+#include "IECorePython/Wrapper.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialiser.h"
 #include "GafferBindings/NodeBinding.h"
 #include "Gaffer/ScriptNode.h"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "boost/tokenizer.hpp"
-
-#include <fstream>
+#include "Gaffer/Context.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -213,6 +214,11 @@ struct ScriptEvaluatedSlotCaller
 	}
 };
 
+static ContextPtr context( ScriptNode &s )
+{
+	return s.context();
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( serialiseOverloads, serialise, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( copyOverloads, copy, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( cutOverloads, cut, 0, 1 );
@@ -238,6 +244,7 @@ void bindScriptNode()
 		.def( "serialise", &ScriptNode::serialise, serialiseOverloads() )
 		.def( "save", &ScriptNode::save )
 		.def( "load", &ScriptNode::load )
+		.def( "context", &context )
 	;
 	
 	SignalBinder<ScriptNode::ScriptExecutedSignal>::bind( "ScriptExecutedSignal" );

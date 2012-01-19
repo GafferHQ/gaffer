@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/Context.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
@@ -58,7 +59,7 @@ GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 
 ScriptNode::ScriptNode( const std::string &name )
-	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() )
+	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() ), m_context( new Context )
 {
 	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "" );
 	addChild( m_fileNamePlug );
@@ -248,6 +249,16 @@ void ScriptNode::load()
 void ScriptNode::save() const
 {
 	throw IECore::Exception( "Cannot save scripts on a ScriptNode not created in Python." );
+}
+
+Context *ScriptNode::context()
+{
+	return m_context.get();
+}
+
+const Context *ScriptNode::context() const
+{
+	return m_context.get();
 }
 
 void ScriptNode::childRemoved( GraphComponent *parent, GraphComponent *child )

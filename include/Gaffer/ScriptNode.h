@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,7 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Action );
 IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( ApplicationRoot );
+IE_CORE_FORWARDDECLARE( Context );
 
 typedef Container<GraphComponent, ScriptNode> ScriptContainer;
 IE_CORE_DECLAREPTR( ScriptContainer );
@@ -179,6 +180,17 @@ class ScriptNode : public Node
 		virtual void save() const;
 		//@}
 
+		//! @name Computation context
+		/// This is a default context for computations to be performed in when
+		/// no other context has been specified. There's no requirement to use it,
+		/// and in fact when requesting output from Nodes any context may be used.
+		/// The default context is typically used by the ui components.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		Context *context();
+		const Context *context() const;
+		//@}
+		
 	protected :
 	
 		virtual void dirty( ConstPlugPtr dirty ) const;
@@ -207,6 +219,8 @@ class ScriptNode : public Node
 		ScriptEvaluatedSignal m_scriptEvaluatedSignal;
 	
 		StringPlugPtr m_fileNamePlug;
+		
+		ContextPtr m_context;
 		
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 	
