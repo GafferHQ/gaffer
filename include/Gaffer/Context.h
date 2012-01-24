@@ -47,7 +47,11 @@ namespace Gaffer
 
 /// This class defines the context in which a computation is performed. The most basic element
 /// common to all Contexts is the frame number, but a context may hold entirely arbitrary
-/// information useful to specific types of computation.
+/// information useful to specific types of computation. Contexts are made current using the
+/// nested Scope class - any computation triggered by ValuePlug::getValue() calls will be
+/// made with respect to the current Context. Each thread maintains a stack of contexts,
+/// allowing computations in different contexts to be performed in parallel, and allowing
+/// contexts to be changed temporarily for a specific computation.
 class Context : public IECore::RefCounted
 {
 
@@ -76,11 +80,31 @@ class Context : public IECore::RefCounted
 		float getFrame() const;
 		/// Convenience method calling set<float>( "frame", frame ).
 		void setFrame( float frame );
+
+		/// A signal emitted when an element of the context is changed.
+		ChangedSignal &changedSignal();
 		
 		IECore::MurmurHash hash() const;
 		
-		/// A signal emitted when an element of the context is changed.
-		ChangedSignal &changedSignal();
+		bool operator == ( const Context &other );
+		bool operator != ( const Context &other );
+		
+		/// The Scope class is used to push and pop the current context on
+		/// the calling thread.
+		class Scope
+		{
+			
+			public :
+			
+				/// Constructing the Scope pushes the current context.
+				Scope( const Context *context );
+				/// Destruction of the Scope pops the previously pushed context. 
+				~Scope();
+		
+		};
+		
+		/// Returns the current context for the calling thread.
+		static const Context *current();
 		
 	private :
 	

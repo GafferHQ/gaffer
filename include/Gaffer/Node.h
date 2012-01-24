@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,18 +50,8 @@ IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( ValuePlug )
 IE_CORE_FORWARDDECLARE( Node )
 IE_CORE_FORWARDDECLARE( ScriptNode )
+IE_CORE_FORWARDDECLARE( Context )
 
-/// Threading
-///
-///		- can we allow multiple computes() at once?
-///		- or do we have to resort to computes() being threaded internally?
-///		- perhaps we could have a method which takes a bunch of input plugs, and guarantees
-///		  that they'll have been computed upon return? that method could deal with the threading.
-///		- do we need to separate plugs from the values they hold? so we can deal with computes()
-///		  at different times? and if we did that then does that help with the threading?
-///			- if we did that and used CompoundObject as a DataBlock then we could map IECore::Parameters
-///			  straight to Plugs very very easily.
-///				- what is the overhead?
 class Node : public GraphComponent
 {
 
@@ -118,7 +108,7 @@ class Node : public GraphComponent
 		virtual void dirty( ConstPlugPtr dirty ) const = 0;
 		/// Called when getValue() is called on an output plug which is dirty. Must
 		/// be implemented to calculate and set the value for this Plug.
-		virtual void compute( PlugPtr output ) const = 0;
+		virtual void compute( Plug *output, const Context *context ) const = 0;
 
 		/// Implemented to remove all connections when the node is being
 		/// unparented.

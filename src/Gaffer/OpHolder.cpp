@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -103,7 +103,7 @@ void OpHolder::dirty( ConstPlugPtr dirty ) const
 	}
 }
 
-void OpHolder::compute( PlugPtr output ) const
+void OpHolder::compute( Plug *output, const Context *context ) const
 {
 	if( output->getName()=="result" )
 	{	

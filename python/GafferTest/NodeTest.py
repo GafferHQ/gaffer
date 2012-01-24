@@ -283,6 +283,18 @@ class NodeTest( unittest.TestCase ) :
 		
 		self.assertEqual( n2["op1"].getInput(), None )
 		
+	def testComputeInContext( self ) :
+	
+		n = GafferTest.FrameNode()
+		self.assertEqual( n["output"].getValue(), 1 )
+	
+		c = Gaffer.Context()
+		c.setFrame( 10 )
+		
+		with c :
+			self.assertEqual( n["output"].getValue(), 10 )
+	
+		
 if __name__ == "__main__":
 	unittest.main()
 	

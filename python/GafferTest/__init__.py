@@ -39,6 +39,7 @@ from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GCTest import GCTest
 from GraphComponentTest import GraphComponentTest
+from FrameNode import FrameNode
 from NodeTest import NodeTest
 from PlugTest import PlugTest
 from NumericPlugTest import NumericPlugTest

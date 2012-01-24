@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Context.h"
 
 #include "boost/format.hpp"
 
@@ -157,13 +158,13 @@ void ValuePlug::computeIfDirty()
 			setFromInput();
 		}
 		else
-		{
+		{	
 			NodePtr n = node();
 			if( !n )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % fullName() ) ); 
 			}
-			n->compute( this );
+			n->compute( this, Context::current() );
 		}
 		/// \todo we need a proper response to failure here - perhaps call setToDefault()?
 		/// and do we need some kind of error status for plugs?

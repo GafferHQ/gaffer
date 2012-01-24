@@ -194,7 +194,7 @@ class ScriptNode : public Node
 	protected :
 	
 		virtual void dirty( ConstPlugPtr dirty ) const;
-		virtual void compute( PlugPtr output ) const;
+		virtual void compute( Plug *output, const Context *context ) const;
 			
 	private :
 		

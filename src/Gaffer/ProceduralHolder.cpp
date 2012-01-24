@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -100,11 +100,11 @@ void ProceduralHolder::dirty( ConstPlugPtr dirty ) const
 	}
 }
 
-void ProceduralHolder::compute( PlugPtr output ) const
+void ProceduralHolder::compute( Plug *output, const Context *context ) const
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
 	{	
 		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
-		staticPointerCast<ObjectPlug>( output )->setValue( getProcedural() );
+		static_cast<ObjectPlug *>( output )->setValue( getProcedural() );
 	}
 }

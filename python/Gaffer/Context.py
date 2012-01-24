@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,38 +34,21 @@
 #  
 ##########################################################################
 
-import IECore
 import Gaffer
 
-class AddNode( Gaffer.Node ) :
-		
-	def __init__( self, name="AddNode", inputs={}, dynamicPlugs=() ) :
+# Add on methods to allow contexts to be used in "with" blocks.
+# In python we use this mechanism in preference to the Context::Scope
+# class used in C++.
 
-		Gaffer.Node.__init__( self, name )
+def __enter( self ) :
 
-		p1 = Gaffer.IntPlug( "op1", Gaffer.Plug.Direction.In )
-		p2 = Gaffer.IntPlug( "op2", Gaffer.Plug.Direction.In )
+	self.__scope = Gaffer.Context._Scope( self )
+	
+def __exit( self, type, value, traceBack ) :
 
-		self.addChild( p1 )
-		self.addChild( p2 )
+	del self.__scope
+	
+Gaffer.Context.__enter__ = __enter
+Gaffer.Context.__exit__ = __exit
 
-		p3 = Gaffer.IntPlug( "sum", Gaffer.Plug.Direction.Out )
-
-		self.addChild( p3 )
-		
-		self._init( inputs, dynamicPlugs )
-
-	def dirty( self, plug ) :
-
-		if plug.getName()=="op1" or plug.getName()=="op2" :
-
-			self.getChild( "sum" ).setDirty()
-
-	def compute( self, plug, context ) :
-
-		assert( plug.isSame( self.getChild( "sum" ) ) )
-		assert( isinstance( context, Gaffer.Context ) )
-
-		plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
-
-IECore.registerRunTimeTyped( AddNode )
+Context = Gaffer.Context

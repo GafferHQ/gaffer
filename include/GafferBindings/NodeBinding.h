@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Node.h"
+#include "Gaffer/Context.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
 
@@ -65,7 +66,7 @@ namespace GafferBindings
 		CLASSNAME::dirty( dirty );\
 	}\
 \
-	virtual void compute( Gaffer::PlugPtr output ) const\
+	virtual void compute( Gaffer::Plug *output, const Gaffer::Context *context ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
@@ -73,11 +74,11 @@ namespace GafferBindings
 			boost::python::override f = this->get_override( "compute" );\
 			if( f )\
 			{\
-				f( IECore::constPointerCast<Gaffer::Plug>( output ) );\
+				f( Gaffer::PlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );\
 				return;\
 			}\
 		}\
-		CLASSNAME::compute( output );\
+		CLASSNAME::compute( output, context );\
 	}
 
 #define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \

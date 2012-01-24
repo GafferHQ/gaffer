@@ -211,9 +211,8 @@ void ScriptNode::dirty( ConstPlugPtr dirty ) const
 {
 }
 
-void ScriptNode::compute( PlugPtr output ) const
+void ScriptNode::compute( Plug *output, const Context *context ) const
 {
-	assert( 0 );
 }
 
 void ScriptNode::execute( const std::string &pythonScript )

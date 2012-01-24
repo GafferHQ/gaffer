@@ -34,12 +34,20 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include <stack>
+
+#include "tbb/enumerable_thread_specific.h"
+
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/Context.h"
 
 using namespace Gaffer;
 using namespace IECore;
+
+//////////////////////////////////////////////////////////////////////////
+// Context implementation
+//////////////////////////////////////////////////////////////////////////
 
 static InternedString g_frame( "frame" );
 
@@ -64,12 +72,54 @@ void Context::setFrame( float frame )
 	set( g_frame, frame );
 }
 
+Context::ChangedSignal &Context::changedSignal()
+{
+	return m_changedSignal;
+}
+
 IECore::MurmurHash Context::hash() const
 {
 	return ((Object *)( m_data.get() ))->hash();
 }
 
-Context::ChangedSignal &Context::changedSignal()
+bool Context::operator == ( const Context &other )
 {
-	return m_changedSignal;
+	return m_data->isEqualTo( other.m_data.get() );
+}
+
+bool Context::operator != ( const Context &other )
+{
+	return m_data->isNotEqualTo( other.m_data.get() );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Scope and current context implementation
+//////////////////////////////////////////////////////////////////////////
+
+typedef std::stack<const Context *> ContextStack;
+typedef tbb::enumerable_thread_specific<ContextStack> ThreadSpecificContextStack;
+
+static ThreadSpecificContextStack g_threadContexts;
+static ContextPtr g_defaultContext = new Context;
+
+Context::Scope::Scope( const Context *context )
+{
+	ContextStack &stack = g_threadContexts.local();
+	stack.push( context );
+}
+
+Context::Scope::~Scope()
+{
+	ContextStack &stack = g_threadContexts.local();
+	stack.pop();
+}
+
+const Context *Context::current()
+{
+	ContextStack &stack = g_threadContexts.local();
+	if( !stack.size() )
+	{
+		return g_defaultContext;
+	}
+	return stack.top();
 }

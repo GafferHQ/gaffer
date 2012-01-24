@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,38 +34,28 @@
 #  
 ##########################################################################
 
-import IECore
+import unittest
+
 import Gaffer
 
-class AddNode( Gaffer.Node ) :
+## The simplest possible node to use the context during
+# computation - just outputs the current frame.
+class FrameNode( Gaffer.Node ) :
+
+	def __init__( self ) :
+	
+		Gaffer.Node.__init__( self )
 		
-	def __init__( self, name="AddNode", inputs={}, dynamicPlugs=() ) :
-
-		Gaffer.Node.__init__( self, name )
-
-		p1 = Gaffer.IntPlug( "op1", Gaffer.Plug.Direction.In )
-		p2 = Gaffer.IntPlug( "op2", Gaffer.Plug.Direction.In )
-
-		self.addChild( p1 )
-		self.addChild( p2 )
-
-		p3 = Gaffer.IntPlug( "sum", Gaffer.Plug.Direction.Out )
-
-		self.addChild( p3 )
+		self.addChild(
+			Gaffer.FloatPlug(
+				"output",
+				direction = Gaffer.Plug.Direction.Out,
+			)
+		)
 		
-		self._init( inputs, dynamicPlugs )
-
-	def dirty( self, plug ) :
-
-		if plug.getName()=="op1" or plug.getName()=="op2" :
-
-			self.getChild( "sum" ).setDirty()
-
 	def compute( self, plug, context ) :
-
-		assert( plug.isSame( self.getChild( "sum" ) ) )
+	
+		assert( plug.isSame( self["output"] ) )
 		assert( isinstance( context, Gaffer.Context ) )
-
-		plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
-
-IECore.registerRunTimeTyped( AddNode )
+		
+		plug.setValue( 10 )

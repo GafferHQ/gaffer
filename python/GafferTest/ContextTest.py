@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import threading
 
 import Gaffer
 
@@ -113,6 +114,72 @@ class ContextTest( unittest.TestCase ) :
 		c["i"] = 1
 		self.assertEqual( c["i"], 1 )
 		self.assertEqual( c2["i"], 10 )
+	
+	def testEquality( self ) :
+		
+		c = Gaffer.Context()
+		c2 = Gaffer.Context()
+		
+		self.assertEqual( c, c2 )
+		self.failIf( c != c2 )
+		
+		c["somethingElse"] = 1
+		
+		self.assertNotEqual( c, c2 )
+		self.failIf( c == c2 )
+		
+	def testCurrent( self ) :
+	
+		# if nothing has been made current then there should be a default
+		# constructed context in place.
+		c = Gaffer.Context.current()
+		c2 = Gaffer.Context()		
+		self.assertEqual( c, c2 )
+		
+		# and we should be able to change that using the with statement
+		c2["something"] = 1
+		with c2 :
+		
+			self.failUnless( Gaffer.Context.current().isSame( c2 ) )
+			self.assertEqual( Gaffer.Context.current()["something"], 1 )
+		
+		# and bounce back to the original
+		self.failUnless( Gaffer.Context.current().isSame( c ) )
+	
+	def testCurrentIsThreadSpecific( self ) :
+	
+		c = Gaffer.Context()
+		self.failIf( c.isSame( Gaffer.Context.current() ) )
+		
+		def f() :
+		
+			self.failIf( c.isSame( Gaffer.Context.current() ) )
+			with Gaffer.Context() :
+				pass
+				
+		with c :
+		
+			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+			t = threading.Thread( target = f )
+			t.start()
+			t.join()
+			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+				
+		self.failIf( c.isSame( Gaffer.Context.current() ) )
+	
+	def testThreading( self ) :
+	
+		# for good measure, run testCurrent() in a load of threads at
+		# the same time.
+		
+		threads = []
+		for i in range( 0, 1000 ) :
+			t = threading.Thread( target = self.testCurrent )
+			t.start()
+			threads.append( t )
+			
+		for t in threads :
+			t.join()
 		
 if __name__ == "__main__":
 	unittest.main()

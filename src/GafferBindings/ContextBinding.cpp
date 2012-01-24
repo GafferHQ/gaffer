@@ -86,6 +86,11 @@ struct ChangedSlotCaller
 	}
 };
 
+static ContextPtr current()
+{
+	return const_cast<Context *>( Context::current() );
+}
+
 void bindContext()
 {	
 	scope s = IECorePython::RefCountedClass<Context, IECore::RefCounted>( "Context" )
@@ -102,9 +107,16 @@ void bindContext()
 		.def( "get", &get )
 		.def( "__getitem__", &get )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
-	;
+		.def( self == self )
+		.def( self != self )
+		.def( "current", &current ).staticmethod( "current" )
+		;
 
 	SignalBinder<Context::ChangedSignal, DefaultSignalCaller<Context::ChangedSignal>, ChangedSlotCaller>::bind( "ChangedSignal" );
+	
+	class_<Context::Scope>( "_Scope", init<Context *>() )
+	;
+
 }
 
 } // namespace GafferBindings
