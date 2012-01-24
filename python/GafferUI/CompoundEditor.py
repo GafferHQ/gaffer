@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -296,16 +296,15 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		assert( len( splitContainer ) == 1 )
 		assert( isinstance( splitContainer[0], GafferUI.TabbedContainer ) )
 		
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 )
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 ) as row :
 		
-		# node target button
-		row.append( _TargetButton( splitContainer[0] ) )
+			# node target button
+			_TargetButton( splitContainer[0] ) 
 		
-		# layout button
-		layoutButton = GafferUI.Button( image="layoutButton.png", hasFrame=False )
-		layoutButton.setToolTip( "Click to modify the layout" )
-		splitContainer.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
-		row.append( layoutButton )
+			# layout button
+			layoutButton = GafferUI.Button( image="layoutButton.png", hasFrame=False )
+			layoutButton.setToolTip( "Click to modify the layout" )
+			splitContainer.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
 		
 		splitContainer[0].setCornerWidget( row )
 				

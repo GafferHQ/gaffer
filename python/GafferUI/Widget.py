@@ -39,6 +39,7 @@ import weakref
 import string
 import os
 import math
+import inspect
 
 import IECore
 
@@ -118,7 +119,8 @@ class Widget( object ) :
 		self.setToolTip( toolTip )
 		
 		if len( self.__parentStack ) :
-			self.__parentStack[-1].addChild( self )
+			if self.__initNesting() == self.__parentStack[-1][1] + 1 :					
+				self.__parentStack[-1][0].addChild( self )
 	
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
@@ -277,12 +279,27 @@ class Widget( object ) :
 	
 		assert( isinstance( container, GafferUI.ContainerWidget ) )
 	
-		cls.__parentStack.append( container )
+		cls.__parentStack.append( ( container, cls.__initNesting() ) )
 	
 	@classmethod
 	def _popParent( cls ) :
 	
-		return cls.__parentStack.pop()
+		return cls.__parentStack.pop()[0]
+	
+	# Returns how many Widgets are currently in construction
+	# on the call stack. We use this to avoid automatically
+	# parenting Widgets that are being created inside a constructor.
+	@staticmethod
+	def __initNesting() :
+	
+		widgetsInInit = set()
+		for frame in [ x[0] for x in inspect.stack() ] :
+			if frame.f_code.co_name=="__init__" :
+				frameSelf = frame.f_locals[frame.f_code.co_varnames[0]]
+				if isinstance( frameSelf, Widget ) :
+					widgetsInInit.add( frameSelf )
+		
+		return len( widgetsInInit )
 	
 	__parentStack = []
 	

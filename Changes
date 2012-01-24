@@ -32,6 +32,8 @@
 
 * Fixed bug which meant that plug flags were not correctly serialised.
 
+* Fixed bug in the automatic Widget parenting mechanism, which meant Widgets could be parented inappropriately when being created from the constructor of another Widget.
+
 0.26.0
 ------
 
