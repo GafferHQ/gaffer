@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -115,7 +115,28 @@ class ContainerWidgetTest( unittest.TestCase ) :
 			GafferUI.Button( image="arrowDown10.png" )
 			
 		self.assertEqual( len( l ), 1 )
+	
+	def testWithContextInsideWidgetConstructor( self ) :
+	
+		class TestWindow( GafferUI.Window ) :
+		
+			def __init__( self ) :
 			
+				GafferUI.Window.__init__( self )
+	
+				with GafferUI.ListContainer() as l :
+					GafferUI.TextWidget( "hello" )
+					GafferUI.Button( image="arrowDown10.png" )
+					
+				self.setChild( l )
+		
+		w = TestWindow()
+		
+		self.failUnless( isinstance( w.getChild(), GafferUI.ListContainer ) )
+		self.assertEqual( len( w.getChild() ), 2 )
+		self.failUnless( isinstance( w.getChild()[0], GafferUI.TextWidget ) )
+		self.failUnless( isinstance( w.getChild()[1], GafferUI.Button ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
