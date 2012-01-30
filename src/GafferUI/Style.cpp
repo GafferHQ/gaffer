@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,6 +65,7 @@ void Style::setDefaultStyle( StylePtr style )
 	g_defaultStyle = style;
 }
 
+/*
 const std::string &Style::stateAttribute()
 {
 	static std::string s = "user:GafferUI:state";
@@ -99,3 +101,4 @@ IECore::ConstDataPtr Style::stateValueSelected()
 	}
 	return d;
 }
+*/

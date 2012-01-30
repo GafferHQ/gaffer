@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -71,15 +72,11 @@ Imath::Box3f Frame::bound() const
 	return b;
 }
 
-void Frame::doRender( IECore::RendererPtr renderer ) const
+void Frame::doRender( const Style *style ) const
 {
 	Imath::Box3f b = IndividualContainer::bound();
-	
-	renderer->attributeBegin();
 		
-		getStyle()->renderFrame( renderer, Box2f( V2f( b.min.x, b.min.y ), V2f( b.max.x, b.max.y ) ), m_border );
-	
-	renderer->attributeEnd();
-	
-	IndividualContainer::doRender( renderer );
+	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ), V2f( b.max.x, b.max.y ) ), m_border );
+		
+	IndividualContainer::doRender( style );
 }

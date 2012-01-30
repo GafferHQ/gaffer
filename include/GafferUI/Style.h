@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,12 +38,18 @@
 #ifndef GAFFERUI_STYLE_H
 #define GAFFERUI_STYLE_H
 
+#include "OpenEXR/ImathBox.h"
+
+#include "IECore/RunTimeTyped.h"
+
 #include "GafferUI/TypeIds.h"
 
-#include "IECore/Renderer.h"
-#include "IECore/Font.h"
+namespace IECoreGL
+{
 
-#include <stack>
+IE_CORE_FORWARDDECLARE( Texture );
+
+} // namespace IECoreGL
 
 namespace GafferUI
 {
@@ -59,45 +66,42 @@ class Style : public IECore::RunTimeTyped
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Style, StyleTypeId, IECore::RunTimeTyped );
 		
-		/// \todo Not just renderLabel?
-		virtual IECore::FontPtr labelFont() const = 0;
+		enum State
+		{
+			NormalState,
+			DisabledState,
+			HighlightedState
+		};
+		
+		/// Must be called once to allow the Style to set up any necessary state before calling
+		/// any of the render* methods below. The currently bound style is passed as it may
+		/// be possible to use it to optimise the binding of a new style of the same type.
+		virtual void bind( const Style *currentStyle=0 ) const = 0;
+		
+		enum TextType
+		{
+			LabelText,
+			LastText
+		};
+		
+		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
+		virtual void renderText( TextType textType, const std::string &text, State state = NormalState ) const = 0;
 
 		/// \todo Should all these be taking 3d arguments - no but 3d counterparts might be good.
-		virtual void renderFrame( IECore::RendererPtr renderer, const Imath::Box2f &frame, float borderWidth ) const = 0;
-		virtual void renderNodule( IECore::RendererPtr renderer, float radius ) const = 0;
-		virtual void renderConnection( IECore::RendererPtr renderer, const Imath::V3f &src, const Imath::V3f &dst ) const = 0;
-		virtual void renderHandle( IECore::RendererPtr renderer, const Imath::V3f &p ) const = 0;
-	
-		//! @name User attributes
-		/// Additional control is provided over the rendering
-		/// of ui elements by specifying user attribute values
-		/// to the Renderer before calling the render methods
-		/// above. These methods provide the names and data
-		/// values to be used in such calls.
-		////////////////////////////////////////////////
-		//@{
-		/// Returns the name of an attribute which can
-		/// be used to specify the state of the ui being
-		/// rendered. This allows Gadgets to be rendered
-		/// as inactive, selected etc.
-		static const std::string &stateAttribute();
-		/// The attribute value to specify a normal render
-		/// state.
-		static IECore::ConstDataPtr stateValueNormal(); 
-		/// The attribute value to specify an inactive render
-		/// state.
-		static IECore::ConstDataPtr stateValueInactive();
-		/// The attribute value to specify an inactive render
-		/// state.
-		static IECore::ConstDataPtr stateValueSelected(); 
-		//@}
-	
+		virtual void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const = 0;
+		virtual void renderNodule( float radius, State state = NormalState ) const = 0;
+		virtual void renderConnection( const Imath::V3f &src, const Imath::V3f &dst, State state = NormalState ) const = 0;
+		virtual void renderSelectionBox( const Imath::Box2f &box ) const = 0;
+		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const = 0;
+				
 		//! @name Default style
 		/// There always exists a default style which is
-		/// applied to all newly created Gadgets. Typically
-		/// you would set this once when an application
-		/// starts and then leave it alone - if not set it
-		/// defaults to an instance of StandardStyle.
+		/// applied to all Gadgets where the style has not
+		/// been explicitly set. Typically you would set this
+		/// once when an application starts and then leave it
+		/// alone - if not set it defaults to an instance of
+		/// StandardStyle.
+		/// \see GafferUI::Gadget::setStyle()
 		////////////////////////////////////////////////
 		//@{
 		static StylePtr getDefaultStyle();

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,12 +35,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/Gadget.h"
-#include "GafferUI/Style.h"
+#include "boost/lexical_cast.hpp"
+
+#include "OpenEXR/ImathBoxAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 
-#include "OpenEXR/ImathBoxAlgo.h"
+#include "IECoreGL/GL.h"
+#include "IECoreGL/NameStateComponent.h"
+
+#include "GafferUI/Gadget.h"
+#include "GafferUI/Style.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -49,8 +54,21 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( Style::getDefaultStyle() ), m_toolTip( "" )
+	:	GraphComponent( name ), m_style( 0 ), m_toolTip( "" )
 {
+	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
+	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
+}
+
+GadgetPtr Gadget::select( const std::string &name )
+{
+	if( name.compare( 0, 18, "__Gaffer::Gadget::" ) )
+	{
+		return 0;
+	}
+	std::string address = name.c_str() + 18;
+	size_t a = boost::lexical_cast<size_t>( address );
+	return reinterpret_cast<Gadget *>( a );
 }
 
 Gadget::~Gadget()
@@ -67,11 +85,6 @@ bool Gadget::acceptsParent( const Gaffer::GraphComponent *potentialParent ) cons
 	return potentialParent->isInstanceOf( staticTypeId() );
 }
 
-ConstStylePtr Gadget::getStyle() const
-{
-	return m_style;
-}
-
 void Gadget::setStyle( ConstStylePtr style )
 {
 	if( style!=m_style )
@@ -79,6 +92,25 @@ void Gadget::setStyle( ConstStylePtr style )
 		m_style = style;
 		renderRequestSignal()( this );
 	}
+}
+
+const Style *Gadget::getStyle() const
+{
+	return m_style.get();
+}
+
+const Style *Gadget::style() const
+{
+	const Gadget *g = this;
+	while( g )
+	{
+		if( g->m_style )
+		{
+			return g->m_style.get();
+		}
+		g = g->parent<Gadget>();
+	}
+	return Style::getDefaultStyle().get();
 }
 
 void Gadget::setTransform( const Imath::M44f &matrix )
@@ -108,16 +140,34 @@ Imath::M44f Gadget::fullTransform( ConstGadgetPtr ancestor ) const
 	return result;
 }
 
-void Gadget::render( IECore::RendererPtr renderer ) const
+void Gadget::render( const Style *currentStyle ) const
 {
-	renderer->attributeBegin();
-		renderer->concatTransform( m_transform );
-		renderer->setAttribute( "name", new IECore::StringData( fullName() ) );
-		doRender( renderer );
-	renderer->attributeEnd();
+	glPushMatrix();
+	
+		glMultMatrixf( m_transform.getValue() );
+	
+		glLoadName( m_glName );
+	
+		if( !currentStyle )
+		{
+			currentStyle = style();
+			currentStyle->bind();
+		}
+		else
+		{
+			if( m_style )
+			{
+				m_style->bind();
+				currentStyle = m_style;
+			}
+		}
+		
+		doRender( currentStyle );
+
+	glPopMatrix();	
 }
 
-void Gadget::doRender( IECore::RendererPtr renderer ) const
+void Gadget::doRender( const Style *style ) const
 {
 }
 

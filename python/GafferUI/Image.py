@@ -75,7 +75,7 @@ class Image( GafferUI.Widget ) :
 			
 		image = IECore.LinearToSRGBOp()(
 			input = image,
-			channels = IECore.StringVectorData( [ c for c in image.keys() if c != "A" ] ),
+			channels = IECore.StringVectorData( image.keys() ),
 		)
 
 		y = image["Y"].data if "Y" in image else None

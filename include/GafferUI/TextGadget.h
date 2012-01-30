@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,13 +54,6 @@ class TextGadget : public Gadget
 		virtual ~TextGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TextGadget, TextGadgetTypeId, Gadget );
-
-		/// Returns the font that will be used to display the text.
-		/// If this has not been set it will default to getStyle()->labelFont().
-		IECore::ConstFontPtr getFont() const;
-		/// Sets the font used to display the text - this overrides the font
-		/// set by the Style. Passing 0 reverts to the font from the Style.
-		void setFont( IECore::FontPtr font );
 		
 		const std::string &getText() const;
 		void setText( const std::string &text );
@@ -68,11 +62,10 @@ class TextGadget : public Gadget
 
 	protected :
 	
-		virtual void doRender( IECore::RendererPtr renderer ) const;
+		virtual void doRender( const Style *style ) const;
 
 	private :
 		
-		IECore::FontPtr m_font;
 		std::string m_text;
 		
 };

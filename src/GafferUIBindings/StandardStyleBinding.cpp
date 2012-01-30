@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,10 +34,42 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-void main()
+#include "boost/python.hpp"
+
+#include "IECoreGL/Font.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "GafferUI/StandardStyle.h"
+
+#include "GafferUIBindings/StandardStyleBinding.h"
+
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
+
+static IECoreGL::FontPtr getFont( StandardStyle &s, Style::TextType textType )
 {
-	gl_Position = ftransform();
-	gl_FrontColor = gl_Color;
-	gl_BackColor = gl_Color;
-	gl_TexCoord[0] = gl_MultiTexCoord0;
+	return const_cast<IECoreGL::Font *>( s.getFont( textType ) );
+}
+
+void GafferUIBindings::bindStandardStyle()
+{
+	scope s = IECorePython::RunTimeTypedClass<StandardStyle>()
+		.def( init<>() )
+		.def( "setColor", &StandardStyle::setColor )
+		.def( "getColor", &StandardStyle::getColor, return_value_policy<copy_const_reference>() )
+		.def( "setFont", &StandardStyle::setFont )
+		.def( "getFont", &getFont )		
+	;
+	
+	enum_<StandardStyle::Color>( "Color" )
+		.value( "BackgroundColor", StandardStyle::BackgroundColor )
+		.value( "SunkenColor", StandardStyle::SunkenColor )
+		.value( "RaisedColor", StandardStyle::RaisedColor )
+		.value( "ForegroundColor", StandardStyle::ForegroundColor )
+		.value( "HighlightColor", StandardStyle::HighlightColor )
+		.value( "ConnectionColor", StandardStyle::ConnectionColor )
+		.value( "LastColor", StandardStyle::LastColor )
+	;
 }

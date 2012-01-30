@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,10 +79,12 @@ class ConnectionGadget : public Gadget
 
 		void setPositionsFromNodules();
 		
-		void doRender( IECore::RendererPtr renderer ) const;
+		void doRender( const Style *style ) const;
 
 	private :
 		
+		void enter( GadgetPtr gadget, const ButtonEvent &event );
+		void leave( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
 		bool dragUpdate( GadgetPtr gadget, const DragDropEvent &event );
@@ -94,6 +97,8 @@ class ConnectionGadget : public Gadget
 		NodulePtr m_dstNodule;
 		
 		Gaffer::Plug::Direction m_dragEnd;
+		
+		bool m_hovering;
 		
 };
 

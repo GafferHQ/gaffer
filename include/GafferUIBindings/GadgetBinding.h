@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +39,7 @@
 #define GAFFERUIBINDINGS_GADGETBINDING_H
 
 #include "GafferUI/Gadget.h"
+#include "GafferUI/Style.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
 
@@ -70,16 +71,16 @@ namespace GafferUIBindings
 		return CLASSNAME::getToolTip();\
 	}\
 	\
-	virtual void doRender( IECore::RendererPtr renderer ) const\
+	virtual void doRender( const Style *style ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		override f = this->get_override( "doRender" );\
 		if( f )\
 		{\
-			f( renderer );\
+			f( style );\
 			return;\
 		}\
-		CLASSNAME::doRender( renderer );\
+		CLASSNAME::doRender( style );\
 	}\
 
 /// This must be used in /every/ Gadget binding. See the lengthy comments in
