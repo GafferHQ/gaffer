@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -60,6 +60,8 @@
 #include "GafferUIBindings/StandardNoduleBinding.h"
 #include "GafferUIBindings/CompoundNoduleBinding.h"
 #include "GafferUIBindings/ImageGadgetBinding.h"
+#include "GafferUIBindings/StyleBinding.h"
+#include "GafferUIBindings/StandardStyleBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -89,5 +91,7 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindStandardNodule();
 	bindCompoundNodule();
 	bindImageGadget();
+	bindStyle();
+	bindStandardStyle();
 	
 }

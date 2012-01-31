@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -132,40 +132,32 @@ Imath::Box3f StandardNodeGadget::bound() const
 	return b;
 }
 
-void StandardNodeGadget::doRender( IECore::RendererPtr renderer ) const
+void StandardNodeGadget::doRender( const Style *style ) const
 {
+	Gaffer::ConstScriptNodePtr script = node()->scriptNode();
 	
-	renderer->attributeBegin();
+	Style::State state = Style::NormalState;
+	if( script && script->selection()->contains( node() ) )
+	{
+		state = Style::HighlightedState;
+	}
 	
-		Gaffer::ConstScriptNodePtr script = node()->scriptNode();
-		if( script && script->selection()->contains( node() ) )
-		{
-			renderer->setAttribute( Style::stateAttribute(), Style::stateValueSelected() );
-		}
-		else
-		{
-			renderer->setAttribute( Style::stateAttribute(), Style::stateValueNormal() );		
-		}
-		
-		Box3f b = bound();
-		Box3f inputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleRow" )->transformedBound( this );
-		Box3f outputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleRow" )->transformedBound( this );
-		
-		if( !inputRowBound.isEmpty() )
-		{
-			b.max.y -= inputRowBound.size().y / 2.0f;
-		}
-		if( !outputRowBound.isEmpty() )
-		{
-			b.min.y += outputRowBound.size().y / 2.0f;
-		}
+	Box3f b = bound();
+	Box3f inputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleRow" )->transformedBound( this );
+	Box3f outputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleRow" )->transformedBound( this );
+	
+	if( !inputRowBound.isEmpty() )
+	{
+		b.max.y -= inputRowBound.size().y / 2.0f;
+	}
+	if( !outputRowBound.isEmpty() )
+	{
+		b.min.y += outputRowBound.size().y / 2.0f;
+	}
 
-		getStyle()->renderFrame( renderer, Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ), g_borderWidth );
-		
-		NodeGadget::doRender( renderer );
-
-	renderer->attributeEnd();
-
+	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ), g_borderWidth, state );
+	
+	NodeGadget::doRender( style );
 }
 
 NodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug )

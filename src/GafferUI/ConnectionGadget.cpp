@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -55,10 +55,12 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( ConnectionGadget );
 
 ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	Gadget( staticTypeName() ), m_dragEnd( Gaffer::Plug::Invalid )
+	:	Gadget( staticTypeName() ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
 {
 	setNodules( srcNodule, dstNodule );
 	
+	enterSignal().connect( boost::bind( &ConnectionGadget::enter, this, ::_1, ::_2 ) );
+	leaveSignal().connect( boost::bind( &ConnectionGadget::leave, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &ConnectionGadget::buttonPress, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &ConnectionGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragUpdateSignal().connect( boost::bind( &ConnectionGadget::dragUpdate, this, ::_1, ::_2 ) );
@@ -177,10 +179,13 @@ Imath::Box3f ConnectionGadget::bound() const
 	return r;
 }
 
-void ConnectionGadget::doRender( IECore::RendererPtr renderer ) const
+void ConnectionGadget::doRender( const Style *style ) const
 {
 	const_cast<ConnectionGadget *>( this )->setPositionsFromNodules();
-	getStyle()->renderConnection( renderer, m_srcPos, m_dstPos );
+	
+	Style::State state = m_hovering ? Style::HighlightedState : Style::NormalState;
+	
+	style->renderConnection( m_srcPos, m_dstPos, state );
 }
 
 bool ConnectionGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
@@ -283,4 +288,16 @@ std::string ConnectionGadget::getToolTip() const
 	}
 	
 	return srcName + " -> " + dstName;
+}
+
+void ConnectionGadget::enter( GadgetPtr gadget, const ButtonEvent &event )
+{
+	m_hovering = true;
+	renderRequestSignal()( this );
+}
+
+void ConnectionGadget::leave( GadgetPtr gadget, const ButtonEvent &event )
+{
+	m_hovering = false;
+	renderRequestSignal()( this );
 }

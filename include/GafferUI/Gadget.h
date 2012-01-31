@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,18 +38,17 @@
 #ifndef GAFFERUI_GADGET_H
 #define GAFFERUI_GADGET_H
 
+#include "OpenEXR/ImathBox.h"
+
+#include "IECoreGL/GL.h"
+
+#include "Gaffer/GraphComponent.h"
+
 #include "GafferUI/TypeIds.h"
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/KeyEvent.h"
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/DragDropEvent.h"
-
-#include "Gaffer/GraphComponent.h"
-
-#include "IECore/RunTimeTyped.h"
-#include "IECore/Renderer.h"
-
-#include "boost/signals.hpp"
 
 namespace GafferUI
 {
@@ -57,11 +56,8 @@ namespace GafferUI
 IE_CORE_FORWARDDECLARE( Gadget );
 IE_CORE_FORWARDDECLARE( Style );
 
-/// Gadgets are UI elements implemented on top of the Cortex project infrastructure - 
-/// they draw themselves using the Renderer interface, and provide an interface for
-/// handling events. They can therefore be used by any code willing to implement the
-/// Renderer interface for real time display and provide suitable events - the GadgetWidget
-/// python class is an example of such a host.
+/// Gadgets are zoomable UI elements. They draw themselves using OpenGL, and provide an interface for
+/// handling events.
 /// \todo Should there be some base class for this and the Widget class?
 ///
 /// BASIC PLAN :
@@ -91,6 +87,11 @@ class Gadget : public Gaffer::GraphComponent
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gadget, GadgetTypeId, Gaffer::GraphComponent );
 
+		/// Returns the Gadget with the specified name, where name has been retrieved
+		/// from an IECoreGL::HitRecord after rendering some Gadget in GL_SELECT mode.
+		/// \todo Consider better mechanisms.
+		static GadgetPtr select( const std::string &name );
+
 		/// @name Parent-child relationships
 		////////////////////////////////////////////////////////////////////
 		//@{
@@ -102,13 +103,21 @@ class Gadget : public Gaffer::GraphComponent
 		//@}
 
 		/// @name Style
-		/// Every Gadget has a Style object to define its appearance. This is set
-		/// to the result of Style::getDefaultStyle() on construction but can be
-		/// subsequently changed if necessary.
+		/// Gadgets use Style objects to define their appearance. Styles may
+		/// may be set on individual Gadgets, and are inherited by child Gadgets
+		/// from their parents.
 		////////////////////////////////////////////////////////////////////
 		//{@
-		ConstStylePtr getStyle() const;
+		/// Explicitly sets the Style for this Gadget, overriding any inherited
+		/// Style.
 		void setStyle( ConstStylePtr style );
+		/// Returns any Style explicitly applied to this Gadget using setStyle().
+		/// Note that this may return 0, meaning that the Gadget is inheriting the
+		/// Style from the parent Gadget.
+		const Style *getStyle() const;
+		/// Returns the Style in effect for this Gadget, after inheriting any
+		/// Style from the parent and applying possible overrides from setStyle().
+		const Style *style() const;
 		//@}
 
 		/// @name Transform
@@ -127,8 +136,13 @@ class Gadget : public Gaffer::GraphComponent
 		/// @name Display
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// Renders the Gadget.
-		void render( IECore::RendererPtr renderer ) const;
+		/// Renders the Gadget into the current OpenGL context. If currentStyle
+		/// is passed then it must already have been bound with Style::bind(),
+		/// and will be used if and only if not overridden by a Style applied
+		/// specifically to this Gadget. Typically users will not pass currentStyle -
+		/// but it must be passed by Gadget implementations when rendering child
+		/// Gadgets in doRender().
+		void render( const Style *currentStyle = 0 ) const;
 		/// The bounding box of the Gadget before transformation.
 		virtual Imath::Box3f bound() const = 0;
 		/// The bounding box transformed by the result of getTransform().
@@ -208,9 +222,9 @@ class Gadget : public Gaffer::GraphComponent
 	
 		/// The subclass specific part of render(). This must be implemented
 		/// appropriately by all subclasses. The public render() method
-		/// sets the renderer up with the name attribute and transform for
-		/// this Gadget and then calls doRender().
-		virtual void doRender( IECore::RendererPtr renderer ) const = 0;
+		/// sets the GL state up with the name attribute and transform for
+		/// this Gadget, makes sure the style is bound and then calls doRender().
+		virtual void doRender( const Style *style ) const = 0;
 		
 	private :
 		
@@ -239,6 +253,8 @@ class Gadget : public Gaffer::GraphComponent
 
 		KeySignal m_keyPressSignal;
 		KeySignal m_keyReleaseSignal;
+		
+		GLuint m_glName;
 
 };
 

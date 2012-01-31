@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -41,6 +41,13 @@
 
 #include "GafferUI/Gadget.h"
 
+namespace IECoreGL
+{
+
+IE_CORE_FORWARDDECLARE( Texture )
+
+} // namespace IECoreGL
+
 namespace GafferUI
 {
 
@@ -63,14 +70,16 @@ class ImageGadget : public Gadget
 			
 	protected :
 	
-		virtual void doRender( IECore::RendererPtr renderer ) const;
+		virtual void doRender( const Style *style ) const;
 
 	private :
-	
-		// deliberately not providing accessors for this, as it may
-		// well be better to hold an IECoreGL::Texture at some point
-		// in the future (for speed of drawing).
-		IECore::ConstImagePrimitivePtr m_image;
+		
+		Imath::Box3f m_bound;
+		// We can't actually generate the GL texture until doRender(), as
+		// the GL state might not be valid until then. so we store either
+		// the image to convert, the filename to load, or the previously
+		// converted texture in this member.
+		mutable IECore::ConstRunTimeTypedPtr m_imageOrTextureOrFileName;
 		
 };
 

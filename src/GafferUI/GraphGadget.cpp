@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -142,42 +142,37 @@ ConstConnectionGadgetPtr GraphGadget::connectionGadget( Gaffer::ConstPlugPtr dst
 	return findConnectionGadget( dstPlug.get() );
 }
 		
-void GraphGadget::doRender( IECore::RendererPtr renderer ) const
+void GraphGadget::doRender( const Style *style ) const
 {
-	renderer->attributeBegin();
+	glDisable( GL_DEPTH_TEST );
 	
-		renderer->setAttribute( "gl:depthTest", new IECore::BoolData( false ) );
+	// render connection first so they go underneath
+	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+	{
+		if( ConnectionGadgetPtr c = IECore::runTimeCast<ConnectionGadget>( *it ) )
+		{
+			c->render( style );
+		}
+	}
 
-		// render connection first so they go underneath
-		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+	// then render the rest on top
+	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+	{
+		if( !((*it)->isInstanceOf( ConnectionGadget::staticTypeId() )) )
 		{
-			if( ConnectionGadgetPtr c = IECore::runTimeCast<ConnectionGadget>( *it ) )
-			{
-				c->render( renderer );
-			}
+			IECore::staticPointerCast<const Gadget>( *it )->render( style );
 		}
-
-		// then render the rest on top
-		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-		{
-			if( !((*it)->isInstanceOf( ConnectionGadget::staticTypeId() )) )
-			{
-				IECore::staticPointerCast<const Gadget>( *it )->render( renderer );
-			}
-		}
-		
-		// render drag select thing if needed
-		if( m_dragSelecting )
-		{
-			Box2f b;
-			b.extendBy( m_dragStartPosition );
-			b.extendBy( m_lastDragPosition );
-			/// \figure out how we can modify the Style classes to allow this to be a nice blue colour
-			renderer->setAttribute( "opacity", new IECore::Color3fData( Color3f( 0.2f ) ) );
-			getStyle()->renderFrame( renderer, b, 0.5f );		
-		}
+	}
 	
-	renderer->attributeEnd();
+	// render drag select thing if needed
+	if( m_dragSelecting )
+	{
+		Box2f b;
+		b.extendBy( m_dragStartPosition );
+		b.extendBy( m_lastDragPosition );
+		style->renderSelectionBox( b );		
+	}
+	
 }
 
 bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )

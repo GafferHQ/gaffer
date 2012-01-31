@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,11 +35,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/RenderableGadget.h"
-
 #include "IECore/SimpleTypedData.h"
+#include "IECore/WorldBlock.h"
 
-#include <sstream>
+#include "IECoreGL/Renderer.h"
+#include "IECoreGL/Scene.h"
+#include "IECoreGL/Camera.h"
+#include "IECoreGL/State.h"
+
+#include "GafferUI/RenderableGadget.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -47,8 +52,9 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( RenderableGadget );
 
 RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
-	:	Gadget( staticTypeName() ), m_renderable( renderable )
+	:	Gadget( staticTypeName() ), m_renderable( 0 ), m_scene( 0 ), m_baseState( new IECoreGL::State( true ) )
 {
+	setRenderable( renderable );
 }
 
 RenderableGadget::~RenderableGadget()
@@ -67,11 +73,11 @@ Imath::Box3f RenderableGadget::bound() const
 	}
 }
 
-void RenderableGadget::doRender( IECore::RendererPtr renderer ) const
+void RenderableGadget::doRender( const Style *style ) const
 {
-	if( m_renderable )
+	if( m_scene )
 	{
-		m_renderable->render( renderer );
+		m_scene->render( m_baseState );
 	}
 }
 
@@ -80,6 +86,18 @@ void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
 	if( renderable!=m_renderable )
 	{
 		m_renderable = renderable;
+		m_scene = 0;
+		if( m_renderable )
+		{
+			IECoreGL::RendererPtr renderer = new IECoreGL::Renderer;
+			renderer->setOption( "gl:mode", new IECore::StringData( "deferred" ) );
+			{
+				IECore::WorldBlock world( renderer );
+				m_renderable->render( renderer );
+			}	
+			m_scene = renderer->scene();
+			m_scene->setCamera( 0 );	
+		}
 		renderRequestSignal()( this );
 	}
 }
@@ -92,4 +110,9 @@ IECore::VisibleRenderablePtr RenderableGadget::getRenderable()
 IECore::ConstVisibleRenderablePtr RenderableGadget::getRenderable() const
 {
 	return m_renderable;
+}
+
+IECoreGL::State *RenderableGadget::baseState()
+{
+	return m_baseState.get();
 }

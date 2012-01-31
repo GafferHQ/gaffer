@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -122,9 +122,10 @@ Imath::Box3f SplinePlugGadget::bound() const
 	return result;
 }
 
-void SplinePlugGadget::doRender( IECore::RendererPtr renderer ) const
+void SplinePlugGadget::doRender( const Style *style ) const
 {
-	for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
+	/// \todo Implement for new Style rendering
+	/*for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
 	{
 		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( i ) );
 		if( spline )
@@ -165,7 +166,7 @@ void SplinePlugGadget::doRender( IECore::RendererPtr renderer ) const
 				}
 			}
 		}
-	}
+	}*/
 }
 
 void SplinePlugGadget::splineAdded( SetPtr splineStandardSet, IECore::RunTimeTypedPtr splinePlug )

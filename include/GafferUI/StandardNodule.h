@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,7 +62,7 @@ class StandardNodule : public Nodule
 
 	protected :
 
-		void doRender( IECore::RendererPtr renderer ) const;
+		void doRender( const Style *style ) const;
 
 		void enter( GadgetPtr gadget, const ButtonEvent &event );
 		void leave( GadgetPtr gadget, const ButtonEvent &event );

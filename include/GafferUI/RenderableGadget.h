@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -41,6 +42,14 @@
 
 #include "IECore/VisibleRenderable.h"
 
+namespace IECoreGL
+{
+
+IE_CORE_FORWARDDECLARE( Scene )
+IE_CORE_FORWARDDECLARE( State )
+
+} // namespace IECoreGL
+
 namespace GafferUI
 {
 
@@ -62,13 +71,21 @@ class RenderableGadget : public Gadget
 		IECore::VisibleRenderablePtr getRenderable();
 		IECore::ConstVisibleRenderablePtr getRenderable() const;
 		
+		/// Returns the IECoreGL::State object used as the base display
+		/// style for the Renderable. This may be modified freely to
+		/// change the display style.
+		IECoreGL::State *baseState();
+		
 	protected :
 	
-		virtual void doRender( IECore::RendererPtr renderer ) const;
+		virtual void doRender( const Style *style ) const;
 		
 	private :
 	
 		IECore::VisibleRenderablePtr m_renderable;
+		IECoreGL::ScenePtr m_scene;
+		IECoreGL::StatePtr m_baseState;
+		
 };
 
 } // namespace GafferUI

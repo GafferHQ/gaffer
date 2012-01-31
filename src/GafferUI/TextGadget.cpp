@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -46,22 +47,12 @@ using namespace boost;
 IE_CORE_DEFINERUNTIMETYPED( TextGadget );
 
 TextGadget::TextGadget( const std::string &text )
-	:	Gadget( staticTypeName() ), m_font( 0 ), m_text( text )
+	:	Gadget( staticTypeName() ), m_text( text )
 {
 }
 
 TextGadget::~TextGadget()
 {
-}
-
-IECore::ConstFontPtr TextGadget::getFont() const
-{
-	return IECore::constPointerCast<Font>( m_font ? m_font : getStyle()->labelFont() );
-}
-
-void TextGadget::setFont( IECore::FontPtr font )
-{
-	m_font = font;
 }
 
 const std::string &TextGadget::getText() const
@@ -80,16 +71,10 @@ void TextGadget::setText( const std::string &text )
 
 Imath::Box3f TextGadget::bound() const
 {
-	Imath::Box2f b = getFont()->bound( m_text );
-	return Imath::Box3f( Imath::V3f( b.min.x, b.min.y, 0 ), Imath::V3f( b.max.x, b.max.y, 0 ) );
+	return style()->textBound( Style::LabelText, m_text );
 }
 
-void TextGadget::doRender( IECore::RendererPtr renderer ) const
+void TextGadget::doRender( const Style *style ) const
 {
-	renderer->attributeBegin();
-		/// \todo Have the color and wotnot come from the style.
-		renderer->setAttribute( "color", new IECore::Color3fData( Imath::Color3f( 0, 0, 0 ) ) );
-		renderer->setAttribute( "gl:textPrimitive:type", new IECore::StringData( "sprite" ) );
-		renderer->text( getFont()->fileName(), m_text );
-	renderer->attributeEnd();
+	style->renderText( Style::LabelText, m_text );
 }
