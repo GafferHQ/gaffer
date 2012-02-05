@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,7 +52,15 @@ class CheckBox( GafferUI.Widget ) :
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
 		
 		self._qtWidget().stateChanged.connect( Gaffer.WeakMethod( self.__stateChanged ) )
-		
+	
+	def setText( self, text ) :
+	
+		self._qtWidget().setText( text )
+	
+	def getText( self ) :
+	
+		return str( self._qtWidget().text() )
+	
 	def setState( self, checked ) :
 	
 		self._qtWidget().setCheckState( QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked )
