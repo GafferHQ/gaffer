@@ -34,6 +34,12 @@
 
 * Fixed bug in the automatic Widget parenting mechanism, which meant Widgets could be parented inappropriately when being created from the constructor of another Widget.
 
+* The Path.addFilter() and Path.removeFilter() methods have been deprecated and replaced with Path.setFilter() and Path.getFilter() methods. Use the new CompoundFilter class if you wish to use more than one filter.
+
+* The PathFilter class now has setEnabled() and getEnabled() methods to turn the filter on and off. Derived classes should now implement the _filter() method rather than the filter() method.
+
+* The PathFilter class now has a changedSignal(), which issues notifications when the filter is changed in some way. The Path class uses this to correctly trigger its own pathChangedSignal()
+
 0.26.0
 ------
 

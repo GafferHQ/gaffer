@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,18 +34,54 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
+import Gaffer
+
+## The CompoundPathFilter class simply combines a number of other
+# PathFilters, applying them in sequence.
+class CompoundPathFilter( Gaffer.PathFilter ) :
+
+	def __init__( self, filters=[] ) :
+	
+		Gaffer.PathFilter.__init__( self )
+	
+		self.__filters = None
+		self.setFilters( filters )
+		
+	def addFilter( self, filter ) :
+	
+		assert( filter not in self.__filters )
+		
+		self.__filters.append( filter )
+		if self.getEnabled() :
+			self.changedSignal()( self )
+	
+	def removeFilter( self, filter ) :
+	
+		self.__filters.remove( filter )
+		if self.getEnabled() :
+			self.changedSignal()( self )
+	
+	def setFilters( self, filters ) :
+	
+		assert( type( filters ) is list )
+		
+		if filters == self.__filters :
+			return
+		
+		# copy list so it can't be changed behind our back
+		self.__filters = list( filters )
+		
+		if self.getEnabled() :
+			self.changedSignal()( self )
+		
+	def getFilters( self ) :
+	
+		# return a copy so the list can't be changed behind our back
+		return list( self.__filters )
+	
+	def _filter( self, paths ) :
+	
+		for f in self.__filters :
+			paths = f.filter( paths )
+			
+		return paths

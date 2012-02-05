@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -67,6 +68,57 @@ class PathTest( unittest.TestCase ) :
 		self.assertEqual( p[1], "b" )
 		self.assertEqual( str( p ), "/a/b" )
 		
+	def testChangedSignal( self ) :
+	
+		changedPaths = []
+		def f( path ) :		
+			changedPaths.append( str( path ) )
+	
+		p = Gaffer.Path( "/" )
+		c = p.pathChangedSignal().connect( f )
+		
+		p.append( "hello" )
+		p.append( "goodbye" )
+		p[0] = "hello"
+		p[1] = "bob"
+		
+		self.assertEqual( changedPaths, [ "/hello", "/hello/goodbye", "/hello/bob" ] )
+		
+	def testFilters( self ) :
+	
+		p = Gaffer.Path( "/" )
+		self.assertEqual( p.getFilter(), None )
+		
+		changedPaths = []
+		def f( path ) :		
+			changedPaths.append( str( path ) )
+	
+		c = p.pathChangedSignal().connect( f )
+		self.assertEqual( len( changedPaths ), 0 )
+		
+		filter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		
+		p.setFilter( filter )
+		self.failUnless( p.getFilter() is filter )
+		self.assertEqual( len( changedPaths ), 1 )
+		
+		p.setFilter( filter )
+		self.failUnless( p.getFilter() is filter )
+		self.assertEqual( len( changedPaths ), 1 )
+		
+		p.setFilter( None )
+		self.failUnless( p.getFilter() is None )
+		self.assertEqual( len( changedPaths ), 2 )
+		
+		p.setFilter( filter )
+		self.failUnless( p.getFilter() is filter )
+		self.assertEqual( len( changedPaths ), 3 )
+		
+		filter.setEnabled( False )
+		self.assertEqual( len( changedPaths ), 4 )
+		
+		filter.setEnabled( True )
+		self.assertEqual( len( changedPaths ), 5 )
 		
 if __name__ == "__main__":
 	unittest.main()

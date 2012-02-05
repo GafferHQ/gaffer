@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -65,8 +66,45 @@ class PathFilterTest( unittest.TestCase ) :
 		children = path.children()
 		self.assertEqual( len( children ), len( glob.glob( "test/data/scripts/*" ) ) )
 			
-
+	def testEnabledState( self ) :
+	
+		path = Gaffer.FileSystemPath( "test/data/scripts" )
 		
+		f = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		self.assertEqual( f.getEnabled(), True )
+		
+		path.setFilter( f )
+		self.assertEqual( len( path.children() ), len( glob.glob( "test/data/scripts/*.gfr" ) ) )
+		
+		f.setEnabled( False )
+		self.assertEqual( f.getEnabled(), False )
+		self.assertEqual( len( path.children() ), len( glob.glob( "test/data/scripts/*" ) ) )
+
+		f.setEnabled( True )
+		self.assertEqual( f.getEnabled(), True )
+		self.assertEqual( len( path.children() ), len( glob.glob( "test/data/scripts/*.gfr" ) ) )
+		
+	def testChangedSignal( self ) :
+	
+		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		
+		enabledStates = []
+		
+		def f( pf ) :
+		
+			self.failUnless( pf is pathFilter )
+			enabledStates.append( pf.getEnabled() )
+			
+		c = pathFilter.changedSignal().connect( f )
+	
+		pathFilter.setEnabled( False )
+		pathFilter.setEnabled( False )
+		pathFilter.setEnabled( True )
+		pathFilter.setEnabled( True )
+		pathFilter.setEnabled( False )
+		
+		self.assertEqual( enabledStates, [ False, True, False ] )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

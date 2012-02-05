@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,18 +34,70 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
+import unittest
+
+import Gaffer
+
+class CompoundPathFilterTest( unittest.TestCase ) :
+
+	def test( self ) :
+	
+		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		f2 = Gaffer.FileNamePathFilter( [ "*.tif" ] )
+		
+		c = Gaffer.CompoundPathFilter()
+		self.assertEqual( c.getFilters(), [] )
+		
+		c.addFilter( f1 )
+		self.assertEqual( c.getFilters(), [ f1 ] )
+		
+		c.addFilter( f2 )
+		self.assertEqual( c.getFilters(), [ f1, f2 ] )
+		
+		c.removeFilter( f1 )
+		self.assertEqual( c.getFilters(), [ f2 ] )
+		
+		c.setFilters( [ f1, f2 ] )
+		self.assertEqual( c.getFilters(), [ f1, f2 ] )
+		
+	def testChangedSignal( self ) :
+	
+		cf = Gaffer.CompoundPathFilter()
+
+		self.__numChanges = 0
+		def f( filter ) :
+			self.failUnless( filter is cf )
+			self.__numChanges += 1
+	
+		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		f2 = Gaffer.FileNamePathFilter( [ "*.tif" ] )
+		
+		c = cf.changedSignal().connect( f )
+		self.assertEqual( self.__numChanges, 0 )
+		
+		cf.addFilter( f1 )
+		self.assertEqual( self.__numChanges, 1 )
+		
+		cf.setFilters( [ f1 ] )
+		self.assertEqual( self.__numChanges, 1 )
+		
+		cf.setFilters( [ f1, f2 ] )
+		self.assertEqual( self.__numChanges, 2 )
+		
+		cf.removeFilter( f1 )
+		self.assertEqual( self.__numChanges, 3 )
+		
+		# changing filters while not enabled shouldn't emit the signal
+		
+		cf.setEnabled( False )
+		self.assertEqual( self.__numChanges, 4 )
+		
+		cf.setFilters( [] )
+		self.assertEqual( self.__numChanges, 4 )
+		
+		cf.setFilters( [ f1, f2 ] )
+		self.assertEqual( self.__numChanges, 4 )
+		
+if __name__ == "__main__":
+	unittest.main()
+	
