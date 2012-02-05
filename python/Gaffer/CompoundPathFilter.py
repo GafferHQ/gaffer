@@ -45,6 +45,7 @@ class CompoundPathFilter( Gaffer.PathFilter ) :
 		Gaffer.PathFilter.__init__( self )
 	
 		self.__filters = None
+		self.__changedConnections = []
 		self.setFilters( filters )
 		
 	def addFilter( self, filter ) :
@@ -52,12 +53,16 @@ class CompoundPathFilter( Gaffer.PathFilter ) :
 		assert( filter not in self.__filters )
 		
 		self.__filters.append( filter )
+		self.__changedConnections.append( filter.changedSignal().connect( Gaffer.WeakMethod( self.__filterChanged ) ) )
 		if self.getEnabled() :
 			self.changedSignal()( self )
 	
 	def removeFilter( self, filter ) :
 	
-		self.__filters.remove( filter )
+		index = self.__filters.index( filter )
+		del self.__filters[index]
+		del self.__changedConnections[index]
+		
 		if self.getEnabled() :
 			self.changedSignal()( self )
 	
@@ -70,6 +75,9 @@ class CompoundPathFilter( Gaffer.PathFilter ) :
 		
 		# copy list so it can't be changed behind our back
 		self.__filters = list( filters )
+		
+		# update changed connections
+		self.__changedConnections = [ f.changedSignal().connect( Gaffer.WeakMethod( self.__filterChanged ) ) for f in self.__filters ]
 		
 		if self.getEnabled() :
 			self.changedSignal()( self )
@@ -85,3 +93,10 @@ class CompoundPathFilter( Gaffer.PathFilter ) :
 			paths = f.filter( paths )
 			
 		return paths
+		
+	def __filterChanged( self, childFilter ) :
+	
+		assert( childFilter in self.__filters )
+	
+		if self.getEnabled() :
+			self.changedSignal()( self )

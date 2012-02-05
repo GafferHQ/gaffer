@@ -97,6 +97,45 @@ class CompoundPathFilterTest( unittest.TestCase ) :
 		
 		cf.setFilters( [ f1, f2 ] )
 		self.assertEqual( self.__numChanges, 4 )
+	
+	def testChangedSignalPropagation( self ) :
+	
+		cf = Gaffer.CompoundPathFilter()
+
+		self.__numChanges = 0
+		def f( filter ) :
+			self.failUnless( filter is cf )
+			self.__numChanges += 1
+	
+		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		f2 = Gaffer.FileNamePathFilter( [ "*.tif" ] )
+	
+		c = cf.changedSignal().connect( f )
+		self.assertEqual( self.__numChanges, 0 )
+
+		cf.setFilters( [ f1, f2 ] )
+		self.assertEqual( self.__numChanges, 1 )
+
+		f1.changedSignal()( f1 )		
+		self.assertEqual( self.__numChanges, 2 )
+
+		f2.changedSignal()( f2 )
+		self.assertEqual( self.__numChanges, 3 )
+
+		cf.removeFilter( f1 )
+		self.assertEqual( self.__numChanges, 4 )
+		f1.changedSignal()( f1 )		
+		self.assertEqual( self.__numChanges, 4 )
+		
+		cf.removeFilter( f2 )
+		self.assertEqual( self.__numChanges, 5 )
+		f2.changedSignal()( f2 )		
+		self.assertEqual( self.__numChanges, 5 )
+		
+		cf.addFilter( f1 )
+		self.assertEqual( self.__numChanges, 6 )
+		f1.changedSignal()( f1 )		
+		self.assertEqual( self.__numChanges, 7 )
 		
 if __name__ == "__main__":
 	unittest.main()
