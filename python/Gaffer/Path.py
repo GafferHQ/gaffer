@@ -41,7 +41,7 @@ import Gaffer
 
 class Path( object ) :
 
-	def __init__( self, path ) :
+	def __init__( self, path, filter=None ) :
 	
 		self.__items = []
 		
@@ -57,6 +57,7 @@ class Path( object ) :
 				self.__items.append( p )
 				
 		self.__filter = None
+		self.setFilter( filter )
 									
 	## Returns true if this path is valid - ie references something
 	# which actually exists.

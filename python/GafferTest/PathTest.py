@@ -119,6 +119,15 @@ class PathTest( unittest.TestCase ) :
 		
 		filter.setEnabled( True )
 		self.assertEqual( len( changedPaths ), 5 )
+
+	def testConstructWithFilter( self ) :
+	
+		p = Gaffer.Path( "/test/path" )
+		self.failUnless( p.getFilter() is None )
+		
+		f = Gaffer.FileNamePathFilter( [ "*.exr" ] )
+		p = Gaffer.Path( "/test/path", filter = f )
+		self.failUnless( p.getFilter() is f )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,13 +43,13 @@ import Gaffer
 
 class FileSystemPath( Gaffer.Path ) :
 
-	def __init__( self, path ) :
+	def __init__( self, path, filter=None ) :
 	
 		if isinstance( path, basestring ) :
 			if len( path ) and path[0] != "/" :
 				path = os.path.join( os.getcwd(), path )
 	
-		Gaffer.Path.__init__( self, path )
+		Gaffer.Path.__init__( self, path, filter )
 									
 	def isValid( self ) :
 	
