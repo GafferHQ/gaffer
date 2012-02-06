@@ -49,11 +49,11 @@ class FileNamePathFilter( PathFilter ) :
 	# The resulting filter will pass through any path whose
 	# name matches one or more of the regular expressions. If filterLeafOnly
 	# is True then directories will always be passed through.
-	def __init__( self, matchers, leafOnly=True ) :
+	def __init__( self, matchers, leafOnly=True, userData={} ) :
 
 		assert( isinstance( matchers, ( list, tuple ) ) )
 	
-		PathFilter.__init__( self )
+		PathFilter.__init__( self, userData )
 		
 		self.__matchers = []
 		for m in matchers :

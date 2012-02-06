@@ -43,11 +43,17 @@ import Gaffer
 # method.
 class PathFilter( object ) :
 
-	def __init__( self ) :
+	def __init__( self, userData={} ) :
+	
+		self.__userData = userData.copy()
 	
 		self.__enabled = True
 		self.__changedSignal = Gaffer.Signal1()
-		
+	
+	def userData( self ) :
+	
+		return self.__userData
+	
 	def setEnabled( self, enabled ) :
 	
 		if enabled == self.__enabled :

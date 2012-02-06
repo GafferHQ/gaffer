@@ -42,6 +42,8 @@
 
 * The PathFilter class now has a changedSignal(), which issues notifications when the filter is changed in some way. The Path class uses this to correctly trigger its own pathChangedSignal()
 
+* The PathFilter classes now accept a dictionary userData argument to the constructor, which can be used for storing arbitrary data with the filter.
+
 * The CheckBox class now has setText() and getText() accessors.
 
 0.26.0

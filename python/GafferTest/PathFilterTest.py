@@ -104,6 +104,16 @@ class PathFilterTest( unittest.TestCase ) :
 		pathFilter.setEnabled( False )
 		
 		self.assertEqual( enabledStates, [ False, True, False ] )
+		
+	def testUserData( self ) :
+	
+		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		self.assertEqual( pathFilter.userData(), {} )
+		
+		ud = { "a" : "a" }
+		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ], userData = ud )
+		self.assertEqual( pathFilter.userData(), ud )
+		self.failIf( pathFilter.userData() is ud )
 	
 if __name__ == "__main__":
 	unittest.main()
