@@ -40,9 +40,9 @@ import Gaffer
 # PathFilters, applying them in sequence.
 class CompoundPathFilter( Gaffer.PathFilter ) :
 
-	def __init__( self, filters=[] ) :
+	def __init__( self, filters=[], userData={} ) :
 	
-		Gaffer.PathFilter.__init__( self )
+		Gaffer.PathFilter.__init__( self, userData )
 	
 		self.__filters = None
 		self.__changedConnections = []
