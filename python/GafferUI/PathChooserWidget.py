@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,10 +35,10 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
-
-QtGui = GafferUI._qtImport( "QtGui" )
 
 class PathChooserWidget( GafferUI.Widget ) :
 
@@ -53,11 +53,24 @@ class PathChooserWidget( GafferUI.Widget ) :
 		self.__directoryListing = GafferUI.PathListingWidget( self.__path )
 		self.__column.append( self.__directoryListing, True )
 		
-		pathWidgetRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		self.__filterFrame = GafferUI.Frame( borderWidth=0, borderStyle=GafferUI.Frame.BorderStyle.None )
+		self.__column.append( self.__filterFrame )
+		self.__filter = None
+		self.__updateFilter()
 		
-		upButton = GafferUI.Button( image = "pathUpArrow.png" )
-		self.__upButtonClickedConnection = upButton.clickedSignal().connect( self.__upButtonClicked )
+		pathWidgetRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 )
+		
+		reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
+		reloadButton.setToolTip( "Click to refresh view" )
+		self.__reloadButtonClickedConnection = reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ) )
+		pathWidgetRow.append( reloadButton )
+		
+		upButton = GafferUI.Button( image = "pathUpArrow.png", hasFrame=False )
+		upButton.setToolTip( "Click to go up one level" )
+		self.__upButtonClickedConnection = upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ) )
 		pathWidgetRow.append( upButton )
+		
+		pathWidgetRow.append( GafferUI.Spacer( IECore.V2i( 4, 4 ) ) )
 		
 		self.__pathWidget = GafferUI.PathWidget( self.__path )
 		pathWidgetRow.append( self.__pathWidget )
@@ -68,7 +81,8 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 		self.__listingSelectedConnection = self.__directoryListing.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
 		self.__pathWidgetSelectedConnection = self.__pathWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
-
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		
 	## Returns the PathWidget used for text-based path entry.
 	def pathWidget( self ) :
 	
@@ -91,3 +105,26 @@ class PathChooserWidget( GafferUI.Widget ) :
 			return
 	
 		del self.__path[-1]
+
+	def __reloadButtonClicked( self, button ) :
+	
+		self.__path.pathChangedSignal()( self.__path )
+	
+	def __updateFilter( self ) :
+	
+		newFilter = self.__path.getFilter()
+		if self.__filter is newFilter :
+			return
+		
+		newFilterUI = None
+		if newFilter is not None :
+			newFilterUI = GafferUI.PathFilterWidget.create( newFilter )
+		
+		self.__filterFrame.setChild( newFilterUI )
+		self.__filterFrame.setVisible( newFilterUI is not None )
+			
+		self.__filter = newFilter
+	
+	def __pathChanged( self, path ) :
+	
+		self.__updateFilter()

@@ -46,6 +46,8 @@
 
 * The CheckBox class now has setText() and getText() accessors.
 
+* Added PathFilterWidget class to allow uis to be built for the filters on paths. Added filter ui to PathChooserWidget, along with a button to refresh the listing. 
+
 0.26.0
 ------
 
