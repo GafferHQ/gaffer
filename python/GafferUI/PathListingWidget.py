@@ -149,10 +149,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 				row = []
 				for column in self.__columns :
-					if column.infoField == "name" :
-						value = child[-1]
-					else :
-						value = info.get( column.infoField, None )
+					value = info.get( column.infoField, None )
 					row.append( _Item( value, column.displayFunction, column.lessThanFunction ) )
 				
 				self.__itemModel.appendRow( row )
