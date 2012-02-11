@@ -50,6 +50,8 @@
 
 * The Path class now adds "name" and "fullName" entries to the info() dictionary.
 
+* The Menu class now accepts booleans as well as callables for the checkBox MenuItemDefinition entry.
+
 0.26.0
 ------
 
