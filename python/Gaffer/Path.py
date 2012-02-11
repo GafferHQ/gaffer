@@ -76,6 +76,8 @@ class Path( object ) :
 			return None
 			
 		result = {}
+		result["name"] = self[-1] if len( self ) else ""
+		result["fullName"] = str( self )
 		
 		return result
 	

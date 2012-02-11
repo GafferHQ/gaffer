@@ -129,6 +129,26 @@ class PathTest( unittest.TestCase ) :
 		p = Gaffer.Path( "/test/path", filter = f )
 		self.failUnless( p.getFilter() is f )
 		
+	def testInfo( self ) :
+	
+		class TestPath( Gaffer.Path ) :
+		
+			def __init__( self, p ) :
+			
+				Gaffer.Path.__init__( self, p )
+				
+			def isValid( self ) :
+				
+				return True
+	
+		p = TestPath( "/a/b/c" )
+		self.assertEqual( p.info()["name"], "c" )
+		self.assertEqual( p.info()["fullName"], "/a/b/c" )
+		
+		p = TestPath( "/" )
+		self.assertEqual( p.info()["name"], "" )
+		self.assertEqual( p.info()["fullName"], "/" )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

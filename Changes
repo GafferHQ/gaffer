@@ -48,6 +48,8 @@
 
 * Added PathFilterWidget class to allow uis to be built for the filters on paths. Added filter ui to PathChooserWidget, along with a button to refresh the listing. 
 
+* The Path class now adds "name" and "fullName" entries to the info() dictionary.
+
 0.26.0
 ------
 
