@@ -51,11 +51,11 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="2"
-     inkscape:cx="86.010285"
-     inkscape:cy="971.74672"
+     inkscape:cx="366.01029"
+     inkscape:cy="931.74672"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="true"
+     showgrid="false"
      inkscape:window-width="1440"
      inkscape:window-height="852"
      inkscape:window-x="34"
@@ -439,7 +439,7 @@
        inkscape:label="#rect2859" />
     <g
        id="forExport:aboutLogo"
-       transform="matrix(0.47176156,0,0,0.47176156,77.25665,21.77092)"
+       transform="matrix(0.47176156,0,0,0.47176156,97.25665,21.77092)"
        inkscape:label="#g4957">
       <path
          sodipodi:nodetypes="scsccccccssccccccccccs"
