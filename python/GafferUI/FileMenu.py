@@ -170,5 +170,13 @@ def __scriptPathFilter() :
 			}
 		) 
 	)
+	
+	result.addFilter(
+		Gaffer.InfoPathFilter(
+			infoKey = "name",
+			matcher = None, # the ui will fill this in
+			leafOnly = False,
+		)
+	)
 
 	return result

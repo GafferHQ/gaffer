@@ -112,6 +112,7 @@ from ProgressBar import ProgressBar
 from SelectionMenu import SelectionMenu
 from PathFilterWidget import PathFilterWidget
 from CompoundPathFilterWidget import CompoundPathFilterWidget
+from InfoPathFilterWidget import InfoPathFilterWidget
 
 # then stuff specific to graph uis
 
