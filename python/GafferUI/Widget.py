@@ -368,7 +368,7 @@ class Widget( object ) :
 		QWidget#gafferWindow {
 
 			color: $foreground;
-			font-size: 10px;
+			font: 8pt "Sans";
 			etch-disabled-text: 0;
 			background-color: $backgroundMid;
 			border: 1px solid #555555;
@@ -383,7 +383,7 @@ class Widget( object ) :
 		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
 		
 			color: $foreground;
-			font-size: 10px;
+			font: 8pt "Sans";
 			etch-disabled-text: 0;
 			alternate-background-color: $alternateColor;
 			selection-background-color: $brightColor;

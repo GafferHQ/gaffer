@@ -1,3 +1,7 @@
+0.27.0
+------
+* Keeping the same font dpi no matter where gaffer is running.
+
 * Fixed bug which caused NameError to be thrown when loading a script containing an OpHolder.
 
 * NodeUI widgets can now be customised on a per-plug basis using the NodeUI.registerPlugValueWidget call.
