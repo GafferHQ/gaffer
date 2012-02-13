@@ -70,7 +70,8 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 	{
 		throw IECore::Exception( "Result plug is not derived from ValuePlug" );
 	}
-	resultPlug->setDirty();
+	
+	plugDirtiedSignal()( resultPlug );
 }
 
 void OpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
@@ -98,7 +99,8 @@ void OpHolder::dirty( ConstPlugPtr dirty ) const
 		ConstValuePlugPtr resultPlug = getChild<ValuePlug>( "result" );
 		if( resultPlug )
 		{
-			constPointerCast<ValuePlug>( resultPlug )->setDirty();
+			/// \todo Replace with an affects() method and deal with this in ValuePlug
+			// plugDirtiedSignal()( resultPlug );
 		}
 	}
 }

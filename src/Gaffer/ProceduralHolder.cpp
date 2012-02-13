@@ -70,7 +70,7 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
 	
 	ParameterisedHolderNode::setParameterised( parameterised );
 	
-	getChild<ObjectPlug>( "output" )->setDirty();
+	plugDirtiedSignal()( getChild<ObjectPlug>( "output" ) );
 }
 
 void ProceduralHolder::setProcedural( const std::string &className, int classVersion )
@@ -94,9 +94,8 @@ void ProceduralHolder::dirty( ConstPlugPtr dirty ) const
 	if( parametersPlug && parametersPlug->isAncestorOf( dirty ) )
 	{
 		ConstObjectPlugPtr resultPlug = getChild<ObjectPlug>( "output" );
-		/// \todo Shouldn't need this cast, because I don't think this method should be const.
-		/// See other notes in OpHolder::dirty().
-		constPointerCast<ObjectPlug>( resultPlug )->setDirty();
+		/// \todo Replace with an affects() method and deal with this in ValuePlug
+		// plugDirtiedSignal()( resultPlug );
 	}
 }
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,13 +35,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/Action.h"
+#include "boost/bind.hpp"
 
 #include "OpenEXR/ImathFun.h"
 
-#include "boost/bind.hpp"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/Action.h"
 
+using namespace IECore;
 using namespace Gaffer;
 
 template<typename T>
@@ -66,7 +67,6 @@ NumericPlug<T>::NumericPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, flags ),
-		m_value( defaultValue ),
 		m_defaultValue( defaultValue ),
 		m_minValue( minValue ),
 		m_maxValue( maxValue )
@@ -126,28 +126,22 @@ template<class T>
 void NumericPlug<T>::setValue( T value )
 {
 	value = Imath::clamp( value, m_minValue, m_maxValue );
-	if( value!=m_value || getDirty() )
+	
+	DataTypePtr &s = typedStorage();
+	if( value!=s->readable() )
 	{
 		Action::enact(
 			this,
 			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), value ),
-			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), m_value )		
+			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), s->readable() )		
 		);
 	}
 }
 
 template<class T>
-void NumericPlug<T>::setValueInternal( T value )
-{
-	m_value = value;
-	valueSet();	
-}
-
-template<class T>
 T NumericPlug<T>::getValue()
 {
-	computeIfDirty();
-	return m_value;
+	return typedStorage( true )->readable();
 }
 
 template<class T>
@@ -165,6 +159,24 @@ void NumericPlug<T>::setFromInput()
 		default :
 			assert( 0 ); // shouldn't have connections of any other type
 	}
+}
+
+template<class T>
+typename NumericPlug<T>::DataTypePtr &NumericPlug<T>::typedStorage( bool update )
+{
+	ObjectPtr &o = storage( update );
+	if( !o )
+	{
+		o = new DataType( m_defaultValue );
+	}
+	return reinterpret_cast<DataTypePtr &>( o );
+}
+
+template<class T>
+void NumericPlug<T>::setValueInternal( T value )
+{
+	typedStorage()->writable() = value;
+	valueSet();	
 }
 
 // explicit instantiation

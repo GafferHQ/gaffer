@@ -88,7 +88,5 @@ void GafferBindings::bindValuePlug()
 {
 	IECorePython::RunTimeTypedClass<ValuePlug>()
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( ValuePlug )
-		.def( "setDirty", &ValuePlug::setDirty )
-		.def( "getDirty", &ValuePlug::getDirty )
 	;	
 }

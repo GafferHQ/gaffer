@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -55,9 +55,9 @@ TypedObjectPlug<T>::TypedObjectPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, flags ),
-		m_value( defaultValue ? defaultValue->copy() : 0 ),
 		m_defaultValue( defaultValue ? defaultValue->copy() : 0 )
 {
+	typedStorage() = defaultValue ? defaultValue->copy() : 0;
 }
 
 template<class T>
@@ -102,28 +102,26 @@ void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 template<class T>
 void TypedObjectPlug<T>::setValueInternal( ConstValuePtr value )
 {
-	if( value )
-	{
-		m_value = value->copy();
-	}
-	else
-	{
-		m_value = 0;
-	}
+	typedStorage() = value ? value->copy() : 0;
 	valueSet();
 }
 
 template<class T>
 typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue()
 {
-	computeIfDirty();
-	return m_value;
+	return typedStorage( true );
 }
 
 template<class T>
 void TypedObjectPlug<T>::setFromInput()
 {
 	setValue( getInput<TypedObjectPlug<T> >()->getValue() );
+}
+
+template<class T>
+typename TypedObjectPlug<T>::ValuePtr &TypedObjectPlug<T>::typedStorage( bool update )
+{
+	return reinterpret_cast<ValuePtr &>( storage( update ) );
 }
 
 namespace Gaffer

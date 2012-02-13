@@ -40,6 +40,8 @@
 
 #include "OpenEXR/ImathMatrix.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
@@ -82,9 +84,12 @@ class TypedPlug : public ValuePlug
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedPlug<T> );		
 
+		typedef IECore::TypedData<T> DataType;
+		typedef typename DataType::Ptr DataTypePtr;
+
+		DataTypePtr &typedStorage( bool update = false );
 		void setValueInternal( T value );
 	
-		T m_value;
 		T m_defaultValue;
 
 };

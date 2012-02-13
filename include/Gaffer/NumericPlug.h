@@ -37,9 +37,11 @@
 #ifndef GAFFER_NUMERICPLUG_H
 #define GAFFER_NUMERICPLUG_H
 
-#include "Gaffer/ValuePlug.h"
-
 #include "OpenEXR/ImathLimits.h"
+
+#include "IECore/SimpleTypedData.h"
+
+#include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
 {
@@ -53,7 +55,6 @@ class NumericPlug : public ValuePlug
 		typedef T ValueType;
 
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( NumericPlug<T>, ValuePlug );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( NumericPlug<T> );
 
 		NumericPlug(
 			const std::string &name = staticTypeName(),
@@ -89,9 +90,14 @@ class NumericPlug : public ValuePlug
 
 	private :
 	
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( NumericPlug<T> );
+
+		typedef IECore::TypedData<T> DataType;
+		typedef typename DataType::Ptr DataTypePtr;
+		
+		DataTypePtr &typedStorage( bool update = false );
 		void setValueInternal( T value );
 	
-		T m_value;
 		T m_defaultValue;
 		T m_minValue;
 		T m_maxValue;

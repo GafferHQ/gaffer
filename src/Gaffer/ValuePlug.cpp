@@ -46,7 +46,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
 
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags ), m_dirty( direction==Out )
+	:	Plug( name, direction, flags )
 {
 }
 
@@ -67,10 +67,11 @@ bool ValuePlug::acceptsInput( ConstPlugPtr input ) const
 	return true;
 }
 
+/// \todo !!!
 void ValuePlug::setInput( PlugPtr input )
 {
 	Plug::setInput( input );
-	if( input )
+	/*if( input )
 	{
 		// cast safe because acceptsInput checks type.
 		ValuePlugPtr vInput = IECore::staticPointerCast<ValuePlug>( input );
@@ -82,11 +83,11 @@ void ValuePlug::setInput( PlugPtr input )
 		{
 			setFromInput();
 		}
-	}
+	}*/
 	/// \todo What should we do with the value on disconnect?
 }
 
-void ValuePlug::setDirty()
+/*void ValuePlug::setDirty()
 {
 	if( m_dirty )
 	{
@@ -114,16 +115,15 @@ void ValuePlug::setDirty()
 			o->setDirty();
 		}
 	}
-}
+}*/
 
-bool ValuePlug::getDirty() const
+IECore::ObjectPtr &ValuePlug::storage( bool update )
 {
-	return m_dirty;
+	return m_storage;
 }
 
 void ValuePlug::valueSet()
 {
-	m_dirty = false;
 	Node *n = node();
 	if( n )
 	{
@@ -146,27 +146,5 @@ void ValuePlug::valueSet()
 		{
 			o->setFromInput();
 		}
-	}
-}
-
-void ValuePlug::computeIfDirty()
-{
-	if( getDirty() )
-	{
-		if( getInput<Plug>() )
-		{
-			setFromInput();
-		}
-		else
-		{	
-			NodePtr n = node();
-			if( !n )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % fullName() ) ); 
-			}
-			n->compute( this, Context::current() );
-		}
-		/// \todo we need a proper response to failure here - perhaps call setToDefault()?
-		/// and do we need some kind of error status for plugs?
 	}
 }

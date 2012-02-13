@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -114,20 +114,6 @@ void CompoundPlug::setInput( PlugPtr input )
 		}
 	}
 	ValuePlug::setInput( input );
-}
-
-void CompoundPlug::setDirty()
-{
-	ChildContainer::const_iterator it;
-	for( it = children().begin(); it!=children().end(); it++ )
-	{
-		ValuePlugPtr p = IECore::runTimeCast<ValuePlug>( *it );
-		if( p )
-		{
-			p->setDirty();
-		}
-	}
-	ValuePlug::setDirty();
 }
 
 void CompoundPlug::setFromInput()

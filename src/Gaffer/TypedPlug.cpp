@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,6 @@ TypedPlug<T>::TypedPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, flags ),
-		m_value( defaultValue ),
 		m_defaultValue( defaultValue )
 {
 }
@@ -88,12 +87,13 @@ const T &TypedPlug<T>::defaultValue() const
 template<class T>
 void TypedPlug<T>::setValue( const T &value )
 {
-	if( value!=m_value || getDirty() )
+	DataTypePtr &s = typedStorage();
+	if( value!=s->readable() )
 	{
 		Action::enact(
 			this,
 			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), value ),
-			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), m_value )		
+			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), s->readable() )		
 		);
 	}
 }
@@ -101,21 +101,31 @@ void TypedPlug<T>::setValue( const T &value )
 template<class T>
 void TypedPlug<T>::setValueInternal( T value )
 {
-	m_value = value;
+	typedStorage()->writable() = value;
 	valueSet();
 }
 
 template<class T>
 const T &TypedPlug<T>::getValue()
 {
-	computeIfDirty();
-	return m_value;
+	return typedStorage( true )->readable();
 }
 
 template<class T>
 void TypedPlug<T>::setFromInput()
 {
 	setValue( getInput<TypedPlug<T> >()->getValue() );
+}
+
+template<class T>
+typename TypedPlug<T>::DataTypePtr &TypedPlug<T>::typedStorage( bool update )
+{
+	IECore::ObjectPtr &o = storage( update );
+	if( !o )
+	{
+		o = new DataType( m_defaultValue );
+	}
+	return reinterpret_cast<DataTypePtr &>( o );
 }
 
 namespace Gaffer

@@ -63,9 +63,6 @@ class CompoundPlug : public ValuePlug
 		/// input and this Plug.
 		virtual void setInput( PlugPtr input );
 
-		/// Sets all child plugs dirty.
-		virtual void setDirty();
-
 	protected :
 
 		virtual void setFromInput();
