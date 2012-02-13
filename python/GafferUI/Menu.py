@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -139,10 +139,13 @@ class Menu( GafferUI.Widget ) :
 
 						if item.checkBox is not None :
 							qtAction.setCheckable( True )
-							kwArgs = {}
-							if "menu" in inspect.getargspec( item.checkBox )[0] :
-								kwArgs["menu"] = self
-							qtAction.setChecked( item.checkBox( **kwArgs ) )
+							checked = item.checkBox
+							if callable( checked ) :
+								kwArgs = {}
+								if "menu" in inspect.getargspec( checked )[0] :
+									kwArgs["menu"] = self
+								checked = checked( **kwArgs )
+							qtAction.setChecked( checked )
 
 						if item.divider :
 							qtAction.setSeparator( True )

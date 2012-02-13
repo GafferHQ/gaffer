@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -74,8 +75,8 @@ def open( menu ) :
 	else :
 		path = Gaffer.FileSystemPath( os.getcwd() )
 	
-	path.addFilter( Gaffer.FileNamePathFilter( [ "*.gfr" ] ) )
-	path.addFilter( Gaffer.FileNamePathFilter( [ re.compile( "^[^.].*" ) ], leafOnly=False ) )
+	path.setFilter( __scriptPathFilter() )
+
 	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open" )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
@@ -119,9 +120,8 @@ def saveAs( menu ) :
 	else :
 		path = Gaffer.FileSystemPath( os.getcwd() )
 
-	path.addFilter( Gaffer.FileNamePathFilter( [ "*.gfr" ] ) )
-	path.addFilter( Gaffer.FileNamePathFilter( [ re.compile( "^[^.].*" ) ], leafOnly=False ) )
-
+	path.setFilter( __scriptPathFilter() )
+	
 	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save" )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
@@ -143,3 +143,40 @@ def revertToSaved( menu ) :
 	else :
 		## \todo Warn
 		pass
+
+def __scriptPathFilter() :
+
+	result = Gaffer.CompoundPathFilter()
+	result.addFilter(
+		Gaffer.FileNamePathFilter(
+			[ "*.gfr", "*.GFR" ],
+			userData = {
+				"UI" : {
+					"label" : "Show only .gfr files",
+				}
+			}
+		)
+	)
+	
+	result.addFilter(
+		Gaffer.FileNamePathFilter(
+			[ re.compile( "^[^.].*" ) ],
+			leafOnly=False,
+			userData = {
+				"UI" : {
+					"label" : "Show hidden files",
+					"invertEnabled" : True,
+				}
+			}
+		) 
+	)
+	
+	result.addFilter(
+		Gaffer.InfoPathFilter(
+			infoKey = "name",
+			matcher = None, # the ui will fill this in
+			leafOnly = False,
+		)
+	)
+
+	return result

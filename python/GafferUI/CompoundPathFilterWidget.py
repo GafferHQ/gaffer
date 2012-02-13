@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,20 +34,47 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
+import IECore
+
+import Gaffer
+import GafferUI
+
+class CompoundPathFilterWidget( GafferUI.PathFilterWidget ) :
+
+	def __init__( self, pathFilter ) :
+			
+		self.__grid = GafferUI.GridContainer( spacing=4 )
+		
+		GafferUI.PathFilterWidget.__init__( self, self.__grid, pathFilter )
+		
+		self.__filters = []
+		self._updateFromPathFilter()
+		
+	## Must be implemented by subclasses to update the UI when the filter
+	# changes in some way.
+	def _updateFromPathFilter( self ) :
+		
+		if self.pathFilter().getFilters() == self.__filters :
+			return
+		
+		for y in range( self.__grid.gridSize().y - 1, -1, -1 ) :
+			self.__grid.removeRow( y )
+	
+		gridPos = IECore.V2i( 0 )
+		for filter in self.pathFilter().getFilters() :
+		
+			filterWidget = GafferUI.PathFilterWidget.create( filter )
+			if filterWidget is None :
+				continue
+						
+			self.__grid[gridPos.x, gridPos.y] = filterWidget	
+		
+			if gridPos.x < 2 :
+				gridPos.x += 1
+			else :
+				gridPos.x = 0
+				gridPos.y += 1
+				
+		self.__filters = self.pathFilter().getFilters()
+	
+GafferUI.PathFilterWidget.registerType( Gaffer.CompoundPathFilter, CompoundPathFilterWidget )

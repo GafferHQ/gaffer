@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -48,10 +49,12 @@ class FileNamePathFilter( PathFilter ) :
 	# The resulting filter will pass through any path whose
 	# name matches one or more of the regular expressions. If filterLeafOnly
 	# is True then directories will always be passed through.
-	def __init__( self, matchers, leafOnly=True ) :
-	
+	def __init__( self, matchers, leafOnly=True, userData={} ) :
+
 		assert( isinstance( matchers, ( list, tuple ) ) )
 	
+		PathFilter.__init__( self, userData )
+		
 		self.__matchers = []
 		for m in matchers :
 		
@@ -63,7 +66,7 @@ class FileNamePathFilter( PathFilter ) :
 
 		self.__leafOnly = leafOnly
 
-	def filter( self, paths ) :
+	def _filter( self, paths ) :
 		
 		result = []
 		for p in paths :

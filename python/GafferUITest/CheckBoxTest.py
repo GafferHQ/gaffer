@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -76,6 +76,16 @@ class CheckBoxTest( unittest.TestCase ) :
 		
 		w.setState( False )		
 		self.assertEqual( w.getState(), False )
+		
+	def testText( self ) :
+		
+		w = GafferUI.CheckBox( "a" )		
+		self.assertEqual( w.getText(), "a" )
+		
+		w.setText( "b" )
+		self.assertEqual( w.getText(), "b" )
+
+		self.failUnless( isinstance( w.getText(), basestring ) )
 		
 if __name__ == "__main__":
 	unittest.main()

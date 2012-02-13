@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,11 +35,13 @@
 #  
 ##########################################################################
 
+import warnings
+
 import Gaffer
 
 class Path( object ) :
 
-	def __init__( self, path ) :
+	def __init__( self, path, filter=None ) :
 	
 		self.__items = []
 		
@@ -54,7 +56,8 @@ class Path( object ) :
 				self.__checkElement( p )		
 				self.__items.append( p )
 				
-		self.__filters = set()
+		self.__filter = None
+		self.setFilter( filter )
 									
 	## Returns true if this path is valid - ie references something
 	# which actually exists.
@@ -73,6 +76,8 @@ class Path( object ) :
 			return None
 			
 		result = {}
+		result["name"] = self[-1] if len( self ) else ""
+		result["fullName"] = str( self )
 		
 		return result
 	
@@ -100,8 +105,8 @@ class Path( object ) :
 	
 		c = self._children()
 			
-		for f in self.__filters :
-			c = f.filter( c )
+		if self.__filter is not None :
+			c = self.__filter.filter( c )
 			
 		return c	
 	
@@ -111,16 +116,44 @@ class Path( object ) :
 	def _children( self ) :
 	
 		raise NotImplementedError
+	
+	def setFilter( self, filter ) :
+	
+		if filter is self.__filter :
+			return
+			
+		self.__filter = filter
+		if self.__filter is not None :
+			self.__filterChangedConnection = self.__filter.changedSignal().connect( Gaffer.WeakMethod( self.__filterChanged ) )
+		else :
+			self.__filterChangedConnection = None
+			
+		self.__emitChangedSignal()
 		
+	def getFilter( self ) :
+	
+		return self.__filter
+	
+	## \deprecated
+	# Use setFilter() instead. If you wish to use more than
+	# one filter then use a CompoundPathFilter.
 	def addFilter( self, pathFilter ) :
 	
-		self.__filters.add( pathFilter )
-		self.__emitChangedSignal()
+		warnings.warn( "Path.addFilter() is deprecated, use Path.setFilter() instead. If you wish to use more than one filter then use a CompoundPathFilter.", DeprecationWarning, 2 )		
 		
+		if not isinstance( self.__filter, Gaffer.CompoundPathFilter ) :
+			self.__filter = Gaffer.CompoundPathFilter()	
+			
+		self.__filter.addFilter( pathFilter )
+		
+	## \deprecated
+	# Use setFilter() instead. If you wish to use more than
+	# one filter then use a CompoundPathFilter.
 	def removeFilter( self, pathFilter ) :
 	
-		self.__filters.remove( pathFilter )
-		self.__emitChangedSignal()
+		warnings.warn( "Path.removeFilter() is deprecated, use Path.setFilter() instead. If you wish to use more than one filter then use a CompoundPathFilter.", DeprecationWarning, 2 )		
+
+		self.__filter.removeFilter( pathFilter )
 
 	def pathChangedSignal( self ) :
 	
@@ -145,7 +178,7 @@ class Path( object ) :
 	def copy( self ) :
 	
 		c = self.__class__( self.__items )
-		c.__filters = set( self.__filters )
+		c.setFilter( self.__filter )
 		
 		return c
 		
@@ -226,3 +259,9 @@ class Path( object ) :
 		
 		if hasattr( self, "_Path__pathChangedSignal" ) :
 			self.__pathChangedSignal( self )
+			
+	def __filterChanged( self, filter ) :
+	
+		assert( filter is self.__filter )
+		
+		self.__emitChangedSignal()

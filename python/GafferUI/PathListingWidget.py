@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -90,6 +90,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 				
 		self.__currentDir = None
+		self.__currentPath = ""
 		self.__columns = columns
 		self.__pathsToItems = {}
 		self.__update()
@@ -118,11 +119,16 @@ class PathListingWidget( GafferUI.Widget ) :
 		return self.__pathSelectedSignal
 			
 	def __update( self ) :
-		
-		# update the listing if necessary
+				
+		# update the listing if necessary. when the path itself changes, we only
+		# want to update if the directory being viewed has changed. if the path
+		# hasn't changed at all then we assume that the filter has changed and
+		# we therefore have to update the listing anyway.
+		# \todo Add an argument to Path.pathChangedSignal() to specify whether it
+		# is the path or the filtering that has changed, and remove self.__currentPath
 				
 		dirPath = self.__dirPath()
-		if self.__currentDir!=dirPath :
+		if self.__currentDir!=dirPath or str( self.__path )==self.__currentPath :
 						
 			children = dirPath.children()
 			self.__pathsToItems.clear()
@@ -143,10 +149,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 				row = []
 				for column in self.__columns :
-					if column.infoField == "name" :
-						value = child[-1]
-					else :
-						value = info.get( column.infoField, None )
+					value = info.get( column.infoField, None )
 					row.append( _Item( value, column.displayFunction, column.lessThanFunction ) )
 				
 				self.__itemModel.appendRow( row )
@@ -157,6 +160,8 @@ class PathListingWidget( GafferUI.Widget ) :
 			self._qtWidget().header().setSortIndicator( sortingColumn, sortingOrder )
 
 			self.__currentDir = dirPath
+		
+		self.__currentPath = str( self.__path )
 				
 		# update the selection
 			
@@ -240,6 +245,7 @@ class _TreeView( QtGui.QTreeView ) :
 	
 		QtGui.QTreeView.__init__( self )
 		
+		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		
 	def sizeHint( self ) :

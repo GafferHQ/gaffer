@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,20 +34,46 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
 from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
+
+## A PathFilter which filters based on an item from Path.info() and an
+# arbitrary match function.
+class InfoPathFilter( PathFilter ) :
+
+	def __init__( self, infoKey, matcher, leafOnly=True, userData={} ) :
+
+		PathFilter.__init__( self, userData )
+		
+		self.__infoKey = infoKey
+		self.__matcher = matcher
+		self.__leafOnly = leafOnly
+	
+	## Matcher and infoKey are set with one call, as otherwise
+	# the intermediate state may yield a new matcher which doesn't work
+	# with the old key.
+	def setMatcher( self, infoKey, matcher ) :
+		
+		self.__infoKey = infoKey
+		self.__matcher = matcher
+		self.changedSignal()( self )
+				
+	def getMatcher( self ) :
+	
+		return self.__infoKey, self.__matcher
+	
+	def _filter( self, paths ) :
+		
+		if self.__matcher is None :
+			return paths
+		
+		result = []
+		for p in paths :
+			if self.__leafOnly and not p.isLeaf() :
+				result.append( p )
+			else :
+				i = p.info()
+				if self.__infoKey in i :
+					if self.__matcher( i[self.__infoKey] ) :
+						result.append( p )
+			
+		return result

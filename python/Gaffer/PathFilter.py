@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,18 +35,52 @@
 #  
 ##########################################################################
 
+import Gaffer
+
 ## PathFilters are classes which can filter the results
 # of Path.children() methods to provide a masked view of
 # filesystems. Filters are applied to a path using the Path.addFilter()
 # method.
 class PathFilter( object ) :
 
-	def __init__( self ) :
+	def __init__( self, userData={} ) :
 	
-		pass
+		self.__userData = userData.copy()
+	
+		self.__enabled = True
+		self.__changedSignal = Gaffer.Signal1()
+	
+	def userData( self ) :
+	
+		return self.__userData
+	
+	def setEnabled( self, enabled ) :
+	
+		if enabled == self.__enabled :
+			return
+			
+		self.__enabled = enabled
+		self.__changedSignal( self )
+		
+	def getEnabled( self ) :
+	
+		return self.__enabled
+	
+	def filter( self, paths ) :
+		
+		if self.__enabled :
+			return self._filter( paths )
+		else :
+			return paths
+	
+	## Returns a signal which is emitted whenever the filter
+	# changes in some way.
+	def changedSignal( self ) :
+	
+		return self.__changedSignal
 	
 	## Must be implemented by derived classes to filter the passed
 	# list of paths and return a new list.
-	def filter( self, paths ) :
+	def _filter( self, paths ) :
 	
-		raise NotImplementedError	
+		raise NotImplementedError

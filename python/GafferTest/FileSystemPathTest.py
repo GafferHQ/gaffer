@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,6 +60,15 @@ class FileSystemPathTest( unittest.TestCase ) :
 	
 		path = Gaffer.FileSystemPath( "/this/path/doesnt/exist" )
 		self.assert_( not path.isLeaf() )
+		
+	def testConstructWithFilter( self ) :
+	
+		p = Gaffer.FileSystemPath( __file__ )
+		self.failUnless( p.getFilter() is None )
+		
+		f = Gaffer.FileNamePathFilter( [ "*.exr" ] )
+		p = Gaffer.FileSystemPath( __file__, filter = f )
+		self.failUnless( p.getFilter() is f )
 		
 if __name__ == "__main__":
 	unittest.main()

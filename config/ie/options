@@ -99,8 +99,8 @@ else :
 	installRoot = os.path.expanduser( "~/gafferTestInstalls" )
 	versionString += "dev"
 
-BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/" + targetApp
-INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/" + targetApp
+BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/cortex/" + cortexMajorVersion + "/" + targetApp
+INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/cortex/" + cortexMajorVersion + "/" + targetApp
 
 if targetAppVersion :
 	
