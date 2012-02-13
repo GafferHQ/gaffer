@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import re
+
 import IECore
 
 import Gaffer
@@ -45,7 +47,8 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		self.__pathWidget = GafferUI.PathPlugValueWidget(
 			parameterHandler.plug(),
-			Gaffer.FileSystemPath( "/" ),
+			Gaffer.FileSystemPath( "/", filter = self._filter() ),
+			pathChooserDialogueKeywords = self._pathChooserDialogueKeywords(),
 		)
 					
 		GafferUI.ParameterValueWidget.__init__(
@@ -58,4 +61,34 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		self._addPopupMenu( self.__pathWidget.pathWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
 
+	def _filter( self ) :
+		
+		result = Gaffer.CompoundPathFilter()	
+		result.addFilter(
+			Gaffer.FileNamePathFilter(
+				[ re.compile( "^[^.].*" ) ],
+				leafOnly=False,
+				userData = {
+					"UI" : {
+						"label" : "Show hidden files",
+						"invertEnabled" : True,
+					}
+				}
+			) 
+		)
+		
+		result.addFilter(
+			Gaffer.InfoPathFilter(
+				infoKey = "name",
+				matcher = None, # the ui will fill this in
+				leafOnly = False,
+			)
+		)
+		
+		return result
+	
+	def _pathChooserDialogueKeywords( self ) :
+	
+		return {}
+	
 GafferUI.ParameterValueWidget.registerType( IECore.PathParameter.staticTypeId(), PathParameterValueWidget )

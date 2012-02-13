@@ -59,6 +59,8 @@
 
 * The Menu class now accepts booleans as well as callables for the checkBox MenuItemDefinition entry.
 
+* PathParameterWidget now applies path filters, and has an _filter() method which can be overridden in derived classes to define the filter.
+
 0.26.0
 ------
 
