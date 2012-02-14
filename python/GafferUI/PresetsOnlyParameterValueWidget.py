@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,11 +43,11 @@ import GafferUI
 
 class PresetsOnlyParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler ) :
+	def __init__( self, parameterHandler, **kw ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		
-		GafferUI.ParameterValueWidget.__init__( self, self.__row, parameterHandler )
+		GafferUI.ParameterValueWidget.__init__( self, self.__row, parameterHandler, **kw )
 		
 		self.__row.append( GafferUI.Image( "collapsibleArrowDownHover.png" ) )
 		self.__label = GafferUI.Label( "" )

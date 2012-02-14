@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -48,9 +48,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # the IECore.Reader mechanism, or an IECore.ImagePrimitive.
 class Image( GafferUI.Widget ) :
 
-	def __init__( self, imagePrimitiveOrFileName ) :
+	def __init__( self, imagePrimitiveOrFileName, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QLabel() )
+		GafferUI.Widget.__init__( self, QtGui.QLabel(), **kw )
 		
 		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
 		# the same size.

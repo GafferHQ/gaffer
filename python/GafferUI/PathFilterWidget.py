@@ -42,9 +42,9 @@ import GafferUI
 ## This class forms the base class for all uis which manipulate PathFilters.
 class PathFilterWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, pathFilter ) :
+	def __init__( self, topLevelWidget, pathFilter, **kw ) :
 			
-		GafferUI.Widget.__init__( self, topLevelWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
 		self.__pathFilter = pathFilter
 		self.__pathFilterChangedConnection = self.__pathFilter.changedSignal().connect( Gaffer.WeakMethod( self.__pathFilterChanged ) )

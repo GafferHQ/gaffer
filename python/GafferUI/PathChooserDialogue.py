@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -40,9 +40,9 @@ import GafferUI
 
 class PathChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, path, title="Select path", cancelLabel="Cancel", confirmLabel="OK" ) :
+	def __init__( self, path, title="Select path", cancelLabel="Cancel", confirmLabel="OK", **kw ) :
 	
-		GafferUI.Dialogue.__init__( self, title )
+		GafferUI.Dialogue.__init__( self, title, **kw )
 		
 		self.__path = path
 		

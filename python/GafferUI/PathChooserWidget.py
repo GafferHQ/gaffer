@@ -42,11 +42,11 @@ import GafferUI
 
 class PathChooserWidget( GafferUI.Widget ) :
 
-	def __init__( self, path ) :
+	def __init__( self, path, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
 		
-		GafferUI.Widget.__init__( self, self.__column )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
 		
 		self.__path = path
 				

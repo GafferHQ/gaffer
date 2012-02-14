@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -344,6 +344,19 @@ class GridContainerTest( unittest.TestCase ) :
 		
 		self.failUnless( b1.parent() is None )
 		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )	
+	
+	def testAutomaticParenting( self ) :
+	
+		with GafferUI.GridContainer() as g :
+		
+			b = GafferUI.Button( "hi", index = ( 1, 2 ) )
+			t = GafferUI.TextWidget( "hi", index = ( 0, 0 ) )
+	
+		self.failUnless( b.parent() is g )	
+		self.failUnless( t.parent() is g )
+		
+		self.failUnless( g[1,2] is b )
+		self.failUnless( g[0,0] is t )
 		
 if __name__ == "__main__":
 	unittest.main()

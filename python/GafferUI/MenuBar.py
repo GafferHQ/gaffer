@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,9 +43,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class MenuBar( GafferUI.Widget ) :
 
-	def __init__( self, definition ) :
+	def __init__( self, definition, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QMenuBar() )
+		GafferUI.Widget.__init__( self, QtGui.QMenuBar(), **kw )
 		
 		# disable menu merging on mac
 		self._qtWidget().setNativeMenuBar( False )

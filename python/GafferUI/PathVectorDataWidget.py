@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,10 +45,9 @@ import GafferUI
 # with additional features for editing the strings as paths
 class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 
-	def __init__( self, data=None, editable=True, header=False, showIndices=True, path=None, pathChooserDialogueKeywords={} ) :
+	def __init__( self, data=None, editable=True, header=False, showIndices=True, path=None, pathChooserDialogueKeywords={}, **kw ) :
 	
-	
-		GafferUI.VectorDataWidget.__init__( self, data=data, editable=editable, header=header, showIndices=showIndices )
+		GafferUI.VectorDataWidget.__init__( self, data=data, editable=editable, header=header, showIndices=showIndices, **kw )
 						
 		self.__path = path if path is not None else Gaffer.FileSystemPath( "/" )
 		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords

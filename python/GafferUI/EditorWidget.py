@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,9 +42,9 @@ import GafferUI
 # manipulate a ScriptNode or its children.
 class EditorWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, scriptNode=None ) :
+	def __init__( self, topLevelWidget, scriptNode=None, **kw ) :
 	
-		GafferUI.Widget.__init__( self, topLevelWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 		
 		self.setScriptNode( scriptNode )
 	

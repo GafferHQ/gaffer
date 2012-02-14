@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,11 +46,11 @@ import GafferUI
 # ["UI"]["password"]
 class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler ) :
+	def __init__( self, parameterHandler, **kw ) :
 		
 		self.__stringPlugValueWidget = GafferUI.PlugValueWidget.create( parameterHandler.plug() )
 	
-		GafferUI.ParameterValueWidget.__init__( self, self.__stringPlugValueWidget, parameterHandler )
+		GafferUI.ParameterValueWidget.__init__( self, self.__stringPlugValueWidget, parameterHandler, **kw )
 		
 		with IECore.IgnoredExceptions( KeyError ) :
 			if parameterHandler.parameter().userData()["UI"]["password"].value :

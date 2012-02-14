@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,16 +41,16 @@ import GafferUI
 # Widgets which may hold other Widgets as children.
 class ContainerWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget ) :
+	def __init__( self, topLevelWidget, **kw ) :
 	
-		GafferUI.Widget.__init__( self, topLevelWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
 	## Must be implemented in subclasses to add a child.
 	# This is used by the automatic parenting mechanism.
 	# In the case of a Container with a limited number of
 	# children, this function should throw an exception when
 	# no more children may be added.
-	def addChild( self, child ) :
+	def addChild( self, child, **kw ) :
 	
 		raise NotImplementedError
 	

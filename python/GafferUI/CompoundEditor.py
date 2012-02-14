@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,11 +52,11 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	__transitionDuration = 400
 
-	def __init__( self, scriptNode=None, children=None ) :
+	def __init__( self, scriptNode=None, children=None, **kw ) :
 		
 		self.__splitContainer = GafferUI.SplitContainer()
 		
-		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode )
+		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode, **kw )
 		
 		self.__splitContainer.append( GafferUI.TabbedContainer() )
 		self.__addCornerWidget( self.__splitContainer )

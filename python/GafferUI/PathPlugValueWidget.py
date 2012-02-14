@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -46,11 +46,11 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## path should be an instance of Gaffer.Path, optionally with
 	# filters applied. It will be updated with the contents of the plug.
-	def __init__( self, plug, path=None, pathChooserDialogueKeywords={} ) :
+	def __init__( self, plug, path=None, pathChooserDialogueKeywords={}, **kw ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 			
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
 
 		self.__path = path if path is not None else Gaffer.FileSystemPath( "/" )
 		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords

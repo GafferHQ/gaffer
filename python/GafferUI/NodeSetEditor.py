@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,12 +45,12 @@ QtCore = GafferUI._qtImport( "QtCore" )
 # to the ScriptNode.selection() but can be modified to be any Set of nodes.
 class NodeSetEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, topLevelWidget, scriptNode ) :
+	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 	
 		self.__nodeSet = Gaffer.StandardSet()
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
 
-		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode )
+		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode, **kw )
 		
 		self.__updateScheduled = False
 			

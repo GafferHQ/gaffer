@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,9 +43,9 @@ import GafferUI
 
 class AboutWindow( GafferUI.Window ) :
 
-	def __init__( self, about ) :
+	def __init__( self, about, **kw ) :
 	
-		GafferUI.Window.__init__( self, title = "About " + about.name() )
+		GafferUI.Window.__init__( self, title = "About " + about.name(), **kw )
 		
 		frame = GafferUI.Frame( borderWidth = 30 )
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10 )

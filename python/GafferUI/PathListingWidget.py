@@ -69,9 +69,9 @@ class PathListingWidget( GafferUI.Widget ) :
 		Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime ),
 	)
 
-	def __init__( self, path, columns = defaultFileSystemColumns, allowMultipleSelection=False ) :
+	def __init__( self, path, columns = defaultFileSystemColumns, allowMultipleSelection=False, **kw ) :
 	
-		GafferUI.Widget.__init__( self, _TreeView() )
+		GafferUI.Widget.__init__( self, _TreeView(), **kw )
 		
 		self.__itemModel = QtGui.QStandardItemModel()
 		

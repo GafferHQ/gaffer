@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,9 +40,9 @@ import GafferUI
 
 class TextInputDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK" ) :
+	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", **kw ) :
 	
-		GafferUI.Dialogue.__init__( self, title )
+		GafferUI.Dialogue.__init__( self, title, **kw )
 		
 		self.__textWidget = GafferUI.TextWidget( initialText )
 		self._setWidget( self.__textWidget )

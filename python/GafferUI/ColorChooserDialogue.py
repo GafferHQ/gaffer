@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,9 +42,9 @@ import GafferUI
 
 class ColorChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title="Select color", color=IECore.Color3f( 1 ), cancelLabel="Cancel", confirmLabel="OK" ) :
+	def __init__( self, title="Select color", color=IECore.Color3f( 1 ), cancelLabel="Cancel", confirmLabel="OK", **kw ) :
 	
-		GafferUI.Dialogue.__init__( self, title )
+		GafferUI.Dialogue.__init__( self, title, **kw )
 		
 		self.__colorChooserWidget = GafferUI.ColorChooser()
 		self._setWidget( self.__colorChooserWidget )

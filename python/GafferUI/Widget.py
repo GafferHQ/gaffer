@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -80,7 +80,12 @@ class Widget( object ) :
 	# created automatically, with the GafferUI.Widget being parented to it. The top level
 	# QWidget can be accessed at any time using the _qtWidget() method. Note that this is
 	# protected to encourage non-reliance on knowledge of the Qt backend.
-	def __init__( self, topLevelWidget, toolTip="" ) :
+	#
+	# All subclass __init__ methods /must/ accept keyword arguments as **kw, and pass them
+	# to their base class constructor. These arguments are used to specify arguments to
+	# Container.addChild() when using the automatic parenting mechanism. Keyword arguments
+	# must not be used for any other purpose.
+	def __init__( self, topLevelWidget, toolTip="", **kw ) :
 	
 		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
 		
@@ -120,7 +125,7 @@ class Widget( object ) :
 		
 		if len( self.__parentStack ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :					
-				self.__parentStack[-1][0].addChild( self )
+				self.__parentStack[-1][0].addChild( self, **kw )
 	
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
@@ -383,7 +388,7 @@ class Widget( object ) :
 		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
 		
 			color: $foreground;
-			font: 8pt "Sans";
+			font: 10px;
 			etch-disabled-text: 0;
 			alternate-background-color: $alternateColor;
 			selection-background-color: $brightColor;

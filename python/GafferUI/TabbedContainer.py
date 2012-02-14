@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,9 +45,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
-	def __init__( self, cornerWidget=None ) :
+	def __init__( self, cornerWidget=None, **kw ) :
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QTabWidget() )
+		GafferUI.ContainerWidget.__init__( self, QtGui.QTabWidget(), **kw )
 		
 		self._qtWidget().setUsesScrollButtons( False )
 		self._qtWidget().setElideMode( QtCore.Qt.ElideNone )

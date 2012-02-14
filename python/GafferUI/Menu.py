@@ -47,9 +47,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Menu( GafferUI.Widget ) :
 
-	def __init__( self, definition, _qtMenu=None ) :
+	def __init__( self, definition, _qtMenu=None, **kw ) :
 	
-		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else QtGui.QMenu() )
+		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else QtGui.QMenu(), **kw )
 			
 		self._qtWidget().aboutToShow.connect( curry( self.__show, self._qtWidget(), definition ) )
 		

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,11 +46,11 @@ import GafferUI
 ## \todo Reject drag and drop of anything that's not a number
 class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 	
 		self.__numericWidget = GafferUI.NumericWidget( plug.getValue() )
 			
-		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug, **kw )
 
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )

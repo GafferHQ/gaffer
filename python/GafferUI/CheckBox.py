@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -43,9 +42,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class CheckBox( GafferUI.Widget ) :
 
-	def __init__( self, text="", checked=False ) :
+	def __init__( self, text="", checked=False, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ) )
+		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ), **kw )
 		
 		self.setState( checked )
 		

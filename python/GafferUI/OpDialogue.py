@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,12 +45,12 @@ import GafferUI
 # IECore.Op instance and then execute it.
 class OpDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, opInstance, title=None ) :
+	def __init__( self, opInstance, title=None, **kw ) :
 
 		if title is None :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )
 
-		GafferUI.Dialogue.__init__( self, title, resizeable=True )
+		GafferUI.Dialogue.__init__( self, title, resizeable=True, **kw )
 		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( opInstance )

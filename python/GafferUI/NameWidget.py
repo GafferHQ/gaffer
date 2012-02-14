@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,9 +45,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class NameWidget( GafferUI.TextWidget ) :
 
-	def __init__( self, graphComponent ) :
+	def __init__( self, graphComponent, **kw ) :
 	
-		GafferUI.TextWidget.__init__( self )
+		GafferUI.TextWidget.__init__( self, **kw )
 
 		self._qtWidget().setValidator( QtGui.QRegExpValidator( QtCore.QRegExp( "[A-Za-z_]+[A-Za-z_0-9]*" ), self._qtWidget() ) )
 

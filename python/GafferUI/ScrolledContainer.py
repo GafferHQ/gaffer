@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,9 +46,9 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 
 	ScrollMode = IECore.Enum.create( "Never", "Always", "Automatic" )
 
-	def __init__( self, horizontalMode=ScrollMode.Automatic, verticalMode=ScrollMode.Automatic, borderWidth=0 ) :
+	def __init__( self, horizontalMode=ScrollMode.Automatic, verticalMode=ScrollMode.Automatic, borderWidth=0, **kw ) :
 	
-		GafferUI.ContainerWidget.__init__( self, _ScrollArea() )
+		GafferUI.ContainerWidget.__init__( self, _ScrollArea(), **kw )
 				
 		self._qtWidget().setViewportMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		self._qtWidget().setWidgetResizable( True )

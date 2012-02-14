@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -73,7 +73,7 @@ class GLWidget( GafferUI.Widget ) :
 	## Note that you won't always get the buffer options you ask for - a best fit is found
 	# among the available formats. In particular it appears that a depth buffer is often present
 	# even when not requested.	
-	def __init__( self, bufferOptions = set() ) :
+	def __init__( self, bufferOptions = set(), **kw ) :
 	
 		if GLWidget.__sharingWidget is None :
 			GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
@@ -88,7 +88,7 @@ class GLWidget( GafferUI.Widget ) :
 		if hasattr( format, "setVersion" ) : # setVersion doesn't exist in qt prior to 4.7.		
 			format.setVersion( 2, 1 )
 					
-		GafferUI.Widget.__init__( self, QtOpenGL.QGLWidget( format, shareWidget = GLWidget.__sharingWidget ) )
+		GafferUI.Widget.__init__( self, QtOpenGL.QGLWidget( format, shareWidget = GLWidget.__sharingWidget ), **kw )
 		
 		self._qtWidget().resizeGL = Gaffer.WeakMethod( self.__resizeGL )
 		self._qtWidget().paintGL = Gaffer.WeakMethod( self.__paintGL )

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,10 +42,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Window( GafferUI.ContainerWidget ) :
 
-	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=True, child=None ) :
+	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=True, child=None, **kw ) :
 	
 		GafferUI.ContainerWidget.__init__(
-			self, QtGui.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ) )
+			self, QtGui.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ), **kw )
 		)
 		
 		self.__child = None
@@ -89,10 +89,12 @@ class Window( GafferUI.ContainerWidget ) :
 	
 	def addChild( self, child ) :
 	
-		if self.getChild() is not None :
-			raise Exception( "Window can only hold one child" )
-			
-		self.setChild( child )
+		if isinstance( child, Window ) :
+			self.addChildWindow( child )
+		else :
+			if self.getChild() is not None :
+				raise Exception( "Window can only hold one child" )
+			self.setChild( child )
 	
 	def setChild( self, child ) :
 	

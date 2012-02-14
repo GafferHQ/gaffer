@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,11 +43,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 	
 		self.__checkBox = GafferUI.CheckBox()
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug, **kw )
  
 		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 						
