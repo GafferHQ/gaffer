@@ -298,12 +298,14 @@ class Widget( object ) :
 	def __initNesting() :
 	
 		widgetsInInit = set()
-		for frame in [ x[0] for x in inspect.stack() ] :
+		frame = inspect.currentframe( 1 )
+		while frame :
 			if frame.f_code.co_name=="__init__" :
 				frameSelf = frame.f_locals[frame.f_code.co_varnames[0]]
 				if isinstance( frameSelf, Widget ) :
 					widgetsInInit.add( frameSelf )
-		
+			frame = frame.f_back
+			
 		return len( widgetsInInit )
 	
 	__parentStack = []
