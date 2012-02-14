@@ -14,6 +14,8 @@
 		# expand is automatically passed to ListContainer.addChild()
 		GafferUI.Spacer( IECore.V2i( 10 ), expand=True )
 
+* Added the ability to easily profile any gaffer application using the cPython profiling module, by specifying the -profileFileName command line flag. Use the pstats module to examine the resulting file.
+
 0.27.0
 ------
 
