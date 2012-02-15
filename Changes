@@ -18,6 +18,8 @@
 
 * Optimised the Widget event filter.
 
+* Fixed circular reference in GafferUI.CompoundParameterValueWidget which could cause "Underlying C/C++ object has been deleted" errors.
+
 0.27.0
 ------
 

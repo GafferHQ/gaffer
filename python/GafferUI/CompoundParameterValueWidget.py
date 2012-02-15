@@ -76,8 +76,8 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			
 		GafferUI.ParameterValueWidget.__init__( self, topLevelWidget, parameterHandler, **kw )
 		
-		self.__plugAddedConnection = parameterHandler.plug().childAddedSignal().connect( self.__childAddedOrRemoved )
-		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( self.__childAddedOrRemoved )
+		self.__plugAddedConnection = parameterHandler.plug().childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 		self.__childrenChangedPending = False
 		
 		if collapsible :
