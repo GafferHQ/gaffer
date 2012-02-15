@@ -49,7 +49,7 @@ class WriteNodeUI( GafferUI.NodeUI ) :
 		GafferUI.NodeUI._build( self )
 		
 		executeButton = GafferUI.Button( "Execute" )
-		self.__executeButtonConnection = executeButton.clickedSignal().connect( self.__executeClicked )
+		self.__executeButtonConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
 		
 		self._addWidget( executeButton )
 		
