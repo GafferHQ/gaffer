@@ -16,6 +16,8 @@
 
 * Added the ability to easily profile any gaffer application using the cPython profiling module, by specifying the -profileFileName command line flag. Use the pstats module to examine the resulting file.
 
+* Optimised the Widget event filter.
+
 0.27.0
 ------
 

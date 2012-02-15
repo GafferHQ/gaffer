@@ -942,11 +942,34 @@ class _EventFilter( QtCore.QObject ) :
 	def __init__( self ) :
 	
 		QtCore.QObject.__init__( self )
-		
+	
+		# the vast majority ( ~99% at time of testing ) of events entering
+		# eventFilter() are totally irrelevant to us. it's therefore very
+		# important for interactivity to exit the filter as fast as possible
+		# in these cases. first testing for membership of this set seems the
+		# best way. if further optimisation becomes necessary, then perhaps the
+		# best solution is an event filter implemented in c++, which does the early
+		# out based on the mask and then calls through to python only if this fails.
+		self.__eventMask = set( (
+			QtCore.QEvent.ToolTip,
+			QtCore.QEvent.MouseButtonPress,
+			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.MouseMove,
+			QtCore.QEvent.Enter,
+			QtCore.QEvent.Leave,
+			QtCore.QEvent.Wheel,				
+		) )
+	
 	def eventFilter( self, qObject, qEvent ) :
 		
+		qEventType = qEvent.type() # for speed it's best not to keep calling this below
+		# early out as quickly as possible for the majority of cases where we have literally
+		# no interest in the event.
+		if qEventType not in self.__eventMask :
+			return False
+		
 		# we display tooltips even on disabled widgets
-		if qEvent.type()==QtCore.QEvent.ToolTip :
+		if qEventType==qEvent.ToolTip :
 		
 			widget = Widget._owner( qObject )
 			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
@@ -956,7 +979,7 @@ class _EventFilter( QtCore.QObject ) :
 		if not qObject.isEnabled() :
 			return False
 			
-		if qEvent.type()==QtCore.QEvent.KeyPress :
+		if qEventType==qEvent.KeyPress :
 						
 			widget = Widget._owner( qObject )
 			event = GafferUI.KeyEvent(
@@ -966,7 +989,7 @@ class _EventFilter( QtCore.QObject ) :
 
 			return widget.keyPressSignal()( widget, event )
 		
-		elif qEvent.type()==QtCore.QEvent.MouseButtonPress :
+		elif qEventType==qEvent.MouseButtonPress :
 					
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
@@ -982,7 +1005,7 @@ class _EventFilter( QtCore.QObject ) :
 			if event.buttons :
 				return widget.buttonPressSignal()( widget, event )
 			
-		elif qEvent.type()==QtCore.QEvent.MouseButtonRelease :
+		elif qEventType==qEvent.MouseButtonRelease :
 				
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
@@ -997,7 +1020,7 @@ class _EventFilter( QtCore.QObject ) :
 
 			return widget.buttonReleaseSignal()( widget, event )
 			
-		elif qEvent.type()==QtCore.QEvent.MouseMove :
+		elif qEventType==qEvent.MouseMove :
 				
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
@@ -1012,19 +1035,19 @@ class _EventFilter( QtCore.QObject ) :
 
 			return widget.mouseMoveSignal()( widget, event )
 		
-		elif qEvent.type()==QtCore.QEvent.Enter :
+		elif qEventType==qEvent.Enter :
 				
 			widget = Widget._owner( qObject )
 
 			return widget.enterSignal()( widget )
 			
-		elif qEvent.type()==QtCore.QEvent.Leave :
+		elif qEventType==qEvent.Leave :
 				
 			widget = Widget._owner( qObject )
 
 			return widget.leaveSignal()( widget )
 			
-		elif qEvent.type()==QtCore.QEvent.Wheel :
+		elif qEventType==qEvent.Wheel :
 				
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
