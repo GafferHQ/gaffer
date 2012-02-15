@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,9 +46,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## \todo Worry about colourspace (including not doing the alpha compositing in the wrong space)
 class ColorSwatch( GafferUI.Widget ) :
 
-	def __init__( self, color=IECore.Color4f( 1 ) ) :
+	def __init__( self, color=IECore.Color4f( 1 ), **kw ) :
 	
-		GafferUI.Widget.__init__( self, _ColorSwatch() )
+		GafferUI.Widget.__init__( self, _ColorSwatch(), **kw )
 	
 		self._qtWidget().swatchColor = color
 		

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,7 +47,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class GraphEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode=None ) :
+	def __init__( self, scriptNode=None, **kw ) :
 		
 		self.__gadgetWidget = GadgetWidget(
 			bufferOptions = set( [
@@ -56,7 +56,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			cameraMode = GadgetWidget.CameraMode.Mode2D,
 		)
 		
-		EditorWidget.__init__( self, self.__gadgetWidget, scriptNode )
+		EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 		
 		self.__gadgetWidget.setBackgroundColor( IECore.Color3f( 0.5 ) )
 		self.__gadgetWidget._framingBound = Gaffer.WeakMethod( self.__framingBound )

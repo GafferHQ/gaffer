@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 	_labelWidth = 110
 
 	## If collapsible is not None then it overrides any ["UI]["collapsible"] userData the parameter might have.
-	def __init__( self, parameterHandler, collapsible=None ) :
+	def __init__( self, parameterHandler, collapsible=None, **kw ) :
 		
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = self._columnSpacing )
 		
@@ -74,10 +74,10 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		else :
 			topLevelWidget = self.__column
 			
-		GafferUI.ParameterValueWidget.__init__( self, topLevelWidget, parameterHandler )
+		GafferUI.ParameterValueWidget.__init__( self, topLevelWidget, parameterHandler, **kw )
 		
-		self.__plugAddedConnection = parameterHandler.plug().childAddedSignal().connect( self.__childAddedOrRemoved )
-		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( self.__childAddedOrRemoved )
+		self.__plugAddedConnection = parameterHandler.plug().childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 		self.__childrenChangedPending = False
 		
 		if collapsible :

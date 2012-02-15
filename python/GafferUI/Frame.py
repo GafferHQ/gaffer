@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,9 +46,9 @@ class Frame( GafferUI.ContainerWidget ) :
 	## \todo Raised and Inset?
 	BorderStyle = IECore.Enum.create( "None", "Flat" )
 
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat ) :
+	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame() )
+		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
 		
 		self._qtWidget().setLayout( QtGui.QGridLayout() )
 		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )

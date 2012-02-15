@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,9 +41,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
-	def __init__( self, text="", editable=True ) :
+	def __init__( self, text="", editable=True, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit() )
+		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit(), **kw )
 
 		self.setText( text )
 		

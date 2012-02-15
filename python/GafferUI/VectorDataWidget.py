@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -51,11 +51,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 	#
 	# header may be False for no header, True for a default header, or a list of
 	# strings to specify a custom header per column.
-	def __init__( self, data=None, editable=True, header=False, showIndices=True ) :
+	def __init__( self, data=None, editable=True, header=False, showIndices=True, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 	
-		GafferUI.Widget.__init__( self, self.__column )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
 		
 		# table view
 		

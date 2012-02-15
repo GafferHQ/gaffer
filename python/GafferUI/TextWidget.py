@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,9 +47,9 @@ class TextWidget( GafferUI.Widget ) :
 
 	DisplayMode = IECore.Enum.create( "Normal", "Password" )
 
-	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal ) :
+	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QLineEdit() )
+		GafferUI.Widget.__init__( self, QtGui.QLineEdit(), **kw )
 
 		self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
 		self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )

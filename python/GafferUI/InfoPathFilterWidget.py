@@ -45,11 +45,11 @@ import GafferUI
 
 class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 
-	def __init__( self, pathFilter ) :
+	def __init__( self, pathFilter, **kw ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=0, borderWidth=0 )
 		
-		GafferUI.PathFilterWidget.__init__( self, self.__row, pathFilter )
+		GafferUI.PathFilterWidget.__init__( self, self.__row, pathFilter, **kw )
 		with self.__row :
 		
 			filterButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False )

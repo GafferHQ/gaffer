@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,9 +57,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # del[2,0:2] # delete all children intersecting the specified area (both the remaining buttons in this case).
 class GridContainer( GafferUI.ContainerWidget ) :
 
-	def __init__( self, spacing=0, borderWidth=0 ) :
+	def __init__( self, spacing=0, borderWidth=0, **kw ) :
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget() )
+		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), **kw )
 	
 		self.__qtLayout = _GridLayout( self._qtWidget() )
 		self.__qtLayout.setSpacing( spacing )
@@ -148,7 +148,11 @@ class GridContainer( GafferUI.ContainerWidget ) :
 			yRange = index[1], index[1] + 1
 			
 		return xRange, yRange	
-				
+	
+	def addChild( self, child, index=( 1, 1 ) ) :
+	
+		self[index] = child
+	
 	def removeChild( self, child ) :
 
 		assert( child in self.__widgets )

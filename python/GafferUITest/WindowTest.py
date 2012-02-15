@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -218,6 +218,21 @@ class WindowTest( unittest.TestCase ) :
 		self.assertEqual( w.getVisible(), True )
 		self.assertEqual( self.__windowWasClosed, 0 )
 		
+	def testAutomaticParenting( self ) :
+	
+		with GafferUI.Window() as w :
+		
+			d = GafferUI.Window()
+			f = GafferUI.Frame()
+			# should only accept one child
+			self.assertRaises( Exception, GafferUI.Frame )
+			# should accept any number of child windows though
+			d2 = GafferUI.Window()
+		
+		self.failUnless( d.parent() is w )
+		self.failUnless( f.parent() is w )
+		self.failUnless( d2.parent() is w )
+				
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,11 +42,11 @@ import GafferUI
 
 class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 	
 		self.__splineWidget = GafferUI.SplineWidget()
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget.gtkWidget(), plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget.gtkWidget(), plug, **kw )
 
 		self.__splineWidget.gtkWidget().connect( "button-press-event", self.__buttonPress )
 		self.__splineWidget.gtkWidget().add_events( gtk.gdk.BUTTON_PRESS_MASK )

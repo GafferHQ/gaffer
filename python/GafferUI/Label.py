@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,9 +47,9 @@ class Label( GafferUI.Widget ) :
 	HorizontalAlignment = IECore.Enum.create( "Left", "Right", "Center" )
 	VerticalAlignment = IECore.Enum.create( "Top", "Bottom", "Center" )
 	
-	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center ) :
+	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QLabel( text ) )
+		GafferUI.Widget.__init__( self, QtGui.QLabel( text ), **kw )
 
 		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
 		# the same size. it's particularly important that it doesn't accept growth vertically as then vertical ListContainers

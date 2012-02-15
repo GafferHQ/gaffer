@@ -63,9 +63,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	CameraMode = IECore.Enum.create( "None", "Mode2D", "Mode3D" )
 
-	def __init__( self, gadget=None, bufferOptions=set(), cameraMode=CameraMode.Mode2D ) :
+	def __init__( self, gadget=None, bufferOptions=set(), cameraMode=CameraMode.Mode2D, **kw ) :
 		
-		GLWidget.__init__( self, bufferOptions )
+		GLWidget.__init__( self, bufferOptions, **kw )
 		
 		## \todo Decide if/how this goes in the public API
 		self._qtWidget().setMouseTracking( True )		

@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,8 +42,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class SelectionMenu( GafferUI.Widget ) :
 
-	def __init__( self ) :
-		GafferUI.Widget.__init__( self, QtGui.QComboBox() )
+	def __init__( self, **kw ) :
+	
+		GafferUI.Widget.__init__( self, QtGui.QComboBox(), **kw )
+		
 		self._qtWidget().currentIndexChanged.connect( Gaffer.WeakMethod( self.__changed ) )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__selected ) )
 		self.__currentIndexChangedSignal = GafferUI.WidgetSignal()

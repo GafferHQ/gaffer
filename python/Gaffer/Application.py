@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +36,7 @@
 ##########################################################################
 
 import os
+import cProfile
 
 import IECore
 
@@ -44,10 +46,34 @@ class Application( IECore.Parameterised ) :
 	
 		IECore.Parameterised.__init__( self, "" )
 
+		self.parameters().addParameters(
+			
+			[
+				IECore.FileNameParameter(	
+					name = "profileFileName",
+					description = "If this is specified, then the application"
+						"is run using the cProfile profiling module, and the "
+						"results saved to the file for later examination.",
+					defaultValue = "",
+					allowEmptyString = True
+				),
+			]
+		
+		)
+
 	def run( self ) :
 	
 		args = self.parameters().getValidatedValue()
-		return self.doRun( args )
+		
+		if args["profileFileName"].value :
+			contextDict = {
+				"self" : self,
+				"args" : args,
+			}
+			cProfile.runctx( "result = self.doRun( args )", contextDict, contextDict, args["profileFileName"].value )
+			return contextDict["result"]
+		else :
+			return self.doRun( args )
 
 	def _executeStartupFiles( self, subdirectories, contextDict = {} ) :
 	

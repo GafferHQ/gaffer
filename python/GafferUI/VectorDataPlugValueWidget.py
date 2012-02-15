@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,11 +41,11 @@ import GafferUI
 
 class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 		
 		self.__dataWidget = GafferUI.VectorDataWidget()
 			
-		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 		
 		self.__dataChangedConnection = self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 		

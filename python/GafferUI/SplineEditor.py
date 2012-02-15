@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,11 +41,11 @@ import GafferUI
 
 class SplineEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 		
-		GafferUI.EditorWidget.__init__( self, self.__column.gtkWidget(), scriptNode )
+		GafferUI.EditorWidget.__init__( self, self.__column.gtkWidget(), scriptNode, **kw )
 		
 		self.__splineGadget = GafferUI.SplinePlugGadget()
 		self.__selectionAddedConnection = self.__splineGadget.selection().memberAddedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )

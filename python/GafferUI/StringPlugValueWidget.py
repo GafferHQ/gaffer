@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,11 +50,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # \todo Stop editing for non editable plugs.
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 	
 		self.__textWidget = GafferUI.TextWidget()
 			
-		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, **kw )
 
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )

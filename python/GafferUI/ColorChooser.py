@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,9 +45,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # A custom slider for drawing the backgrounds.
 class ColorSlider( GafferUI.Slider ) :
 
-	def __init__( self, color, component ) :
+	def __init__( self, color, component, **kw ) :
 	
-		GafferUI.Slider.__init__( self )
+		GafferUI.Slider.__init__( self, **kw )
 		
 		self.color = color
 		self.component = component

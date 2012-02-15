@@ -43,7 +43,7 @@ import GafferUI
 
 class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler ) :
+	def __init__( self, parameterHandler, **kw ) :
 		
 		self.__pathWidget = GafferUI.PathPlugValueWidget(
 			parameterHandler.plug(),
@@ -55,7 +55,8 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			
 			self,
 			self.__pathWidget,
-			parameterHandler
+			parameterHandler,
+			**kw
 			
 		)
 		

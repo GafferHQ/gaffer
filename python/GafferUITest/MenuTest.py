@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import IECore
 
@@ -57,6 +59,30 @@ class MenuTest( unittest.TestCase ) :
 		)
 
 		menu = GafferUI.Menu( definition )
+
+	def testLifetime( self ) :
+	
+		def f() :
+		
+			pass
+	
+		definition = IECore.MenuDefinition(
+
+			[
+				( "/apple/pear/banana", { } ),
+				( "/apple/pear/divider", { "divider" : True } ),
+				( "/apple/pear/submarine", { "command" : f } ),
+				( "/dog/inactive", { "active" : False } ),
+			]
+
+		)
+
+		menu = GafferUI.Menu( definition )
+		
+		w = weakref.ref( menu )
+		del menu
+		
+		self.assertEqual( w(), None )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,9 +42,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class ProgressBar( GafferUI.Widget ) :
 	
-	def __init__( self, progress = 0, range = ( 0, 100 ), text = "%p%" ) :
+	def __init__( self, progress = 0, range = ( 0, 100 ), text = "%p%", **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QProgressBar() )
+		GafferUI.Widget.__init__( self, QtGui.QProgressBar(), **kw )
 
 		self._qtWidget().setRange( range[0], range[1] )
 		

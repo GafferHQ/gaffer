@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,11 +52,11 @@ class NodeUI( GafferUI.Widget ) :
 
 	_columnSpacing = 4
 
-	def __init__( self, node ) :
+	def __init__( self, node, **kw ) :
 	
 		self.__currentColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=self._columnSpacing )
 		
-		GafferUI.Widget.__init__( self, self.__currentColumn )
+		GafferUI.Widget.__init__( self, self.__currentColumn, **kw )
 	
 		self.__node = node
 		

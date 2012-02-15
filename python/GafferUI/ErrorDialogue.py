@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,9 +44,9 @@ import GafferUI
 
 class ErrorDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title, message, details=None ) :
+	def __init__( self, title, message, details=None, **kw ) :
 
-		GafferUI.Dialogue.__init__( self, title, resizeable=True )
+		GafferUI.Dialogue.__init__( self, title, resizeable=True, **kw )
 		
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
 		messageWidget = GafferUI.Label( IECore.StringUtil.wrap( message, 60 ) )

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,11 +44,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 			
 		self.__swatch = GafferUI.ColorSwatch()
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug, **kw )
 				
 		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		

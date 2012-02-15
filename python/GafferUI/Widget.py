@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -80,7 +80,12 @@ class Widget( object ) :
 	# created automatically, with the GafferUI.Widget being parented to it. The top level
 	# QWidget can be accessed at any time using the _qtWidget() method. Note that this is
 	# protected to encourage non-reliance on knowledge of the Qt backend.
-	def __init__( self, topLevelWidget, toolTip="" ) :
+	#
+	# All subclass __init__ methods /must/ accept keyword arguments as **kw, and pass them
+	# to their base class constructor. These arguments are used to specify arguments to
+	# Container.addChild() when using the automatic parenting mechanism. Keyword arguments
+	# must not be used for any other purpose.
+	def __init__( self, topLevelWidget, toolTip="", **kw ) :
 	
 		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
 		
@@ -120,7 +125,7 @@ class Widget( object ) :
 		
 		if len( self.__parentStack ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :					
-				self.__parentStack[-1][0].addChild( self )
+				self.__parentStack[-1][0].addChild( self, **kw )
 	
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
@@ -293,12 +298,14 @@ class Widget( object ) :
 	def __initNesting() :
 	
 		widgetsInInit = set()
-		for frame in [ x[0] for x in inspect.stack() ] :
+		frame = inspect.currentframe( 1 )
+		while frame :
 			if frame.f_code.co_name=="__init__" :
 				frameSelf = frame.f_locals[frame.f_code.co_varnames[0]]
 				if isinstance( frameSelf, Widget ) :
 					widgetsInInit.add( frameSelf )
-		
+			frame = frame.f_back
+			
 		return len( widgetsInInit )
 	
 	__parentStack = []
@@ -368,7 +375,7 @@ class Widget( object ) :
 		QWidget#gafferWindow {
 
 			color: $foreground;
-			font: 8pt "Sans";
+			font: 10px;
 			etch-disabled-text: 0;
 			background-color: $backgroundMid;
 			border: 1px solid #555555;
@@ -383,7 +390,7 @@ class Widget( object ) :
 		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
 		
 			color: $foreground;
-			font: 8pt "Sans";
+			font: 10px;
 			etch-disabled-text: 0;
 			alternate-background-color: $alternateColor;
 			selection-background-color: $brightColor;
@@ -935,11 +942,35 @@ class _EventFilter( QtCore.QObject ) :
 	def __init__( self ) :
 	
 		QtCore.QObject.__init__( self )
-		
+	
+		# the vast majority ( ~99% at time of testing ) of events entering
+		# eventFilter() are totally irrelevant to us. it's therefore very
+		# important for interactivity to exit the filter as fast as possible
+		# in these cases. first testing for membership of this set seems the
+		# best way. if further optimisation becomes necessary, then perhaps the
+		# best solution is an event filter implemented in c++, which does the early
+		# out based on the mask and then calls through to python only if this fails.
+		self.__eventMask = set( (
+			QtCore.QEvent.ToolTip,
+			QtCore.QEvent.KeyPress,
+			QtCore.QEvent.MouseButtonPress,
+			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.MouseMove,
+			QtCore.QEvent.Enter,
+			QtCore.QEvent.Leave,
+			QtCore.QEvent.Wheel,			
+		) )
+	
 	def eventFilter( self, qObject, qEvent ) :
 		
+		qEventType = qEvent.type() # for speed it's best not to keep calling this below
+		# early out as quickly as possible for the majority of cases where we have literally
+		# no interest in the event.
+		if qEventType not in self.__eventMask :
+			return False
+		
 		# we display tooltips even on disabled widgets
-		if qEvent.type()==QtCore.QEvent.ToolTip :
+		if qEventType==qEvent.ToolTip :
 		
 			widget = Widget._owner( qObject )
 			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
@@ -949,7 +980,7 @@ class _EventFilter( QtCore.QObject ) :
 		if not qObject.isEnabled() :
 			return False
 			
-		if qEvent.type()==QtCore.QEvent.KeyPress :
+		if qEventType==qEvent.KeyPress :
 						
 			widget = Widget._owner( qObject )
 			event = GafferUI.KeyEvent(
@@ -959,7 +990,7 @@ class _EventFilter( QtCore.QObject ) :
 
 			return widget.keyPressSignal()( widget, event )
 		
-		elif qEvent.type()==QtCore.QEvent.MouseButtonPress :
+		elif qEventType==qEvent.MouseButtonPress :
 					
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
@@ -975,7 +1006,7 @@ class _EventFilter( QtCore.QObject ) :
 			if event.buttons :
 				return widget.buttonPressSignal()( widget, event )
 			
-		elif qEvent.type()==QtCore.QEvent.MouseButtonRelease :
+		elif qEventType==qEvent.MouseButtonRelease :
 				
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
@@ -990,7 +1021,7 @@ class _EventFilter( QtCore.QObject ) :
 
 			return widget.buttonReleaseSignal()( widget, event )
 			
-		elif qEvent.type()==QtCore.QEvent.MouseMove :
+		elif qEventType==qEvent.MouseMove :
 				
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(
@@ -1005,19 +1036,19 @@ class _EventFilter( QtCore.QObject ) :
 
 			return widget.mouseMoveSignal()( widget, event )
 		
-		elif qEvent.type()==QtCore.QEvent.Enter :
+		elif qEventType==qEvent.Enter :
 				
 			widget = Widget._owner( qObject )
 
 			return widget.enterSignal()( widget )
 			
-		elif qEvent.type()==QtCore.QEvent.Leave :
+		elif qEventType==qEvent.Leave :
 				
 			widget = Widget._owner( qObject )
 
 			return widget.leaveSignal()( widget )
 			
-		elif qEvent.type()==QtCore.QEvent.Wheel :
+		elif qEventType==qEvent.Wheel :
 				
 			widget = Widget._owner( qObject )
 			event = GafferUI.ButtonEvent(

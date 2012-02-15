@@ -66,6 +66,8 @@ from ProgressBarTest import ProgressBarTest
 from ContainerWidgetTest import ContainerWidgetTest
 from SelectionMenuTest import SelectionMenuTest
 from StandardStyleTest import StandardStyleTest
+from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
+from EditorWidgetTest import EditorWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

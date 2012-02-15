@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,27 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
+import unittest
+import weakref
 
 import Gaffer
+import GafferTest
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class CompoundParameterValueWidgetTest( unittest.TestCase ) :
 
-class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
+	def testLifetime( self ) :
 
-	def __init__( self, plug, **kw ) :
+		n = Gaffer.OpHolder()
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:-1]
+		n.setOp( *opSpec )
+		
+		ui = GafferUI.CompoundParameterValueWidget( n.parameterHandler() )
+		w = weakref.ref( ui )
+		del ui
+		
+		self.assertEqual( w(), None )
+		
+if __name__ == "__main__":
+	unittest.main()
 	
-		self.__checkBox = GafferUI.CheckBox()
-		
-		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug, **kw )
- 
-		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
-						
-		self.updateFromPlug()
-		
-	def updateFromPlug( self ) :
-
-		if not hasattr( self, "_BoolPlugValueWidget__checkBox" ) :
-			# we're still constructing
-			return
-		
-		if self.getPlug() is not None :
-			self.__checkBox.setState( self.getPlug().getValue() )
-		
-	def __stateChanged( self, widget ) :
-		
-		self.__setPlugValue()
-			
-		return False
-	
-	def __setPlugValue( self ) :
-			
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-						
-			self.getPlug().setValue( self.__checkBox.getState() )
-	
-GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug.staticTypeId(), BoolPlugValueWidget )
