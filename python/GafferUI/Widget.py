@@ -952,12 +952,13 @@ class _EventFilter( QtCore.QObject ) :
 		# out based on the mask and then calls through to python only if this fails.
 		self.__eventMask = set( (
 			QtCore.QEvent.ToolTip,
+			QtCore.QEvent.KeyPress,
 			QtCore.QEvent.MouseButtonPress,
 			QtCore.QEvent.MouseButtonRelease,
 			QtCore.QEvent.MouseMove,
 			QtCore.QEvent.Enter,
 			QtCore.QEvent.Leave,
-			QtCore.QEvent.Wheel,				
+			QtCore.QEvent.Wheel,			
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
