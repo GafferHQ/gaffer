@@ -285,8 +285,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		assert( len( splitContainer ) == 2 )
 		
 		handle = splitContainer.handle( 0 )
-		splitContainer.__handleEnterConnection = handle.enterSignal().connect( self.__handleEnter )
-		splitContainer.__handleButtonReleaseConnection = handle.buttonReleaseSignal().connect( self.__handleButtonRelease )
+		splitContainer.__handleEnterConnection = handle.enterSignal().connect( CompoundEditor.__handleEnter )
+		splitContainer.__handleButtonReleaseConnection = handle.buttonReleaseSignal().connect( CompoundEditor.__handleButtonRelease )
 		splitContainer.__preferredHandlePosition = 0.5 # where the user put it last
 		
 		splitContainer.setOrientation( orientation )
