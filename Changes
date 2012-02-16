@@ -20,6 +20,10 @@
 
 * Fixed circular reference in GafferUI.CompoundParameterValueWidget which could cause "Underlying C/C++ object has been deleted" errors.
 
+* The displayFunction in GafferUI.PathListingWidget.Columns may now return a GafferUI.Image or (as an optimisation) a QtGui.QIcon.
+
+* Added GafferUI.PathListingWidget.defaultFileSystemIconColumn, which can be added to the list of columns passed to GafferUI.PathListingWidget to obtain an icon view.
+
 0.27.0
 ------
 
