@@ -106,8 +106,6 @@ class Widget( object ) :
 			
 		Widget.__qtWidgetOwners[self.__qtWidget] = weakref.ref( self )
 				
-		self.__qtWidget.installEventFilter( _eventFilter )
-
 		# disable different focus appearance on os x
 		## \todo If we have a style class for Widget at some point, then perhaps
 		# this should go in there.
@@ -126,7 +124,18 @@ class Widget( object ) :
 		if len( self.__parentStack ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :					
 				self.__parentStack[-1][0].addChild( self, **kw )
-	
+				
+		self.__eventFilterInstalled = False		
+		# if a class has overridden getToolTip, then the tooltips
+		# may be dynamic based on context, and we need to display
+		# them using the event filter.
+		c = self.__class__
+		while c and c is not Widget :
+			if "getToolTip" in c.__dict__ :
+				self.__ensureEventFilter()
+				break
+			c = c.__bases__[0]
+		
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
 	# visible explicitly after creation.		
@@ -212,31 +221,38 @@ class Widget( object ) :
 
 	def keyPressSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__keyPressSignal
 	
 	## \todo Should these be renamed to mousePressSignal and mouseReleaseSignal?	
 	def buttonPressSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__buttonPressSignal
 	
 	def buttonReleaseSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__buttonReleaseSignal
 	
 	def mouseMoveSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__mouseMoveSignal
 	
 	def enterSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__enterSignal
 		
 	def leaveSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__leaveSignal
 		
 	def wheelSignal( self ) :
 	
+		self.__ensureEventFilter()
 		return self.__wheelSignal
 	
 	## Returns the tooltip to be displayed. This may be overriden
@@ -245,7 +261,7 @@ class Widget( object ) :
 	# been called.
 	def getToolTip( self ) :
 	
-		return self.__toolTip
+		return str( self._qtWidget().toolTip() )
 	
 	## Sets the tooltip to be displayed for this Widget. This
 	# will override any default behaviour until setToolTip( "" )
@@ -254,7 +270,7 @@ class Widget( object ) :
 	
 		assert( isinstance( toolTip, basestring ) )
 		
-		self.__toolTip = toolTip
+		self._qtWidget().setToolTip( toolTip )
 		
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.
@@ -364,6 +380,17 @@ class Widget( object ) :
 			min( 255, max( 0, color.b ) ),
 		)
 	
+	# We try not to install the event filter until absolutely
+	# necessary, as there's an overhead in having it in place.
+	# This function installs the filter, and is called when
+	# we know that the filter will be needed (typically when a
+	# client accesses one of the signals triggered by the filter).
+	def __ensureEventFilter( self ) :
+	
+		if not self.__eventFilterInstalled :
+			self._qtWidget().installEventFilter( _eventFilter )
+			self.__eventFilterInstalled = True
+
 	def _setStyleSheet( self ):
 
 		self.__qtWidget.setStyleSheet( self.__styleSheet )

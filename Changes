@@ -24,6 +24,8 @@
 
 * Added GafferUI.PathListingWidget.defaultFileSystemIconColumn, which can be added to the list of columns passed to GafferUI.PathListingWidget to obtain an icon view.
 
+* Optimised Widget implementation so that the event filter is only applied when it is absolutely needed - either when a connection to one of the signals has been made or when getToolTip has been overridden. Investigations with the standard gaffer ui revealed that only about one third of widgets meet these criteria.
+
 0.27.0
 ------
 
