@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -173,7 +173,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		IECoreGL.ToGLCameraConverter( self.__camera ).convert().render( None )
 		IECoreGL.State.bindBaseState()
 		IECoreGL.State.defaultState().bind()
-		self.__gadget.render()
+		if self.__gadget :
+			self.__gadget.render()
 			
 	def __renderRequest( self, gadget ) :
 	
