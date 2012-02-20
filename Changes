@@ -26,6 +26,8 @@
 
 * Optimised Widget implementation so that the event filter is only applied when it is absolutely needed - either when a connection to one of the signals has been made or when getToolTip has been overridden. Investigations with the standard gaffer ui revealed that only about one third of widgets meet these criteria.
 
+* Optimised Widget implementation by lazily constructing signals when they are first accessed. This improves construction times but also reduces the memory footprint of a freshly constructed Widget by 40%.
+
 0.27.0
 ------
 
