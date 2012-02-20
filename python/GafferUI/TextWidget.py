@@ -51,10 +51,6 @@ class TextWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLineEdit(), **kw )
 
-		self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
-		self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )
-		self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished ) )
-
 		self.setText( text )
 		self.setEditable( editable )
 		self.setDisplayMode( displayMode )
@@ -112,6 +108,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__textChangedSignal
 		except :
 			self.__textChangedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
 			
 		return self.__textChangedSignal
 
@@ -124,6 +121,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__editingFinishedSignal
 		except :
 			self.__editingFinishedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished ) )
 			
 		return self.__editingFinishedSignal
 
@@ -134,6 +132,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__activatedSignal
 		except :
 			self.__activatedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )
 			
 		return self.__activatedSignal
 
