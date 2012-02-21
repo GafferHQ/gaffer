@@ -142,43 +142,21 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 	def testDirtyPropagation( self ) :
 	
-		c = Gaffer.CompoundPlug( direction=Gaffer.Plug.Direction.Out )
-		c["f1"] = Gaffer.FloatPlug( direction=Gaffer.Plug.Direction.Out )
-		c["f2"] = Gaffer.FloatPlug( direction=Gaffer.Plug.Direction.Out )
+		c = Gaffer.CompoundPlug( "c" )
+		c["c1"] = Gaffer.CompoundPlug()
+		c["c1"]["f1"] = Gaffer.FloatPlug()
 		
 		n = Gaffer.Node()
 		n["c"] = c
-
-		c["f1"].setValue( 10 )
-		c["f2"].setValue( 10 )
 		
-		self.failIf( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failIf( n["c"].getDirty() )
+		dirtyPlugs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 		
-		c["f1"].setDirty()
-
-		self.failUnless( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failUnless( n["c"].getDirty() )
+		n.plugDirtiedSignal()( c["c1"]["f1"] )
 		
-		c["f1"].setValue( 10 )
-						
-		self.failIf( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failIf( n["c"].getDirty() )
-
-		c.setDirty()
-		self.failUnless( c["f1"].getDirty() )
-		self.failUnless( c["f2"].getDirty() )
-		self.failUnless( n["c"].getDirty() )
-
-		c["f1"].setValue( 10 )
-		c["f2"].setValue( 10 )
-
-		self.failIf( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failIf( n["c"].getDirty() )
+		self.assertEqual( len( dirtyPlugs ), 3 )
+		self.failUnless( dirtyPlugs[0][0].isSame( c["c1"]["f1"] ) )
+		self.failUnless( dirtyPlugs[1][0].isSame( c["c1"] ) )
+		self.failUnless( dirtyPlugs[2][0].isSame( c["c1"] ) )
 		
 	def testPlugSetPropagation( self ) :
 	
