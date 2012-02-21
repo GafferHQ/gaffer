@@ -37,15 +37,16 @@
 
 from __future__ import with_statement
 
-from OpenGL.GL import *
-
 import IECore
-import IECoreGL
 
 import Gaffer
 import GafferUI
 from GLWidget import GLWidget
 from _GafferUI import ButtonEvent, ModifiableEvent, ContainerGadget, DragDropEvent, KeyEvent
+
+# import lazily to improve startup of apps which don't use GL functionality
+GL = Gaffer.lazyImport( "OpenGL.GL" )
+IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -169,9 +170,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		## \todo bg = self.__backgroundColor.linearToSRGB()
 		bg = IECore.Color3f( 0.3, 0.3, 0.3 )
-		glClearColor( bg[0], bg[1], bg[2], 0.0 )
-		glClearDepth( 1.0 )
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+		GL.glClearColor( bg[0], bg[1], bg[2], 0.0 )
+		GL.glClearDepth( 1.0 )
+		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT )
 			  
 		self.__updateScene()
 		if self.__scene :
@@ -445,9 +446,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		region = IECore.Box2f( regionCentre - regionSize/2, regionCentre + regionSize/2 )
 		
-		glClearColor( 0.0, 0.0, 0.0, 0.0 );
-		glClearDepth( 1.0 )
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		GL.glClearColor( 0.0, 0.0, 0.0, 0.0 );
+		GL.glClearDepth( 1.0 )
+		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		selection = self.__scene.select( region )
 		
 		if not len( selection ) :

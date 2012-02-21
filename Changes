@@ -30,6 +30,8 @@
 
 * Added Gaffer.lazyImport function, which imports modules in such a way that they aren't actually loaded until first accessed.
 
+* Optimised startup of gaffer applications which don't use any GL functionality, by using the new Gaffer.lazyImport functionality for PyOpenGL, IECoreGL and QtOpenGL.
+
 0.27.0
 ------
 
