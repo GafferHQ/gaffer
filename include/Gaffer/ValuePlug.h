@@ -73,35 +73,39 @@ class ValuePlug : public Plug
 		
 	protected :
 	
-		/// Derived classes must use this pointer to store and retrieve plug
-		/// values. The ValuePlug class doesn't dictate what sort of value
-		/// is stored (provided it derives from IECore::Object), but must be
-		/// allowed to dictate where it is stored. storage() will return different
-		/// locations depending on the current context, enabling multithreading
-		/// and caching of results behind the scenes. Passing true will
-		/// cause the ValuePlug to first update the current stored value if necessary
-		/// by calling node()->compute() or setFromInput(). Typically a derived
-		/// class should have a public setValue() method which stores into storage()
-		/// and a getValue() method which retrieves from storage( true ).
-		IECore::ObjectPtr &storage( bool update );
-	
-		/// Must be called by derived classes when the value has been
-		/// set. This emits any relevant signals and propagates the value to the
-		/// Plug's outputs.
-		void valueSet();
-		
+		/// Internally all values are stored as instances of classes derived
+		/// from IECore::Object, although this isn't necessarily visible to the user.
+		/// This function updates the value using node()->compute()
+		/// or setFromInput() as appropriate and then returns it. Typically
+		/// this will be called by a subclass getValue() method which will
+		/// extract a value from the object and return it to the user in a more
+		/// convenient form. Note that this function will often return different
+		/// objects with each query - this allows it to support the calculation
+		/// of values in different contexts and on different threads. It is also
+		/// possible for 0 to be returned, either if a computation fails or if
+		/// the value for the plug has not been set - in this case the subclass
+		/// should return the default value from it's getValue() method.
+		IECore::ConstObjectPtr getObjectValue();
+		/// Should be called by derived classes when they wish to set the plug
+		/// value.
+		void setObjectValue( IECore::ConstObjectPtr value );
+				
 		/// Must be implemented to set the value of this Plug from the
 		/// value of its input. This allows the Plug to perform any
-		/// necessary conversions of the input value. Called by the valueSet()
+		/// necessary conversions of the input value. Called by the getValue()
 		/// function to propagate values through the graph.
 		virtual void setFromInput() = 0;
 		
 	private :
 	
+		class Computation;
+		friend class Computation;
+	
+		void setValueInternal( IECore::ConstObjectPtr value );
 		void propagateDirtiness();
 	
 		/// For holding the value of input plugs with no input connections.
-		IECore::ObjectPtr m_staticStorage;
+		IECore::ConstObjectPtr m_staticValue;
 
 };
 

@@ -223,6 +223,7 @@ class NodeTest( unittest.TestCase ) :
 		
 		n["p1"] = Gaffer.StringPlug( defaultValue = "default", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p1"].setValue( "value" )
+		self.assertEqual( n["p1"].getValue(), "value" )
 		
 		s = Gaffer.ScriptNode()
 		s["n"] = n

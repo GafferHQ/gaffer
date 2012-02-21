@@ -94,10 +94,7 @@ class NumericPlug : public ValuePlug
 
 		typedef IECore::TypedData<T> DataType;
 		typedef typename DataType::Ptr DataTypePtr;
-		
-		DataTypePtr &typedStorage( bool update = false );
-		void setValueInternal( T value );
-	
+			
 		T m_defaultValue;
 		T m_minValue;
 		T m_maxValue;

@@ -64,6 +64,7 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( f.defaultValue(), 10 )
 		self.assertEqual( f.getName(), "a" )
 		self.assertEqual( f.typeName(), "FloatPlug" )
+		self.assertEqual( f.getValue(), 10 )
 	
 	def testHaveMinMaxValues( self ) :
 	

@@ -35,12 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "OpenEXR/ImathFun.h"
 
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/Action.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -126,22 +123,18 @@ template<class T>
 void NumericPlug<T>::setValue( T value )
 {
 	value = Imath::clamp( value, m_minValue, m_maxValue );
-	
-	DataTypePtr &s = typedStorage();
-	if( value!=s->readable() )
-	{
-		Action::enact(
-			this,
-			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), value ),
-			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), s->readable() )		
-		);
-	}
+	setObjectValue( new DataType( value ) );
 }
 
 template<class T>
 T NumericPlug<T>::getValue()
 {
-	return typedStorage( true )->readable();
+	ConstObjectPtr o = getObjectValue();
+	if( o )
+	{
+		return static_cast<const DataType *>( o.get() )->readable();
+	}
+	return m_defaultValue;
 }
 
 template<class T>
@@ -159,24 +152,6 @@ void NumericPlug<T>::setFromInput()
 		default :
 			assert( 0 ); // shouldn't have connections of any other type
 	}
-}
-
-template<class T>
-typename NumericPlug<T>::DataTypePtr &NumericPlug<T>::typedStorage( bool update )
-{
-	ObjectPtr &o = storage( update );
-	if( !o )
-	{
-		o = new DataType( m_defaultValue );
-	}
-	return reinterpret_cast<DataTypePtr &>( o );
-}
-
-template<class T>
-void NumericPlug<T>::setValueInternal( T value )
-{
-	typedStorage()->writable() = value;
-	valueSet();	
 }
 
 // explicit instantiation

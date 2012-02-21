@@ -39,40 +39,86 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "boost/bind.hpp"
 #include "boost/format.hpp"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Action.h"
 
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
-// Storage implementation
+// Computation implementation
+// The computation class is responsible for managing the transient storage
+// necessary for computed results, and for managing the call to Node::compute().
+// One day it may also be responsible for managing a cache of previous
+// results and maybe even shipping some computations off over the network
+// to a special computation server of some sort.
 //////////////////////////////////////////////////////////////////////////
 
-struct Storage : IECore::RefCounted
+class ValuePlug::Computation
 {
 	
-	IE_CORE_DECLAREMEMBERPTR( Storage )
+	public :
 	
-	Storage( Plug *plug )
-		:	m_plug( plug ), m_written( false )
-	{
-	}
+		Computation( ValuePlug *resultPlug )
+			:	m_resultPlug( resultPlug ), m_resultWritten( false )
+		{
+			g_threadComputations.local().push( this );
+		
+			if( m_resultPlug->getInput<Plug>() )
+			{
+				m_resultPlug->setFromInput();
+			}
+			else
+			{
+				assert( m_resultPlug->direction()==Out );
+				Node *n = m_resultPlug->node();
+				if( !n )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
+				}
+				n->compute( m_resultPlug, Context::current() );
+			}
+			
+			// the call to compute() or setFromInput() above should cause setValue() to be called
+			// on the result plug, which in turn will call ValuePlug::setObjectValue, which will
+			// then store the result in the current computation.
+			
+		}
+		
+		~Computation()
+		{
+			g_threadComputations.local().pop();
+		}
 	
-	Plug *m_plug;
-	IECore::ObjectPtr m_storage;
-	bool m_written;
+		static Computation *current()
+		{
+			ComputationStack &s = g_threadComputations.local();
+			if( !s.size() )
+			{
+				return 0;
+			}
+			return s.top();
+		}
+	
+	/// \todo Make accessors
+	//private :
+	
+		ValuePlug *m_resultPlug;
+		IECore::ConstObjectPtr m_resultValue;
+		bool m_resultWritten;
+
+		typedef std::stack<Computation *> ComputationStack;
+		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
+
+		static ThreadSpecificComputationStack g_threadComputations;
 		
 };
 
-IE_CORE_DECLAREPTR( Storage );
-
-typedef std::stack<StoragePtr> StorageStack;
-typedef tbb::enumerable_thread_specific<StorageStack> ThreadSpecificStorageStack;
-
-static ThreadSpecificStorageStack g_threadStorage;
+ValuePlug::Computation::ThreadSpecificComputationStack ValuePlug::Computation::g_threadComputations;
 
 //////////////////////////////////////////////////////////////////////////
 // ValuePlug implementation
@@ -118,78 +164,74 @@ void ValuePlug::setInput( PlugPtr input )
 		/// \todo Need to revert to default value	
 	}
 }
-			
-IECore::ObjectPtr &ValuePlug::storage( bool update )
+
+IECore::ConstObjectPtr ValuePlug::getObjectValue()
 {
 	bool haveInput = getInput<Plug>();
 	if( direction()==In && !haveInput )
 	{
 		// input plug with no input connection. there can only ever be a single value,
-		// so we store it directly on the plug.
-		return m_staticStorage;
+		// which is stored directly on the plug.
+		return m_staticValue;
 	}
-
-	// an input plug with an input connection or an output plug. there can be many values -
-	// one per context. we therefore store them transiently on the StorageStack.
 	
-	StorageStack &threadStorage = g_threadStorage.local();
+	// an input plug with an input connection or an output plug. there can be many values -
+	// one per context. the computation class is responsible for providing storage for the result
+	// and also actually managing the computation.
+	Computation computation( this );
 
-	if( update )
+	if( !computation.m_resultWritten )
 	{
-		// push some new storage.
-		StoragePtr s = new Storage( this );
-		threadStorage.push( s );
-		if( haveInput )
-		{
-			setFromInput();
-		}
-		else
-		{
-			assert( direction()==Out );
-			Node *n = node();
-			if( !n )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % fullName() ) );			
-			}
-			n->compute( this, Context::current() );
-		}
-			
-		return s->m_storage;
+		throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % fullName() ) );			
 	}
-	else
-	{	
-		while( threadStorage.size() && threadStorage.top()->m_plug!=this )
-		{
-			threadStorage.pop(); //!!! MAKE THIS SOUND LIKE IT MAKES SENSE!
-		}
-		
-		Storage *s = threadStorage.top().get();
-		// return storage previously pushed
-		if( !threadStorage.size() )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot access storage for plug \"%s\" because there is no current computation." ) % fullName() ) );					
-		}
-		if( s->m_plug != this )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot access storage for plug \"%s\" because plug \"%s\" is the current computation." ) % fullName() % s->m_plug->fullName() ) );						
-		}
-		s->m_written = true; /// !!! RENAME THIS OR HAVE TWO STORAGE FUNCTIONS OR SOMETHING
-		return s->m_storage;
-	}
+	
+	return computation.m_resultValue;
 }
 
-void ValuePlug::valueSet()
+void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 {
-	//THIS IS A HACK AND TOTALLY UNRELIABLE! WE HAVE TO RESTRUCTURE TO AVOID THINGS DANGLING ON THE STACK!
-	//I THINK getValue() and setValue() at the ValuePlug level is the way to go.
-	
-	StorageStack &threadStorage = g_threadStorage.local();
-	if( threadStorage.size() > 1 || ( threadStorage.size() && !threadStorage.top()->m_written ) )
+	bool haveInput = getInput<Plug>();
+	if( direction()==In && !haveInput )
 	{
-		// don't signal anything during a compute
+		// input plug with no input connection. there can only ever be a single value,
+		// which we store directly on the plug. when setting this we need to take care
+		// of undo, and also of triggering the plugValueSet signal and propagating the
+		// plugDirtiedSignal.
+		if( ( (bool)value != (bool)m_staticValue ) ||
+			( value && value->isNotEqualTo( m_staticValue ) )
+		)
+		{
+			Action::enact( 
+				this,
+				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), value ),
+				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), m_staticValue )
+			);
+		}		
 		return;
 	}
-		
+
+	// an input plug with an input connection or an output plug. we must be currently in a computation
+	// triggered by getObjectValue() for a setObjectValue() call to be valid. we never trigger plugValueSet
+	// or plugDirtiedSignals during computation.
+	
+	Computation *computation = Computation::current();
+	if( !computation )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % fullName() ) );					
+	}
+	
+	if( computation->m_resultPlug != this )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % fullName() % computation->m_resultPlug->fullName() ) );						
+	}
+	
+	computation->m_resultValue = value;
+	computation->m_resultWritten = true;
+}
+
+void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
+{
+	m_staticValue = value;
 	Node *n = node();
 	if( n )
 	{
@@ -200,7 +242,6 @@ void ValuePlug::valueSet()
 		// output values as soon as the dirty signal is emitted. 
 		n->plugSetSignal()( this );
 	}
-	
 	propagateDirtiness();
 }
 

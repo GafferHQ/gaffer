@@ -91,11 +91,7 @@ class TypedObjectPlug : public ValuePlug
 	private :
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedObjectPlug<T> );		
-
-		ValuePtr &typedStorage( bool update = false );
-		void setValueInternal( ConstValuePtr value );
 	
-		ValuePtr m_value;
 		ConstValuePtr m_defaultValue;
 
 };

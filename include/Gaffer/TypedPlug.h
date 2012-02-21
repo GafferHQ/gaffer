@@ -74,7 +74,7 @@ class TypedPlug : public ValuePlug
 		void setValue( const T &value );
 		/// Returns the value. This isn't const as it may require a compute
 		/// and therefore a setValue().
-		const T &getValue();
+		T getValue();
 
 	protected :
 
@@ -86,9 +86,6 @@ class TypedPlug : public ValuePlug
 
 		typedef IECore::TypedData<T> DataType;
 		typedef typename DataType::Ptr DataTypePtr;
-
-		DataTypePtr &typedStorage( bool update = false );
-		void setValueInternal( T value );
 	
 		T m_defaultValue;
 

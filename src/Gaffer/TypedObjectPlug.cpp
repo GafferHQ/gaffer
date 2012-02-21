@@ -36,11 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/Action.h"
 
 #include "OpenEXR/ImathFun.h"
-
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 
@@ -87,45 +84,24 @@ typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::defaultValue() co
 template<class T>
 void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 {
-	// the other plug types only actually do anything if the new value is different than the old.
-	// we don't do that here as it's assumed that the cost of testing large objects for equality
-	// is greater than the cost of the additional callbacks invoked if the value is set to the same
-	// again.
-	Action::enact(
-		this,
-		boost::bind( &TypedObjectPlug<T>::setValueInternal, Ptr( this ), value ),
-		boost::bind( &TypedObjectPlug<T>::setValueInternal, Ptr( this ), m_value )		
-	);
-}
-
-template<class T>
-void TypedObjectPlug<T>::setValueInternal( ConstValuePtr value )
-{
-	typedStorage() = value ? value->copy() : 0;
-	valueSet();
+	setObjectValue( value ? value->copy() : 0 );
 }
 
 template<class T>
 typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue()
 {
-	return typedStorage( true );
+	IECore::ConstObjectPtr o = getObjectValue();
+	if( o )
+	{
+		return IECore::staticPointerCast<const ValueType>( o );
+	}
+	return m_defaultValue;
 }
 
 template<class T>
 void TypedObjectPlug<T>::setFromInput()
 {
 	setValue( getInput<TypedObjectPlug<T> >()->getValue() );
-}
-
-template<class T>
-typename TypedObjectPlug<T>::ValuePtr &TypedObjectPlug<T>::typedStorage( bool update )
-{
-	IECore::ObjectPtr &o = storage( update );
-	if( !o )
-	{
-		o = m_defaultValue ? m_defaultValue->copy() : 0;
-	}
-	return reinterpret_cast<ValuePtr &>( storage( update ) );
 }
 
 namespace Gaffer

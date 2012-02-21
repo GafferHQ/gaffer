@@ -36,11 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/Action.h"
 
 #include "OpenEXR/ImathFun.h"
-
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 
@@ -87,45 +84,24 @@ const T &TypedPlug<T>::defaultValue() const
 template<class T>
 void TypedPlug<T>::setValue( const T &value )
 {
-	DataTypePtr &s = typedStorage();
-	if( value!=s->readable() )
+	setObjectValue( new DataType( value ) );
+}
+
+template<class T>
+T TypedPlug<T>::getValue()
+{
+	IECore::ConstObjectPtr o = getObjectValue();
+	if( o )
 	{
-		Action::enact(
-			this,
-			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), value ),
-			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), s->readable() )		
-		);
+		return static_cast<const DataType *>( o.get() )->readable();
 	}
-}
-
-template<class T>
-void TypedPlug<T>::setValueInternal( T value )
-{
-	typedStorage()->writable() = value;
-	valueSet();
-}
-
-template<class T>
-const T &TypedPlug<T>::getValue()
-{
-	return typedStorage( true )->readable();
+	return m_defaultValue;
 }
 
 template<class T>
 void TypedPlug<T>::setFromInput()
 {
 	setValue( getInput<TypedPlug<T> >()->getValue() );
-}
-
-template<class T>
-typename TypedPlug<T>::DataTypePtr &TypedPlug<T>::typedStorage( bool update )
-{
-	IECore::ObjectPtr &o = storage( update );
-	if( !o )
-	{
-		o = new DataType( m_defaultValue );
-	}
-	return reinterpret_cast<DataTypePtr &>( o );
 }
 
 namespace Gaffer
