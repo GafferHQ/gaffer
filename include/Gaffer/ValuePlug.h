@@ -98,8 +98,10 @@ class ValuePlug : public Plug
 		
 	private :
 	
-		/// \todo Remove this and have a cache of values indexed by context etc.
-		IECore::ObjectPtr m_storage;
+		void propagateDirtiness();
+	
+		/// For holding the value of input plugs with no input connections.
+		IECore::ObjectPtr m_staticStorage;
 
 };
 

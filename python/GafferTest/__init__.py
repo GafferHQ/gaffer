@@ -71,6 +71,8 @@ from WriteNodeTest import WriteNodeTest
 from ExecuteApplicationTest import ExecuteApplicationTest
 from ContextTest import ContextTest
 from CompoundPathFilterTest import CompoundPathFilterTest
+from BadNode import BadNode
+from CapturingSlot import CapturingSlot
 
 if __name__ == "__main__":
 	import unittest

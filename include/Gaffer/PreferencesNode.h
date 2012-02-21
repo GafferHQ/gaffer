@@ -58,11 +58,6 @@ class PreferencesNode : public Node
 		/// Accepts only ApplicationRoots.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		
-	protected :
-		
-		virtual void dirty( ConstPlugPtr dirty ) const;
-		virtual void compute( Plug *output, const Context *context ) const;
-		
 };
 
 } // namespace Gaffer

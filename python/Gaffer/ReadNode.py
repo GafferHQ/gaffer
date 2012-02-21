@@ -60,12 +60,14 @@ class ReadNode( Gaffer.Node ) :
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
 		self.__ensureReader()
 
-	def dirty( self, plug ) :
+	def affects( self, input ) :
 		
-		if ("parameters" in self and self["parameters"].isAncestorOf( plug )) or plug.getName()=="fileName" :
-						
-			self["output"].setDirty()
+		outputs = []
+		if ("parameters" in self and self["parameters"].isAncestorOf( input )) or input.isSame( self["fileName"] ) :
+			outputs.append( self["output"] )
 
+		return outputs
+		
 	def compute( self, plug, context ) :
 	
 		assert( plug.isSame( self["output"] ) )

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,8 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( f.defaultValue(), 1 )
 		self.assertEqual( f.minValue(), -1 )
 		self.assertEqual( f.maxValue(), 10 )
-		self.assertEqual( f.getValue(), 1 )
+		# cannot get the value of an output plug unless it's on a Node
+		self.assertRaises( RuntimeError, f.getValue )
 		
 		f = Gaffer.FloatPlug( defaultValue=10, name="a" )
 		self.assertEqual( f.defaultValue(), 10 )

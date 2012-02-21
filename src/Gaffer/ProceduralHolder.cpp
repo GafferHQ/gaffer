@@ -88,14 +88,12 @@ IECore::ConstParameterisedProceduralPtr ProceduralHolder::getProcedural( std::st
 	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
-void ProceduralHolder::dirty( ConstPlugPtr dirty ) const
+void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	ConstPlugPtr parametersPlug = getChild<Plug>( "parameters" );
-	if( parametersPlug && parametersPlug->isAncestorOf( dirty ) )
+	const Plug *parametersPlug = getChild<Plug>( "parameters" );
+	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
 	{
-		ConstObjectPlugPtr resultPlug = getChild<ObjectPlug>( "output" );
-		/// \todo Replace with an affects() method and deal with this in ValuePlug
-		// plugDirtiedSignal()( resultPlug );
+		outputs.push_back( getChild<ObjectPlug>( "output" ) );
 	}
 }
 

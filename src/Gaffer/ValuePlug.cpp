@@ -35,13 +35,48 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include <stack>
+
+#include "tbb/enumerable_thread_specific.h"
+
+#include "boost/format.hpp"
+
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
 
-#include "boost/format.hpp"
-
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Storage implementation
+//////////////////////////////////////////////////////////////////////////
+
+struct Storage : IECore::RefCounted
+{
+	
+	IE_CORE_DECLAREMEMBERPTR( Storage )
+	
+	Storage( Plug *plug )
+		:	m_plug( plug ), m_written( false )
+	{
+	}
+	
+	Plug *m_plug;
+	IECore::ObjectPtr m_storage;
+	bool m_written;
+		
+};
+
+IE_CORE_DECLAREPTR( Storage );
+
+typedef std::stack<StoragePtr> StorageStack;
+typedef tbb::enumerable_thread_specific<StorageStack> ThreadSpecificStorageStack;
+
+static ThreadSpecificStorageStack g_threadStorage;
+
+//////////////////////////////////////////////////////////////////////////
+// ValuePlug implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
 
@@ -67,63 +102,94 @@ bool ValuePlug::acceptsInput( ConstPlugPtr input ) const
 	return true;
 }
 
-/// \todo !!!
 void ValuePlug::setInput( PlugPtr input )
 {
 	Plug::setInput( input );
-	/*if( input )
+	if( input )
 	{
-		// cast safe because acceptsInput checks type.
-		ValuePlugPtr vInput = IECore::staticPointerCast<ValuePlug>( input );
-		if( vInput->getDirty() )
+		if( Node *n = node() )
 		{
-			setDirty();
+			n->plugDirtiedSignal()( this );
 		}
-		else
+		propagateDirtiness();
+	}
+	else
+	{
+		/// \todo Need to revert to default value	
+	}
+}
+			
+IECore::ObjectPtr &ValuePlug::storage( bool update )
+{
+	bool haveInput = getInput<Plug>();
+	if( direction()==In && !haveInput )
+	{
+		// input plug with no input connection. there can only ever be a single value,
+		// so we store it directly on the plug.
+		return m_staticStorage;
+	}
+
+	// an input plug with an input connection or an output plug. there can be many values -
+	// one per context. we therefore store them transiently on the StorageStack.
+	
+	StorageStack &threadStorage = g_threadStorage.local();
+
+	if( update )
+	{
+		// push some new storage.
+		StoragePtr s = new Storage( this );
+		threadStorage.push( s );
+		if( haveInput )
 		{
 			setFromInput();
 		}
-	}*/
-	/// \todo What should we do with the value on disconnect?
-}
-
-/*void ValuePlug::setDirty()
-{
-	if( m_dirty )
-	{
-		return;
-	}
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot set \"%s\" dirty as it's an input with no incoming connection." ) % fullName() ) );
-	}
-	m_dirty = true;
-	NodePtr n = node();
-	if( n )
-	{
-		n->plugDirtiedSignal()( this );
-		if( direction()==In )
+		else
 		{
-			n->dirty( this );
+			assert( direction()==Out );
+			Node *n = node();
+			if( !n )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % fullName() ) );			
+			}
+			n->compute( this, Context::current() );
 		}
+			
+		return s->m_storage;
 	}
-	for( OutputContainer::const_iterator it=outputs().begin(); it!=outputs().end(); it++ )
-	{
-		ValuePlugPtr o = IECore::runTimeCast<ValuePlug>( *it );
-		if( o )
+	else
+	{	
+		while( threadStorage.size() && threadStorage.top()->m_plug!=this )
 		{
-			o->setDirty();
+			threadStorage.pop(); //!!! MAKE THIS SOUND LIKE IT MAKES SENSE!
 		}
+		
+		Storage *s = threadStorage.top().get();
+		// return storage previously pushed
+		if( !threadStorage.size() )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Cannot access storage for plug \"%s\" because there is no current computation." ) % fullName() ) );					
+		}
+		if( s->m_plug != this )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Cannot access storage for plug \"%s\" because plug \"%s\" is the current computation." ) % fullName() % s->m_plug->fullName() ) );						
+		}
+		s->m_written = true; /// !!! RENAME THIS OR HAVE TWO STORAGE FUNCTIONS OR SOMETHING
+		return s->m_storage;
 	}
-}*/
-
-IECore::ObjectPtr &ValuePlug::storage( bool update )
-{
-	return m_storage;
 }
 
 void ValuePlug::valueSet()
 {
+	//THIS IS A HACK AND TOTALLY UNRELIABLE! WE HAVE TO RESTRUCTURE TO AVOID THINGS DANGLING ON THE STACK!
+	//I THINK getValue() and setValue() at the ValuePlug level is the way to go.
+	
+	StorageStack &threadStorage = g_threadStorage.local();
+	if( threadStorage.size() > 1 || ( threadStorage.size() && !threadStorage.top()->m_written ) )
+	{
+		// don't signal anything during a compute
+		return;
+	}
+		
 	Node *n = node();
 	if( n )
 	{
@@ -133,18 +199,35 @@ void ValuePlug::valueSet()
 		// are set, and listeners on output plugs may pull to get new
 		// output values as soon as the dirty signal is emitted. 
 		n->plugSetSignal()( this );
-		
+	}
+	
+	propagateDirtiness();
+}
+
+void ValuePlug::propagateDirtiness()
+{
+	Node *n = node();
+	if( n )
+	{
 		if( direction()==In )
 		{
-			n->dirty( this );
+			Node::AffectedPlugsContainer affected;
+			n->affects( this, affected );
+			for( Node::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
+			{
+				n->plugDirtiedSignal()( const_cast<ValuePlug *>( *it ) );
+				const_cast<ValuePlug *>( *it )->propagateDirtiness();
+			}
 		}
 	}
+	
 	for( OutputContainer::const_iterator it=outputs().begin(); it!=outputs().end(); it++ )
 	{
 		ValuePlugPtr o = IECore::runTimeCast<ValuePlug>( *it );
 		if( o )
 		{
-			o->setFromInput();
+			n->plugDirtiedSignal()( o );
+			o->propagateDirtiness();
 		}
 	}
 }

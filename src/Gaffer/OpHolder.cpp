@@ -89,18 +89,15 @@ IECore::ConstOpPtr OpHolder::getOp( std::string *className, int *classVersion ) 
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-void OpHolder::dirty( ConstPlugPtr dirty ) const
+void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	ConstPlugPtr parametersPlug = getChild<Plug>( "parameters" );
-	if( parametersPlug && parametersPlug->isAncestorOf( dirty ) )
+	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
 	{
-		/// \todo Should the dirty() method really be const? Should it perhaps fill an array
-		/// of plugs instead? Then it could be used for dependency queries too, and remain const.
-		ConstValuePlugPtr resultPlug = getChild<ValuePlug>( "result" );
+		const ValuePlug *resultPlug = getChild<ValuePlug>( "result" );
 		if( resultPlug )
 		{
-			/// \todo Replace with an affects() method and deal with this in ValuePlug
-			// plugDirtiedSignal()( resultPlug );
+			outputs.push_back( resultPlug );
 		}
 	}
 }

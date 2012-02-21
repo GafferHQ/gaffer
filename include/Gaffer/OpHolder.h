@@ -67,10 +67,11 @@ class OpHolder : public ParameterisedHolderNode
 		/// Convenience function which returns runTimeCast<Op>( getParameterised() );
 		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
 		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
+
+		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 	
 	protected :
 	
-		virtual void dirty( ConstPlugPtr dirty ) const;
 		virtual void compute( Plug *output, const Context *context ) const;
 		
 	private :

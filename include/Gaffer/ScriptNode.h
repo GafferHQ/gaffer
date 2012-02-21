@@ -190,12 +190,7 @@ class ScriptNode : public Node
 		Context *context();
 		const Context *context() const;
 		//@}
-		
-	protected :
-	
-		virtual void dirty( ConstPlugPtr dirty ) const;
-		virtual void compute( Plug *output, const Context *context ) const;
-			
+					
 	private :
 		
 		bool selectionSetAcceptor( Set::ConstPtr s, Set::ConstMemberPtr m );

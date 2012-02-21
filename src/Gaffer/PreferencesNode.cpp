@@ -63,11 +63,3 @@ bool PreferencesNode::acceptsParent( const GraphComponent *potentialParent ) con
 {
 	return potentialParent->isInstanceOf( (IECore::TypeId)ApplicationRootTypeId );
 }
-
-void PreferencesNode::dirty( ConstPlugPtr dirty ) const
-{
-}
-
-void PreferencesNode::compute( Plug *output, const Context *context ) const
-{
-}

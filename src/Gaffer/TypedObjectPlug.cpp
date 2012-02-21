@@ -57,7 +57,6 @@ TypedObjectPlug<T>::TypedObjectPlug(
 	:	ValuePlug( name, direction, flags ),
 		m_defaultValue( defaultValue ? defaultValue->copy() : 0 )
 {
-	typedStorage() = defaultValue ? defaultValue->copy() : 0;
 }
 
 template<class T>
@@ -121,6 +120,11 @@ void TypedObjectPlug<T>::setFromInput()
 template<class T>
 typename TypedObjectPlug<T>::ValuePtr &TypedObjectPlug<T>::typedStorage( bool update )
 {
+	IECore::ObjectPtr &o = storage( update );
+	if( !o )
+	{
+		o = m_defaultValue ? m_defaultValue->copy() : 0;
+	}
 	return reinterpret_cast<ValuePtr &>( storage( update ) );
 }
 

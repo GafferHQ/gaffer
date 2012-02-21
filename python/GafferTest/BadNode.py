@@ -34,28 +34,48 @@
 #  
 ##########################################################################
 
-import unittest
+import IECore
 
 import Gaffer
 
-## The simplest possible node to use the context during
-# computation - just outputs the current frame.
-class FrameNode( Gaffer.Node ) :
+class BadNode( Gaffer.Node ) :
+		
+	def __init__( self, name="BadNode", inputs={}, dynamicPlugs=() ) :
 
-	def __init__( self ) :
-	
-		Gaffer.Node.__init__( self )
+		Gaffer.Node.__init__( self, name )
+
+		self.addChild( Gaffer.IntPlug( "in1", Gaffer.Plug.Direction.In ) )
+		self.addChild( Gaffer.IntPlug( "in2", Gaffer.Plug.Direction.In ) )
+
+		self.addChild( Gaffer.IntPlug( "out1", Gaffer.Plug.Direction.Out ) )
+		self.addChild( Gaffer.IntPlug( "out2", Gaffer.Plug.Direction.Out ) )
+		self.addChild( Gaffer.IntPlug( "out3", Gaffer.Plug.Direction.Out ) )
 		
-		self.addChild(
-			Gaffer.FloatPlug(
-				"output",
-				direction = Gaffer.Plug.Direction.Out,
-			)
-		)
+		self._init( inputs, dynamicPlugs )
+
+	def affects( self, input ) :
 		
+		outputs = []
+		if input.getName() == "in1" :
+			outputs.append( self["out1"] )
+		elif input.getName() == "in1" :
+			outputs.append( self["out2"] )
+			
+		return outputs
+
 	def compute( self, plug, context ) :
-	
-		assert( plug.isSame( self["output"] ) )
-		assert( isinstance( context, Gaffer.Context ) )
+
+		if plug.isSame( self["out1"] ) :
+			# good - pull on the right input and set the right plug
+			plug.setValue( self["in1"].getValue() )
+			# bad - try to set another plug at the same time
+			self["out2"].setValue( 10 )
+		elif plug.isSame( self["out2"] ) :
+			# bad - pull on the wrong plug
+			plug.setValue( self["in1"].getValue() )
+		elif plug.isSame( self["out3"] ) :
+			# bad - don't do anything
+			pass
+			
 		
-		plug.setValue( context.getFrame() )
+IECore.registerRunTimeTyped( BadNode )

@@ -48,20 +48,8 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( Node )
 
-/// let's not have DoublePlug or DoubleVectorPlug
-///		- keep all real types as float ?? really?? why not use double if we use only one type?
-///		- and all integers as int? - except for maybe UIntVectorData?
-///
-/// Cannot dirty an input plug without a connection
-///		- and input plugs revert to default (or current value) on disconnect?
-/// Expressions
-///		- Node? or intrinsic to Plug somehow? do they dirty automatically? or compute each time?
-///		- it'd be nice not to have to call IntData::value() just to get values from Plugs in these
-/// Memory management
-///		- Is this where we flush less often used values into a disk cache? and load 'em again when needed?
-///
-/// Image plugs with partial computation - how would they work????
-///
+/// The Plug class defines a means of making point to point connections.
+/// A Plug may have many outputs but only one input.
 class Plug : public GraphComponent
 {
 

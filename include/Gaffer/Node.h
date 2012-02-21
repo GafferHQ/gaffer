@@ -65,6 +65,8 @@ class Node : public GraphComponent
 		typedef boost::signal<void (PlugPtr)> UnaryPlugSignal;
 		typedef boost::signal<void (PlugPtr, PlugPtr)> BinaryPlugSignal;
 		
+		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
+		
 		/// @name Plug iterators
 		//////////////////////////////////////////////////////////////
 		//@{
@@ -101,14 +103,15 @@ class Node : public GraphComponent
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		
+		/// Must be implemented to fill outputs with all the plugs whose computation
+		/// will be affected by the specified input.
+		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
 	protected :
 		
-		/// Called when an input plug becomes dirty. Must be implemented to dirty any
-		/// output plugs which depend on the input.
-		virtual void dirty( ConstPlugPtr dirty ) const = 0;
-		/// Called when getValue() is called on an output plug which is dirty. Must
-		/// be implemented to calculate and set the value for this Plug.
-		virtual void compute( Plug *output, const Context *context ) const = 0;
+		/// Called to compute the values for output Plugs. Must be implemented to compute
+		/// an appropriate value and apply it using output->setValue().
+		virtual void compute( ValuePlug *output, const Context *context ) const;
 
 		/// Implemented to remove all connections when the node is being
 		/// unparented.

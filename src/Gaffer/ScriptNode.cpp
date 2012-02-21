@@ -206,14 +206,6 @@ ConstStringPlugPtr ScriptNode::fileNamePlug() const
 {
 	return m_fileNamePlug;
 }
-	
-void ScriptNode::dirty( ConstPlugPtr dirty ) const
-{
-}
-
-void ScriptNode::compute( Plug *output, const Context *context ) const
-{
-}
 
 void ScriptNode::execute( const std::string &pythonScript )
 {

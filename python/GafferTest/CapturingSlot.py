@@ -34,28 +34,16 @@
 #  
 ##########################################################################
 
-import unittest
-
 import Gaffer
 
-## The simplest possible node to use the context during
-# computation - just outputs the current frame.
-class FrameNode( Gaffer.Node ) :
-
-	def __init__( self ) :
+class CapturingSlot( list ) :
 	
-		Gaffer.Node.__init__( self )
+	def __init__( self, *signals ) :
 		
-		self.addChild(
-			Gaffer.FloatPlug(
-				"output",
-				direction = Gaffer.Plug.Direction.Out,
-			)
-		)
+		self.__connections = []
+		for s in signals :
+			self.__connections.append( s.connect( Gaffer.WeakMethod( self.__slot ) ) )
 		
-	def compute( self, plug, context ) :
+	def __slot( self, *args ) :
 	
-		assert( plug.isSame( self["output"] ) )
-		assert( isinstance( context, Gaffer.Context ) )
-		
-		plug.setValue( context.getFrame() )
+		self.append( args )

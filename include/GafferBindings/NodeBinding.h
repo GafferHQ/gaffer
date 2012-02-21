@@ -38,10 +38,13 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_H
 #define GAFFERBINDINGS_NODEBINDING_H
 
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
 
@@ -51,22 +54,23 @@ namespace GafferBindings
 #define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 \
-	virtual void dirty( Gaffer::ConstPlugPtr dirty ) const\
+	virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "dirty" ) )\
+		if( PyObject_HasAttrString( m_pyObject, "affects" ) )\
 		{\
-			boost::python::override f = this->get_override( "dirty" );\
+			boost::python::override f = this->get_override( "affects" );\
 			if( f )\
 			{\
-				f( IECore::constPointerCast<Gaffer::Plug>( dirty ) );\
+				boost::python::list pythonOutputs = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( input ) ) );\
+				boost::python::container_utils::extend_container( outputs, pythonOutputs );\
 				return;\
 			}\
 		}\
-		CLASSNAME::dirty( dirty );\
+		CLASSNAME::affects( input, outputs );\
 	}\
 \
-	virtual void compute( Gaffer::Plug *output, const Gaffer::Context *context ) const\
+	virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
@@ -74,7 +78,7 @@ namespace GafferBindings
 			boost::python::override f = this->get_override( "compute" );\
 			if( f )\
 			{\
-				f( Gaffer::PlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );\
+				f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );\
 				return;\
 			}\
 		}\
@@ -82,8 +86,22 @@ namespace GafferBindings
 	}
 
 #define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
-	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )
-		
+	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
+	.def( "affects", &GafferBindings::affects<CLASSNAME> )
+
+template<typename T>
+static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
+{
+	Gaffer::Node::AffectedPlugsContainer a;
+	n.T::affects( p, a );
+	boost::python::list result;
+	for( Gaffer::Node::AffectedPlugsContainer::const_iterator it=a.begin(); it!=a.end(); it++ )
+	{
+		result.append( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( *it ) ) );
+	}
+	return result;
+}
+
 void bindNode();
 
 void initNode( Gaffer::Node *node, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs );

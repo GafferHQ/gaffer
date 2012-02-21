@@ -55,11 +55,13 @@ class AddNode( Gaffer.Node ) :
 		
 		self._init( inputs, dynamicPlugs )
 
-	def dirty( self, plug ) :
+	def affects( self, input ) :
+		
+		outputs = []
+		if input.getName() in ( "op1", "op2" ) :
+			outputs.append( self.getChild( "sum" ) )
 
-		if plug.getName()=="op1" or plug.getName()=="op2" :
-
-			self.getChild( "sum" ).setDirty()
+		return outputs
 
 	def compute( self, plug, context ) :
 

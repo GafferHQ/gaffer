@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -69,27 +69,21 @@ class OpHolderTest( unittest.TestCase ) :
 		self.failUnless( "P" not in m2 )
 		self.failUnless( "renamed" in m2 )
 		
-	def testDirty( self ) :
+		n["parameters"]["names"].setValue( IECore.StringVectorData( [ "P renamedAgain" ] ) )
+
+		self.failUnless( "P" not in m2 )
+		self.failUnless( "renamed" in m2 )
+		
+	def testAffects( self ) :
 	
 		n = Gaffer.OpHolder()
 		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		
-		self.failUnless( n["result"].getDirty() )
+		a = n.affects( n["parameters"]["input"] )
+		self.assertEqual( len( a ), 1 )
+		self.failUnless( a[0].isSame( n["result"] ) )
 		
-		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
-		n["parameters"]["input"].setValue( m )
-		n["result"].getValue()
-		
-		self.failIf( n["result"].getDirty() )
-		
-		m2 = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -10 ), IECore.V2f( 10 ) ) )
-		n["parameters"]["input"].setValue( m )		
-		self.failUnless( n["result"].getDirty() )
-
-		n["result"].getValue()
-		self.failIf( n["result"].getDirty() )		
-	
 	def testSerialise( self ) :
 	
 		s = Gaffer.ScriptNode()
