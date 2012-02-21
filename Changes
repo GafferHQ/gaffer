@@ -28,6 +28,8 @@
 
 * Optimised Widget implementation by lazily constructing signals when they are first accessed. This improves construction times but also reduces the memory footprint of a freshly constructed Widget by 40%.
 
+* Added Gaffer.lazyImport function, which imports modules in such a way that they aren't actually loaded until first accessed.
+
 0.27.0
 ------
 

@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,20 +34,39 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
+import sys
+import types
+
+def lazyImport( moduleName ) :
+
+	# if the module is already loaded, then just return it
+	module = sys.modules.get( moduleName, None )
+	if module is not None :
+		return module
+	
+	# load parent module if necessary
+	parentModule = None
+	parentModuleName = moduleName.rpartition( "." )[0]
+	if parentModuleName :
+		parentModule = lazyImport( parentModuleName )
+		
+	module = LazyModule( moduleName )
+	sys.modules[moduleName] = module
+	return module
+
+class LazyModule( types.ModuleType ) :
+
+	def __init__( self, moduleName ) :
+	
+		types.ModuleType.__init__( self, moduleName )
+	
+		self.__loaded = False
+	
+	def __getattribute__( self, name ) :
+	
+		if not types.ModuleType.__getattribute__( self, "_LazyModule__loaded" ) :
+			# then a reload will trick python into doing the actual import
+			reload( self ) 
+			self.__loaded = True
+			
+		return types.ModuleType.__getattribute__( self, name )

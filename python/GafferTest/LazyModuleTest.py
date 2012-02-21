@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,20 +34,37 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
+import sys
+import types
+import unittest
+
+import Gaffer
+
+class LazyModuleTest( unittest.TestCase ) :
+
+	def test( self ) :
+		
+		# lazy loading something already loaded should just return the module
+		# directly.
+		ut = Gaffer.lazyImport( "unittest" )
+		self.failUnless( ut is unittest )
+		self.failUnless( type( ut ) is types.ModuleType )
+		
+		# lazy loading something not yet loaded should give us a nice
+		# lazy module. hopefully nobody is loading the dummy_threading
+		# module for any other purpose.
+		
+		self.failIf( "dummy_threading" in sys.modules )
+		
+		lazyDT = Gaffer.lazyImport( "dummy_threading" )
+		self.failUnless( "dummy_threading" in sys.modules )
+		self.failUnless( isinstance( lazyDT, Gaffer.LazyModule ) )
+		
+		# check we can still get stuff out
+		
+		t = lazyDT.Thread()
+		s = lazyDT.Semaphore()
+		
+if __name__ == "__main__":
+	unittest.main()
+	

@@ -69,8 +69,8 @@ from ApplicationRootTest import ApplicationRootTest
 from WriteNodeTest import WriteNodeTest
 from ExecuteApplicationTest import ExecuteApplicationTest
 from CompoundPathFilterTest import CompoundPathFilterTest
+from LazyModuleTest import LazyModuleTest
 
 if __name__ == "__main__":
 	import unittest
 	unittest.main()
-	
