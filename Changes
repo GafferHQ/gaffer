@@ -36,6 +36,8 @@
 
 * Added setSelection() and getSelection() methods to GafferUI.TextWidget, along with a selectionChangedSignal() method.
 
+* The Menu.popup() method now takes optional position and forcePosition arguments.
+
 0.27.0
 ------
 

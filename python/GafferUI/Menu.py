@@ -57,16 +57,29 @@ class Menu( GafferUI.Widget ) :
 		
 		self.__popupParent = None
 		
-	## Displays the menu at the current pointer position, and attached to
-	# an optional parent.
-	def popup( self, parent=None ) :
+	## Displays the menu at the specified position, and attached to
+	# an optional parent. If position is not specified then it 
+	# defaults to the current cursor position. If forcePosition is specified
+	# then the menu will be shown exactly at the requested position, even if
+	# doing so means some of it will be off screen.
+	def popup( self, parent=None, position=None, forcePosition=False ) :
 	
 		if parent is not None :
 			self.__popupParent = weakref.ref( parent )
 		else :
 			self.__popupParent = None
 			
-		self._qtWidget().popup( QtGui.QCursor.pos() )
+		if position is None :
+			position = QtGui.QCursor.pos()
+		else :
+			position = QtCore.QPoint( position.x, position.y )
+			
+		self._qtWidget().popup( position )
+
+		# qt is helpful and tries to keep you menu on screen, but this isn't always
+		# what you want, so we override the helpfulness if requested.
+		if forcePosition :
+			self._qtWidget().move( position )
 
 	## Reimplemented from Widget to report the parent passed to popup().
 	def parent( self ) :
