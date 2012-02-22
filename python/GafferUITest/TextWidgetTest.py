@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,6 +39,7 @@ import weakref
 import gc
 
 import GafferUI
+import GafferTest
 
 class TextWidgetTest( unittest.TestCase ) :
 
@@ -77,6 +78,31 @@ class TextWidgetTest( unittest.TestCase ) :
 		
 		w.setDisplayMode( GafferUI.TextWidget.DisplayMode.Normal )
 		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Normal )		
+	
+	def testSelection( self ) :
+	
+		w = GafferUI.TextWidget()
+		self.assertEqual( w.getSelection(), ( 0, 0 ) )
+				
+		w.setText( "hello" )
+		w.setSelection( 1, 4 )
+		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[1:4] )
+	
+		w.setSelection( 0, -2 )
+		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:-2] )
+	
+		w.setSelection( 0, None )
+		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:] )
+	
+		w.setSelection( 0, 0 )
+		self.assertEqual( w.getText()[slice( *w.getSelection() )], "" )
+		self.assertEqual( w.getSelection(), ( 0, 0 ) )
+	
+		c = GafferTest.CapturingSlot( w.selectionChangedSignal() )
 		
+		w.setSelection( 0, 2 )
+		self.assertEqual( len( c ), 1 )
+		self.failUnless( c[0][0] is w )
+	
 if __name__ == "__main__":
 	unittest.main()

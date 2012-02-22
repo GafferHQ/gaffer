@@ -34,6 +34,8 @@
 
 * Added buttonDoubleClickSignal() to GafferUI.Widget and GafferUI.Gadget.
 
+* Added setSelection() and getSelection() methods to GafferUI.TextWidget, along with a selectionChangedSignal() method.
+
 0.27.0
 ------
 
