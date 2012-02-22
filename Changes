@@ -38,6 +38,8 @@
 
 * The Menu.popup() method now takes optional position and forcePosition arguments.
 
+* Improved PathWidget popup listing behaviour.
+
 0.27.0
 ------
 
