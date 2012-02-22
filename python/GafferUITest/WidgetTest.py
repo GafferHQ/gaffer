@@ -215,6 +215,7 @@ class WidgetTest( unittest.TestCase ) :
 			( "keyPressSignal", GafferUI.WidgetEventSignal ),
 			( "buttonPressSignal", GafferUI.WidgetEventSignal ),
 			( "buttonReleaseSignal", GafferUI.WidgetEventSignal ),
+			( "buttonDoubleClickSignal", GafferUI.WidgetEventSignal ),
 			( "mouseMoveSignal", GafferUI.WidgetEventSignal ),
 			( "enterSignal", GafferUI.WidgetSignal ),
 			( "leaveSignal", GafferUI.WidgetSignal ),

@@ -32,6 +32,8 @@
 
 * Optimised startup of gaffer applications which don't use any GL functionality, by using the new Gaffer.lazyImport functionality for PyOpenGL, IECoreGL and QtOpenGL.
 
+* Added buttonDoubleClickSignal() to GafferUI.Widget and GafferUI.Gadget.
+
 0.27.0
 ------
 

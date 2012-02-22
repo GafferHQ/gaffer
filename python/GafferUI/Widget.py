@@ -114,7 +114,8 @@ class Widget( object ) :
 		self._keyPressSignal = None
  		self._buttonPressSignal = None
  		self._buttonReleaseSignal = None
- 		self._mouseMoveSignal = None
+  		self._buttonDoubleClickSignal = None
+		self._mouseMoveSignal = None
  		self._enterSignal = None
  		self._leaveSignal = None
  		self._wheelSignal = None
@@ -240,6 +241,13 @@ class Widget( object ) :
 		if self._buttonReleaseSignal is None :
 			self._buttonReleaseSignal = GafferUI.WidgetEventSignal()		
 		return self._buttonReleaseSignal
+		
+	def buttonDoubleClickSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._buttonDoubleClickSignal is None :
+			self._buttonDoubleClickSignal = GafferUI.WidgetEventSignal()		
+		return self._buttonDoubleClickSignal
 	
 	def mouseMoveSignal( self ) :
 	
@@ -996,6 +1004,7 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.KeyPress,
 			QtCore.QEvent.MouseButtonPress,
 			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.MouseButtonDblClick,
 			QtCore.QEvent.MouseMove,
 			QtCore.QEvent.Enter,
 			QtCore.QEvent.Leave,
@@ -1003,7 +1012,7 @@ class _EventFilter( QtCore.QObject ) :
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
-		
+				
 		qEventType = qEvent.type() # for speed it's best not to keep calling this below
 		# early out as quickly as possible for the majority of cases where we have literally
 		# no interest in the event.
@@ -1036,18 +1045,19 @@ class _EventFilter( QtCore.QObject ) :
 		elif qEventType==qEvent.MouseButtonPress :
 					
 			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			if event.buttons and ( widget._buttonPressSignal is not None ) :
-				return widget._buttonPressSignal( widget, event )
+			if widget._buttonPressSignal is not None :
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					0.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+	
+				if event.buttons  :
+					return widget._buttonPressSignal( widget, event )
 			
 		elif qEventType==qEvent.MouseButtonRelease :
 				
@@ -1065,6 +1075,23 @@ class _EventFilter( QtCore.QObject ) :
 				)
 
 				return widget._buttonReleaseSignal( widget, event )
+				
+		elif qEventType==qEvent.MouseButtonDblClick :
+				
+			widget = Widget._owner( qObject )
+			if widget._buttonDoubleClickSignal is not None :
+
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					0.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+
+				return widget._buttonDoubleClickSignal( widget, event )		
 			
 		elif qEventType==qEvent.MouseMove :
 				

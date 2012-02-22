@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -166,6 +166,8 @@ class Gadget : public Gaffer::GraphComponent
 		ButtonSignal &buttonPressSignal();
 		/// The signal triggered by a button release event.
 		ButtonSignal &buttonReleaseSignal();
+		/// The signal triggered by a button double click event.
+		ButtonSignal &buttonDoubleClickSignal();
 		
 		typedef boost::signal<void ( GadgetPtr, const ButtonEvent &event )> EnterLeaveSignal; 
 		/// The signal triggered when the mouse enters the Gadget.
@@ -226,6 +228,7 @@ class Gadget : public Gaffer::GraphComponent
 			
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;
+		ButtonSignal m_buttonDoubleClickSignal;
 		
 		EnterLeaveSignal m_enterSignal;
 		EnterLeaveSignal m_leaveSignal;

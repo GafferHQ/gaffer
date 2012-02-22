@@ -76,6 +76,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 		self.__wheelConnection = self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ) )
 		
@@ -261,7 +262,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__lastButtonPressGadget = None
 			
 		return True
-
+		
+	def __buttonDoubleClick( self, widget, event ) :
+				
+		gadgets = self.__select( event )
+		self.__eventToGadgetSpace( event )
+				
+		gadget, result = self.__dispatchEvent( gadgets, "buttonDoubleClickSignal", event )
+		return result
+		
 	def __mouseMove( self, widget, event ) :
 	
 		if not self.__gadget :
