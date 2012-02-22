@@ -465,7 +465,7 @@ class Widget( object ) :
 
 		QMenu {
 
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			padding-bottom: 5px;
 			padding-top: 5px;
 
@@ -493,7 +493,7 @@ class Widget( object ) :
 		QMenu::separator {
 
 			height: 1px;
-			background: $backgroundDarkest;
+			background: $backgroundDark;
 			margin-left: 10px;
 			margin-right: 10px;
 			margin-top: 5px;
@@ -596,7 +596,7 @@ class Widget( object ) :
 		
 		QComboBox QAbstractItemView {
 					
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			selection-background-color: $backgroundLighter;
 			background-color: $backgroundMid;
 			height:40px;
@@ -728,7 +728,7 @@ class Widget( object ) :
 		QHeaderView::section {
 		
 			border: 1px solid transparent;
-			border-bottom: 1px solid $backgroundDarkest;
+			border-bottom: 1px solid $backgroundDark;
 			padding: 4px;
 			font-weight: bold;
 		
@@ -880,7 +880,7 @@ class Widget( object ) :
 		}
 		
 		.QFrame#borderStyleFlat {
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			border-radius: 4px;
 			padding: 2px;
 		}
@@ -889,7 +889,7 @@ class Widget( object ) :
 			background-clip: border;
 			color: $backgroundDarkest;
 			background-color: $brightColor2;
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			padding: 2px;
 
 		}
