@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,75 +34,37 @@
 #  
 ##########################################################################
 
+import sys
+import types
 import unittest
-import weakref
-import gc
 
-import GafferUI
-import GafferTest
+import Gaffer
 
-class TextWidgetTest( unittest.TestCase ) :
+class LazyModuleTest( unittest.TestCase ) :
 
-	def testLifespan( self ) :
-	
-		w = GafferUI.TextWidget()
-		r = weakref.ref( w )
+	def test( self ) :
 		
-		self.failUnless( r() is w )
+		# lazy loading something already loaded should just return the module
+		# directly.
+		ut = Gaffer.lazyImport( "unittest" )
+		self.failUnless( ut is unittest )
+		self.failUnless( type( ut ) is types.ModuleType )
 		
-		del w
+		# lazy loading something not yet loaded should give us a nice
+		# lazy module. hopefully nobody is loading the dummy_threading
+		# module for any other purpose.
 		
-		self.failUnless( r() is None )
-	
-	def testTextChangedSignal( self ) :
-	
-		self.emissions = 0
-		def f( w ) :
-			self.emissions += 1
-			
-		w = GafferUI.TextWidget()
-		c = w.textChangedSignal().connect( f )
+		self.failIf( "dummy_threading" in sys.modules )
 		
-		w.setText( "hello" )
-		self.assertEqual( w.getText(), "hello" )		
+		lazyDT = Gaffer.lazyImport( "dummy_threading" )
+		self.failUnless( "dummy_threading" in sys.modules )
+		self.failUnless( isinstance( lazyDT, Gaffer.LazyModule ) )
 		
-		self.assertEqual( self.emissions, 1 )
-	
-	def testDisplayMode( self ) :
-	
-		w = GafferUI.TextWidget()
-		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Normal )
+		# check we can still get stuff out
 		
-		w = GafferUI.TextWidget( displayMode = GafferUI.TextWidget.DisplayMode.Password )
-		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Password )		
+		t = lazyDT.Thread()
+		s = lazyDT.Semaphore()
 		
-		w.setDisplayMode( GafferUI.TextWidget.DisplayMode.Normal )
-		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Normal )		
-	
-	def testSelection( self ) :
-	
-		w = GafferUI.TextWidget()
-		self.assertEqual( w.getSelection(), ( 0, 0 ) )
-				
-		w.setText( "hello" )
-		w.setSelection( 1, 4 )
-		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[1:4] )
-	
-		w.setSelection( 0, -2 )
-		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:-2] )
-	
-		w.setSelection( 0, None )
-		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:] )
-	
-		w.setSelection( 0, 0 )
-		self.assertEqual( w.getText()[slice( *w.getSelection() )], "" )
-		self.assertEqual( w.getSelection(), ( 0, 0 ) )
-	
-		c = GafferTest.CapturingSlot( w.selectionChangedSignal() )
-		
-		w.setSelection( 0, 2 )
-		self.assertEqual( len( c ), 1 )
-		self.failUnless( c[0][0] is w )
-	
 if __name__ == "__main__":
 	unittest.main()
+	

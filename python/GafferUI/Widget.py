@@ -106,27 +106,37 @@ class Widget( object ) :
 			
 		Widget.__qtWidgetOwners[self.__qtWidget] = weakref.ref( self )
 				
-		self.__qtWidget.installEventFilter( _eventFilter )
-
 		# disable different focus appearance on os x
 		## \todo If we have a style class for Widget at some point, then perhaps
 		# this should go in there.
 		self.__qtWidget.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
 		
-		self.__keyPressSignal = GafferUI.WidgetEventSignal()
-		self.__buttonPressSignal = GafferUI.WidgetEventSignal()
-		self.__buttonReleaseSignal = GafferUI.WidgetEventSignal()
-		self.__mouseMoveSignal = GafferUI.WidgetEventSignal()
-		self.__enterSignal = GafferUI.WidgetSignal()
-		self.__leaveSignal = GafferUI.WidgetSignal()
-		self.__wheelSignal = GafferUI.WidgetEventSignal()
-		
+		self._keyPressSignal = None
+ 		self._buttonPressSignal = None
+ 		self._buttonReleaseSignal = None
+  		self._buttonDoubleClickSignal = None
+		self._mouseMoveSignal = None
+ 		self._enterSignal = None
+ 		self._leaveSignal = None
+ 		self._wheelSignal = None
+ 				
 		self.setToolTip( toolTip )
 		
 		if len( self.__parentStack ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :					
 				self.__parentStack[-1][0].addChild( self, **kw )
-	
+				
+		self.__eventFilterInstalled = False		
+		# if a class has overridden getToolTip, then the tooltips
+		# may be dynamic based on context, and we need to display
+		# them using the event filter.
+		c = self.__class__
+		while c and c is not Widget :
+			if "getToolTip" in c.__dict__ :
+				self.__ensureEventFilter()
+				break
+			c = c.__bases__[0]
+		
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
 	# visible explicitly after creation.		
@@ -212,32 +222,60 @@ class Widget( object ) :
 
 	def keyPressSignal( self ) :
 	
-		return self.__keyPressSignal
+		self.__ensureEventFilter()
+		if self._keyPressSignal is None :
+			self._keyPressSignal = GafferUI.WidgetEventSignal()
+		return self._keyPressSignal
 	
 	## \todo Should these be renamed to mousePressSignal and mouseReleaseSignal?	
 	def buttonPressSignal( self ) :
 	
-		return self.__buttonPressSignal
+		self.__ensureEventFilter()
+		if self._buttonPressSignal is None :
+			self._buttonPressSignal = GafferUI.WidgetEventSignal()
+		return self._buttonPressSignal
 	
 	def buttonReleaseSignal( self ) :
 	
-		return self.__buttonReleaseSignal
+		self.__ensureEventFilter()
+		if self._buttonReleaseSignal is None :
+			self._buttonReleaseSignal = GafferUI.WidgetEventSignal()		
+		return self._buttonReleaseSignal
+		
+	def buttonDoubleClickSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._buttonDoubleClickSignal is None :
+			self._buttonDoubleClickSignal = GafferUI.WidgetEventSignal()		
+		return self._buttonDoubleClickSignal
 	
 	def mouseMoveSignal( self ) :
 	
-		return self.__mouseMoveSignal
+		self.__ensureEventFilter()
+		if self._mouseMoveSignal is None :
+			self._mouseMoveSignal = GafferUI.WidgetEventSignal()
+		return self._mouseMoveSignal
 	
 	def enterSignal( self ) :
 	
-		return self.__enterSignal
+		self.__ensureEventFilter()
+		if self._enterSignal is None :
+			self._enterSignal = GafferUI.WidgetSignal()
+		return self._enterSignal
 		
 	def leaveSignal( self ) :
 	
-		return self.__leaveSignal
+		self.__ensureEventFilter()
+		if self._leaveSignal is None :
+			self._leaveSignal = GafferUI.WidgetSignal()
+		return self._leaveSignal
 		
 	def wheelSignal( self ) :
 	
-		return self.__wheelSignal
+		self.__ensureEventFilter()
+		if self._wheelSignal is None :
+			self._wheelSignal = GafferUI.WidgetEventSignal()
+		return self._wheelSignal
 	
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
@@ -245,7 +283,7 @@ class Widget( object ) :
 	# been called.
 	def getToolTip( self ) :
 	
-		return self.__toolTip
+		return str( self._qtWidget().toolTip() )
 	
 	## Sets the tooltip to be displayed for this Widget. This
 	# will override any default behaviour until setToolTip( "" )
@@ -254,7 +292,7 @@ class Widget( object ) :
 	
 		assert( isinstance( toolTip, basestring ) )
 		
-		self.__toolTip = toolTip
+		self._qtWidget().setToolTip( toolTip )
 		
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.
@@ -364,6 +402,17 @@ class Widget( object ) :
 			min( 255, max( 0, color.b ) ),
 		)
 	
+	# We try not to install the event filter until absolutely
+	# necessary, as there's an overhead in having it in place.
+	# This function installs the filter, and is called when
+	# we know that the filter will be needed (typically when a
+	# client accesses one of the signals triggered by the filter).
+	def __ensureEventFilter( self ) :
+	
+		if not self.__eventFilterInstalled :
+			self._qtWidget().installEventFilter( _eventFilter )
+			self.__eventFilterInstalled = True
+
 	def _setStyleSheet( self ):
 
 		self.__qtWidget.setStyleSheet( self.__styleSheet )
@@ -416,7 +465,7 @@ class Widget( object ) :
 
 		QMenu {
 
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			padding-bottom: 5px;
 			padding-top: 5px;
 
@@ -444,7 +493,7 @@ class Widget( object ) :
 		QMenu::separator {
 
 			height: 1px;
-			background: $backgroundDarkest;
+			background: $backgroundDark;
 			margin-left: 10px;
 			margin-right: 10px;
 			margin-top: 5px;
@@ -547,7 +596,7 @@ class Widget( object ) :
 		
 		QComboBox QAbstractItemView {
 					
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			selection-background-color: $backgroundLighter;
 			background-color: $backgroundMid;
 			height:40px;
@@ -679,7 +728,7 @@ class Widget( object ) :
 		QHeaderView::section {
 		
 			border: 1px solid transparent;
-			border-bottom: 1px solid $backgroundDarkest;
+			border-bottom: 1px solid $backgroundDark;
 			padding: 4px;
 			font-weight: bold;
 		
@@ -831,7 +880,7 @@ class Widget( object ) :
 		}
 		
 		.QFrame#borderStyleFlat {
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			border-radius: 4px;
 			padding: 2px;
 		}
@@ -840,7 +889,7 @@ class Widget( object ) :
 			background-clip: border;
 			color: $backgroundDarkest;
 			background-color: $brightColor2;
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			padding: 2px;
 
 		}
@@ -955,6 +1004,7 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.KeyPress,
 			QtCore.QEvent.MouseButtonPress,
 			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.MouseButtonDblClick,
 			QtCore.QEvent.MouseMove,
 			QtCore.QEvent.Enter,
 			QtCore.QEvent.Leave,
@@ -962,7 +1012,7 @@ class _EventFilter( QtCore.QObject ) :
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
-		
+				
 		qEventType = qEvent.type() # for speed it's best not to keep calling this below
 		# early out as quickly as possible for the majority of cases where we have literally
 		# no interest in the event.
@@ -983,85 +1033,111 @@ class _EventFilter( QtCore.QObject ) :
 		if qEventType==qEvent.KeyPress :
 						
 			widget = Widget._owner( qObject )
-			event = GafferUI.KeyEvent(
-				Widget._key( qEvent.key() ),
-				Widget._modifiers( qEvent.modifiers() ),
-			)
+			if widget._keyPressSignal is not None :
 
-			return widget.keyPressSignal()( widget, event )
+				event = GafferUI.KeyEvent(
+					Widget._key( qEvent.key() ),
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+
+				return widget._keyPressSignal( widget, event )
 		
 		elif qEventType==qEvent.MouseButtonPress :
 					
 			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			if event.buttons :
-				return widget.buttonPressSignal()( widget, event )
+			if widget._buttonPressSignal is not None :
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					0.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+	
+				if event.buttons  :
+					return widget._buttonPressSignal( widget, event )
 			
 		elif qEventType==qEvent.MouseButtonRelease :
 				
 			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
+			if widget._buttonReleaseSignal is not None :
 
-			return widget.buttonReleaseSignal()( widget, event )
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					0.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+
+				return widget._buttonReleaseSignal( widget, event )
+				
+		elif qEventType==qEvent.MouseButtonDblClick :
+				
+			widget = Widget._owner( qObject )
+			if widget._buttonDoubleClickSignal is not None :
+
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					0.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+
+				return widget._buttonDoubleClickSignal( widget, event )		
 			
 		elif qEventType==qEvent.MouseMove :
 				
 			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				0.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
+			if widget._mouseMoveSignal is not None :
 
-			return widget.mouseMoveSignal()( widget, event )
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					0.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+
+				return widget._mouseMoveSignal( widget, event )
 		
 		elif qEventType==qEvent.Enter :
 				
 			widget = Widget._owner( qObject )
-
-			return widget.enterSignal()( widget )
+			if widget._enterSignal is not None :
+				return widget._enterSignal( widget )
 			
 		elif qEventType==qEvent.Leave :
 				
 			widget = Widget._owner( qObject )
-
-			return widget.leaveSignal()( widget )
+			if widget._leaveSignal is not None :
+				return widget._leaveSignal( widget )
 			
 		elif qEventType==qEvent.Wheel :
 				
 			widget = Widget._owner( qObject )
-			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.buttons() ),
-				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
-				),
-				qEvent.delta() / 8.0,
-				Widget._modifiers( qEvent.modifiers() ),
-			)
-
-			return widget.wheelSignal()( widget, event )	
+			if widget._wheelSignal is not None :
+			
+				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.buttons() ),
+					IECore.LineSegment3f(
+						IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+						IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					),
+					qEvent.delta() / 8.0,
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+	
+				return widget._wheelSignal( widget, event )	
 			
 		return False
 

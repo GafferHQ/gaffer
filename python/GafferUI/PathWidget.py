@@ -44,6 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
+
 class PathWidget( GafferUI.TextWidget ) :
 
 	def __init__( self, path, **kw ) :
@@ -57,7 +59,8 @@ class PathWidget( GafferUI.TextWidget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		
 		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
-	
+		self.__selectionChangedConnection = self.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		
 	def path( self ) :
 	
 		return self.__path
@@ -102,28 +105,51 @@ class PathWidget( GafferUI.TextWidget ) :
 			# ctrl click
 			
 			position = self._eventPosition( event )			
-			dirPath = self.__path.copy()
-			n = os.path.dirname( self.getText()[:position] ) or "/"
-			dirPath.setFromString( n )
+			self.__popupListing( position )
 			
-			options = dirPath.children()
-			options = [ x[-1] for x in options ]
-			
-			if len( options ) :
-							
-				md = IECore.MenuDefinition()
-				for o in options :
-					md.append( "/" + o,
-						IECore.MenuItemDefinition(
-							label=o,
-							command = IECore.curry( self.__replacePathEntry, len( dirPath ), o )
-						)
-					)
-					
-				m = GafferUI.Menu( md )
-				m.popup()
+			return True
 			
 		return False
+
+	def __selectionChanged( self, widget ) :
+	
+		assert( widget is self )
+				
+		start, end = self.getSelection()
+		if start == end :
+			return
+		
+		text = self.getText()
+		selectedText = text[start:end]
+				
+		if selectedText == "/" and end == len( text ) :
+			# the final slash was selected
+			self.__popupListing( end )		
+		elif text[start-1] == "/" and ( end >= len( text ) or text[end] == "/" ) :
+			self.__popupListing( start )
+			
+	def __popupListing( self, textIndex ) :
+	
+		dirPath = self.__path.copy()
+		n = os.path.dirname( self.getText()[:textIndex] ) or "/"
+		dirPath.setFromString( n )
+		
+		options = dirPath.children()
+		options = [ x[-1] for x in options ]
+				
+		if len( options ) :
+						
+			md = IECore.MenuDefinition()
+			for o in options :
+				md.append( "/" + o,
+					IECore.MenuItemDefinition(
+						label=o,
+						command = IECore.curry( Gaffer.WeakMethod( self.__replacePathEntry ), len( dirPath ), o )
+					)
+				)
+				
+			self.__popupMenu = GafferUI.Menu( md )
+			self.__popupMenu.popup( position = self.__popupPosition( textIndex ), forcePosition=True )
 		
 	def __replacePathEntry( self, position, newEntry ) :
 	
@@ -135,7 +161,17 @@ class PathWidget( GafferUI.TextWidget ) :
 	
 		if position==len( self.__path )-1 and not self.__path.isLeaf() :
 			self.setText( self.getText() + "/" )
-				
+	
+	def __popupPosition( self, textIndex ) :
+	
+		## \todo Surely there's a better way?
+		for x in range( 0, 10000 ) :
+			if self._qtWidget().cursorPositionAt( QtCore.QPoint( x, 5 ) ) >= textIndex :
+				break
+	
+		p = self._qtWidget().mapToGlobal( QtCore.QPoint( x, self._qtWidget().height() ) )
+		return IECore.V2i( p.x(), p.y() )
+	
 	def __pathChanged( self, path ) :
 	
 		self.setText( str( path ) )

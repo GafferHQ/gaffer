@@ -37,15 +37,16 @@
 
 from __future__ import with_statement
 
-from OpenGL.GL import *
-
 import IECore
-import IECoreGL
 
 import Gaffer
 import GafferUI
 from GLWidget import GLWidget
 from _GafferUI import ButtonEvent, ModifiableEvent, ContainerGadget, DragDropEvent, KeyEvent
+
+# import lazily to improve startup of apps which don't use GL functionality
+GL = Gaffer.lazyImport( "OpenGL.GL" )
+IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -67,6 +68,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		GLWidget.__init__( self, bufferOptions, **kw )
 		
+		# Force the IECoreGL lazy loading to kick in /now/. Otherwise we can get IECoreGL objects
+		# being returned from the GafferUIBindings without the appropriate boost::python converters
+		# having been registered first.
+		IECoreGL.Renderer
+		
 		## \todo Decide if/how this goes in the public API
 		self._qtWidget().setMouseTracking( True )		
 				
@@ -75,6 +81,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 		self.__wheelConnection = self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ) )
 		
@@ -166,9 +173,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		## \todo bg = self.__backgroundColor.linearToSRGB()
 		bg = IECore.Color3f( 0.3, 0.3, 0.3 )
-		glClearColor( bg[0], bg[1], bg[2], 0.0 )
-		glClearDepth( 1.0 )
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+		GL.glClearColor( bg[0], bg[1], bg[2], 0.0 )
+		GL.glClearDepth( 1.0 )
+		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT )
 			  
 		IECoreGL.ToGLCameraConverter( self.__camera ).convert().render( None )
 		IECoreGL.State.bindBaseState()
@@ -229,7 +236,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__lastButtonPressGadget = None
 			
 		return True
-
+		
+	def __buttonDoubleClick( self, widget, event ) :
+				
+		gadgets = self.__select( event )
+		self.__eventToGadgetSpace( event )
+				
+		gadget, result = self.__dispatchEvent( gadgets, "buttonDoubleClickSignal", event )
+		return result
+		
 	def __mouseMove( self, widget, event ) :
 	
 		if not self.__gadget :
@@ -419,9 +434,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		selector = IECoreGL.Selector()		
 		selector.begin( region )
 		
-		glClearColor( 0.0, 0.0, 0.0, 0.0 );
-		glClearDepth( 1.0 )
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		GL.glClearColor( 0.0, 0.0, 0.0, 0.0 );
+		GL.glClearDepth( 1.0 )
+		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		
 		self.__gadget.render()
 		

@@ -42,7 +42,7 @@
 ##########################################################################
 
 __qtModuleName = None
-def _qtImport( name ) :
+def _qtImport( name, lazy=False ) :
 
 	# decide which qt bindings to use
 	global __qtModuleName
@@ -59,8 +59,12 @@ def _qtImport( name ) :
 				__qtModuleName = "PyQt4"
 
 	# import the submodule from those bindings and return it
-	qtModule = __import__( __qtModuleName + "." + name )
-	return getattr( qtModule, name )
+	if lazy :
+		import Gaffer
+		return Gaffer.lazyImport( __qtModuleName + "." + name )
+	else :
+		qtModule = __import__( __qtModuleName + "." + name )
+		return getattr( qtModule, name )
 
 ##########################################################################
 # now import our actual functionality

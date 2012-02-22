@@ -42,17 +42,19 @@ import logging
 # when running in maya 2012 the default log level allows info messages through.
 # so we set a specific log level on the OpenGL logger to keep it quiet.
 logging.getLogger( "OpenGL" ).setLevel( logging.WARNING )
-from OpenGL.GL import *
 
-import IECoreGL
 import IECore
 
 import Gaffer
 import GafferUI
 
+# import lazily to improve startup of apps which don't use GL functionality
+GL = Gaffer.lazyImport( "OpenGL.GL" )
+IECoreGL = Gaffer.lazyImport( "IECoreGL" )
+
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
-QtOpenGL = GafferUI._qtImport( "QtOpenGL" )
+QtOpenGL = GafferUI._qtImport( "QtOpenGL", lazy=True )
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -98,7 +100,7 @@ class GLWidget( GafferUI.Widget ) :
 	# classes if necessary.
 	def _resize( self, size ) :
 	
-		glViewport( 0, 0, size.x, size.y )
+		GL.glViewport( 0, 0, size.x, size.y )
 	
 	## Derived classes must override this to draw their contents using
 	# OpenGL calls.

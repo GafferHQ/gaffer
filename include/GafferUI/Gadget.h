@@ -180,6 +180,8 @@ class Gadget : public Gaffer::GraphComponent
 		ButtonSignal &buttonPressSignal();
 		/// The signal triggered by a button release event.
 		ButtonSignal &buttonReleaseSignal();
+		/// The signal triggered by a button double click event.
+		ButtonSignal &buttonDoubleClickSignal();
 		
 		typedef boost::signal<void ( GadgetPtr, const ButtonEvent &event )> EnterLeaveSignal; 
 		/// The signal triggered when the mouse enters the Gadget.
@@ -240,6 +242,7 @@ class Gadget : public Gaffer::GraphComponent
 			
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;
+		ButtonSignal m_buttonDoubleClickSignal;
 		
 		EnterLeaveSignal m_enterSignal;
 		EnterLeaveSignal m_leaveSignal;

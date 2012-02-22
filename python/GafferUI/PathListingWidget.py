@@ -38,6 +38,7 @@
 from __future__ import with_statement
 
 import operator
+import os
 import time
 
 import IECore
@@ -61,12 +62,23 @@ class PathListingWidget( GafferUI.Widget ) :
 			self.label = label
 			self.displayFunction = displayFunction
 			self.lessThanFunction = lessThanFunction
+		
+	## A collection of handy column definitions
+	defaultNameColumn = Column( infoField = "name", label = "Name" )
+	defaultFileSystemOwnerColumn = Column( infoField = "fileSystem:owner", label = "Owner" )
+	defaultFileSystemModificationTimeColumn = Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime )
+	defaultFileSystemIconColumn = Column(
+		infoField = "fullName",
+		label = "Type",
+		displayFunction = lambda x, provider = QtGui.QFileIconProvider() : provider.icon( QtCore.QFileInfo( x ) ),
+		lessThanFunction = lambda x, y : os.path.splitext( x )[-1] < os.path.splitext( y )[-1],
+	)
 	
 	## A sensible set of columns to display for FileSystemPaths
 	defaultFileSystemColumns = (
-		Column( infoField = "name", label = "Name" ),
-		Column( infoField = "fileSystem:owner", label = "Owner" ),
-		Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime ),
+		defaultNameColumn,
+		defaultFileSystemOwnerColumn,
+		defaultFileSystemModificationTimeColumn,
 	)
 
 	def __init__( self, path, columns = defaultFileSystemColumns, allowMultipleSelection=False, **kw ) :
@@ -264,7 +276,13 @@ class _Item( QtGui.QStandardItem ) :
 
 	def __init__( self, value, displayFunction, lessThanFunction ) :
 	
-		QtGui.QStandardItem.__init__( self, displayFunction( value ) )
+		displayValue = displayFunction( value )
+		if isinstance( displayValue, basestring ) :
+			QtGui.QStandardItem.__init__( self, displayValue )
+		elif isinstance( displayValue, QtGui.QIcon ) :
+			QtGui.QStandardItem.__init__( self, displayValue, "" )
+		elif isinstance( displayValue, GafferUI.Image ) :
+			QtGui.QStandardItem.__init__( self, QtGui.QIcon( displayValue._qtPixmap() ), "" )
 		
 		self.__value = value
 		self.__lessThanFunction = lessThanFunction

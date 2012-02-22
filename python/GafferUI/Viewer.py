@@ -39,10 +39,12 @@ import copy
 import functools
 
 import IECore
-import IECoreGL
 
 import Gaffer
 import GafferUI
+
+# import lazily to improve startup of apps which don't use GL functionality
+IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
 QtGui = GafferUI._qtImport( "QtGui" )
 

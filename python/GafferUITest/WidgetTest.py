@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -207,6 +207,25 @@ class WidgetTest( unittest.TestCase ) :
 		self.assertEqual( t.visible(), False )
 		self.assertEqual( t.visible( relativeTo = l ), False )
 		
+	def testSignals( self ) :
+	
+		w = TestWidget()
+	
+		for s in [
+			( "keyPressSignal", GafferUI.WidgetEventSignal ),
+			( "buttonPressSignal", GafferUI.WidgetEventSignal ),
+			( "buttonReleaseSignal", GafferUI.WidgetEventSignal ),
+			( "buttonDoubleClickSignal", GafferUI.WidgetEventSignal ),
+			( "mouseMoveSignal", GafferUI.WidgetEventSignal ),
+			( "enterSignal", GafferUI.WidgetSignal ),
+			( "leaveSignal", GafferUI.WidgetSignal ),
+			( "wheelSignal", GafferUI.WidgetEventSignal ),				
+		] :
+		
+			self.failUnless( isinstance( getattr( w, s[0] )(), s[1] ) )
+			self.failUnless( getattr( w, s[0] )() is getattr( w, s[0] )() )
+			
+
 if __name__ == "__main__":
 	unittest.main()
 	

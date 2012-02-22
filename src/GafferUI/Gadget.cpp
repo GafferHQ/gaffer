@@ -213,6 +213,11 @@ Gadget::ButtonSignal &Gadget::buttonReleaseSignal()
 	return m_buttonReleaseSignal;
 }
 
+Gadget::ButtonSignal &Gadget::buttonDoubleClickSignal()
+{
+	return m_buttonDoubleClickSignal;
+}
+
 Gadget::EnterLeaveSignal &Gadget::enterSignal()
 {
 	return m_enterSignal;

@@ -73,8 +73,8 @@ from ContextTest import ContextTest
 from CompoundPathFilterTest import CompoundPathFilterTest
 from BadNode import BadNode
 from CapturingSlot import CapturingSlot
+from LazyModuleTest import LazyModuleTest
 
 if __name__ == "__main__":
 	import unittest
 	unittest.main()
-	

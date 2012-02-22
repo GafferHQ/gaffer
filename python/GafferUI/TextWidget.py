@@ -51,10 +51,6 @@ class TextWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLineEdit(), **kw )
 
-		self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
-		self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )
-		self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished ) )
-
 		self.setText( text )
 		self.setEditable( editable )
 		self.setDisplayMode( displayMode )
@@ -99,6 +95,30 @@ class TextWidget( GafferUI.Widget ) :
 	
 		return self._qtWidget().cursorPosition()
 	
+	## Start and end are indexes into the text, and support the same
+	# indexing as a standard python string (negative indices index relative
+	# to the end etc).
+	def setSelection( self, start, end ) :
+	
+		if start is None :
+			start = 0
+			
+		if end is None :
+			end = len( self.getText() )	
+		elif end < 0 :
+			end += len( self.getText() )
+			
+		self._qtWidget().setSelection( start, end - start )
+	
+	## Returns a ( start, end ) tuple.
+	def getSelection( self ) :
+	
+		if not self._qtWidget().hasSelectedText() :
+			return 0, 0
+	
+		selectionStart = self._qtWidget().selectionStart()
+		return ( selectionStart, selectionStart + len( self._qtWidget().selectedText() ) )
+	
 	## \todo Should this be moved to the Widget class?
 	def grabFocus( self ) :
 	
@@ -112,6 +132,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__textChangedSignal
 		except :
 			self.__textChangedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
 			
 		return self.__textChangedSignal
 
@@ -124,6 +145,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__editingFinishedSignal
 		except :
 			self.__editingFinishedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished ) )
 			
 		return self.__editingFinishedSignal
 
@@ -134,9 +156,21 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__activatedSignal
 		except :
 			self.__activatedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )
 			
 		return self.__activatedSignal
 
+	## A signal emitted whenever the selection changes.
+	def selectionChangedSignal( self ) :
+	
+		try :
+			return self.__selectionChangedSignal
+		except :	
+			self.__selectionChangedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		
+		return self.__selectionChangedSignal
+		
 	## Returns the character index underneath the specified
 	# ButtonEvent.
 	def _eventPosition( self, event ) :
@@ -153,19 +187,14 @@ class TextWidget( GafferUI.Widget ) :
 		signal( self )		
 		
 	def __returnPressed( self ) :
-	
-		try :
-			signal = self.__activatedSignal
-		except :
-			return
 			
-		signal( self )
+		self.__activatedSignal( self )
 	
 	def __editingFinished( self ) :
-	
-		try :
-			signal = self.__editingFinishedSignal
-		except :
-			return
 			
-		signal( self )		
+		self.__editingFinishedSignal( self )		
+
+	def __selectionChanged( self ) :
+	
+		self.__selectionChangedSignal( self )
+		
