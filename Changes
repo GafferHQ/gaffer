@@ -40,6 +40,8 @@
 
 * Improved PathWidget popup listing behaviour.
 
+* GafferUI.ScrolledContainer now always asks for enough size to completely show its contents, regardless of the scroll mode in use.
+
 0.27.0
 ------
 

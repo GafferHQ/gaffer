@@ -115,8 +115,8 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 		return self.__policiesToModes[p[1]]
 
 # Private implementation - a QScrollArea derived class which is a bit more
-# forceful aboout claiming size when the scrollbars are off in a particular 
-# direction.
+# forceful aboout claiming size - it always asks for enough to completely show
+# the contained widget.
 class _ScrollArea( QtGui.QScrollArea ) :
 
 	def __init__( self ) :
@@ -144,29 +144,21 @@ class _ScrollArea( QtGui.QScrollArea ) :
 				
 	def sizeHint( self ) :
 			
-		result = QtGui.QScrollArea.sizeHint( self )
-		
 		w = self.widget()
-		if w :
-		
-			wSize = w.sizeHint()
-			if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-				result.setWidth(
-					self.__marginLeft +
-					self.__marginRight +
-					wSize.width() +
-					self.verticalScrollBar().sizeHint().width()
-				)
+		if not w :
+			return QtGui.QScrollArea.sizeHint( self )
+			
+		wSize = w.sizeHint()
 
-			if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-				result.setHeight(
-					self.__marginTop +
-					self.__marginBottom +
-					wSize.height() +
-					self.horizontalScrollBar().sizeHint().width()
-				)
+		width = self.__marginLeft + self.__marginRight + wSize.width()
+		if self.verticalScrollBarPolicy()!=QtCore.Qt.ScrollBarAlwaysOff :
+			width += self.verticalScrollBar().sizeHint().width()
+			
+		height = self.__marginTop + self.__marginBottom + wSize.height()
+		if self.horizontalScrollBarPolicy()!=QtCore.Qt.ScrollBarAlwaysOff :
+			height += horizontalScrollBar().sizeHint().height()
 				
-		return result
+		return QtCore.QSize( width, height )
 	
 	def eventFilter( self, widget, event ) :
 	
