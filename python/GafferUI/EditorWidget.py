@@ -72,9 +72,9 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		self.__context = context
 		if self.__context is not None :
-			__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 		else :
-			__contextChangedConnection = None
+			self.__contextChangedConnection = None
 	
 		self._updateFromContext()
 	
@@ -94,8 +94,8 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		raise NotImplementedError
 		
-	def __contextChanged( self, context ) :
-	
+	def __contextChanged( self, context, key ) :
+		
 		assert( context.isSame( self.getContext() ) )
 		
 		self._updateFromContext()
