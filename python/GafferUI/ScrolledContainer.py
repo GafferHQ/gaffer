@@ -151,18 +151,31 @@ class _ScrollArea( QtGui.QScrollArea ) :
 		wSize = w.sizeHint()
 
 		width = self.__marginLeft + self.__marginRight + wSize.width()
-		if self.verticalScrollBarPolicy()!=QtCore.Qt.ScrollBarAlwaysOff :
+		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOn :
 			width += self.verticalScrollBar().sizeHint().width()
 			
 		height = self.__marginTop + self.__marginBottom + wSize.height()
-		if self.horizontalScrollBarPolicy()!=QtCore.Qt.ScrollBarAlwaysOff :
-			height += horizontalScrollBar().sizeHint().height()
+		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOn :
+			height += self.horizontalScrollBar().sizeHint().height()
 				
 		return QtCore.QSize( width, height )
 	
 	def eventFilter( self, widget, event ) :
 	
 		if widget is self.widget() and isinstance( event, QtGui.QResizeEvent ) :
+			# Ask for our geometry to be recalculated if possible. This allows
+			# us to expand and contract with our child.
 			self.updateGeometry()
-		
+			
+			# I don't know why this is necessary. If it's removed then when the
+			# child widget resizes and the ScrolledContainer is resized up to fit,
+			# the scroll bar flickers on and off briefly. This can be seen in the
+			# OpDialogue with any op with collapsible parameter sections. Ideally
+			# we would find a better fix, or at least understand this one.
+			while widget is not None :
+				if widget.layout() is not None :
+					widget.layout().invalidate()
+				widget = widget.parent()
+			
+			
 		return False
