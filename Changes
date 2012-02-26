@@ -42,6 +42,10 @@
 
 * GafferUI.ScrolledContainer now always asks for enough size to completely show its contents, regardless of the scroll mode in use.
 
+* Deprecated GafferUI.Window setResizeable() and getResizeable() methods in favour of new setSizeMode() and getSizeMode() methods. These provide three modes - Manual (the same as the previous resizeable), Fixed (the same as the previous non-resizeable) and Automatic, whereby the window always tries to fit its child. Added a resizeToFitChild() method for cases where sizeMode is not Automatic and you know the child has been resized.
+
+* The OpDialogue now resizes automatically to fit the parameters initially, and adjust as parameter sections are shown and hidden.
+
 0.27.0
 ------
 

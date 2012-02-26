@@ -42,9 +42,10 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 class Dialogue( GafferUI.Window ) :
 
-	def __init__( self, title, borderWidth=8, resizeable=True, **kw ) :
+	## \todo Remove the deprecated resizeable argument
+	def __init__( self, title, borderWidth=8, resizeable=None, sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 	
-		GafferUI.Window.__init__( self, title, borderWidth, resizeable, **kw )
+		GafferUI.Window.__init__( self, title, borderWidth, resizeable, sizeMode=sizeMode, **kw )
 		
 		self._qtWidget().setWindowFlags( QtCore.Qt.WindowFlags( QtCore.Qt.Dialog ) )
 		

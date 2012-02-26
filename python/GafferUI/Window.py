@@ -35,6 +35,10 @@
 #  
 ##########################################################################
 
+import warnings
+
+import IECore
+
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -42,7 +46,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Window( GafferUI.ContainerWidget ) :
 
-	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=True, child=None, **kw ) :
+	SizeMode = IECore.Enum.create( "Fixed", "Manual", "Automatic" )
+
+	## \todo Remove the deprecated resizable argument
+	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, **kw ) :
 	
 		GafferUI.ContainerWidget.__init__(
 			self, QtGui.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ), **kw )
@@ -64,8 +71,11 @@ class Window( GafferUI.ContainerWidget ) :
 		
 		self.setTitle( title )
 		
-		self.setResizeable( resizeable )
-
+		if resizeable is not None :
+			self.setResizeable( resizeable )
+		else :
+			self.setSizeMode( sizeMode )
+			
 		self.__closedSignal = GafferUI.WidgetSignal()
 		
 		self.setChild( child )
@@ -131,13 +141,36 @@ class Window( GafferUI.ContainerWidget ) :
 		self.__childWindows.add( childWindow )
 		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() )
 		
+	## \deprecated
 	def setResizeable( self, resizeable ) :
 	
-		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetDefaultConstraint if resizeable else QtGui.QLayout.SetFixedSize );
-		
+		warnings.warn( "Window.setResizeable() is deprecated, use Window.setSizeMode() instead.", DeprecationWarning, 2 )		
+		if resizeable :
+			self.setSizeMode( self.SizeMode.Manual )
+		else :
+			self.setSizeMode( self.SizeMode.Fixed )
+					
+	## \deprecated
 	def getResizeable( self ) :
 	
-		return self.__qtLayout.sizeConstraint() == QtGui.QLayout.SetDefaultConstraint
+		warnings.warn( "Window.getResizeable() is deprecated, use Window.getSizeMode() instead.", DeprecationWarning, 2 )		
+		return self.getSizeMode() == self.SizeMode.Manual
+		
+	def setSizeMode( self, sizeMode ) :
+	
+		self.__sizeMode = sizeMode
+		if sizeMode == self.SizeMode.Manual :
+			self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetDefaultConstraint )
+		else :
+			self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetFixedSize )
+		
+	def getSizeMode( self ) :
+	
+		return self.__sizeMode
+		
+	def resizeToFitChild( self ) :
+	
+		self._qtWidget().setGeometry( QtCore.QRect( self._qtWidget().geometry().topLeft(), self._qtWidget().sizeHint() ) )
 
 	def setFullScreen( self, fullScreen ) :
 	
@@ -191,7 +224,9 @@ class _WindowEventFilter( QtCore.QObject ) :
 		
 	def eventFilter( self, qObject, qEvent ) :
 	
-		if qEvent.type()==QtCore.QEvent.Close :
+		type = qEvent.type()
+		
+		if type==QtCore.QEvent.Close :
 			widget = GafferUI.Widget._owner( qObject )
 			closed = widget.close()
 			if closed :
@@ -199,7 +234,12 @@ class _WindowEventFilter( QtCore.QObject ) :
 			else :
 				qEvent.ignore()
 			return True
-
+		elif type==QtCore.QEvent.LayoutRequest :
+			widget = GafferUI.Widget._owner( qObject )
+			if widget.getSizeMode() == widget.SizeMode.Automatic :
+				widget.resizeToFitChild()
+				return True
+			
 		return False
 
 # this single instance is used by all window widgets

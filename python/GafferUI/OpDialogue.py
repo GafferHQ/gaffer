@@ -45,12 +45,12 @@ import GafferUI
 # IECore.Op instance and then execute it.
 class OpDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, opInstance, title=None, **kw ) :
+	def __init__( self, opInstance, title=None, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw ) :
 
 		if title is None :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )
 
-		GafferUI.Dialogue.__init__( self, title, resizeable=True, **kw )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( opInstance )
@@ -58,10 +58,6 @@ class OpDialogue( GafferUI.Dialogue ) :
 		frame = GafferUI.Frame()
 		frame.setChild( GafferUI.NodeUI.create( self.__node ) )
 		
-		## \todo Decide how we allow this sort of tweak using the public
-		# interface. Perhaps we should have a SizeableContainer or something?
-		frame._qtWidget().setMinimumSize( 400, 300 )
-
 		self._setWidget( frame )
 		
 		self.__cancelButton = self._addButton( "Cancel" )
@@ -70,7 +66,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
 		self.__opExecutedSignal = Gaffer.Signal1()
-			
+					
 	## A signal called when the user has pressed the execute button
 	# and the Op has been successfully executed. This is passed the
 	# result of the execution.
