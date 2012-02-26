@@ -42,6 +42,7 @@
 
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/Container.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/UndoContext.h"
@@ -190,7 +191,17 @@ class ScriptNode : public Node
 		Context *context();
 		const Context *context() const;
 		//@}
-					
+		
+		//! @name Frame range
+		/// The ScriptNode defines the valid frame range using two numeric plugs.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		IntPlug *frameStartPlug();
+		const IntPlug *frameStartPlug() const;
+		IntPlug *frameEndPlug();
+		const IntPlug *frameEndPlug() const;
+		//@}
+		
 	private :
 		
 		bool selectionSetAcceptor( Set::ConstPtr s, Set::ConstMemberPtr m );
@@ -218,6 +229,7 @@ class ScriptNode : public Node
 		ContextPtr m_context;
 		
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
+		void plugSet( PlugPtr plug );
 	
 };
 

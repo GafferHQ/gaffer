@@ -43,6 +43,7 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/CompoundPlug.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
@@ -64,9 +65,17 @@ ScriptNode::ScriptNode( const std::string &name )
 	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "" );
 	addChild( m_fileNamePlug );
 	
+	CompoundPlugPtr frameRangePlug = new CompoundPlug( "frameRange", Plug::In );
+	IntPlugPtr frameStartPlug = new IntPlug( "start", Plug::In, 1 );
+	IntPlugPtr frameEndPlug = new IntPlug( "end", Plug::In, 100 );
+	frameRangePlug->addChild( frameStartPlug );
+	frameRangePlug->addChild( frameEndPlug );
+	addChild( frameRangePlug );
+	
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
 	childRemovedSignal().connect( boost::bind( &ScriptNode::childRemoved, this, ::_1, ::_2 ) );
+	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
 }
 
 ScriptNode::~ScriptNode()
@@ -252,7 +261,41 @@ const Context *ScriptNode::context() const
 	return m_context.get();
 }
 
+IntPlug *ScriptNode::frameStartPlug()
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "start" );
+}
+
+const IntPlug *ScriptNode::frameStartPlug() const
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "start" );
+}
+
+IntPlug *ScriptNode::frameEndPlug()
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "end" );
+}
+
+const IntPlug *ScriptNode::frameEndPlug() const
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "end" );
+}
+
 void ScriptNode::childRemoved( GraphComponent *parent, GraphComponent *child )
 {
 	m_selection->remove( child );
+}
+
+void ScriptNode::plugSet( PlugPtr plug )
+{
+	/// \todo Should we introduce some plug constraints classes to assist in managing these
+	/// kinds of relationships?
+	if( plug == frameStartPlug() )
+	{
+		frameEndPlug()->setValue( std::max( frameEndPlug()->getValue(), frameStartPlug()->getValue() ) );
+	}
+	else if( plug == frameEndPlug() )
+	{
+		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );	
+	}
 }

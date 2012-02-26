@@ -341,8 +341,30 @@ a = A()"""
 		c.setFrame( 10.0 )
 		
 		self.assertEqual( s.context().getFrame(), 10.0 )
-		self.failUnless( s.context().isSame( c ) )					
+		self.failUnless( s.context().isSame( c ) )
+		
+	def testFrameRange( self ) :
 	
+		s = Gaffer.ScriptNode()
+		
+		self.failUnless( isinstance( s["frameRange"]["start"], Gaffer.IntPlug ) )
+		self.failUnless( isinstance( s["frameRange"]["end"], Gaffer.IntPlug ) )
+		
+		self.assertEqual( s["frameRange"]["start"].getValue(), 1 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
+		
+		s["frameRange"]["start"].setValue( 110 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 110 )
+		
+		s["frameRange"]["end"].setValue( 200 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 200 )
+		
+		s["frameRange"]["end"].setValue( 100 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 100 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
