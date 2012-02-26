@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -43,27 +43,27 @@ namespace GafferUI
 
 enum TypeId
 {
-	GadgetTypeId = 110501,
-	NodeGadgetTypeId = 110502,
-	GraphGadgetTypeId = 110503,
-	ContainerGadgetTypeId = 110504,
-	RenderableGadgetTypeId = 110505,
-	TextGadgetTypeId = 110506,
-	NameGadgetTypeId = 110507,
-	IndividualContainerTypeId = 110508,
-	FrameTypeId = 110509,
-	StyleTypeId = 110510,
-	StandardStyleTypeId = 110511,
-	NoduleTypeId = 110512,
-	LinearContainerTypeId = 110513,
-	ConnectionGadgetTypeId = 110514,
-	StandardNodeGadgetTypeId = 110515,
-	SplinePlugGadgetTypeId = 110516,
-	StandardNoduleTypeId = 110517,
-	CompoundNoduleTypeId = 110518,
-	ImageGadgetTypeId = 110519,
+	GadgetTypeId = 110251,
+	NodeGadgetTypeId = 110252,
+	GraphGadgetTypeId = 110253,
+	ContainerGadgetTypeId = 110254,
+	RenderableGadgetTypeId = 110255,
+	TextGadgetTypeId = 110256,
+	NameGadgetTypeId = 110257,
+	IndividualContainerTypeId = 110258,
+	FrameTypeId = 110259,
+	StyleTypeId = 110260,
+	StandardStyleTypeId = 110261,
+	NoduleTypeId = 110262,
+	LinearContainerTypeId = 110263,
+	ConnectionGadgetTypeId = 110264,
+	StandardNodeGadgetTypeId = 110265,
+	SplinePlugGadgetTypeId = 110266,
+	StandardNoduleTypeId = 110267,
+	CompoundNoduleTypeId = 110268,
+	ImageGadgetTypeId = 110269,
 	
-	LastTypeId = 110999
+	LastTypeId = 110500
 };
 
 } // namespace GafferUI
