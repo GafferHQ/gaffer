@@ -60,6 +60,7 @@
 #include "GafferBindings/ProceduralHolderBinding.h"
 #include "GafferBindings/PreferencesNodeBinding.h"
 #include "GafferBindings/ContextBinding.h"
+#include "GafferBindings/BoxPlugBinding.h"
 
 using namespace GafferBindings;
 
@@ -91,5 +92,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindProceduralHolder();
 	bindPreferencesNode();
 	bindContext();
+	bindBoxPlug();
 
 }

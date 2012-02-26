@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,79 +34,70 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/BoxParameterHandler.h"
+#ifndef GAFFER_BOXPLUG_H
+#define GAFFER_BOXPLUG_H
 
-using namespace Gaffer;
+#include "OpenEXR/ImathBox.h"
 
-template<typename T>
-ParameterHandler::ParameterHandlerDescription<BoxParameterHandler<T>, IECore::TypedParameter<T> > BoxParameterHandler<T>::g_description;
+#include "IECore/BoxTraits.h"
 
-template<typename T>
-BoxParameterHandler<T>::BoxParameterHandler( typename ParameterType::Ptr parameter )
-	:	m_parameter( parameter )
+#include "Gaffer/CompoundNumericPlug.h"
+
+namespace Gaffer
 {
-}
 
 template<typename T>
-BoxParameterHandler<T>::~BoxParameterHandler()
+class BoxPlug : public CompoundPlug
 {
-}
 
-template<typename T>
-IECore::ParameterPtr BoxParameterHandler<T>::parameter()
-{
-	return m_parameter;
-}
+	public :
 
-template<typename T>
-IECore::ConstParameterPtr BoxParameterHandler<T>::parameter() const
-{
-	return m_parameter;
-}
+		typedef T ValueType;
+		typedef CompoundNumericPlug<typename IECore::BoxTraits<T>::BaseType> ChildType;
+		
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( BoxPlug<T>, CompoundPlug );
 
-template<typename T>
-Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
-{
-	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
-	if( !m_plug || m_plug->direction()!=direction )
-	{
-		m_plug = new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
-		plugParent->setChild( m_parameter->name(), m_plug );
-	}
+		BoxPlug(
+			const std::string &name = staticTypeName(),
+			Direction direction=In,
+			T defaultValue = T(),
+			unsigned flags = Default
+		);
+		virtual ~BoxPlug();
 
-	setupPlugFlags( m_plug );
+		/// Accepts no children following construction.
+		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+
+		ChildType *min();
+		const ChildType *min() const;	
 	
-	return m_plug;
-}
+		ChildType *max();
+		const ChildType *max() const;	
 
-template<typename T>
-Gaffer::PlugPtr BoxParameterHandler<T>::plug()
-{
-	return m_plug;
-}
-
-template<typename T>
-Gaffer::ConstPlugPtr BoxParameterHandler<T>::plug() const
-{
-	return m_plug;
-}
+		T defaultValue() const;
 		
-template<typename T>
-void BoxParameterHandler<T>::setParameterValue()
-{
-	m_parameter->setTypedValue( m_plug->getValue() );
-}
+		/// Calls setValue for the min and max child plugs, using the min and max of 
+		/// value.
+		/// \undoable
+		void setValue( const T &value );
+		/// Returns the value, calling getValue() on the min and max child plugs to compute a component
+		/// of the result. This isn't const as it may require a compute and therefore a setValue().
+		T getValue();
+			
+};
 
-template<typename T>
-void BoxParameterHandler<T>::setPlugValue()
-{
-	m_plug->setValue( m_parameter->getTypedValue() );
-}
-		
-// explicit instantiations
+typedef BoxPlug<Imath::Box2i> Box2iPlug;
+typedef BoxPlug<Imath::Box3i> Box3iPlug;
 
-template class BoxParameterHandler<Imath::Box2f>;
-template class BoxParameterHandler<Imath::Box3f>;
+typedef BoxPlug<Imath::Box2f> Box2fPlug;
+typedef BoxPlug<Imath::Box3f> Box3fPlug;
 
-template class BoxParameterHandler<Imath::Box2i>;
-template class BoxParameterHandler<Imath::Box3i>;
+IE_CORE_DECLAREPTR( Box2iPlug );
+IE_CORE_DECLAREPTR( Box3iPlug );
+
+IE_CORE_DECLAREPTR( Box2fPlug );
+IE_CORE_DECLAREPTR( Box3fPlug );
+
+} // namespace Gaffer
+
+#endif // GAFFER_BOXPLUG_H

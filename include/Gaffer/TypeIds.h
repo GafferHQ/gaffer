@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -79,8 +79,13 @@ enum TypeId
 	OpHolderTypeId = 110032,
 	ProceduralHolderTypeId = 110033,
 	PreferencesNodeTypeId = 110034,
+	ObjectVectorPlugTypeId = 110035,
+	Box2iPlugTypeId = 110036,
+	Box3iPlugTypeId = 110037,
+	Box2fPlugTypeId = 110038,
+	Box3fPlugTypeId = 110039,
 	
-	LastTypeId = 110500,
+	LastTypeId = 110250,
 	
 };
 

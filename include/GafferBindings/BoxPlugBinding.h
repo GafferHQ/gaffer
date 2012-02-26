@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,49 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXPARAMETERHANDLER_H
-#define GAFFER_BOXPARAMETERHANDLER_H
+#ifndef GAFFERBINDINGS_BOXPLUGBINDING_H
+#define GAFFERBINDINGS_BOXPLUGBINDING_H
 
-#include "IECore/TypedParameter.h"
-#include "IECore/BoxTraits.h"
-
-#include "Gaffer/ParameterHandler.h"
-#include "Gaffer/BoxPlug.h"
-
-namespace Gaffer
+namespace GafferBindings
 {
 
-template<typename T>
-class BoxParameterHandler : public ParameterHandler
-{
+void bindBoxPlug();
 
-	public :
+} // namespace GafferBindings
 
-		IE_CORE_DECLAREMEMBERPTR( BoxParameterHandler<T> );
-
-		typedef IECore::TypedParameter<T> ParameterType;
-		typedef BoxPlug<T> PlugType;
-
-		BoxParameterHandler( typename ParameterType::Ptr parameter );
-		virtual ~BoxParameterHandler();
-		
-		virtual IECore::ParameterPtr parameter();
-		virtual IECore::ConstParameterPtr parameter() const;
-		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
-		virtual Gaffer::PlugPtr plug();
-		virtual Gaffer::ConstPlugPtr plug() const;
-		virtual void setParameterValue();
-		virtual void setPlugValue();
-		
-	private :
-	
-		typename ParameterType::Ptr m_parameter;
-		typename PlugType::Ptr m_plug;
-	
-		static ParameterHandlerDescription<BoxParameterHandler<T>, ParameterType> g_description;
-
-};
-
-} // namespace Gaffer
-
-#endif // GAFFER_BOXPARAMETERHANDLER_H
+#endif // GAFFERBINDINGS_BOXPLUGBINDING_H
