@@ -37,7 +37,6 @@
 #include "Gaffer/CompoundNumericPlug.h"
 
 using namespace Gaffer;
-using namespace boost;
 
 template<typename T>
 CompoundNumericPlug<T>::CompoundNumericPlug(
@@ -153,7 +152,7 @@ T CompoundNumericPlug<T>::maxValue() const
 }
 
 template<typename T>
-void CompoundNumericPlug<T>::setValue( T value )
+void CompoundNumericPlug<T>::setValue( const T &value )
 {
 	for( unsigned i=0; i<T::dimensions(); i++ )
 	{
