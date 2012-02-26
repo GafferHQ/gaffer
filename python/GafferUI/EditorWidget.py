@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,9 @@
 #  
 ##########################################################################
 
-from Gaffer import ScriptNode
+import types
+
+import Gaffer
 import GafferUI
 
 ## The EditorWidget is a base class for all Widgets which somehow display or
@@ -48,16 +50,42 @@ class EditorWidget( GafferUI.Widget ) :
 		
 		self.setScriptNode( scriptNode )
 	
+	## Sets the script being edited. This will also call setContext( scriptNode.context() ).
 	def setScriptNode( self, scriptNode ) :
 	
-		if not ( scriptNode is None or scriptNode.isInstanceOf( ScriptNode.staticTypeId() ) ) :
+		if not ( scriptNode is None or scriptNode.isInstanceOf( Gaffer.ScriptNode.staticTypeId() ) ) :
 			raise TypeError( "Editor expects a ScriptNode instance or None.")
 		
 		self.__scriptNode = scriptNode
+		self.setContext( scriptNode.context() if scriptNode is not None else None )
 		
 	def getScriptNode( self ) :
 	
 		return self.__scriptNode
+	
+	## By default Editors operate in the main context held by the script node. This function
+	# allows an alternative context to be provided, making it possible for an editor to 
+	# display itself at a custom frame (or with any other context modification).
+	def setContext( self, context ) :
+	
+		assert( isinstance( context, ( Gaffer.Context, types.NoneType ) ) )
+	
+		self.__context = context
+		if self.__context is not None :
+			__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		else :
+			__contextChangedConnection = None
+	
+		self._updateFromContext()
+	
+	def getContext( self ) :
+	
+		return self.__context
+	
+	## May be implemented by derived classes to update state based on a change of context.
+	def _updateFromContext( self ) :
+	
+		pass	
 	
 	## This must be implemented by all derived classes as it used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation - 
@@ -65,6 +93,12 @@ class EditorWidget( GafferUI.Widget ) :
 	def __repr__( self ) :
 	
 		raise NotImplementedError
+		
+	def __contextChanged( self, context ) :
+	
+		assert( context.isSame( self.getContext() ) )
+		
+		self._updateFromContext()
 	
 	@classmethod
 	def types( cls ) :
