@@ -62,7 +62,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView = _TableView()
 						
 		self.__tableView.horizontalHeader().setVisible( bool( header ) )
-		self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
+		self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents )
+		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 		
 		self.__tableView.verticalHeader().setVisible( showIndices )
 		self.__tableView.verticalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
@@ -73,7 +74,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
 		self.__tableView.setCornerButtonEnabled( False )
-		
+	
 		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
@@ -130,23 +131,16 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.__model :
 		
 			columnIndex = 0
-			columnWidths = []
 			for accessor in self.__model.vectorDataAccessors() :
 				for i in range( 0, accessor.numColumns() ) :
 					delegate = _Delegate.create( accessor.data() )
 					delegate.setParent( self.__model )
 					self.__tableView.setItemDelegateForColumn( columnIndex, delegate )
-					columnWidths.append( delegate.columnWidth() )
 					canStretch = delegate.canStretch()
 					columnIndex += 1
 
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
 			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
-
-			# we have to call resizeSection after setStretchLastSection as otherwise it doesn't work
-			horizontalHeader = self.__tableView.horizontalHeader()
-			for i in range( 0, len( columnWidths ) ) :
-				horizontalHeader.resizeSection( i, max( columnWidths[i], horizontalHeader.sectionSizeHint( i ) ) )
 		
 		self.__tableView.updateGeometry()
 	
@@ -270,13 +264,15 @@ class _TableView( QtGui.QTableView ) :
 		if prevModel :
 			prevModel.rowsInserted.disconnect( self.__sizeShouldChange )
 			prevModel.rowsRemoved.disconnect( self.__sizeShouldChange )
+			prevModel.dataChanged.connect( self.__sizeShouldChange )
 	
 		QtGui.QTableView.setModel( self, model )
 	
 		if model :
 			model.rowsInserted.connect( self.__sizeShouldChange )
 			model.rowsRemoved.connect( self.__sizeShouldChange )
-	
+			model.dataChanged.connect( self.__sizeShouldChange )
+			
 		self.updateGeometry()
 
 	def minimumSizeHint( self ) :
@@ -533,11 +529,7 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 	def __init__( self ) :
 			
 		QtGui.QStyledItemDelegate.__init__( self )
-	
-	def columnWidth( self ) :
-	
-		return 70
-		
+			
 	def canStretch( self ) :
 	
 		return False
@@ -576,15 +568,7 @@ class _BoolDelegate( _Delegate ) :
 	def __init__( self ) :
 	
 		_Delegate.__init__( self )
-		
-	def columnWidth( self ) :
-	
-		return 30
-		
-	def canStretch( self ) :
-	
-		return False
-
+				
 	def paint( self, painter, option, index ) :
 		
 		# draw the background
