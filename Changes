@@ -46,6 +46,8 @@
 
 * The OpDialogue now resizes automatically to fit the parameters initially, and adjust as parameter sections are shown and hidden.
 
+* The Widget class now has a keyReleaseSignal, and the GadgetWidget propagates events on this signal to the existing Gadget::keyReleaseSignal.
+
 0.27.0
 ------
 

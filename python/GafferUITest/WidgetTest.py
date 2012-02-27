@@ -213,6 +213,7 @@ class WidgetTest( unittest.TestCase ) :
 	
 		for s in [
 			( "keyPressSignal", GafferUI.WidgetEventSignal ),
+			( "keyReleaseSignal", GafferUI.WidgetEventSignal ),
 			( "buttonPressSignal", GafferUI.WidgetEventSignal ),
 			( "buttonReleaseSignal", GafferUI.WidgetEventSignal ),
 			( "buttonDoubleClickSignal", GafferUI.WidgetEventSignal ),

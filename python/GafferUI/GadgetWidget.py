@@ -74,6 +74,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__keyReleaseConnection = self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
@@ -328,6 +329,17 @@ class GadgetWidget( GafferUI.GLWidget ) :
 				
 		# pass the key to the gadget
 		result = self.__dispatchEvent( self.getGadget(), "keyPressSignal", event )
+		
+		return True if result[1] else False
+
+	def __keyRelease( self, widget, event ) :
+		
+		if not self.__gadget :
+			return True
+		
+		# pass the key to the gadget - we really need a focus model for gadgets so
+		# we can be smarter here
+		result = self.__dispatchEvent( self.getGadget(), "keyReleaseSignal", event )
 		
 		return True if result[1] else False
 	

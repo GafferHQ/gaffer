@@ -112,6 +112,7 @@ class Widget( object ) :
 		self.__qtWidget.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
 		
 		self._keyPressSignal = None
+		self._keyReleaseSignal = None
  		self._buttonPressSignal = None
  		self._buttonReleaseSignal = None
   		self._buttonDoubleClickSignal = None
@@ -226,6 +227,13 @@ class Widget( object ) :
 		if self._keyPressSignal is None :
 			self._keyPressSignal = GafferUI.WidgetEventSignal()
 		return self._keyPressSignal
+
+	def keyReleaseSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._keyReleaseSignal is None :
+			self._keyReleaseSignal = GafferUI.WidgetEventSignal()
+		return self._keyReleaseSignal
 	
 	## \todo Should these be renamed to mousePressSignal and mouseReleaseSignal?	
 	def buttonPressSignal( self ) :
@@ -1002,6 +1010,7 @@ class _EventFilter( QtCore.QObject ) :
 		self.__eventMask = set( (
 			QtCore.QEvent.ToolTip,
 			QtCore.QEvent.KeyPress,
+			QtCore.QEvent.KeyRelease,
 			QtCore.QEvent.MouseButtonPress,
 			QtCore.QEvent.MouseButtonRelease,
 			QtCore.QEvent.MouseButtonDblClick,
@@ -1041,6 +1050,18 @@ class _EventFilter( QtCore.QObject ) :
 				)
 
 				return widget._keyPressSignal( widget, event )
+
+		elif qEventType==qEvent.KeyRelease :
+						
+			widget = Widget._owner( qObject )
+			if widget._keyReleaseSignal is not None :
+
+				event = GafferUI.KeyEvent(
+					Widget._key( qEvent.key() ),
+					Widget._modifiers( qEvent.modifiers() ),
+				)
+
+				return widget._keyReleaseSignal( widget, event )
 		
 		elif qEventType==qEvent.MouseButtonPress :
 					
