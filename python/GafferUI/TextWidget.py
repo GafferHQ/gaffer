@@ -102,6 +102,8 @@ class TextWidget( GafferUI.Widget ) :
 	
 		if start is None :
 			start = 0
+		elif start < 0 :
+			start += len( self.getText() )
 			
 		if end is None :
 			end = len( self.getText() )	
@@ -170,7 +172,24 @@ class TextWidget( GafferUI.Widget ) :
 			self._qtWidget().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		
 		return self.__selectionChangedSignal
-		
+	
+	## A signal emitted when the user has finished selecting some text, but hasn't
+	# immediately started editing it.
+	def selectingFinishedSignal( self ) :
+	
+		try :
+			return self.__selectingFinishedSignal
+		except :
+			self.__selectingFinishedSignal = GafferUI.WidgetSignal()
+			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+			self.__keyReleaseConnection = self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ) )
+			self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+			self.__lastSelection = self.getSelection()
+			self.__numSelectionPossiblyFinishedEvents = 0
+			
+		return self.__selectingFinishedSignal
+	
 	## Returns the character index underneath the specified
 	# ButtonEvent.
 	def _eventPosition( self, event ) :
@@ -198,3 +217,46 @@ class TextWidget( GafferUI.Widget ) :
 	
 		self.__selectionChangedSignal( self )
 		
+	def __keyPress( self, widget, event ) :
+	
+		assert( widget is self )
+		
+		if event.key == "Shift" :
+			self.__lastSelection = self.getSelection()
+		
+	def __keyRelease( self, widget, event ) :
+	
+		assert( widget is self )
+		
+		if event.key == "Shift" and self.getSelection() != ( 0, 0 ) :
+			self.__startSelectionFinishedTimer()
+			
+		return False
+	
+	def __buttonPress( self, widget, event ) :
+	
+		assert( widget is self )
+		self.__lastSelection = self.getSelection()
+		return False
+	
+	def __buttonRelease( self, widget, event ) :
+	
+		assert( widget is self )
+		self.__startSelectionFinishedTimer()
+		return False
+	
+	def __startSelectionFinishedTimer( self ) :
+			
+		self.__numSelectionPossiblyFinishedEvents += 1
+		QtCore.QTimer.singleShot( QtGui.QApplication.doubleClickInterval(), self.__selectionPossiblyFinished )
+	
+	def __selectionPossiblyFinished( self ) :
+	
+		assert( self.__numSelectionPossiblyFinishedEvents > 0 )
+		
+		self.__numSelectionPossiblyFinishedEvents -= 1
+		if self.__numSelectionPossiblyFinishedEvents == 0 :
+			selection = self.getSelection() 
+			if selection != ( 0, 0 ) and selection != self.__lastSelection :
+				self.__selectingFinishedSignal( self )
+			self.__lastSelection = selection

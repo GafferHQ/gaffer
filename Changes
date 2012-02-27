@@ -34,7 +34,7 @@
 
 * Added buttonDoubleClickSignal() to GafferUI.Widget and GafferUI.Gadget.
 
-* Added setSelection() and getSelection() methods to GafferUI.TextWidget, along with a selectionChangedSignal() method.
+* Added setSelection() and getSelection() methods to GafferUI.TextWidget, along with a selectionChangedSignal() method. An additional selectingFinishedSignal() uses heuristics to determine when the user has finished making a selection. This is useful in Widgets which wish to provide easy methods of acting on the selection.
 
 * The Menu.popup() method now takes optional position and forcePosition arguments.
 
