@@ -94,6 +94,9 @@ class TextWidgetTest( unittest.TestCase ) :
 		w.setSelection( 0, None )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:] )
 	
+		w.setSelection( None, -2 )
+		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[:-2] )
+		
 		w.setSelection( 0, 0 )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "" )
 		self.assertEqual( w.getSelection(), ( 0, 0 ) )

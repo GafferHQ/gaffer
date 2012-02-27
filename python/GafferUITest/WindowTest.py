@@ -232,7 +232,29 @@ class WindowTest( unittest.TestCase ) :
 		self.failUnless( d.parent() is w )
 		self.failUnless( f.parent() is w )
 		self.failUnless( d2.parent() is w )
-				
+		
+	def testSizeMode( self ) :
+	
+		w = GafferUI.Window()
+		self.assertEqual( w.getSizeMode(), w.SizeMode.Manual )
+		
+		w = GafferUI.Window( sizeMode=GafferUI.Window.SizeMode.Fixed )
+		self.assertEqual( w.getSizeMode(), w.SizeMode.Fixed )
+		
+		w.setSizeMode( GafferUI.Window.SizeMode.Automatic )
+		self.assertEqual( w.getSizeMode(), w.SizeMode.Automatic )
+
+	def testResizeable( self ) :
+	
+		w = GafferUI.Window()
+		self.failUnless( w.getResizeable() )
+		
+		w.setResizeable( False )
+		self.failIf( w.getResizeable() )
+
+		w.setResizeable( True )
+		self.failUnless( w.getResizeable() )
+
 if __name__ == "__main__":
 	unittest.main()
 	

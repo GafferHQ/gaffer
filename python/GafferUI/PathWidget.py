@@ -53,20 +53,21 @@ class PathWidget( GafferUI.TextWidget ) :
 		GafferUI.TextWidget.__init__( self, str( path ), **kw )
 		
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__selectingFinishedConnection = self.selectingFinishedSignal().connect( Gaffer.WeakMethod( self.__selectingFinished ) )		
 				
 		self.__path = path
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		
 		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
-		self.__selectionChangedConnection = self.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		
+		self.__popupMenu = None
+	
 	def path( self ) :
 	
 		return self.__path
 				
 	def __keyPress( self, widget, event ) :
-				
+								
 		if event.key=="Tab" :
 
 			# do tab completion
@@ -96,37 +97,70 @@ class PathWidget( GafferUI.TextWidget ) :
 						
 			return True
 			
-		return False
+		elif event.key == "Down" :
 		
-	def __buttonPress( self, widget, event ) :
+			if event.modifiers & GafferUI.ModifiableEvent.Modifiers.Shift :
+				 # select all!
+				 self.setSelection( None, None )
+			else :
+				text = self.getText()
+				position = self.getCursorPosition()
+				if position == len( text ) and text[-1]=="/" :
+					# select last character to trigger menu for next path entry
+					self.setSelection( -1, None )
+				else :
+					# select path entry around the cursor
+					low = text.rfind( "/", 0, position )
+					high = text.find( "/", position )
+					if low != -1 :
+						self.setSelection( low+1, high if high != -1 else None )
 				
-		if event.modifiers & event.Modifiers.Control :
-		
-			# ctrl click
-			
-			position = self._eventPosition( event )			
-			self.__popupListing( position )
-			
+			self.__popupMenuForSelection()
 			return True
 			
 		return False
-
-	def __selectionChanged( self, widget ) :
+		
+	def __selectingFinished( self, widget ) :
 	
 		assert( widget is self )
-				
+		
+		self.__popupMenuForSelection()
+
+	def __popupMenuForSelection( self ) :
+					
 		start, end = self.getSelection()
 		if start == end :
 			return
 		
 		text = self.getText()
 		selectedText = text[start:end]
-				
-		if selectedText == "/" and end == len( text ) :
+		
+		if text == selectedText :
+			self.__popupHierarchy()
+		elif selectedText == "/" and end == len( text ) :
 			# the final slash was selected
 			self.__popupListing( end )		
-		elif text[start-1] == "/" and ( end >= len( text ) or text[end] == "/" ) :
+		elif "/" not in selectedText and text[start-1] == "/" and ( end >= len( text ) or text[end] == "/" ) :
 			self.__popupListing( start )
+	
+	def __popupHierarchy( self ) :
+	
+		pathCopy = self.__path.copy()
+		md = IECore.MenuDefinition()
+		i = 0
+		while len( pathCopy ) :
+			md.append(
+				"/" + str( i ),
+				IECore.MenuItemDefinition(
+					label = str( pathCopy ),
+					command = IECore.curry( Gaffer.WeakMethod( self.__path.setFromString ), str( pathCopy ) ), 
+				)
+			)
+			del pathCopy[-1]
+			i += 1
+			
+		self.__popupMenu = GafferUI.Menu( md )
+		self.__popupMenu.popup( position = self.__popupPosition( 0 ), forcePosition=True )
 			
 	def __popupListing( self, textIndex ) :
 	

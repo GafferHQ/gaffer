@@ -42,7 +42,7 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 
 	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", **kw ) :
 	
-		GafferUI.Dialogue.__init__( self, title, **kw )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 		
 		self.__textWidget = GafferUI.TextWidget( initialText )
 		self._setWidget( self.__textWidget )
@@ -50,9 +50,7 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 
 		self.__cancelButton = self._addButton( cancelLabel )
 		self.__confirmButton = self._addButton( confirmLabel )
-		
-		self.setResizeable( False )
-		
+				
 	def waitForText( self, **kw ) :
 	
 		button = self.waitForButton( **kw )

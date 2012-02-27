@@ -54,7 +54,11 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 	
 	def setData( self, data ) :
 		
-		assert( isinstance( data, ( IECore.StringVectorData, type( None ) ) ) )
+		if isinstance( data, list ) :
+			assert( len( data ), 1 )
+			assert( isinstance( data[0], ( IECore.StringVectorData, type( None ) ) ) )
+		else :
+			assert( isinstance( data, ( IECore.StringVectorData, type( None ) ) ) )
 		
 		GafferUI.VectorDataWidget.setData( self, data )
 

@@ -115,8 +115,8 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 		return self.__policiesToModes[p[1]]
 
 # Private implementation - a QScrollArea derived class which is a bit more
-# forceful aboout claiming size when the scrollbars are off in a particular 
-# direction.
+# forceful aboout claiming size - it always asks for enough to completely show
+# the contained widget.
 class _ScrollArea( QtGui.QScrollArea ) :
 
 	def __init__( self ) :
@@ -144,33 +144,38 @@ class _ScrollArea( QtGui.QScrollArea ) :
 				
 	def sizeHint( self ) :
 			
-		result = QtGui.QScrollArea.sizeHint( self )
-		
 		w = self.widget()
-		if w :
-		
-			wSize = w.sizeHint()
-			if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-				result.setWidth(
-					self.__marginLeft +
-					self.__marginRight +
-					wSize.width() +
-					self.verticalScrollBar().sizeHint().width()
-				)
+		if not w :
+			return QtGui.QScrollArea.sizeHint( self )
+			
+		wSize = w.sizeHint()
 
-			if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-				result.setHeight(
-					self.__marginTop +
-					self.__marginBottom +
-					wSize.height() +
-					self.horizontalScrollBar().sizeHint().width()
-				)
+		width = self.__marginLeft + self.__marginRight + wSize.width()
+		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOn :
+			width += self.verticalScrollBar().sizeHint().width()
+			
+		height = self.__marginTop + self.__marginBottom + wSize.height()
+		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOn :
+			height += self.horizontalScrollBar().sizeHint().height()
 				
-		return result
+		return QtCore.QSize( width, height )
 	
 	def eventFilter( self, widget, event ) :
 	
 		if widget is self.widget() and isinstance( event, QtGui.QResizeEvent ) :
+			# Ask for our geometry to be recalculated if possible. This allows
+			# us to expand and contract with our child.
 			self.updateGeometry()
-		
+			
+			# I don't know why this is necessary. If it's removed then when the
+			# child widget resizes and the ScrolledContainer is resized up to fit,
+			# the scroll bar flickers on and off briefly. This can be seen in the
+			# OpDialogue with any op with collapsible parameter sections. Ideally
+			# we would find a better fix, or at least understand this one.
+			while widget is not None :
+				if widget.layout() is not None :
+					widget.layout().invalidate()
+				widget = widget.parent()
+			
+			
 		return False

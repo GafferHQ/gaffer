@@ -45,7 +45,7 @@ class AboutWindow( GafferUI.Window ) :
 
 	def __init__( self, about, **kw ) :
 	
-		GafferUI.Window.__init__( self, title = "About " + about.name(), **kw )
+		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
 		
 		frame = GafferUI.Frame( borderWidth = 30 )
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10 )
@@ -112,6 +112,4 @@ class AboutWindow( GafferUI.Window ) :
 			column.append( collapsible, expand=True )
 
 		self.setChild( frame )
-		
-		#self.setResizeable( False )
 

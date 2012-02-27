@@ -36,11 +36,23 @@
 
 * Added buttonDoubleClickSignal() to GafferUI.Widget and GafferUI.Gadget.
 
-* Added setSelection() and getSelection() methods to GafferUI.TextWidget, along with a selectionChangedSignal() method.
+* Added setSelection() and getSelection() methods to GafferUI.TextWidget, along with a selectionChangedSignal() method. An additional selectingFinishedSignal() uses heuristics to determine when the user has finished making a selection. This is useful in Widgets which wish to provide easy methods of acting on the selection.
 
 * The Menu.popup() method now takes optional position and forcePosition arguments.
 
 * Improved PathWidget popup listing behaviour.
+
+* GafferUI.ScrolledContainer now always asks for enough size to completely show its contents, regardless of the scroll mode in use.
+
+* Deprecated GafferUI.Window setResizeable() and getResizeable() methods in favour of new setSizeMode() and getSizeMode() methods. These provide three modes - Manual (the same as the previous resizeable), Fixed (the same as the previous non-resizeable) and Automatic, whereby the window always tries to fit its child. Added a resizeToFitChild() method for cases where sizeMode is not Automatic and you know the child has been resized.
+
+* The OpDialogue now resizes automatically to fit the parameters initially, and adjust as parameter sections are shown and hidden.
+
+* The Widget class now has a keyReleaseSignal, and the GadgetWidget propagates events on this signal to the existing Gadget::keyReleaseSignal.
+
+* Added support for "label" attributes in menu definitions to GafferUI.Menu. This is really just a workaround for the fact that IECore.MenuDefinition uses / characters to delineate between menu entries, and sometimes we want a / in the entry name itself.
+
+* The VectorDataWidget now sizes itself to fit its contents.
 
 0.27.0
 ------

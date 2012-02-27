@@ -38,7 +38,7 @@
 import inspect
 import weakref
 
-from IECore import curry
+import IECore
 
 import GafferUI
 
@@ -51,7 +51,7 @@ class Menu( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else QtGui.QMenu(), **kw )
 			
-		self._qtWidget().aboutToShow.connect( curry( self.__show, self._qtWidget(), definition ) )
+		self._qtWidget().aboutToShow.connect( IECore.curry( self.__show, self._qtWidget(), definition ) )
 		
 		self._setStyleSheet()
 		
@@ -135,20 +135,24 @@ class Menu( GafferUI.Widget ) :
 										
 					subMenu = qtMenu.addMenu( name )
 					subMenuDefinition = definition.reRooted( "/" + name + "/" )					
-					subMenu.aboutToShow.connect( curry( self.__show, subMenu, subMenuDefinition ) )
+					subMenu.aboutToShow.connect( IECore.curry( self.__show, subMenu, subMenuDefinition ) )
 					
 				else :
 				
+					label = name
+					with IECore.IgnoredExceptions( AttributeError ) :
+						label = item.label
+					
 					if item.subMenu is not None :
 										
-						subMenu = qtMenu.addMenu( name )
-						subMenu.aboutToShow.connect( curry( self.__show, subMenu, item.subMenu ) )
+						subMenu = qtMenu.addMenu( label )
+						subMenu.aboutToShow.connect( IECore.curry( self.__show, subMenu, item.subMenu ) )
 					
 					else :
 				
 						# it's not a submenu
 
-						qtAction = QtGui.QAction( name, qtMenu )
+						qtAction = QtGui.QAction( label, qtMenu )
 
 						if item.checkBox is not None :
 							qtAction.setCheckable( True )
@@ -171,7 +175,7 @@ class Menu( GafferUI.Widget ) :
 								signal = qtAction.triggered[bool]
 
 							## \todo Check we're not making unbreakable circular references here
-							signal.connect( curry( self.__commandWrapper, qtAction, item.command ) )
+							signal.connect( IECore.curry( self.__commandWrapper, qtAction, item.command ) )
 
 						active = item.active
 						if callable( active ) :
