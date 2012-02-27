@@ -48,6 +48,8 @@
 
 * The Widget class now has a keyReleaseSignal, and the GadgetWidget propagates events on this signal to the existing Gadget::keyReleaseSignal.
 
+* Added support for "label" attributes in menu definitions to GafferUI.Menu. This is really just a workaround for the fact that IECore.MenuDefinition uses / characters to delineate between menu entries, and sometimes we want a / in the entry name itself.
+
 0.27.0
 ------
 
