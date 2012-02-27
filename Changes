@@ -1,3 +1,7 @@
+* Removed assert warning
+
+0.28.0
+------
 * Added an InfoPathFilter, which allows filtering with an arbitrary match function applied to an arbitrary field of Path.info(). Used this to implement a filter text box for path choosers.
 
 * GridContainer now supports the automatic parenting mechanism
