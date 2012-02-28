@@ -151,7 +151,6 @@ class Widget( object ) :
 		if visible != self.getVisible() :
 			self.__qtWidget.setVisible( visible )
 
-	
 	## Returns False if this Widget has been explicitly hidden
 	# using setVisible( False ), and True otherwise. Note that if
 	# a parent Widget has been hidden, then this function may still
