@@ -143,7 +143,14 @@ class Widget( object ) :
 	# visible explicitly after creation.		
 	def setVisible( self, visible ) :
 	
-		self.__qtWidget.setVisible( visible )
+		# It's important that we only call __qtWidget.setVisible( True )
+		# if we actually need to (if setVisible( False ) has been
+		# called before or if we're a window that hasn't been shown yet),
+		# as otherwise extra sizing events seem to get thrown around,
+		# resulting in juddering as windows are opened for the first time.
+		if visible != self.getVisible() :
+			self.__qtWidget.setVisible( visible )
+
 	
 	## Returns False if this Widget has been explicitly hidden
 	# using setVisible( False ), and True otherwise. Note that if
