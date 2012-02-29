@@ -1,0 +1,1 @@
+* Added a GafferBindings::NodeClass class, which simplifies the binding of Node derived classes. It is now a one liner to bind a typical extension node.

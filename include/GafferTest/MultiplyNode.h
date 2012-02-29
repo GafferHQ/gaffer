@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,52 +34,34 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERTEST_MULTIPLYNODE_H
+#define GAFFERTEST_MULTIPLYNODE_H
 
-#include "IECore/ParameterisedProcedural.h"
+#include "Gaffer/Node.h"
 
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferTest/TypeIds.h"
 
-#include "Gaffer/ProceduralHolder.h"
-#include "Gaffer/CompoundParameterHandler.h"
+namespace GafferTest
+{
 
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
-
-using namespace boost::python;
-using namespace GafferBindings;
-using namespace Gaffer;
-
-class ProceduralHolderWrapper : public ProceduralHolder, public IECorePython::Wrapper<ProceduralHolder>
+class MultiplyNode : public Gaffer::Node
 {
 
 	public :
-		
-		ProceduralHolderWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	ProceduralHolder( name ), IECorePython::Wrapper<ProceduralHolder>( self, this )
-		{
-			initNode( this, inputs, dynamicPlugs );
-			loadParameterised();
-		}		
-		
-		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( ProceduralHolder )
 
+		MultiplyNode( const std::string &name=staticTypeName() );
+		virtual ~MultiplyNode();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MultiplyNode, MultiplyNodeTypeId, Gaffer::Node );
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+		
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
 };
 
-IE_CORE_DECLAREPTR( ProceduralHolderWrapper );
+} // namespace GafferTest
 
-static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
-{
-	return n.getProcedural();
-}
-
-void GafferBindings::bindProceduralHolder()
-{
-	
-	GafferBindings::NodeClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
-		.def( "setProcedural", &ProceduralHolder::setProcedural )
-		.def( "getProcedural", &getProcedural )
-	;
-			
-}
+#endif // GAFFERTEST_MULTIPLYNODE_H

@@ -38,6 +38,7 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_H
 #define GAFFERBINDINGS_NODEBINDING_H
 
+#include "boost/python.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
@@ -50,6 +51,17 @@
 
 namespace GafferBindings
 {
+
+void bindNode();
+
+template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
+class NodeClass : public IECorePython::RunTimeTypedClass<T, Ptr>
+{
+	public :
+	
+		NodeClass( const char *docString = 0 );
+		
+};
 
 #define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
@@ -85,27 +97,10 @@ namespace GafferBindings
 		CLASSNAME::compute( output, context );\
 	}
 
-#define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
-	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
-	.def( "affects", &GafferBindings::affects<CLASSNAME> )
-
-template<typename T>
-static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
-{
-	Gaffer::Node::AffectedPlugsContainer a;
-	n.T::affects( p, a );
-	boost::python::list result;
-	for( Gaffer::Node::AffectedPlugsContainer::const_iterator it=a.begin(); it!=a.end(); it++ )
-	{
-		result.append( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( *it ) ) );
-	}
-	return result;
-}
-
-void bindNode();
-
 void initNode( Gaffer::Node *node, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs );
 
 } // namespace GafferBindings
+
+#include "GafferBindings/NodeBinding.inl"
 
 #endif // GAFFERBINDINGS_NODEBINDING_H

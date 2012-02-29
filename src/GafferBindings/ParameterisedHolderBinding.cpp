@@ -112,17 +112,7 @@ static ParameterModificationContextWrapper *parameterModificationContext( Parame
 
 void GafferBindings::bindParameterisedHolder()
 {
-	scope s = IECorePython::RunTimeTypedClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr>()
-		.def( 	init< const std::string &, const dict &, const tuple & >
-				(
-					(
-						arg( "name" ) = ParameterisedHolderNode::staticTypeName(),
-						arg( "inputs" ) = dict(),
-						arg( "dynamicPlugs" ) = tuple()
-					)
-				)
-		)
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( ParameterisedHolderNode )
+	scope s = NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr>()
 		.def(
 			"setParameterised",
 			(void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr, bool ))&ParameterisedHolderNode::setParameterised,

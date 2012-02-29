@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,52 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "Gaffer/NumericPlug.h"
 
-#include "IECore/ParameterisedProcedural.h"
+#include "GafferTest/MultiplyNode.h"
 
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "Gaffer/ProceduralHolder.h"
-#include "Gaffer/CompoundParameterHandler.h"
-
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
-
-using namespace boost::python;
-using namespace GafferBindings;
+using namespace GafferTest;
 using namespace Gaffer;
 
-class ProceduralHolderWrapper : public ProceduralHolder, public IECorePython::Wrapper<ProceduralHolder>
+IE_CORE_DEFINERUNTIMETYPED( MultiplyNode )
+
+MultiplyNode::MultiplyNode( const std::string &name )
+	:	Node( name )
 {
-
-	public :
-		
-		ProceduralHolderWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	ProceduralHolder( name ), IECorePython::Wrapper<ProceduralHolder>( self, this )
-		{
-			initNode( this, inputs, dynamicPlugs );
-			loadParameterised();
-		}		
-		
-		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( ProceduralHolder )
-
-};
-
-IE_CORE_DECLAREPTR( ProceduralHolderWrapper );
-
-static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
-{
-	return n.getProcedural();
+	addChild( new IntPlug( "op1" ) );
+	addChild( new IntPlug( "op2" ) );
+	addChild( new IntPlug( "product", Plug::Out ) );	
 }
 
-void GafferBindings::bindProceduralHolder()
+MultiplyNode::~MultiplyNode()
 {
-	
-	GafferBindings::NodeClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
-		.def( "setProcedural", &ProceduralHolder::setProcedural )
-		.def( "getProcedural", &getProcedural )
-	;
-			
+}
+
+void MultiplyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	if( input == getChild<IntPlug>( "op1" ) || input == getChild<IntPlug>( "op2" ) )
+	{
+		outputs.push_back( getChild<IntPlug>( "product" ) );
+	}
+}
+
+void MultiplyNode::compute( ValuePlug *output, const Context *context ) const
+{
+	/// \todo Fix const correctness issues so we don't need daft casts in here.
+	MultiplyNode *mutableThis = const_cast<MultiplyNode *>( this );
+	IntPlug *product = mutableThis->getChild<IntPlug>( "product" ).get();
+	if( output == product )
+	{
+		product->setValue(
+			mutableThis->getChild<IntPlug>( "op1" )->getValue() *
+			mutableThis->getChild<IntPlug>( "op2" )->getValue()
+		);
+	}
 }

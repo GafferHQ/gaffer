@@ -187,17 +187,7 @@ void GafferBindings::initNode( Node *node, const boost::python::dict &inputs, co
 void GafferBindings::bindNode()
 {
 	
-	scope s = IECorePython::RunTimeTypedClass<Node, NodeWrapperPtr>()
-		.def( 	init< const std::string &, const dict &, const tuple & >
-				(
-					(
-						arg( "name" ) = Node::staticTypeName(),
-						arg( "inputs" ) = dict(),
-						arg( "dynamicPlugs" ) = tuple()
-					)
-				)
-		)
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( Node )
+	scope s = NodeClass<Node, NodeWrapperPtr>()
 		.def( "scriptNode", (ScriptNodePtr (Node::*)())&Node::scriptNode )
 		.def( "_init", &initNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,17 +77,7 @@ static IECore::OpPtr getOp( OpHolder &n )
 void GafferBindings::bindOpHolder()
 {
 	
-	IECorePython::RunTimeTypedClass<OpHolder, OpHolderWrapperPtr>()
-		.def( 	init< const std::string &, const dict &, const tuple & >
-				(
-					(
-						arg( "name" ) = OpHolder::staticTypeName(),
-						arg( "inputs" ) = dict(),
-						arg( "dynamicPlugs" ) = tuple()
-					)
-				)
-		)
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( OpHolder )
+	NodeClass<OpHolder, OpHolderWrapperPtr>()
 		.def(
 			"setOp",
 			&OpHolder::setOp,

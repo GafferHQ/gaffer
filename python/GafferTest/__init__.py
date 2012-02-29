@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+from _GafferTest import *
+
 from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GCTest import GCTest
@@ -74,6 +76,7 @@ from CompoundPathFilterTest import CompoundPathFilterTest
 from BadNode import BadNode
 from CapturingSlot import CapturingSlot
 from LazyModuleTest import LazyModuleTest
+from NodeBindingTest import NodeBindingTest
 
 if __name__ == "__main__":
 	import unittest

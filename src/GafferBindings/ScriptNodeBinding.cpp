@@ -66,9 +66,11 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 
 	public :
 
-		ScriptNodeWrapper( PyObject *self, const std::string &name=staticTypeName() )
+		ScriptNodeWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
 			:	ScriptNode( name ), IECorePython::Wrapper<ScriptNode>( self, this )
 		{
+			initNode( this, inputs, dynamicPlugs );
+
 			// this dict will form both the locals and the globals for the execute()
 			// and evaluate() methods. it's not possible to have a separate locals
 			// and globals dictionary and have things work as intended. see
@@ -226,10 +228,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( deleteNodesOverloads, deleteNodes, 0, 1 
 
 void bindScriptNode()
 {
-	scope s = IECorePython::RunTimeTypedClass<ScriptNode, ScriptNodeWrapperPtr>()
-		.def( init<>() )
-		.def( init<const std::string &>() )
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( ScriptNode )
+	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( "selection", (StandardSetPtr (ScriptNode::*)())&ScriptNode::selection )
 		.def( "undo", &ScriptNode::undo )
 		.def( "redo", &ScriptNode::redo )
