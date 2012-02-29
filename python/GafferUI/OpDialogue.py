@@ -45,7 +45,7 @@ import GafferUI
 # IECore.Op instance and then execute it.
 class OpDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, opInstance, title=None, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw ) :
+	def __init__( self, opInstance, title=None, sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		if title is None :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )

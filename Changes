@@ -1,3 +1,7 @@
+0.28.1
+------
+* Changed the default resize mode of OpDialogue/ErrorDialogue to be manual
+
 * Removed assert warning
 
 0.28.0

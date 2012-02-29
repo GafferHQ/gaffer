@@ -391,7 +391,7 @@ env = Environment(
 
 	GAFFER_MAJOR_VERSION = "0",
 	GAFFER_MINOR_VERSION = "28",
-	GAFFER_PATCH_VERSION = "0",
+	GAFFER_PATCH_VERSION = "1",
 	
 	PYTHON_VERSION = "2.7", # \todo need some way of getting this magically
 
