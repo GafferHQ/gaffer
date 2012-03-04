@@ -1,3 +1,32 @@
+* The Gaffer.BlockedConnection constructor now accepts a list of connections to block, as an alternative to just a single connection.
+
+* Added a Gaffer.LeafPathFilter class, which filters out leaf Paths.
+
+* Fixed problem with Dialogue.waitForButton() which meant that the keyboard focus would be in the wrong place if a parent window was provided.
+
+* PathListingWidget now supports user resizing of the columns. The existing automatic resizing behaviour remains, but any changes made by the user are remembered and applied as offsets to future automatic resize events.
+
+* PathListingWidget.Column.lessThanFunction has been replaced with PathListingWidget.Column.sortFunction. The former was a function to compare two items, whereas the latter now simply returns the data in a form that should be passed to a standard less than comparison.
+
+* Added PathListingWidget.selectionChangedSignal().
+
+* Added PathListingWidget.scrollToPath() method.
+
+* PathListingWidget now supports a tree view mode in addition to the existing list mode. This is exposed in the PathChooserWidget and PathChooserDialogue via a button to toggle between the modes.
+
+* Deprecated PathListingWidget.selectedPaths() and introduced a pair of getSelectedPaths()/setSelectedPaths() methods.
+
+0.28.1
+------
+
+* Changed the default resize mode of OpDialogue/ErrorDialogue to be manual
+
+* Removed assert warning
+
+* Fixed juddering resize events when opening the OpDialogue, by optimising out unecessary calls in Widget.setVisible().
+
+0.28.0
+------
 * Added an InfoPathFilter, which allows filtering with an arbitrary match function applied to an arbitrary field of Path.info(). Used this to implement a filter text box for path choosers.
 
 * PathParameterWidget now applies path filters, and has an _filter() method which can be overridden in derived classes to define the filter.

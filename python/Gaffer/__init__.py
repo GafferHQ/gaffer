@@ -53,3 +53,4 @@ from Context import Context
 from CompoundPathFilter import CompoundPathFilter
 from InfoPathFilter import InfoPathFilter
 from LazyModule import lazyImport, LazyModule
+from LeafPathFilter import LeafPathFilter

@@ -50,9 +50,9 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="2"
-     inkscape:cx="366.01029"
-     inkscape:cy="931.74672"
+     inkscape:zoom="1"
+     inkscape:cx="248.51055"
+     inkscape:cy="982.43138"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -439,7 +439,7 @@
        inkscape:label="#rect2859" />
     <g
        id="forExport:aboutLogo"
-       transform="matrix(0.47176156,0,0,0.47176156,97.25665,21.77092)"
+       transform="matrix(0.47176156,0,0,0.47176156,134.0363,82.990882)"
        inkscape:label="#g4957">
       <path
          sodipodi:nodetypes="scsccccccssccccccccccs"
@@ -890,5 +890,58 @@
        d="m 108.5,59.862183 15,0 0,15 -15,0 z"
        style="fill:#787878;stroke:#3c3c3c;stroke-opacity:1;fill-opacity:1"
        id="path3888" />
+    <g
+       id="forExport:pathListingList"
+       inkscape:label="#g3271">
+      <rect
+         inkscape:label="#rect3931"
+         transform="matrix(0,1,1,0,0,0)"
+         y="245"
+         x="62.362183"
+         height="14.999993"
+         width="15.000001"
+         id="rect3244"
+         style="fill:none;stroke:none" />
+      <rect
+         y="64.862183"
+         x="247"
+         height="2"
+         width="11"
+         id="rect3246"
+         style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <rect
+         style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         id="rect3248"
+         width="11"
+         height="2"
+         x="247"
+         y="68.862183" />
+      <rect
+         y="72.862183"
+         x="247"
+         height="2"
+         width="11"
+         id="rect3250"
+         style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    </g>
+    <g
+       id="forExport:pathListingTree"
+       inkscape:label="#g3279">
+      <path
+         sodipodi:nodetypes="ccccccccccccc"
+         inkscape:connector-curvature="0"
+         id="rect3268"
+         d="m 262,64.862183 5,0 0,4 3,0 0,4 3,0.03125 0,1.968753 -5,-3e-6 0,-4 -3,0 0,-4 -3,3e-6 z"
+         style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999988;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1" />
+      <rect
+         style="fill:none;stroke:none"
+         id="rect3277"
+         width="15.000001"
+         height="14.999993"
+         x="62.362183"
+         y="260"
+         transform="matrix(0,1,1,0,0,0)"
+         inkscape:label="#rect3931" />
+    </g>
   </g>
 </svg>

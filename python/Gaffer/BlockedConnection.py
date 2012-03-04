@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,19 +35,26 @@
 #  
 ##########################################################################
 
+import Gaffer
+
 class BlockedConnection() :
 
-	def __init__( self, connection ) :
+	def __init__( self, connectionOrConnections ) :
 	
-		self.__connection = connection
-
+		if isinstance( connectionOrConnections, Gaffer.Connection ) :
+			self.__connections = [ connectionOrConnections ]
+		else :
+			self.__connections = connectionOrConnections
+			
 	def __enter__( self ) :
 	
-		assert( not self.__connection.blocked() )
-		self.__connection.block()
+		for c in self.__connections :
+			assert( not c.blocked() )
+			c.block()
 		
 	def __exit__( self, type, value, traceBack ) :
 	
-		assert( self.__connection.blocked() )
-		self.__connection.unblock()
+		for c in self.__connections :
+			assert( c.blocked() )
+			c.unblock()
 		

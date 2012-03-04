@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,60 +34,16 @@
 #  
 ##########################################################################
 
-import sys
-import traceback
+from PathFilter import PathFilter
 
-import IECore
+## A PathFilter which removes leaf items.
+class LeafPathFilter( PathFilter ) :
 
-import Gaffer
-import GafferUI
+	def __init__( self, userData={} ) :
 
-class ErrorDialogue( GafferUI.Dialogue ) :
-
-	def __init__( self, title, message, details=None, **kw ) :
-
-		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
-		
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
-		messageWidget = GafferUI.Label( IECore.StringUtil.wrap( message, 60 ) )
-		messageFrame = GafferUI.Frame( child = messageWidget, borderWidth=8 )
-		
-		column.append( messageFrame )
-		
-		if details is not None :
-		
-			detailsWidget = GafferUI.MultiLineTextWidget(
-				text = details,
-				editable = False,
-			)
+		PathFilter.__init__( self, userData )
 			
-			detailsFrame = GafferUI.Frame( child = detailsWidget, borderWidth=8 )
-			
-			column.append(
-				GafferUI.Collapsible( label = "Details", collapsed = True, child = detailsFrame )						
-			)
-					
-		self._setWidget( column )
-								
-		self.__closeButton = self._addButton( "Close" )
-	
-	## Displays the last raised exception in a modal dialogue.	
-	@staticmethod
-	def displayException( title="Error", messagePrefix=None, withDetails=True, parentWindow=None ) :
-	
-		message = str( sys.exc_info()[1] )
-		if messagePrefix :
-			message = messagePrefix + message
-			
-		if withDetails :
-			details = "".join( traceback.format_exc() )
-		else :
-			details = False
-			
-		dialogue = ErrorDialogue(
-			title = title,
-			message = message,
-			details = details,
-		)
-					
-		dialogue.waitForButton( parentWindow=parentWindow )
+	def _filter( self, paths ) :
+		
+		return [ p for p in paths if not p.isLeaf() ]
+		

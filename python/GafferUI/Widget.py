@@ -143,8 +143,14 @@ class Widget( object ) :
 	# visible explicitly after creation.		
 	def setVisible( self, visible ) :
 	
-		self.__qtWidget.setVisible( visible )
-	
+		# It's important that we only call __qtWidget.setVisible( True )
+		# if we actually need to (if setVisible( False ) has been
+		# called before or if we're a window that hasn't been shown yet),
+		# as otherwise extra sizing events seem to get thrown around,
+		# resulting in juddering as windows are opened for the first time.
+		if visible != self.getVisible() :
+			self.__qtWidget.setVisible( visible )
+
 	## Returns False if this Widget has been explicitly hidden
 	# using setVisible( False ), and True otherwise. Note that if
 	# a parent Widget has been hidden, then this function may still
@@ -733,19 +739,52 @@ class Widget( object ) :
 
 		}
 		
+		QHeaderView {
+		
+			border: 0px;
+			margin: 0px;
+		
+		}
+		
 		QHeaderView::section {
 		
-			border: 1px solid transparent;
-			border-bottom: 1px solid $backgroundDark;
-			padding: 4px;
+			border: 1px solid $backgroundDark;
+			padding: 6px;
 			font-weight: bold;
+			margin: 0px;
+		
+		}
+		
+		/* tuck adjacent header sections beneath one another so we only get */
+		/* a single width line between them                                 */
+		QHeaderView::section:horizontal:!first {
+		
+			margin-left: -1px;
+		
+		}
+		
+		QHeaderView::section:horizontal:only-one {
+		
+			margin-left: 0px;
+		
+		}
+		
+		QHeaderView::section:vertical:!first {
+		
+			margin-top: -1px;
+		
+		}
+		
+		QHeaderView::section:vertical:only-one {
+		
+			margin-top: 0px;
 		
 		}
 		
 		QHeaderView::down-arrow {
 			
 			image: url($GAFFER_ROOT/graphics/headerSortDown.png);
-		
+			
 		}
 		
 		QHeaderView::up-arrow {
@@ -860,6 +899,28 @@ class Widget( object ) :
 			spacing: 5px;
 		}
 
+		QTreeView QHeaderView {
+			/* tuck header border inside the treeview border */
+			margin-top: -1px;
+			margin-left: -1px;
+			margin-right: -1px;
+		}
+		
+		QTreeView::branch {
+			border-image : none;
+			image : none;		
+		}
+
+		QTreeView::branch:closed:has-children {
+			border-image : none;
+			image : url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
+		}
+		
+		QTreeView::branch:open:has-children {
+			border-image : none;
+			image : url($GAFFER_ROOT/graphics/collapsibleArrowDown.png);
+		}
+		
 		QCheckBox::indicator {
 			width: 20px;
 			height: 20px;
@@ -911,6 +972,12 @@ class Widget( object ) :
 			background-color: $brightColor;
 		}
 
+		QTableView {
+		
+			border: 0px solid transparent;
+		
+		}
+
 		QTableView::item:selected {
 			background-color: $brightColor;
 		}
@@ -921,20 +988,18 @@ class Widget( object ) :
 		}
 	
 		QTableView#vectorDataWidget {
-			border: 0px solid transparent;
+			border: 1px solid $backgroundDark;
 			padding: 0px;
 		}
 		
 		QTableView#vectorDataWidgetEditable {
-			border: 0px solid transparent;
 			padding: 0px;
 			background-color: $backgroundLighter;
-			gridline-color: $backgroundMid;
+			gridline-color: $backgroundDark;
 		}
 			
 		QHeaderView::section#vectorDataWidgetVerticalHeader {
 			background-color: transparent;
-			border: 0px solid transparent;
 		}
 		
 		QTableView::indicator {
