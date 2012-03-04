@@ -82,7 +82,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		defaultNameColumn,
 		defaultFileSystemOwnerColumn,
 		defaultFileSystemModificationTimeColumn,
-		defaultFileSystemIconColumn,
 	)
 	
 	DisplayMode = IECore.Enum.create( "List", "Tree" )
