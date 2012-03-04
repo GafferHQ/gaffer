@@ -69,8 +69,14 @@ class Dialogue( GafferUI.Window ) :
 		assert( len( self.__buttonRow ) )
 	
 		if parentWindow is not None :
+			focusWidget = self._qtWidget().focusWidget()
 			parentWindow.addChildWindow( self )
-		
+			if focusWidget is not None :
+				# the reparenting above removes the focus, so we reclaim it.
+				# this is important for PathChooserWidget, which puts the focus
+				# in the right place in waitForPath(), then calls waitForButton().
+				focusWidget.setFocus( QtCore.Qt.ActiveWindowFocusReason )
+			
 		self.setVisible( False )
 		self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
 		self.setVisible( True )

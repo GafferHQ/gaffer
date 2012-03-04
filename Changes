@@ -2,6 +2,8 @@
 
 * Added a Gaffer.LeafPathFilter class, which filters out leaf Paths.
 
+* Fixed problem with Dialogue.waitForButton() which meant that the keyboard focus would be in the wrong place if a parent window was provided.
+
 0.28.1
 ------
 
