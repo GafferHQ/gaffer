@@ -1,8 +1,13 @@
+* The Gaffer.BlockedConnection constructor now accepts a list of connections to block, as an alternative to just a single connection.
+
 0.28.1
 ------
+
 * Changed the default resize mode of OpDialogue/ErrorDialogue to be manual
 
 * Removed assert warning
+
+* Fixed juddering resize events when opening the OpDialogue, by optimising out unecessary calls in Widget.setVisible().
 
 0.28.0
 ------
