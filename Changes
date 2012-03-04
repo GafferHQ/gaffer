@@ -4,6 +4,18 @@
 
 * Fixed problem with Dialogue.waitForButton() which meant that the keyboard focus would be in the wrong place if a parent window was provided.
 
+* PathListingWidget now supports user resizing of the columns. The existing automatic resizing behaviour remains, but any changes made by the user are remembered and applied as offsets to future automatic resize events.
+
+* PathListingWidget.Column.lessThanFunction has been replaced with PathListingWidget.Column.sortFunction. The former was a function to compare two items, whereas the latter now simply returns the data in a form that should be passed to a standard less than comparison.
+
+* Added PathListingWidget.selectionChangedSignal().
+
+* Added PathListingWidget.scrollToPath() method.
+
+* PathListingWidget now supports a tree view mode in addition to the existing list mode. This is exposed in the PathChooserWidget and PathChooserDialogue via a button to toggle between the modes.
+
+* Deprecated PathListingWidget.selectedPaths() and introduced a pair of getSelectedPaths()/setSelectedPaths() methods.
+
 0.28.1
 ------
 
