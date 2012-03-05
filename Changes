@@ -18,6 +18,8 @@
 
 * Added the ability to remove children from the TabbedContainer using del[start:end] notation.
 
+* Added GafferUI.EventLoop.executeOnUIThread().
+
 0.28.1
 ------
 
