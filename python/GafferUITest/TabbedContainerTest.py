@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -120,6 +121,30 @@ class TabbedContainerTest( unittest.TestCase ) :
 		tc.setCurrent( b2 )
 		self.failUnless( self.__current is b2 )
 		self.failUnless( tc.getCurrent() is b2 )
+		
+	def testDel( self ) :
+	
+		with GafferUI.TabbedContainer() as t :
+		
+			b1 = GafferUI.Button()
+			b2 = GafferUI.Button()
+			b3 = GafferUI.Button()
+		
+		self.assertEqual( len( t ), 3 )
+		for b in ( b1, b2, b3 ) :
+			self.failUnless( b.parent() is t )
+		
+		del t[0]
+		self.assertEqual( len( t ), 2 )
+		for b in ( b2, b3 ) :
+			self.failUnless( b.parent() is t )
+		print b1.parent()
+		self.failUnless( b1.parent() is None )
+		
+		del t[:]
+		self.assertEqual( len( t ), 0 )
+		for b in ( b1, b2, b3 ) :
+			self.failUnless( b.parent() is None )
 		
 if __name__ == "__main__":
 	unittest.main()

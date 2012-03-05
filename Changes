@@ -16,6 +16,8 @@
 
 * Deprecated PathListingWidget.selectedPaths() and introduced a pair of getSelectedPaths()/setSelectedPaths() methods.
 
+* Added the ability to remove children from the TabbedContainer using del[start:end] notation.
+
 0.28.1
 ------
 
