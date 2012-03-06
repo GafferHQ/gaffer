@@ -379,7 +379,7 @@ class _PathItem() :
 		if not self.__displayData :
 			info = self.__path.info()
 			for column in self.__columns :
-				if info is not None :
+				if info is not None and column.infoField in info :
 					value = column.displayFunction( info[column.infoField] )		
 					if isinstance( value, GafferUI.Image ) :
 						value = value._qtPixmap()

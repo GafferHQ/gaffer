@@ -26,6 +26,8 @@
 
 * Fixed bug in GafferUI.Frame.removeChild.
 
+* PathListingWidget now copes if a field in the Path.info() is missing.
+
 0.28.1
 ------
 
