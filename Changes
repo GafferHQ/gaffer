@@ -24,6 +24,8 @@
 
 * Added GafferUI.BusyWidget, for saying "i might be some time but i don't really know how long so just twiddle your thumbs please".
 
+* Fixed bug in GafferUI.Frame.removeChild.
+
 0.28.1
 ------
 

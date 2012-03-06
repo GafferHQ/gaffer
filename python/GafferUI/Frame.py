@@ -71,7 +71,7 @@ class Frame( GafferUI.ContainerWidget ) :
 	
 		assert( child is self.__child )
 		
-		child.setParent( None )
+		child._qtWidget().setParent( None )
 		self.__child = None
 
 	def addChild( self, child ) :

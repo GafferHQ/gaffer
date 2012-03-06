@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -56,7 +56,18 @@ class FrameTest( unittest.TestCase ) :
 		
 		f.setBorderStyle( GafferUI.Frame.BorderStyle.None )
 		self.assertEqual( f.getBorderStyle(), GafferUI.Frame.BorderStyle.None )
+	
+	def testRemoveChild( self ) :
+	
+		f = GafferUI.Frame()
+		b = GafferUI.Button()
+	
+		f.setChild( b )
+		self.failUnless( b.parent() is f )
 		
+		f.removeChild( b )
+		self.failUnless( b.parent() is None )
+	
 if __name__ == "__main__":
 	unittest.main()
 	
