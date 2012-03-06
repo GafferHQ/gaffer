@@ -20,6 +20,8 @@
 
 * Added GafferUI.EventLoop.executeOnUIThread().
 
+* Added Gaffer.DictPath, to allow browsing of dictionaries, IECore.CompoundData and IECore.CompoundObjects using the GafferUI Path components.
+
 0.28.1
 ------
 

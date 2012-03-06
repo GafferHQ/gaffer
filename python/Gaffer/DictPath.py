@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,22 +34,72 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
+import IECore
+
+import Gaffer
+
+class DictPath( Gaffer.Path ) :
+
+	__dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject )
+
+	def __init__( self, dict, path, filter=None ) :
+		
+		Gaffer.Path.__init__( self, path, filter )
+	
+		assert( isinstance( dict, self.__dictTypes ) )
+	
+		self.__dict = dict
+	
+	def isValid( self ) :
+	
+		try :
+			self.__dictEntry()
+			return True
+		except :
+			return False
+	
+	def isLeaf( self ) :
+	
+		try :
+			e = self.__dictEntry()
+			return not isinstance( e, self.__dictTypes )
+		except :
+			return False
+			
+	def info( self ) :
+	
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
+					
+		try :
+			e = self.__dictEntry()
+			if not isinstance( e, self.__dictTypes ) :
+				result["dict:value"] = e
+		except :
+			pass
+		
+		return result
+		
+	def copy( self ) :
+	
+		return DictPath( self.__dict, self[:], self.getFilter() )
+	
+	def _children( self ) :
+	
+		try :
+			e = self.__dictEntry()
+			if isinstance( e, self.__dictTypes ) :
+				return [ DictPath( self.__dict, self[:] + [ x ] ) for x in e.keys() ]
+		except :
+			return []
+			
+		return []
+
+	def __dictEntry( self ) :
+		
+		e = self.__dict
+		for p in self :
+			e = e[p]
+			
+		return e

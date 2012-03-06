@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,22 +34,69 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
+import unittest
+
+import Gaffer
+
+class DictPathTest( unittest.TestCase ) :
+
+	def test( self ) :
+	
+		d = {
+			"one" : 1,
+			"two" : 2,
+			"three" : "three",
+			"d" : {
+				"e" : {
+					"four" : 4,
+				},
+				"five" : 5,
+			},
+			"f" : {},
+		}
+		
+		p = Gaffer.DictPath( d, "/" )
+		
+		self.failUnless( p.isValid() )
+		self.failIf( p.isLeaf() )
+		
+		children = p.children()
+		self.assertEqual( len( children ), 5 )
+		for child in children :
+			self.failUnless( isinstance( child, Gaffer.DictPath ) )
+			if child[-1] in ( "d", "f" ) :
+				self.failIf( child.isLeaf() ) 
+				self.failIf( "value" in child.info() )
+			else :
+				self.failUnless( child.isLeaf() )
+				self.failUnless( "dict:value" in child.info() )
+		
+		p.setFromString( "/d/e/four" )
+		self.assertEqual( p.info()["dict:value"], 4 )
+		
+		p.setFromString( "/d/e/fourfdsfsd" )
+		self.failIf( p.isValid() )
+	
+	def testCopy( self ) :
+	
+		d = {
+			"one" : 1,
+			"two" : 2,
+		}
+		
+		p = Gaffer.DictPath( d, "/one" )
+
+		pp = p.copy()
+		self.assertEqual( str( pp ), str( p ) )
+		self.assertEqual( pp, p )
+		self.failIf( p != p )
+		
+		del pp[-1]
+		self.assertNotEqual( str( pp ), str( p ) )
+		self.assertNotEqual( pp, p )
+		self.failUnless( pp != p )
+		
+	
+if __name__ == "__main__":
+	unittest.main()
+	
