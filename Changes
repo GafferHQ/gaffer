@@ -22,6 +22,8 @@
 
 * Added Gaffer.DictPath, to allow browsing of dictionaries, IECore.CompoundData and IECore.CompoundObjects using the GafferUI Path components.
 
+* Added GafferUI.BusyWidget, for saying "i might be some time but i don't really know how long so just twiddle your thumbs please".
+
 0.28.1
 ------
 

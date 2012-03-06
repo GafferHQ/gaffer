@@ -117,6 +117,7 @@ from SelectionMenu import SelectionMenu
 from PathFilterWidget import PathFilterWidget
 from CompoundPathFilterWidget import CompoundPathFilterWidget
 from InfoPathFilterWidget import InfoPathFilterWidget
+from BusyWidget import BusyWidget
 
 # then stuff specific to graph uis
 
