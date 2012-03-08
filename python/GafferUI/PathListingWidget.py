@@ -66,7 +66,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			self.displayFunction = displayFunction
 			self.sortFunction = sortFunction
 		
-	## A collection of handy column definitions
+	## A collection of handy column definitions for FileSystemPaths
 	defaultNameColumn = Column( infoField = "name", label = "Name" )
 	defaultFileSystemOwnerColumn = Column( infoField = "fileSystem:owner", label = "Owner" )
 	defaultFileSystemModificationTimeColumn = Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime )
@@ -76,14 +76,25 @@ class PathListingWidget( GafferUI.Widget ) :
 		displayFunction = lambda x, provider = QtGui.QFileIconProvider() : provider.icon( QtCore.QFileInfo( x ) ),
 		sortFunction = lambda x : os.path.splitext( x )[-1],
 	)
-	
-	## A sensible set of columns to display for FileSystemPaths
+		
 	defaultFileSystemColumns = (
 		defaultNameColumn,
 		defaultFileSystemOwnerColumn,
 		defaultFileSystemModificationTimeColumn,
 	)
 	
+	## A collection of handy column definitions for IndexedIOPaths
+	defaultIndexedIOEntryTypeColumn = Column( infoField = "indexedIO:entryType", label = "Entry Type" )
+	defaultIndexedIODataTypeColumn = Column( infoField = "indexedIO:dataType", label = "Data Type" )
+	defaultIndexedIOArrayLengthColumn = Column( infoField = "indexedIO:arrayLength", label = "Array Length" )
+
+	defaultIndexedIOColumns = (
+		defaultNameColumn,
+		defaultIndexedIOEntryTypeColumn,
+		defaultIndexedIODataTypeColumn,
+		defaultIndexedIOArrayLengthColumn,
+	)
+
 	DisplayMode = IECore.Enum.create( "List", "Tree" )
 
 	def __init__(
