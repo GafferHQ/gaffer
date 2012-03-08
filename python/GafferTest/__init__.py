@@ -72,6 +72,7 @@ from CompoundPathFilterTest import CompoundPathFilterTest
 from LazyModuleTest import LazyModuleTest
 from CapturingSlot import CapturingSlot
 from DictPathTest import DictPathTest
+from IndexedIOPathTest import IndexedIOPathTest
 
 if __name__ == "__main__":
 	import unittest

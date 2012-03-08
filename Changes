@@ -28,6 +28,8 @@
 
 * PathListingWidget now copes if a field in the Path.info() is missing.
 
+* Added a Gaffer.IndexedIOPath class, to allow browsing inside Cortex files using the GafferUI Path components.
+
 0.28.1
 ------
 
