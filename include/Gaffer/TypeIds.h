@@ -84,6 +84,7 @@ enum TypeId
 	Box3iPlugTypeId = 110037,
 	Box2fPlugTypeId = 110038,
 	Box3fPlugTypeId = 110039,
+	PrimitivePlugTypeId = 110040,
 	
 	LastTypeId = 110200,
 	

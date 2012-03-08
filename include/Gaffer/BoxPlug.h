@@ -81,8 +81,8 @@ class BoxPlug : public CompoundPlug
 		/// \undoable
 		void setValue( const T &value );
 		/// Returns the value, calling getValue() on the min and max child plugs to compute a component
-		/// of the result. This isn't const as it may require a compute and therefore a setValue().
-		T getValue();
+		/// of the result.
+		T getValue() const;
 			
 };
 

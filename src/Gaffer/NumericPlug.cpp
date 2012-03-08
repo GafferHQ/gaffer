@@ -127,7 +127,7 @@ void NumericPlug<T>::setValue( T value )
 }
 
 template<class T>
-T NumericPlug<T>::getValue()
+T NumericPlug<T>::getValue() const
 {
 	ConstObjectPtr o = getObjectValue();
 	if( o )

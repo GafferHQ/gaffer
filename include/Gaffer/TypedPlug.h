@@ -72,9 +72,8 @@ class TypedPlug : public ValuePlug
 
 		/// \undoable
 		void setValue( const T &value );
-		/// Returns the value. This isn't const as it may require a compute
-		/// and therefore a setValue().
-		T getValue();
+		/// Returns the value.
+		T getValue() const;
 
 	protected :
 

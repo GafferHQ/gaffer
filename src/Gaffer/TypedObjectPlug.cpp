@@ -88,7 +88,7 @@ void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 }
 
 template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue()
+typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue() const
 {
 	IECore::ConstObjectPtr o = getObjectValue();
 	if( o )
@@ -114,6 +114,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FloatVectorDataPlug, FloatVect
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fVectorDataPlug, V3fVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectVectorPlug, ObjectVectorPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( PrimitivePlug, PrimitivePlugTypeId )
 
 }
 
@@ -125,3 +126,4 @@ template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
+template class TypedObjectPlug<IECore::Primitive>;

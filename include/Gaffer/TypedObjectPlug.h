@@ -41,6 +41,7 @@
 #include "IECore/Object.h"
 #include "IECore/VectorTypedData.h"
 #include "IECore/ObjectVector.h"
+#include "IECore/Primitive.h"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/PlugIterator.h"
@@ -81,9 +82,8 @@ class TypedObjectPlug : public ValuePlug
 		/// \undoable
 		/// \todo This is taking a copy - does that cause terrible performance?
 		void setValue( ConstValuePtr value );
-		/// Returns the value. This isn't const as it may require a compute
-		/// and therefore a setValue().
-		ConstValuePtr getValue();
+		/// Returns the value.
+		ConstValuePtr getValue() const;
 
 	protected :
 
@@ -104,6 +104,7 @@ typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
 typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
 typedef TypedObjectPlug<IECore::V3fVectorData> V3fVectorDataPlug;
 typedef TypedObjectPlug<IECore::ObjectVector> ObjectVectorPlug;
+typedef TypedObjectPlug<IECore::Primitive> PrimitivePlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
 IE_CORE_DECLAREPTR( BoolVectorDataPlug );
@@ -112,6 +113,7 @@ IE_CORE_DECLAREPTR( FloatVectorDataPlug );
 IE_CORE_DECLAREPTR( StringVectorDataPlug );
 IE_CORE_DECLAREPTR( V3fVectorDataPlug );
 IE_CORE_DECLAREPTR( ObjectVectorPlug );
+IE_CORE_DECLAREPTR( PrimitivePlug );
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
@@ -140,6 +142,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fVectorDataPlug> > Outp
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectVectorPlug> > ObjectVectorPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectVectorPlug> > InputObjectVectorPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectVectorPlug> > OutputObjectVectorPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, PrimitivePlug> > PrimitivePlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, PrimitivePlug> > InputPrimitivePlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, PrimitivePlug> > OutputPrimitivePlugIterator;
 
 } // namespace Gaffer
 

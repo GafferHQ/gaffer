@@ -88,7 +88,7 @@ void TypedPlug<T>::setValue( const T &value )
 }
 
 template<class T>
-T TypedPlug<T>::getValue()
+T TypedPlug<T>::getValue() const
 {
 	IECore::ConstObjectPtr o = getObjectValue();
 	if( o )

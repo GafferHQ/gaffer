@@ -76,7 +76,7 @@ class SplinePlug : public CompoundPlug
 		
 		/// \undoable
 		void setValue( const T &value );
-		T getValue();
+		T getValue() const;
 		
 		CompoundPlugPtr basisPlug();
 		ConstCompoundPlugPtr basisPlug() const;

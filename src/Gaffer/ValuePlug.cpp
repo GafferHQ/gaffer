@@ -63,24 +63,28 @@ class ValuePlug::Computation
 	
 	public :
 	
-		Computation( ValuePlug *resultPlug )
+		Computation( const ValuePlug *resultPlug )
 			:	m_resultPlug( resultPlug ), m_resultWritten( false )
 		{
 			g_threadComputations.local().push( this );
 		
 			if( m_resultPlug->getInput<Plug>() )
 			{
-				m_resultPlug->setFromInput();
+				// cast is ok, because we know that the resulting setValue() call won't
+				// actually modify the plug, but will just place the value in our m_resultValue.
+				const_cast<ValuePlug *>( m_resultPlug )->setFromInput();
 			}
 			else
 			{
 				assert( m_resultPlug->direction()==Out );
-				Node *n = m_resultPlug->node();
+				const Node *n = m_resultPlug->node();
 				if( !n )
 				{
 					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
 				}
-				n->compute( m_resultPlug, Context::current() );
+				// cast is ok, because we know that the resulting setValue() call won't
+				// actually modify the plug, but will just place the value in our m_resultValue.
+				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
 			}
 			
 			// the call to compute() or setFromInput() above should cause setValue() to be called
@@ -107,7 +111,7 @@ class ValuePlug::Computation
 	/// \todo Make accessors
 	//private :
 	
-		ValuePlug *m_resultPlug;
+		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
 		bool m_resultWritten;
 
@@ -165,7 +169,7 @@ void ValuePlug::setInput( PlugPtr input )
 	}
 }
 
-IECore::ConstObjectPtr ValuePlug::getObjectValue()
+IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 {
 	bool haveInput = getInput<Plug>();
 	if( direction()==In && !haveInput )

@@ -117,7 +117,7 @@ void BoxPlug<T>::setValue( const T &value )
 }
 
 template<typename T>
-T BoxPlug<T>::getValue()
+T BoxPlug<T>::getValue() const
 {
 	return T( this->min()->getValue(), this->max()->getValue() );
 }

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -161,7 +161,7 @@ void CompoundNumericPlug<T>::setValue( const T &value )
 }
 
 template<typename T>
-T CompoundNumericPlug<T>::getValue()
+T CompoundNumericPlug<T>::getValue() const
 {
 	T result;
 	for( unsigned i=0; i<T::dimensions(); i++ )

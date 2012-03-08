@@ -85,7 +85,7 @@ class ValuePlug : public Plug
 		/// possible for 0 to be returned, either if a computation fails or if
 		/// the value for the plug has not been set - in this case the subclass
 		/// should return the default value from it's getValue() method.
-		IECore::ConstObjectPtr getObjectValue();
+		IECore::ConstObjectPtr getObjectValue() const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value.
 		void setObjectValue( IECore::ConstObjectPtr value );

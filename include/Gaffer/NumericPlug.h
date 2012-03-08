@@ -80,9 +80,8 @@ class NumericPlug : public ValuePlug
 		/// Clamps the value between min and max.
 		/// \undoable
 		void setValue( T value );
-		/// Returns the value. This isn't const as it may require a compute
-		/// and therefore a setValue().
-		T getValue();
+		/// Returns the value.
+		T getValue() const;
 
 	protected :
 
