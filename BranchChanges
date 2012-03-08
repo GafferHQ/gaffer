@@ -1,1 +1,5 @@
 * Added a GafferBindings::NodeClass class, which simplifies the binding of Node derived classes. It is now a one liner to bind a typical extension node.
+
+* The op app now has an arguments parameter which can be used to specify the parameter values for the op.
+
+* The op app now has a gui parameter. When this is true a gui is presented, when it is false the op is executed directly on the command line.
