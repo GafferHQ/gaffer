@@ -65,14 +65,11 @@ void MultiplyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outp
 
 void MultiplyNode::compute( ValuePlug *output, const Context *context ) const
 {
-	/// \todo Fix const correctness issues so we don't need daft casts in here.
-	MultiplyNode *mutableThis = const_cast<MultiplyNode *>( this );
-	IntPlug *product = mutableThis->getChild<IntPlug>( "product" ).get();
-	if( output == product )
+	if( output == getChild<IntPlug>( "product" ).get() )
 	{
-		product->setValue(
-			mutableThis->getChild<IntPlug>( "op1" )->getValue() *
-			mutableThis->getChild<IntPlug>( "op2" )->getValue()
+		static_cast<IntPlug *>( output )->setValue(
+			getChild<IntPlug>( "op1" )->getValue() *
+			getChild<IntPlug>( "op2" )->getValue()
 		);
 	}
 }
