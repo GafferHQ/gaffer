@@ -30,6 +30,8 @@
 
 * Added a Gaffer.IndexedIOPath class, to allow browsing inside Cortex files using the GafferUI Path components.
 
+* GafferUI.EventLoop in Houdini mode now pumps 5 times rather than once per hou.ui.eventLoop idle. This makes typing in text fields interactive.
+
 0.28.1
 ------
 

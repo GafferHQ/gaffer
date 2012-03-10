@@ -106,7 +106,7 @@ class EventLoop() :
 		elif self.__runStyle == self.__RunStyle.Houdini :
 			if self.__houdiniCallback is None :
 				import hou
-				hou.ui.addEventLoopCallback( self.__pump )
+				hou.ui.addEventLoopCallback( IECore.curry( self.__pump, 5 ) )
 				self.__houdiniCallback = hou.ui.eventLoopCallbacks()[-1]
 		else :
 			# RunStyle.AlreadyRunning
@@ -239,9 +239,10 @@ class EventLoop() :
 			time.sleep( 0.01 )
 			maya.utils.executeDeferred( self.__pump )
 				
-	def __pump( self ) :
+	def __pump( self, thrusts=1 ) :
 	
-		self.__qtEventLoop.processEvents()
+		for thrust in range( 0, thrusts ) :
+			self.__qtEventLoop.processEvents()
 
 class _UIThreadExecutor( QtCore.QObject ) :
 
