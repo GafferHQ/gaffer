@@ -36,7 +36,7 @@
 
 * Added a frame() method to GafferUI.GadgetWidget, to frame a particular bounding box in the viewport, and fixed a bug whereby setGadget() didn't request a redraw.
 
-* Added setPath and getPath methods to PathListingWidget.
+* Added setPath and getPath methods to PathListingWidget, and PathWidget.
 
 0.28.1
 ------
