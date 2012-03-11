@@ -34,6 +34,8 @@
 
 * GafferUI.TabbedContainer now has setTabsVisible() and getTabsVisible() methods.
 
+* Added a frame() method to GafferUI.GadgetWidget, to frame a particular bounding box in the viewport, and fixed a bug whereby setGadget() didn't request a redraw.
+
 0.28.1
 ------
 
