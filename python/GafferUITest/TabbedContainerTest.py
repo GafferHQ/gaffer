@@ -145,6 +145,17 @@ class TabbedContainerTest( unittest.TestCase ) :
 		self.assertEqual( len( t ), 0 )
 		for b in ( b1, b2, b3 ) :
 			self.failUnless( b.parent() is None )
+			
+	def testTabsVisible( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		self.assertEqual( t.getTabsVisible(), True )
+		
+		t.setTabsVisible( False )
+		self.assertEqual( t.getTabsVisible(), False )
+	
+		t.setTabsVisible( True )
+		self.assertEqual( t.getTabsVisible(), True )
 		
 if __name__ == "__main__":
 	unittest.main()

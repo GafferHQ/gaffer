@@ -32,6 +32,8 @@
 
 * GafferUI.EventLoop in Houdini mode now pumps 5 times rather than once per hou.ui.eventLoop idle. This makes typing in text fields interactive.
 
+* GafferUI.TabbedContainer now has setTabsVisible() and getTabsVisible() methods.
+
 0.28.1
 ------
 

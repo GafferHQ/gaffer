@@ -148,6 +148,14 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	
 		return self.__cornerWidget
 		
+	def setTabsVisible( self, visible ) :
+	
+		self._qtWidget().tabBar().setVisible( visible )
+		
+	def getTabsVisible( self ) :
+	
+		return not self._qtWidget().tabBar().isHidden()
+		
 	def currentChangedSignal( self ) :
 	
 		return self.__currentChangedSignal
