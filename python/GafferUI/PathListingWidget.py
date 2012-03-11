@@ -115,9 +115,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setSortingEnabled( True )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		
-		self.__path = path
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
-
 		self.__sortProxyModel = QtGui.QSortFilterProxyModel()
 		self.__sortProxyModel.setSortRole( QtCore.Qt.UserRole )
 		
@@ -128,15 +125,30 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )			
-				
-		self.__currentDir = None
-		self.__currentPath = ""
+
 		self.__columns = columns
 		self.__displayMode = displayMode
-		self.__update()
+		
+		self.__path = None
+		self.setPath( path )
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
+	
+	def setPath( self, path ) :
+	
+		if path is self.__path :
+			return
+		
+		self.__path = path
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		self.__currentDir = None
+		self.__currentPath = ""
+		self.__update()
+
+	def getPath( self ) :
+	
+		return self.__path
 	
 	def scrollToPath( self, path ) :
 	
