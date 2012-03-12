@@ -643,7 +643,7 @@ class Widget( object ) :
 
 		QTabBar::tab {
 
-			border: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
 			padding: 4px;
 			padding-left: 8px;
 			padding-right: 8px;
@@ -668,20 +668,33 @@ class Widget( object ) :
 
 		}
 
-		QTabBar::tab:!selected, QSplitter::handle {
-
+		QTabBar::tab:!selected {
+		
+			color: $foregroundFaded;
 			background-color: $backgroundDark;
-
+		
+		}
+		
+		QSplitter::handle:vertical {
+		
+			background-color: $backgroundDark;
+			height: 2px;
+			margin-top: 2px;
+			margin-bottom: 2px;
+			/* i don't know why the padding has to be here */
+			padding-top: -2px;
+			padding-bottom: -2px;
 		}
 		
 		QSplitter::handle:horizontal {
-			width: 4px;
+		
+			background-color: $backgroundDark;
+			width: 2px;
+			margin-left: 2px;
+			margin-right: 2px;
+
 		}
 
-		QSplitter::handle:vertical {
-			height: 4px;
-		}
-		
 		/* I'm not sure why this is necessary, but it works around a problem where the */
 		/* style for QSplitter::handle:hover isn't always accepted.                    */
 		QSplitterHandle:hover {}
@@ -698,7 +711,8 @@ class Widget( object ) :
 		/* so that it sits underneath the bottom of the tabs.         */
 		/* this means the active tab can blend into the frame.        */
 		QTabWidget::pane {
-			border-top: 1px solid $backgroundDarkest;
+			border: 1px solid $backgroundDark;
+			border-top: 1px solid $backgroundDark;
 			top: -1px;
 		}
 

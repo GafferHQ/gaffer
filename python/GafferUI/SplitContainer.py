@@ -54,7 +54,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		self.__widgets = []
 		self.__handleWidgets = {}
 		self.__sizeAnimation = None
-		
+				
 		self.setOrientation( orientation )
 	
 	def getOrientation( self ) :
@@ -202,6 +202,13 @@ class _Splitter( QtGui.QSplitter ) :
 	def __init__( self ) :
 	
 		QtGui.QSplitter.__init__( self )
+		
+		# There seems to be an odd interaction between this and the stylesheet, and
+		# setting this to the desired size and then using the stylesheet to divide it into
+		# margins seems the only reliable way of sizing the handle.
+		## \todo This should come from the style once we've unified the Gadgetand Widget
+		# styling.
+		self.setHandleWidth( 6 )
 		
 	def createHandle( self ) :
 			
