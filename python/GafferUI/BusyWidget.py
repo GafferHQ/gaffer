@@ -47,18 +47,17 @@ class BusyWidget( GafferUI.Widget ) :
 
 	def __init__( self, size = 50, **kw ) :
 	
-		GafferUI.Widget.__init__( self, _BusyWidget(), **kw )
-		
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
-		self._qtWidget().setMinimumSize( size, size )
+		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), **kw )
 		
 # qt implementation class
 class _BusyWidget( QtGui.QWidget ) :
 
-	def __init__( self, parent=None ) :
+	def __init__( self, parent = None , size = 50 ) :
 		
 		QtGui.QWidget.__init__( self, parent )
-		
+
+		self.__size = size
+		self.setMinimumSize( size, size )
 		self.startTimer( 1000 / 25 )
 	
 	def timerEvent( self, event ) :
@@ -72,7 +71,7 @@ class _BusyWidget( QtGui.QWidget ) :
 				
 		width, height = float( self.width() ), float( self.height() )
 		centreX, centreY = width / 2, height / 2
-		radius = min( centreX, centreY ) * 0.95
+		radius = self.__size * 0.95
 		numCircles = 10
 		circleRadius = radius / 5
 			
