@@ -38,6 +38,8 @@
 
 * Added setPath and getPath methods to PathListingWidget, and PathWidget.
 
+* Added setPathCollapsed and getPathCollapsed to PathListingWidget to allow programmatic control of the tree view.
+
 0.28.1
 ------
 

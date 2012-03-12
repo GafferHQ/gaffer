@@ -152,10 +152,23 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 	def scrollToPath( self, path ) :
 	
-		index = self.__sortProxyModel.sourceModel().indexForPath( path )
-		index = self.__sortProxyModel.mapFromSource( index )
+		index = self.__indexForPath( path )
 		if index.isValid() :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )	
+	
+	def setPathCollapsed( self, path, collapsed ) :
+	
+		index = self.__indexForPath( path )
+		if index.isValid() :
+			self._qtWidget().setExpanded( index, not collapsed )
+		
+	def getPathCollapsed( self, path ) :
+	
+		index = self.__indexForPath( path )
+		if index.isValid() :
+			return self._qtWidget().isExpanded( index )
+		
+		return False
 	
 	def getDisplayMode( self ) :
 	
@@ -181,7 +194,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 	## Sets the currently selected paths. Paths which are not currently being displayed
 	# will be discarded, such that subsequent calls to getSelectedPaths will not include them.
-	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True ) :
+	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True, expandNonLeaf=True ) :
 	
 		paths = pathOrPaths
 		if isinstance( pathOrPaths, Gaffer.Path ) :
@@ -195,14 +208,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		for path in paths :
 		
-			indexToSelect = self.__sortProxyModel.sourceModel().indexForPath( path )
-			indexToSelect = self.__sortProxyModel.mapFromSource( indexToSelect )
-			
+			indexToSelect = self.__indexForPath( path )
 			if indexToSelect.isValid() :
 				selectionModel.select( indexToSelect, selectionModel.Select | selectionModel.Rows )
 				if scrollToFirst :
 					self._qtWidget().scrollTo( indexToSelect, self._qtWidget().EnsureVisible )
 					scrollToFirst = False
+				if expandNonLeaf and not path.isLeaf() :
+					self._qtWidget().setExpanded( indexToSelect, True )
 					
 	## \deprecated Use getSelectedPaths() instead.
 	# \todo Remove me
@@ -295,6 +308,13 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __pathChanged( self, path ) :
 		
 		self.__update()
+		
+	def __indexForPath( self, path ) :
+	
+		indexToSelect = self.__sortProxyModel.sourceModel().indexForPath( path )
+		indexToSelect = self.__sortProxyModel.mapFromSource( indexToSelect )
+		
+		return indexToSelect
 
 # Private implementation - a QTreeView with some specific size behaviour
 class _TreeView( QtGui.QTreeView ) :
