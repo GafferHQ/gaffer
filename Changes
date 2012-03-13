@@ -40,6 +40,8 @@
 
 * Added setPathCollapsed and getPathCollapsed to PathListingWidget to allow programmatic control of the tree view.
 
+* Added Gaffer.ClassLoaderPath class to allow browsing of ops and suchlike.
+
 0.28.1
 ------
 
