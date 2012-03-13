@@ -44,6 +44,8 @@
 
 * GafferUI.SplitContainer.setSizes() can now be called before the SplitContainer has become visible.
 
+* Added GafferUI.ErrorDialogue.ExceptionHandler class to simplify error handling.
+
 0.28.1
 ------
 
