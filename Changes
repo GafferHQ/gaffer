@@ -42,6 +42,8 @@
 
 * Added Gaffer.ClassLoaderPath class to allow browsing of ops and suchlike.
 
+* GafferUI.SplitContainer.setSizes() can now be called before the SplitContainer has become visible.
+
 0.28.1
 ------
 

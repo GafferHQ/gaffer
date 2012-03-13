@@ -130,12 +130,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 			availableSize = self.size().x
 			
 		if len( self ) > 1 :
-			handleSize = 0
-			if self.getOrientation() == self.Orientation.Vertical :
-				handleSize = self.handle( 0 ).size().y
-			else :
-				handleSize = self.handle( 0 ).size().x	
-			availableSize -= (len( self ) - 1) * handleSize
+			availableSize -= (len( self ) - 1) * self._qtWidget().handleWidth()
 				
 		scaleFactor = availableSize / sum( sizes )
 		sizes = [ scaleFactor * x for x in sizes ]
