@@ -118,6 +118,15 @@ from PathFilterWidget import PathFilterWidget
 from CompoundPathFilterWidget import CompoundPathFilterWidget
 from InfoPathFilterWidget import InfoPathFilterWidget
 from BusyWidget import BusyWidget
+from PathPreviewWidget import PathPreviewWidget
+from CompoundPathPreview import CompoundPathPreview
+from DeferredPathPreview import DeferredPathPreview
+from HeaderPathPreview import HeaderPathPreview
+from InfoPathPreview import InfoPathPreview
+from ReaderPathPreview import ReaderPathPreview
+from FileIndexedIOPathPreview import FileIndexedIOPathPreview
+from IndexedIODataPathPreview import IndexedIODataPathPreview
+from OpPathPreview import OpPathPreview
 
 # then stuff specific to graph uis
 
@@ -153,6 +162,7 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 #from SplineEditor import SplineEditor
 from AboutWindow import AboutWindow
 import ApplicationMenu
+from BrowserEditor import BrowserEditor
 
 # then stuff specific to parameterised objects
 

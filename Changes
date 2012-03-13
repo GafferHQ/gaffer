@@ -46,6 +46,12 @@
 
 * Added GafferUI.ErrorDialogue.ExceptionHandler class to simplify error handling.
 
+* Added classes for previewing paths. General file information, headers, images, meshes, ops, and indexed io files and contents may all be previewed.
+
+* Added a BrowserEditor class for embedding a file browser into a Gaffer layout.
+
+* Added a browser app to browse the filesystem and display previews.
+
 0.28.1
 ------
 
