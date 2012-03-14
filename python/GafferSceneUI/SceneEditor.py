@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,33 +34,43 @@
 #  
 ##########################################################################
 
-import os
-
-import IECore
-
-import Gaffer
 import GafferScene
 import GafferUI
-import GafferSceneUI
 
-# ScriptWindow menu
+class SceneEditor( GafferUI.NodeSetEditor ) :
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
+	def __init__( self, scriptNode=None, **kw ) :
+	
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		
+		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, **kw )
+				
+		self._updateFromSet()
+				
+	def __repr__( self ) :
 
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
+		return "GafferSceneUI.SceneEditor()"
 
-# Node menu
-
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	def _updateFromSet( self ) :
+			
+		if not hasattr( self, "_SceneEditor__column" ) :
+			# we're being called during construction
+			return
+		
+		del self.__column[:]
+		
+		node = self._lastAddedNode()
+		if not node or not isinstance( node, GafferScene.SceneNode ) :
+			return
+		
+		with self.__column :
+			
+			path = GafferScene.ScenePath( node["out"], "/" )
+			GafferUI.PathListingWidget(
+				path,
+				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+				allowMultipleSelection = True,
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			)
+			
+GafferUI.EditorWidget.registerType( "SceneEditor", SceneEditor )

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,33 +34,35 @@
 #  
 ##########################################################################
 
-import os
-
 import IECore
 
-import Gaffer
-import GafferScene
 import GafferUI
-import GafferSceneUI
 
-# ScriptWindow menu
+import GafferScene
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
+__all__ = []
 
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
+## The Viewer currently wants to be given a Renderable, which the SceneProcedural is not.
+# So we wrap it in this class so we can give it to the Viewer. This should all change when
+# the Viewer becomes more elaborate and we actually implement a SceneView class.
+class __WrappingProcedural( IECore.ParameterisedProcedural ) :
 
-# Node menu
+	def __init__( self, procedural ) :
+	
+		IECore.ParameterisedProcedural.__init__( self, "" )
+		
+		self.__procedural = procedural
+		
+	def doBound( self, args ) :
+	
+		return self.__procedural.bound()
+		
+	def doRender( self, renderer, args ) :
+	
+		renderer.procedural( self.__procedural )
+		
+def __sceneViewCreator( plug, context ) :
 
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	return __WrappingProcedural( GafferScene.SceneProcedural( plug, context, "/" ) )
+	
+GafferUI.Viewer.registerView( GafferScene.ScenePlug.staticTypeId(), __sceneViewCreator )

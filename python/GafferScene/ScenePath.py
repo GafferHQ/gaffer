@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,33 +34,60 @@
 #  
 ##########################################################################
 
-import os
-
 import IECore
 
 import Gaffer
 import GafferScene
-import GafferUI
-import GafferSceneUI
 
-# ScriptWindow menu
+class ScenePath( Gaffer.Path ) :
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
-
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-
-# Node menu
-
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	def __init__( self, scenePlug, path, filter=None ) :
+	
+		Gaffer.Path.__init__( self, path, filter )
+	
+		assert( isinstance( scenePlug, GafferScene.ScenePlug ) )
+	
+		self.__scenePlug = scenePlug
+	
+	def isValid( self ) :
+	
+		with self.__context() :
+			with IECore.IgnoredExceptions( Exception ) :
+				## \todo Possibly we should just have a "valid" child plug
+				self.__scenePlug["bound"].getValue()
+				return True
+				
+		return False
+	
+	def info( self ) :
+	
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
+			
+		return result
+		
+	def isLeaf( self ) :
+	
+		# any part of the scene could get children at any time
+		return False
+		
+	def _children( self ) :
+	
+		childNames = []
+		with self.__context() :
+			with IECore.IgnoredExceptions( Exception ) :
+				childNames = self.__scenePlug["childNames"].getValue()
+		
+		return [ ScenePath( self.__scenePlug, self[:] + [ x ] ) for x in childNames ]
+	
+	def copy( self ) :
+	
+		return ScenePath( self.__scenePlug, self[:], self.getFilter() )
+		
+	def __context( self ) :
+	
+		context = Gaffer.Context()
+		context["scene:path"] = str( self )
+		
+		return context

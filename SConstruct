@@ -627,7 +627,19 @@ libraries = {
 		},
 		"additionalFiles" : glob.glob( "python/GafferTest/*/*" )
 	},
-		
+	
+	"GafferScene" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferSceneBindings" ],
+		},
+	},
+	
+	"GafferSceneUI" : {
+	},
+	
 	"GafferUI" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
