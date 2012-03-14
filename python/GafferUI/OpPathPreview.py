@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,60 +36,51 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class OpPathPreview( GafferUI.DeferredPathPreview ) :
 
-class Frame( GafferUI.ContainerWidget ) :
+	def __init__( self, path ) :
+	
+		self.__column = GafferUI.ListContainer( borderWidth = 8 )
+		
+		GafferUI.DeferredPathPreview.__init__( self, self.__column, path )
+		
+		self._updateFromPath()
+	
+	def isValid( self ) :
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
-	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+		path = self.getPath()
+		if not isinstance( path, Gaffer.ClassLoaderPath ) :
+			return False
 			
-		self.setChild( child )
+		if path.classLoader() is not IECore.ClassLoader.defaultOpLoader() :
+			return False
 		
-	def setChild( self, child ) :
+		return path.isLeaf()
+		
+	def _load( self ) :
+		
+		return self.getPath().load()()
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
+	def _deferredUpdate( self, op ) :
+	
+		del self.__column[:]
 		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
+		self.__node = Gaffer.ParameterisedHolderNode()
+		self.__node.setParameterised( op )
 		
-		self.__child = child	
+		with self.__column :
+		
+			GafferUI.NodeUI.create( self.__node )
+			
+			button = GafferUI.Button( "Execute" )
+			self.__executeClickedConnection = button.clickedSignal().connect( self.__executeClicked )
 
-	def getChild( self ) :
+	def __executeClicked( self, button ) :
 	
-		return self.__child
+		with GafferUI.ErrorDialogue.ExceptionHandler( parentWindow=self.ancestor( GafferUI.Window ) ) :
+			self.__node.getParameterised()[0]()
+		
+GafferUI.PathPreviewWidget.registerType( "Op", OpPathPreview )

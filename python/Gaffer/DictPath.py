@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,60 +36,70 @@
 
 import IECore
 
-import GafferUI
+import Gaffer
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class DictPath( Gaffer.Path ) :
 
-class Frame( GafferUI.ContainerWidget ) :
+	__dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject )
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
+	def __init__( self, dict, path, filter=None ) :
 		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+		Gaffer.Path.__init__( self, path, filter )
 	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
+		assert( isinstance( dict, self.__dictTypes ) )
 	
-	def getBorderStyle( self ) :
+		self.__dict = dict
 	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
+	def isValid( self ) :
 	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
+		try :
+			self.__dictEntry()
+			return True
+		except :
+			return False
 	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+	def isLeaf( self ) :
+	
+		try :
+			e = self.__dictEntry()
+			return not isinstance( e, self.__dictTypes )
+		except :
+			return False
 			
-		self.setChild( child )
-		
-	def setChild( self, child ) :
+	def info( self ) :
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
+					
+		try :
+			e = self.__dictEntry()
+			if not isinstance( e, self.__dictTypes ) :
+				result["dict:value"] = e
+		except :
+			pass
 		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
+		return result
 		
-		self.__child = child	
+	def copy( self ) :
+	
+		return DictPath( self.__dict, self[:], self.getFilter() )
+	
+	def _children( self ) :
+	
+		try :
+			e = self.__dictEntry()
+			if isinstance( e, self.__dictTypes ) :
+				return [ DictPath( self.__dict, self[:] + [ x ] ) for x in e.keys() ]
+		except :
+			return []
+			
+		return []
 
-	def getChild( self ) :
-	
-		return self.__child
+	def __dictEntry( self ) :
+		
+		e = self.__dict
+		for p in self :
+			e = e[p]
+			
+		return e

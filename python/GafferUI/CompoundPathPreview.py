@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,50 @@
 #  
 ##########################################################################
 
-import IECore
+import Gaffer
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class CompoundPathPreview( GafferUI.PathPreviewWidget ) :
 
-class Frame( GafferUI.ContainerWidget ) :
-
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
+	## If specified, childTypes should be a tuple of names of types
+	# registered with PathPreviewWidget - each type will be
+	# instantiated to become a tab in the CompoundPathPreview.
+	# If not specified, then all registered types are used.
+	def __init__( self, path, childTypes=None, **kw ) :
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+		self.__tabbedContainer = GafferUI.TabbedContainer()
 	
-	def setBorderStyle( self, borderStyle ) :
+		GafferUI.PathPreviewWidget.__init__( self, self.__tabbedContainer, path, **kw )
 		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
+		if childTypes is None :
+			childTypes = GafferUI.PathPreviewWidget.types()
 		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+		self.__labelsAndTabs = []
+		for type in childTypes :
+			widget = GafferUI.PathPreviewWidget.create( type, path )
+			self.__labelsAndTabs.append( ( type, widget ) )
 			
-		self.setChild( child )
+		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 		
-	def setChild( self, child ) :
+		self.__preferredTab = None
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
+		self._updateFromPath()
 		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
-
-	def getChild( self ) :
+	def _updateFromPath( self ) :
 	
-		return self.__child
+		with Gaffer.BlockedConnection( self.__currentTabChangedConnection ) :
+					
+			del self.__tabbedContainer[:]
+			for label, tab in self.__labelsAndTabs :
+				tab.setPath( self.getPath() )
+				if tab.isValid() :
+					self.__tabbedContainer.append( tab, label=label )
+					if label == self.__preferredTab :
+						self.__tabbedContainer.setCurrent( tab )
+																	
+	def __currentTabChanged( self, tabbedContainer, current ) :
+	
+		assert( tabbedContainer is self.__tabbedContainer )
+		if current is not None :
+			self.__preferredTab = self.__tabbedContainer.getLabel( current )

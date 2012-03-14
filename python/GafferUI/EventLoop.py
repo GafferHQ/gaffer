@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 ##########################################################################
 
 import time
+import weakref
 import threading
 
 import IECore
@@ -105,7 +106,7 @@ class EventLoop() :
 		elif self.__runStyle == self.__RunStyle.Houdini :
 			if self.__houdiniCallback is None :
 				import hou
-				hou.ui.addEventLoopCallback( self.__pump )
+				hou.ui.addEventLoopCallback( IECore.curry( self.__pump, 5 ) )
 				self.__houdiniCallback = hou.ui.eventLoopCallbacks()[-1]
 		else :
 			# RunStyle.AlreadyRunning
@@ -192,6 +193,31 @@ class EventLoop() :
 		if len( cls.__idleCallbacks )==0 :
 			cls.__idleTimer.stop()
 	
+	## Widgets may only be manipulated on the thread where mainEventLoop() is running. It
+	# is common to want to perform some background processing on a secondary thread, and
+	# to update the UI during processing or upon completion. This function can be used from
+	# such a secondary thread to queue a callable to be called on the main thread.
+	@classmethod
+	def executeOnUIThread( cls, callable, waitForResult=False ) :
+		
+		resultCondition = threading.Condition() if waitForResult else None
+		
+		# we only use a weakref here, because we don't want to be keeping the object
+		# alive from this thread, and hence deleting it from this thread. instead it
+		# is deleted in _UIThreadExecutor.event().
+		uiThreadExecutor = weakref.ref( _UIThreadExecutor( callable, resultCondition ) )
+		uiThreadExecutor().moveToThread( cls.__qtApplication.thread() )
+
+		if resultCondition is not None :
+			resultCondition.acquire()
+			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( _UIThreadExecutor.executeEventType ) )
+			resultCondition.wait()
+			resultCondition.release()
+			return resultCondition.resultValue
+		else :
+			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( _UIThreadExecutor.executeEventType ) )
+			return None
+			
 	# This is a staticmethod rather than a classmethod because PySide 1.0.5
 	# doesn't support classmethods as slots.
 	@staticmethod
@@ -213,6 +239,43 @@ class EventLoop() :
 			time.sleep( 0.01 )
 			maya.utils.executeDeferred( self.__pump )
 				
-	def __pump( self ) :
+	def __pump( self, thrusts=1 ) :
 	
-		self.__qtEventLoop.processEvents()
+		for thrust in range( 0, thrusts ) :
+			self.__qtEventLoop.processEvents()
+
+class _UIThreadExecutor( QtCore.QObject ) :
+
+	executeEventType = QtCore.QEvent.registerEventType()
+
+	__instances = set()
+	
+	def __init__( self, callable, resultCondition = None ) :
+	
+		QtCore.QObject.__init__( self )
+		
+		self.__callable = callable
+		self.__resultCondition = resultCondition
+		# we store a reference to ourselves in __instances, as otherwise
+		# we go out of scope and get deleted at the end of executeOnUIThread
+		# above. that's bad because we never live long enough to get our event,
+		# and we'll also be being deleted from the calling thread, not the ui
+		# thread where we live.
+		self.__instances.add( self )
+		
+	def event( self, event ) :
+	
+		if event.type() == self.executeEventType :
+			result = self.__callable()
+			if self.__resultCondition is not None :
+				self.__resultCondition.acquire()
+				self.__resultCondition.resultValue = result
+				self.__resultCondition.notify()
+				self.__resultCondition.release()
+			
+			self.__instances.remove( self )
+		
+			return True
+			
+		return False
+		

@@ -113,6 +113,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		framingBound = self._framingBound()
 		if not framingBound.isEmpty() :
 			self.__cameraController.frame( framingBound )
+			
+		self._redraw()
 		
 	def getGadget( self ) :
 	
@@ -153,6 +155,17 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		return self.__select( position )
 	
+	## Frames the specified bounding box so it is entirely visible in the Widget.
+	# \todo I think the entire camera management needs to be shifted to a ViewportGadget.
+	def frame( self, bound, viewDirection=None, upVector=IECore.V3f( 0, 1, 0 ) ) :
+	
+		if viewDirection is not None :
+			self.__cameraController.frame( bound, viewDirection, upVector )		
+		else :
+			self.__cameraController.frame( bound )
+		
+		self._redraw()
+		
 	## Returns the bounding box which will be framed when "f" is pressed. This
 	# may be overridden in derived classes to implement more intelligent framing.
 	def _framingBound( self ) :
@@ -297,8 +310,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if event.key=="F" :
 			bound = self._framingBound()
 			if not bound.isEmpty() :
-				self.__cameraController.frame( bound )
-				self._redraw()
+				self.frame( bound )
 			return True
 				
 		# pass the key to the gadget

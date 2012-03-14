@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,11 +36,16 @@
 ##########################################################################
 
 import unittest
+import threading
+import time
 
 import IECore
 
 import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 class EventLoopTest( unittest.TestCase ) :
 
@@ -56,6 +62,7 @@ class EventLoopTest( unittest.TestCase ) :
 			
 			if self.__idleCalls==2 :
 				GafferUI.EventLoop.mainEventLoop().stop()
+				return False
 				
 			return True
 			
@@ -64,9 +71,66 @@ class EventLoopTest( unittest.TestCase ) :
 		GafferUI.EventLoop.mainEventLoop().start()
 	
 		self.assertEqual( self.__idleCalls, 2 )
+			
+	def testExecuteOnUITheadAndWaitForResult( self ) :
+	
+		def f() :
 		
-		GafferUI.EventLoop.removeIdleCallback( stop )
+			GafferUI.EventLoop.mainEventLoop().stop()
+			self.__uiThreadFunctionCalled = True
+			self.__uiThreadCalledOnCorrectThread = QtCore.QThread.currentThread() == QtGui.QApplication.instance().thread()
+			return 101
+			
+		def t() :
 		
+			self.__uiThreadResult = GafferUI.EventLoop.executeOnUIThread( f, waitForResult=True )
+			
+		thread = threading.Thread( target = t )
+		
+		GafferUI.EventLoop.addIdleCallback( thread.start )
+		GafferUI.EventLoop.mainEventLoop().start()
+		
+		thread.join()
+		self.assertEqual( self.__uiThreadFunctionCalled, True )
+		self.assertEqual( self.__uiThreadCalledOnCorrectThread, True )
+		self.assertEqual( self.__uiThreadResult, 101 )
+		
+	def testExecuteOnUITheadAndDontWaitForResult( self ) :
+	
+		def f() :
+		
+			time.sleep( 2 )
+			GafferUI.EventLoop.mainEventLoop().stop()
+			self.__uiThreadFunctionCalled = True
+			self.__uiThreadCalledOnCorrectThread = QtCore.QThread.currentThread() == QtGui.QApplication.instance().thread()
+			return 101
+			
+		def t() :
+		
+			st = time.clock()
+			self.__uiThreadResult = GafferUI.EventLoop.executeOnUIThread( f, waitForResult=False )
+			self.__executeOnUIThreadDuration = time.clock() - st
+			
+		thread = threading.Thread( target = t )
+		
+		GafferUI.EventLoop.addIdleCallback( thread.start )
+		GafferUI.EventLoop.mainEventLoop().start()
+		
+		thread.join()
+		self.assertEqual( self.__uiThreadFunctionCalled, True )
+		self.assertEqual( self.__uiThreadCalledOnCorrectThread, True )
+		self.assertEqual( self.__uiThreadResult, None )
+		# we shouldn't be waiting for the result of ui thread, so the return should be quicker
+		# than the actual function called
+		self.failUnless( self.__executeOnUIThreadDuration < 2 )
+		
+	def setUp( self ) :
+	
+		self.__uiThreadFunctionCalled = False
+		self.__uiThreadCalledOnCorrectThread = False
+		self.__uiThreadResult = None
+		self.__executeOnUIThreadDuration = 10000
+	
 if __name__ == "__main__":
 	unittest.main()
 	

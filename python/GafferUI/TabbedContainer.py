@@ -98,7 +98,14 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	
 	def __delitem__( self, index ) :
 	
-		self.removeChild( self.__widgets[index] )
+		if isinstance( index, slice ) :
+			indices = range( *(index.indices( len( self ) ) ) )
+			for i in indices :
+				self._qtWidget().removeTab( self._qtWidget().indexOf( self[i]._qtWidget() ) )
+				self[i]._qtWidget().setParent( None )
+			del self.__widgets[index]
+		else :
+			self.removeChild( self.__widgets[index] )
 	
 	def __len__( self ) :
 	
@@ -122,6 +129,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			self.__cornerWidget = None
 		else :
 			self._qtWidget().removeTab( self.__widgets.index( child ) )
+			child._qtWidget().setParent( None )
 			self.__widgets.remove( child )
 
 	def setCornerWidget( self, cornerWidget ) :
@@ -139,6 +147,14 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def getCornerWidget( self ) :
 	
 		return self.__cornerWidget
+		
+	def setTabsVisible( self, visible ) :
+	
+		self._qtWidget().tabBar().setVisible( visible )
+		
+	def getTabsVisible( self ) :
+	
+		return not self._qtWidget().tabBar().isHidden()
 		
 	def currentChangedSignal( self ) :
 	

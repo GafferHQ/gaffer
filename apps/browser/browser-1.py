@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,61 +35,28 @@
 ##########################################################################
 
 import IECore
-
+import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class browser( Gaffer.Application ) :
 
-class Frame( GafferUI.ContainerWidget ) :
+	def __init__( self ) :
+	
+		Gaffer.Application.__init__( self )
+		
+	def doRun( self, args ) :
+	
+		self.__application = Gaffer.ApplicationRoot( "browser" )
+		self.__application["scripts"]["script1"] = Gaffer.ScriptNode()
+		
+		with GafferUI.Window( "Gaffer Browser" ) as window :
+			browser = GafferUI.BrowserEditor( self.__application["scripts"]["script1"] )
+		
+		window.setVisible( True )
+		
+		GafferUI.EventLoop.mainEventLoop().start()		
+				
+		return 0
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
+IECore.registerRunTimeTyped( browser )
 
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
-	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
-			
-		self.setChild( child )
-		
-	def setChild( self, child ) :
-	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
-
-	def getChild( self ) :
-	
-		return self.__child

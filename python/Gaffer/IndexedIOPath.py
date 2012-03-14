@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,60 +36,83 @@
 
 import IECore
 
-import GafferUI
+import Gaffer
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class IndexedIOPath( Gaffer.Path ) :
 
-class Frame( GafferUI.ContainerWidget ) :
-
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
+	def __init__( self, indexedIO, path, filter=None ) :
 		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+		Gaffer.Path.__init__( self, path, filter )
 	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
+		if isinstance( indexedIO, basestring ) :
+			self.__indexedIO = IECore.IndexedIOInterface.create( indexedIO, "/", IECore.IndexedIOOpenMode.Read )
+		else :
+			self.__indexedIO = indexedIO
 	
-	def getBorderStyle( self ) :
+	def isValid( self ) :
 	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
+		try :
+			self.__entry()
+			return True
+		except :
+			return False
 	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
+	def isLeaf( self ) :
 	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+		try :
+			e = self.__entry()
+		except :
+			return False
 			
-		self.setChild( child )
+		return e.entryType() == IECore.IndexedIOEntryType.File
 		
-	def setChild( self, child ) :
+	def info( self ) :
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
 		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
+		e = None
+		with IECore.IgnoredExceptions( Exception ) :
+			e = self.__entry()
 		
-		self.__child = child	
+		if e is None :
+			return result
+			
+		result["indexedIO:entryType"] = e.entryType()
+		if e.entryType() == IECore.IndexedIOEntryType.File :
+			result["indexedIO:dataType"] = e.dataType()
+			with IECore.IgnoredExceptions( Exception ) :
+				result["indexedIO:arrayLength"] = e.arrayLength()
+		
+		return result
+		
+	def copy( self ) :
+	
+		return IndexedIOPath( self.__indexedIO, self[:], self.getFilter() )
+	
+	def data( self ) :
+	
+		return self.__indexedIO.read( str( self ) )
+	
+	def _children( self ) :
+	
+		e = None
+		try :
+			e = self.__entry()
+		except :
+			return []
+		
+		if e is None or e.entryType() == IECore.IndexedIOEntryType.File :
+			return []
+			
+		self.__indexedIO.chdir( str( self ) )
+		entries = self.__indexedIO.ls()
+		result = [ IndexedIOPath( self.__indexedIO, self[:] + [ x.id() ] ) for x in entries ]
+		self.__indexedIO.chdir( "/" )
+		
+		return result
 
-	def getChild( self ) :
-	
-		return self.__child
+	def __entry( self ) :
+		
+		return self.__indexedIO.ls( str( self ) )

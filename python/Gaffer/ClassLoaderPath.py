@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,69 @@
 #  
 ##########################################################################
 
-import IECore
+import Gaffer
 
-import GafferUI
+class ClassLoaderPath( Gaffer.Path ) :
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
-class Frame( GafferUI.ContainerWidget ) :
-
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
+	def __init__( self, classLoader, path, filter=None ) :
 		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+		Gaffer.Path.__init__( self, path, filter )
 	
-	def setBorderStyle( self, borderStyle ) :
+		self.__classLoader = classLoader
+	
+	def isValid( self ) :
 		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+		if not len( self ) :
+			# root is always valid
+			return True
 			
-		self.setChild( child )
+		p = str( self )[1:] # remove leading slash
 		
-	def setChild( self, child ) :
+		if p in self.__classLoader.classNames() :
+			return True
+		elif self.__classLoader.classNames( p + "/*" ) :
+			return True
+			
+		return False
+		
+	def isLeaf( self ) :
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
-
-	def getChild( self ) :
+		return str( self )[1:] in self.__classLoader.classNames()
+				
+	def info( self ) :
 	
-		return self.__child
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
+		
+		if self.isLeaf() :
+			result["classLoader:versions"] = self.__classLoader.versions( str( self )[1:] )
+		
+		return result
+		
+	def copy( self ) :
+	
+		return ClassLoaderPath( self.__classLoader, self[:], self.getFilter() )
+	
+	def classLoader( self ) :
+	
+		return self.__classLoader
+		
+	def load( self, version=None ) :
+	
+		return self.__classLoader.load( str( self )[1:], version )
+	
+	def _children( self ) :
+	
+		result = []
+		added = set()
+		matcher = str( self )[1:] + "/*" if len( self ) else "*"
+		for n in self.__classLoader.classNames( matcher) :
+			child = ClassLoaderPath( self.__classLoader, "/" + n, self.getFilter() )
+			while len( child ) > len( self ) + 1 :
+				del child[-1]
+			if str( child ) not in added :
+				result.append( child )
+				added.add( str( child ) )
+				
+		return result

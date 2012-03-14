@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,61 @@
 #  
 ##########################################################################
 
-import IECore
+import math
+import time
 
+import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-class Frame( GafferUI.ContainerWidget ) :
+class BusyWidget( GafferUI.Widget ) :
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
+	def __init__( self, size = 50, **kw ) :
+	
+		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), **kw )
+		
+# qt implementation class
+class _BusyWidget( QtGui.QWidget ) :
 
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
+	def __init__( self, parent = None , size = 50 ) :
 		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
-	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
+		QtGui.QWidget.__init__( self, parent )
 
-	def addChild( self, child ) :
+		self.__size = size
+		self.setMinimumSize( size, size )
+		self.startTimer( 1000 / 25 )
 	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+	def timerEvent( self, event ) :
+	
+		self.update()
+	
+	def paintEvent( self, event ) :
+	
+		painter = QtGui.QPainter( self )
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+				
+		width, height = float( self.width() ), float( self.height() )
+		centreX, centreY = width / 2, height / 2
+		radius = self.__size * 0.95
+		numCircles = 10
+		circleRadius = radius / 5
 			
-		self.setChild( child )
+		for i in range( 0, numCircles ) :
+			
+			theta = i * 360.0 / numCircles + time.time() * 10
+			circleCentreX = centreX - (radius - circleRadius) * math.cos( math.radians( theta ) )
+			circleCentreY = centreY + (radius - circleRadius) * math.sin( math.radians( theta ) )
+			
+			alpha =  1 - ( ( math.fmod( theta + time.time() * 270, 360 ) ) / 360 )
 		
-	def setChild( self, child ) :
-	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
+			## \todo Colours (and maybe even drawing) should come from style
+			brush = QtGui.QBrush( QtGui.QColor( 119, 156, 189, alpha * 255 ) )
+			painter.setBrush( brush )
 
-	def getChild( self ) :
+			pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, alpha * 255 ) )
+			pen.setWidth( circleRadius / 10 )
+			painter.setPen( pen )
 	
-		return self.__child
+			painter.drawEllipse( QtCore.QPointF( circleCentreX, circleCentreY ), circleRadius, circleRadius )

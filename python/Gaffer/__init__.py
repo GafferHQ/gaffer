@@ -54,3 +54,6 @@ from CompoundPathFilter import CompoundPathFilter
 from InfoPathFilter import InfoPathFilter
 from LazyModule import lazyImport, LazyModule
 from LeafPathFilter import LeafPathFilter
+from DictPath import DictPath
+from IndexedIOPath import IndexedIOPath
+from ClassLoaderPath import ClassLoaderPath

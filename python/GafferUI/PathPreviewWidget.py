@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,78 @@
 #  
 ##########################################################################
 
-import IECore
-
+import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+## This Widget defines a base class for all Widgets which are able to
+# preview the contents of a path in some way.
+class PathPreviewWidget( GafferUI.Widget ) :
 
-class Frame( GafferUI.ContainerWidget ) :
-
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
+	def __init__( self, topLevelWidget, path ) :
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+		GafferUI.Widget.__init__( self, topLevelWidget )
 	
-	def setBorderStyle( self, borderStyle ) :
+		self.__path = None
+		self.setPath( path )
 		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
+	def setPath( self, path ) :
 	
-	def getBorderStyle( self ) :
+		assert( isinstance( path, Gaffer.Path ) )
 	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
+		if path is self.__path :
+			return
 		
-	def removeChild( self, child ) :
+		prevPath = self.__path
+		self.__path = path
+		self.__currentPath = None
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
+		if prevPath != None :
+			# we don't call _updateFromPath when setPath is called from __init__,
+			# as otherwise all the derived classes have to deal with not yet being
+			# constructed in their implementations.
+			self._updateFromPath()
 	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+	def getPath( self ) :
+	
+		return self.__path
+	
+	## Must be implemented by subclasses, to return True
+	# if this Widget is currently displaying something useful,
+	# and False if not.
+	def isValid( self ) :
+	
+		raise NotImplementedError
+	
+	## Must be implemented by subclasses
+	def _updateFromPath( self ) :
+	
+		raise NotImplementedError
+	
+	def __pathChanged( self, path ) :
+	
+		assert( path is self.__path )
+	
+		if str( path ) == self.__currentPath :
+			return
 			
-		self.setChild( child )
+		self._updateFromPath()	
+			
+		self.__currentPath = str( path )
 		
-	def setChild( self, child ) :
+	@classmethod
+	def types( cls ) :
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
+		return cls.__namesToCreators.keys()
 		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
+	@classmethod
+	def create( cls, name, path ) :
+	
+		return cls.__namesToCreators[name]( path )
 
-	def getChild( self ) :
+	@classmethod
+	def registerType( cls, name, creator ) :
 	
-		return self.__child
+		cls.__namesToCreators[name] = creator
+
+	__namesToCreators = {}

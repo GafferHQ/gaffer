@@ -77,6 +77,9 @@ from BadNode import BadNode
 from CapturingSlot import CapturingSlot
 from LazyModuleTest import LazyModuleTest
 from NodeBindingTest import NodeBindingTest
+from DictPathTest import DictPathTest
+from IndexedIOPathTest import IndexedIOPathTest
+from ClassLoaderPathTest import ClassLoaderPathTest
 
 if __name__ == "__main__":
 	import unittest

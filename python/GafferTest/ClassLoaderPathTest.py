@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,34 +39,61 @@ import unittest
 import IECore
 
 import Gaffer
-import GafferUI
 
-class FrameTest( unittest.TestCase ) :
+class ClassLoaderPathTest( unittest.TestCase ) :
 
-	def testConstructor( self ) :
-	
-		g = GafferUI.RenderableGadget( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		f = GafferUI.Frame( g )
-	
-	def testBorderStyle( self ) :
-	
-		f = GafferUI.Frame()
-		self.assertEqual( f.getBorderStyle(), GafferUI.Frame.BorderStyle.Flat )
+	def test( self ) :
 		
-		f.setBorderStyle( GafferUI.Frame.BorderStyle.None )
-		self.assertEqual( f.getBorderStyle(), GafferUI.Frame.BorderStyle.None )
-	
-	def testRemoveChild( self ) :
-	
-		f = GafferUI.Frame()
-		b = GafferUI.Button()
-	
-		f.setChild( b )
-		self.failUnless( b.parent() is f )
+		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/" )
+		self.failUnless( p.isValid() )
+		self.failIf( p.isLeaf() )
 		
-		f.removeChild( b )
-		self.failUnless( b.parent() is None )
+		p.append( "common" )
+		self.failUnless( p.isValid() )
+		self.failIf( p.isLeaf() )
+
+		p.append( "iDontExist" )
+		self.failIf( p.isValid() )
+		self.failIf( p.isLeaf() )
+
+		del p[-1]
+		self.failUnless( p.isValid() )
+		self.failIf( p.isLeaf() )
+
+		p.setFromString( "/common/primitive/mesh/addNormals" )
+		self.failUnless( p.isValid() )
+		self.failUnless( p.isLeaf() )
+
+		p.setFromString( "/common/primitive/mesh" )
+		children = p.children()
+		for child in children :
+			self.failUnless( isinstance( child, Gaffer.ClassLoaderPath ) )
+			self.assertEqual( len( child ), len( p ) + 1 )
+			self.failUnless( child.isLeaf() )
+			
+		children = [ str( x ) for x in children ]
+		self.failUnless( "/common/primitive/mesh/addNormals" in children )
+		self.failUnless( "/common/primitive/mesh/addTangents" in children )
+		self.failUnless( "/common/primitive/mesh/merge" in children )
+		
+		p.setFromString( "/" )
+		children = p.children()
+		for child in children :
+			self.failUnless( isinstance( child, Gaffer.ClassLoaderPath ) )
+			self.assertEqual( len( child ), len( p ) + 1 )
+		
+		p.setFromString( "/common/primitive/mesh/addNormals" )
+		versions = p.info()["classLoader:versions"]
+		self.failUnless( isinstance( versions, list ) )
+		self.failUnless( len( versions ) )
+		
+	def testLoad( self ) :
 	
+		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/common/primitive/mesh/addNormals" )
+		
+		op = p.load()()
+		self.failUnless( isinstance( op, IECore.Op ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

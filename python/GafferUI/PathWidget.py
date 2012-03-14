@@ -38,6 +38,7 @@
 from __future__ import with_statement
 
 import os
+import warnings
 
 import IECore
 
@@ -54,18 +55,29 @@ class PathWidget( GafferUI.TextWidget ) :
 		
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__selectingFinishedConnection = self.selectingFinishedSignal().connect( Gaffer.WeakMethod( self.__selectingFinished ) )		
-				
-		self.__path = path
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
-		
+						
 		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 		
 		self.__popupMenu = None
 	
+		self.__path = None
+		self.setPath( path )
+		
 	def path( self ) :
 	
+		warnings.warn( "PathWidget.path() is deprecated, use PathWidget.getPath() instead.", DeprecationWarning, 2 )		
 		return self.__path
-				
+	
+	def setPath( self, path ) :
+	
+		self.__path = path
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		self.setText( str( self.__path ) )
+	
+	def getPath( self ) :
+	
+		return self.__path
+	
 	def __keyPress( self, widget, event ) :
 								
 		if event.key=="Tab" :

@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,36 @@
 #  
 ##########################################################################
 
-import IECore
-
+import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class InfoPathPreview( GafferUI.DeferredPathPreview ) :
 
-class Frame( GafferUI.ContainerWidget ) :
+	def __init__( self, path ) :
+	
+		self.__pathListing = GafferUI.PathListingWidget(
+			Gaffer.DictPath( {}, "/" ),
+			columns = (
+ 				GafferUI.PathListingWidget.defaultNameColumn,
+ 				GafferUI.PathListingWidget.Column( "dict:value", "Value" ),
+ 			),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+		)
+		
+		GafferUI.DeferredPathPreview.__init__( self, self.__pathListing, path )
+		
+		self._updateFromPath()
+	
+	def isValid( self ) :
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
+		return self.getPath().isValid()
 
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
+	def _load( self ) :
+		
+		return self.getPath().info()
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+	def _deferredUpdate( self, o ) :
 	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
+		self.__pathListing.setPath( Gaffer.DictPath( o, "/" ) )
 
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
-			
-		self.setChild( child )
-		
-	def setChild( self, child ) :
-	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
-
-	def getChild( self ) :
-	
-		return self.__child
+GafferUI.PathPreviewWidget.registerType( "Info", InfoPathPreview )

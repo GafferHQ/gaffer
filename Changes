@@ -16,6 +16,42 @@
 
 * Deprecated PathListingWidget.selectedPaths() and introduced a pair of getSelectedPaths()/setSelectedPaths() methods.
 
+* Added the ability to remove children from the TabbedContainer using del[start:end] notation.
+
+* Added GafferUI.EventLoop.executeOnUIThread().
+
+* Added Gaffer.DictPath, to allow browsing of dictionaries, IECore.CompoundData and IECore.CompoundObjects using the GafferUI Path components.
+
+* Added GafferUI.BusyWidget, for saying "i might be some time but i don't really know how long so just twiddle your thumbs please".
+
+* Fixed bug in GafferUI.Frame.removeChild.
+
+* PathListingWidget now copes if a field in the Path.info() is missing.
+
+* Added a Gaffer.IndexedIOPath class, to allow browsing inside Cortex files using the GafferUI Path components.
+
+* GafferUI.EventLoop in Houdini mode now pumps 5 times rather than once per hou.ui.eventLoop idle. This makes typing in text fields interactive.
+
+* GafferUI.TabbedContainer now has setTabsVisible() and getTabsVisible() methods.
+
+* Added a frame() method to GafferUI.GadgetWidget, to frame a particular bounding box in the viewport, and fixed a bug whereby setGadget() didn't request a redraw.
+
+* Added setPath and getPath methods to PathListingWidget, and PathWidget.
+
+* Added setPathCollapsed and getPathCollapsed to PathListingWidget to allow programmatic control of the tree view.
+
+* Added Gaffer.ClassLoaderPath class to allow browsing of ops and suchlike.
+
+* GafferUI.SplitContainer.setSizes() can now be called before the SplitContainer has become visible.
+
+* Added GafferUI.ErrorDialogue.ExceptionHandler class to simplify error handling.
+
+* Added classes for previewing paths. General file information, headers, images, meshes, ops, and indexed io files and contents may all be previewed.
+
+* Added a BrowserEditor class for embedding a file browser into a Gaffer layout.
+
+* Added a browser app to browse the filesystem and display previews.
+
 0.28.1
 ------
 

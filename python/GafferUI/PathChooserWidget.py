@@ -42,7 +42,7 @@ import GafferUI
 
 class PathChooserWidget( GafferUI.Widget ) :
 
-	def __init__( self, path, **kw ) :
+	def __init__( self, path, previewTypes=[], **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
 		
@@ -79,9 +79,18 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 				GafferUI.PathWidget( self.__dirPath )
 			
-			# directory listing. this also uses a modified path of it's own.
-			self.__listingPath = self.__path.copy()
-			self.__directoryListing = GafferUI.PathListingWidget( self.__listingPath, expand=True )
+			# directory listing and preview widget
+			with GafferUI.SplitContainer( GafferUI.SplitContainer.Orientation.Horizontal, expand=True ) as splitContainer :
+			
+				# the listing also uses a modified path of it's own.
+				self.__listingPath = self.__path.copy()
+				self.__directoryListing = GafferUI.PathListingWidget( self.__listingPath )
+			
+				if len( previewTypes ) :
+					GafferUI.CompoundPathPreview( self.__path, childTypes=previewTypes )
+				
+			if len( splitContainer ) > 1 :
+				splitContainer.setSizes( [ 2, 1 ] ) # give priority to the listing over the preview
 		
 			# filter section
 			self.__filterFrame = GafferUI.Frame( borderWidth=0, borderStyle=GafferUI.Frame.BorderStyle.None )

@@ -66,7 +66,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			self.displayFunction = displayFunction
 			self.sortFunction = sortFunction
 		
-	## A collection of handy column definitions
+	## A collection of handy column definitions for FileSystemPaths
 	defaultNameColumn = Column( infoField = "name", label = "Name" )
 	defaultFileSystemOwnerColumn = Column( infoField = "fileSystem:owner", label = "Owner" )
 	defaultFileSystemModificationTimeColumn = Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime )
@@ -76,8 +76,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		displayFunction = lambda x, provider = QtGui.QFileIconProvider() : provider.icon( QtCore.QFileInfo( x ) ),
 		sortFunction = lambda x : os.path.splitext( x )[-1],
 	)
-	
-	## A sensible set of columns to display for FileSystemPaths
+		
 	defaultFileSystemColumns = (
 		defaultNameColumn,
 		defaultFileSystemOwnerColumn,
@@ -85,6 +84,18 @@ class PathListingWidget( GafferUI.Widget ) :
 		defaultFileSystemIconColumn,
 	)
 	
+	## A collection of handy column definitions for IndexedIOPaths
+	defaultIndexedIOEntryTypeColumn = Column( infoField = "indexedIO:entryType", label = "Entry Type" )
+	defaultIndexedIODataTypeColumn = Column( infoField = "indexedIO:dataType", label = "Data Type" )
+	defaultIndexedIOArrayLengthColumn = Column( infoField = "indexedIO:arrayLength", label = "Array Length" )
+
+	defaultIndexedIOColumns = (
+		defaultNameColumn,
+		defaultIndexedIOEntryTypeColumn,
+		defaultIndexedIODataTypeColumn,
+		defaultIndexedIOArrayLengthColumn,
+	)
+
 	DisplayMode = IECore.Enum.create( "List", "Tree" )
 
 	def __init__(
@@ -105,9 +116,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setSortingEnabled( True )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		
-		self.__path = path
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
-
 		self.__sortProxyModel = QtGui.QSortFilterProxyModel()
 		self.__sortProxyModel.setSortRole( QtCore.Qt.UserRole )
 		
@@ -118,22 +126,50 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )			
-				
-		self.__currentDir = None
-		self.__currentPath = ""
+
 		self.__columns = columns
 		self.__displayMode = displayMode
-		self.__update()
+		
+		self.__path = None
+		self.setPath( path )
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 	
+	def setPath( self, path ) :
+	
+		if path is self.__path :
+			return
+		
+		self.__path = path
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		self.__currentDir = None
+		self.__currentPath = ""
+		self.__update()
+
+	def getPath( self ) :
+	
+		return self.__path
+	
 	def scrollToPath( self, path ) :
 	
-		index = self.__sortProxyModel.sourceModel().indexForPath( path )
-		index = self.__sortProxyModel.mapFromSource( index )
+		index = self.__indexForPath( path )
 		if index.isValid() :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )	
+	
+	def setPathCollapsed( self, path, collapsed ) :
+	
+		index = self.__indexForPath( path )
+		if index.isValid() :
+			self._qtWidget().setExpanded( index, not collapsed )
+		
+	def getPathCollapsed( self, path ) :
+	
+		index = self.__indexForPath( path )
+		if index.isValid() :
+			return self._qtWidget().isExpanded( index )
+		
+		return False
 	
 	def getDisplayMode( self ) :
 	
@@ -159,7 +195,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 	## Sets the currently selected paths. Paths which are not currently being displayed
 	# will be discarded, such that subsequent calls to getSelectedPaths will not include them.
-	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True ) :
+	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True, expandNonLeaf=True ) :
 	
 		paths = pathOrPaths
 		if isinstance( pathOrPaths, Gaffer.Path ) :
@@ -173,14 +209,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		for path in paths :
 		
-			indexToSelect = self.__sortProxyModel.sourceModel().indexForPath( path )
-			indexToSelect = self.__sortProxyModel.mapFromSource( indexToSelect )
-			
+			indexToSelect = self.__indexForPath( path )
 			if indexToSelect.isValid() :
 				selectionModel.select( indexToSelect, selectionModel.Select | selectionModel.Rows )
 				if scrollToFirst :
 					self._qtWidget().scrollTo( indexToSelect, self._qtWidget().EnsureVisible )
 					scrollToFirst = False
+				if expandNonLeaf and not path.isLeaf() :
+					self._qtWidget().setExpanded( indexToSelect, True )
 					
 	## \deprecated Use getSelectedPaths() instead.
 	# \todo Remove me
@@ -273,6 +309,13 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __pathChanged( self, path ) :
 		
 		self.__update()
+		
+	def __indexForPath( self, path ) :
+	
+		indexToSelect = self.__sortProxyModel.sourceModel().indexForPath( path )
+		indexToSelect = self.__sortProxyModel.mapFromSource( indexToSelect )
+		
+		return indexToSelect
 
 # Private implementation - a QTreeView with some specific size behaviour
 class _TreeView( QtGui.QTreeView ) :
@@ -380,7 +423,7 @@ class _PathItem() :
 		if not self.__displayData :
 			info = self.__path.info()
 			for column in self.__columns :
-				if info is not None :
+				if info is not None and column.infoField in info :
 					value = column.displayFunction( info[column.infoField] )		
 					if isinstance( value, GafferUI.Image ) :
 						value = value._qtPixmap()

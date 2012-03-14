@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,60 +36,41 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class IndexedIODataPathPreview( GafferUI.DeferredPathPreview ) :
 
-class Frame( GafferUI.ContainerWidget ) :
+	def __init__( self, path ) :
+	
+		self.__vectorDataWidget = GafferUI.VectorDataWidget( IECore.IntVectorData(), editable=False )
+		
+		GafferUI.DeferredPathPreview.__init__( self, self.__vectorDataWidget, path )
+		
+		self._updateFromPath()
+	
+	def isValid( self ) :
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
-	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
-	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+		if not isinstance( self.getPath(), Gaffer.IndexedIOPath ) or not self.getPath().isLeaf() :
+			return False
 			
-		self.setChild( child )
-		
-	def setChild( self, child ) :
-	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
+		return True
 
-	def getChild( self ) :
+	def _load( self ) :
+		
+		data = None
+		with IECore.IgnoredExceptions( RuntimeError ) :
+			data = self.getPath().data()
+
+		return data
 	
-		return self.__child
+	def _deferredUpdate( self, data ) :
+	
+		if data is None :
+			data = IECore.IntVectorData()
+		elif not IECore.DataTraits.isSequenceDataType( data ) :
+			data = IECore.StringVectorData( [ str( data.value ) ] )
+			
+		self.__vectorDataWidget.setData( data )
+
+GafferUI.PathPreviewWidget.registerType( "Data", IndexedIODataPathPreview )

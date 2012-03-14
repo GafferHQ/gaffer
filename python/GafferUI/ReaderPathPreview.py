@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,67 @@
 #  
 ##########################################################################
 
+import os
+
 import IECore
 
+import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class ReaderPathPreview( GafferUI.DeferredPathPreview ) :
 
-class Frame( GafferUI.ContainerWidget ) :
-
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
+	def __init__( self, path ) :
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+		self.__renderableGadget = GafferUI.RenderableGadget( None )
+		self.__gadgetWidget = GafferUI.GadgetWidget( self.__renderableGadget )
 	
-	def setBorderStyle( self, borderStyle ) :
+		GafferUI.DeferredPathPreview.__init__( self, self.__gadgetWidget, path )
 		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
+		self._updateFromPath()
 		
-	def removeChild( self, child ) :
+	def isValid( self ) :
 	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
+		if not isinstance( self.getPath(), Gaffer.FileSystemPath ) :
+			return False
 			
-		self.setChild( child )
+		ext = os.path.splitext( str( self.getPath() ) )[1]
+		if not ext :
+			return False
+			
+		return ext[1:].lower() in IECore.Reader.supportedExtensions()
 		
-	def setChild( self, child ) :
+	def _load( self ) :
 	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
+		reader = None
+		with IECore.IgnoredExceptions( RuntimeError ) :
+			reader = IECore.Reader.create( str( self.getPath() ) )
+	
+		if reader is None :
+			return None
+			
+		o = None
+		with IECore.IgnoredExceptions( RuntimeError ) :
+			o = reader.read()
+			
+		if not isinstance( o, IECore.VisibleRenderable ) :
+			return None
+			
+		if isinstance( o, IECore.ImagePrimitive ) :
+			## \todo Deal with colorspace uniformly everywhere, doing the
+			# transformations in the viewers themselves.
+			IECore.LinearToSRGBOp()( input=o, copyInput=False )
 
-	def getChild( self ) :
+		return o
 	
-		return self.__child
+	def _deferredUpdate( self, o ) :
+	
+		self.__renderableGadget.setRenderable( o )
+		
+		if isinstance( o, IECore.ImagePrimitive ) :
+			self.__gadgetWidget.setCameraMode( GafferUI.GadgetWidget.CameraMode.Mode2D )
+		else :
+			self.__gadgetWidget.setCameraMode( GafferUI.GadgetWidget.CameraMode.Mode3D )
+		
+		self.__gadgetWidget.frame( o.bound(), IECore.V3f( 0, 0, -1 ) )
+
+GafferUI.PathPreviewWidget.registerType( "Preview", ReaderPathPreview )

@@ -91,3 +91,21 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 		)
 					
 		dialogue.waitForButton( parentWindow=parentWindow )
+
+	## A simple context manager which calls displayException() if any exceptions are caught.
+	class ExceptionHandler :
+	
+		## The keyword arguments will be passed to displayException().
+		def __init__( self, **kw ) :
+		
+			self.__kw = kw
+			
+		def __enter__( self ) :
+		
+			pass
+			
+		def __exit__( self, type, value, traceback ) :
+		
+			if type is not None :
+				ErrorDialogue.displayException( **self.__kw )
+				return True

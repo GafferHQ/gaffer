@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,69 @@
 #  
 ##########################################################################
 
-import IECore
+import unittest
 
-import GafferUI
+import Gaffer
 
-QtGui = GafferUI._qtImport( "QtGui" )
+class DictPathTest( unittest.TestCase ) :
 
-class Frame( GafferUI.ContainerWidget ) :
+	def test( self ) :
+	
+		d = {
+			"one" : 1,
+			"two" : 2,
+			"three" : "three",
+			"d" : {
+				"e" : {
+					"four" : 4,
+				},
+				"five" : 5,
+			},
+			"f" : {},
+		}
+		
+		p = Gaffer.DictPath( d, "/" )
+		
+		self.failUnless( p.isValid() )
+		self.failIf( p.isLeaf() )
+		
+		children = p.children()
+		self.assertEqual( len( children ), 5 )
+		for child in children :
+			self.failUnless( isinstance( child, Gaffer.DictPath ) )
+			if child[-1] in ( "d", "f" ) :
+				self.failIf( child.isLeaf() ) 
+				self.failIf( "value" in child.info() )
+			else :
+				self.failUnless( child.isLeaf() )
+				self.failUnless( "dict:value" in child.info() )
+		
+		p.setFromString( "/d/e/four" )
+		self.assertEqual( p.info()["dict:value"], 4 )
+		
+		p.setFromString( "/d/e/fourfdsfsd" )
+		self.failIf( p.isValid() )
+	
+	def testCopy( self ) :
+	
+		d = {
+			"one" : 1,
+			"two" : 2,
+		}
+		
+		p = Gaffer.DictPath( d, "/one" )
 
-	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
-
-	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
+		pp = p.copy()
+		self.assertEqual( str( pp ), str( p ) )
+		self.assertEqual( pp, p )
+		self.failIf( p != p )
+		
+		del pp[-1]
+		self.assertNotEqual( str( pp ), str( p ) )
+		self.assertNotEqual( pp, p )
+		self.failUnless( pp != p )
+		
 	
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
-		
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
-		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		
-		self.__child = None
-		self.setChild( child )
-		
-		self.setBorderStyle( borderStyle )
+if __name__ == "__main__":
+	unittest.main()
 	
-	def setBorderStyle( self, borderStyle ) :
-		
-		self._qtWidget().setObjectName( "borderStyle" + str( borderStyle ) )
-	
-	def getBorderStyle( self ) :
-	
-		n = IECore.CamelCase.split( str( self._qtWidget().objectName() ) )[-1]
-		return getattr( self.BorderStyle, n )
-		
-	def removeChild( self, child ) :
-	
-		assert( child is self.__child )
-		
-		child._qtWidget().setParent( None )
-		self.__child = None
-
-	def addChild( self, child ) :
-	
-		if self.getChild() is not None :
-			raise Exception( "Frame can only hold one child" )
-			
-		self.setChild( child )
-		
-	def setChild( self, child ) :
-	
-		if self.__child is not None :
-			self.removeChild( self.__child )
-		
-		if child is not None :	
-			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
-		self.__child = child	
-
-	def getChild( self ) :
-	
-		return self.__child
