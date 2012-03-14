@@ -5,3 +5,5 @@
 * The op app now has a gui parameter. When this is true a gui is presented, when it is false the op is executed directly on the command line.
 
 * Added the GafferScene and GafferSceneUI modules. These will allow the generation and editing of scene graphs.
+
+* Fixed RunTimeTyped registration of Gaffer::CompoundPlug.

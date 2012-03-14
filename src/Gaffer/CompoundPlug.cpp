@@ -44,6 +44,8 @@
 using namespace Gaffer;
 using namespace boost;
 
+IE_CORE_DEFINERUNTIMETYPED( CompoundPlug )
+
 CompoundPlug::CompoundPlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
 {

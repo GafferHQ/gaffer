@@ -265,6 +265,13 @@ class CompoundPlugTest( unittest.TestCase ) :
 		p = Gaffer.CompoundPlug( "hello" )
 		self.failUnless( p.acceptsInput( None ) )
 		
+	def testRunTimeTyped( self ) :
+	
+		p = Gaffer.CompoundPlug( "hello" )
+		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
