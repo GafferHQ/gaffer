@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -73,7 +73,7 @@ class NoduleTest( unittest.TestCase ) :
 		nc = GafferUI.Nodule.create( n["c"] )
 
 		self.failUnless( isinstance( ni, GafferUI.StandardNodule ) )
-		self.failUnless( nc is None )
+		self.failUnless( isinstance( nc, GafferUI.StandardNodule ) )
 		
 		GafferUI.Nodule.registerNodule( NoduleTestNode.staticTypeId(), "c", GafferUI.CompoundNodule )
 
