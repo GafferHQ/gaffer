@@ -170,10 +170,10 @@ void Plug::setInputInternal( PlugPtr input, bool emit )
 	}
 	if( emit )
 	{
-		NodePtr n = node();
+		Node *n = node();
 		if( n )
 		{
-			node()->plugInputChangedSignal()( this );
+			n->plugInputChangedSignal()( this );
 		}
 	}
 }
