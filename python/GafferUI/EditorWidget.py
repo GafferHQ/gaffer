@@ -48,6 +48,7 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 		
+		self.__scriptNode = None
 		self.setScriptNode( scriptNode )
 	
 	## Sets the script being edited. This will also call setContext( scriptNode.context() ).
@@ -56,8 +57,12 @@ class EditorWidget( GafferUI.Widget ) :
 		if not ( scriptNode is None or scriptNode.isInstanceOf( Gaffer.ScriptNode.staticTypeId() ) ) :
 			raise TypeError( "Editor expects a ScriptNode instance or None.")
 		
+		if scriptNode is self.__scriptNode :
+			return
+		
 		self.__scriptNode = scriptNode
-		self.setContext( scriptNode.context() if scriptNode is not None else None )
+		self.__context = None
+		self.__setContextInternal( scriptNode.context() if scriptNode is not None else None, callUpdate=False )
 		
 	def getScriptNode( self ) :
 	
@@ -68,6 +73,14 @@ class EditorWidget( GafferUI.Widget ) :
 	# display itself at a custom frame (or with any other context modification).
 	def setContext( self, context ) :
 	
+		self.__setContextInternal( context, callUpdate=True )
+	
+	def getContext( self ) :
+	
+		return self.__context
+	
+	def __setContextInternal( self, context, callUpdate ) :
+	
 		assert( isinstance( context, ( Gaffer.Context, types.NoneType ) ) )
 	
 		self.__context = context
@@ -76,11 +89,8 @@ class EditorWidget( GafferUI.Widget ) :
 		else :
 			self.__contextChangedConnection = None
 	
-		self._updateFromContext()
-	
-	def getContext( self ) :
-	
-		return self.__context
+		if callUpdate :
+			self._updateFromContext()
 	
 	## May be implemented by derived classes to update state based on a change of context.
 	def _updateFromContext( self ) :

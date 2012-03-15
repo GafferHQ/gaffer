@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -127,7 +127,15 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		self.__update()	
-		
+	
+	def _updateFromContext( self ) :
+	
+		if not hasattr( self, "_Viewer__renderableGadget" ) :
+			# we're being called during construction
+			return
+			
+		self.__update()
+
 	def __update( self ) :
 
 		renderable = None		
