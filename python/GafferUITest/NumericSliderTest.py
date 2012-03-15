@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,40 +34,63 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
-from ColorSwatchTest import ColorSwatchTest
-from VariantTest import VariantTest
-from GridContainerTest import GridContainerTest
-from NoduleTest import NoduleTest
-from ProgressBarTest import ProgressBarTest
-from ContainerWidgetTest import ContainerWidgetTest
-from SelectionMenuTest import SelectionMenuTest
-from StandardStyleTest import StandardStyleTest
-from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
-from EditorWidgetTest import EditorWidgetTest
-from NumericSliderTest import NumericSliderTest
+import unittest
 
+import GafferUI
+
+class NumericSliderTest( unittest.TestCase ) :
+
+	def testConstruction( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0, minValue = 0, maxValue = 1 )
+		
+		self.assertEqual( s.getPosition(), 0 )
+		self.assertEqual( s.getValue(), 0 )
+		self.assertEqual( s.getRange(), ( 0, 1 ) )
+		
+	def testSetValue( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0, minValue = 0, maxValue = 2 )
+		
+		self.assertEqual( s.getPosition(), 0 )
+		self.assertEqual( s.getValue(), 0 )
+		
+		s.setValue( 0.5 )
+		self.assertEqual( s.getPosition(), 0.25 )
+		self.assertEqual( s.getValue(), 0.5 )
+		
+	def testSetRange( self ) :
+	
+		s = GafferUI.NumericSlider( value = 1, minValue = 0, maxValue = 2 )
+		
+		self.assertEqual( s.getPosition(), 0.5 )
+		self.assertEqual( s.getValue(), 1 )
+		
+		s.setRange( 0, 1 )
+		self.assertEqual( s.getPosition(), 1 )
+		self.assertEqual( s.getValue(), 1 )
+		
+	def testSetZeroRange( self ) :
+	
+		s = GafferUI.NumericSlider( value = 1, minValue = 1, maxValue = 2 )
+		
+		self.assertEqual( s.getPosition(), 0 )
+		self.assertEqual( s.getValue(), 1 )
+		
+		s.setRange( 1, 1 )
+		self.assertEqual( s.getValue(), 1 )
+		
+	def testSetPosition( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0, minValue = 0, maxValue = 2 )
+		
+		self.assertEqual( s.getPosition(), 0 )
+		self.assertEqual( s.getValue(), 0 )
+		
+		s.setPosition( 0.5 )
+		self.assertEqual( s.getPosition(), 0.5 )
+		self.assertEqual( s.getValue(), 1 )
+		
+		
 if __name__ == "__main__":
 	unittest.main()

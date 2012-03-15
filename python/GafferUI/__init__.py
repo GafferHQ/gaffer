@@ -127,6 +127,7 @@ from ReaderPathPreview import ReaderPathPreview
 from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from IndexedIODataPathPreview import IndexedIODataPathPreview
 from OpPathPreview import OpPathPreview
+from NumericSlider import NumericSlider
 
 # then stuff specific to graph uis
 
