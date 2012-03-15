@@ -1112,8 +1112,12 @@ class _EventFilter( QtCore.QObject ) :
 		if qEventType==qEvent.ToolTip :
 		
 			widget = Widget._owner( qObject )
-			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
-			return True
+			toolTip = widget.getToolTip()
+			if toolTip :
+				QtGui.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+				return True
+			else :
+				return False
 		
 		# but for anything else we ignore disabled widgets
 		if not qObject.isEnabled() :

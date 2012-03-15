@@ -7,3 +7,5 @@
 * Added the GafferScene and GafferSceneUI modules. These will allow the generation and editing of scene graphs.
 
 * Fixed RunTimeTyped registration of Gaffer::CompoundPlug.
+
+* Fixed behaviour when a Widget doesn't have a tooltip - it now correctly looks for tooltips on parent Widgets until one is found.
