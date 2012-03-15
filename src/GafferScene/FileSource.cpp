@@ -63,8 +63,8 @@ const Gaffer::StringPlug *FileSource::fileNamePlug() const
 
 void FileSource::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	if( outPlug()->isAncestorOf( input ) )
+	if( input == fileNamePlug() )
 	{
-		outputs.push_back( fileNamePlug() );
+		outputs.push_back( outPlug() );
 	}
 }
