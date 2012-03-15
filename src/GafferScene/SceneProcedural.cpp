@@ -81,9 +81,12 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	}
 	
 	ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
-	for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+	if( childNames )
 	{
-		string childScenePath = m_scenePath + "/" + *it;
-		renderer->procedural( new SceneProcedural( m_scenePlug, m_context, childScenePath ) );
-	}	
+		for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+		{
+			string childScenePath = m_scenePath + "/" + *it;
+			renderer->procedural( new SceneProcedural( m_scenePlug, m_context, childScenePath ) );
+		}	
+	}
 }
