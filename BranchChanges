@@ -9,3 +9,7 @@
 * Fixed RunTimeTyped registration of Gaffer::CompoundPlug.
 
 * Fixed behaviour when a Widget doesn't have a tooltip - it now correctly looks for tooltips on parent Widgets until one is found.
+
+* Added a GafferUI.NumericSlider widget.
+
+* The Viewer now correctly updates when the context has changed. The EditorWidget no longer calls _updateFromContext() at awkward times.
