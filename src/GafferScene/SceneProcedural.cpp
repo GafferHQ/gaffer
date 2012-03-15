@@ -85,7 +85,12 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 		{
-			string childScenePath = m_scenePath + "/" + *it;
+			string childScenePath = m_scenePath;
+			if( m_scenePath.size() > 1 )
+			{
+				childScenePath += "/";
+			}
+			childScenePath += *it;
 			renderer->procedural( new SceneProcedural( m_scenePlug, m_context, childScenePath ) );
 		}	
 	}
