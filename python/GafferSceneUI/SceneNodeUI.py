@@ -34,6 +34,17 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-import SceneNodeUI
-import SceneView
+import fnmatch
+
+import GafferUI
+
+import GafferScene
+
+def __noduleCreator( plug ) :
+
+	if isinstance( plug, GafferScene.ScenePlug ) :
+		return GafferUI.StandardNodule( plug )
+		
+	return None
+
+GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
