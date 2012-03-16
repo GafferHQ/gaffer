@@ -271,6 +271,26 @@ class CompoundPlugTest( unittest.TestCase ) :
 		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
 		
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
+
+	def testSerialisationOfMasterConnection( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.CompoundPlugNode()
+		s["n2"] = GafferTest.CompoundPlugNode()
+		
+		s["n1"]["p"].setInput( s["n2"]["p"] )
+		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
+		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+		
+		ss = s.serialise()
+				
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
+		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
