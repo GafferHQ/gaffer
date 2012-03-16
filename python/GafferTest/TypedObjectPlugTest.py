@@ -104,7 +104,78 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.ObjectPlug( "hello", defaultValue = None )
 		self.failUnless( p.defaultValue() is None )
+		
+	def testSerialisationWithValueAndDefaultValue( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.IntData( 10 ) )
+		s["n"]["t"].setValue( IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
+		
+ 		se = s.serialise()
+		
+ 		s2 = Gaffer.ScriptNode()
+ 		s2.execute( se )
+ 		 		
+ 		self.failUnless( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )		
+ 		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
+		self.failUnless( s2["n"]["t"].getValue() == IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
+ 	
+	def testSerialisationWithUnserialisableValue( self ) :
+	
+		# right now we can only serialise types which define __repr__.
+		# this test just asserts that if one does happen to be used then it
+		# at least doesn't totally break the parsing. ideally we need to make
+		# sure that all types can be serialised (although storing large types
+		# in the file itself is frankly a terrible idea).
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 10 ) ) ) )
+		s["n"]["t"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ) ) )
+		
+		mh = IECore.CapturingMessageHandler()
+		with mh :
+ 			se = s.serialise()
+		
+		self.assertEqual( len( mh.messages ), 2 )
+		
+		s2 = Gaffer.ScriptNode()
+ 		s2.execute( se )
+	
+	def testConstructCantSpecifyBothInputAndValue( self ) :
+	
+		out = Gaffer.ObjectPlug( "out", direction=Gaffer.Plug.Direction.Out )
+		
+		self.assertRaises( Exception, Gaffer.ObjectPlug, "in", input=out, value=IECore.IntData( 10 ) )
+	
+	class TypedObjectPlugNode( Gaffer.Node ) :
+		
+		def __init__( self, name="TypedObjectPlugNode", inputs={}, dynamicPlugs=() ) :
+		
+			Gaffer.Node.__init__( self, name )
 			
+			self.addChild(
+				Gaffer.ObjectPlug( "p" ),
+			)
+			
+			self._init( inputs, dynamicPlugs )
+	
+	IECore.registerRunTimeTyped( TypedObjectPlugNode )
+	
+	def testSerialisationOfStaticPlugs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = self.TypedObjectPlugNode()
+		s["n"]["p"].setValue( IECore.IntData( 10 ) )
+
+ 		se = s.serialise()
+				
+		s2 = Gaffer.ScriptNode()
+ 		s2.execute( se )
+ 		
+ 		self.assertEqual( s2["n"]["p"].getValue(), IECore.IntData( 10 ) )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -60,6 +60,8 @@
 
 * Fixed crash in python bindings for TypedObjectPlug::defaultValue, for the case of the default value being null.
 
+* TypedObjectPlug bindings now support the serialisation of the value and default value, provided that the bindings for the types they hold implement __repr__ appropriately.
+
 0.28.1
 ------
 
