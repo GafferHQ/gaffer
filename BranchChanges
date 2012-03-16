@@ -13,3 +13,5 @@
 * Added a GafferUI.NumericSlider widget.
 
 * The Viewer now correctly updates when the context has changed. The EditorWidget no longer calls _updateFromContext() at awkward times.
+
+* Added a simple TimeEditor for manipulating the current frame.

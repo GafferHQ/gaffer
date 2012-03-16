@@ -51,8 +51,8 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="248.51055"
-     inkscape:cy="982.43138"
+     inkscape:cx="358.77946"
+     inkscape:cy="985.84511"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -89,6 +89,22 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-52.362183)">
+    <rect
+       inkscape:label="#rect3932"
+       y="61.487183"
+       x="369"
+       height="17"
+       width="9.5"
+       id="forExport:timeEditorEnd"
+       style="fill:#ff0000;fill-opacity:0;stroke:none" />
+    <rect
+       style="fill:none;stroke:none"
+       id="forExport:timeEditorPlay"
+       width="13"
+       height="17"
+       x="354.5"
+       y="61.362183"
+       inkscape:label="#rect3932" />
     <path
        id="path3886"
        style="fill:#787878;fill-opacity:1;fill-rule:evenodd;stroke:#3c3c3c;stroke-opacity:1"
@@ -943,5 +959,154 @@
          transform="matrix(0,1,1,0,0,0)"
          inkscape:label="#rect3931" />
     </g>
+    <g
+       id="forExport:timeEditor3"
+       inkscape:label="#g3968">
+      <g
+         id="g3181">
+        <path
+           sodipodi:type="arc"
+           style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+           id="path3407"
+           sodipodi:cx="260.25"
+           sodipodi:cy="13.25"
+           sodipodi:rx="1.25"
+           sodipodi:ry="1.25"
+           d="m 261.5,13.25 c 0,0.690356 -0.55964,1.25 -1.25,1.25 -0.69036,0 -1.25,-0.559644 -1.25,-1.25 0,-0.690356 0.55964,-1.25 1.25,-1.25 0.69036,0 1.25,0.559644 1.25,1.25 z"
+           transform="matrix(1.6,0,0,1.6,-135.4,43.162183)" />
+        <path
+           transform="matrix(1.6,0,0,1.6,-135.4,49.162183)"
+           d="m 261.5,13.25 c 0,0.690356 -0.55964,1.25 -1.25,1.25 -0.69036,0 -1.25,-0.559644 -1.25,-1.25 0,-0.690356 0.55964,-1.25 1.25,-1.25 0.69036,0 1.25,0.559644 1.25,1.25 z"
+           sodipodi:ry="1.25"
+           sodipodi:rx="1.25"
+           sodipodi:cy="13.25"
+           sodipodi:cx="260.25"
+           id="path3169"
+           style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+           sodipodi:type="arc" />
+        <path
+           sodipodi:type="arc"
+           style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+           id="path3171"
+           sodipodi:cx="260.25"
+           sodipodi:cy="13.25"
+           sodipodi:rx="1.25"
+           sodipodi:ry="1.25"
+           d="m 261.5,13.25 c 0,0.690356 -0.55964,1.25 -1.25,1.25 -0.69036,0 -1.25,-0.559644 -1.25,-1.25 0,-0.690356 0.55964,-1.25 1.25,-1.25 0.69036,0 1.25,0.559644 1.25,1.25 z"
+           transform="matrix(1.6,0,0,1.6,-135.4,55.162183)" />
+      </g>
+      <rect
+         y="61.362183"
+         x="278.5"
+         height="18"
+         width="5"
+         id="rect3194"
+         style="fill:none;fill-opacity:0.35265700000000000;stroke:none" />
+    </g>
+    <g
+       id="forExport:timeEditor2"
+       inkscape:label="#g3975">
+      <g
+         transform="translate(0,3)"
+         id="g3177">
+        <path
+           transform="matrix(1.6,0,0,1.6,-129.4,43.162183)"
+           d="m 261.5,13.25 c 0,0.690356 -0.55964,1.25 -1.25,1.25 -0.69036,0 -1.25,-0.559644 -1.25,-1.25 0,-0.690356 0.55964,-1.25 1.25,-1.25 0.69036,0 1.25,0.559644 1.25,1.25 z"
+           sodipodi:ry="1.25"
+           sodipodi:rx="1.25"
+           sodipodi:cy="13.25"
+           sodipodi:cx="260.25"
+           id="path3173"
+           style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+           sodipodi:type="arc" />
+        <path
+           sodipodi:type="arc"
+           style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+           id="path3175"
+           sodipodi:cx="260.25"
+           sodipodi:cy="13.25"
+           sodipodi:rx="1.25"
+           sodipodi:ry="1.25"
+           d="m 261.5,13.25 c 0,0.690356 -0.55964,1.25 -1.25,1.25 -0.69036,0 -1.25,-0.559644 -1.25,-1.25 0,-0.690356 0.55964,-1.25 1.25,-1.25 0.69036,0 1.25,0.559644 1.25,1.25 z"
+           transform="matrix(1.6,0,0,1.6,-129.4,49.162183)" />
+      </g>
+      <rect
+         style="fill:none;fill-opacity:0.35265700000000000;stroke:none"
+         id="rect3964"
+         width="5"
+         height="18"
+         x="284.5"
+         y="61.362183" />
+    </g>
+    <g
+       id="forExport:timeEditor1">
+      <path
+         transform="matrix(1.6,0,0,1.6,-123.4,49.162183)"
+         d="m 261.5,13.25 c 0,0.690356 -0.55964,1.25 -1.25,1.25 -0.69036,0 -1.25,-0.559644 -1.25,-1.25 0,-0.690356 0.55964,-1.25 1.25,-1.25 0.69036,0 1.25,0.559644 1.25,1.25 z"
+         sodipodi:ry="1.25"
+         sodipodi:rx="1.25"
+         sodipodi:cy="13.25"
+         sodipodi:cx="260.25"
+         id="path3188"
+         style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+         sodipodi:type="arc" />
+      <rect
+         y="61.362183"
+         x="290.5"
+         height="18"
+         width="5"
+         id="rect3966"
+         style="fill:none;fill-opacity:0.35265700000000000;stroke:none" />
+    </g>
+    <g
+       id="g3928"
+       transform="translate(25.5,18)">
+      <rect
+         y="62.862183"
+         x="330.5"
+         height="14"
+         width="4"
+         id="rect3127"
+         style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1" />
+      <rect
+         style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1"
+         id="rect3897"
+         width="4"
+         height="14"
+         x="336.5"
+         y="62.862183" />
+    </g>
+    <path
+       style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:0.99999994;stroke-opacity:1"
+       d="m 355.5,62.987183 0,4.875 2.5,2.125 -2.5,2.125 0,4.875 10.5,-7 z"
+       id="rect3899"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccc" />
+    <path
+       style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1;stroke-opacity:1"
+       d="m 374,62.924683 0,4.5625 -3.5,-2.8125 0,10.5 3.5,-2.8125 0,4.5625 3,0 0,-7 0,-7 -3,0 z"
+       id="rect3920"
+       inkscape:connector-curvature="0" />
+    <path
+       id="path3926"
+       d="m 348.5,62.799683 0,4.5625 3.5,-2.8125 0,10.5 -3.5,-2.8125 0,4.5625 -3,0 0,-7 0,-7 3,0 z"
+       style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1;stroke-opacity:1"
+       inkscape:connector-curvature="0" />
+    <rect
+       inkscape:label="#rect3932"
+       y="79.362183"
+       x="354.5"
+       height="17"
+       width="13"
+       id="forExport:timeEditorPause"
+       style="fill:none;stroke:none" />
+    <rect
+       style="fill:none;stroke:none"
+       id="forExport:timeEditorStart"
+       width="9.5"
+       height="17"
+       x="344"
+       y="61.299683"
+       inkscape:label="#rect3932" />
   </g>
 </svg>
