@@ -58,6 +58,8 @@
 
 * Added Widget.visibilityChangedSignal().
 
+* Fixed crash in python bindings for TypedObjectPlug::defaultValue, for the case of the default value being null.
+
 0.28.1
 ------
 

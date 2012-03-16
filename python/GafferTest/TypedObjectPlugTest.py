@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -99,7 +99,12 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 		self.assertEqual( p.getValue(), IECore.BoolVectorData( [ False ] ) )
 				
 		self.assertRaises( Exception, p.setValue, IECore.IntData( 10 ) )
-				
+
+	def testNullDefaultValue( self ) :
+	
+		p = Gaffer.ObjectPlug( "hello", defaultValue = None )
+		self.failUnless( p.defaultValue() is None )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

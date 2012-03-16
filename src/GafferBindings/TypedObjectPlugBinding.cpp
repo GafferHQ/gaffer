@@ -115,7 +115,12 @@ static typename T::Ptr construct(
 template<typename T>
 static typename T::ValuePtr defaultValue( typename T::Ptr p )
 {
-	return p->defaultValue()->copy();
+	typename T::ConstValuePtr v = p->defaultValue();
+	if( v )
+	{
+		return v->copy();
+	}
+	return 0;
 }
 
 template<typename T>
