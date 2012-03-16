@@ -56,10 +56,7 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		if not ( scriptNode is None or scriptNode.isInstanceOf( Gaffer.ScriptNode.staticTypeId() ) ) :
 			raise TypeError( "Editor expects a ScriptNode instance or None.")
-		
-		if scriptNode is self.__scriptNode :
-			return
-		
+				
 		self.__scriptNode = scriptNode
 		self.__context = None
 		self.__setContextInternal( scriptNode.context() if scriptNode is not None else None, callUpdate=False )
