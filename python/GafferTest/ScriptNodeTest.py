@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -332,7 +332,17 @@ a = A()"""
 		del s["n1"]
 		
 		self.failUnless( n1 not in s.selection() )
-							
+	
+	def testApplicationRoot( self ) :
+	
+		s = Gaffer.ScriptNode()
+		self.failUnless( s.applicationRoot() is None )
+	
+		a = Gaffer.ApplicationRoot()
+		a["scripts"]["one"] = s
+		
+		self.failUnless( s.applicationRoot().isSame( a ) )	
+	
 if __name__ == "__main__":
 	unittest.main()
 	

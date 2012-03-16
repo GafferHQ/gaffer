@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,8 +77,8 @@ class ScriptNode : public Node
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		
 		/// Convenience function which simply returns ancestor<ApplicationRoot>().
-		ApplicationRootPtr application();
-		ConstApplicationRootPtr application() const;
+		ApplicationRoot *applicationRoot();
+		const ApplicationRoot *applicationRoot() const;
 		
 		//! @name Selection
 		/// The ScriptNode maintains a list of child Nodes which are considered

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,6 +42,7 @@
 #include "GafferBindings/Serialiser.h"
 #include "GafferBindings/NodeBinding.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/ApplicationRoot.h"
 
 #include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
@@ -218,12 +219,18 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( copyOverloads, copy, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( cutOverloads, cut, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( deleteNodesOverloads, deleteNodes, 0, 1 );
 
+static ApplicationRootPtr applicationRoot( ScriptNode &s )
+{
+	return s.applicationRoot();
+}
+
 void bindScriptNode()
 {
 	scope s = IECorePython::RunTimeTypedClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( ScriptNode )
+		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", (StandardSetPtr (ScriptNode::*)())&ScriptNode::selection )
 		.def( "undo", &ScriptNode::undo )
 		.def( "redo", &ScriptNode::redo )

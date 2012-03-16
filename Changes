@@ -52,6 +52,10 @@
 
 * Added a browser app to browse the filesystem and display previews.
 
+* Renamed ScriptNode::application() method to ScriptNode::applicationRoot() and changed return type to a raw pointer in keeping with the rest of Gaffer. Added python binding.
+
+* Added ApplicationRoot::preferencesLocation() method to return an appropriate directory into which settings can be saved.
+
 0.28.1
 ------
 
