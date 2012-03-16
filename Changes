@@ -52,6 +52,18 @@
 
 * Added a browser app to browse the filesystem and display previews.
 
+* Renamed ScriptNode::application() method to ScriptNode::applicationRoot() and changed return type to a raw pointer in keeping with the rest of Gaffer. Added python binding.
+
+* Added ApplicationRoot::preferencesLocation() method to return an appropriate directory into which settings can be saved.
+
+* Added Widget.visibilityChangedSignal().
+
+* Fixed crash in python bindings for TypedObjectPlug::defaultValue, for the case of the default value being null.
+
+* TypedObjectPlug bindings now support the serialisation of the value and default value, provided that the bindings for the types they hold implement __repr__ appropriately.
+
+* Fixed bug in GafferBindings::Serialiser which meant that serialisers were called twice unecessarily.
+
 0.28.1
 ------
 

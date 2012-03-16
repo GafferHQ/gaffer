@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -364,7 +364,17 @@ a = A()"""
 		s["frameRange"]["end"].setValue( 100 )
 		self.assertEqual( s["frameRange"]["start"].getValue(), 100 )
 		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
+	
+	def testApplicationRoot( self ) :
+	
+		s = Gaffer.ScriptNode()
+		self.failUnless( s.applicationRoot() is None )
+	
+		a = Gaffer.ApplicationRoot()
+		a["scripts"]["one"] = s
 		
+		self.failUnless( s.applicationRoot().isSame( a ) )	
+	
 if __name__ == "__main__":
 	unittest.main()
 	

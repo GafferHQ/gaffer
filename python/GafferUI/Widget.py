@@ -120,6 +120,7 @@ class Widget( object ) :
  		self._enterSignal = None
  		self._leaveSignal = None
  		self._wheelSignal = None
+ 		self._visibilityChangedSignal = None
  				
 		self.setToolTip( toolTip )
 		
@@ -291,6 +292,16 @@ class Widget( object ) :
 			self._wheelSignal = GafferUI.WidgetEventSignal()
 		return self._wheelSignal
 	
+	## Note that this is not emitted every time setVisible() is called -
+	# instead it is emitted when the Widget either becomes or ceases to
+	# be visible on screen.
+	def visibilityChangedSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._visibilityChangedSignal is None :
+			self._visibilityChangedSignal = GafferUI.WidgetSignal()
+		return self._visibilityChangedSignal
+		
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
 	# allow custom behaviour when setToolTip( nonEmptyString ) has
@@ -1098,6 +1109,8 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.Enter,
 			QtCore.QEvent.Leave,
 			QtCore.QEvent.Wheel,			
+			QtCore.QEvent.Show,			
+			QtCore.QEvent.Hide,			
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
@@ -1108,7 +1121,7 @@ class _EventFilter( QtCore.QObject ) :
 		if qEventType not in self.__eventMask :
 			return False
 		
-		# we display tooltips even on disabled widgets
+		# we display tooltips and emit visibility events even on disabled widgets
 		if qEventType==qEvent.ToolTip :
 		
 			widget = Widget._owner( qObject )
@@ -1118,7 +1131,14 @@ class _EventFilter( QtCore.QObject ) :
 				return True
 			else :
 				return False
-		
+			
+		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
+				
+			widget = Widget._owner( qObject )
+			if widget is not None and widget._visibilityChangedSignal is not None :
+				widget._visibilityChangedSignal( widget )
+			return False
+
 		# but for anything else we ignore disabled widgets
 		if not qObject.isEnabled() :
 			return False

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,12 +87,12 @@ bool ScriptNode::acceptsParent( const GraphComponent *potentialParent ) const
 	return potentialParent->isInstanceOf( ScriptContainer::staticTypeId() );
 }
 
-ApplicationRootPtr ScriptNode::application()
+ApplicationRoot *ScriptNode::applicationRoot()
 {
 	return ancestor<ApplicationRoot>();
 }
 
-ConstApplicationRootPtr ScriptNode::application() const
+const ApplicationRoot *ScriptNode::applicationRoot() const
 {
 	return ancestor<ApplicationRoot>();
 }
@@ -145,7 +145,7 @@ void ScriptNode::redo()
 
 void ScriptNode::copy( ConstSetPtr filter )
 {
-	ApplicationRootPtr app = application();
+	ApplicationRoot *app = applicationRoot();
 	if( !app )
 	{
 		throw( "ScriptNode has no ApplicationRoot" );
@@ -163,7 +163,7 @@ void ScriptNode::cut( ConstSetPtr filter )
 
 void ScriptNode::paste()
 {
-	ApplicationRootPtr app = application();
+	ApplicationRoot *app = applicationRoot();
 	if( !app )
 	{
 		throw( "ScriptNode has no ApplicationRoot" );

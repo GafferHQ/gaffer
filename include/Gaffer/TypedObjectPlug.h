@@ -50,9 +50,6 @@ namespace Gaffer
 {
 
 /// A Plug type which can store values derived from IECore::Object.
-/// \todo Should we remove the ability to specify a default value, since
-/// we can't serialise all values? Or should we use some nasty MemIndexedIO
-/// thing to support that?
 template<typename T>
 class TypedObjectPlug : public ValuePlug
 {

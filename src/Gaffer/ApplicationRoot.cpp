@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,6 +34,8 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 //////////////////////////////////////////////////////////////////////////
+
+#include "boost/filesystem.hpp"
 
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/PreferencesNode.h"
@@ -109,7 +111,7 @@ void ApplicationRoot::savePreferences( const std::string &fileName ) const
 	throw IECore::Exception( "Cannot save preferences from an ApplicationRoot not created in Python." );
 }
 
-std::string ApplicationRoot::defaultPreferencesFileName() const
+std::string ApplicationRoot::preferencesLocation() const
 {
 	const char *home = getenv( "HOME" );
 	if( !home )
@@ -118,7 +120,15 @@ std::string ApplicationRoot::defaultPreferencesFileName() const
 	}
 	
 	std::string result = home;
-	result += "/gaffer/startup/" + getName() + "/preferences.py";
+	result += "/gaffer/startup/" + getName();
+	
+	boost::filesystem::create_directories( result );
+
 	return result;
+}
+
+std::string ApplicationRoot::defaultPreferencesFileName() const
+{
+	return preferencesLocation() + "/preferences.py";
 }
 

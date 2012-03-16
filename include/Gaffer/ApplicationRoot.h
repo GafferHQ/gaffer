@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -92,10 +92,15 @@ class ApplicationRoot : public GraphComponent
 		/// Returns the preferences node.
 		PreferencesNodePtr preferences();
 		ConstPreferencesNodePtr preferences() const;
-		/// Saves the current preferences to ~/gaffer/startup/appName/preferences.py
+		/// Saves the current preferences to preferencesLocation()/preferences.py.
 		void savePreferences() const;
 		/// Saves the current preferences value to the specified file.
 		virtual void savePreferences( const std::string &fileName ) const;
+		/// Returns ~/gaffer/startup/appName - the directory in which preferences are
+		/// stored, and ensures that the directory exists. Other application components
+		/// may use this location to store settings they wish to persist across invocations.
+		/// \todo Perhaps this should include a major version number in the future.
+		std::string preferencesLocation() const;
 		//@}
 		
 	private :

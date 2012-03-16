@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -89,7 +89,14 @@ class ApplicationRootTest( unittest.TestCase ) :
 		a.savePreferences( self.__preferencesFile )
 		os.chmod( self.__preferencesFile, 0 )
 		self.assertRaises( RuntimeError, a.savePreferences, self.__preferencesFile )
+	
+	def testPreferencesLocation( self ) :
+	
+		a = Gaffer.ApplicationRoot( "testApp" )
 		
+		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
+		self.failUnless( os.path.isdir( a.preferencesLocation() ) )
+	
 	def tearDown( self ) :
 				
 		for f in [
