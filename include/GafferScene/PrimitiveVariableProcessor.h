@@ -34,48 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
+#define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/FileSource.h"
-#include "GafferScene/ModelCacheSource.h"
-#include "GafferScene/SceneProcedural.h"
 #include "GafferScene/SceneProcessor.h"
-#include "GafferScene/AttributeCache.h"
-#include "GafferScene/PrimitiveVariableProcessor.h"
-#include "GafferScene/DeletePrimitiveVariables.h"
 
-using namespace boost::python;
-using namespace GafferScene;
-
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferScene
 {
-	
-	IECorePython::RunTimeTypedClass<ScenePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = Gaffer::CompoundPlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-	;
-	
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( init<ScenePlugPtr, const Gaffer::Context *, const std::string &>() )
-	;
 
-	GafferBindings::NodeClass<SceneNode>();
-	GafferBindings::NodeClass<FileSource>();
-	GafferBindings::NodeClass<ModelCacheSource>();
-	GafferBindings::NodeClass<SceneProcessor>();
-	GafferBindings::NodeClass<AttributeCache>();
-	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::NodeClass<DeletePrimitiveVariables>();
+/// The PrimitiveVariableProcessor base class simplifies the process of manipulating
+/// primitive variables.
+class PrimitiveVariableProcessor : public SceneProcessor
+{
+
+	public :
+
+		PrimitiveVariableProcessor( const std::string &name=staticTypeName() );
+		virtual ~PrimitiveVariableProcessor();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneProcessor );
+		
+		Gaffer::StringPlug *namesPlug();
+		const Gaffer::StringPlug *namesPlug() const;
+		
+		Gaffer::BoolPlug *invertNamesPlug();
+		const Gaffer::BoolPlug *invertNamesPlug() const;
+
+		/// Implemented so that namesPlug() affects outPlug()->geometryPlug().
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+		
+		/// Implemented to call processPrimitiveVariable() for the appropriate variables of inputGeometry.
+		virtual IECore::PrimitivePtr processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const;
+		/// Must be implemented by subclasses to process the primitive variable and return it.
+		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const;
 	
-}
+};
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H

@@ -56,6 +56,7 @@ GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 
 GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
 GafferUI.NodeMenu.append( "/Scene/Process/AttributeCache", GafferScene.AttributeCache )
+GafferUI.NodeMenu.append( "/Scene/Process/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables )
 
 GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )

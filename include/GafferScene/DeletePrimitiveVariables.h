@@ -34,48 +34,30 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H
+#define GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H
 
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/FileSource.h"
-#include "GafferScene/ModelCacheSource.h"
-#include "GafferScene/SceneProcedural.h"
-#include "GafferScene/SceneProcessor.h"
-#include "GafferScene/AttributeCache.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
-#include "GafferScene/DeletePrimitiveVariables.h"
 
-using namespace boost::python;
-using namespace GafferScene;
-
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferScene
 {
-	
-	IECorePython::RunTimeTypedClass<ScenePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = Gaffer::CompoundPlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-	;
-	
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( init<ScenePlugPtr, const Gaffer::Context *, const std::string &>() )
-	;
 
-	GafferBindings::NodeClass<SceneNode>();
-	GafferBindings::NodeClass<FileSource>();
-	GafferBindings::NodeClass<ModelCacheSource>();
-	GafferBindings::NodeClass<SceneProcessor>();
-	GafferBindings::NodeClass<AttributeCache>();
-	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::NodeClass<DeletePrimitiveVariables>();
+class DeletePrimitiveVariables : public PrimitiveVariableProcessor
+{
+
+	public :
+
+		DeletePrimitiveVariables( const std::string &name=staticTypeName() );
+		virtual ~DeletePrimitiveVariables();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
+					
+	protected :
+		
+		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const;
 	
-}
+};
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H

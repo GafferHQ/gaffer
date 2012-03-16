@@ -34,48 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/FileSource.h"
-#include "GafferScene/ModelCacheSource.h"
-#include "GafferScene/SceneProcedural.h"
-#include "GafferScene/SceneProcessor.h"
-#include "GafferScene/AttributeCache.h"
-#include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
 
-using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
-{
-	
-	IECorePython::RunTimeTypedClass<ScenePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = Gaffer::CompoundPlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-	;
-	
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( init<ScenePlugPtr, const Gaffer::Context *, const std::string &>() )
-	;
+IE_CORE_DEFINERUNTIMETYPED( DeletePrimitiveVariables );
 
-	GafferBindings::NodeClass<SceneNode>();
-	GafferBindings::NodeClass<FileSource>();
-	GafferBindings::NodeClass<ModelCacheSource>();
-	GafferBindings::NodeClass<SceneProcessor>();
-	GafferBindings::NodeClass<AttributeCache>();
-	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::NodeClass<DeletePrimitiveVariables>();
-	
+DeletePrimitiveVariables::DeletePrimitiveVariables( const std::string &name )
+	:	PrimitiveVariableProcessor( name )
+{
+}
+
+DeletePrimitiveVariables::~DeletePrimitiveVariables()
+{
+}
+
+void DeletePrimitiveVariables::processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &variable ) const
+{
+	variable.interpolation = IECore::PrimitiveVariable::Invalid;
+	variable.data = 0;
 }

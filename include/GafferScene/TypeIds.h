@@ -48,6 +48,8 @@ enum TypeId
 	ModelCacheSourceTypeId = 110504,
 	SceneProcessorTypeId = 110505,
 	AttributeCacheTypeId = 110506,
+	PrimitiveVariableProcessorTypeId = 110507,
+	DeletePrimitiveVariablesTypeId = 110508,
 	
 	LastTypeId = 110999
 };
