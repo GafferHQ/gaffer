@@ -637,6 +637,9 @@ libraries = {
 		},
 	},
 	
+	"GafferSceneTest" : {
+	},
+	
 	"GafferSceneUI" : {
 	},
 	

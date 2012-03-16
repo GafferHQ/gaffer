@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,58 +34,46 @@
 #  
 ##########################################################################
 
-import IECore
+import unittest
+
 import Gaffer
+import GafferScene
 
-class test( Gaffer.Application ) :
+class AttributeCacheTest( unittest.TestCase ) :
 
-	def __init__( self ) :
+	def testConstructWithInputs( self ) :
 	
-		Gaffer.Application.__init__( self )
-		
-		self.parameters().addParameters(
-		
-			[
-				IECore.StringParameter(
-					name = "testCase",
-					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
-					defaultValue = "",
-				)
-			]
-		
-		)
-		
-		self.parameters().userData()["parser"] = IECore.CompoundObject(
-			{
-				"flagless" : IECore.StringVectorData( [ "testCase" ] )
+		# this used to crash
+		m = GafferScene.ModelCacheSource()
+		a = GafferScene.AttributeCache(
+			inputs = {
+				"in.bound.min.x" : m["out.bound.min.x"],
+				"in.bound.min.y" : m["out.bound.min.y"],
+				"in.bound.min.z" : m["out.bound.min.z"],
+				"in.bound.max.x" : m["out.bound.max.x"],
+				"in.bound.max.y" : m["out.bound.max.y"],
+				"in.bound.max.z" : m["out.bound.max.z"],
+				"in.transform" : m["out.transform"],
+				"in.geometry" : m["out.geometry"],
+				"in.childNames" : m["out.childNames"],
 			}
 		)
-				
-	def doRun( self, args ) :
 	
-		import sys
-		import unittest
-		import GafferTest
-		import GafferUITest
-		import GafferSceneTest
+	def testSerialisationOfMasterConnection( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["m"] = GafferScene.ModelCacheSource()
+		s["a"] = GafferScene.AttributeCache()
 		
-		testSuite = unittest.TestSuite()
-		if args["testCase"].value :
+		s["a"]["in"].setInput( s["m"]["out"] )
+		self.failUnless( s["a"]["in"].getInput().isSame( s["m"]["out"] ) )
 		
-			testCase = unittest.defaultTestLoader.loadTestsFromName( args["testCase"].value )
-			testSuite.addTest( testCase )
-			
-		else :
+		ss = s.serialise()
 		
-			for module in ( GafferTest, GafferUITest, GafferSceneTest ) :
-		
-				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
-				testSuite.addTest( moduleTestSuite )
-			
+		s = Gaffer.ScriptNode()
+		s.execute( ss )	
 
-		testRunner = unittest.TextTestRunner( verbosity=2 )
-		testResult = testRunner.run( testSuite )
-		
-		return 0 if testResult.wasSuccessful() else 1
+		self.failUnless( s["a"]["in"].getInput().isSame( s["m"]["out"] ) )
 
-IECore.registerRunTimeTyped( test )
+if __name__ == "__main__":
+	unittest.main()

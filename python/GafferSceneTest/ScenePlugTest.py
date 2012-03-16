@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,58 +34,22 @@
 #  
 ##########################################################################
 
+import unittest
+
 import IECore
+
 import Gaffer
+import GafferScene
 
-class test( Gaffer.Application ) :
+class ScenePlugTest( unittest.TestCase ) :
 
-	def __init__( self ) :
+	def testRunTimeTyped( self ) :
 	
-		Gaffer.Application.__init__( self )
+		p = GafferScene.ScenePlug()
 		
-		self.parameters().addParameters(
+		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )	
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.CompoundPlug.staticTypeId() )
 		
-			[
-				IECore.StringParameter(
-					name = "testCase",
-					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
-					defaultValue = "",
-				)
-			]
-		
-		)
-		
-		self.parameters().userData()["parser"] = IECore.CompoundObject(
-			{
-				"flagless" : IECore.StringVectorData( [ "testCase" ] )
-			}
-		)
-				
-	def doRun( self, args ) :
+if __name__ == "__main__":
+	unittest.main()
 	
-		import sys
-		import unittest
-		import GafferTest
-		import GafferUITest
-		import GafferSceneTest
-		
-		testSuite = unittest.TestSuite()
-		if args["testCase"].value :
-		
-			testCase = unittest.defaultTestLoader.loadTestsFromName( args["testCase"].value )
-			testSuite.addTest( testCase )
-			
-		else :
-		
-			for module in ( GafferTest, GafferUITest, GafferSceneTest ) :
-		
-				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
-				testSuite.addTest( moduleTestSuite )
-			
-
-		testRunner = unittest.TextTestRunner( verbosity=2 )
-		testResult = testRunner.run( testSuite )
-		
-		return 0 if testResult.wasSuccessful() else 1
-
-IECore.registerRunTimeTyped( test )

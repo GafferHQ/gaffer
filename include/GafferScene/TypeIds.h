@@ -46,6 +46,8 @@ enum TypeId
 	SceneNodeTypeId = 110502,
 	FileSourceTypeId = 110503,
 	ModelCacheSourceTypeId = 110504,
+	SceneProcessorTypeId = 110505,
+	AttributeCacheTypeId = 110506,
 	
 	LastTypeId = 110999
 };

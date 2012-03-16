@@ -34,44 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_ATTRIBUTECACHE_H
+#define GAFFERSCENE_ATTRIBUTECACHE_H
 
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/FileSource.h"
-#include "GafferScene/ModelCacheSource.h"
-#include "GafferScene/SceneProcedural.h"
 #include "GafferScene/SceneProcessor.h"
-#include "GafferScene/AttributeCache.h"
 
-using namespace boost::python;
-using namespace GafferScene;
-
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferScene
 {
-	
-	IECorePython::RunTimeTypedClass<ScenePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = Gaffer::CompoundPlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-	;
-	
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( init<ScenePlugPtr, const Gaffer::Context *, const std::string &>() )
-	;
 
-	GafferBindings::NodeClass<SceneNode>();
-	GafferBindings::NodeClass<FileSource>();
-	GafferBindings::NodeClass<ModelCacheSource>();
-	GafferBindings::NodeClass<SceneProcessor>();
-	GafferBindings::NodeClass<AttributeCache>();
-	
-}
+/// The AttributeCache node applies data previously cached using IECore::AttributeCache.
+class AttributeCache : public SceneProcessor
+{
+
+	public :
+
+		AttributeCache( const std::string &name=staticTypeName() );
+		virtual ~AttributeCache();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( AttributeCache, AttributeCacheTypeId, SceneProcessor );
+		
+		/// Holds the name of the attribute cache file or sequence to be loaded.
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+		
+		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+		virtual IECore::PrimitivePtr processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const;
+
+		std::string entryForPath( const ScenePath &path ) const;
+		
+};
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_ATTRIBUTECACHE_H

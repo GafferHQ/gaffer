@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,58 +34,67 @@
 #  
 ##########################################################################
 
-import IECore
-import Gaffer
+import os
+import glob
 
-class test( Gaffer.Application ) :
+import IECore
+
+class convertAnimCache( IECore.Op ) :
 
 	def __init__( self ) :
 	
-		Gaffer.Application.__init__( self )
+		IECore.Op.__init__( self, "Converts animation caches from an old skool format to a nice new one.", IECore.FileSequenceParameter( "result", "" ) )
 		
 		self.parameters().addParameters(
-		
+			
 			[
-				IECore.StringParameter(
-					name = "testCase",
-					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
+				IECore.FileSequenceParameter(
+					"inputSequence",
+					"The animation sequence to convert.",
 					defaultValue = "",
-				)
-			]
-		
+					allowEmptyString = False,
+					check = IECore.FileSequenceParameter.CheckType.MustExist,
+					extensions = "fio",
+			),
+				IECore.FileSequenceParameter(
+					"outputSequence",
+					"The animation sequence to create",
+					defaultValue = "",
+					allowEmptyString = False,
+					extensions = "fio",
+				),
+			],
+			
 		)
-		
-		self.parameters().userData()["parser"] = IECore.CompoundObject(
-			{
-				"flagless" : IECore.StringVectorData( [ "testCase" ] )
-			}
-		)
-				
-	def doRun( self, args ) :
+
+	def doOperation( self, args ) :
 	
-		import sys
-		import unittest
-		import GafferTest
-		import GafferUITest
-		import GafferSceneTest
-		
-		testSuite = unittest.TestSuite()
-		if args["testCase"].value :
-		
-			testCase = unittest.defaultTestLoader.loadTestsFromName( args["testCase"].value )
-			testSuite.addTest( testCase )
+		src = self.parameters()["inputSequence"].getFileSequenceValue()
+		dst = self.parameters()["outputSequence"].getFileSequenceValue()
+		# if no frame list is specified on the dst parameter, then we use the same as src parameter.
+		if isinstance( dst.frameList, IECore.EmptyFrameList ):
+			dst.frameList = src.frameList
 			
-		else :
-		
-			for module in ( GafferTest, GafferUITest, GafferSceneTest ) :
-		
-				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
-				testSuite.addTest( moduleTestSuite )
+		for ( sf, df ) in zip( src.fileNames(), dst.fileNames() ) :
 			
-
-		testRunner = unittest.TextTestRunner( verbosity=2 )
-		testResult = testRunner.run( testSuite )
-		
-		return 0 if testResult.wasSuccessful() else 1
-
-IECore.registerRunTimeTyped( test )
+			sc = IECore.AttributeCache( sf, IECore.IndexedIOOpenMode.Read )
+			dc = IECore.AttributeCache( df, IECore.IndexedIOOpenMode.Write )
+			
+			combinedBound = IECore.Box3f()
+			for objectName in sc.objects() :
+			
+				p = b = None
+				with IECore.IgnoredExceptions( Exception ) :
+					p = sc.read( objectName, "vertCache.P" )
+					b = sc.read( objectName, "vertCache.boundingBox" )
+				
+				if p is not None and b is not None :
+					combinedBound.extendBy( b.value )
+					dc.write( "-" + objectName, "primVar:P", p )
+					dc.write( "-" + objectName, "bound", b )
+			
+			dc.write( "-", "bound", IECore.Box3fData( combinedBound ) )
+				
+		return args["outputSequence"].value
+			
+IECore.registerRunTimeTyped( convertAnimCache )
