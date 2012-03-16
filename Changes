@@ -62,6 +62,8 @@
 
 * TypedObjectPlug bindings now support the serialisation of the value and default value, provided that the bindings for the types they hold implement __repr__ appropriately.
 
+* Fixed bug in GafferBindings::Serialiser which meant that serialisers were called twice unecessarily.
+
 0.28.1
 ------
 

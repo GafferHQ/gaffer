@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -117,22 +117,22 @@ std::string Serialiser::add( Gaffer::ConstNodePtr o )
 	{
 		return "";
 	}
-	if( m_visited.find( o )!=m_visited.end() )
+	
+	if( m_visited.find( o )==m_visited.end() )
 	{
-		return "__nodes[\"" + o->getName() + "\"]";
+		std::string s = serialiseC( o );
+		if( s=="" )
+		{
+			return s;
+		}
+	
+		m_visited.insert( o );
+		std::string name = "__nodes[\"" + o->getName() + "\"]";
+		m_result += name + " = " + s + "\n";
+		m_result += "addChild( " + name + " )\n\n";
 	}
 	
-	std::string s = serialiseC( o );
-	if( s=="" )
-	{
-		return s;
-	}
-
-	m_visited.insert( o );
-	std::string name = "__nodes[\"" + o->getName() + "\"]";
-	m_result += name + " = " + s + "\n";
-	m_result += "addChild( " + name + " )\n\n";
-	return o->getName();
+	return "__nodes[\"" + o->getName() + "\"]";
 }
 
 std::string Serialiser::serialiseC( Gaffer::ConstGraphComponentPtr o )
@@ -156,7 +156,6 @@ std::string Serialiser::serialiseC( Gaffer::ConstGraphComponentPtr o )
 		return "";
 	}
 	
-	std::string result = it->second( *this, o );
 	return it->second( *this, o );
 }
 
