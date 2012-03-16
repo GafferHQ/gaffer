@@ -80,7 +80,7 @@ class TimeEditor( GafferUI.EditorWidget ) :
 				maxValue = float( scriptNode["frameRange"]["end"].getValue() ),
 				expand = 1
 			)
-			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( self.__sliderChanged )
+			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) )
 
 			self.__startButton = GafferUI.Button( image = "timeEditorStart.png", hasFrame=False )
 			self.__startButtonClickedConnection = self.__startButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ) )
