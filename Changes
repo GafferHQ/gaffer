@@ -56,6 +56,8 @@
 
 * Added ApplicationRoot::preferencesLocation() method to return an appropriate directory into which settings can be saved.
 
+* Added Widget.visibilityChangedSignal().
+
 0.28.1
 ------
 
