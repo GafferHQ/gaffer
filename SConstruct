@@ -705,9 +705,10 @@ for libraryName, libraryDef in libraries.items() :
 	
 	headerInstall = libEnv.Install(
 		"$BUILD_DIR/" + "include/" + libraryName,
-		glob.glob( "include/" + libraryName + "*.h" ) +
-		glob.glob( "include/" + libraryName + "*.inl" )
+		glob.glob( "include/" + libraryName + "/*.h" ) +
+		glob.glob( "include/" + libraryName + "/*.inl" )
 	)
+	libEnv.Alias( "build", headerInstall )
 		
 	# bindings library and binary python modules
 
