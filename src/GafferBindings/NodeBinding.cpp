@@ -59,7 +59,7 @@ using namespace Gaffer;
 static std::string serialisePlug( Serialiser &s, ConstGraphComponentPtr ancestor, PlugPtr plug )
 {
 	// not dynamic, we can just serialise the connection/value				
-	if( plug->isInstanceOf( CompoundPlug::staticTypeId() ) )
+	if( plug->isInstanceOf( CompoundPlug::staticTypeId() ) && !plug->getInput<Plug>() )
 	{
 		std::string result;
 		CompoundPlug *cPlug = static_cast<CompoundPlug *>( plug.get() );
