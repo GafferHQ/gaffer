@@ -174,6 +174,10 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 		self.failUnless( self.set )
 	
+	## \todo We're not currently testing the order of propagation.
+	# If we wanted to guarantee a sensible order then we should move
+	# the propagation implementation from CompoundPlug onto ValuePlug,
+	# as is done for dirtiness.
 	def testMultipleLevelsOfPlugSetPropagation( self ) :
 	
 		c = Gaffer.CompoundPlug( "c" )
