@@ -157,10 +157,7 @@ void ValuePlug::setInput( PlugPtr input )
 	Plug::setInput( input );
 	if( input )
 	{
-		if( Node *n = node() )
-		{
-			n->plugDirtiedSignal()( this );
-		}
+		emitDirtiness();
 		propagateDirtiness();
 	}
 	else
@@ -249,6 +246,22 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
 	propagateDirtiness();
 }
 
+void ValuePlug::emitDirtiness( Node *n )
+{
+	n = n ? n : node();
+	if( !n )
+	{
+		return;
+	}
+	
+	ValuePlug *p = this;
+	while( p )
+	{
+		n->plugDirtiedSignal()( p );
+		p = p->parent<ValuePlug>();
+	}
+}
+
 void ValuePlug::propagateDirtiness()
 {
 	Node *n = node();
@@ -260,7 +273,7 @@ void ValuePlug::propagateDirtiness()
 			n->affects( this, affected );
 			for( Node::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
 			{
-				n->plugDirtiedSignal()( const_cast<ValuePlug *>( *it ) );
+				const_cast<ValuePlug *>( *it )->emitDirtiness( n );
 				const_cast<ValuePlug *>( *it )->propagateDirtiness();
 			}
 		}
@@ -271,7 +284,7 @@ void ValuePlug::propagateDirtiness()
 		ValuePlugPtr o = IECore::runTimeCast<ValuePlug>( *it );
 		if( o )
 		{
-			n->plugDirtiedSignal()( o );
+			o->emitDirtiness();
 			o->propagateDirtiness();
 		}
 	}
