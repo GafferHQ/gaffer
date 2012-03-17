@@ -57,7 +57,7 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.setScriptNode( self, scriptNode )
 		
 		del self.__row[:]
-		self.__scriptNodePlugChangedConnection = None
+		self.__scriptNodePlugSetConnection = None
 		if not scriptNode :
 			return
 			
@@ -139,7 +139,7 @@ class TimeEditor( GafferUI.EditorWidget ) :
 	def __frameChanged( self, widget ) :
 		
 		assert( widget is self.__frame )
-		
+				
 		frame = widget.getValue()
 		frame = max( frame, self.getScriptNode()["frameRange"]["start"].getValue() )
 		frame = min( frame, self.getScriptNode()["frameRange"]["end"].getValue() )
@@ -161,11 +161,18 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		
 	def __scriptNodePlugSet( self, plug ) :
 	
+		combineFunction = None
 		if plug.isSame( self.getScriptNode()["frameRange"]["start"] ) :
-			self.__sliderRangeStart.setValue( max( plug.getValue(), self.__sliderRangeStart.getValue() ) )
+			combineFunction = max
 		elif plug.isSame( self.getScriptNode()["frameRange"]["end"] ) :
-			self.__sliderRangeEnd.setValue( min( plug.getValue(), self.__sliderRangeEnd.getValue() ) )
-	
+			combineFunction = min
+		
+		if combineFunction is not None :
+			self.__sliderRangeStart.setValue( combineFunction( plug.getValue(), self.__sliderRangeStart.getValue() ) )
+			self.__sliderRangeEnd.setValue( combineFunction( plug.getValue(), self.__sliderRangeEnd.getValue() ) )
+			self.__slider.setRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
+			self.getContext().setFrame( combineFunction( plug.getValue(), self.getContext().getFrame() ) )
+			
 	def __visibilityButtonClicked( self, button ) :
 	
 		assert( button is self.__visibilityButton )
