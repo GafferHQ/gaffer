@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 class SplineEditor( GafferUI.EditorWidget ) :
@@ -45,7 +46,7 @@ class SplineEditor( GafferUI.EditorWidget ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 		
-		GafferUI.EditorWidget.__init__( self, self.__column.gtkWidget(), scriptNode, **kw )
+		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, **kw )
 		
 		self.__splineGadget = GafferUI.SplinePlugGadget()
 		self.__selectionAddedConnection = self.__splineGadget.selection().memberAddedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
@@ -74,6 +75,6 @@ class SplineEditor( GafferUI.EditorWidget ) :
 			self.__xPlugWidget.setPlug( None )
 			self.__yPlugWidget.setPlug( None )
 		else :
-			selectedPlug = selection.lastAdded()
+			selectedPlug = selection[-1]
 			self.__xPlugWidget.setPlug( selectedPlug["x"] )
 			self.__yPlugWidget.setPlug( selectedPlug["y"] )

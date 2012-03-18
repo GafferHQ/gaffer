@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -124,49 +124,35 @@ Imath::Box3f SplinePlugGadget::bound() const
 
 void SplinePlugGadget::doRender( const Style *style ) const
 {
-	/// \todo Implement for new Style rendering
-	/*for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
+	for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
 	{
 		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( i ) );
 		if( spline )
 		{
+
+			// draw all the curves				
+			//SplineUIMap::iterator uiIt = m_uis.find( spline.get() );
+			//assert( uiIt!=m_uis.end() );
+
+			//if( !uiIt->second.curve )
+			//{
+			//	updateCurve( uiIt );
+			//}
+			//uiIt->second.curve->render( renderer );
+		
+			// draw handles for the points
+			unsigned n = spline->numPoints();
+			for( unsigned i=0; i<n; i++ )
 			{
-				IECore::AttributeBlock ab( renderer );
-
-				renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new IECore::BoolData( true ) );
-				renderer->setAttribute( "gl:smoothing:lines", new IECore::BoolData( true ) );
-
-				// draw all the curves				
-				SplineUIMap::iterator uiIt = m_uis.find( spline.get() );
-				assert( uiIt!=m_uis.end() );
-
-				//if( !uiIt->second.curve )
-				//{
-					updateCurve( uiIt );
-				//}
-				uiIt->second.curve->render( renderer );
-			
-				// draw handles for the points
-				unsigned n = spline->numPoints();
-				for( unsigned i=0; i<n; i++ )
-				{
-					if( m_selection->contains( spline->pointPlug( i ) ) )
-					{
-						renderer->setAttribute( Style::stateAttribute(), Style::stateValueSelected() );
-					}
-					else
-					{
-						renderer->setAttribute( Style::stateAttribute(), Style::stateValueNormal() );
-					}
-					
-					V3f p( 0 );
-					p.x = spline->pointXPlug( i )->getValue();
-					p.y = spline->pointYPlug( i )->getValue();
-					getStyle()->renderHandle( renderer, p );
-				}
+				V3f p( 0 );
+				p.x = spline->pointXPlug( i )->getValue();
+				p.y = spline->pointYPlug( i )->getValue();
+				
+				Style::State state = m_selection->contains( spline->pointPlug( i ) ) ? Style::HighlightedState : Style::NormalState;
+				style->renderFrame( Imath::Box2f( V2f( p.x-0.1, p.y-0.1 ), V2f( p.x+0.1, p.y+0.1 ) ), state );	
 			}
 		}
-	}*/
+	}
 }
 
 void SplinePlugGadget::splineAdded( SetPtr splineStandardSet, IECore::RunTimeTypedPtr splinePlug )
