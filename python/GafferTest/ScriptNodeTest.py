@@ -365,6 +365,25 @@ a = A()"""
 		self.assertEqual( s["frameRange"]["start"].getValue(), 100 )
 		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
 	
+	def testFrameRangeLoadAndSave( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["frameRange"]["start"].setValue( 110 )		
+		s["frameRange"]["end"].setValue( 200 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 200 )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s2 = Gaffer.ScriptNode()
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.load()
+
+		self.assertEqual( s2["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s2["frameRange"]["end"].getValue(), 200 )
+	
 	def testApplicationRoot( self ) :
 	
 		s = Gaffer.ScriptNode()
