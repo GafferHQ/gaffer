@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+
+#include "IECorePython/ScopedGILLock.h"
 
 #include "GafferBindings/SignalBinding.h"
 
@@ -119,6 +122,7 @@ struct PythonResultCombiner
 		else
 		{
 			// we have a custom combiner, so use that
+			IECorePython::ScopedGILLock gilLock;
 			SlotCallRange<SlotCallIterator> range( first, last );
 			return combiner( range );
 		}

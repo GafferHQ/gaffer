@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,41 +34,58 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
-from ColorSwatchTest import ColorSwatchTest
-from VariantTest import VariantTest
-from GridContainerTest import GridContainerTest
-from NoduleTest import NoduleTest
-from ProgressBarTest import ProgressBarTest
-from ContainerWidgetTest import ContainerWidgetTest
-from SelectionMenuTest import SelectionMenuTest
-from StandardStyleTest import StandardStyleTest
-from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
-from EditorWidgetTest import EditorWidgetTest
-from NumericSliderTest import NumericSliderTest
-from RenderableGadgetTest import RenderableGadgetTest
+import unittest
 
+import IECore
+
+import GafferUI
+
+class RenderableGadgetTest( unittest.TestCase ) :
+
+	class TestProcedural( IECore.ParameterisedProcedural ) :
+	
+		def __init__( self, level = 0 ) :
+		
+			IECore.ParameterisedProcedural.__init__( self, "" )
+			
+			self.__level = level
+			
+		def doBound( self, args ) :
+		
+			return IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) )
+			
+		def doRender( self, renderer, args ) :
+		
+			if self.__level < 3 :
+				RenderableGadgetTest.TestProcedural( self.__level + 1 ).render( renderer )
+
+	def testSetRenderableWithThreadedProcedural( self ) :
+				
+		for i in range( 0, 100 ) :
+			b = GafferUI.RenderableGadget( None )
+			b.setRenderable( self.TestProcedural() )
+	
+	def testConstructWithThreadedProcedural( self ) :
+		
+		for i in range( 0, 100 ) :
+			b = GafferUI.RenderableGadget( self.TestProcedural() )
+			
+	def testDefaultConstructor( self ) :
+	
+		b = GafferUI.RenderableGadget()
+		self.assertEqual( b.getRenderable(), None )
+		
+	def testRenderRequestSignal( self ) :
+	
+		g = GafferUI.RenderableGadget()
+
+		def f( gg ) :
+		
+			self.failUnless( g.isSame( gg ) )
+		
+		c = g.renderRequestSignal().connect( f )
+		g.setRenderable( IECore.SpherePrimitive() )
+		
 if __name__ == "__main__":
 	unittest.main()
+	

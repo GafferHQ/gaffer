@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #include "IECoreGL/State.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferUIBindings/RenderableGadgetBinding.h"
 #include "GafferUIBindings/GadgetBinding.h"
@@ -54,12 +55,30 @@ static IECoreGL::StatePtr baseState( RenderableGadget &g )
 	return g.baseState();
 }
 
+static RenderableGadgetPtr construct( IECore::VisibleRenderablePtr renderable )
+{
+	// we must release the GIL because the renderable might include a python procedural
+	// which might get invoked on a separate thread by the renderer that VisibleRenderable
+	// uses internally.
+	IECorePython::ScopedGILRelease gilRelease;
+	return new RenderableGadget( renderable );
+}
+
+static void setRenderable( RenderableGadget &g, IECore::VisibleRenderablePtr renderable )
+{
+	// we must release the GIL because the renderable might include a python procedural
+	// which might get invoked on a separate thread by the renderer that VisibleRenderable
+	// uses internally.
+	IECorePython::ScopedGILRelease gilRelease;
+	g.setRenderable( renderable );
+}
+
 void GafferUIBindings::bindRenderableGadget()
 {
 	IECorePython::RunTimeTypedClass<RenderableGadget>()
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( RenderableGadget )
-		.def( init<IECore::VisibleRenderablePtr>() )
-		.def( "setRenderable", &RenderableGadget::setRenderable )
+		.def( "__init__", make_constructor( construct, default_call_policies(), ( boost::python::arg( "renderable" ) = IECore::VisibleRenderablePtr() ) ) )
+		.def( "setRenderable", &setRenderable )
 		.def( "getRenderable", (IECore::VisibleRenderablePtr (RenderableGadget::*)())&RenderableGadget::getRenderable )
 		.def( "baseState", &baseState )
 	;

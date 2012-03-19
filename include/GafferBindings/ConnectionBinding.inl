@@ -40,6 +40,8 @@
 
 #include "boost/version.hpp"
 
+#include "IECorePython/ScopedGILLock.h"
+
 namespace boost { namespace python {
 
 /// \todo this works for now, but should blatantly be implemented as some rvalue_from_python jobby.
@@ -126,6 +128,7 @@ struct SlotBase<0, Signal, Caller>
 	}
 	typename Signal::slot_result_type operator()()
 	{
+		IECorePython::ScopedGILLock gilLock;
 		return Caller()( m_connection->slot() );
 	}
 	Connection *m_connection;
@@ -144,6 +147,7 @@ struct SlotBase<1, Signal, Caller>
 	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1 )
 #endif
 	{
+		IECorePython::ScopedGILLock gilLock;
 		return Caller()( m_connection->slot(), a1 );
 	}
 	Connection *m_connection;
@@ -162,6 +166,7 @@ struct SlotBase<2, Signal, Caller>
 	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
 #endif
 	{
+		IECorePython::ScopedGILLock gilLock;
 		return Caller()( m_connection->slot(), a1, a2 );
 	}
 	Connection *m_connection;
@@ -180,6 +185,7 @@ struct SlotBase<3, Signal, Caller>
 	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
 #endif
 	{
+		IECorePython::ScopedGILLock gilLock;
 		return Caller()( m_connection->slot(), a1, a2, a3 );
 	}
 	Connection *m_connection;
