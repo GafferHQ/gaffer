@@ -74,10 +74,13 @@ class ScenePath( Gaffer.Path ) :
 		
 	def _children( self ) :
 	
-		childNames = []
+		childNames = None
 		with self.__context() :
 			with IECore.IgnoredExceptions( Exception ) :
 				childNames = self.__scenePlug["childNames"].getValue()
+				
+		if childNames is None :
+			return []
 		
 		return [ ScenePath( self.__scenePlug, self[:] + [ x ] ) for x in childNames ]
 	
