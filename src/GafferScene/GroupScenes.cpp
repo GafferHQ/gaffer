@@ -34,29 +34,69 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SceneProcessor.h"
+#include "Gaffer/Context.h"
 
+#include "GafferScene/GroupScenes.h"
+
+using namespace std;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( SceneProcessor );
+IE_CORE_DEFINERUNTIMETYPED( GroupScenes );
 
-SceneProcessor::SceneProcessor( const std::string &name )
-	:	SceneNode( name )
+GroupScenes::GroupScenes( const std::string &name )
+	:	SceneHierarchyProcessor( name )
 {
-	addChild( new ScenePlug( "in", Gaffer::Plug::In ) );
+	addChild( new StringPlug( "name", Plug::In, "group" ) );
 }
 
-SceneProcessor::~SceneProcessor()
+GroupScenes::~GroupScenes()
 {
 }
 
-ScenePlug *SceneProcessor::inPlug()
+Gaffer::StringPlug *GroupScenes::namePlug()
 {
-	return getChild<ScenePlug>( "in" );
+	return getChild<StringPlug>( "name" );
 }
 
-const ScenePlug *SceneProcessor::inPlug() const
+const Gaffer::StringPlug *GroupScenes::namePlug() const
 {
-	return getChild<ScenePlug>( "in" );
+	return getChild<StringPlug>( "name" );
+}
+
+void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	SceneHierarchyProcessor::affects( input, outputs );
+	
+	if( input == namePlug() || input == inPlug()->childNamesPlug() )
+	{
+		outputs.push_back( mappingPlug() );
+	}
+}
+
+void GroupScenes::computeMapping( const Gaffer::Context *context, Mapping &result ) const
+{	
+	string groupName = namePlug()->getValue();
+	if( groupName == "" )
+	{
+		return;
+	}
+	
+	MappingChildContainer &rootChildren = result["/"];
+	rootChildren[groupName] = Child( "", "" );
+	
+	ConstStringVectorDataPtr childNamesData = inPlug()->childNames( "/" );
+	if( !childNamesData )
+	{
+		return;
+	}
+	
+	const vector<string> &childNames = childNamesData->readable();
+	MappingChildContainer &groupChildren = result["/" + groupName];
+	for( vector<string>::const_iterator it = childNames.begin(), end = childNames.end(); it != end; it++ )
+	{
+		groupChildren[*it] = Child( "in", "/" + *it );
+	}
+	
 }

@@ -47,13 +47,17 @@ enum TypeId
 	FileSourceTypeId = 110503,
 	ModelCacheSourceTypeId = 110504,
 	SceneProcessorTypeId = 110505,
-	AttributeCacheTypeId = 110506,
-	PrimitiveVariableProcessorTypeId = 110507,
-	DeletePrimitiveVariablesTypeId = 110508,
+	SceneElementProcessorTypeId = 110506,
+	AttributeCacheTypeId = 110507,
+	PrimitiveVariableProcessorTypeId = 110508,
+	DeletePrimitiveVariablesTypeId = 110509,
+	SceneHierarchyProcessorTypeId = 110510,
+	SceneHierarchyProcessorMappingDataTypeId = 110511,
+	GroupScenesTypeId = 110512,
 	
-	LastTypeId = 110999
+	LastTypeId = 110700
 };
 
-} // namespace GafferUI
+} // namespace GafferScene
 
 #endif // GAFFERSCENE_TYPEIDS_H

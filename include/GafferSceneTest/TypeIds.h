@@ -34,29 +34,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SceneProcessor.h"
+#ifndef GAFFERSCENETEST_TYPEIDS_H
+#define GAFFERSCENETEST_TYPEIDS_H
 
-using namespace Gaffer;
-using namespace GafferScene;
-
-IE_CORE_DEFINERUNTIMETYPED( SceneProcessor );
-
-SceneProcessor::SceneProcessor( const std::string &name )
-	:	SceneNode( name )
+namespace GafferSceneTest
 {
-	addChild( new ScenePlug( "in", Gaffer::Plug::In ) );
-}
 
-SceneProcessor::~SceneProcessor()
+enum TypeId
 {
-}
+	CompoundObjectSourceTypeId = 110701,
+	
+	LastTypeId = 110999
+};
 
-ScenePlug *SceneProcessor::inPlug()
-{
-	return getChild<ScenePlug>( "in" );
-}
+} // namespace GafferSceneTest
 
-const ScenePlug *SceneProcessor::inPlug() const
-{
-	return getChild<ScenePlug>( "in" );
-}
+#endif // GAFFERSCENETEST_TYPEIDS_H

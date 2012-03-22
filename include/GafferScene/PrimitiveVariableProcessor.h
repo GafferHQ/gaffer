@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 #define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 
-#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/SceneElementProcessor.h"
 
 namespace GafferScene
 {
 
 /// The PrimitiveVariableProcessor base class simplifies the process of manipulating
 /// primitive variables.
-class PrimitiveVariableProcessor : public SceneProcessor
+class PrimitiveVariableProcessor : public SceneElementProcessor
 {
 
 	public :
@@ -52,7 +52,7 @@ class PrimitiveVariableProcessor : public SceneProcessor
 		PrimitiveVariableProcessor( const std::string &name=staticTypeName() );
 		virtual ~PrimitiveVariableProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneElementProcessor );
 		
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;

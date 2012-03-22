@@ -638,6 +638,12 @@ libraries = {
 	},
 	
 	"GafferSceneTest" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferScene" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "Gaffer", "GafferBindings", "GafferScene", "GafferSceneTest" ],
+		},
 	},
 	
 	"GafferSceneUI" : {

@@ -44,7 +44,7 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( PrimitiveVariableProcessor );
 
 PrimitiveVariableProcessor::PrimitiveVariableProcessor( const std::string &name )
-	:	SceneProcessor( name )
+	:	SceneElementProcessor( name )
 {
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );

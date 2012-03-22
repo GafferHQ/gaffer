@@ -34,29 +34,46 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SceneProcessor.h"
+#ifndef GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H
+#define GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H
 
-using namespace Gaffer;
-using namespace GafferScene;
+#include "IECore/CompoundObject.h"
 
-IE_CORE_DEFINERUNTIMETYPED( SceneProcessor );
+#include "GafferScene/SceneNode.h"
 
-SceneProcessor::SceneProcessor( const std::string &name )
-	:	SceneNode( name )
+#include "GafferSceneTest/TypeIds.h"
+
+namespace GafferSceneTest
 {
-	addChild( new ScenePlug( "in", Gaffer::Plug::In ) );
-}
 
-SceneProcessor::~SceneProcessor()
+/// A source which turns a CompoundObject hierarchy into a scene.
+/// It's useful as a source node in unit tests.
+class CompoundObjectSource : public GafferScene::SceneNode
 {
-}
 
-ScenePlug *SceneProcessor::inPlug()
-{
-	return getChild<ScenePlug>( "in" );
-}
+	public :
 
-const ScenePlug *SceneProcessor::inPlug() const
-{
-	return getChild<ScenePlug>( "in" );
-}
+		CompoundObjectSource( const std::string &name=staticTypeName() );
+		virtual ~CompoundObjectSource();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::SceneNode );
+
+		Gaffer::ObjectPlug *inPlug();
+		const Gaffer::ObjectPlug *inPlug() const;
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+		
+		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
+		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
+		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
+		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
+		
+		const IECore::CompoundObject *entryForPath( const ScenePath &path ) const;
+		
+};
+
+} // namespace GafferSceneTest
+
+#endif // GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H

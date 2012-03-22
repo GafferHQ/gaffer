@@ -46,9 +46,24 @@
 #include "GafferScene/AttributeCache.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
+#include "GafferScene/SceneHierarchyProcessor.h"
+#include "GafferScene/GroupScenes.h"
 
 using namespace boost::python;
 using namespace GafferScene;
+
+IECore::PrimitivePtr geometry( const ScenePlug &plug, const std::string &scenePath )
+{
+	IECore::ConstPrimitivePtr g = plug.geometry( scenePath );
+	return g ? g->copy() : 0;
+}
+
+
+IECore::StringVectorDataPtr childNames( const ScenePlug &plug, const std::string &scenePath )
+{
+	IECore::ConstStringVectorDataPtr n = plug.childNames( scenePath );
+	return n ? n->copy() : 0;
+}
 
 BOOST_PYTHON_MODULE( _GafferScene )
 {
@@ -64,6 +79,10 @@ BOOST_PYTHON_MODULE( _GafferScene )
 				)
 			)	
 		)
+		.def( "bound", &ScenePlug::bound )
+		.def( "transform", &ScenePlug::transform )
+		.def( "geometry", &geometry )
+		.def( "childNames", &childNames )
 	;
 	
 	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
@@ -74,8 +93,11 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<FileSource>();
 	GafferBindings::NodeClass<ModelCacheSource>();
 	GafferBindings::NodeClass<SceneProcessor>();
+	GafferBindings::NodeClass<SceneElementProcessor>();
 	GafferBindings::NodeClass<AttributeCache>();
 	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
 	GafferBindings::NodeClass<DeletePrimitiveVariables>();
+	GafferBindings::NodeClass<SceneHierarchyProcessor>();
+	GafferBindings::NodeClass<GroupScenes>();
 	
 }

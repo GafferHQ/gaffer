@@ -34,29 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SceneProcessor.h"
+#include "GafferBindings/NodeBinding.h"
 
-using namespace Gaffer;
-using namespace GafferScene;
+#include "GafferSceneTest/CompoundObjectSource.h"
 
-IE_CORE_DEFINERUNTIMETYPED( SceneProcessor );
+using namespace GafferSceneTest;
 
-SceneProcessor::SceneProcessor( const std::string &name )
-	:	SceneNode( name )
+BOOST_PYTHON_MODULE( _GafferSceneTest )
 {
-	addChild( new ScenePlug( "in", Gaffer::Plug::In ) );
-}
+	
+	GafferBindings::NodeClass<CompoundObjectSource>();
 
-SceneProcessor::~SceneProcessor()
-{
-}
-
-ScenePlug *SceneProcessor::inPlug()
-{
-	return getChild<ScenePlug>( "in" );
-}
-
-const ScenePlug *SceneProcessor::inPlug() const
-{
-	return getChild<ScenePlug>( "in" );
 }

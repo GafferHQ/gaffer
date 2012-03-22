@@ -65,7 +65,7 @@ static InterpolatedCacheCache g_interpolatedCacheCache( interpolatedCacheGetter,
 //////////////////////////////////////////////////////////////////////////
 
 AttributeCache::AttributeCache( const std::string &name )
-	:	SceneProcessor( name )
+	:	SceneElementProcessor( name )
 {
 	addChild( new StringPlug( "fileName" ) );
 }

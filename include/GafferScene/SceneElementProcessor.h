@@ -34,41 +34,47 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTECACHE_H
-#define GAFFERSCENE_ATTRIBUTECACHE_H
+#ifndef GAFFERSCENE_SCENEELEMENTPROCESSOR_H
+#define GAFFERSCENE_SCENEELEMENTPROCESSOR_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
-/// The AttributeCache node applies data previously cached using IECore::AttributeCache.
-class AttributeCache : public SceneElementProcessor
+/// The SceneElementProcessor class provides a base class for modifying elements of an input
+/// scene while leaving the scene hierarchy unchanged.
+class SceneElementProcessor : public SceneProcessor
 {
 
 	public :
 
-		AttributeCache( const std::string &name=staticTypeName() );
-		virtual ~AttributeCache();
+		SceneElementProcessor( const std::string &name=staticTypeName() );
+		virtual ~SceneElementProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( AttributeCache, AttributeCacheTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, SceneProcessor );
 		
-		/// Holds the name of the attribute cache file or sequence to be loaded.
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
-
+		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		
+		/// Implemented to call processBound().
+		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		/// Implemented to call processTransform().
+		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		/// Implemented to call processGeometry().
+		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		/// Implemented as a pass-through.
+		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		
+		/// May be reimplemented by derived classes - default implementations are pass-throughs.
 		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 		virtual IECore::PrimitivePtr processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const;
-
-		std::string entryForPath( const ScenePath &path ) const;
 		
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_ATTRIBUTECACHE_H
+#endif // GAFFERSCENE_SCENEELEMENTPROCESSOR_H

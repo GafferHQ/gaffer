@@ -87,7 +87,21 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// in the scene graph.
 		Gaffer::StringVectorDataPlug *childNamesPlug();
 		const Gaffer::StringVectorDataPlug *childNamesPlug() const;
-		//@} 
+		//@}
+		
+		/// @name Convenience accessors
+		/// These functions create temporary Contexts specifying the scenePath
+		/// and then return the result of calling getValue() on the appropriate child
+		/// plug. They therefore only make sense for output plugs or inputs which
+		/// have an input connection - if called on an unconnected input plug,
+		/// an Exception will be thrown.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		Imath::Box3f bound( const std::string &scenePath ) const;
+		Imath::M44f transform( const std::string &scenePath ) const;
+		IECore::ConstPrimitivePtr geometry( const std::string &scenePath ) const;
+		IECore::ConstStringVectorDataPtr childNames( const std::string &scenePath ) const;
+		//@}
 	
 };
 
