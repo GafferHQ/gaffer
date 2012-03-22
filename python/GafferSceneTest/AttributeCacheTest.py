@@ -75,5 +75,21 @@ class AttributeCacheTest( unittest.TestCase ) :
 
 		self.failUnless( s["a"]["in"].getInput().isSame( s["m"]["out"] ) )
 
+	def testSerialisationOfMasterConnectionWhenInputNotSerialised( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["m"] = GafferScene.ModelCacheSource()
+		s["a"] = GafferScene.AttributeCache()
+		
+		s["a"]["in"].setInput( s["m"]["out"] )
+		self.failUnless( s["a"]["in"].getInput().isSame( s["m"]["out"] ) )
+		
+		ss = s.serialise( Gaffer.StandardSet( [ s["a"] ] ) )
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )	
+
+		self.assertEqual( s["a"]["in"].getInput(), None )
+
 if __name__ == "__main__":
 	unittest.main()
