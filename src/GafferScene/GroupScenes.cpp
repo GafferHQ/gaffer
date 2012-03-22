@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "OpenEXR/ImathBoxAlgo.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/GroupScenes.h"
@@ -46,7 +48,7 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( GroupScenes );
 
 GroupScenes::GroupScenes( const std::string &name )
-	:	SceneHierarchyProcessor( name )
+	:	SceneProcessor( name )
 {
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
 }
@@ -67,36 +69,101 @@ const Gaffer::StringPlug *GroupScenes::namePlug() const
 
 void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneHierarchyProcessor::affects( input, outputs );
+	SceneProcessor::affects( input, outputs );
 	
 	if( input == namePlug() || input == inPlug()->childNamesPlug() )
 	{
-		outputs.push_back( mappingPlug() );
+		outputs.push_back( outPlug() );
 	}
 }
 
-void GroupScenes::computeMapping( const Gaffer::Context *context, Mapping &result ) const
+Imath::Box3f GroupScenes::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+	std::string source = sourcePath( path, groupName );
+	
+	if( !source.size() )
+	{
+		Imath::Box3f b = inPlug()->bound( "/" );
+		Imath::M44f t = inPlug()->transform( "/" );
+		return transform( b, t );	
+	}
+	else
+	{
+		return inPlug()->bound( source );
+	}
+}
+
+Imath::M44f GroupScenes::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+	std::string source = sourcePath( path, groupName );
+	
+	if( !source.size() )
+	{
+		return Imath::M44f();
+	}
+	else
+	{
+		return inPlug()->transform( source );
+	}
+}
+
+IECore::PrimitivePtr GroupScenes::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+	std::string source = sourcePath( path, groupName );
+	
+	if( !source.size() )
+	{
+		return 0;
+	}
+	else
+	{
+		ConstPrimitivePtr g = inPlug()->geometry( source );
+		return g ? g->copy() : 0;
+	}
+}
+
+IECore::StringVectorDataPtr GroupScenes::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {	
-	string groupName = namePlug()->getValue();
-	if( groupName == "" )
+	std::string groupName = namePlug()->getValue();
+	std::string source = sourcePath( path, groupName );
+	
+	if( !source.size() )
 	{
-		return;
+		StringVectorDataPtr result = new StringVectorData();
+		result->writable().push_back( groupName );
+		return result;
+	}
+	else
+	{
+		ConstStringVectorDataPtr c = inPlug()->childNames( source );
+		return c ? c->copy() : 0;
+	}
+}
+
+std::string GroupScenes::sourcePath( const std::string &outputPath, const std::string &groupName ) const
+{
+	// we're a pass through if no group name is given
+	if( !groupName.size() )
+	{
+		return outputPath;
 	}
 	
-	MappingChildContainer &rootChildren = result["/"];
-	rootChildren[groupName] = Child( "", "" );
-	
-	ConstStringVectorDataPtr childNamesData = inPlug()->childNames( "/" );
-	if( !childNamesData )
+	// if the root is requested then we have nowhere from the input to map from.
+	// the compute functions will conjure up a new top level node.
+	if( outputPath=="/" )
 	{
-		return;
+		return "";
 	}
 	
-	const vector<string> &childNames = childNamesData->readable();
-	MappingChildContainer &groupChildren = result["/" + groupName];
-	for( vector<string>::const_iterator it = childNames.begin(), end = childNames.end(); it != end; it++ )
+	if( outputPath.size() == groupName.size() + 1 )
 	{
-		groupChildren[*it] = Child( "in", "/" + *it );
+		return "/";
 	}
-	
+	else
+	{
+		return std::string( outputPath, groupName.size() + 1 );	
+	}
 }

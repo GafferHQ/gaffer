@@ -46,7 +46,6 @@
 #include "GafferScene/AttributeCache.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/SceneHierarchyProcessor.h"
 #include "GafferScene/GroupScenes.h"
 
 using namespace boost::python;
@@ -97,7 +96,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<AttributeCache>();
 	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
 	GafferBindings::NodeClass<DeletePrimitiveVariables>();
-	GafferBindings::NodeClass<SceneHierarchyProcessor>();
 	GafferBindings::NodeClass<GroupScenes>();
 	
 }

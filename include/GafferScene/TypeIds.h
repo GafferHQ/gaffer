@@ -51,9 +51,7 @@ enum TypeId
 	AttributeCacheTypeId = 110507,
 	PrimitiveVariableProcessorTypeId = 110508,
 	DeletePrimitiveVariablesTypeId = 110509,
-	SceneHierarchyProcessorTypeId = 110510,
-	SceneHierarchyProcessorMappingDataTypeId = 110511,
-	GroupScenesTypeId = 110512,
+	GroupScenesTypeId = 110510,
 	
 	LastTypeId = 110700
 };

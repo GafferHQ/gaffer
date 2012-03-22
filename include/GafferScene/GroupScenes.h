@@ -37,12 +37,12 @@
 #ifndef GAFFERSCENE_GROUPSCENES_H
 #define GAFFERSCENE_GROUPSCENES_H
 
-#include "GafferScene/SceneHierarchyProcessor.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
-class GroupScenes : public SceneHierarchyProcessor
+class GroupScenes : public SceneProcessor
 {
 
 	public :
@@ -50,7 +50,7 @@ class GroupScenes : public SceneHierarchyProcessor
 		GroupScenes( const std::string &name=staticTypeName() );
 		virtual ~GroupScenes();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GroupScenes, GroupScenesTypeId, SceneHierarchyProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GroupScenes, GroupScenesTypeId, SceneProcessor );
 		
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -59,10 +59,13 @@ class GroupScenes : public SceneHierarchyProcessor
 	
 	protected :
 			
-		//virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
-		virtual void computeMapping( const Gaffer::Context *context, Mapping &result ) const;
-
+		std::string sourcePath( const std::string &outputPath, const std::string &groupName ) const;
+		
 };
 
 } // namespace GafferScene
