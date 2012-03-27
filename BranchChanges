@@ -19,3 +19,5 @@
 * Fixed GIL problems caused by passing multithreaded python procedurals to RenderableGadget.
 
 * Fixed GIL problems when emitting signals with python slots from a thread which does not currently hold the GIL.
+
+* Added an ExpressionNode class.

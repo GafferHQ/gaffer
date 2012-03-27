@@ -61,6 +61,7 @@
 #include "GafferBindings/PreferencesNodeBinding.h"
 #include "GafferBindings/ContextBinding.h"
 #include "GafferBindings/BoxPlugBinding.h"
+#include "GafferBindings/ExpressionNodeBinding.h"
 
 using namespace GafferBindings;
 
@@ -93,5 +94,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindPreferencesNode();
 	bindContext();
 	bindBoxPlug();
+	bindExpressionNode();
 
 }

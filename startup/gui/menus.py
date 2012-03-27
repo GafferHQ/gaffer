@@ -65,5 +65,7 @@ GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
 GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
 GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
 
+GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
+
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )

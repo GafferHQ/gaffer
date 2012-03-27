@@ -80,6 +80,7 @@ from NodeBindingTest import NodeBindingTest
 from DictPathTest import DictPathTest
 from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
+from ExpressionNodeTest import ExpressionNodeTest
 
 if __name__ == "__main__":
 	import unittest

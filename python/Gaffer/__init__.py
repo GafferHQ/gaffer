@@ -57,3 +57,4 @@ from LeafPathFilter import LeafPathFilter
 from DictPath import DictPath
 from IndexedIOPath import IndexedIOPath
 from ClassLoaderPath import ClassLoaderPath
+from PythonExpressionEngine import PythonExpressionEngine
