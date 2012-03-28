@@ -2,6 +2,8 @@
 
 * Gaffer.BlockedConnection now supports reentrancy, with the connection only becoming unblocked when the outermost block has been exited.
 
+* Fixed bug which prevented selection using the up/down cursor keys from working in the PathChooserWidget.
+
 0.29.0
 ------
 
