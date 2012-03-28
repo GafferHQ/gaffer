@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -49,25 +49,50 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def setPlug( self, plug ) :
 	
 		self.__plug = plug
-
+		
+		context = None
+		
 		if self.__plug is not None :
 			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
+			if scriptNode is not None :
+				context = scriptNode.context()
 		else :
 			self.__plugSetConnection = None
 			self.__plugDirtiedConnection = None
 			self.__plugInputChangedConnection = None
 
-		self.updateFromPlug()
+		self.__context = context
+		self.__updateContextConnection()		
+		self._updateFromPlug()
 		
 	def getPlug( self ) :
 	
 		return self.__plug
 	
+	## By default, PlugValueWidgets operate in the main context held by the script node
+	# for the script the plug belongs to. This function allows an alternative context
+	# to be provided, making it possible to view a plug at a custom frame (or with any
+	# other context modification).
+	def setContext( self, context ) :
+
+		assert( isinstance( context, Gaffer.Context ) )
+		if context is self.__context :
+			return
+
+		self.__context = context
+		self.__updateContextConnection()
+		self._updateFromPlug()
+		
+	def getContext( self ) :
+	
+		return self.__context
+			
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plug.	
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 	
 		raise NotImplementedError
 	
@@ -112,16 +137,36 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		if plug.isSame( self.__plug ) :
 		
-			self.updateFromPlug()	
+			self._updateFromPlug()	
 
 	def __plugDirtied( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
 		
-			self.updateFromPlug()	
+			self._updateFromPlug()	
 
 	def __plugInputChanged( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
+			self.__updateContextConnection()
+			self._updateFromPlug()
+			
+	def __contextChanged( self, context, key ) :
+	
+		self._updateFromPlug()
+
+	def __updateContextConnection( self ) :
+	
+		# we only want to be notified of context changes if we have a plug and that
+		# plug has an incoming connection. otherwise context changes are irrelevant
+		# and we'd just be slowing things down by asking for notifications.
+	
+		context = self.__context
+		plug = self.getPlug()
+		if plug is None or plug.getInput() is None :
+			context = None
 		
-			self.updateFromPlug()	
+		if context is not None :
+			self.__contextChangedConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		else :
+			self.__contextChangedConnection = None

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -54,11 +54,12 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self.__colorChooserDialogue = None
 		
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 	
 		plug = self.getPlug()
-		c = plug.getValue()
-		self.__swatch.setColor( c )
+		if plug is not None :
+			with self.getContext() :
+				self.__swatch.setColor( plug.getValue() )
 		
 	def __buttonPress( self, widget, event ) :
 				

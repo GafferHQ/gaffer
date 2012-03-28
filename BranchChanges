@@ -21,3 +21,5 @@
 * Fixed GIL problems when emitting signals with python slots from a thread which does not currently hold the GIL.
 
 * Added an ExpressionNode class.
+
+* PlugValueWidgets now have setContext and getContext methods, and update correctly when the context changes if a plug has input connections.

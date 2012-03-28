@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,42 +34,34 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
-from ColorSwatchTest import ColorSwatchTest
-from VariantTest import VariantTest
-from GridContainerTest import GridContainerTest
-from NoduleTest import NoduleTest
-from ProgressBarTest import ProgressBarTest
-from ContainerWidgetTest import ContainerWidgetTest
-from SelectionMenuTest import SelectionMenuTest
-from StandardStyleTest import StandardStyleTest
-from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
-from EditorWidgetTest import EditorWidgetTest
-from NumericSliderTest import NumericSliderTest
-from RenderableGadgetTest import RenderableGadgetTest
-from PlugValueWidgetTest import PlugValueWidgetTest
+import unittest
 
+import Gaffer
+import GafferUI
+import GafferTest
+
+class PlugValueWidgetTest( unittest.TestCase ) :
+
+	def testContext( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["m"] = GafferTest.MultiplyNode()
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
+		
+		w = GafferUI.NumericPlugValueWidget( s["m"]["op1"] )
+		self.failUnless( w.getContext().isSame( s.context() ) )
+		
+		s.context().setFrame( 10 )
+		self.assertEqual( w.numericWidget().getValue(), 10 )
+		
+		context = Gaffer.Context()
+		context.setFrame( 20 )
+		w.setContext( context )
+		self.failUnless( w.getContext().isSame( context ) )
+		self.assertEqual( w.numericWidget().getValue(), 20 )
+		
 if __name__ == "__main__":
 	unittest.main()
+	

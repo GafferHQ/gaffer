@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -64,21 +64,22 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 	
-		self.updateFromPlug()
+		self._updateFromPlug()
 	
 	## Returns the PathWidget used to display the path.
 	def pathWidget( self ) :
 	
 		return self.__row[0]
 		
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 
 		if not hasattr( self, "_PathPlugValueWidget__path" ) :
 			# still constructing
 			return
 
-		with IECore.IgnoredExceptions( ValueError ) :
-			self.__path.setFromString( self.getPlug().getValue() )
+			with self.getContext() :
+				with IECore.IgnoredExceptions( ValueError ) :
+					self.__path.setFromString( self.getPlug().getValue() )
 		
 	def __pathChanged( self, path ) :
 				

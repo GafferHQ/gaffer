@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -51,16 +52,17 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
  
 		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 						
-		self.updateFromPlug()
+		self._updateFromPlug()
 		
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 
 		if not hasattr( self, "_BoolPlugValueWidget__checkBox" ) :
 			# we're still constructing
 			return
 		
 		if self.getPlug() is not None :
-			self.__checkBox.setState( self.getPlug().getValue() )
+			with self.getContext() :
+				self.__checkBox.setState( self.getPlug().getValue() )
 		
 	def __stateChanged( self, widget ) :
 		

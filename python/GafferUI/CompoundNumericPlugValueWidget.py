@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			w = GafferUI.NumericPlugValueWidget( p )
 			self.__row.append( w )
 				
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 
 		pass		
 		
