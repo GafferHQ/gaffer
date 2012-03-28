@@ -1,5 +1,8 @@
+* Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
+
 0.29.0
 ------
+
 * The Gaffer.BlockedConnection constructor now accepts a list of connections to block, as an alternative to just a single connection.
 
 * Added a Gaffer.LeafPathFilter class, which filters out leaf Paths.
