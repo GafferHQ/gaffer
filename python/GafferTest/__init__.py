@@ -74,6 +74,7 @@ from CapturingSlot import CapturingSlot
 from DictPathTest import DictPathTest
 from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
+from BlockedConnectionTest import BlockedConnectionTest
 
 if __name__ == "__main__":
 	import unittest

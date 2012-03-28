@@ -1,5 +1,7 @@
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
 
+* Gaffer.BlockedConnection now supports reentrancy, with the connection only becoming unblocked when the outermost block has been exited.
+
 0.29.0
 ------
 

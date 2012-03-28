@@ -49,12 +49,17 @@ class BlockedConnection() :
 	def __enter__( self ) :
 	
 		for c in self.__connections :
-			assert( not c.blocked() )
-			c.block()
+			try :
+				c.__blockCount += 1
+			except AttributeError :
+				c.__blockCount = 1
+			if c.__blockCount == 1 :
+				c.block()
 		
 	def __exit__( self, type, value, traceBack ) :
 	
 		for c in self.__connections :
-			assert( c.blocked() )
-			c.unblock()
+			c.__blockCount -= 1
+			if c.__blockCount == 0 :
+				c.unblock()
 		
