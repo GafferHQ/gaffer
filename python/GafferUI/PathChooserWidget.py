@@ -127,8 +127,9 @@ class PathChooserWidget( GafferUI.Widget ) :
 		selection = self.__directoryListing.getSelectedPaths()
 		for path in selection :
 			if path.isLeaf() :
-				self.__path[:] = path[:]
-				break
+				with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+					self.__path[:] = path[:]
+					break
 
 	# This slot is connected to the pathSelectedSignals of the children and just forwards
 	# them to our own pathSelectedSignal.

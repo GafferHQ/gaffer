@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,31 +34,66 @@
 #  
 ##########################################################################
 
+import unittest
+
 import Gaffer
 
-class BlockedConnection() :
+class BlockedConnectionTest( unittest.TestCase ) :
 
-	def __init__( self, connectionOrConnections ) :
+	def test( self ) :
 	
-		if isinstance( connectionOrConnections, Gaffer.Connection ) :
-			self.__connections = [ connectionOrConnections ]
-		else :
-			self.__connections = connectionOrConnections
-			
-	def __enter__( self ) :
+		self.numCalls = 0
+		def f() :
+			self.numCalls += 1
 	
-		for c in self.__connections :
-			try :
-				c.__blockCount += 1
-			except AttributeError :
-				c.__blockCount = 1
-			if c.__blockCount == 1 :
-				c.block()
+		s = Gaffer.Signal0()
+		c = s.connect( f )
 		
-	def __exit__( self, type, value, traceBack ) :
-	
-		for c in self.__connections :
-			c.__blockCount -= 1
-			if c.__blockCount == 0 :
-				c.unblock()
+		s()
+		self.assertEqual( self.numCalls, 1 )
 		
+		with Gaffer.BlockedConnection( c ) :
+			s()
+		
+		self.assertEqual( self.numCalls, 1 )
+		
+		s()
+		self.assertEqual( self.numCalls, 2 )
+		
+	def testReentrant( self ) :
+	
+		self.numCalls = 0
+		def f() :
+			self.numCalls += 1
+	
+		s = Gaffer.Signal0()
+		c = s.connect( f )
+		
+		s()
+		self.assertEqual( self.numCalls, 1 )
+		
+		with Gaffer.BlockedConnection( c ) :
+			s()
+			self.assertEqual( self.numCalls, 1 )
+			with Gaffer.BlockedConnection( c ) :
+				s()
+		
+		self.assertEqual( self.numCalls, 1 )
+		
+		s()
+		self.assertEqual( self.numCalls, 2 )
+		
+		with Gaffer.BlockedConnection( c ) :
+			s()
+			self.assertEqual( self.numCalls, 2 )
+			with Gaffer.BlockedConnection( c ) :
+				s()
+		
+		self.assertEqual( self.numCalls, 2 )
+		
+		s()
+		self.assertEqual( self.numCalls, 3 )
+		
+if __name__ == "__main__":
+	unittest.main()
+	
