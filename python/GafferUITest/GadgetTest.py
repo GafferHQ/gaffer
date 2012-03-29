@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -95,6 +95,27 @@ class GadgetTest( unittest.TestCase ) :
 		c.addChild( mg )
 		
 		self.assertEqual( c.bound().size(), mg.bound().size() )
+	
+	def testStyle( self ) :
+	
+		g = GafferUI.TextGadget( "test" )
+		l = GafferUI.LinearContainer()
+		l.addChild( g )
+		
+		self.assertEqual( g.getStyle(), None )
+		self.assertEqual( l.getStyle(), None )
+		
+		self.failUnless( g.style().isSame( GafferUI.Style.getDefaultStyle() ) )
+		self.failUnless( l.style().isSame( GafferUI.Style.getDefaultStyle() ) )
+		
+		s = GafferUI.StandardStyle()
+		l.setStyle( s )
+		
+		self.failUnless( l.getStyle().isSame( s ) )
+		self.assertEqual( g.getStyle(), None )
+		
+		self.failUnless( g.style().isSame( s ) )
+		self.failUnless( l.style().isSame( s ) )	
 	
 if __name__ == "__main__":
 	unittest.main()

@@ -67,10 +67,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __init__( self, gadget=None, bufferOptions=set(), cameraMode=CameraMode.Mode2D, **kw ) :
 		
 		GLWidget.__init__( self, bufferOptions, **kw )
+
+		# Force the IECoreGL lazy loading to kick in /now/. Otherwise we can get IECoreGL objects
+		# being returned from the GafferUIBindings without the appropriate boost::python converters
+		# having been registered first.
+		IECoreGL.Renderer
 		
 		## \todo Decide if/how this goes in the public API
 		self._qtWidget().setMouseTracking( True )		
-				
+		
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -88,15 +93,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.setCameraMode( cameraMode )
 		self.setBackgroundColor( IECore.Color3f( 0 ) )
 		self.setGadget( gadget )
-				
-		self.__baseState = IECoreGL.State( True )
-		
+						
 		self._qtWidget().installEventFilter( _eventFilter )
 		
 	def setGadget( self, gadget ) :
 	
 		self.__gadget = gadget
-		self.__scene = None
 		self.__lastButtonPressGadget = None
 		self.__lastButtonPressEvent = None
 		self.__dragDropEvent = None
@@ -189,45 +191,16 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		GL.glClearDepth( 1.0 )
 		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT )
 			  
-		self.__updateScene()
-		if self.__scene :
+		IECoreGL.ToGLCameraConverter( self.__camera ).convert().render( None )
+		IECoreGL.State.bindBaseState()
+		IECoreGL.State.defaultState().bind()
+		self.__gadget.render()
 			
-			self.__scene.setCamera( IECoreGL.ToGLCameraConverter( self.__camera ).convert() )
-			self.__scene.render( self.__baseState )
-	
-	## Returns the IECoreGL.State object used as the base display style for the
-	# rendering of the held Gadget. This may be modified freely to
-	# change the display style.
-	def baseState( self ) :
-	
-		return self.__baseState
-	
 	def __renderRequest( self, gadget ) :
 	
 		# the gadget we're holding has requested to be rerendered.
-		# destroy our scene so we'll have to rebuild it, and ask
-		# that we're redrawn.
-		self.__scene = None
 		self._redraw()
 			
-	def __updateScene( self ) :
-	
-		if not self.__gadget :
-			self.__scene = None
-			return
-			
-		if self.__scene :
-			return
-			
-		renderer = IECoreGL.Renderer()
-		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
-
-		with IECore.WorldBlock( renderer ) :
-		
-			self.__gadget.render( renderer )
-
-		self.__scene = renderer.scene()
-
 	def __buttonPress( self, widget, event ) :
 					
 		if event.modifiers & ModifiableEvent.Modifiers.Alt :
@@ -465,9 +438,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	# depth buffer if it exists or the drawing order if it doesn't.
 	def __select( self, eventOrPosition ) :
 	
-		if not self.__scene :
+		if self.__gadget is None:
 			return []
-		
+				
 		self._qtWidget().context().makeCurrent()
 				
 		viewportSize = IECore.V2f( self._qtWidget().width(), self._qtWidget().height() )
@@ -479,10 +452,18 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		region = IECore.Box2f( regionCentre - regionSize/2, regionCentre + regionSize/2 )
 		
+		IECoreGL.ToGLCameraConverter( self.__camera ).convert().render( None )
+
+		selector = IECoreGL.Selector()		
+		selector.begin( region )
+
 		GL.glClearColor( 0.0, 0.0, 0.0, 0.0 );
 		GL.glClearDepth( 1.0 )
 		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
-		selection = self.__scene.select( region )
+		
+		self.__gadget.render()
+		
+		selection = selector.end()
 		
 		if not len( selection ) :
 			# This causes events to be sent to the top level gadget even when they
@@ -494,19 +475,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		else :
 			selection.reverse()
 				
-		result = []
-		for s in selection :
-			
-			name = s.name.value()
-			nameComponents = name.split( "." )
-			g = self.__gadget
-			assert( g.getName() == nameComponents[0] )
-			for i in range( 1, len( nameComponents ) ) :
-				g = g.getChild( nameComponents[i] )
-				
-			result.append( g )
-				
-		return result
+		gadgets = [ GafferUI.Gadget.select( s.name.value() ) for s in selection ]
+		return [ g for g in gadgets if g is not None ]
 	
 	#########################################################################################################
 	# stuff for controlling the camera

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,10 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-void main()
+#ifndef GAFFERUIBINDINGS_STYLEBINDING_H
+#define GAFFERUIBINDINGS_STYLEBINDING_H
+
+namespace GafferUIBindings
 {
-	gl_Position = ftransform();
-	gl_FrontColor = gl_Color;
-	gl_BackColor = gl_Color;
-	gl_TexCoord[0] = gl_MultiTexCoord0;
-}
+
+void bindStyle();
+
+} // namespace GafferUIBindings
+
+#endif // GAFFERUIBINDINGS_STYLEBINDING_H

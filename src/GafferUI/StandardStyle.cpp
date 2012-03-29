@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,156 +35,303 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/StandardStyle.h"
+#include "OpenEXR/ImathVecAlgo.h"
 
-#include "IECore/MeshPrimitive.h"
-#include "IECore/CurvesPrimitive.h"
-#include "IECore/PointsPrimitive.h"
-#include "IECore/SimpleTypedData.h"
-#include "IECore/ObjectWriter.h"
-#include "IECore/FileNameParameter.h"
 #include "IECore/SearchPath.h"
-#include "IECore/Exception.h"
+#include "IECore/Font.h"
+
+#include "IECoreGL/GL.h"
+#include "IECoreGL/Font.h"
+#include "IECoreGL/FontLoader.h"
+#include "IECoreGL/ShaderManager.h"
+#include "IECoreGL/Shader.h"
+#include "IECoreGL/Camera.h"
+
+#include "GafferUI/StandardStyle.h"
 
 using namespace GafferUI;
 using namespace IECore;
+using namespace IECoreGL;
 using namespace Imath;
 using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( StandardStyle );
 
 StandardStyle::StandardStyle()
+	:	m_shader( 0 )
 {
+	setFont( LabelText, FontLoader::defaultFontLoader()->load( "Vera.ttf" ) );
+	setColor( BackgroundColor, Color3f( 0.2 ) );
+	setColor( SunkenColor, Color3f( 0.1 ) );
+	setColor( RaisedColor, Color3f( 0.5 ) );
+	setColor( ForegroundColor, Color3f( 0.9 ) );
+	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
+	setColor( ConnectionColor, Color3f( 0.1, 0.1, 0.1 ) );
 }
 
 StandardStyle::~StandardStyle()
 {
 }
 
-IECore::FontPtr StandardStyle::labelFont() const
+void StandardStyle::bind( const Style *currentStyle ) const
 {
-	static FontPtr g_font = 0;
-	if( !g_font )
+	if( currentStyle && currentStyle->typeId()==staticTypeId() )
 	{
-		const char *e = getenv( "IECORE_FONT_PATHS" );
-		SearchPath s( e ? e : "", ":" );
-		boost::filesystem::path p = s.find( "Vera.ttf" );
-		if( p.empty() )
-		{
-			throw Exception( "Unable to find font \"Vera.ttf\" on IECORE_FONT_PATHS" );
-		} 
-		g_font = new Font( p.string() );
+		// binding the shader is actually quite an expensive operation
+		// in GL terms, so it's best to avoid it if we know the previous
+		// style already bound it anyway.
+		return;
 	}
-	return g_font;
+	shader()->bind();
 }
 
-void StandardStyle::renderFrame( IECore::RendererPtr renderer, const Imath::Box2f &frame, float borderWidth ) const
+Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
+{	
+	Imath::Box2f b = m_fonts[textType]->coreFont()->bound( text );
+	return Imath::Box3f( Imath::V3f( b.min.x, b.min.y, 0 ), Imath::V3f( b.max.x, b.max.y, 0 ) );
+}
+
+void StandardStyle::renderText( TextType textType, const std::string &text, State state ) const
 {
-	static MeshPrimitivePtr quad = MeshPrimitive::createPlane( Box2f( V2f( 0 ), V2f( 1 ) ) );
-	renderer->attributeBegin();
+	glEnable( GL_TEXTURE_2D );
+	glActiveTexture( GL_TEXTURE0 );
+	m_fonts[textType]->texture()->bind();
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+	glUniform1i( m_bezierParameter, 0 );
+	glUniform1i( m_borderParameter, 0 );
+	glUniform1i( m_edgeAntiAliasingParameter, 0 );
+	glUniform1i( m_textureParameter, 0 );
+	glUniform1i( m_useTextureParameter, 1 );
+
+	glColor( m_colors[ForegroundColor] );
+
+	m_fonts[textType]->renderSprites( text );
+}
+
+void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, State state ) const
+{
 	
-		renderer->setAttribute( "color", new Color3fData( backgroundColor( renderer ) ) );
+	Box2f b = frame;
+	V2f bw( borderWidth );
+	b.min -= bw;
+	b.max += bw;
 	
-		CompoundDataMap parameters;
-		parameters["cornerSizes"] = new IECore::V2fData( Imath::V2f(
-			borderWidth / ( frame.size().x + 2 * borderWidth ),
-			borderWidth / ( frame.size().y + 2 * borderWidth )
-		) );
-		renderer->shader( "surface", "ui/frame", parameters );
+	V2f cornerSizes = bw / b.size();
+	glUniform1i( m_bezierParameter, 0 );
+	glUniform1i( m_borderParameter, 1 );
+	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+	glUniform1i( m_edgeAntiAliasingParameter, 0 );
+	glUniform1i( m_useTextureParameter, 0 );
 	
-		M44f m;
-		m.setTranslation( V3f( frame.min.x - borderWidth, frame.min.y - borderWidth, 0 ) );
-		m.scale( V3f( frame.size().x + 2 * borderWidth, frame.size().y + 2 * borderWidth, 1 ) );
-		renderer->concatTransform( m );
+	glColor( colorForState( RaisedColor, state ) );
+	
+	glBegin( GL_QUADS );
 		
-		quad->render( renderer );
+		glTexCoord2f( 0, 0 );
+		glVertex2f( b.min.x, b.min.y );
+		glTexCoord2f( 0, 1 );
+		glVertex2f( b.min.x, b.max.y );
+		glTexCoord2f( 1, 1 );
+		glVertex2f( b.max.x, b.max.y );
+		glTexCoord2f( 1, 0 );
+		glVertex2f( b.max.x, b.min.y );
+
+	glEnd();
 	
-	renderer->attributeEnd();
 }
 
-void StandardStyle::renderNodule( IECore::RendererPtr renderer, float radius ) const
-{
-	static MeshPrimitivePtr quad = MeshPrimitive::createPlane( Box2f( V2f( -1 ), V2f( 1 ) ) );
-	renderer->attributeBegin();
-	
-		renderer->setAttribute( "color", new Color3fData( backgroundColor( renderer ) ) );
+void StandardStyle::renderNodule( float radius, State state ) const
+{		
+	glUniform1i( m_bezierParameter, 0 );
+	glUniform1i( m_borderParameter, 1 );
+	glUniform2f( m_borderRadiusParameter, 0.5f, 0.5f );
+	glUniform1i( m_edgeAntiAliasingParameter, 0 );
+	glUniform1i( m_useTextureParameter, 0 );
 
-		renderer->shader( "surface", "ui/nodule", CompoundDataMap() );
-	
-		M44f m;
-		m.scale( V3f( radius ) );
-		renderer->concatTransform( m );
+	glColor( colorForState( RaisedColor, state ) );
+
+	glBegin( GL_QUADS );
 		
-		quad->render( renderer );
-	
-	renderer->attributeEnd();
+		glTexCoord2f( 0, 0 );
+		glVertex2f( -radius, -radius );
+		glTexCoord2f( 0, 1 );
+		glVertex2f( radius, -radius );
+		glTexCoord2f( 1, 1 );
+		glVertex2f( radius, radius );
+		glTexCoord2f( 1, 0 );
+		glVertex2f( -radius, radius );
+
+	glEnd();
 }
 
-void StandardStyle::renderConnection( IECore::RendererPtr renderer, const Imath::V3f &src, const Imath::V3f &dst ) const
+void StandardStyle::renderConnection( const Imath::V3f &src, const Imath::V3f &dst, State state ) const
 {
-	static V3fVectorDataPtr p = 0;
-	static CurvesPrimitivePtr c = 0;
-	if( !c )
+	glUniform1i( m_borderParameter, 0 );
+	glUniform1i( m_edgeAntiAliasingParameter, 1 );
+	glUniform1i( m_useTextureParameter, 0 );
+
+	V3f view = IECoreGL::Camera::viewDirectionInObjectSpace();
+	V3f o = view.cross( dst - src ).normalized() * 0.2;
+
+	V3f d = V3f( 0, (src.y - dst.y) / 2.0f, 0 );
+	
+	glUniform1i( m_bezierParameter, 1 );
+	glUniform3fv( m_v0Parameter, 1, src.getValue() ); 
+	glUniform3fv( m_v1Parameter, 1, (src - d).getValue() ); 
+	glUniform3fv( m_v2Parameter, 1, (dst + d).getValue() ); 
+	glUniform3fv( m_v3Parameter, 1, dst.getValue() ); 
+
+	glColor( colorForState( ConnectionColor, state ) );
+
+	glCallList( connectionDisplayList() );
+}
+
+void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
+{
+	/// \todo It'd be nice to make this a constant size on screen
+	/// rather than in Gadget space.
+	V2f cornerSizes = V2f( 0.5f ) / box.size();
+	glUniform1i( m_bezierParameter, 0 );
+	glUniform1i( m_borderParameter, 1 );
+	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+	glUniform1i( m_edgeAntiAliasingParameter, 0 );
+	glUniform1i( m_useTextureParameter, 0 );
+	
+	Color4f c(
+		m_colors[HighlightColor][0],
+		m_colors[HighlightColor][1],
+		m_colors[HighlightColor][2],
+		0.25f
+	);
+	glColor( c );
+	
+	glBegin( GL_QUADS );
+		
+		glTexCoord2f( 0, 0 );
+		glVertex2f( box.min.x, box.min.y );
+		glTexCoord2f( 0, 1 );
+		glVertex2f( box.min.x, box.max.y );
+		glTexCoord2f( 1, 1 );
+		glVertex2f( box.max.x, box.max.y );
+		glTexCoord2f( 1, 0 );
+		glVertex2f( box.max.x, box.min.y );
+
+	glEnd();
+
+}
+
+void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const
+{
+	glEnable( GL_TEXTURE_2D );
+	glActiveTexture( GL_TEXTURE0 );
+	texture->bind();
+	/// \todo IECoreGL::ColorTexture doesn't make mipmaps, so we can't do mipmapped filtering here.
+	/// Perhaps it should and then perhaps we could.
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	
+	glUniform1i( m_bezierParameter, 0 );
+	glUniform1i( m_borderParameter, 0 );
+	glUniform1i( m_edgeAntiAliasingParameter, 0 );
+	glUniform1i( m_textureParameter, 0 );
+	glUniform1i( m_useTextureParameter, 1 );
+
+	glColor3f( 1.0f, 1.0f, 1.0f );
+
+	glBegin( GL_QUADS );
+		
+		glTexCoord2f( 1, 0 );
+		glVertex2f( box.max.x, box.min.y );
+		glTexCoord2f( 1, 1 );
+		glVertex2f( box.max.x, box.max.y );
+		glTexCoord2f( 0, 1 );
+		glVertex2f( box.min.x, box.max.y );	
+		glTexCoord2f( 0, 0 );
+		glVertex2f( box.min.x, box.min.y );
+		
+	glEnd();
+}
+
+void StandardStyle::setColor( Color c, Imath::Color3f v )
+{
+	m_colors[c] = v;
+}
+
+const Imath::Color3f &StandardStyle::getColor( Color c ) const
+{
+	return m_colors[c];
+}
+
+void StandardStyle::setFont( TextType textType, IECoreGL::FontPtr font )
+{
+	m_fonts[textType] = font;
+}
+
+const IECoreGL::Font *StandardStyle::getFont( TextType textType ) const
+{
+	return m_fonts[textType].get();
+}
+
+unsigned int StandardStyle::connectionDisplayList()
+{
+	static unsigned int g_list;
+	static bool g_initialised = false;
+	if( !g_initialised )
 	{
-		p = new V3fVectorData;
-		p->writable().resize( 4 );
-		IntVectorDataPtr v = new IntVectorData;
-		v->writable().push_back( 4 );
-		c = new CurvesPrimitive( v, CubicBasisf::bezier(), false );
-		c->variables["P"] = PrimitiveVariable( PrimitiveVariable::Vertex, p );
-		c->variables["width"] = PrimitiveVariable( PrimitiveVariable::Constant, new FloatData( 0.3 ) );
+		g_list = glGenLists( 1 );
+		
+		glNewList( g_list, GL_COMPILE );
+		
+			glBegin( GL_TRIANGLE_STRIP );
+	
+				const int numSteps = 50;
+				for( int i=0; i<numSteps; i++ )
+				{
+					float t = i / (float)( numSteps - 1 );
+					glTexCoord2f( 0, t );
+					glVertex3f( 0, 0, 0 );
+					glTexCoord2f( 1, t );
+					glVertex3f( 0, 0, 0 );
+				}
+	
+			glEnd();
+		
+		glEndList();
+		
+		g_initialised = true;
 	}
-	
-	vector<V3f> &pp = p->writable();
-	
-	float d = (src.y - dst.y) / 2.0f;
-	pp[0] = V3f( src.x, src.y, 0 );
-	pp[1] = V3f( src.x, src.y - d, 0 );
-	pp[2] = V3f( dst.x, dst.y + d, 0 );
-	pp[3] = V3f( dst.x, dst.y, 0 );
-		
-	renderer->attributeBegin();
-	
-		renderer->shader( "surface", "ui/connection", CompoundDataMap() );
-		c->render( renderer );
-		
-	renderer->attributeEnd();
-	
+	return g_list;
 }
-
-void StandardStyle::renderHandle( IECore::RendererPtr renderer, const Imath::V3f &p ) const
-{
-	static V3fVectorDataPtr points = new V3fVectorData();
-	points->writable().resize( 1 );
-	static PointsPrimitivePtr prim = new PointsPrimitive( points );
-	static StringDataPtr glPoints = new StringData( "forAll" );
-	static FloatDataPtr pointWidth = new FloatData( 8.0f );
-	points->writable()[0] = p;
-	renderer->attributeBegin();
-	
-		renderer->setAttribute( "gl:pointsPrimitive:useGLPoints", glPoints );
-		renderer->setAttribute( "gl:pointsPrimitive:glPointWidth", pointWidth );
-		renderer->setAttribute( "color", new Color3fData( backgroundColor( renderer ) ) );
 		
-		prim->render( renderer );
-	
-	renderer->attributeEnd();
-}
-
-Imath::Color3f StandardStyle::backgroundColor( IECore::RendererPtr renderer ) const
+IECoreGL::Shader *StandardStyle::shader() const
 {
-	ConstDataPtr state = renderer->getAttribute( stateAttribute() );
-	if( state && state->isEqualTo( stateValueNormal() ) )
+	if( !m_shader )
 	{
-		return Color3f( 0.4 );
+		m_shader = ShaderManager::defaultShaderManager()->load( "ui/standardStyle" );
+		m_borderParameter = m_shader->uniformParameterIndex( "border" );
+		m_borderRadiusParameter = m_shader->uniformParameterIndex( "borderRadius" );
+		m_edgeAntiAliasingParameter = m_shader->uniformParameterIndex( "edgeAntiAliasing" );
+		m_textureParameter = m_shader->uniformParameterIndex( "texture" );
+		m_useTextureParameter = m_shader->uniformParameterIndex( "useTexture" );
+		m_bezierParameter = m_shader->uniformParameterIndex( "bezier" );
+		m_v0Parameter = m_shader->uniformParameterIndex( "v0" );
+		m_v1Parameter = m_shader->uniformParameterIndex( "v1" );
+		m_v2Parameter = m_shader->uniformParameterIndex( "v2" );
+		m_v3Parameter = m_shader->uniformParameterIndex( "v3" );
 	}
-	else
-	{
-		return Color3f( 0.8 );
-	}
+	
+	return m_shader.get();
 }
 
-Imath::Color3f StandardStyle::foregroundColor( IECore::RendererPtr renderer ) const
+Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
 {
-	return Color3f( 0 );
+	Color3f result = m_colors[c];
+	if( s == Style::HighlightedState )
+	{
+		result = m_colors[HighlightColor];
+	}
+	
+	return result;
 }

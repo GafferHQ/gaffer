@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,70 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CachedReader.h"
+#include "IECore/LRUCache.h"
 #include "IECore/Exception.h"
+#include "IECore/SearchPath.h"
+#include "IECore/ImageReader.h"
+
+#include "IECoreGL/ToGLTextureConverter.h"
+#include "IECoreGL/TextureLoader.h"
+#include "IECoreGL/Texture.h"
 
 #include "GafferUI/ImageGadget.h"
+#include "GafferUI/Style.h"
 
+using namespace Imath;
+using namespace IECore;
+using namespace IECoreGL;
 using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( ImageGadget );
 
+static Box3f boundGetter( const std::string &fileName, size_t cost )
+{
+	const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
+	IECore::SearchPath sp( s ? s : "", ":" );
+
+	boost::filesystem::path path = sp.find( fileName );
+	if( path.empty() )
+	{
+		throw Exception( "Could not find file '" + fileName + "'" );
+	}
+
+	ReaderPtr reader = Reader::create( path.string() );
+	if( !reader )
+	{
+		throw Exception( "Could not create reader for '" + path.string() + "'" );	
+	}
+
+	ImageReaderPtr imageReader = IECore::runTimeCast<ImageReader>( reader );
+	if( !imageReader )
+	{
+		throw IECore::Exception( boost::str( boost::format( "File \"%s\" does not contain an image." ) % fileName ) );
+	}
+
+	cost = 1;
+	V2i pixelSize = imageReader->displayWindow().size() + V2i( 1 );
+	V3f size( pixelSize.x, pixelSize.y, 0.0f );
+	return Box3f( -size/2.0f, size/2.0f );
+}
+
 ImageGadget::ImageGadget( const std::string &fileName )
 	:	Gadget( staticTypeName() )
 {
-	static IECore::CachedReaderPtr g_cachedReader = 0;
-	if( !g_cachedReader )
-	{
-		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-		g_cachedReader = new IECore::CachedReader(
-			IECore::SearchPath( s ? s : "", ":" ),
-			100 * 1024 * 1024 // 100 megs
-		);
-	}
+	
+	// we'll load the actual texture later when we're sure a GL context exists,
+	// but we need to find the bounding box now so that bound() will always be correct.
 
-	m_image = IECore::runTimeCast<const IECore::ImagePrimitive>( g_cachedReader->read( fileName ) );
-	if( !m_image )
-	{
-		throw IECore::Exception( boost::str( boost::format( "File \"%s\" did not contain an image." ) % fileName ) );
-	}
+	typedef LRUCache<std::string, Box3f> ImageBoundCache;
+	static ImageBoundCache g_imageBoundCache( boundGetter, 10000 );
+	m_bound = g_imageBoundCache.get( fileName );
+
+	m_imageOrTextureOrFileName = new StringData( fileName );
 }
 
 ImageGadget::ImageGadget( IECore::ConstImagePrimitivePtr image )
-	:	Gadget( staticTypeName() ), m_image( image->copy() )
+	:	Gadget( staticTypeName() ), m_bound( image->bound() ), m_imageOrTextureOrFileName( image->copy() )
 {
 }
 
@@ -72,14 +105,39 @@ ImageGadget::~ImageGadget()
 {
 }
 
-void ImageGadget::doRender( IECore::RendererPtr renderer ) const
+void ImageGadget::doRender( const Style *style ) const
 {
-	m_image->render( renderer );
+	
+	if( m_imageOrTextureOrFileName->isInstanceOf( IECore::StringDataTypeId ) )
+	{
+		// load texture from file
+		static TextureLoaderPtr g_textureLoader = 0;
+		if( !g_textureLoader )
+		{
+			const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
+			IECore::SearchPath sp( s ? s : "", ":" );
+			g_textureLoader = new TextureLoader( sp );
+		}
+		
+		m_imageOrTextureOrFileName = g_textureLoader->load( staticPointerCast<const StringData>( m_imageOrTextureOrFileName )->readable() );
+	}
+	else if( m_imageOrTextureOrFileName->isInstanceOf( IECore::ImagePrimitiveTypeId ) )
+	{
+		// convert image to texture
+		ToGLTextureConverterPtr converter = new ToGLTextureConverter( staticPointerCast<const ImagePrimitive>( m_imageOrTextureOrFileName ) );
+		m_imageOrTextureOrFileName = converter->convert();
+	}
+	
+	// render texture
+	if( m_imageOrTextureOrFileName->isInstanceOf( IECoreGL::Texture::staticTypeId() ) )
+	{
+		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
+		style->renderImage( b, (const Texture *)m_imageOrTextureOrFileName.get() );
+	}
+	
 }
 
 Imath::Box3f ImageGadget::bound() const
 {
-	return m_image->bound();
+	return m_bound;
 }
-
-

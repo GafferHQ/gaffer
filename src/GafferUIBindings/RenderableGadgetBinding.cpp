@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,15 +37,22 @@
 
 #include "boost/python.hpp"
 
+#include "IECoreGL/State.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "GafferUIBindings/RenderableGadgetBinding.h"
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/RenderableGadget.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
+
+static IECoreGL::StatePtr baseState( RenderableGadget &g )
+{
+	return g.baseState();
+}
 
 void GafferUIBindings::bindRenderableGadget()
 {
@@ -54,6 +61,7 @@ void GafferUIBindings::bindRenderableGadget()
 		.def( init<IECore::VisibleRenderablePtr>() )
 		.def( "setRenderable", &RenderableGadget::setRenderable )
 		.def( "getRenderable", (IECore::VisibleRenderablePtr (RenderableGadget::*)())&RenderableGadget::getRenderable )
+		.def( "baseState", &baseState )
 	;
 
 }

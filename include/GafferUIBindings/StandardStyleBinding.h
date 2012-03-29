@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,12 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreGL/FilterAlgo.h"
+#ifndef GAFFERUIBINDINGS_STANDARDSTYLEBINDING_H
+#define GAFFERUIBINDINGS_STANDARDSTYLEBINDING_H
 
-void main()
+namespace GafferUIBindings
 {
-	float r = length( gl_TexCoord[0].xy - vec2( 0.5 ) );
-	vec3 c = mix( gl_Color.rgb, vec3( 0.05, 0.05, 0.05 ), ieFilteredStep( 0.35, r ) );
-	float a = 1.0 - ieFilteredStep( 0.45, r );
-	gl_FragColor = vec4( c, a );
-}
+
+void bindStandardStyle();
+
+} // namespace GafferUIBindings
+
+#endif // GAFFERUIBINDINGS_STANDARDSTYLEBINDING_H

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -137,10 +138,10 @@ Imath::Box3f LinearContainer::bound() const
 	return ContainerGadget::bound();
 }
 
-void LinearContainer::doRender( IECore::RendererPtr renderer ) const
+void LinearContainer::doRender( const Style *style ) const
 {
 	calculateChildTransforms();
-	ContainerGadget::doRender( renderer );
+	ContainerGadget::doRender( style );
 }
 
 void LinearContainer::calculateChildTransforms() const

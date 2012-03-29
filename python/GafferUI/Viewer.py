@@ -68,7 +68,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
-		self.__gadgetWidget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
+		self.__renderableGadget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
 		
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		
@@ -145,10 +145,11 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	
 	def __baseState( self, componentType=None ) :
 	
-		return self.__gadgetWidget.baseState().get( componentType.staticTypeId() ).value
+		return self.__renderableGadget.baseState().get( componentType.staticTypeId() ).value
 		
 	def __toggleBaseState( self, checkBox, componentType=None ) :
 	
-		self.__gadgetWidget.baseState().add( componentType( checkBox ) )
+		self.__renderableGadget.baseState().add( componentType( checkBox ) )
+		self.__renderableGadget.renderRequestSignal()( self.__renderableGadget )
 		
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )

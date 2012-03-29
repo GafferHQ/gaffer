@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -81,9 +81,9 @@ Imath::Box3f CompoundNodule::bound() const
 	return m_row->bound();
 }
 
-void CompoundNodule::doRender( IECore::RendererPtr renderer ) const
+void CompoundNodule::doRender( const Style *style ) const
 {
-	m_row->render( renderer );
+	m_row->render( style );
 }
 
 bool CompoundNodule::acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const

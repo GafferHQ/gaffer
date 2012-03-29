@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,7 +77,18 @@ struct RenderRequestSlotCaller
 	}
 };
 
+static StylePtr getStyle( Gadget &g )
+{
+	return const_cast<Style *>( g.getStyle() );
+}
+
+static StylePtr style( Gadget &g )
+{
+	return const_cast<Style *>( g.style() );
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0, 1 );
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( renderOverloads, render, 0, 1 );
 
 void GafferUIBindings::bindGadget()
 {
@@ -85,14 +96,15 @@ void GafferUIBindings::bindGadget()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Gadget )
-		.def( "getStyle", &Gadget::getStyle )
 		.def( "setStyle", &Gadget::setStyle )
+		.def( "getStyle", &getStyle )
+		.def( "style", &style )
 		.def( "getTransform", &Gadget::getTransform, return_value_policy<copy_const_reference>() )
 		.def( "setTransform", &Gadget::setTransform )
 		.def( "fullTransform", &Gadget::fullTransform, fullTransformOverloads() )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)( ConstGadgetPtr ) const)&Gadget::transformedBound )
-		.def( "render",&Gadget::render )
+		.def( "render", &Gadget::render, renderOverloads() )
 		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
 		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )
@@ -108,6 +120,7 @@ void GafferUIBindings::bindGadget()
 		.def( "dragEndSignal", &Gadget::dragEndSignal, return_internal_reference<1>() )
 		.def( "keyPressSignal", &Gadget::keyPressSignal, return_internal_reference<1>() )
 		.def( "keyReleaseSignal", &Gadget::keyReleaseSignal, return_internal_reference<1>() )
+		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 	
 	SignalBinder<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>::bind( "RenderRequestSignal" );	

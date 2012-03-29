@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,10 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-void main()
+#include "boost/python.hpp"
+
+#include "IECoreGL/Texture.h"
+
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "GafferUI/Style.h"
+
+#include "GafferUIBindings/StyleBinding.h"
+
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
+
+void GafferUIBindings::bindStyle()
 {
-	gl_Position = ftransform();
-	gl_FrontColor = gl_Color;
-	gl_BackColor = gl_Color;
-	gl_TexCoord[0] = gl_MultiTexCoord0;
+	scope s = IECorePython::RunTimeTypedClass<Style>()
+		.def( "textBound", &Style::textBound )
+		.def( "renderText", &Style::renderText )
+		.def( "renderFrame", &Style::renderFrame )
+		.def( "renderNodule", &Style::renderNodule )
+		.def( "renderConnection", &Style::renderConnection )
+		.def( "renderSelectionBox", &Style::renderSelectionBox )
+		.def( "renderImage", &Style::renderImage )
+		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
+		.def( "setDefaultStyle", &Style::getDefaultStyle ).staticmethod( "setDefaultStyle" )	
+	;
+	
+	enum_<Style::State>( "State" )
+		.value( "NormalState", Style::NormalState )
+		.value( "DisabledState", Style::DisabledState )
+		.value( "HighlightedState", Style::HighlightedState )
+	;
+	
+	enum_<Style::TextType>( "TextType" )
+		.value( "LabelText", Style::LabelText )
+	;
 }

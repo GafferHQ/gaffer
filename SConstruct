@@ -347,6 +347,12 @@ options.Add(
 )
 
 options.Add(
+	"GLEW_LIB_SUFFIX",
+	"The suffix used when locating the glew libraries.",
+	"",
+)
+
+options.Add(
 	"CORTEX_LIB_SUFFIX",
 	"The suffix used when locating the cortex libraries.",
 	"",
@@ -540,6 +546,7 @@ libEnv.Append(
 		"$BUILD_DIR/include",
 		"$BUILD_DIR/include/python$PYTHON_VERSION",
 		"$BUILD_DIR/include/OpenEXR",
+		"$BUILD_DIR/include/GL",
 		"$LOCATE_DEPENDENCY_CPPPATH",
 	],
 	
@@ -578,9 +585,15 @@ libEnv.Alias( "build", gafferLibraryInstall )
 uiEnv = libEnv.Clone()
 uiEnv.Append(
 
-	LIBS = [ "Gaffer" ],
+	LIBS = [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
 
 )
+
+if env["PLATFORM"] == "darwin" :
+	uiEnv.Append( FRAMEWORKS = "OpenGL" )
+else :
+	uiEnv.Append( LIBS = "GL" )
+
 gafferUILibrary = uiEnv.SharedLibrary( "lib/GafferUI", glob.glob( "src/GafferUI/*.cpp" ) )
 uiEnv.Default( gafferUILibrary )
 
@@ -641,7 +654,7 @@ env.Alias( "build", gafferBindingsLibraryInstall )
 
 pythonUIEnv = pythonEnv.Clone()
 pythonUIEnv.Append(
-	LIBS = [ "GafferUI", "GafferBindings" ],
+	LIBS = [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
 )
 gafferUIBindingsLibrary = pythonUIEnv.SharedLibrary( "lib/GafferUIBindings", glob.glob( "src/GafferUIBindings/*.cpp" ) )
 pythonUIEnv.Default( gafferUIBindingsLibrary )

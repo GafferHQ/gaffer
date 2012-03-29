@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,34 +78,27 @@ Imath::Box3f StandardNodule::bound() const
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
 }
 
-void StandardNodule::doRender( IECore::RendererPtr renderer ) const
+void StandardNodule::doRender( const Style *style ) const
 {
 	if( m_dragging )
 	{
-		// technically we shouldn't be drawing outside of our bound like this.
-		// for the gl renderer it shouldn't matter. for others it might - at that
-		// point we'll have to maintain a separate gagdet parented to the graph
-		// just to draw this line. it seems like unecessary effort now though.
-		/// \todo This is preventing the destination Nodule from being highlighted
-		/// appropriately during dragging, as the GadgetWidget thinks the cursor
-		/// is above this Nodule and not the other. Fix it somehow.
-		getStyle()->renderConnection( renderer, V3f( 0 ), m_dragPosition );
+		int renderMode = GL_RENDER;
+		glGetIntegerv( GL_RENDER_MODE, &renderMode );
+		if( renderMode != GL_SELECT )
+		{
+			style->renderConnection( V3f( 0 ), m_dragPosition );
+		}
 	}
 	
-	renderer->attributeBegin();
-		
-		if( m_hovering )
-		{
-			renderer->setAttribute( Style::stateAttribute(), Style::stateValueSelected() );
-		}
-		else
-		{
-			renderer->setAttribute( Style::stateAttribute(), Style::stateValueNormal() );		
-		}
-		
-		getStyle()->renderNodule( renderer, 0.5 );
+	float radius = 0.5f;
+	Style::State state = Style::NormalState;
+	if( m_hovering )
+	{
+		state = Style::HighlightedState;
+		radius = 1.0f;
+	}
 
-	renderer->attributeEnd();
+	style->renderNodule( radius, state );
 }
 
 void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )
@@ -145,7 +138,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
-	if( plug() == input )
+	if( input )
 	{
 		m_hovering = true;
 		renderRequestSignal()( this );
