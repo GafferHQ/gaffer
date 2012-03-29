@@ -42,7 +42,7 @@ uniform vec2 borderRadius;
 
 uniform bool edgeAntiAliasing;
 
-uniform bool useTexture;
+uniform int textureType;
 uniform sampler2D texture;
 	
 void main()
@@ -64,10 +64,16 @@ void main()
 		result.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );
 	}
 	
-	if( useTexture )
+	/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear
+	/// textures and output only linear data.
+	if( textureType==1 )
 	{
 		result = texture2D( texture, gl_TexCoord[0].xy );
 		result = vec4( ieLinToSRGB( result.r ), ieLinToSRGB( result.g ), ieLinToSRGB( result.b ), ieLinToSRGB( result.a ) );
+	}
+	else if( textureType==2 )
+	{
+		result = texture2D( texture, gl_TexCoord[0].xy );
 	}
 	
 	gl_FragColor = result;

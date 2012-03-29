@@ -6,6 +6,8 @@
 
 * Merged optimised Gadget drawing code from optimisedGadgetDrawing branch - drawing of the graph should now be much quicker.
 
+* ImageGadgets now have a linear to srgb conversion applied when they are drawn. This means they now match the Image widget behaviour.
+
 0.29.0
 ------
 

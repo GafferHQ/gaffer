@@ -103,7 +103,11 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	glUniform1i( m_borderParameter, 0 );
 	glUniform1i( m_edgeAntiAliasingParameter, 0 );
 	glUniform1i( m_textureParameter, 0 );
-	glUniform1i( m_useTextureParameter, 1 );
+	/// \todo IECore is currently providing sRGB data in IECore::Font::image() and therefore
+	/// in IECoreGL::Font::texture(). Either we should change image() to return linear data,
+	/// or use the sRGB texture extension in IECoreGL::Font::texture() to ensure that data is
+	/// automatically linearised before arriving in the shader.
+	glUniform1i( m_textureTypeParameter, 2 );
 
 	glColor( m_colors[ForegroundColor] );
 
@@ -123,7 +127,7 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 	glUniform1i( m_borderParameter, 1 );
 	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_useTextureParameter, 0 );
+	glUniform1i( m_textureTypeParameter, 0 );
 	
 	glColor( colorForState( RaisedColor, state ) );
 	
@@ -148,7 +152,7 @@ void StandardStyle::renderNodule( float radius, State state ) const
 	glUniform1i( m_borderParameter, 1 );
 	glUniform2f( m_borderRadiusParameter, 0.5f, 0.5f );
 	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_useTextureParameter, 0 );
+	glUniform1i( m_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state ) );
 
@@ -170,7 +174,7 @@ void StandardStyle::renderConnection( const Imath::V3f &src, const Imath::V3f &d
 {
 	glUniform1i( m_borderParameter, 0 );
 	glUniform1i( m_edgeAntiAliasingParameter, 1 );
-	glUniform1i( m_useTextureParameter, 0 );
+	glUniform1i( m_textureTypeParameter, 0 );
 
 	V3f view = IECoreGL::Camera::viewDirectionInObjectSpace();
 	V3f o = view.cross( dst - src ).normalized() * 0.2;
@@ -197,7 +201,7 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 	glUniform1i( m_borderParameter, 1 );
 	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_useTextureParameter, 0 );
+	glUniform1i( m_textureTypeParameter, 0 );
 	
 	Color4f c(
 		m_colors[HighlightColor][0],
@@ -236,7 +240,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glUniform1i( m_borderParameter, 0 );
 	glUniform1i( m_edgeAntiAliasingParameter, 0 );
 	glUniform1i( m_textureParameter, 0 );
-	glUniform1i( m_useTextureParameter, 1 );
+	glUniform1i( m_textureTypeParameter, 1 );
 
 	glColor3f( 1.0f, 1.0f, 1.0f );
 
@@ -314,7 +318,7 @@ IECoreGL::Shader *StandardStyle::shader() const
 		m_borderRadiusParameter = m_shader->uniformParameterIndex( "borderRadius" );
 		m_edgeAntiAliasingParameter = m_shader->uniformParameterIndex( "edgeAntiAliasing" );
 		m_textureParameter = m_shader->uniformParameterIndex( "texture" );
-		m_useTextureParameter = m_shader->uniformParameterIndex( "useTexture" );
+		m_textureTypeParameter = m_shader->uniformParameterIndex( "textureType" );
 		m_bezierParameter = m_shader->uniformParameterIndex( "bezier" );
 		m_v0Parameter = m_shader->uniformParameterIndex( "v0" );
 		m_v1Parameter = m_shader->uniformParameterIndex( "v1" );
