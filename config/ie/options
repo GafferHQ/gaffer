@@ -114,6 +114,7 @@ if targetAppVersion :
 LOCATE_DEPENDENCY_CPPPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ), "OpenEXR" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) ),
