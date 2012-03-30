@@ -39,6 +39,7 @@
 	- hierarchy manipulators :
 		- group DONE
 			- with a transform
+				- using a Gaffer::TransformPlug 
 			- with multiple inputs
 		- rename
 		- delete NEXT ?
