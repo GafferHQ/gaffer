@@ -4,6 +4,8 @@
 
 * Fixed bug which prevented selection using the up/down cursor keys from working in the PathChooserWidget.
 
+* ImageGadgets now have a linear to srgb conversion applied when they are drawn. This means they now match the Image widget behaviour.
+
 0.29.0
 ------
 

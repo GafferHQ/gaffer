@@ -103,7 +103,7 @@ class StandardStyle : public Style
 		mutable int m_borderRadiusParameter;
 		mutable int m_edgeAntiAliasingParameter;
 		mutable int m_textureParameter;
-		mutable int m_useTextureParameter;
+		mutable int m_textureTypeParameter;
 		mutable int m_bezierParameter;
 		mutable int m_v0Parameter;
 		mutable int m_v1Parameter;
