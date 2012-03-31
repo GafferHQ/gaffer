@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -60,10 +60,13 @@ std::string GafferBindings::serialisePlugValue( Serialiser &s, PlugPtr plug )
 	if( plug->isInstanceOf( ValuePlug::staticTypeId() ) )
 	{
 		object pythonPlug( plug );
-		object pythonValue = pythonPlug.attr( "getValue" )();
-		s.modulePath( pythonValue ); // to get the import statement for the module in the serialisation
-		std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-		return value;
+		if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
+		{
+			object pythonValue = pythonPlug.attr( "getValue" )();
+			s.modulePath( pythonValue ); // to get the import statement for the module in the serialisation
+			std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
+			return value;
+		}
 	}
 	
 	return "";

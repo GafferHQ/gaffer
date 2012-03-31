@@ -4,8 +4,6 @@
 * fix crashes when modelcachesource has no filename
 	- we could just catch exceptions in ValuePlug::Computation
 	
-* fix cut and paste of SceneProcessorNodes
-
 * viewing a scene node and then connecting an input to it doesn't update
 	- also changing the group name doesn't update the SceneEditor
 
