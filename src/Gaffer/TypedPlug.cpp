@@ -99,9 +99,17 @@ T TypedPlug<T>::getValue() const
 }
 
 template<class T>
-void TypedPlug<T>::setFromInput()
+void TypedPlug<T>::setFrom( const ValuePlug *other )
 {
-	setValue( getInput<TypedPlug<T> >()->getValue() );
+	const TypedPlug<T> *tOther = IECore::runTimeCast<const TypedPlug<T> >( other );
+	if( tOther )
+	{
+		setValue( tOther->getValue() );
+	}
+	else
+	{
+		throw IECore::Exception( "Unsupported plug type" );
+	}
 }
 
 namespace Gaffer

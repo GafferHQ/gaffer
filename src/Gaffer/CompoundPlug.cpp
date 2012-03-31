@@ -118,12 +118,9 @@ void CompoundPlug::setInput( PlugPtr input )
 	ValuePlug::setInput( input );
 }
 
-void CompoundPlug::setFromInput()
+void CompoundPlug::setFrom( const ValuePlug *other )
 {
-	// no need to do anything, as our value is stored
-	// in the child plugs, and their setFromInput methods
-	// will be called anyway when their individual setInput()
-	// methods etc get called.
+	/// \todo Probably need to propagate the call to children, but not sure yet.
 }
 
 void CompoundPlug::parentChanged()

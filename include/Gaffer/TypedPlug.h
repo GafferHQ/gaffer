@@ -75,9 +75,7 @@ class TypedPlug : public ValuePlug
 		/// Returns the value.
 		T getValue() const;
 
-	protected :
-
-		virtual void setFromInput();
+		virtual void setFrom( const ValuePlug *other );
 
 	private :
 

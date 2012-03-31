@@ -138,19 +138,18 @@ T NumericPlug<T>::getValue() const
 }
 
 template<class T>
-void NumericPlug<T>::setFromInput()
+void NumericPlug<T>::setFrom( const ValuePlug *other )
 {
-	PlugPtr i = getInput<Plug>();
-	switch( i->typeId() )
+	switch( other->typeId() )
 	{
 		case FloatPlugTypeId :
-			setValue( (T)IECore::staticPointerCast<FloatPlug>( i )->getValue() );
+			setValue( (T)static_cast<const FloatPlug *>( other )->getValue() );
 			break;
 		case IntPlugTypeId :
-			setValue( (T)IECore::staticPointerCast<IntPlug>( i )->getValue() );
+			setValue( (T)static_cast<const IntPlug *>( other )->getValue() );
 			break;
 		default :
-			assert( 0 ); // shouldn't have connections of any other type
+			throw IECore::Exception( "Unsupported plug type" );
 	}
 }
 

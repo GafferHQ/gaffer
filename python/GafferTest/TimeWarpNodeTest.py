@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,40 +34,36 @@
 #  
 ##########################################################################
 
-import os
-
-import IECore
+import unittest
 
 import Gaffer
-import GafferScene
-import GafferUI
-import GafferSceneUI
+import GafferTest
 
-# ScriptWindow menu
+class TimeWarpNodeTest( unittest.TestCase ) :
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
-
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-
-# Node menu
-
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCache )
-GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
-GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
-GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
-GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
-
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	def test( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["m"] = GafferTest.MultiplyNode()
+		s["m"]["op2"].setValue( 1 )
+		
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context.getFrame() )" ) 
+					
+		s["w"] = Gaffer.TimeWarpNode()
+		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
+		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		s["w"]["offset"].setValue( 2 )
+		s["w"]["speed"].setValue( 2 )
+		
+		for i in range( 0, 10 ) :
+			c = Gaffer.Context()
+			c.setFrame( i )
+			with c :
+				self.assertEqual( s["m"]["product"].getValue(), i )
+				self.assertEqual( s["w"]["out"].getValue(), i * 2 + 2 )
+		
+if __name__ == "__main__":
+	unittest.main()

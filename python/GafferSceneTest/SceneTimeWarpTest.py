@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,40 +34,57 @@
 #  
 ##########################################################################
 
-import os
+import unittest
 
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
-import GafferUI
-import GafferSceneUI
+import GafferSceneTest
 
-# ScriptWindow menu
+class SceneTimeWarpTest( unittest.TestCase ) :
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
-
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-
-# Node menu
-
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCache )
-GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
-GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
-GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
-GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
-
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	def testConstruct( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferScene.SceneTimeWarp()
+		
+		self.assertEqual( s["n"]["speed"].getValue(), 1 )
+		self.assertEqual( s["n"]["offset"].getValue(), 0 )
+	
+	def testRunTimeTyped( self ) :
+	
+		n = GafferScene.SceneTimeWarp()
+		self.failUnless( n.isInstanceOf( GafferScene.SceneTimeWarp.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferScene.SceneContextProcessor.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferScene.SceneContextProcessorBase.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferScene.SceneProcessor.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferScene.SceneNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
+		
+		baseTypeIds = IECore.RunTimeTyped.baseTypeIds( n.typeId() )
+		
+		self.failUnless( GafferScene.SceneContextProcessor.staticTypeId() in baseTypeIds )
+		self.failUnless( GafferScene.SceneContextProcessorBase.staticTypeId() in baseTypeIds )
+		self.failUnless( GafferScene.SceneProcessor.staticTypeId() in baseTypeIds )
+		self.failUnless( GafferScene.SceneNode.staticTypeId() in baseTypeIds )
+		self.failUnless( Gaffer.Node.staticTypeId() in baseTypeIds )
+	
+	def testAffects( self ) :
+	
+		n = GafferScene.SceneTimeWarp()
+		
+		c = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
+		n["speed"].setValue( 2 )
+		
+		print c
+		
+		del c[:]
+		
+		n["offset"].setValue( 2 )
+		
+		print c
+		
+if __name__ == "__main__":
+	unittest.main()

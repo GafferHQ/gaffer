@@ -68,11 +68,11 @@ class ValuePlug::Computation
 		{
 			g_threadComputations.local().push( this );
 		
-			if( m_resultPlug->getInput<Plug>() )
+			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
 			{
 				// cast is ok, because we know that the resulting setValue() call won't
 				// actually modify the plug, but will just place the value in our m_resultValue.
-				const_cast<ValuePlug *>( m_resultPlug )->setFromInput();
+				const_cast<ValuePlug *>( m_resultPlug )->setFrom( input );
 			}
 			else
 			{

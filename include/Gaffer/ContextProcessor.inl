@@ -1,0 +1,122 @@
+//////////////////////////////////////////////////////////////////////////
+//  
+//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//  
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//  
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//  
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//  
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  
+//////////////////////////////////////////////////////////////////////////
+
+#include "Gaffer/ContextProcessor.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ValuePlug.h"
+
+namespace Gaffer
+{
+
+template<typename BaseType>
+const IECore::RunTimeTyped::TypeDescription<ContextProcessor<BaseType> > ContextProcessor<BaseType>::g_typeDescription;
+
+template<typename BaseType>
+ContextProcessor<BaseType>::ContextProcessor( const std::string &name )
+	:	BaseType( name )
+{
+}
+
+template<typename BaseType>
+ContextProcessor<BaseType>::~ContextProcessor()
+{
+}
+
+template<typename BaseType>
+void ContextProcessor<BaseType>::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+{
+	BaseType::affects( input, outputs );
+	
+	const ValuePlug *output = oppositePlug( input );
+	if( output ) 
+	{
+		outputs.push_back( output );
+	}
+}
+
+template<typename BaseType>
+void ContextProcessor<BaseType>::appendAffectedPlugs( Node::AffectedPlugsContainer &outputs ) const
+{
+	Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
+	for( OutputPlugIterator it = n->outputPlugsBegin(), e = n->outputPlugsEnd(); it != e; it++ )
+	{
+		const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
+		if( 0 == valuePlug->getName().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
+		{
+			outputs.push_back( valuePlug );
+		}
+	}
+}
+
+template<typename BaseType>
+void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *context ) const
+{
+	const ValuePlug *input = oppositePlug( output );
+	if( input )
+	{
+		ContextPtr modifiedContext = new Context( *context );
+		processContext( modifiedContext.get() );
+		Context::Scope scopedContext( modifiedContext.get() );
+		output->setFrom( input );
+		return;
+	}
+		
+	return BaseType::compute( output, context );
+}
+
+template<typename BaseType>
+const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug ) const
+{
+	std::string path = plug->relativeName( this );
+	std::string oppositePath;
+	
+	if( 0 == path.compare( 0, 2, "in" ) )
+	{
+		oppositePath = "out" + std::string( path, 2 );
+	}
+	else if( 0 == path.compare( 0, 3, "out" ) )
+	{
+		oppositePath = "in" + std::string( path, 3 );
+	}
+		
+	if( oppositePath.size() )
+	{
+		return BaseType::template getChild<ValuePlug>( oppositePath );
+	}
+	return 0;
+}
+
+} // namespace Gaffer

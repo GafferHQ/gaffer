@@ -34,31 +34,70 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "Gaffer/TimeWarp.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.inl"
 
-namespace GafferScene
+using namespace Gaffer;
+
+namespace Gaffer
 {
 
-enum TypeId
+template<typename BaseType>
+const IECore::RunTimeTyped::TypeDescription<TimeWarp<BaseType> > TimeWarp<BaseType>::g_typeDescription;
+
+template<typename BaseType>
+TimeWarp<BaseType>::TimeWarp( const std::string &name )
+	:	ContextProcessor<BaseType>( name )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
+	ContextProcessor<BaseType>::addChild( new FloatPlug( "speed", Plug::In, 1.0f ) );
+	ContextProcessor<BaseType>::addChild( new FloatPlug( "offset" ) );
+}
+
+template<typename BaseType>
+TimeWarp<BaseType>::~TimeWarp()
+{
+}
+
+template<typename BaseType>
+FloatPlug *TimeWarp<BaseType>::speedPlug()
+{
+	return ContextProcessor<BaseType>::template getChild<FloatPlug>( "speed" );
+}
+
+template<typename BaseType>
+const FloatPlug *TimeWarp<BaseType>::speedPlug() const
+{
+	return ContextProcessor<BaseType>::template getChild<FloatPlug>( "speed" );
+}
+
+template<typename BaseType>
+FloatPlug *TimeWarp<BaseType>::offsetPlug()
+{
+	return ContextProcessor<BaseType>::template getChild<FloatPlug>( "offset" );
+}
+
+template<typename BaseType>
+const FloatPlug *TimeWarp<BaseType>::offsetPlug() const
+{
+	return ContextProcessor<BaseType>::template getChild<FloatPlug>( "offset" );
+}
+
+template<typename BaseType>
+void TimeWarp<BaseType>::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+{
+	ContextProcessor<BaseType>::affects( input, outputs );
 	
-	LastTypeId = 110700
-};
+	if( input == speedPlug() || input == offsetPlug() )
+	{
+		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
+	}
+}
 
-} // namespace GafferScene
+template<typename BaseType>
+void TimeWarp<BaseType>::processContext( Context *context ) const
+{
+	context->setFrame( context->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue() );
+}
 
-#endif // GAFFERSCENE_TYPEIDS_H
+} // namespace Gaffer

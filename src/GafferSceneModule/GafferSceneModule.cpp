@@ -47,6 +47,7 @@
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/GroupScenes.h"
+#include "GafferScene/SceneTimeWarp.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -97,5 +98,10 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
 	GafferBindings::NodeClass<DeletePrimitiveVariables>();
 	GafferBindings::NodeClass<GroupScenes>();
-	
+	GafferBindings::NodeClass<SceneContextProcessorBase>();
+	GafferBindings::NodeClass<SceneContextProcessor>();
+	GafferBindings::NodeClass<SceneTimeWarp>();
+
+	new SceneTimeWarp;
+
 }

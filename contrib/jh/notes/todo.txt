@@ -58,10 +58,10 @@
 	- context manipulator
 		- just passes through input, but shoves things into the context for the input evaluation
 			- should combine nicely with the expression node
-	- time warp / offset / woteva
-		- make the basic class generic somehow? just match "in*" to "out*"?
-			- yep, TimeWarp<SceneProcessor>, then match in to out.
-		- should this share a base class with context manipulator?
+	- time warp / offset / woteva DONE
+		- make the basic class generic somehow? just match "in*" to "out*"? DONE
+			- yep, TimeWarp<SceneProcessor>, then match in to out. DONE
+		- should this share a base class with context manipulator? YEP DONE
 	- expression node
 		- python DONE 
 		- seexpr LATER

@@ -60,10 +60,15 @@ class ValuePlug : public Plug
 		/// Accepts the input only if it is derived from ValuePlug.
 		/// Derived classes may accept more types provided they
 		/// derive from ValuePlug too, and they can deal with them
-		/// in setFromInput().
+		/// in setFrom().
 		virtual bool acceptsInput( ConstPlugPtr input ) const;
 		/// Reimplemented so that values can be propagated from inputs.
 		virtual void setInput( PlugPtr input );
+
+		/// Must be implemented to set the value of this Plug from the other Plug,
+		/// performing any necessary conversions on the input value. Should throw
+		/// an exception if other is of an unsupported type.
+		virtual void setFrom( const ValuePlug *other ) = 0;
 
 		/// Must be implemented by derived classes to set the value
 		/// to the default for this Plug.
@@ -76,7 +81,7 @@ class ValuePlug : public Plug
 		/// Internally all values are stored as instances of classes derived
 		/// from IECore::Object, although this isn't necessarily visible to the user.
 		/// This function updates the value using node()->compute()
-		/// or setFromInput() as appropriate and then returns it. Typically
+		/// or setFrom( getInput() ) as appropriate and then returns it. Typically
 		/// this will be called by a subclass getValue() method which will
 		/// extract a value from the object and return it to the user in a more
 		/// convenient form. Note that this function will often return different
@@ -89,13 +94,7 @@ class ValuePlug : public Plug
 		/// Should be called by derived classes when they wish to set the plug
 		/// value.
 		void setObjectValue( IECore::ConstObjectPtr value );
-				
-		/// Must be implemented to set the value of this Plug from the
-		/// value of its input. This allows the Plug to perform any
-		/// necessary conversions of the input value. Called by the getValue()
-		/// function to propagate values through the graph.
-		virtual void setFromInput() = 0;
-		
+						
 	private :
 	
 		class Computation;

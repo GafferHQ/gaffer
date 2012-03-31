@@ -82,6 +82,7 @@ from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
 from ExpressionNodeTest import ExpressionNodeTest
 from BlockedConnectionTest import BlockedConnectionTest
+from TimeWarpNodeTest import TimeWarpNodeTest
 
 if __name__ == "__main__":
 	import unittest
