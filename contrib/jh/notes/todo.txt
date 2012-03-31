@@ -5,7 +5,6 @@
 	- we could just catch exceptions in ValuePlug::Computation
 	
 * viewing a scene node and then connecting an input to it doesn't update
-	- also changing the group name doesn't update the SceneEditor
 
 * Contexts need to have parents from which they inherit stuff
 

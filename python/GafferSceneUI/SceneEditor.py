@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import Gaffer
 import GafferScene
 import GafferUI
 
@@ -41,10 +42,20 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode=None, **kw ) :
 	
-		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 		
-		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, **kw )
-				
+		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
+		
+		with column :
+		
+			self.__pathListing = GafferUI.PathListingWidget(
+				Gaffer.DictPath( {}, "/" ), # temp till we make a ScenePath
+				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+				allowMultipleSelection = True,
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			)
+		
+		self.__plug = None		
 		self._updateFromSet()
 				
 	def __repr__( self ) :
@@ -52,25 +63,35 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		return "GafferSceneUI.SceneEditor()"
 
 	def _updateFromSet( self ) :
-			
-		if not hasattr( self, "_SceneEditor__column" ) :
+		
+		if not hasattr( self, "_SceneEditor__plug" ) :
 			# we're being called during construction
 			return
-		
-		del self.__column[:]
-		
+			
+		self.__plug = None
 		node = self._lastAddedNode()
 		if not node or not isinstance( node, GafferScene.SceneNode ) :
-			return
+			self.__plugDirtiedConnection = None
+		else :			
+			self.__plug = node["out"]
+			self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			
+		self.__update()
+	
+	def _updateFromContext( self ) :
+	
+		self.__update()
+	
+	def __update( self ) :
 		
-		with self.__column :
-			
-			path = GafferScene.ScenePath( node["out"], "/" )
-			GafferUI.PathListingWidget(
-				path,
-				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
-				allowMultipleSelection = True,
-				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			)
-			
+		if self.__plug is not None :
+			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, "/" ) )
+		else :
+			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+	
+	def __plugDirtied( self, plug ) :
+	
+		if plug.isSame( self.__plug ) :
+			self.__update()
+	
 GafferUI.EditorWidget.registerType( "SceneEditor", SceneEditor )
