@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -149,16 +149,16 @@ std::string GraphComponent::fullName() const
 	return relativeName( 0 );
 }
 
-std::string GraphComponent::relativeName( ConstGraphComponentPtr ancestor ) const
+std::string GraphComponent::relativeName( const GraphComponent *ancestor ) const
 {
 	string fullName = m_name;
 	GraphComponent *c = this->m_parent;
-	while( c && c!=ancestor.get() )
+	while( c && c!=ancestor )
 	{
 		fullName = c->m_name.value() + "." + fullName;
 		c = c->m_parent;
 	}
-	if( ancestor && c!=ancestor.get() )
+	if( ancestor && c!=ancestor )
 	{
 		string what = boost::str( boost::format( "Object \"%s\" is not an ancestor of \"%s\"." ) % ancestor->m_name.value() % m_name.value() );
 		throw Exception( what );

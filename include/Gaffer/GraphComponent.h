@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		std::string fullName() const;
 		/// Returns the relative path name from the specified ancestor to this component.
 		/// Passing 0 for ancestor yields the same result as calling fullName().
-		std::string relativeName( ConstGraphComponentPtr ancestor ) const;
+		std::string relativeName( const GraphComponent *ancestor ) const;
 		/// A signal which is emitted whenever a name is changed.
 		UnarySignal &nameChangedSignal();
 		//@}

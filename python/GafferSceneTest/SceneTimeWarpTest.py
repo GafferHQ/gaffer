@@ -53,6 +53,10 @@ class SceneTimeWarpTest( unittest.TestCase ) :
 		self.assertEqual( s["n"]["speed"].getValue(), 1 )
 		self.assertEqual( s["n"]["offset"].getValue(), 0 )
 	
+	def testConstructWithValues( self ) :
+	
+		s = GafferScene.SceneTimeWarp( inputs = { "speed" : 2, "offset" : 2 } )
+	
 	def testRunTimeTyped( self ) :
 	
 		n = GafferScene.SceneTimeWarp()
@@ -77,14 +81,20 @@ class SceneTimeWarpTest( unittest.TestCase ) :
 		
 		c = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 		n["speed"].setValue( 2 )
-		
-		print c
+
+		found = False
+		for cc in c :
+			if cc[0].isSame( n["out"] ) :
+				found = True		
+		self.failUnless( found )
 		
 		del c[:]
-		
 		n["offset"].setValue( 2 )
-		
-		print c
+		found = False
+		for cc in c :
+			if cc[0].isSame( n["out"] ) :
+				found = True		
+		self.failUnless( found )
 		
 if __name__ == "__main__":
 	unittest.main()
