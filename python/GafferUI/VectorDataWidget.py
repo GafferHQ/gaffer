@@ -85,7 +85,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		
 		addButton = GafferUI.Button( image="plus.png", hasFrame=False )
-		self.__addButtonConnection = addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRow ) )
+		self.__addButtonConnection = addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRows ) )
 		self.__buttonRow.append( addButton )
 		
 		removeButton = GafferUI.Button( image="minus.png", hasFrame=False )
@@ -192,7 +192,23 @@ class VectorDataWidget( GafferUI.Widget ) :
 			m.append( "/Remove Selection", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
 		
 		return m
-		
+	
+	## This function is used by the ui to create new data to append. It may be overridden
+	# in derived classes to customise data creation. The return value should be a list of
+	# VectorData instances  in the same format as that returned by getData(), or None to
+	# cancel the operation.
+	def _createRows( self ) :
+	
+		newData = []
+		data = self.getData()
+		accessors = self.__model.vectorDataAccessors()
+		for d, a in zip( data, accessors ) :
+			nd = d.__class__()
+			nd.append( a.defaultElement() )
+			newData.append( nd )
+			
+		return newData
+	
 	def __dataChanged( self, *unusedArgs ) :
 	
 		self.dataChangedSignal()( self )
@@ -237,16 +253,20 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.setData( data )
 		self.__dataChanged()
 		
-	def __addRow( self, button ) :
+	def __addRows( self, button ) :
 	
 		if self.__model is None :
 			return
 	
-		data = self.getData()
-		accessors = self.__model.vectorDataAccessors()
-		for d, a in zip( data, accessors ) :
-			d.append( a.defaultElement() )
+		newData = self._createRows()
+		if not newData :
+			return
 			
+		data = self.getData()
+		assert( len( data ) == len( newData ) )
+		for i in range( 0, len( data ) ) :
+			data[i].extend( newData[i] )
+					
 		self.setData( data )
 		self.__dataChanged()
 		

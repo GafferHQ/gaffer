@@ -8,6 +8,10 @@
 
 * ImageGadgets now have a linear to srgb conversion applied when they are drawn. This means they now match the Image widget behaviour.
 
+* PathChooserWidget and PathChooserDialogue now accept a new allowMultipleSelection argument to the constructor. Use the new PathChooserDialogue.waitForPaths() method to wait for paths selected in this way.
+
+* VectorDataWidget has a new protected _createRows() method which may be overridden by derived classes to customise the addition of new rows. The PathVectorDataWidget implements this by displaying a dialogue where the user may select multiple paths to be added. This improves the parameter ui for PathVectorParameters.
+
 0.29.0
 ------
 

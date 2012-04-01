@@ -42,7 +42,7 @@ import GafferUI
 
 class PathChooserWidget( GafferUI.Widget ) :
 
-	def __init__( self, path, previewTypes=[], **kw ) :
+	def __init__( self, path, previewTypes=[], allowMultipleSelection=False, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
 		
@@ -77,14 +77,14 @@ class PathChooserWidget( GafferUI.Widget ) :
 				if len( self.__dirPath ) :
 					del self.__dirPath[-1]
 
-				GafferUI.PathWidget( self.__dirPath )
+				self.__dirPathWidget = GafferUI.PathWidget( self.__dirPath )
 			
 			# directory listing and preview widget
 			with GafferUI.SplitContainer( GafferUI.SplitContainer.Orientation.Horizontal, expand=True ) as splitContainer :
 			
 				# the listing also uses a modified path of it's own.
 				self.__listingPath = self.__path.copy()
-				self.__directoryListing = GafferUI.PathListingWidget( self.__listingPath )
+				self.__directoryListing = GafferUI.PathListingWidget( self.__listingPath, allowMultipleSelection=allowMultipleSelection )
 			
 				if len( previewTypes ) :
 					GafferUI.CompoundPathPreview( self.__path, childTypes=previewTypes )
@@ -99,6 +99,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 				
 			# path
 			self.__pathWidget = GafferUI.PathWidget( self.__path )
+			self.__pathWidget.setVisible( allowMultipleSelection == False )
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 
@@ -110,10 +111,21 @@ class PathChooserWidget( GafferUI.Widget ) :
 		self.__dirPathChangedConnection = self.__dirPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__dirPathChanged ) )
 		self.__listingPathChangedConnection = self.__listingPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__listingPathChanged ) )
 		
-	## Returns the PathWidget used for text-based path entry.
+	## Returns the PathWidget used for text-based path entry. Note that this Widget is hidden when multiple
+	# selection is enabled.
 	def pathWidget( self ) :
 	
 		return self.__pathWidget
+	
+	## Returns the PathListingWidget used for displaying the paths to choose from.
+	def pathListingWidget( self ) :
+	
+		return self.__directoryListing
+
+	## Returns the PathWidget used for displaying and editing the current directory.
+	def directoryPathWidget( self ) :
+	
+		return self.__dirPathWidget
 
 	## This signal is emitted when the user has selected a path.
 	def pathSelectedSignal( self ) :
@@ -125,11 +137,11 @@ class PathChooserWidget( GafferUI.Widget ) :
 		assert( widget is self.__directoryListing )
 		
 		selection = self.__directoryListing.getSelectedPaths()
-		for path in selection :
-			if path.isLeaf() :
-				with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
-					self.__path[:] = path[:]
-					break
+		if not selection :
+			return
+			
+		with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+			self.__path[:] = selection[0][:]
 
 	# This slot is connected to the pathSelectedSignals of the children and just forwards
 	# them to our own pathSelectedSignal.
