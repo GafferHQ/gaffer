@@ -24,6 +24,8 @@
 * does CompoundPlug still need to derive from ValuePlug now?
 	- maybe
 		- how are we going to deal with not having to compute bound.min.x, bound.min.y etc individually?
+
+* fix NodeSetEditor when node in locked set is deleted
 	
 * nodes 
 	- modelcachesource DONE
