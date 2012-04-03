@@ -225,7 +225,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 		return self.getSelectedPaths()
 	
-	## This signal is emitted when the selected items change. Use selectedPaths()
+	## This signal is emitted when the selected items change. Use getSelectedPaths()
 	# to get a list of those items.
 	def selectionChangedSignal( self ) :
 	
