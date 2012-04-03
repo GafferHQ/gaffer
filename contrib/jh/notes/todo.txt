@@ -37,8 +37,8 @@
 	
 	- hierarchy manipulators :
 		- group DONE
-			- with a transform
-				- using a Gaffer::TransformPlug 
+			- with a transform DONE
+				- using a Gaffer::TransformPlug DONE
 			- with multiple inputs
 		- rename
 		- delete NEXT ?

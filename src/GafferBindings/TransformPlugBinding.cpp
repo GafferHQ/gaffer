@@ -36,72 +36,80 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/TransformPlugBinding.h"
+#include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/SceneNode.h"
-#include "GafferScene/FileSource.h"
-#include "GafferScene/ModelCacheSource.h"
-#include "GafferScene/SceneProcedural.h"
-#include "GafferScene/SceneProcessor.h"
-#include "GafferScene/AttributeCache.h"
-#include "GafferScene/PrimitiveVariableProcessor.h"
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/GroupScenes.h"
-#include "GafferScene/SceneTimeWarp.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
-using namespace GafferScene;
+using namespace GafferBindings;
+using namespace Gaffer;
 
-IECore::PrimitivePtr geometry( const ScenePlug &plug, const std::string &scenePath )
+/*
+template<typename T>
+static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 {
-	IECore::ConstPrimitivePtr g = plug.geometry( scenePath );
-	return g ? g->copy() : 0;
-}
-
-
-IECore::StringVectorDataPtr childNames( const ScenePlug &plug, const std::string &scenePath )
-{
-	IECore::ConstStringVectorDataPtr n = plug.childNames( scenePath );
-	return n ? n->copy() : 0;
-}
-
-BOOST_PYTHON_MODULE( _GafferScene )
-{
+	typename T::Ptr plug = IECore::constPointerCast<T>( IECore::staticPointerCast<const T>( g ) );
+	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
+		
+	if( plug->direction()!=Plug::In )
+	{
+		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
+	}
 	
-	IECorePython::RunTimeTypedClass<ScenePlug>()
+	object pythonPlug( plug );
+	if( plug->defaultValue()!=typename T::ValueType() )
+	{
+		object pythonValue = pythonPlug.attr( "defaultValue" )();
+		s.modulePath( pythonValue );
+		std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
+		result += "defaultValue = " + value + ", ";
+	}
+	
+	if( plug->getFlags() != Plug::Default )
+	{
+		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
+	}
+	
+	result += "basisMatrix = " + serialisePlugValue( s, plug->basisMatrixPlug() ) + ", ";
+	result += "basisStep = " + serialisePlugValue( s, plug->basisStepPlug() ) + ", ";
+	
+	unsigned numPoints = plug->numPoints();
+	if( numPoints )
+	{
+		result += "points = ( ";
+	
+		for( unsigned i=0; i<numPoints; i++ )
+		{
+			result += "( " + serialisePlugValue( s, plug->pointXPlug( i ) ) + ", " +
+				serialisePlugValue( s, plug->pointYPlug( i ) ) + " ), ";
+		}
+	
+		result += "), ";
+	}
+	
+	result += ")";
+
+	return result;
+}*/
+
+void GafferBindings::bindTransformPlug()
+{	
+	IECorePython::RunTimeTypedClass<TransformPlug>()
 		.def(
 			init< const std::string &, Gaffer::Plug::Direction, unsigned >
 			(
 				(
-					arg( "name" ) = ScenePlug::staticTypeName(),
+					arg( "name" ) = Gaffer::TransformPlug::staticTypeName(),
 					arg( "direction" ) = Gaffer::Plug::In,
 					arg( "flags" ) = Gaffer::Plug::Default
 				)
-			)	
+			)
 		)
-		.def( "bound", &ScenePlug::bound )
-		.def( "transform", &ScenePlug::transform )
-		.def( "geometry", &geometry )
-		.def( "childNames", &childNames )
+		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( TransformPlug )
+		.def( "matrix", &TransformPlug::matrix )
 	;
 	
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( init<ScenePlugPtr, const Gaffer::Context *, const std::string &>() )
-	;
-
-	GafferBindings::NodeClass<SceneNode>();
-	GafferBindings::NodeClass<FileSource>();
-	GafferBindings::NodeClass<ModelCacheSource>();
-	GafferBindings::NodeClass<SceneProcessor>();
-	GafferBindings::NodeClass<SceneElementProcessor>();
-	GafferBindings::NodeClass<AttributeCache>();
-	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::NodeClass<DeletePrimitiveVariables>();
-	GafferBindings::NodeClass<GroupScenes>();
-	GafferBindings::NodeClass<SceneContextProcessorBase>();
-	GafferBindings::NodeClass<SceneContextProcessor>();
-	GafferBindings::NodeClass<SceneTimeWarp>();
-
-	new SceneTimeWarp;
-
+	//Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 }

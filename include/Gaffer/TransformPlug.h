@@ -34,45 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GROUPSCENES_H
-#define GAFFERSCENE_GROUPSCENES_H
+#ifndef GAFFER_TRANSFORMPLUG_H
+#define GAFFER_TRANSFORMPLUG_H
 
-#include "Gaffer/TransformPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferScene/SceneProcessor.h"
-
-namespace GafferScene
+namespace Gaffer
 {
 
-class GroupScenes : public SceneProcessor
+class TransformPlug : public CompoundPlug
 {
 
 	public :
 
-		GroupScenes( const std::string &name=staticTypeName() );
-		virtual ~GroupScenes();
+		TransformPlug( const std::string &name = staticTypeName(), Direction direction=In, unsigned flags = Default );
+		virtual ~TransformPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GroupScenes, GroupScenesTypeId, SceneProcessor );
-		
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
-		
-		Gaffer::TransformPlug *transformPlug();
-		const Gaffer::TransformPlug *transformPlug() const;
-		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-	
-	protected :
-			
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TransformPlug, TransformPlugTypeId, CompoundPlug );
 
-		std::string sourcePath( const std::string &outputPath, const std::string &groupName ) const;
-		
+		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+
+		V3fPlug *translatePlug();
+		const V3fPlug *translatePlug() const;
+		V3fPlug *rotatePlug();
+		const V3fPlug *rotatePlug() const;
+		V3fPlug *scalePlug();
+		const V3fPlug *scalePlug() const;
+
+		Imath::M44f matrix() const;
+
 };
 
-} // namespace GafferScene
+IE_CORE_DECLAREPTR( TransformPlug );
 
-#endif // GAFFERSCENE_GROUPSCENES_H
+} // namespace Gaffer
+
+#endif // GAFFER_TRANSFORMPLUG_H

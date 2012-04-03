@@ -88,6 +88,7 @@ enum TypeId
 	ExpressionNodeTypeId = 110041,
 	ContextProcessorNodeTypeId = 110042,
 	TimeWarpNodeTypeId = 110043,
+	TransformPlugTypeId = 110044,
 	
 	LastTypeId = 110200,
 	

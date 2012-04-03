@@ -34,45 +34,96 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GROUPSCENES_H
-#define GAFFERSCENE_GROUPSCENES_H
+#include "IECore/AngleConversion.h"
 
 #include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/SceneProcessor.h"
+using namespace Imath;
+using namespace Gaffer;
 
-namespace GafferScene
+IE_CORE_DEFINERUNTIMETYPED( TransformPlug );
+
+TransformPlug::TransformPlug( const std::string &name, Direction direction, unsigned flags )
+	:	CompoundPlug( name, direction, flags )
 {
-
-class GroupScenes : public SceneProcessor
-{
-
-	public :
-
-		GroupScenes( const std::string &name=staticTypeName() );
-		virtual ~GroupScenes();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GroupScenes, GroupScenesTypeId, SceneProcessor );
-		
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
-		
-		Gaffer::TransformPlug *transformPlug();
-		const Gaffer::TransformPlug *transformPlug() const;
-		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+	addChild(
+		new V3fPlug(
+			"translate",
+			direction,
+			V3f( 0 ),
+			V3f( limits<float>::min() ),
+			V3f( limits<float>::max() ),			
+			flags
+		)
+	);
 	
-	protected :
-			
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+	addChild(
+		new V3fPlug(
+			"rotate",
+			direction,
+			V3f( 0 ),
+			V3f( limits<float>::min() ),
+			V3f( limits<float>::max() ),			
+			flags
+		)
+	);
+	
+	addChild(
+		new V3fPlug(
+			"scale",
+			direction,
+			V3f( 1 ),
+			V3f( limits<float>::min() ),
+			V3f( limits<float>::max() ),			
+			flags
+		)
+	);
+}
 
-		std::string sourcePath( const std::string &outputPath, const std::string &groupName ) const;
-		
-};
+TransformPlug::~TransformPlug()
+{
+}
 
-} // namespace GafferScene
+bool TransformPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+{
+	return children().size() != 3;
+}
 
-#endif // GAFFERSCENE_GROUPSCENES_H
+V3fPlug *TransformPlug::translatePlug()
+{
+	return getChild<V3fPlug>( "translate" );
+}
+
+const V3fPlug *TransformPlug::translatePlug() const
+{
+	return getChild<V3fPlug>( "translate" );
+}
+
+V3fPlug *TransformPlug::rotatePlug()
+{
+	return getChild<V3fPlug>( "rotate" );
+}
+
+const V3fPlug *TransformPlug::rotatePlug() const
+{
+	return getChild<V3fPlug>( "rotate" );
+}
+
+V3fPlug *TransformPlug::scalePlug()
+{
+	return getChild<V3fPlug>( "scale" );
+}
+
+const V3fPlug *TransformPlug::scalePlug() const
+{
+	return getChild<V3fPlug>( "scale" );
+}
+
+Imath::M44f TransformPlug::matrix() const
+{
+	M44f result;
+	result.scale( scalePlug()->getValue() );
+	result.rotate( IECore::degreesToRadians( rotatePlug()->getValue() ) );
+	result.translate( translatePlug()->getValue() );
+	return result;
+}

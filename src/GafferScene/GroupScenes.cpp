@@ -51,6 +51,7 @@ GroupScenes::GroupScenes( const std::string &name )
 	:	SceneProcessor( name )
 {
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
+	addChild( new TransformPlug( "transform" ) );
 }
 
 GroupScenes::~GroupScenes()
@@ -67,6 +68,16 @@ const Gaffer::StringPlug *GroupScenes::namePlug() const
 	return getChild<StringPlug>( "name" );
 }
 
+Gaffer::TransformPlug *GroupScenes::transformPlug()
+{
+	return getChild<TransformPlug>( "transform" );
+}
+
+const Gaffer::TransformPlug *GroupScenes::transformPlug() const
+{
+	return getChild<TransformPlug>( "transform" );
+}
+
 void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
@@ -75,6 +86,14 @@ void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outpu
 	{
 		outputs.push_back( outPlug() );
 	}
+	
+	if( transformPlug()->isAncestorOf( input ) )
+	{
+		/// \todo Strictly speaking I think we should just push outPlug()->transformPlug()
+		/// here, but the dirty propagation doesn't work for that just now. Get it working.
+		outputs.push_back( outPlug() );
+	}
+	
 }
 
 Imath::Box3f GroupScenes::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -101,7 +120,7 @@ Imath::M44f GroupScenes::computeTransform( const ScenePath &path, const Gaffer::
 	
 	if( !source.size() )
 	{
-		return Imath::M44f();
+		return transformPlug()->matrix();
 	}
 	else
 	{

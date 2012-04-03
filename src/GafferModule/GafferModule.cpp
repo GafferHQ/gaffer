@@ -64,6 +64,7 @@
 #include "GafferBindings/ContextBinding.h"
 #include "GafferBindings/BoxPlugBinding.h"
 #include "GafferBindings/ExpressionNodeBinding.h"
+#include "GafferBindings/TransformPlugBinding.h"
 
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -98,6 +99,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindContext();
 	bindBoxPlug();
 	bindExpressionNode();
+	bindTransformPlug();
 	
 	NodeClass<ContextProcessorNode>();
 	NodeClass<TimeWarpNode>();

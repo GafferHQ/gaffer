@@ -116,6 +116,35 @@ class GroupScenesTest( unittest.TestCase ) :
 		self.assertEqual( group["out"].transform( "/topLevel/group/sphere" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/group/sphere" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/group/sphere" ), None )
+	
+	def testTransform( self ) :
+	
+		sphere = IECore.SpherePrimitive()
+		input = GafferSceneTest.CompoundObjectSource()
+		input["in"].setValue(
+			IECore.CompoundObject( {
+				"geometry" : sphere,
+				"bound" : IECore.Box3fData( sphere.bound() ),
+				"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) ) ),
+			} )
+		)
 		
+		group = GafferScene.GroupScenes( inputs = { "in" : input["out"], "transform.translate" : IECore.V3f( 1, 2, 3 ) } )
+		self.assertEqual( group["name"].getValue(), "group" )
+		
+		rootBound = sphere.bound()
+		rootBound.min += IECore.V3f( 1, 2, 3 )
+		rootBound.max += IECore.V3f( 1, 2, 3 )
+		
+		self.assertEqual( group["out"].geometry( "/" ), None )
+		self.assertEqual( group["out"].transform( "/" ), IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( group["out"].bound( "/" ), rootBound )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "group" ] ) )
+		
+		self.assertEqual( group["out"].geometry( "/group" ), sphere )
+		self.assertEqual( group["out"].transform( "/group" ), IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( group["out"].bound( "/group" ), sphere.bound() )
+		self.assertEqual( group["out"].childNames( "/group" ), None )
+	
 if __name__ == "__main__":
 	unittest.main()

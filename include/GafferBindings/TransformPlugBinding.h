@@ -34,45 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GROUPSCENES_H
-#define GAFFERSCENE_GROUPSCENES_H
+#ifndef GAFFERBINDINGS_TRANSFORMPLUGBINDING_H
+#define GAFFERBINDINGS_TRANSFORMPLUGBINDING_H
 
-#include "Gaffer/TransformPlug.h"
-
-#include "GafferScene/SceneProcessor.h"
-
-namespace GafferScene
+namespace GafferBindings
 {
 
-class GroupScenes : public SceneProcessor
-{
+void bindTransformPlug();
 
-	public :
+} // namespace GafferBindings
 
-		GroupScenes( const std::string &name=staticTypeName() );
-		virtual ~GroupScenes();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GroupScenes, GroupScenesTypeId, SceneProcessor );
-		
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
-		
-		Gaffer::TransformPlug *transformPlug();
-		const Gaffer::TransformPlug *transformPlug() const;
-		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-	
-	protected :
-			
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-
-		std::string sourcePath( const std::string &outputPath, const std::string &groupName ) const;
-		
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_GROUPSCENES_H
+#endif // GAFFERBINDINGS_TRANSFORMPLUGBINDING_H

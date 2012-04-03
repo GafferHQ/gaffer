@@ -83,6 +83,7 @@ from ClassLoaderPathTest import ClassLoaderPathTest
 from ExpressionNodeTest import ExpressionNodeTest
 from BlockedConnectionTest import BlockedConnectionTest
 from TimeWarpNodeTest import TimeWarpNodeTest
+from TransformPlugTest import TransformPlugTest
 
 if __name__ == "__main__":
 	import unittest

@@ -23,3 +23,7 @@
 * Added an ExpressionNode class.
 
 * PlugValueWidgets now have setContext and getContext methods, and update correctly when the context changes if a plug has input connections.
+
+* Added a Gaffer.TransformPlug class, for specifying transformations.
+
+* Removed NodeUI.createPlugValueWidget() registeredWidgets only parameter.

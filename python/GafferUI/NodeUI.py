@@ -157,14 +157,21 @@ class NodeUI( GafferUI.Widget ) :
 		plugs = [ x for x in plugs if x.direction()==Gaffer.Plug.Direction.In and not x.getName().startswith( "__" ) ]
 		for plug in plugs :
 
-			if plug.typeId()==Gaffer.CompoundPlug.staticTypeId() :
+			if isinstance( plug, Gaffer.CompoundPlug ) :
 			
-				widget = self.createPlugValueWidget( plug, registeredWidgetsOnly=True )
-				if widget is not None :
-					self._addWidget( widget )
+				creator = self.__plugValueWidgetCreator( plug )
+				if creator is not None :
+					if creator.creator is not None :
+						widget = creator.creator( plug, **(creator.creatorKeywordArgs) )
+						if widget is not None :
+							self._addWidget( widget )
 				else :
-					with self._collapsible( label = IECore.CamelCase.toSpaced( plug.getName() ), collapsed=True ) :
-						self.__buildWalk( plug )
+					widget = GafferUI.PlugValueWidget.create( plug )
+					if widget is not None :
+						self._addWidget( GafferUI.PlugWidget( widget ) )
+					else :
+						with self._collapsible( label = IECore.CamelCase.toSpaced( plug.getName() ), collapsed=plug.typeId()==Gaffer.CompoundPlug.staticTypeId() ) :
+							self.__buildWalk( plug )
 				
 			else :
 			
@@ -193,29 +200,18 @@ class NodeUI( GafferUI.Widget ) :
 
 	## Creates a PlugWidget for the specified plug. Specific widgets can be
 	# registered for particular plugs by using the registerPlugWidget method below.
-	# If registeredWidgetsOnly is True, then None will be returned unless a specific
-	# widget has been registered using registerPlugValueWidget().
 	@classmethod
-	def createPlugValueWidget( cls, plug, registeredWidgetsOnly=False ) :
+	def createPlugValueWidget( cls, plug ) :
 
-		node = plug.node()
-		plugPath = plug.relativeName( node )
-
-		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-		for typeId in [ node.typeId() ] + nodeHierarchy :	
-			creators = cls.__nodePlugUIs.get( typeId, None )
-			if creators :
-				for creator in creators :
-					if creator.plugPathMatcher.match( plugPath ) :
-						return creator.creator( plug, **(creator.creatorKeywordArgs) )
-		
-		if registeredWidgetsOnly :
-			return None
-		else :
-			return GafferUI.PlugValueWidget.create( plug )
+		creator = cls.__plugValueWidgetCreator( plug )
+		if creator is not None and creator.creator is not None :
+			return creator.creator( plug, **(creator.creatorKeywordArgs) )
+	
+		return GafferUI.PlugValueWidget.create( plug )
 	
 	__nodePlugUIs = {}
-	## Registers a function to create a PlugWidget.
+	## Registers a function to create a PlugWidget. None may be passed to creator, to
+	# disable to the creation of uis for specific plugs.
 	@classmethod
 	def registerPlugValueWidget( cls, nodeTypeId, plugPath, creator, **creatorKeywordArgs ) :
 		
@@ -233,5 +229,21 @@ class NodeUI( GafferUI.Widget ) :
 		)
 		
 		creators.insert( 0, creator )
-				
+	
+	@classmethod
+	def __plugValueWidgetCreator( cls, plug ) :
+	
+		node = plug.node()
+		plugPath = plug.relativeName( node )
+
+		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+		for typeId in [ node.typeId() ] + nodeHierarchy :	
+			creators = cls.__nodePlugUIs.get( typeId, None )
+			if creators :
+				for creator in creators :
+					if creator.plugPathMatcher.match( plugPath ) :
+						return creator
+		
+		return None
+		
 NodeUI.registerNodeUI( Gaffer.Node.staticTypeId(), NodeUI )
