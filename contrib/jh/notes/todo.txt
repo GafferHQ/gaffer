@@ -1,3 +1,5 @@
+* fix script open directory location
+
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
 
