@@ -48,3 +48,4 @@ def __noduleCreator( plug ) :
 	return None
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
+GafferUI.NodeUI.registerPlugValueWidget( GafferScene.SceneNode.staticTypeId(), "in", None )
