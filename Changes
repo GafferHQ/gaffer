@@ -1,3 +1,5 @@
+* Fixed getText method of Label widget
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
