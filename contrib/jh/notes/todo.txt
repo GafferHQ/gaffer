@@ -1,5 +1,7 @@
 * fix script open directory location
 
+* selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
+
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
 
