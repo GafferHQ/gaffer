@@ -34,16 +34,48 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+import IECoreGL
+
+import Gaffer
+import GafferTest
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
+class SceneProceduralTest( unittest.TestCase ) :
 
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupScenesTest import GroupScenesTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
+	def testComputationErrors( self ) :
+	
+		# This test actually exposed a crash bug in IECoreGL, but it's important
+		# that Gaffer isn't susceptible to triggering that bug.
+	
+		mc = GafferScene.ModelCacheSource( inputs = { "fileName" : "iDontExist" } )
+		
+		renderer = IECoreGL.Renderer()
+		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
 
+		class __WrappingProcedural( IECore.ParameterisedProcedural ) :
+		
+			def __init__( self, procedural ) :
+			
+				IECore.ParameterisedProcedural.__init__( self, "" )
+				
+				self.__procedural = procedural
+				
+			def doBound( self, args ) :
+			
+				return self.__procedural.bound()
+				
+			def doRender( self, renderer, args ) :
+			
+				renderer.procedural( self.__procedural )
+		
+		with IECore.WorldBlock( renderer ) :
+		
+			procedural = GafferScene.SceneProcedural( mc["out"], Gaffer.Context(), "/" )
+			__WrappingProcedural( procedural ).render( renderer )
+			
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -4,9 +4,6 @@
 
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
-
-* fix crashes when modelcachesource has no filename
-	- we could just catch exceptions in ValuePlug::Computation
 	
 * viewing a scene node and then connecting an input to it doesn't update
 

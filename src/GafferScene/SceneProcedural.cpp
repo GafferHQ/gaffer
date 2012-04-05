@@ -37,6 +37,7 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 
 #include "IECore/AttributeBlock.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/Context.h"
 
@@ -62,9 +63,21 @@ SceneProcedural::~SceneProcedural()
 Imath::Box3f SceneProcedural::bound() const
 {
 	Context::Scope scopedContext( m_context );
-	Box3f b = m_scenePlug->boundPlug()->getValue();
-	M44f t = m_scenePlug->transformPlug()->getValue();
-	return transform( b, t );
+	/// \todo I think we should be able to remove this exception handling in the future.
+	/// Either when we do better error handling in ValuePlug computations, or when 
+	/// the bug in IECoreGL that caused the crashes in SceneProceduralTest.testComputationErrors
+	/// if fixed.
+	try
+	{
+		Box3f b = m_scenePlug->boundPlug()->getValue();
+		M44f t = m_scenePlug->transformPlug()->getValue();
+		return transform( b, t );
+	}
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::Msg::Error, "SceneProcedural::bound()", e.what() );
+	}
+	return Box3f();
 }
 
 void SceneProcedural::render( RendererPtr renderer ) const
@@ -72,26 +85,34 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	AttributeBlock attributeBlock( renderer );
 	Context::Scope scopedContext( m_context );
 		
-	renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
-		
-	ConstPrimitivePtr primitive = m_scenePlug->geometryPlug()->getValue();
-	if( primitive )
+	/// \todo See above.
+	try
 	{
-		primitive->render( renderer );
-	}
-	
-	ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
-	if( childNames )
-	{
-		for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
+			
+		ConstPrimitivePtr primitive = m_scenePlug->geometryPlug()->getValue();
+		if( primitive )
 		{
-			string childScenePath = m_scenePath;
-			if( m_scenePath.size() > 1 )
+			primitive->render( renderer );
+		}
+		
+		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
+		if( childNames )
+		{
+			for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 			{
-				childScenePath += "/";
-			}
-			childScenePath += *it;
-			renderer->procedural( new SceneProcedural( m_scenePlug, m_context, childScenePath ) );
-		}	
+				string childScenePath = m_scenePath;
+				if( m_scenePath.size() > 1 )
+				{
+					childScenePath += "/";
+				}
+				childScenePath += *it;
+				renderer->procedural( new SceneProcedural( m_scenePlug, m_context, childScenePath ) );
+			}	
+		}
 	}
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::Msg::Error, "SceneProcedural::render()", e.what() );
+	}	
 }
