@@ -315,22 +315,12 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			
 	def __join( self, splitContainer, subPanelIndex ) :
 			
-		# although subPanelToKeepFrom might seem to be a redundant variable,
-		# it is not. it's essential that we keep a temporary reference to it
-		# in addition to the toKeep variable we're actually interested in.
-		# see below.
 		subPanelToKeepFrom = splitContainer[subPanelIndex]	
-		toKeep = subPanelToKeepFrom[0]
-		
-		# here we remove the entire contents of splitContainer. without the subPanelToKeepFrom
-		# variable, there would be no python references to the splitContainer contents any more.
-		# that would mean that the C++ QWidgets would be deleted (it appears that noone wants them).
-		# that would mean that the C++ QWidget for toKeep would also be deleted (by the dying parent).
-		# which would mean that we'd lose the C++ contents of toKeep, even though we need them.
-		# by maintaining a reference to subPanelToKeepFrom, we keep the old parent alive long enough
-		# to reparent toKeep properly - we may then let the old parent die peacefully.
 		del splitContainer[:]
-		splitContainer.append( toKeep )
+		for w in subPanelToKeepFrom[:] :
+			splitContainer.append( w )
+		
+		splitContainer.setOrientation( subPanelToKeepFrom.getOrientation() )
 		
 		# schedule some garbage collection to hoover up the remains. we do this in a delayed
 		# way in case the menu we're called from is holding on to references to the ui elements
