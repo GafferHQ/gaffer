@@ -8,6 +8,8 @@
 
 * Fixed bug which meant that sometimes the remaining layout buttons would cease to work after removing a panel from the CompoundEditor.
 
+* PathListingWidget now has a displayModeChangedSignal() method.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
