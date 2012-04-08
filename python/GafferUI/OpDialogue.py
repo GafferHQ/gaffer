@@ -55,6 +55,10 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( opInstance )
 
+		# we must have a ScriptNode to provide a context for the ui
+		self.__scriptNode = Gaffer.ScriptNode() 
+		self.__scriptNode["op"] = self.__node
+	
 		frame = GafferUI.Frame()
 		frame.setChild( GafferUI.NodeUI.create( self.__node ) )
 		

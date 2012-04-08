@@ -42,23 +42,24 @@ import GafferUI
 
 class PathChooserWidget( GafferUI.Widget ) :
 
-	def __init__( self, path, previewTypes=[], **kw ) :
+	def __init__( self, path, previewTypes=[], allowMultipleSelection=False, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
 		
 		GafferUI.Widget.__init__( self, self.__column, **kw )
 		
-		# we edit this path directly
-		self.__path = path
-		
+		# we use this temporary path for our child widgets while constructing, and then call
+		# self.setPath() to replace it with the real thing. this lets us avoid duplicating the
+		# logic we need in setPath().
+		tmpPath = Gaffer.DictPath( {}, "/" )
 		with self.__column :
 		
 			# row for manipulating current directory
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 ) :
 				
-				displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
-				displayModeButton.setToolTip( "Toggle between list and tree views" )
-				self.__displayModeButtonClickedConnection = displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ) )
+				self.__displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
+				self.__displayModeButton.setToolTip( "Toggle between list and tree views" )
+				self.__displayModeButtonClickedConnection = self.__displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ) )
 				
 				reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
 				reloadButton.setToolTip( "Refresh view" )
@@ -70,24 +71,17 @@ class PathChooserWidget( GafferUI.Widget ) :
 				
 				GafferUI.Spacer( IECore.V2i( 4, 4 ) )
 				
-				# make the path bar at the top of the window. this uses a modified path to make sure it can
-				# only display directories and never be used to choose leaf files. we apply the necessary filter
-				# to achieve that in __updateFilter.
-				self.__dirPath = self.__path.copy()
-				if len( self.__dirPath ) :
-					del self.__dirPath[-1]
-
-				GafferUI.PathWidget( self.__dirPath )
+				self.__dirPathWidget = GafferUI.PathWidget( tmpPath )
 			
 			# directory listing and preview widget
 			with GafferUI.SplitContainer( GafferUI.SplitContainer.Orientation.Horizontal, expand=True ) as splitContainer :
 			
-				# the listing also uses a modified path of it's own.
-				self.__listingPath = self.__path.copy()
-				self.__directoryListing = GafferUI.PathListingWidget( self.__listingPath )
-			
+				self.__directoryListing = GafferUI.PathListingWidget( tmpPath, allowMultipleSelection=allowMultipleSelection )
+				self.__displayModeChangedConnection = self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ) )
 				if len( previewTypes ) :
-					GafferUI.CompoundPathPreview( self.__path, childTypes=previewTypes )
+					self.__previewWidget = GafferUI.CompoundPathPreview( tmpPath, childTypes=previewTypes )
+				else :
+					self.__previewWidget = None
 				
 			if len( splitContainer ) > 1 :
 				splitContainer.setSizes( [ 2, 1 ] ) # give priority to the listing over the preview
@@ -95,25 +89,72 @@ class PathChooserWidget( GafferUI.Widget ) :
 			# filter section
 			self.__filterFrame = GafferUI.Frame( borderWidth=0, borderStyle=GafferUI.Frame.BorderStyle.None )
 			self.__filter = None
-			self.__updateFilter()
 				
 			# path
-			self.__pathWidget = GafferUI.PathWidget( self.__path )
+			self.__pathWidget = GafferUI.PathWidget( tmpPath )
+			self.__pathWidget.setVisible( allowMultipleSelection == False )
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 
 		self.__listingSelectionChangedConnection = self.__directoryListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__listingSelectionChanged ) )
 		self.__listingSelectedConnection = self.__directoryListing.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
 		self.__pathWidgetSelectedConnection = self.__pathWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
+			
+		self.__path = None
+		self.setPath( path )
 		
+	def getPath( self ) :
+		
+		return self.__path
+
+	def setPath( self, path ) :
+	
+		if path is self.__path :
+			return
+
+		self.__path = path
+		
+		# the path bar at the top of the window uses a modified path to make sure it can
+		# only display directories and never be used to choose leaf files. we apply the necessary filter
+		# to achieve that in __updateFilter.
+		self.__dirPath = self.__path.copy()
+		if len( self.__dirPath ) :
+			del self.__dirPath[-1]
+		self.__dirPathWidget.setPath( self.__dirPath )
+		
+		# the listing also uses a modified path of it's own.
+		self.__listingPath = self.__path.copy()
+		self.__directoryListing.setPath( self.__listingPath )
+		
+		# the main path widget is actually allowed to edit the real path
+		self.__pathWidget.setPath( self.__path )
+		
+		# and the preview widget must also use the real path
+		if self.__previewWidget is not None :
+			self.__previewWidget.setPath( self.__path )
+
+		# set up the signals we need to keep everything glued together
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		self.__dirPathChangedConnection = self.__dirPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__dirPathChanged ) )
 		self.__listingPathChangedConnection = self.__listingPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__listingPathChanged ) )
-		
-	## Returns the PathWidget used for text-based path entry.
+
+		self.__updateFilter()
+	
+	## Returns the PathWidget used for text-based path entry. Note that this Widget is hidden when multiple
+	# selection is enabled.
 	def pathWidget( self ) :
 	
 		return self.__pathWidget
+	
+	## Returns the PathListingWidget used for displaying the paths to choose from.
+	def pathListingWidget( self ) :
+	
+		return self.__directoryListing
+
+	## Returns the PathWidget used for displaying and editing the current directory.
+	def directoryPathWidget( self ) :
+	
+		return self.__dirPathWidget
 
 	## This signal is emitted when the user has selected a path.
 	def pathSelectedSignal( self ) :
@@ -125,11 +166,11 @@ class PathChooserWidget( GafferUI.Widget ) :
 		assert( widget is self.__directoryListing )
 		
 		selection = self.__directoryListing.getSelectedPaths()
-		for path in selection :
-			if path.isLeaf() :
-				with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
-					self.__path[:] = path[:]
-					break
+		if not selection :
+			return
+			
+		with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+			self.__path[:] = selection[0][:]
 
 	# This slot is connected to the pathSelectedSignals of the children and just forwards
 	# them to our own pathSelectedSignal.
@@ -226,16 +267,23 @@ class PathChooserWidget( GafferUI.Widget ) :
 		mode = self.__directoryListing.getDisplayMode()
 		if mode == GafferUI.PathListingWidget.DisplayMode.List :
 			mode = GafferUI.PathListingWidget.DisplayMode.Tree
-			buttonImage = "pathListingList.png"
 		else :
 			mode = GafferUI.PathListingWidget.DisplayMode.List
-			buttonImage = "pathListingTree.png"
 			
 		self.__directoryListing.setDisplayMode( mode )
-		button.setImage( buttonImage )
 		
 		# if we're going back to list mode, then we need to update the directory and listing paths,
 		# because they're not changed as we navigate in tree mode.
 		if mode == GafferUI.PathListingWidget.DisplayMode.List :
 			self.__pathChanged( self.__path )
+	
+	def __displayModeChanged( self, pathListing ) :
+	
+		assert( pathListing is self.__directoryListing )
 		
+		if pathListing.getDisplayMode() == GafferUI.PathListingWidget.DisplayMode.List :
+			buttonImage = "pathListingTree.png"
+		else :
+			buttonImage = "pathListingList.png"
+			
+		self.__displayModeButton.setImage( buttonImage )

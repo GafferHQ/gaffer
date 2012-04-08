@@ -72,6 +72,16 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 			m.prepend( "/Choose path...", { "command" : IECore.curry( Gaffer.WeakMethod( self.__editPath ), selectedIndices[0] ) } )
 			
 		return m
+	
+	def _createRows( self ) :
+	
+		path = self.__path.copy()
+		dialogue = GafferUI.PathChooserDialogue( path, allowMultipleSelection=True, **self.__pathChooserDialogueKeywords )
+		paths = dialogue.waitForPaths( parentWindow = self.ancestor( GafferUI.Window ) )
+		if not paths :
+			return None
+			
+		return [ IECore.StringVectorData( [ str( p ) for p in paths ] ) ]
 		
 	def __editPath( self, index ) :
 		

@@ -40,13 +40,17 @@ import GafferUI
 
 class PathChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, path, title="Select path", cancelLabel="Cancel", confirmLabel="OK", **kw ) :
+	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, **kw ) :
 	
+		if title is None :
+			title = "Select paths" if allowMultipleSelection else "Select path"
+			
 		GafferUI.Dialogue.__init__( self, title, **kw )
 		
 		self.__path = path
+		self.__allowMultipleSelection = allowMultipleSelection
 		
-		self.__pathChooserWidget = GafferUI.PathChooserWidget( path )
+		self.__pathChooserWidget = GafferUI.PathChooserWidget( path, allowMultipleSelection=allowMultipleSelection )
 		self._setWidget( self.__pathChooserWidget )
 		self.__pathChooserSelectedConnection = self.__pathChooserWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathChooserSelected ) )
 
@@ -64,15 +68,34 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		return self.__pathSelectedSignal
 	
 	## Causes the dialogue to enter a modal state, returning the path once it has been
-	# selected by the user. Returns None if the dialogue is cancelled.
+	# selected by the user. Returns None if the dialogue is cancelled. Note that you should
+	# use waitForPaths instead if multiple selection is enabled.
 	def waitForPath( self, **kw ) :
-	
-		self.__pathChooserWidget.pathWidget().grabFocus()
+		
+		assert( not self.__allowMultipleSelection )
+		paths = self.waitForPaths( **kw )
+		if paths :
+			assert( len( paths ) == 1 )
+			return paths[0]
+			
+		return None
+		
+	## Causes the dialogue to enter a modal state, returning the paths once they have been
+	# selected by the user. Returns None if the dialogue is cancelled.
+	def waitForPaths( self, **kw ) :
+		
+		if self.__allowMultipleSelection :
+			self.__pathChooserWidget.directoryPathWidget().grabFocus()
+		else :
+			self.__pathChooserWidget.pathWidget().grabFocus()
 	
 		button = self.waitForButton( **kw )
 		
 		if button is self.__confirmButton :
-			return self.__path.copy()
+			result = self.__pathChooserWidget.pathListingWidget().getSelectedPaths()
+			if not result and not self.__allowMultipleSelection :
+				result = [ self.__path.copy() ]
+			return result
 			
 		return None
 		

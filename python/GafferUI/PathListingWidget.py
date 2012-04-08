@@ -135,6 +135,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
+		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
 	
 	def setPath( self, path ) :
 	
@@ -183,6 +184,11 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__displayMode = displayMode
 		self.__currentDir = None # force update to do something
 		self.__update()
+		self.__displayModeChangedSignal( self )
+		
+	def displayModeChangedSignal( self ) :
+	
+		return self.__displayModeChangedSignal
 	
 	## Returns a list of all currently selected paths. Note that a list is returned
 	# even when in single selection mode.
@@ -226,7 +232,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 		return self.getSelectedPaths()
 	
-	## This signal is emitted when the selected items change. Use selectedPaths()
+	## This signal is emitted when the selected items change. Use getSelectedPaths()
 	# to get a list of those items.
 	def selectionChangedSignal( self ) :
 	

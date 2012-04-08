@@ -1,3 +1,21 @@
+* Fixed getText method of Label widget.
+
+* TextInputDialogue now has all text in the textfield selected by default.
+
+* Fixed "RuntimeError: underlying C/C++ object has been deleted" error triggered by removing a panel from a ScriptWindow.
+
+* Fixed bug which meant that removing a panel would only keep a single subpanel of the panel that remained.
+
+* Fixed bug which meant that sometimes the remaining layout buttons would cease to work after removing a panel from the CompoundEditor.
+
+* PathListingWidget now has a displayModeChangedSignal() method.
+
+* Added PathChooserWidget setPath() and getPath() methods.
+
+* Added customisable modes to the BrowserEditor. Current modes allow the browsing of either files or ops.
+
+0.30.0
+------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
 
 * Gaffer.BlockedConnection now supports reentrancy, with the connection only becoming unblocked when the outermost block has been exited.
@@ -5,6 +23,10 @@
 * Fixed bug which prevented selection using the up/down cursor keys from working in the PathChooserWidget.
 
 * ImageGadgets now have a linear to srgb conversion applied when they are drawn. This means they now match the Image widget behaviour.
+
+* PathChooserWidget and PathChooserDialogue now accept a new allowMultipleSelection argument to the constructor. Use the new PathChooserDialogue.waitForPaths() method to wait for paths selected in this way.
+
+* VectorDataWidget has a new protected _createRows() method which may be overridden by derived classes to customise the addition of new rows. The PathVectorDataWidget implements this by displaying a dialogue where the user may select multiple paths to be added. This improves the parameter ui for PathVectorParameters.
 
 0.29.0
 ------

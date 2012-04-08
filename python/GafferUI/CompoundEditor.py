@@ -304,7 +304,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			# layout button
 			layoutButton = GafferUI.Button( image="layoutButton.png", hasFrame=False )
 			layoutButton.setToolTip( "Click to modify the layout" )
-			splitContainer.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
+			layoutButton.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
 		
 		splitContainer[0].setCornerWidget( row )
 				
@@ -314,14 +314,19 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		self.__popupLayoutMenu( splitContainer )
 			
 	def __join( self, splitContainer, subPanelIndex ) :
-	
-		toKeep = splitContainer[subPanelIndex][0]
+			
+		subPanelToKeepFrom = splitContainer[subPanelIndex]	
 		del splitContainer[:]
-		splitContainer.append( toKeep )
+		for w in subPanelToKeepFrom[:] :
+			splitContainer.append( w )
+		
+		splitContainer.setOrientation( subPanelToKeepFrom.getOrientation() )
 		
 		# schedule some garbage collection to hoover up the remains. we do this in a delayed
 		# way in case the menu we're called from is holding on to references to the ui elements
 		# which are going to die.
+		## \todo I don't think this should be necessary now we're using WeakMethods for slots. It
+		# may be a good idea to remove it, as it may otherwise mask problems temporarily.
 		GafferUI.EventLoop.addIdleCallback( self.__collect )
 
 	def __removeCurrentTab( self, tabbedContainer ) :

@@ -45,6 +45,7 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 		
 		self.__textWidget = GafferUI.TextWidget( initialText )
+		self.__textWidget.setSelection( None, None ) # all text
 		self._setWidget( self.__textWidget )
 		self.__textActivatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
 
