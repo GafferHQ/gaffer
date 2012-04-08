@@ -2,6 +2,8 @@
 
 * TextInputDialogue now has all text in the textfield selected by default.
 
+* Fixed "RuntimeError: underlying C/C++ object has been deleted" error triggered by removing a panel from a ScriptWindow.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.

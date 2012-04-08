@@ -314,14 +314,29 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		self.__popupLayoutMenu( splitContainer )
 			
 	def __join( self, splitContainer, subPanelIndex ) :
-	
-		toKeep = splitContainer[subPanelIndex][0]
+			
+		# although subPanelToKeepFrom might seem to be a redundant variable,
+		# it is not. it's essential that we keep a temporary reference to it
+		# in addition to the toKeep variable we're actually interested in.
+		# see below.
+		subPanelToKeepFrom = splitContainer[subPanelIndex]	
+		toKeep = subPanelToKeepFrom[0]
+		
+		# here we remove the entire contents of splitContainer. without the subPanelToKeepFrom
+		# variable, there would be no python references to the splitContainer contents any more.
+		# that would mean that the C++ QWidgets would be deleted (it appears that noone wants them).
+		# that would mean that the C++ QWidget for toKeep would also be deleted (by the dying parent).
+		# which would mean that we'd lose the C++ contents of toKeep, even though we need them.
+		# by maintaining a reference to subPanelToKeepFrom, we keep the old parent alive long enough
+		# to reparent toKeep properly - we may then let the old parent die peacefully.
 		del splitContainer[:]
 		splitContainer.append( toKeep )
 		
 		# schedule some garbage collection to hoover up the remains. we do this in a delayed
 		# way in case the menu we're called from is holding on to references to the ui elements
 		# which are going to die.
+		## \todo I don't think this should be necessary now we're using WeakMethods for slots. It
+		# may be a good idea to remove it, as it may otherwise mask problems temporarily.
 		GafferUI.EventLoop.addIdleCallback( self.__collect )
 
 	def __removeCurrentTab( self, tabbedContainer ) :
