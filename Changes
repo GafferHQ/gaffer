@@ -1,4 +1,6 @@
-* Fixed getText method of Label widget
+* Fixed getText method of Label widget.
+
+* TextInputDialogue now has all text in the textfield selected by default.
 
 0.30.0
 ------
