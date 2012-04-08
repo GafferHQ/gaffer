@@ -304,7 +304,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			# layout button
 			layoutButton = GafferUI.Button( image="layoutButton.png", hasFrame=False )
 			layoutButton.setToolTip( "Click to modify the layout" )
-			splitContainer.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
+			layoutButton.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
 		
 		splitContainer[0].setCornerWidget( row )
 				

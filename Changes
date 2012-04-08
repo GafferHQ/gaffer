@@ -6,6 +6,8 @@
 
 * Fixed bug which meant that removing a panel would only keep a single subpanel of the panel that remained.
 
+* Fixed bug which meant that sometimes the remaining layout buttons would cease to work after removing a panel from the CompoundEditor.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
