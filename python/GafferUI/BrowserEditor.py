@@ -36,6 +36,7 @@
 
 import os
 import re
+import weakref
 
 import IECore
 
@@ -46,45 +47,175 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode=None, **kw ) :
 	
-		self.__column = GafferUI.ListContainer( borderWidth = 8 )
+		self.__column = GafferUI.ListContainer( borderWidth = 8, spacing = 6 )
 		
 		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, **kw )
 		
 		with self.__column :
 		
-			path = Gaffer.FileSystemPath(
-				os.getcwd(),
-				Gaffer.CompoundPathFilter(
-				
-					filters = [
-					
-						Gaffer.FileNamePathFilter(
-							[ re.compile( "^[^.].*" ) ],
-							leafOnly=False,
-							userData = {
-								"UI" : {
-									"label" : "Show hidden files",
-									"invertEnabled" : True,
-								}
-							}
-						),
-						
-						Gaffer.InfoPathFilter(
-							infoKey = "name",
-							matcher = None, # the ui will fill this in
-							leafOnly = False,
-						),
-						
-					]
-				
-				)
-			)
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 6 ) :
+			
+				GafferUI.Label( "Location" )
+			
+				modeMenu = GafferUI.SelectionMenu()
+				for mode in self.__modes :
+					modeMenu.addItem( mode[0] )
+				self.__modeChangedConnection = modeMenu.currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__modeChanged ) )
 		
-			pathChooser = GafferUI.PathChooserWidget( path, previewTypes=GafferUI.PathPreviewWidget.types() )
-			pathChooser.pathWidget().setVisible( False )
+			self.__pathChooser = GafferUI.PathChooserWidget( Gaffer.DictPath( {}, "/" ), previewTypes=GafferUI.PathPreviewWidget.types() )
+			self.__pathChooser.pathWidget().setVisible( False )
 		
+		self.__modeInstances = {}
+		self.__currentModeInstance = None
+		self.__modeChanged( modeMenu )
+	
+	## Returns the PathChooserWidget which forms the majority of this ui.
+	def pathChooser( self ) :
+	
+		return self.__pathChooser
+	
 	def __repr__( self ) :
 
 		return "GafferUI.BrowserEditor()"
+		
+	def __modeChanged( self, modeMenu ) :
+	
+		label = modeMenu.getCurrentItem()
+		if label not in self.__modeInstances :
+			for mode in self.__modes :
+				if mode[0] == label :
+					self.__modeInstances[label] = mode[1]( self )
+					break
 
-GafferUI.EditorWidget.registerType( "Browser", BrowserEditor )
+		if self.__currentModeInstance is not None :
+			self.__currentModeInstance.disconnect()
+		
+		self.__currentModeInstance = self.__modeInstances[label]
+		self.__currentModeInstance.connect()
+		
+	class Mode( object ) :
+	
+		def __init__( self, browser ) :
+		
+			self.__browser = weakref.ref( browser ) # avoid circular references
+			self.__directoryPath = None
+			self.__displayMode = None
+			
+		def browser( self ) :
+		
+			return self.__browser()
+		
+		def connect( self ) :
+		
+			if self.__directoryPath is None :
+				self.__directoryPath = self._initialPath()
+				self.__displayMode = self._initialDisplayMode()
+		
+			# we need a little bit of jiggery pokery, because the PathChooserWidget edits
+			# the main path as a leaf path, and we're more interested in setting the current
+			# directory.
+			pathElements = self.__directoryPath[:]
+			self.browser().pathChooser().setPath( self.__directoryPath )
+			self.browser().pathChooser().directoryPathWidget().getPath()[:] = pathElements
+			
+			self.browser().pathChooser().pathListingWidget().setDisplayMode( self.__displayMode )
+						
+		def disconnect( self ) :
+	
+			self.__directoryPath[:] = self.browser().pathChooser().directoryPathWidget().getPath()[:]
+			self.__displayMode = self.browser().pathChooser().pathListingWidget().getDisplayMode()
+	
+		## Must be implemented by derived classes to return the initial directory path to be viewed.
+		def _initialPath( self ) :
+		
+			raise NotImplementedError
+		
+		## May be reimplemented by derived classes to change the initial display mode of the path listing
+		def _initialDisplayMode( self ) :
+		
+			return GafferUI.PathListingWidget.DisplayMode.List
+	
+	__modes = []
+	@classmethod
+	def registerMode( cls, label, modeCreator ) :
+	
+		cls.__modes.append( ( label, modeCreator ) )
+
+GafferUI.EditorWidget.registerType( "Browser", BrowserEditor )	
+
+class FileSystemMode( BrowserEditor.Mode ) :
+
+	def __init__( self, browser ) :
+		
+		BrowserEditor.Mode.__init__( self, browser )
+
+	def _initialPath( self ) :
+	
+		return Gaffer.FileSystemPath(
+			os.getcwd(),
+			filter = Gaffer.CompoundPathFilter(
+			
+				filters = [
+				
+					Gaffer.FileNamePathFilter(
+						[ re.compile( "^[^.].*" ) ],
+						leafOnly=False,
+						userData = {
+							"UI" : {
+								"label" : "Show hidden files",
+								"invertEnabled" : True,
+							}
+						}
+					),
+					
+					Gaffer.InfoPathFilter(
+						infoKey = "name",
+						matcher = None, # the ui will fill this in
+						leafOnly = False,
+					),
+					
+				],
+			
+			),
+		)
+			
+BrowserEditor.registerMode( "Files", FileSystemMode )
+	
+class OpMode( BrowserEditor.Mode ) :
+
+	def __init__( self, browser ) :
+	
+		BrowserEditor.Mode.__init__( self, browser )
+				
+	def connect( self ) :
+	
+		BrowserEditor.Mode.connect( self )
+		
+		self.__pathSelectedConnection = self.browser().pathChooser().pathListingWidget().pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
+		
+	def disconnect( self ) :
+	
+		BrowserEditor.Mode.disconnect( self )
+
+		self.__pathSelectedConnection = None
+	
+	def _initialPath( self ) :
+	
+		return Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/" )
+		
+	def _initialDisplayMode( self ) :
+	
+		return GafferUI.PathListingWidget.DisplayMode.Tree
+	
+	def __pathSelected( self, pathListing ) :
+	
+		selectedPaths = pathListing.getSelectedPaths()
+		if not len( selectedPaths ) :
+			return
+			
+		op = selectedPaths[0].classLoader().load( str( selectedPaths[0] )[1:] )()
+		opDialogue = GafferUI.OpDialogue( op )
+		pathListing.ancestor( GafferUI.Window ).addChildWindow( opDialogue )
+		opDialogue.setVisible( True )
+
+BrowserEditor.registerMode( "Ops", OpMode )

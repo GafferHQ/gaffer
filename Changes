@@ -10,6 +10,10 @@
 
 * PathListingWidget now has a displayModeChangedSignal() method.
 
+* Added PathChooserWidget setPath() and getPath() methods.
+
+* Added customisable modes to the BrowserEditor. Current modes allow the browsing of either files or ops.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
