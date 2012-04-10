@@ -90,9 +90,14 @@ class EditorWidget( GafferUI.Widget ) :
 			self._updateFromContext()
 	
 	## May be implemented by derived classes to update state based on a change of context.
+	# To temporarily suspend calls to this function, use Gaffer.BlockedConnection( self._contextChangedConnection() ).
 	def _updateFromContext( self ) :
 	
-		pass	
+		pass
+		
+	def _contextChangedConnection( self ) :
+	
+		return self.__contextChangedConnection
 	
 	## This must be implemented by all derived classes as it used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation - 
