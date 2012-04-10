@@ -27,3 +27,5 @@
 * Added a Gaffer.TransformPlug class, for specifying transformations.
 
 * Removed NodeUI.createPlugValueWidget() registeredWidgets only parameter.
+
+* Added PathListingWidget setPathExpanded, getPathExpanded, setExpandedPaths, getExpandedPaths and expansionChangedSignal methods.

@@ -106,11 +106,11 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 			self.__pathListing.setSelectedPaths( [ pathCopy ], expandNonLeaf=False )
 			# expand as people type forwards
 			if len( pathCopy ) > len( self.__prevPath ) :
-				self.__pathListing.setPathCollapsed( pathCopy, False )
+				self.__pathListing.setPathExpanded( pathCopy, True )
 			# collapse as people delete backwards
 			else :
 				while len( pathCopy ) < len( self.__prevPath ) :
-					self.__pathListing.setPathCollapsed( self.__prevPath, True )
+					self.__pathListing.setPathExpanded( self.__prevPath, False )
 					del self.__prevPath[-1]
 					
 		self.__prevPath = pathCopy
