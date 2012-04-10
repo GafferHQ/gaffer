@@ -37,6 +37,8 @@
 #include "boost/python.hpp"
 
 #include "IECore/SimpleTypedData.h"
+#include "IECore/DespatchTypedData.h"
+#include "IECore/TypeTraits.h"
 #include "IECorePython/RefCountedBinding.h"
 
 #include "Gaffer/Context.h"
@@ -52,22 +54,28 @@ using namespace IECore;
 namespace GafferBindings
 {
 
+struct SimpleTypedDataGetter
+{
+	typedef object ReturnType;
+	
+	template<typename T>
+	object operator()( typename T::Ptr data )
+	{
+		return object( data->readable() );
+	}
+};
+
 static object get( Context &c, const IECore::InternedString &name )
 {
-	const Data *d = c.get<Data>( name );
-	/// \todo Support more types - possibly using DespatchTypedData.
-	switch( d->typeId() )
+	ConstDataPtr d = c.get<Data>( name );
+	try
 	{
-		case IntDataTypeId :
-			return object( static_cast<const IntData *>( d )->readable() );
-		case FloatDataTypeId :
-			return object( static_cast<const FloatData *>( d )->readable() );
-		case StringDataTypeId :
-			return object( static_cast<const StringData *>( d )->readable() );
-		default :
-			return object();
+		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
 	}
-	return object();
+	catch( const InvalidArgumentException &e )
+	{
+		return object( DataPtr( d->copy() ) );
+	}
 }
 
 struct ChangedSlotCaller
@@ -101,9 +109,11 @@ void bindContext()
 		.def( "set", &Context::set<float> )
 		.def( "set", &Context::set<int> )
 		.def( "set", &Context::set<std::string> )
+		.def( "set", &Context::set<Data *> )
 		.def( "__setitem__", &Context::set<float> )
 		.def( "__setitem__", &Context::set<int> )
 		.def( "__setitem__", &Context::set<std::string> )
+		.def( "__setitem__", &Context::set<Data *> )
 		.def( "get", &get )
 		.def( "__getitem__", &get )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )

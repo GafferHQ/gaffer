@@ -43,22 +43,60 @@ namespace Gaffer
 {
 
 template<typename T, typename Enabler>
-struct Context::Getter
+struct Context::Accessor
 {	
 	typedef const T &ResultType;
 	
-	ResultType operator() ( const IECore::CompoundData *data, const IECore::InternedString &name )
+	/// Returns true if the value has changed
+	bool set( IECore::CompoundData *data, const IECore::InternedString &name, const T &value )
+	{
+		IECore::TypedData<T> *d = data->member<IECore::TypedData<T> >( name );
+		if( d )
+		{
+			if( d->readable() == value )
+			{
+				// no change so early out
+				return false;
+			}
+			else
+			{
+				// update in place to avoid allocations
+				d->writable() = value;
+				return true;
+			}			
+		}
+		else
+		{
+			data->writable()[name] = new IECore::TypedData<T>( value );
+			return true;
+		}
+	}
+	
+	ResultType get( const IECore::CompoundData *data, const IECore::InternedString &name )
 	{
 		return data->member<IECore::TypedData<T> >( name, true )->readable();		
 	}
 };
 
 template<typename T>
-struct Context::Getter<T, typename boost::enable_if<boost::is_base_of<IECore::Data, T> >::type>
+struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::Data, typename boost::remove_pointer<T>::type > >::type>
 {
-	typedef const T *ResultType;
+	typedef typename boost::remove_pointer<T>::type ValueType;
+	typedef const ValueType *ResultType;
 	
-	ResultType operator() ( const IECore::CompoundData *data, const IECore::InternedString &name )
+	bool set( IECore::CompoundData *data, const IECore::InternedString &name, const T &value )
+	{
+		const ValueType *d = data->member<ValueType>( name );
+		if( d && d->isEqualTo( value ) )
+		{
+			return false;
+		}
+		
+		data->writable()[name] = value->copy();
+		return true;
+	}
+	
+	ResultType get( const IECore::CompoundData *data, const IECore::InternedString &name )
 	{
 		return data->member<T>( name, true );		
 	}
@@ -67,32 +105,16 @@ struct Context::Getter<T, typename boost::enable_if<boost::is_base_of<IECore::Da
 template<typename T>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
-	IECore::TypedData<T> *d = m_data->member<IECore::TypedData<T> >( name );
-	if( d )
+	if( Accessor<T>().set( m_data.get(), name, value ) )
 	{
-		if( d->readable() == value )
-		{
-			// no change so early out
-			return;
-		}
-		else
-		{
-			// update in place to avoid allocations
-			d->writable() = value;
-		}			
+		m_changedSignal( this, name );
 	}
-	else
-	{
-		m_data->writable()[name] = new IECore::TypedData<T>( value );
-	}
-	
-	m_changedSignal( this, name );
 }
 
 template<typename T>
-typename Context::Getter<T>::ResultType Context::get( const IECore::InternedString &name ) const
+typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name ) const
 {
-	return Getter<T>()( m_data.get(), name );
+	return Accessor<T>().get( m_data.get(), name );
 }
 		
 } // namespace Gaffer

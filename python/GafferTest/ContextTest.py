@@ -37,6 +37,8 @@
 import unittest
 import threading
 
+import IECore
+
 import Gaffer
 
 class ContextTest( unittest.TestCase ) :
@@ -180,6 +182,19 @@ class ContextTest( unittest.TestCase ) :
 			
 		for t in threads :
 			t.join()
+			
+	def testSetWithObject( self ) :
+	
+		c = Gaffer.Context()
+	
+		v = IECore.StringVectorData( [ "a", "b", "c" ] )
+		c.set( "v", v )
+		
+		self.assertEqual( c.get( "v" ), v )
+		self.failIf( c.get( "v" ).isSame( v ) )
+
+		self.assertEqual( c["v"], v )
+		self.failIf( c["v"].isSame( v ) )
 		
 if __name__ == "__main__":
 	unittest.main()

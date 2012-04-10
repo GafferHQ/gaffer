@@ -65,8 +65,10 @@ class Context : public IECore::RefCounted
 		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
 	
 		template<typename T, typename Enabler=void>
-		struct Getter;
+		struct Accessor;
 		
+		/// Calling with simple types (e.g float) will automatically
+		/// create a TypedData<T> to store the value.
 		template<typename T>
 		void set( const IECore::InternedString &name, const T &value );
 		/// Can be used to retrieve simple types :
@@ -74,7 +76,7 @@ class Context : public IECore::RefCounted
 		/// And also IECore::Data types :
 		///		const FloatData *f = context->get<FloatData>( "myFloat" )
 		template<typename T>
-		typename Getter<T>::ResultType get( const IECore::InternedString &name ) const;
+		typename Accessor<T>::ResultType get( const IECore::InternedString &name ) const;
 		
 		/// Convenience method returning get<float>( "frame" ).
 		float getFrame() const;
