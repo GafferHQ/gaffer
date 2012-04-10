@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -67,7 +67,25 @@ def create( name ) :
 # specified. If the file is later evaluated it will reregister the layouts with this module.
 def save( fileObject, nameRegex = None ) :
 
+	# decide what to write
+	namesToWrite = []
 	for name in names() :
 		if nameRegex.match( name ) or nameRegex is None :
-			fileObject.write( "GafferUI.Layouts.add( \"%s\", \"%s\" )\n\n" % ( name, __namedLayouts[name] ) )
+			namesToWrite.append( name )
+	
+	# write the necessary import statements
+	imported = set()
+	for layout in [ __namedLayouts[name] for name in namesToWrite ] :
+		className = layout.partition( "(" )[0]
+		moduleName = className.rpartition( "." )[0]
+		if moduleName not in imported :
+			fileObject.write( "import %s\n" % moduleName )
+			imported.add( moduleName )
+	
+	if len( imported ) :
+		fileObject.write( "\n" )
+	
+	# finally write out the layouts
+	for name in namesToWrite :
+		fileObject.write( "GafferUI.Layouts.add( \"%s\", \"%s\" )\n\n" % ( name, __namedLayouts[name] ) )
 	
