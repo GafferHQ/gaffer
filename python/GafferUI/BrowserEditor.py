@@ -181,6 +181,45 @@ class FileSystemMode( BrowserEditor.Mode ) :
 			
 BrowserEditor.registerMode( "Files", FileSystemMode )
 	
+class FileSequenceMode( BrowserEditor.Mode ) :
+
+	def __init__( self, browser ) :
+		
+		BrowserEditor.Mode.__init__( self, browser )
+	
+	def _initialPath( self ) :
+	
+	
+		return Gaffer.SequencePath(
+			Gaffer.FileSystemPath( os.getcwd() ),
+			filter = Gaffer.CompoundPathFilter(
+				
+				filters = [
+				
+					Gaffer.FileNamePathFilter(
+						[ re.compile( "^[^.].*" ) ],
+						leafOnly=False,
+						userData = {
+							"UI" : {
+								"label" : "Show hidden files",
+								"invertEnabled" : True,
+							}
+						}
+					),
+					
+					Gaffer.InfoPathFilter(
+						infoKey = "name",
+						matcher = None, # the ui will fill this in
+						leafOnly = False,
+					),
+					
+				],
+			
+			),
+		)
+		
+BrowserEditor.registerMode( "File Sequences", FileSequenceMode )
+
 class OpMode( BrowserEditor.Mode ) :
 
 	def __init__( self, browser ) :

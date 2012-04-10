@@ -47,7 +47,7 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		self.__pathWidget = GafferUI.PathPlugValueWidget(
 			parameterHandler.plug(),
-			Gaffer.FileSystemPath( "/", filter = self._filter() ),
+			self._path(),
 			pathChooserDialogueKeywords = self._pathChooserDialogueKeywords(),
 		)
 					
@@ -61,6 +61,10 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		)
 		
 		self._addPopupMenu( self.__pathWidget.pathWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
+
+	def _path( self ) :
+	
+		return Gaffer.FileSystemPath( "/", filter = self._filter() )
 
 	def _filter( self ) :
 		

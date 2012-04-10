@@ -75,6 +75,7 @@ from DictPathTest import DictPathTest
 from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
 from BlockedConnectionTest import BlockedConnectionTest
+from SequencePathTest import SequencePathTest
 
 if __name__ == "__main__":
 	import unittest
