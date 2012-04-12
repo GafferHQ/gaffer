@@ -16,6 +16,8 @@
 
 * Added Gaffer.SequencePath class and used it to implement a file sequence browsing mode for the BrowserEditor and a FileSequenceParameterValueWidget.
 
+* Added PathListingWidget setColumns() and getColumns() methods.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
