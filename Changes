@@ -18,6 +18,8 @@
 
 * Added PathListingWidget setColumns() and getColumns() methods.
 
+* Added a Gaffer.OpMatcher class, to provide lists of ops which are suitable for application to particular objects.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.

@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,26 +34,58 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
+import os
+import unittest
+
+import IECore
+
+import Gaffer
+
+class OpMatcherTest( unittest.TestCase ) :
+
+	__sequence = IECore.FileSequence( "/tmp/a.#.exr 1-10" )
+
+	def setUp( self ) :
+	
+		for f in self.__sequence.fileNames() :
+			os.system( "touch %s" % f )
+
+	def testFile( self ) :
+	
+		matcher = Gaffer.OpMatcher.defaultInstance()
+		
+		exrFile = os.path.dirname( __file__ ) + "/images/checker.exr"
+		path = Gaffer.FileSystemPath( exrFile )
+		
+		ops = matcher.matches( path )
+		self.failUnless( len( ops ) )
+
+	def testSequences( self ) :
+	
+		matcher = Gaffer.OpMatcher.defaultInstance()
+	
+		path = Gaffer.SequencePath( str( self.__sequence ) )
+		ops = matcher.matches( path )
+		
+		sequenceRenumber = None
+		for op in ops :
+			if isinstance( op, IECore.SequenceRenumberOp ) :
+				sequenceRenumber = op
+				
+		self.failUnless( sequenceRenumber is not None )
+		self.assertEqual( sequenceRenumber["src"].getTypedValue(), str( self.__sequence ) )
+	
+	def testDefaultInstance( self ) :
+	
+		self.failUnless( isinstance( Gaffer.OpMatcher.defaultInstance(), Gaffer.OpMatcher ) )
+		self.failUnless( Gaffer.OpMatcher.defaultInstance() is Gaffer.OpMatcher.defaultInstance() )
+	
+	def tearDown( self ) :
+	
+		for f in self.__sequence.fileNames() :
+			if os.path.exists( f ) :
+				os.remove( f )
+								
+if __name__ == "__main__":
+	unittest.main()
+	
