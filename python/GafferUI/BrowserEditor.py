@@ -110,7 +110,8 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			if self.__directoryPath is None :
 				self.__directoryPath = self._initialPath()
 				self.__displayMode = self._initialDisplayMode()
-		
+				self.__columns = self._initialColumns()
+				
 			# we need a little bit of jiggery pokery, because the PathChooserWidget edits
 			# the main path as a leaf path, and we're more interested in setting the current
 			# directory.
@@ -119,6 +120,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			self.browser().pathChooser().directoryPathWidget().getPath()[:] = pathElements
 			
 			self.browser().pathChooser().pathListingWidget().setDisplayMode( self.__displayMode )
+			self.browser().pathChooser().pathListingWidget().setColumns( self.__columns )
 						
 		def disconnect( self ) :
 	
@@ -134,6 +136,10 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 		def _initialDisplayMode( self ) :
 		
 			return GafferUI.PathListingWidget.DisplayMode.List
+			
+		def _initialColumns( self ) :
+		
+			raise NotImplementedError
 	
 	__modes = []
 	@classmethod
@@ -178,9 +184,56 @@ class FileSystemMode( BrowserEditor.Mode ) :
 			
 			),
 		)
+		
+	def _initialColumns( self ) :
+	
+		return GafferUI.PathListingWidget.defaultFileSystemColumns
 			
 BrowserEditor.registerMode( "Files", FileSystemMode )
 	
+class FileSequenceMode( BrowserEditor.Mode ) :
+
+	def __init__( self, browser ) :
+		
+		BrowserEditor.Mode.__init__( self, browser )
+	
+	def _initialPath( self ) :
+	
+	
+		return Gaffer.SequencePath(
+			Gaffer.FileSystemPath( os.getcwd() ),
+			filter = Gaffer.CompoundPathFilter(
+				
+				filters = [
+				
+					Gaffer.FileNamePathFilter(
+						[ re.compile( "^[^.].*" ) ],
+						leafOnly=False,
+						userData = {
+							"UI" : {
+								"label" : "Show hidden files",
+								"invertEnabled" : True,
+							}
+						}
+					),
+					
+					Gaffer.InfoPathFilter(
+						infoKey = "name",
+						matcher = None, # the ui will fill this in
+						leafOnly = False,
+					),
+					
+				],
+			
+			),
+		)
+
+	def _initialColumns( self ) :
+	
+		return GafferUI.PathListingWidget.defaultFileSystemColumns
+		
+BrowserEditor.registerMode( "File Sequences", FileSequenceMode )
+
 class OpMode( BrowserEditor.Mode ) :
 
 	def __init__( self, browser ) :
@@ -206,6 +259,10 @@ class OpMode( BrowserEditor.Mode ) :
 	def _initialDisplayMode( self ) :
 	
 		return GafferUI.PathListingWidget.DisplayMode.Tree
+	
+	def _initialColumns( self ) :
+	
+		return [ GafferUI.PathListingWidget.defaultNameColumn ]
 	
 	def __pathSelected( self, pathListing ) :
 	

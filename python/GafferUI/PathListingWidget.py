@@ -223,6 +223,19 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 		return self.__displayModeChangedSignal
 	
+	def setColumns( self, columns ) :
+	
+		if columns == self.__columns :
+			return
+		
+		self.__columns = columns
+		self.__currentDir = None # force update to do something
+		self.__update()
+		
+	def getColumns( self ) :
+		
+		return self.__columns
+	
 	## Returns a list of all currently selected paths. Note that a list is returned
 	# even when in single selection mode.
 	def getSelectedPaths( self ) :

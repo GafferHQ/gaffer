@@ -84,6 +84,7 @@ from ExpressionNodeTest import ExpressionNodeTest
 from BlockedConnectionTest import BlockedConnectionTest
 from TimeWarpNodeTest import TimeWarpNodeTest
 from TransformPlugTest import TransformPlugTest
+from SequencePathTest import SequencePathTest
 
 if __name__ == "__main__":
 	import unittest
