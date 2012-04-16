@@ -37,6 +37,7 @@
 import os
 import re
 import weakref
+import threading
 
 import IECore
 
@@ -101,6 +102,11 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			self.__directoryPath = None
 			self.__displayMode = None
 			
+			# create the op matcher on a separate thread, as it may take a while to trawl
+			# through all the available ops.
+			self.__opMatcher = None
+			threading.Thread( target = self.__createOpMatcher ).start()
+			
 		def browser( self ) :
 		
 			return self.__browser()
@@ -121,11 +127,15 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			
 			self.browser().pathChooser().pathListingWidget().setDisplayMode( self.__displayMode )
 			self.browser().pathChooser().pathListingWidget().setColumns( self.__columns )
+			
+			self.__contextMenuConnection = self.browser().pathChooser().pathListingWidget().contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 						
 		def disconnect( self ) :
 	
 			self.__directoryPath[:] = self.browser().pathChooser().directoryPathWidget().getPath()[:]
 			self.__displayMode = self.browser().pathChooser().pathListingWidget().getDisplayMode()
+	
+			self.__contextMenuConnection = None
 	
 		## Must be implemented by derived classes to return the initial directory path to be viewed.
 		def _initialPath( self ) :
@@ -136,11 +146,52 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 		def _initialDisplayMode( self ) :
 		
 			return GafferUI.PathListingWidget.DisplayMode.List
-			
+		
+		## Must be reimplemented by derived classes to specify the columns to be displayed in the PathListingWidget.
 		def _initialColumns( self ) :
 		
 			raise NotImplementedError
-	
+			
+		def __contextMenu( self, pathListing ) :
+		
+			menuDefinition = IECore.MenuDefinition()
+		
+			if self.__opMatcher is not None :
+			
+				selectedPaths = pathListing.getSelectedPaths()
+				if len( selectedPaths ) == 1 :
+					parameterValue = selectedPaths[0]
+				else :
+					parameterValue = selectedPaths
+			
+				ops = self.__opMatcher.matches( parameterValue )
+				for op in ops :
+				
+					menuDefinition.append( "/Actions/" + op.typeName(), { "command" : self.__opDialogueCommand( op ) } )
+					
+			else :
+			
+				menuDefinition.append( "/Loading actions...", { "active" : False } )
+					
+			self.__menu = GafferUI.Menu( menuDefinition )
+			if len( menuDefinition.items() ) :
+				self.__menu.popup( parent = pathListing.ancestor( GafferUI.Window ) )
+			
+			return True
+		
+		def __createOpMatcher( self ) :
+		
+			self.__opMatcher = Gaffer.OpMatcher.defaultInstance()
+			
+		def __opDialogueCommand( self, op ) :
+		
+			def showDialogue( menu ) :
+			
+				dialogue = GafferUI.OpDialogue( op )
+				dialogue.waitForResult( parentWindow = menu.ancestor( GafferUI.Window ) )
+				
+			return showDialogue
+			
 	__modes = []
 	@classmethod
 	def registerMode( cls, label, modeCreator ) :
@@ -198,7 +249,6 @@ class FileSequenceMode( BrowserEditor.Mode ) :
 		BrowserEditor.Mode.__init__( self, browser )
 	
 	def _initialPath( self ) :
-	
 	
 		return Gaffer.SequencePath(
 			Gaffer.FileSystemPath( os.getcwd() ),

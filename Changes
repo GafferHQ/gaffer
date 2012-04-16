@@ -22,6 +22,9 @@
 
 * Added a contextMenuSignal() to the Widget class.
 
+* Added a right click menu to the BrowserEditor, allowing suitable ops to be applied to
+files and file sequences.
+
 0.30.0
 ------
 * Fixed problem trying to call QLineEdit.setPlaceholderText within Nuke.
