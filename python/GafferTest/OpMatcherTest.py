@@ -68,7 +68,7 @@ class OpMatcherTest( unittest.TestCase ) :
 		ops = matcher.matches( path )
 		
 		sequenceRenumber = None
-		for op in ops :
+		for op, parameter in ops :
 			if isinstance( op, IECore.SequenceRenumberOp ) :
 				sequenceRenumber = op
 				

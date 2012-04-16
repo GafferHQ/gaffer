@@ -165,9 +165,9 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 					parameterValue = selectedPaths
 			
 				ops = self.__opMatcher.matches( parameterValue )
-				for op in ops :
+				for op, parameter in ops :
 				
-					menuDefinition.append( "/Actions/" + op.typeName(), { "command" : self.__opDialogueCommand( op ) } )
+					menuDefinition.append( "/Actions/%s (%s)" % ( op.typeName(), parameter.name ), { "command" : self.__opDialogueCommand( op ) } )
 					
 			else :
 			

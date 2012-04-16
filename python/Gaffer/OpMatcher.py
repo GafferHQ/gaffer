@@ -79,17 +79,21 @@ class OpMatcher() :
 			if ignore :
 				continue
 					
-			parameter = self.__findParameter( opInstance.parameters() )
-			if parameter is not None :
-				self.__ops.append( ( opClass, ) + parameter )
+			parameters = []
+			self.__findParameters( opInstance.parameters(), parameters )
+			if len( parameters ) :
+				self.__ops.append( ( opClass, parameters ) )
 			
-	## Returns a list of suitable ops set up to operate on the given
-	# parameterValue.
+	## Returns a list of ( op, parameter ) tuples. Each op will be an Op instance
+	# where the corresponding parameter has already been set with parameterValue.
 	def matches( self, parameterValue ) :
 	
-		processedValue = None
+		processedValues = []
 		if isinstance( parameterValue, ( Gaffer.FileSystemPath, Gaffer.SequencePath ) ) :
-			processedValue = IECore.StringData( str( parameterValue ) )
+			# we might be able to match a single file
+			processedValues.append( IECore.StringData( str( parameterValue ) ) )
+			# or provide a single file input to an op which accepts multiple files
+			processedValues.append( IECore.StringVectorData( [ str( parameterValue ) ] ) )
 		elif isinstance( parameterValue, list ) :
 			processedValue = IECore.StringVectorData()
 			for value in parameterValue :
@@ -98,19 +102,21 @@ class OpMatcher() :
 		elif isinstance( parameterValue, IECore.Object ) :
 			processedValue = parameterValue
 			
-		if processedValue is None :
+		if not processedValues :
 			return []
 		
 		result = []
-		for opClass, testParameter, parameterPath in self.__ops :
-			if testParameter.valueValid( processedValue )[0] :
-				op = opClass()
-				parameter = op.parameters()
-				for name in parameterPath :
-					parameter = parameter[name]
-			
-				parameter.setValue( processedValue )
-				result.append( op )
+		for opClass, parameters in self.__ops :
+			for testParameter, parameterPath in parameters :
+				for processedValue in processedValues :
+					if testParameter.valueValid( processedValue )[0] :
+						op = opClass()
+						parameter = op.parameters()
+						for name in parameterPath :
+							parameter = parameter[name]
+
+						parameter.setValue( processedValue )
+						result.append( ( op, parameter ) )
 		
 		return result
 				
@@ -126,13 +132,11 @@ class OpMatcher() :
 				
 			return cls.__defaultInstance
 	
-	def __findParameter( self, parameter, path = None ) :
+	def __findParameters( self, parameter, result, path = None ) :
 	
 		if path is None :
 			path = []
-	
-		result = None
-				
+					
 		for child in parameter.values() :
 		
 			ignore = False
@@ -148,14 +152,7 @@ class OpMatcher() :
 			childPath = path + [ child.name ]
 			
 			if isinstance( child, IECore.CompoundParameter ) :
-				result = self.__findParameter( child, childPath )
-				
+				self.__findParameters( child, result, childPath )
 			elif isinstance( child, ( IECore.PathParameter, IECore.PathVectorParameter ) ) :
 				if child.mustExist :
-					result = child, childPath
-			
-			if result is not None :
-				return result
-				
-		return None
-		
+					result.append( ( child, childPath ) )
