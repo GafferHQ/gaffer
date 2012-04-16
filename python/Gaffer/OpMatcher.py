@@ -43,26 +43,46 @@ import Gaffer
 
 ## The OpMatcher class provides a means of searching for Ops suitable to
 # act upon a given input value.
+#
+# The following Op userData entries are supported :
+#
+# ["OpMatcher"]["ignore"] - when this BoolData is True, the Op is not
+# considered by the matcher.
+#
+# The following Parameter usedData entries are supported :
+#
+# ["OpMatcher"]["ignore"] - when this BoolData is True, the Parameter is not
+# considered by the matcher.
 class OpMatcher() :
 
-	def __init__( self, classLoader ) :
+	def __init__( self, classLoader, classNamesMatchString = "*" ) :
 		
 		# these are filled with tuples of the form ( opClass, parameter, parameterPath )
 		self.__ops = []
 		
-		for className in classLoader.classNames() :
-		
+		classNamesMatchString = "common/*"
+		for className in classLoader.classNames( classNamesMatchString ) :
+					
 			try :
 				opClass = classLoader.load( className )
 				opInstance = opClass()
 			except Exception, m :
-				IECore.msg( IECore.Msg.Level.Error, "Gaffer.OpMatcher", "Error loading op \"%s\" - \"%s\".\n %s" % ( className, m, traceback.format_exc() ) )
+				IECore.msg( IECore.Msg.Level.Error, "Gaffer.OpMatcher", "Error loading op \"%s\" : %s" % ( className, traceback.format_exc() ) )
 				continue
 			
+			ignore = False
+			with IECore.IgnoredExceptions( KeyError ) :
+				# backwards compatibility with something proprietary
+				ignore = opInstance.userData()["UI"]["OpMatcher"]["ignore"].value
+			with IECore.IgnoredExceptions( KeyError ) :
+				ignore = opInstance.userData()["OpMatcher"]["ignore"].value
+			if ignore :
+				continue
+					
 			parameter = self.__findParameter( opInstance.parameters() )
 			if parameter is not None :
 				self.__ops.append( ( opClass, ) + parameter )
-	
+			
 	## Returns a list of suitable ops set up to operate on the given
 	# parameterValue.
 	def matches( self, parameterValue ) :
@@ -115,6 +135,16 @@ class OpMatcher() :
 				
 		for child in parameter.values() :
 		
+			ignore = False
+			with IECore.IgnoredExceptions( KeyError ) :
+				# backwards compatibility with something proprietary
+				ignore = child.userData()["UI"]["OpMatcher"]["ignore"].value
+			with IECore.IgnoredExceptions( KeyError ) :
+				# backwards compatibility with something proprietary
+				ignore = child.userData()["OpMatcher"]["ignore"].value	
+			if ignore :
+				continue
+			
 			childPath = path + [ child.name ]
 			
 			if isinstance( child, IECore.CompoundParameter ) :
