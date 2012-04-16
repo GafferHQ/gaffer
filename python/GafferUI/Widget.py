@@ -121,6 +121,7 @@ class Widget( object ) :
  		self._leaveSignal = None
  		self._wheelSignal = None
  		self._visibilityChangedSignal = None
+ 		self._contextMenuSignal = None
  				
 		self.setToolTip( toolTip )
 		
@@ -301,6 +302,13 @@ class Widget( object ) :
 		if self._visibilityChangedSignal is None :
 			self._visibilityChangedSignal = GafferUI.WidgetSignal()
 		return self._visibilityChangedSignal
+
+	def contextMenuSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._contextMenuSignal is None :
+			self._contextMenuSignal = GafferUI.WidgetSignal()
+		return self._contextMenuSignal
 		
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
@@ -1110,7 +1118,8 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.Leave,
 			QtCore.QEvent.Wheel,			
 			QtCore.QEvent.Show,			
-			QtCore.QEvent.Hide,			
+			QtCore.QEvent.Hide,
+			QtCore.QEvent.ContextMenu,		
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
@@ -1258,7 +1267,13 @@ class _EventFilter( QtCore.QObject ) :
 					Widget._modifiers( qEvent.modifiers() ),
 				)
 	
-				return widget._wheelSignal( widget, event )	
+				return widget._wheelSignal( widget, event )
+				
+		elif qEventType==qEvent.ContextMenu :
+		
+			widget = Widget._owner( qObject )
+			if widget._contextMenuSignal is not None :
+				return widget._contextMenuSignal( widget )
 			
 		return False
 
