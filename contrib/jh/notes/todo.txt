@@ -2,8 +2,6 @@
 	
 * PopupWidget
 
-* fix layout save/load when there's a SceneEditor in the layout
-
 * fix script open directory location
 
 * selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural

@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import re
+
 import GafferUI
 
 __namedLayouts = {}
@@ -60,8 +62,19 @@ def names() :
 ## Recreates a previously stored layout, returning it in the form of a CompoundEditor.
 def create( name ) :
 
-	r = __namedLayouts[name]
-	return eval( r )
+	layout = __namedLayouts[name]
+		
+	# first try to import the modules the layout needs
+	contextDict = {}
+	imported = set()
+	classNameRegex = re.compile( "Gaffer[^(,]*\(" )
+	for className in classNameRegex.findall( layout ) :
+		moduleName = className.partition( "." )[0]
+		if moduleName not in imported :
+			exec( "import %s" % moduleName, contextDict, contextDict )
+			imported.add( moduleName )
+
+	return eval( layout, contextDict, contextDict )
 
 ## Saves all layouts whose name matches the optional regular expression into the file object
 # specified. If the file is later evaluated it will reregister the layouts with this module.
@@ -73,17 +86,8 @@ def save( fileObject, nameRegex = None ) :
 		if nameRegex.match( name ) or nameRegex is None :
 			namesToWrite.append( name )
 	
-	# write the necessary import statements
-	imported = set()
-	for layout in [ __namedLayouts[name] for name in namesToWrite ] :
-		className = layout.partition( "(" )[0]
-		moduleName = className.rpartition( "." )[0]
-		if moduleName not in imported :
-			fileObject.write( "import %s\n" % moduleName )
-			imported.add( moduleName )
-	
-	if len( imported ) :
-		fileObject.write( "\n" )
+	# write the necessary import statement
+	fileObject.write( "import GafferUI\n\n" )
 	
 	# finally write out the layouts
 	for name in namesToWrite :
