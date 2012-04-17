@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferScene
 import GafferUI
@@ -42,7 +44,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode=None, **kw ) :
 	
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 		
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
 		
@@ -54,6 +56,8 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				allowMultipleSelection = True,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
+
+			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 		
 		self.__plug = None		
 		self._updateFromSet()
@@ -67,31 +71,29 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		if not hasattr( self, "_SceneEditor__plug" ) :
 			# we're being called during construction
 			return
-			
+					
 		self.__plug = None
 		node = self._lastAddedNode()
-		if not node or not isinstance( node, GafferScene.SceneNode ) :
-			self.__plugDirtiedConnection = None
-		else :			
+		if node and isinstance( node, GafferScene.SceneNode ) :
 			self.__plug = node["out"]
-			self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			
-		self.__update()
-	
-	def _updateFromContext( self ) :
-	
-		self.__update()
-	
-	def __update( self ) :
-		
-		if self.__plug is not None :
-			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, "/" ) )
+		if self.__plug is not None :		
+			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, self.getContext(), "/" ) )
 		else :
 			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+		
+	def _updateFromContext( self ) :
 	
-	def __plugDirtied( self, plug ) :
+		# the ScenePath will trigger an update anyway
+		pass
+		
+	def __expansionChanged( self, pathListing ) :
 	
-		if plug.isSame( self.__plug ) :
-			self.__update()
-	
+		assert( pathListing is self.__pathListing )
+		
+		paths = pathListing.getExpandedPaths()
+		paths = IECore.StringVectorData( [ "/" ] + [ str( path ) for path in paths ] )
+		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
+			self.getContext().set( "ui:scene:expandedPaths", paths )
+		
 GafferUI.EditorWidget.registerType( "SceneEditor", SceneEditor )

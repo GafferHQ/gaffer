@@ -41,20 +41,24 @@ import GafferScene
 
 class ScenePath( Gaffer.Path ) :
 
-	def __init__( self, scenePlug, path, filter=None ) :
+	def __init__( self, scenePlug, context, path, filter=None ) :
 	
 		Gaffer.Path.__init__( self, path, filter )
 	
 		assert( isinstance( scenePlug, GafferScene.ScenePlug ) )
 	
 		self.__scenePlug = scenePlug
+		self.__plugDirtiedConnection = self.__scenePlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+
+		self.__context = None
+		self.setContext( context )
 	
 	def isValid( self ) :
 	
-		with self.__context() :
+		with self.__context :
 			with IECore.IgnoredExceptions( Exception ) :
 				## \todo Possibly we should just have a "valid" child plug
-				self.__scenePlug["bound"].getValue()
+				self.__scenePlug.bound( str( self ) )
 				return True
 				
 		return False
@@ -75,22 +79,39 @@ class ScenePath( Gaffer.Path ) :
 	def _children( self ) :
 	
 		childNames = None
-		with self.__context() :
+		with self.__context :
 			with IECore.IgnoredExceptions( Exception ) :
-				childNames = self.__scenePlug["childNames"].getValue()
+				childNames = self.__scenePlug.childNames( str( self ) )
 				
 		if childNames is None :
 			return []
 		
-		return [ ScenePath( self.__scenePlug, self[:] + [ x ] ) for x in childNames ]
+		return [ ScenePath( self.__scenePlug, self.__context, self[:] + [ x ] ) for x in childNames ]
 	
 	def copy( self ) :
 	
-		return ScenePath( self.__scenePlug, self[:], self.getFilter() )
-		
-	def __context( self ) :
+		return ScenePath( self.__scenePlug, self.__context, self[:], self.getFilter() )
 	
-		context = Gaffer.Context()
-		context["scene:path"] = str( self )
+	def setContext( self, context ) :
+	
+		if context is self.__context :
+			return
 		
-		return context
+		self.__context = context
+		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.pathChangedSignal()( self )
+		
+	def getContext( self ) :
+	
+		return self.__context
+				
+	def __contextChanged( self, context, key ) :
+	
+		if not key.startswith( "ui:" ) :
+			self.pathChangedSignal()( self )
+		
+	def __plugDirtied( self, plug ) :
+	
+		if plug.isSame( self.__scenePlug ) :
+			self.pathChangedSignal()( self )
+			

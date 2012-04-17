@@ -63,6 +63,10 @@ class __WrappingProcedural( IECore.ParameterisedProcedural ) :
 		
 def __sceneViewCreator( plug, context ) :
 
-	return __WrappingProcedural( GafferScene.SceneProcedural( plug, context, "/" ) )
+	pathsToExpand = IECore.StringVectorData( [ "/" ] )
+	with IECore.IgnoredExceptions( Exception ) :
+		pathsToExpand = context.get( "ui:scene:expandedPaths" )
+
+	return __WrappingProcedural( GafferScene.SceneProcedural( plug, context, "/", pathsToExpand ) )
 	
 GafferUI.Viewer.registerView( GafferScene.ScenePlug.staticTypeId(), __sceneViewCreator )

@@ -61,7 +61,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath="/" );
+		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath="/", const IECore::StringVectorData *pathsToExpand = 0 );
 		virtual ~SceneProcedural();
 		
 		virtual Imath::Box3f bound() const;
@@ -69,9 +69,14 @@ class SceneProcedural : public IECore::Renderer::Procedural
 				
 	protected :
 		
+		SceneProcedural( const SceneProcedural &other, const std::string &scenePath );
+		
 		ScenePlugPtr m_scenePlug;
 		Gaffer::ContextPtr m_context;
 		std::string m_scenePath;
+		
+		typedef std::set<std::string> ExpandedPathsSet;
+		boost::shared_ptr<ExpandedPathsSet> m_pathsToExpand;
 		
 };
 

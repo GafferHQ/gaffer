@@ -38,6 +38,7 @@
 
 #include "IECore/AttributeBlock.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/CurvesPrimitive.h"
 
 #include "Gaffer/Context.h"
 
@@ -50,8 +51,23 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath )
+SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath, const IECore::StringVectorData *pathsToExpand )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath )
+{
+	m_context->set( "scene:path", m_scenePath );
+	
+	if( pathsToExpand )
+	{
+		m_pathsToExpand = boost::shared_ptr<ExpandedPathsSet>( new ExpandedPathsSet );
+		for( std::vector<std::string>::const_iterator it = pathsToExpand->readable().begin(); it != pathsToExpand->readable().end(); it++ )
+		{
+			m_pathsToExpand->insert( *it );
+		}
+	}	
+}
+
+SceneProcedural::SceneProcedural( const SceneProcedural &other, const std::string &scenePath )
+	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ), m_pathsToExpand( other.m_pathsToExpand )
 {
 	m_context->set( "scene:path", m_scenePath );
 }
@@ -84,7 +100,9 @@ void SceneProcedural::render( RendererPtr renderer ) const
 {	
 	AttributeBlock attributeBlock( renderer );
 	Context::Scope scopedContext( m_context );
-		
+	
+	renderer->setAttribute( "name", new StringData( m_scenePath ) );
+	
 	/// \todo See above.
 	try
 	{
@@ -96,19 +114,39 @@ void SceneProcedural::render( RendererPtr renderer ) const
 			primitive->render( renderer );
 		}
 		
-		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
-		if( childNames )
+		bool expand = true;
+		if( m_pathsToExpand )
 		{
-			for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+			expand = m_pathsToExpand->find( m_scenePath ) != m_pathsToExpand->end();
+		}
+				
+		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
+		if( childNames && childNames->readable().size() )
+		{		
+			if( expand )
 			{
-				string childScenePath = m_scenePath;
-				if( m_scenePath.size() > 1 )
+				if( childNames )
 				{
-					childScenePath += "/";
+					for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+					{
+						string childScenePath = m_scenePath;
+						if( m_scenePath.size() > 1 )
+						{
+							childScenePath += "/";
+						}
+						childScenePath += *it;
+						renderer->procedural( new SceneProcedural( *this, childScenePath ) );
+					}	
 				}
-				childScenePath += *it;
-				renderer->procedural( new SceneProcedural( m_scenePlug, m_context, childScenePath ) );
-			}	
+			}
+			else
+			{
+				renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
+				renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
+				renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
+				Box3f b = m_scenePlug->boundPlug()->getValue();
+				CurvesPrimitive::createBox( b )->render( renderer );	
+			}
 		}
 	}
 	catch( const std::exception &e )
