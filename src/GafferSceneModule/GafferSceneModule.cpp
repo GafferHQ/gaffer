@@ -48,6 +48,7 @@
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/GroupScenes.h"
 #include "GafferScene/SceneTimeWarp.h"
+#include "GafferScene/Plane.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -111,6 +112,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<SceneContextProcessorBase>();
 	GafferBindings::NodeClass<SceneContextProcessor>();
 	GafferBindings::NodeClass<SceneTimeWarp>();
+	GafferBindings::NodeClass<RenderableSceneNode>();
+	GafferBindings::NodeClass<Plane>();
 
 	new SceneTimeWarp;
 

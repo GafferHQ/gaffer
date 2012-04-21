@@ -55,6 +55,7 @@ GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 # Node menu
 
 GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
+GafferUI.NodeMenu.append( "/Scene/Primitive/Plane", GafferScene.Plane )
 GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCache )
 GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )

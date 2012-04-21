@@ -43,6 +43,7 @@ from AttributeCacheTest import AttributeCacheTest
 from GroupScenesTest import GroupScenesTest
 from SceneTimeWarpTest import SceneTimeWarpTest
 from SceneProceduralTest import SceneProceduralTest
+from PlaneTest import PlaneTest
 
 if __name__ == "__main__":
 	import unittest

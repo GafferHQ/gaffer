@@ -34,33 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "IECore/MeshPrimitive.h"
 
-namespace GafferScene
-{
+#include "GafferScene/Plane.h"
 
-enum TypeId
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace Imath;
+using namespace IECore;
+
+IE_CORE_DEFINERUNTIMETYPED( Plane );
+
+Plane::Plane( const std::string &name )
+	:	RenderableSceneNode( name, "plane" )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	RenderableSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
+	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 1.0f ), V2f( 0.0f ) ) );
+}
+
+Plane::~Plane()
+{
+}
+
+Gaffer::V2fPlug *Plane::dimensionsPlug()
+{
+	return getChild<V2fPlug>( "dimensions" );
+}
+
+const Gaffer::V2fPlug *Plane::dimensionsPlug() const
+{
+	return getChild<V2fPlug>( "dimensions" );
+}
+
+void Plane::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+{
+	RenderableSceneNode::affects( input, outputs );
 	
-	LastTypeId = 110700
-};
+	if( input->parent<V2fPlug>() == dimensionsPlug() )
+	{
+		outputs.push_back( renderablePlug() );
+	}
+}
 
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H
+IECore::VisibleRenderablePtr Plane::computeRenderable( const Context *context ) const
+{
+	V2f dimensions = dimensionsPlug()->getValue();
+	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ) );
+}

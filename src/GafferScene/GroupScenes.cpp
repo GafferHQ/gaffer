@@ -86,8 +86,7 @@ void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outpu
 	{
 		outputs.push_back( outPlug() );
 	}
-	
-	if( transformPlug()->isAncestorOf( input ) )
+	else if( transformPlug()->isAncestorOf( input ) )
 	{
 		/// \todo Strictly speaking I think we should just push outPlug()->transformPlug()
 		/// here, but the dirty propagation doesn't work for that just now. Get it working.
