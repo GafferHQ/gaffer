@@ -34,34 +34,50 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_SEEDS_H
+#define GAFFERSCENE_SEEDS_H
+
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+/// \todo Allow seeding on multiple meshes, and make a useful base class
+/// for handling the sourcePlug and namePlug. Perhaps we could also make a class
+/// which allows suitable ops to be used that way too.
+class Seeds : public SceneProcessor
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	RenderableSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
+
+	public :
+
+		Seeds( const std::string &name=staticTypeName() );
+		virtual ~Seeds();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Seeds, SeedsTypeId, SceneProcessor );
+
+		Gaffer::StringPlug *sourcePlug();
+		const Gaffer::StringPlug *sourcePlug() const;
+		
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+		
+		Gaffer::FloatPlug *densityPlug();
+		const Gaffer::FloatPlug *densityPlug() const;
+		
+		Gaffer::StringPlug *pointTypePlug();
+		const Gaffer::StringPlug *pointTypePlug() const;
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
 	
-	LastTypeId = 110700
+		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_SEEDS_H
