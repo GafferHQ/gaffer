@@ -31,6 +31,11 @@
 		- how are we going to deal with not having to compute bound.min.x, bound.min.y etc individually?
 
 * fix NodeSetEditor when node in locked set is deleted
+
+* audit Node::affects() and CompoundPlugs in AffectedPlugsContainer
+	- i believe this should be a shortcut for putting all the children in
+		- but isn't
+		- and needs documenting
 	
 * nodes 
 	- modelcachesource DONE
@@ -116,3 +121,7 @@
 
 * revert to saved seems broken
 	- i ended up with two of the same node
+	
+* decide how to register typeIds - namespace::name?
+	- i wanted to rename GroupScenes to Group but couldn't due to duplicate typename registrations
+		- namespacing everything would fix that
