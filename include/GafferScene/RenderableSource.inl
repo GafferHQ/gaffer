@@ -51,7 +51,7 @@ RenderableSource<BaseType>::RenderableSource( const std::string &name, const std
 	BaseType::addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
 	BaseType::addChild( new Gaffer::TransformPlug( "transform" ) );
 	BaseType::addChild( new Gaffer::ObjectPlug( "__renderable", Gaffer::Plug::Out ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__inputRenderable", Gaffer::Plug::In ) );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__inputRenderable", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputRenderablePlug()->setInput( renderablePlug() );
 }
 

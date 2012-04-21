@@ -95,6 +95,12 @@ class PlaneTest( unittest.TestCase ) :
 		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0.5, -0.5, 0 ), IECore.V3f( 1.5, 0.5, 0 ) ) )
 		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 
+	def testSerialise( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["p"] = GafferScene.Plane()
 		
+		ss = s.serialise()
+	
 if __name__ == "__main__":
 	unittest.main()
