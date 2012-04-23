@@ -180,6 +180,17 @@ class ScriptNodeTest( unittest.TestCase ) :
 		
 		self.assert_( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
 
+	def testLoadClearsFirst( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a1"] = GafferTest.AddNode()
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s.load()
+		self.failIf( "a2" in s )
+		
 	def testSaveFailureHandling( self ) :
 	
 		s = Gaffer.ScriptNode()

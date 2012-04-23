@@ -118,9 +118,6 @@
 			* because then we'll want specialised ones that do streaming
 	
 * font weight for attribute editor labels
-
-* revert to saved seems broken
-	- i ended up with two of the same node
 	
 * decide how to register typeIds - namespace::name?
 	- i wanted to rename GroupScenes to Group but couldn't due to duplicate typename registrations

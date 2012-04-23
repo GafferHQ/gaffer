@@ -139,7 +139,6 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 			return Serialiser::serialise( this, filter );
 		}
 		
-		/// \todo Clear the script before executing!!
 		/// We need to consider implementing a delete() method first though.
 		virtual void load()
 		{
@@ -162,7 +161,8 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 				std::getline( f, line );
 				s += line + "\n";
 			}
-						
+			
+			deleteNodes();			
 			execute( s );
 		}
 		
