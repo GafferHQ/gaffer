@@ -164,10 +164,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 				else :
 					parameterValue = selectedPaths
 			
-				ops = self.__opMatcher.matches( parameterValue )
-				for op, parameter in ops :
-				
-					menuDefinition.append( "/Actions/%s (%s)" % ( op.typeName(), parameter.name ), { "command" : self.__opDialogueCommand( op ) } )
+				menuDefinition.append( "/Actions", { "subMenu" : IECore.curry( Gaffer.WeakMethod( self.__actionsSubMenu ), parameterValue ) } )
 					
 			else :
 			
@@ -179,6 +176,19 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			
 			return True
 		
+		def __actionsSubMenu( self, parameterValue ) :
+		
+			menuDefinition = IECore.MenuDefinition()
+				
+			ops = self.__opMatcher.matches( parameterValue )
+			if len( ops ) :
+				for op, parameter in ops :
+					menuDefinition.append( "/%s (%s)" % ( op.typeName(), parameter.name ), { "command" : self.__opDialogueCommand( op ) } )
+			else :
+				menuDefinition.append( "/None available", { "active" : False } )
+				
+			return menuDefinition
+				
 		def __createOpMatcher( self ) :
 		
 			self.__opMatcher = Gaffer.OpMatcher.defaultInstance()
