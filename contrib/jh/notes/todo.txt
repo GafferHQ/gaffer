@@ -101,6 +101,12 @@
 		  
 * fullscreen button in top right
 
+* it is most definitely not cool that we're not returning const & from Plug::getValue() any more
+	- the reason being that we couldn't guarantee the lifetime when things were in the cache
+	- a whole load of wasted allocations
+	- could return const & for unconnected plugs?
+	- or somehow keep the thing guaranteed alive for a bit?
+
 * audit wrappers for things
 	- do we really want ScriptNode::typeId() to go into python? really?
 		- because that is happening all the fricking time whenever we call ancestor<ScriptNode>
@@ -108,6 +114,10 @@
 * make layout menu line up with button
 	* Widget.bound() method
 	* MenuButton?
+
+* maybe the compute*() methods could return ConstPtr and then we don't need all the something ? something->copy() : 0 nonsense everywhere?
+	- or does that mean unecessary copying sometimes?
+	- or can ObjectPlug::setValue() accept a ConstPtr?
 
 * fix the flickering widget on open
 	- it's the menu bar
