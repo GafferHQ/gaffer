@@ -62,7 +62,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView = _TableView()
 						
 		self.__tableView.horizontalHeader().setVisible( bool( header ) )
-		self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents )
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 		
 		self.__tableView.verticalHeader().setVisible( showIndices )
@@ -131,14 +130,17 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.__model :
 		
 			columnIndex = 0
+			haveResizeableContents = False
 			for accessor in self.__model.vectorDataAccessors() :
 				for i in range( 0, accessor.numColumns() ) :
 					delegate = _Delegate.create( accessor.data() )
 					delegate.setParent( self.__model )
 					self.__tableView.setItemDelegateForColumn( columnIndex, delegate )
 					canStretch = delegate.canStretch()
+					haveResizeableContents = haveResizeableContents or canStretch
 					columnIndex += 1
 
+			self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents if haveResizeableContents else QtGui.QHeaderView.Fixed )
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
 			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
 		
