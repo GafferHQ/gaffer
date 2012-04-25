@@ -152,6 +152,10 @@ IECore::StringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &p
 	else if( path == parentPath )
 	{
 		/// \todo Perhaps allow any existing children to coexist?
+		/// If we do that then we know that the bound at the parent is just the union
+		/// of the old bound and the bound at the root of the branch. we could then
+		/// optimise the propagation of the bound back to the root by just unioning the
+		/// appropriately transformed branch bound with the bound from the input scene.
 		StringVectorDataPtr result = new StringVectorData;
 		result->writable().push_back( namePlug()->getValue() );
 		return result;		
