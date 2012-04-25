@@ -50,6 +50,7 @@
 #include "GafferScene/SceneTimeWarp.h"
 #include "GafferScene/Plane.h"
 #include "GafferScene/Seeds.h"
+#include "GafferScene/Instancer.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -115,8 +116,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<SceneTimeWarp>();
 	GafferBindings::NodeClass<RenderableSceneNode>();
 	GafferBindings::NodeClass<Plane>();
+	GafferBindings::NodeClass<BranchCreator>();
 	GafferBindings::NodeClass<Seeds>();
-
-	new SceneTimeWarp;
+	GafferBindings::NodeClass<Instancer>();
 
 }

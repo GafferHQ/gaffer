@@ -38,7 +38,9 @@
 
 #include "GafferScene/SceneNode.h"
 
+using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace GafferScene;
 using namespace Gaffer;
 
@@ -125,4 +127,23 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 			);
 		}
 	}
+}
+
+Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const
+{
+	Box3f result;
+	ConstStringVectorDataPtr childNames = out->childNames( path );
+	for( vector<string>::const_iterator it = childNames->readable().begin(); it != childNames->readable().end(); it++ )
+	{
+		string childPath = path;
+		if( childPath.size() > 1 )
+		{	
+			childPath += "/";
+		}
+		childPath += *it;
+		Box3f childBound = out->bound( childPath );
+		childBound = transform( childBound, out->transform( childPath ) );
+		result.extendBy( childBound );
+	}
+	return result;
 }

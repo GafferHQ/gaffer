@@ -34,36 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_INSTANCER_H
+#define GAFFERSCENE_INSTANCER_H
+
+#include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class Instancer : public BranchCreator
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	RenderableSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
+
+	public :
+
+		Instancer( const std::string &name=staticTypeName() );
+		virtual ~Instancer();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Instancer, InstancerTypeId, BranchCreator );
+		
+		ScenePlug *instancePlug();
+		const ScenePlug *instancePlug() const;
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
 	
-	LastTypeId = 110700
+		virtual Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		virtual Imath::M44f computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		virtual IECore::PrimitivePtr computeBranchGeometry( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		virtual IECore::StringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		
+	private :
+	
+		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
+		int instanceIndex( const ScenePath &branchPath ) const;
+		Gaffer::ContextPtr instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const;
+		
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_INSTANCER_H

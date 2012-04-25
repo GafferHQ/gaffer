@@ -73,6 +73,11 @@ class SceneNode : public Gaffer::Node
 		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
 		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
 		
+		/// Convenience function to compute the correct bounding box for a path from the bounding box and transforms of its
+		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine
+		/// information about the parent - the last thing we want to be doing when defining large scenes procedurally.
+		Imath::Box3f unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
+		
 };
 
 } // namespace GafferScene
