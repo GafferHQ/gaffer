@@ -89,6 +89,7 @@ enum TypeId
 	ContextProcessorNodeTypeId = 110042,
 	TimeWarpNodeTypeId = 110043,
 	TransformPlugTypeId = 110044,
+	AtomicBox3fPlugTypeId = 110045,
 	
 	LastTypeId = 110200,
 	

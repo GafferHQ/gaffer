@@ -74,39 +74,9 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		std::string scenePath = context->get<std::string>( "scene:path" );
 		if( output == scenePlug->boundPlug() )
 		{
-			/// \todo This'll currently never get called, making us do the
-			/// shenanigans below for the children of bound plugs. This causes
-			/// far more computation than necessary.
-			static_cast<Box3fPlug *>( output )->setValue(
+			static_cast<AtomicBox3fPlug *>( output )->setValue(
 				computeBound( scenePath, context, scenePlug )
 			);
-		}
-		else if( scenePlug->boundPlug()->isAncestorOf( output ) )
-		{
-			Box3f bound = computeBound( scenePath, context, scenePlug );
-			V3f p;
-			if( scenePlug->boundPlug()->min()->isAncestorOf( output ) )
-			{
-				p = bound.min;
-			}
-			else
-			{
-				p = bound.max;
-			}
-			float value;
-			if( output->getName() == "x" )
-			{
-				value = p[0];
-			}
-			else if( output->getName() == "y" )
-			{
-				value = p[1];
-			}
-			else
-			{
-				value = p[2];
-			}
-			static_cast<FloatPlug *>( output )->setValue( value );
 		}
 		else if( output == scenePlug->transformPlug() )
 		{

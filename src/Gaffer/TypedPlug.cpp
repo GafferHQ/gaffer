@@ -119,6 +119,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( BoolPlug, BoolPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringPlug, StringPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M33fPlug, M33fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M44fPlug, M44fPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox3fPlug, AtomicBox3fPlugTypeId )
 
 }
 
@@ -127,3 +128,4 @@ template class TypedPlug<bool>;
 template class TypedPlug<std::string>;
 template class TypedPlug<Imath::M33f>;
 template class TypedPlug<Imath::M44f>;
+template class TypedPlug<Imath::Box3f>;

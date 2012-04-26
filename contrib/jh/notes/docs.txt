@@ -1,0 +1,45 @@
+Box3fPlug vs AtomicBox3fPlug
+============================
+
+For inputs you might like the Box3fPlug - to allow individual keyframing/expressioning etc of the different components.
+
+For outputs where the whole box is computed as one you should definitely use the AtomicBox3fPlug, because otherwise you are repeating the same calculation each time you are asked for a single component. Gaffer will only ever ever ever allow one plug to be set in compute(). This will not change. If you really want to have a Box3fPlug output, but your computation is atomic, then consider having a hidden AtomicBox3fPlug for which you perform the computation (whcih will be cached (when we have caching) and then implement the compute for the components of the actual Box3fPlug output to read from this cached plug.
+
+Anatomy of a Gaffer application
+===============================
+
+The Gaffer framework is designed to allow the creation of a multitude of different specialised applications. Therefore the main gaffer executable is merely an empty shell, capable of loading and running any such application. Gaffer is launched from the command line specifying the name of an application to run, followed by any command line arguments for the application. The following command runs the "test" application, which exercises the gaffer unit tests :
+
+	gaffer test
+	
+Command line arguments allow a specific test to be run :
+
+	gaffer test -testCase GafferTest.NodeTest
+
+Specifying a script file rather than an application name is a convenience for opening the script in the "gui" application, so the following two commands are equivalent :
+
+	gaffer myScene.gfr
+	gaffer gui -scripts myScene.gfr
+
+A closer look at the gaffer executable reveals that it's just a short bash wrapper, which sets up some environment variables and runs bin/gaffer.py, which then does the actual work of loading and running the requested application. At it's core then, any invocation of gaffer is merely a script running in a standard python interpreter. Applications themselves are also implemented in python, although they most likely will use modules implemented in C++ to perform much of the heavy lifting for the sake of performance. 
+
+Gaffer searches for applications on a set of paths defined by the GAFFER_APP_PATHS environment variables. A quick look inside the gaffer installation reveals that the standard applications are installed as follows :
+
+	apps/browser/browser-1.py
+	apps/gui/gui-1.py
+	apps/test/test-1.py
+	...
+	
+By creating an equivalent layout in another location, and adding that location to the GAFFER_APP_PATHS environment variable, any number of additional apps can be created and run :
+
+	edit ~/gafferApps/helloWorld/helloWorld-1.py
+	export GAFFER_APP_PATHS=~/gafferApps
+	gaffer helloWorld
+
+HELLO WORLD APP. SOME MENTION OF THE APPLICATION ROOT AND STARTUP FILES.
+
+Anatomy of the main GUI application
+===================================
+
+scripts, nodes, plugs, clipboard, windows
+

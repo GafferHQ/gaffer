@@ -75,8 +75,8 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// The plug used to pass the bounding box of the current node in
 		/// the scene graph. The bounding box is supplied /without/ the
 		/// transform applied.
-		Gaffer::Box3fPlug *boundPlug();
-		const Gaffer::Box3fPlug *boundPlug() const;
+		Gaffer::AtomicBox3fPlug *boundPlug();
+		const Gaffer::AtomicBox3fPlug *boundPlug() const;
 		/// The plug used to pass the transform for the current node.
 		Gaffer::M44fPlug *transformPlug();
 		const Gaffer::M44fPlug *transformPlug() const;

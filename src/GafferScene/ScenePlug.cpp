@@ -50,7 +50,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 {
 	
 	addChild(
-		new Box3fPlug(
+		new AtomicBox3fPlug(
 			"bound",
 			direction,
 			Imath::Box3f(),
@@ -109,14 +109,14 @@ bool ScenePlug::acceptsInput( Gaffer::ConstPlugPtr input ) const
 	return true;
 }
 
-Gaffer::Box3fPlug *ScenePlug::boundPlug()
+Gaffer::AtomicBox3fPlug *ScenePlug::boundPlug()
 {
-	return getChild<Box3fPlug>( "bound" );
+	return getChild<AtomicBox3fPlug>( "bound" );
 }
 
-const Gaffer::Box3fPlug *ScenePlug::boundPlug() const
+const Gaffer::AtomicBox3fPlug *ScenePlug::boundPlug() const
 {
-	return getChild<Box3fPlug>( "bound" );
+	return getChild<AtomicBox3fPlug>( "bound" );
 }
 
 Gaffer::M44fPlug *ScenePlug::transformPlug()

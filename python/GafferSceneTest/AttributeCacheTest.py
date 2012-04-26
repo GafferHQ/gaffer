@@ -47,12 +47,7 @@ class AttributeCacheTest( unittest.TestCase ) :
 		m = GafferScene.ModelCacheSource()
 		a = GafferScene.AttributeCache(
 			inputs = {
-				"in.bound.min.x" : m["out.bound.min.x"],
-				"in.bound.min.y" : m["out.bound.min.y"],
-				"in.bound.min.z" : m["out.bound.min.z"],
-				"in.bound.max.x" : m["out.bound.max.x"],
-				"in.bound.max.y" : m["out.bound.max.y"],
-				"in.bound.max.z" : m["out.bound.max.z"],
+				"in.bound" : m["out.bound"],
 				"in.transform" : m["out.transform"],
 				"in.geometry" : m["out.geometry"],
 				"in.childNames" : m["out.childNames"],
