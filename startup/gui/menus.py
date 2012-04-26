@@ -64,14 +64,14 @@ GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
 
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
+GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
+GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
 
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
-GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
+GafferUI.NodeMenu.append( "/Cortex/Primitive/Sphere", Gaffer.SphereNode )
+GafferUI.NodeMenu.append( "/Cortex/Group", Gaffer.GroupNode )
 
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+
+GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
+GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
