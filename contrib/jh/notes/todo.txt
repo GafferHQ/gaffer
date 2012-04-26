@@ -1,5 +1,5 @@
 * seeds derived from branchcreator
-	- with make sure we don't do expensive bounds propagation
+	- with make sure we don't do expensive bounds propagation !!!!!!!!
 
 * viewing a scene node and then connecting an input to it doesn't update
 
