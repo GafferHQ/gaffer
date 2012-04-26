@@ -47,36 +47,14 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( Seeds );
 
 Seeds::Seeds( const std::string &name )
-	:	SceneProcessor( name )
+	:	BranchCreator( name )
 {
-	addChild( new StringPlug( "source" ) );
-	addChild( new StringPlug( "name", Plug::In, "seeds" ) );
 	addChild( new FloatPlug( "density", Plug::In, 1.0f, 0.0f ) );
 	addChild( new StringPlug( "pointType", Plug::In, "gl:point" ) );
 }
 
 Seeds::~Seeds()
 {
-}
-
-Gaffer::StringPlug *Seeds::sourcePlug()
-{
-	return getChild<StringPlug>( "source" );
-}
-
-const Gaffer::StringPlug *Seeds::sourcePlug() const
-{
-	return getChild<StringPlug>( "source" );
-}
-
-Gaffer::StringPlug *Seeds::namePlug()
-{
-	return getChild<StringPlug>( "name" );
-}
-
-const Gaffer::StringPlug *Seeds::namePlug() const
-{
-	return getChild<StringPlug>( "name" );
 }
 
 Gaffer::FloatPlug *Seeds::densityPlug()
@@ -101,56 +79,34 @@ const Gaffer::StringPlug *Seeds::pointTypePlug() const
 
 void Seeds::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneProcessor::affects( input, outputs );
+	BranchCreator::affects( input, outputs );
 	
-	const ScenePlug *in = inPlug();
-	if( input->parent<ScenePlug>() == in )
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-	}
-	else if( input == sourcePlug() || input == namePlug() )
-	{
-		outputs.push_back( outPlug() );
-	}
-	else if( input == densityPlug() || input == pointTypePlug() )
+	if( input == densityPlug() || input == pointTypePlug() )
 	{
 		outputs.push_back( outPlug()->geometryPlug() );
 	}
 }
 
-Imath::Box3f Seeds::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	string source = sourcePlug()->getValue();
-	if( path == source + "/" + namePlug()->getValue() )
+	if( branchPath=="/" )
 	{
-		return inPlug()->bound( sourcePlug()->getValue() );
-	}	
-	else
-	{
-		return inPlug()->boundPlug()->getValue();
+		 return inPlug()->bound( parentPath );
 	}
+	return Box3f();
 }
 
-Imath::M44f Seeds::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	string source = sourcePlug()->getValue();
-	if( path == source + "/" + namePlug()->getValue() )
-	{
-		return M44f();
-	}	
-	else
-	{
-		return inPlug()->transformPlug()->getValue();
-	}
+	return M44f();
 }
 
-IECore::PrimitivePtr Seeds::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::PrimitivePtr Seeds::computeBranchGeometry( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	string source = sourcePlug()->getValue();
-	if( path == source + "/" + namePlug()->getValue() )
+	if( branchPath == "/" )
 	{
 		// do what we came for
-		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->geometry( source ) );
+		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->geometry( parentPath ) );
 		if( !mesh )
 		{
 			return 0;
@@ -165,29 +121,10 @@ IECore::PrimitivePtr Seeds::computeGeometry( const ScenePath &path, const Gaffer
 		
 		return result;
 	}
-	else
-	{
-		ConstPrimitivePtr primitive = inPlug()->geometryPlug()->getValue();
-		return primitive ? primitive->copy() : 0;
-	}
+	return 0;
 }
 
-IECore::StringVectorDataPtr Seeds::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::StringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	IECore::ConstStringVectorDataPtr inputNames = inPlug()->childNamesPlug()->getValue();
-	StringVectorDataPtr outputNames = inputNames ? inputNames->copy() : 0;
-	if( path == sourcePlug()->getValue() )
-	{
-		std::string name = namePlug()->getValue();
-		if( name.size() )
-		{
-			if( !outputNames )
-			{
-				outputNames = new StringVectorData();
-			}
-			outputNames->writable().push_back( name );
-		}
-	}
-	
-	return outputNames;
+	return 0;
 }

@@ -37,15 +37,12 @@
 #ifndef GAFFERSCENE_SEEDS_H
 #define GAFFERSCENE_SEEDS_H
 
-#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
 {
 
-/// \todo Allow seeding on multiple meshes, and make a useful base class
-/// for handling the sourcePlug and namePlug. Perhaps we could also make a class
-/// which allows suitable ops to be used that way too.
-class Seeds : public SceneProcessor
+class Seeds : public BranchCreator
 {
 
 	public :
@@ -53,13 +50,7 @@ class Seeds : public SceneProcessor
 		Seeds( const std::string &name=staticTypeName() );
 		virtual ~Seeds();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Seeds, SeedsTypeId, SceneProcessor );
-
-		Gaffer::StringPlug *sourcePlug();
-		const Gaffer::StringPlug *sourcePlug() const;
-		
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Seeds, SeedsTypeId, BranchCreator );
 		
 		Gaffer::FloatPlug *densityPlug();
 		const Gaffer::FloatPlug *densityPlug() const;
@@ -71,10 +62,10 @@ class Seeds : public SceneProcessor
 
 	protected :
 	
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::PrimitivePtr computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		virtual Imath::M44f computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		virtual IECore::PrimitivePtr computeBranchGeometry( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+		virtual IECore::StringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
 		
 };
 
