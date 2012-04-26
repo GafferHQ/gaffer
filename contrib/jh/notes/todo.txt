@@ -1,14 +1,18 @@
+PRIORITIES!!!!
+==============
+	
+	* viewing a scene node and then connecting an input to it doesn't update
+	* selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
+		- do properly!
+	* get timewarp working with expressions inside an instancer
+
 * seeds derived from branchcreator
 	- with make sure we don't do expensive bounds propagation !!!!!!!!
-
-* viewing a scene node and then connecting an input to it doesn't update
 
 * fix the camera movement
 	
 * fix script open directory location
 
-* selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
-	- do properly!
 
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
