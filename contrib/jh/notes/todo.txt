@@ -1,16 +1,18 @@
+* seeds derived from branchcreator
+	- with make sure we don't do expensive bounds propagation
+
+* viewing a scene node and then connecting an input to it doesn't update
+
 * fix the camera movement
 	
-* PopupWidget
-
 * fix script open directory location
 
 * selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
+	- do properly!
 
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
 	
-* viewing a scene node and then connecting an input to it doesn't update
-
 * Contexts need to have parents from which they inherit stuff
 
 * stop camera moving all the bloody time
@@ -28,7 +30,6 @@
 
 * does CompoundPlug still need to derive from ValuePlug now?
 	- maybe
-		- how are we going to deal with not having to compute bound.min.x, bound.min.y etc individually?
 
 * fix NodeSetEditor when node in locked set is deleted
 
