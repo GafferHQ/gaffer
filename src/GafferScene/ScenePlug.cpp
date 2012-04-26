@@ -155,9 +155,9 @@ Imath::Box3f ScenePlug::bound( const std::string &scenePath ) const
 	{
 		throw IECore::Exception( "ScenePlug::bound called on unconnected input plug" );
 	}
-	Context tmpContext( *Context::current() );
-	tmpContext.set( "scene:path", scenePath );
-	Context::Scope scopedContext( &tmpContext );
+	ContextPtr tmpContext = new Context( *Context::current() );
+	tmpContext->set( "scene:path", scenePath );
+	Context::Scope scopedContext( tmpContext );
 	return boundPlug()->getValue();
 }
 
@@ -167,9 +167,9 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 	{
 		throw IECore::Exception( "ScenePlug::transform called on unconnected input plug" );
 	}
-	Context tmpContext( *Context::current() );
-	tmpContext.set( "scene:path", scenePath );
-	Context::Scope scopedContext( &tmpContext );
+	ContextPtr tmpContext = new Context( *Context::current() );
+	tmpContext->set( "scene:path", scenePath );
+	Context::Scope scopedContext( tmpContext );
 	return transformPlug()->getValue();
 }
 
@@ -179,9 +179,9 @@ IECore::ConstPrimitivePtr ScenePlug::geometry( const std::string &scenePath ) co
 	{
 		throw IECore::Exception( "ScenePlug::geometry called on unconnected input plug" );
 	}
-	Context tmpContext( *Context::current() );
-	tmpContext.set( "scene:path", scenePath );
-	Context::Scope scopedContext( &tmpContext );
+	ContextPtr tmpContext = new Context( *Context::current() );
+	tmpContext->set( "scene:path", scenePath );
+	Context::Scope scopedContext( tmpContext );
 	return geometryPlug()->getValue();
 }
 
@@ -191,8 +191,8 @@ IECore::ConstStringVectorDataPtr ScenePlug::childNames( const std::string &scene
 	{
 		throw IECore::Exception( "ScenePlug::childNames called on unconnected input plug" );
 	}
-	Context tmpContext( *Context::current() );
-	tmpContext.set( "scene:path", scenePath );
-	Context::Scope scopedContext( &tmpContext );
+	ContextPtr tmpContext = new Context( *Context::current() );
+	tmpContext->set( "scene:path", scenePath );
+	Context::Scope scopedContext( tmpContext );
 	return childNamesPlug()->getValue();
 }

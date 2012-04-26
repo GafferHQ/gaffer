@@ -51,6 +51,7 @@
 #include "GafferScene/Plane.h"
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
+#include "GafferScene/ObjectToScene.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -119,5 +120,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<BranchCreator>();
 	GafferBindings::NodeClass<Seeds>();
 	GafferBindings::NodeClass<Instancer>();
+	GafferBindings::NodeClass<ObjectToScene>();
 
 }

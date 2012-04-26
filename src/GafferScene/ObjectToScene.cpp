@@ -34,37 +34,46 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "GafferScene/ObjectToScene.h"
 
-namespace GafferScene
-{
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace IECore;
 
-enum TypeId
+IE_CORE_DEFINERUNTIMETYPED( ObjectToScene );
+
+ObjectToScene::ObjectToScene( const std::string &name )
+	:	RenderableSceneNode( name, "object" )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	RenderableSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
+	addChild( new ObjectPlug( "object" ) );
+}
+
+ObjectToScene::~ObjectToScene()
+{
+}
+
+Gaffer::ObjectPlug *ObjectToScene::objectPlug()
+{
+	return getChild<ObjectPlug>( "object" );
+}
+
+const Gaffer::ObjectPlug *ObjectToScene::objectPlug() const
+{
+	return getChild<ObjectPlug>( "object" );
+}
+
+void ObjectToScene::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+{
+	RenderableSceneNode::affects( input, outputs );
 	
-	LastTypeId = 110700
-};
+	if( input == objectPlug() )
+	{
+		outputs.push_back( renderablePlug() );
+	}
+}
 
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H
+IECore::VisibleRenderablePtr ObjectToScene::computeRenderable( const Context *context ) const
+{
+	ConstVisibleRenderablePtr o = runTimeCast<const VisibleRenderable>( objectPlug()->getValue() );
+	return o ? o->copy() : 0;
+}

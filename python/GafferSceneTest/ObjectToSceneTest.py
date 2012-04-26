@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,43 +35,33 @@
 ##########################################################################
 
 import os
+import unittest
 
 import IECore
 
 import Gaffer
 import GafferScene
-import GafferUI
-import GafferSceneUI
 
-# ScriptWindow menu
+class ObjectToSceneTest( unittest.TestCase ) :
 
-scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
-
-GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
-GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
-GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-
-# Node menu
-
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
-GafferUI.NodeMenu.append( "/Scene/Primitive/Plane", GafferScene.Plane )
-GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCache )
-GafferUI.NodeMenu.append( "/Scene/Add/Seeds", GafferScene.Seeds )
-GafferUI.NodeMenu.append( "/Scene/Add/Instancer", GafferScene.Instancer )
-GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
-GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
-GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
-
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
-
-GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
-GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
-
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+	def test( self ) :
+	
+		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
+		
+		read = Gaffer.ReadNode( inputs = { "fileName" : fileName } )
+		object = IECore.Reader.create( fileName ).read()
+		
+		objectToScene = GafferScene.ObjectToScene( inputs = { "object" : read["output"] } )
+		
+		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
+		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( objectToScene["out"].geometry( "/" ), None )
+		self.assertEqual( objectToScene["out"].childNames( "/" ), IECore.StringVectorData( [ "object" ] ) )
+		
+		self.assertEqual( objectToScene["out"].bound( "/object" ), object.bound() )
+		self.assertEqual( objectToScene["out"].transform( "/object" ), IECore.M44f() )
+		self.assertEqual( objectToScene["out"].geometry( "/object" ), object )
+		self.assertEqual( objectToScene["out"].childNames( "/object" ), None )
+		
+if __name__ == "__main__":
+	unittest.main()

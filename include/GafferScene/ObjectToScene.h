@@ -34,37 +34,35 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_OBJECTTOSCENE_H
+#define GAFFERSCENE_OBJECTTOSCENE_H
+
+#include "GafferScene/RenderableSource.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class ObjectToScene : public RenderableSceneNode
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	RenderableSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	
-	LastTypeId = 110700
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToScene, ObjectToSceneTypeId, RenderableSceneNode );
+
+		ObjectToScene( const std::string &name=staticTypeName() );
+		virtual ~ObjectToScene();
+		
+		Gaffer::ObjectPlug *objectPlug();
+		const Gaffer::ObjectPlug *objectPlug() const;
+				
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual IECore::VisibleRenderablePtr computeRenderable( const Gaffer::Context *context ) const;
+
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_OBJECTTOSCENE_H

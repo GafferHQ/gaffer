@@ -51,3 +51,5 @@ GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.tr
 GafferUI.NodeUI.registerPlugValueWidget( GafferScene.SceneNode.staticTypeId(), "in", None )
 
 GafferUI.NodeUI.registerPlugValueWidget( GafferScene.Instancer.staticTypeId(), "instance", None )
+
+GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene.staticTypeId(), "object", GafferUI.StandardNodule )
