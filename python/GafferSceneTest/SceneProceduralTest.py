@@ -46,6 +46,22 @@ import GafferSceneTest
 
 class SceneProceduralTest( unittest.TestCase ) :
 
+	class __WrappingProcedural( IECore.ParameterisedProcedural ) :
+		
+		def __init__( self, procedural ) :
+		
+			IECore.ParameterisedProcedural.__init__( self, "" )
+			
+			self.__procedural = procedural
+			
+		def doBound( self, args ) :
+		
+			return self.__procedural.bound()
+			
+		def doRender( self, renderer, args ) :
+		
+			renderer.procedural( self.__procedural )
+			
 	def testComputationErrors( self ) :
 	
 		# This test actually exposed a crash bug in IECoreGL, but it's important
@@ -56,26 +72,30 @@ class SceneProceduralTest( unittest.TestCase ) :
 		renderer = IECoreGL.Renderer()
 		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
 
-		class __WrappingProcedural( IECore.ParameterisedProcedural ) :
-		
-			def __init__( self, procedural ) :
-			
-				IECore.ParameterisedProcedural.__init__( self, "" )
-				
-				self.__procedural = procedural
-				
-			def doBound( self, args ) :
-			
-				return self.__procedural.bound()
-				
-			def doRender( self, renderer, args ) :
-			
-				renderer.procedural( self.__procedural )
-		
 		with IECore.WorldBlock( renderer ) :
 		
 			procedural = GafferScene.SceneProcedural( mc["out"], Gaffer.Context(), "/" )
-			__WrappingProcedural( procedural ).render( renderer )
-			
+			self.__WrappingProcedural( procedural ).render( renderer )
+	
+	def testPythonComputationErrors( self ) :
+	
+		# As above, this may be an IECoreGL bug, but again it's important that
+		# Gaffer doesn't trigger it.
+		
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+		
+		script["expression"] = Gaffer.ExpressionNode()
+		script["expression"]["engine"].setValue( "python" )
+		script["expression"]["expression"].setValue( 'parent["plane"]["transform"]["translate"]["x"] = iDontExist["andNorDoI"]' )
+				
+		renderer = IECoreGL.Renderer()
+		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
+
+		with IECore.WorldBlock( renderer ) :
+		
+			procedural = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+			self.__WrappingProcedural( procedural ).render( renderer )
+		
 if __name__ == "__main__":
 	unittest.main()

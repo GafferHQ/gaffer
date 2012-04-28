@@ -44,6 +44,7 @@
 #include "Gaffer/ExpressionNode.h"
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ExpressionNodeBinding.h"
+#include "GafferBindings/TranslatePythonException.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -61,14 +62,21 @@ class EngineWrapper : public ExpressionNode::Engine, public IECorePython::Wrappe
 		virtual std::string outPlug()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "outPlug" );
-			if( f )
+			try
 			{
-				return f();
+				boost::python::override f = this->get_override( "outPlug" );
+				if( f )
+				{
+					return f();
+				}
+				else
+				{
+					msg( IECore::Msg::Error, "EngineWrapper::outPlug", "outPlug method not defined in python." );
+				}
 			}
-			else
+			catch( const error_already_set &e )
 			{
-				msg( IECore::Msg::Error, "EngineWrapper::outPlug", "outPlug method not defined in python." );
+				translatePythonException();
 			}
 			return "";
 		}
@@ -76,36 +84,50 @@ class EngineWrapper : public ExpressionNode::Engine, public IECorePython::Wrappe
 		virtual void inPlugs( std::vector<std::string> &plugs )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override f = this->get_override( "inPlugs" );
-			if( f )
+			try
 			{
-				list pythonPlugs = f();
-				container_utils::extend_container( plugs, pythonPlugs );
+				override f = this->get_override( "inPlugs" );
+				if( f )
+				{
+					list pythonPlugs = f();
+					container_utils::extend_container( plugs, pythonPlugs );
+				}
+				else
+				{
+					msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );			
+				}
 			}
-			else
+			catch( const error_already_set &e )
 			{
-				msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );			
-			}
+				translatePythonException();
+			}	
 		}
 		
 		virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override f = this->get_override( "execute" );
-			if( f )
+			try
 			{
-				list pythonProxyInputs;
-				for( std::vector<const ValuePlug *>::const_iterator it = proxyInputs.begin(); it!=proxyInputs.end(); it++ )
+				override f = this->get_override( "execute" );
+				if( f )
 				{
-					pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+					list pythonProxyInputs;
+					for( std::vector<const ValuePlug *>::const_iterator it = proxyInputs.begin(); it!=proxyInputs.end(); it++ )
+					{
+						pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+					}
+		
+					f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs, ValuePlugPtr( proxyOutput ) );
 				}
-	
-				f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs, ValuePlugPtr( proxyOutput ) );
+				else
+				{
+					msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );			
+				}
 			}
-			else
+			catch( const error_already_set &e )
 			{
-				msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );			
-			}
+				translatePythonException();
+			}	
 		}
 		
 };
