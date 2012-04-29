@@ -4,7 +4,8 @@ PRIORITIES!!!!
 	* viewing a scene node and then connecting an input to it doesn't update
 	* selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
 		- do properly!
-	* Context.get( name, defaultValue ) binding
+	* better ui for existing nodes
+		- tab completion in path fields etc.
 	
 * seeds derived from branchcreator
 	- with make sure we don't do expensive bounds propagation !!!!!!!!
@@ -12,7 +13,6 @@ PRIORITIES!!!!
 * fix the camera movement
 	
 * fix script open directory location
-
 
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
@@ -41,6 +41,9 @@ PRIORITIES!!!!
 	- i believe this should be a shortcut for putting all the children in
 		- but isn't
 		- and needs documenting
+
+* popup slider for NumericWidget
+	- modifying the selected part of the number text
 	
 * nodes 
 	- modelcachesource DONE
