@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import fnmatch
+
 import Gaffer
 import GafferUI
 
@@ -64,3 +66,5 @@ def __createParameterWidget( plug ) :
 GafferUI.NodeUI.registerNodeUI( Gaffer.WriteNode.staticTypeId(), WriteNodeUI )
 GafferUI.NodeUI.registerPlugValueWidget( Gaffer.WriteNode.staticTypeId(), "fileName", GafferUI.PathPlugValueWidget )
 GafferUI.NodeUI.registerPlugValueWidget( Gaffer.WriteNode.staticTypeId(), "parameters", __createParameterWidget )
+GafferUI.Nodule.registerNodule( Gaffer.WriteNode.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.WriteNode.staticTypeId(), "in", GafferUI.StandardNodule )
