@@ -77,9 +77,9 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# still constructing
 			return
 
-			with self.getContext() :
-				with IECore.IgnoredExceptions( ValueError ) :
-					self.__path.setFromString( self.getPlug().getValue() )
+		with self.getContext() :
+			with IECore.IgnoredExceptions( ValueError ) :
+				self.__path.setFromString( self.getPlug().getValue() )
 		
 	def __pathChanged( self, path ) :
 				
