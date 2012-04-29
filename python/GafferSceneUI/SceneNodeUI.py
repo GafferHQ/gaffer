@@ -81,3 +81,14 @@ GafferUI.NodeUI.registerPlugValueWidget(
 		path = Gaffer.SequencePath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "fio" ] ) ),
 	)
 )
+
+# BranchCreator
+
+GafferUI.NodeUI.registerPlugValueWidget(
+	GafferScene.BranchCreator.staticTypeId(),
+	"parent",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
+	),
+)
