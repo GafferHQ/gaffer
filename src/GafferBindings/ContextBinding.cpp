@@ -78,6 +78,28 @@ static object get( Context &c, const IECore::InternedString &name )
 	}
 }
 
+/// \todo It'd be nice if there was a get with default in C++ as well.
+static object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
+{
+	ConstDataPtr d;
+	try
+	{
+		d = c.get<Data>( name );
+	}
+	catch( ... )
+	{
+		return defaultValue;
+	}
+	try
+	{
+		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
+	}
+	catch( const InvalidArgumentException &e )
+	{
+		return object( DataPtr( d->copy() ) );
+	}
+}
+
 struct ChangedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, ConstContextPtr context, const IECore::InternedString &name )
@@ -115,6 +137,7 @@ void bindContext()
 		.def( "__setitem__", &Context::set<std::string> )
 		.def( "__setitem__", &Context::set<Data *> )
 		.def( "get", &get )
+		.def( "get", &getWithDefault )
 		.def( "__getitem__", &get )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
 		.def( self == self )

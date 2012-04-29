@@ -196,6 +196,14 @@ class ContextTest( unittest.TestCase ) :
 		self.assertEqual( c["v"], v )
 		self.failIf( c["v"].isSame( v ) )
 		
+	def testGetWithDefault( self ) :
+	
+		c = Gaffer.Context()
+		self.assertRaises( RuntimeError, c.get, "f" ) 
+		self.assertEqual( c.get( "f", 10 ), 10 )
+		c["f"] = 1.0
+		self.assertEqual( c.get( "f" ), 1.0 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
