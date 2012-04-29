@@ -146,37 +146,5 @@ def revertToSaved( menu ) :
 
 def __scriptPathFilter() :
 
-	result = Gaffer.CompoundPathFilter()
-	result.addFilter(
-		Gaffer.FileNamePathFilter(
-			[ "*.gfr", "*.GFR" ],
-			userData = {
-				"UI" : {
-					"label" : "Show only .gfr files",
-				}
-			}
-		)
-	)
+	return Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] )
 	
-	result.addFilter(
-		Gaffer.FileNamePathFilter(
-			[ re.compile( "^[^.].*" ) ],
-			leafOnly=False,
-			userData = {
-				"UI" : {
-					"label" : "Show hidden files",
-					"invertEnabled" : True,
-				}
-			}
-		) 
-	)
-	
-	result.addFilter(
-		Gaffer.InfoPathFilter(
-			infoKey = "name",
-			matcher = None, # the ui will fill this in
-			leafOnly = False,
-		)
-	)
-
-	return result

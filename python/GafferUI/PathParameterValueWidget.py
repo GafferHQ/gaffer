@@ -68,30 +68,8 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	def _filter( self ) :
 		
-		result = Gaffer.CompoundPathFilter()	
-		result.addFilter(
-			Gaffer.FileNamePathFilter(
-				[ re.compile( "^[^.].*" ) ],
-				leafOnly=False,
-				userData = {
-					"UI" : {
-						"label" : "Show hidden files",
-						"invertEnabled" : True,
-					}
-				}
-			) 
-		)
+		return Gaffer.FileSystemPath.createStandardFilter()
 		
-		result.addFilter(
-			Gaffer.InfoPathFilter(
-				infoKey = "name",
-				matcher = None, # the ui will fill this in
-				leafOnly = False,
-			)
-		)
-		
-		return result
-	
 	def _pathChooserDialogueKeywords( self ) :
 	
 		return {}

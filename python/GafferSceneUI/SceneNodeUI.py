@@ -36,9 +36,12 @@
 
 import fnmatch
 
+import Gaffer
 import GafferUI
 
 import GafferScene
+
+# SceneNode
 
 def __noduleCreator( plug ) :
 
@@ -50,6 +53,31 @@ def __noduleCreator( plug ) :
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.NodeUI.registerPlugValueWidget( GafferScene.SceneNode.staticTypeId(), "in", None )
 
+# Instancer
+
 GafferUI.NodeUI.registerPlugValueWidget( GafferScene.Instancer.staticTypeId(), "instance", None )
 
+# ObjectToScene
+
 GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene.staticTypeId(), "object", GafferUI.StandardNodule )
+
+# ModelCacheSource
+
+GafferUI.NodeUI.registerPlugValueWidget(
+	GafferScene.ModelCacheSource.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "mdc" ] ) )
+	)
+)
+
+# AttributeCache
+
+GafferUI.NodeUI.registerPlugValueWidget(
+	GafferScene.AttributeCache.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = Gaffer.SequencePath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "fio" ] ) ),
+	)
+)
