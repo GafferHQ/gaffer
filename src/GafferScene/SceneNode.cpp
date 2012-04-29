@@ -103,17 +103,20 @@ Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, co
 {
 	Box3f result;
 	ConstStringVectorDataPtr childNames = out->childNames( path );
-	for( vector<string>::const_iterator it = childNames->readable().begin(); it != childNames->readable().end(); it++ )
+	if( childNames )
 	{
-		string childPath = path;
-		if( childPath.size() > 1 )
-		{	
-			childPath += "/";
+		for( vector<string>::const_iterator it = childNames->readable().begin(); it != childNames->readable().end(); it++ )
+		{
+			string childPath = path;
+			if( childPath.size() > 1 )
+			{	
+				childPath += "/";
+			}
+			childPath += *it;
+			Box3f childBound = out->bound( childPath );
+			childBound = transform( childBound, out->transform( childPath ) );
+			result.extendBy( childBound );
 		}
-		childPath += *it;
-		Box3f childBound = out->bound( childPath );
-		childBound = transform( childBound, out->transform( childPath ) );
-		result.extendBy( childBound );
 	}
 	return result;
 }
