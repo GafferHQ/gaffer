@@ -209,6 +209,26 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_OCIO", "Set this to build OCIO.", "0" )
+)
+
+options.Add(
+	"OCIO_SRC_DIR",
+	"The location of the OCIO source to be used if BUILD_DEPENDENCY_OCIO is specified.",
+	"$DEPENDENCIES_SRC_DIR/imageworks-OpenColorIO-a16d9ac",
+)
+
+options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_OIIO", "Set this to build OIIO.", "0" )
+)
+
+options.Add(
+	"OIIO_SRC_DIR",
+	"The location of the OIIO source to be used if BUILD_DEPENDENCY_OIIO is specified.",
+	"$DEPENDENCIES_SRC_DIR/OpenImageIO-oiio-fa4b6ef",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_CORTEX", "Set this to build cortex.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -442,6 +462,7 @@ depEnv["ENV"].update(
 		"PYTHONPATH" : depEnv.subst( "$BUILD_DIR/python" ),
  		"M4PATH" : depEnv.subst( "$BUILD_DIR/share/aclocal" ),
 		"PKG_CONFIG_PATH" : depEnv.subst( "$BUILD_DIR/lib/pkgconfig" ),
+		"CMAKE_PREFIX_PATH" : depEnv.subst( "$BUILD_DIR" ),
 		"HOME" : os.environ["HOME"],
 	}
 )
@@ -502,6 +523,14 @@ if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	if depEnv["PLATFORM"]=="posix" :
 		runCommand( "mkdir -p $BUILD_DIR/lib64/pkgconfig" )
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
+
+if depEnv["BUILD_DEPENDENCY_OCIO"] :
+	runCommand( "cd $OCIO_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+
+if depEnv["BUILD_DEPENDENCY_OIIO"] :
+	runCommand( "cd $OIIO_SRC_DIR && make clean && make THIRD_PARTY_TOOLS_HOME=$BUILD_DIR OCIO_PATH=$BUILD_DIR USE_OPENJPEG=0" )
+	if depEnv["PLATFORM"]=="darwin" :
+		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/macosx/* $BUILD_DIR" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
 	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH' SAVE_OPTIONS=gaffer.options" )
