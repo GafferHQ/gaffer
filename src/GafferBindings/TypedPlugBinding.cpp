@@ -160,4 +160,5 @@ void GafferBindings::bindTypedPlug()
 	bind<M33fPlug>();
 	bind<M44fPlug>();	
 	bind<AtomicBox3fPlug>();	
+	bind<AtomicBox2iPlug>();
 }

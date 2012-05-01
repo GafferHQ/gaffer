@@ -93,12 +93,14 @@ typedef TypedPlug<std::string> StringPlug;
 typedef TypedPlug<Imath::M33f> M33fPlug;
 typedef TypedPlug<Imath::M44f> M44fPlug;
 typedef TypedPlug<Imath::Box3f> AtomicBox3fPlug;
+typedef TypedPlug<Imath::Box2i> AtomicBox2iPlug;
 
 IE_CORE_DECLAREPTR( BoolPlug );
 IE_CORE_DECLAREPTR( StringPlug );
 IE_CORE_DECLAREPTR( M33fPlug );
 IE_CORE_DECLAREPTR( M44fPlug );
 IE_CORE_DECLAREPTR( AtomicBox3fPlug );
+IE_CORE_DECLAREPTR( AtomicBox2iPlug );
 
 } // namespace Gaffer
 

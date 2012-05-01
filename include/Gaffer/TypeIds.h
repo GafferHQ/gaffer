@@ -90,6 +90,7 @@ enum TypeId
 	TimeWarpNodeTypeId = 110043,
 	TransformPlugTypeId = 110044,
 	AtomicBox3fPlugTypeId = 110045,
+	AtomicBox2iPlugTypeId = 110046,
 	
 	LastTypeId = 110200,
 	
