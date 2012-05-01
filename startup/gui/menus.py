@@ -40,8 +40,11 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferImage
+
 import GafferUI
 import GafferSceneUI
+import GafferImageUI
 
 # ScriptWindow menu
 
@@ -63,6 +66,8 @@ GafferUI.NodeMenu.append( "/Scene/Add/Instancer", GafferScene.Instancer )
 GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
+
+GafferUI.NodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader )
 
 GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )

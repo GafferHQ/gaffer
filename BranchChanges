@@ -29,3 +29,5 @@
 * Removed NodeUI.createPlugValueWidget() registeredWidgets only parameter.
 
 * Added PathListingWidget setPathExpanded, getPathExpanded, setExpandedPaths, getExpandedPaths and expansionChangedSignal methods.
+
+* Added the GafferImage and GafferImageUI modules, for tile based image processing.

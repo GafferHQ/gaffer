@@ -34,19 +34,21 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TYPEIDS_H
-#define GAFFERSCENETEST_TYPEIDS_H
+#ifndef GAFFERIMAGE_TYPEIDS_H
+#define GAFFERIMAGE_TYPEIDS_H
 
-namespace GafferSceneTest
+namespace GafferImage
 {
 
 enum TypeId
 {
-	CompoundObjectSourceTypeId = 110701,
+	ImagePlugTypeId = 110750,
+	ImageNodeTypeId = 110751,
+	ImageReaderTypeId = 110752,
 	
-	LastTypeId = 110749
+	LastTypeId = 110999
 };
 
-} // namespace GafferSceneTest
+} // namespace GafferImage
 
-#endif // GAFFERSCENETEST_TYPEIDS_H
+#endif // GAFFERIMAGE_TYPEIDS_H

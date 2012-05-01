@@ -34,19 +34,43 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TYPEIDS_H
-#define GAFFERSCENETEST_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferSceneTest
-{
+#include "GafferBindings/NodeBinding.h"
 
-enum TypeId
+#include "GafferImage/ImageNode.h"
+#include "GafferImage/ImageReader.h"
+
+using namespace boost::python;
+using namespace GafferImage;
+
+static IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile  )
 {
-	CompoundObjectSourceTypeId = 110701,
+	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
+	return d ? d->copy() : 0;
+}
+
+BOOST_PYTHON_MODULE( _GafferImage )
+{
 	
-	LastTypeId = 110749
-};
+	IECorePython::RunTimeTypedClass<ImagePlug>()
+		.def(
+			init< const std::string &, Gaffer::Plug::Direction, unsigned >
+			(
+				(
+					arg( "name" ) = ImagePlug::staticTypeName(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default
+				)
+			)	
+		)
+		.def( "channelData", &channelData )
+		.def( "image", &ImagePlug::image )
+		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
+		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
+	;
 
-} // namespace GafferSceneTest
+	GafferBindings::NodeClass<ImageNode>();
+	GafferBindings::NodeClass<ImageReader>();
 
-#endif // GAFFERSCENETEST_TYPEIDS_H
+}

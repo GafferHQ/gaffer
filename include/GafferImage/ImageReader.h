@@ -34,19 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TYPEIDS_H
-#define GAFFERSCENETEST_TYPEIDS_H
+#ifndef GAFFERSCENE_IMAGEREADER_H
+#define GAFFERSCENE_IMAGEREADER_H
 
-namespace GafferSceneTest
+#include "GafferImage/ImageNode.h"
+
+namespace GafferImage
 {
 
-enum TypeId
+/// \todo Linearise images. Investigate OIIO auto-tiling.
+class ImageReader : public ImageNode
 {
-	CompoundObjectSourceTypeId = 110701,
-	
-	LastTypeId = 110749
+
+	public :
+
+		ImageReader( const std::string &name=staticTypeName() );
+		virtual ~ImageReader();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageReader, ImageReaderTypeId, ImageNode );
+		
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+		
+		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::StringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::FloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
 };
 
-} // namespace GafferSceneTest
+} // namespace GafferImage
 
-#endif // GAFFERSCENETEST_TYPEIDS_H
+#endif // GAFFERSCENE_IMAGEREADER_H

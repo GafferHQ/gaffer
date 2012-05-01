@@ -34,19 +34,73 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TYPEIDS_H
-#define GAFFERSCENETEST_TYPEIDS_H
+#include "Gaffer/Context.h"
 
-namespace GafferSceneTest
+#include "GafferImage/ImageNode.h"
+
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace GafferImage;
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( ImageNode );
+
+ImageNode::ImageNode( const std::string &name )
+	:	Node( name )
 {
+	addChild( new ImagePlug( "out", Gaffer::Plug::Out ) );
+}
 
-enum TypeId
+ImageNode::~ImageNode()
 {
-	CompoundObjectSourceTypeId = 110701,
-	
-	LastTypeId = 110749
-};
+}
 
-} // namespace GafferSceneTest
+ImagePlug *ImageNode::outPlug()
+{
+	return getChild<ImagePlug>( "out" );
+}
 
-#endif // GAFFERSCENETEST_TYPEIDS_H
+const ImagePlug *ImageNode::outPlug() const
+{
+	return getChild<ImagePlug>( "out" );
+}
+				
+void ImageNode::compute( ValuePlug *output, const Context *context ) const
+{
+	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	if( imagePlug )
+	{
+		if( output == imagePlug->displayWindowPlug() )
+		{
+			static_cast<AtomicBox2iPlug *>( output )->setValue(
+				computeDisplayWindow( context, imagePlug )
+			);
+		}
+		else if( output == imagePlug->dataWindowPlug() )
+		{
+			static_cast<AtomicBox2iPlug *>( output )->setValue(
+				computeDataWindow( context, imagePlug )
+			);
+		}
+		else if( output == imagePlug->channelNamesPlug() )
+		{
+			static_cast<StringVectorDataPlug *>( output )->setValue(
+				computeChannelNames( context, imagePlug )
+			);
+		}
+		else if( output == imagePlug->channelDataPlug() )
+		{
+			std::string channelName = context->get<string>( "image:channelName" );
+			V2i tileOrigin = context->get<V2i>( "image:tileOrigin" );
+			if( tileOrigin.x % ImagePlug::tileSize() || tileOrigin.y % ImagePlug::tileSize() )
+			{
+				throw Exception( "The image:tileOrigin must be a multiple of ImagePlug::tileSize()" );
+			}
+			static_cast<FloatVectorDataPlug *>( output )->setValue(
+				computeChannelData( channelName, tileOrigin, context, imagePlug )
+			);
+		}
+	}
+}
+

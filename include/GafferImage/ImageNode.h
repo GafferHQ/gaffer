@@ -34,19 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TYPEIDS_H
-#define GAFFERSCENETEST_TYPEIDS_H
+#ifndef GAFFERSCENE_IMAGENODE_H
+#define GAFFERSCENE_IMAGENODE_H
 
-namespace GafferSceneTest
+#include "Gaffer/Node.h"
+
+#include "GafferImage/ImagePlug.h"
+
+namespace GafferImage
 {
 
-enum TypeId
+/// The SceneNode class is the base class for all Nodes which are capable of generating
+/// or manipulating images.
+class ImageNode : public Gaffer::Node
 {
-	CompoundObjectSourceTypeId = 110701,
-	
-	LastTypeId = 110749
+
+	public :
+
+		ImageNode( const std::string &name=staticTypeName() );
+		virtual ~ImageNode();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageNode, ImageNodeTypeId, Gaffer::Node );
+		
+		/// All ImageNodes have at least one output ImagePlug for passing on their result. More
+		/// may be added by derived classes if necessary.
+		ImagePlug *outPlug();
+		const ImagePlug *outPlug() const;
+				
+	protected :
+				
+		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		virtual IECore::StringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		virtual IECore::FloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		
 };
 
-} // namespace GafferSceneTest
+} // namespace GafferImage
 
-#endif // GAFFERSCENETEST_TYPEIDS_H
+#endif // GAFFERSCENE_IMAGENODE_H
