@@ -1,5 +1,7 @@
 * Added GafferUI.NotificationMessageHandler, for displaying IECore messages in a little window.
 
+* Added a ParameterHandler for DateTimeParameters.
+
 0.31.0
 ------
 
