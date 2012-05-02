@@ -1,5 +1,8 @@
+* Added GafferUI.NotificationMessageHandler, for displaying IECore messages in a little window.
+
 0.31.0
 ------
+
 * Fixed getText method of Label widget.
 
 * TextInputDialogue now has all text in the textfield selected by default.

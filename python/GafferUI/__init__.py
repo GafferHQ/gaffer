@@ -127,6 +127,7 @@ from ReaderPathPreview import ReaderPathPreview
 from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from IndexedIODataPathPreview import IndexedIODataPathPreview
 from OpPathPreview import OpPathPreview
+from NotificationMessageHandler import NotificationMessageHandler
 
 # then stuff specific to graph uis
 
