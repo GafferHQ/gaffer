@@ -34,48 +34,55 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H
+#define GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H
 
-#include "GafferBindings/NodeBinding.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferImage/ImageNode.h"
-#include "GafferImage/ImageReader.h"
-#include "GafferImage/Display.h"
 
-using namespace boost::python;
-using namespace GafferImage;
-
-static IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile  )
+namespace GafferImage
 {
-	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
-	return d ? d->copy() : 0;
-}
 
-BOOST_PYTHON_MODULE( _GafferImage )
+template<typename BaseType>
+class ImagePrimitiveSource : public BaseType
 {
+
+	public :
+
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ImagePrimitiveSource<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ImagePrimitiveSource<BaseType> );
+
+		virtual ~ImagePrimitiveSource();
+				
+		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		ImagePrimitiveSource( const std::string &name );
+
+		Gaffer::ObjectPlug *imagePrimitivePlug();
+		const Gaffer::ObjectPlug *imagePrimitivePlug() const;
+
+		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const = 0;		
+		
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::StringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::FloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+	private :
 	
-	IECorePython::RunTimeTypedClass<ImagePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = ImagePlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-		.def( "channelData", &channelData )
-		.def( "image", &ImagePlug::image )
-		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
-		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
-	;
+		Gaffer::ObjectPlug *inputImagePrimitivePlug();
+		const Gaffer::ObjectPlug *inputImagePrimitivePlug() const;
+		
+};
 
-	GafferBindings::NodeClass<ImageNode>();
-	GafferBindings::NodeClass<ImageReader>();
-	GafferBindings::NodeClass<ImagePrimitiveNode>();
-	GafferBindings::NodeClass<Display>()
-		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
-	;
+typedef ImagePrimitiveSource<ImageNode> ImagePrimitiveNode;
+IE_CORE_DECLAREPTR( ImagePrimitiveNode );
 
-}
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_IMAGEPRIMITIVESOURCE_H

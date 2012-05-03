@@ -34,48 +34,56 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_DISPLAY_H
+#define GAFFERIMAGE_DISPLAY_H
 
-#include "GafferBindings/NodeBinding.h"
+#include "IECore/DisplayDriverServer.h"
 
-#include "GafferImage/ImageNode.h"
-#include "GafferImage/ImageReader.h"
-#include "GafferImage/Display.h"
+#include "Gaffer/NumericPlug.h"
 
-using namespace boost::python;
-using namespace GafferImage;
+#include "GafferImage/ImagePrimitiveSource.h"
 
-static IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile  )
+namespace GafferImage
 {
-	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
-	return d ? d->copy() : 0;
-}
 
-BOOST_PYTHON_MODULE( _GafferImage )
+IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
+
+class Display : public ImagePrimitiveNode
 {
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Display, DisplayTypeId, ImagePrimitiveNode );
+
+		Display( const std::string &name = staticTypeName() );
+		virtual ~Display();
+		
+		Gaffer::IntPlug *portPlug();
+		const Gaffer::IntPlug *portPlug() const;
+				
+		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const;
+		
+		static UnaryPlugSignal &dataReceivedSignal();
+		
+	protected :
+
+		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const;		
 	
-	IECorePython::RunTimeTypedClass<ImagePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = ImagePlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-		.def( "channelData", &channelData )
-		.def( "image", &ImagePlug::image )
-		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
-		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
-	;
+	private :
+	
+		IECore::DisplayDriverServerPtr m_server;
+		GafferDisplayDriverPtr m_driver;
+				
+		void plugSet( Gaffer::PlugPtr plug );
+		void setupServer();
+		void driverCreated( GafferDisplayDriver *driver );
+		void setupDriver( GafferDisplayDriverPtr driver );
+		void dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound );
+		
+};
 
-	GafferBindings::NodeClass<ImageNode>();
-	GafferBindings::NodeClass<ImageReader>();
-	GafferBindings::NodeClass<ImagePrimitiveNode>();
-	GafferBindings::NodeClass<Display>()
-		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
-	;
+IE_CORE_DECLAREPTR( Display );
 
-}
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_DISPLAY_H

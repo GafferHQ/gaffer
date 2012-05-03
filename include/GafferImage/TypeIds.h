@@ -45,6 +45,9 @@ enum TypeId
 	ImagePlugTypeId = 110750,
 	ImageNodeTypeId = 110751,
 	ImageReaderTypeId = 110752,
+	ImagePrimitiveNodeTypeId = 110753,
+	DisplayTypeId = 110754,
+	GafferDisplayDriverTypeId = 110755,
 	
 	LastTypeId = 110999
 };

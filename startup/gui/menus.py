@@ -67,7 +67,8 @@ GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
 
-GafferUI.NodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader )
+GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
+GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
 
 GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )

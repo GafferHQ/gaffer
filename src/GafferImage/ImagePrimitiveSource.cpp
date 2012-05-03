@@ -34,48 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "GafferImage/ImagePrimitiveSource.inl"
 
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferImage/ImageNode.h"
-#include "GafferImage/ImageReader.h"
-#include "GafferImage/Display.h"
-
-using namespace boost::python;
-using namespace GafferImage;
-
-static IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile  )
+namespace GafferImage
 {
-	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
-	return d ? d->copy() : 0;
-}
 
-BOOST_PYTHON_MODULE( _GafferImage )
-{
-	
-	IECorePython::RunTimeTypedClass<ImagePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = ImagePlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-		.def( "channelData", &channelData )
-		.def( "image", &ImagePlug::image )
-		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
-		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
-	;
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ImagePrimitiveNode, ImagePrimitiveNodeTypeId )
 
-	GafferBindings::NodeClass<ImageNode>();
-	GafferBindings::NodeClass<ImageReader>();
-	GafferBindings::NodeClass<ImagePrimitiveNode>();
-	GafferBindings::NodeClass<Display>()
-		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
-	;
+// explicit instantiation
+template class GafferImage::ImagePrimitiveSource<ImageNode>;
 
-}
+} // namespace GafferImage
