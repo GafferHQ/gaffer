@@ -136,6 +136,7 @@ IE_CORE_DEFINERUNTIMETYPED( Display );
 Display::Display( const std::string &name )
 	:	ImagePrimitiveNode( name )
 {
+	/// \todo This plug should be made unconnectable when we have that functionality.
 	addChild( new IntPlug( "port", Plug::In, 1559 ) );
 	plugSetSignal().connect( boost::bind( &Display::plugSet, this, ::_1 ) );
 	GafferDisplayDriver::instanceCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
