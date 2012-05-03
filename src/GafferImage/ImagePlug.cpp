@@ -161,8 +161,8 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 		throw IECore::Exception( "ImagePlug::channelData called on unconnected input plug" );
 	}
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "image:channelData", channelName );
-	tmpContext->set( "image:tile", tile );
+	tmpContext->set( "image:channelName", channelName );
+	tmpContext->set( "image:tileOrigin", tile );
 	Context::Scope scopedContext( tmpContext );
 	return channelDataPlug()->getValue();
 }

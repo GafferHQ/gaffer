@@ -43,12 +43,12 @@ import GafferImage
 
 class ImageReaderTest( unittest.TestCase ) :
 
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+
 	def test( self ) :
 	
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	
 		n = GafferImage.ImageReader()
-		n["fileName"].setValue( fileName )		
+		n["fileName"].setValue( self.fileName )		
 	
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 		self.assertEqual( n["out"]["displayWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
@@ -61,12 +61,20 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.failUnless( "A" in channelNames )
 	
 		image = n["out"].image()
-		image2 = IECore.Reader.create( fileName ).read()
+		image2 = IECore.Reader.create( self.fileName ).read()
 		
 		image.blindData().clear()
 		image2.blindData().clear()
 		
 		self.assertEqual( image, image2 )
+		
+	def testTileSize( self ) :
+	
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.fileName )
+		
+		tile = n["out"].channelData( "R", IECore.V2i( 0 ) )
+		self.assertEqual( len( tile ), GafferImage.ImagePlug().tileSize() **2 )
 	
 if __name__ == "__main__":
 	unittest.main()
