@@ -42,8 +42,12 @@ PRIORITIES!!!!
 
 * popup slider for NumericWidget
 	- modifying the selected part of the number text
+
+* image nodes
+	- frame support for reader
+	- ocio node
 	
-* nodes 
+* scene nodes 
 	- modelcachesource DONE
 	- attributecache DONE
 	- primitive variable delete DONE
