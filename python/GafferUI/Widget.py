@@ -469,7 +469,7 @@ class Widget( object ) :
 			
 		}
 		
-		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
+		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit, QDateTimeEdit {
 		
 			color: $foreground;
 			font: 10px;
@@ -580,6 +580,48 @@ class Widget( object ) :
 
 		}
 
+		QDateTimeEdit {
+
+			background-color: $backgroundLighter;
+			padding: 1px;
+			margin: 0px;
+			border: 1px solid $backgroundDark;	
+		}
+		
+		QDateTimeEdit::drop-down {
+			width: 15px;
+			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		}
+
+		#qt_calendar_navigationbar {
+		
+			background-color : $brightColor;
+		
+		}
+		
+		#qt_calendar_monthbutton, #qt_calendar_yearbutton {
+		
+			color : $foreground;
+			font-weight : bold;
+			font-size : 16pt;
+		
+		}
+		
+		#qt_calendar_monthbutton::menu-indicator {
+			image : none;
+		}
+		
+		#qt_calendar_calendarview {
+		
+			color : $foreground;
+			font-weight : normal;
+			font-size : 14pt;
+			selection-background-color: $brightColor;
+			background-color : $backgroundMid;
+			gridline-color: $backgroundDark;
+
+		}
+		
 		QPushButton, QComboBox {
 		
 			font-weight: bold;

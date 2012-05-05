@@ -177,6 +177,7 @@ from PathVectorParameterValueWidget import PathVectorParameterValueWidget
 from StringParameterValueWidget import StringParameterValueWidget
 from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
 from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
+from DateTimeParameterValueWidget import DateTimeParameterValueWidget
 
 # and specific node uis
 
