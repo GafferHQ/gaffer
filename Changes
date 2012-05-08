@@ -7,6 +7,9 @@ from .cob and .fio files.
 
 * Fixed bug in VectorDataWidget, whereby the vertical header would disappear when rows were deleted.
 
+* Multiple fields may now be edited simultaneously in the VectorDataWidget, by selecting several fields before editing one of the selected fields. Changes are automatically copied to the rest of the selection. Columns may be selected by clicking on the horizontal header
+and rows by clicking on the vertical header.
+
 0.31.0
 ------
 

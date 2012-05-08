@@ -71,7 +71,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
 		
-		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
+		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectItems )
 		self.__tableView.setCornerButtonEnabled( False )
 	
 		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
@@ -105,6 +105,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		else :
 			self.__headerOverride = None
 		
+		self.__propagatingDataChangesToSelection = False
+		
 		self.setData( data )
 		self.setEditable( editable )
 	
@@ -119,9 +121,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 			if not isinstance( data, list ) :
 				data = [ data ]
 			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride )
-			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__dataChanged ) )
-			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__dataChanged ) )
-			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__dataChanged ) )
+			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
+			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
+			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 		else :
 			self.__model = None
 		
@@ -194,7 +196,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.getEditable() :
 
 			m.append( "/divider", { "divider" : True } )
-			m.append( "/Remove Selection", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
+			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
 		
 		return m
 	
@@ -214,7 +216,26 @@ class VectorDataWidget( GafferUI.Widget ) :
 			
 		return newData
 	
-	def __dataChanged( self, *unusedArgs ) :
+	def __modelDataChanged( self, topLeft, bottomRight ) :
+	
+		if self.__propagatingDataChangesToSelection :
+			return
+			
+		if topLeft == bottomRight and self.__tableView.selectionModel().isSelected( topLeft ) :
+			self.__propagatingDataChangesToSelection = True
+			valueToPropagate = self.__model.data( topLeft, QtCore.Qt.EditRole )
+			for index in self.__tableView.selectedIndexes() :
+				if index == topLeft :
+					continue
+				# we have to ignore exceptions, as the items we're setting might
+				# have a different data type than the value we're passing.
+				with IECore.IgnoredExceptions( Exception ) :
+					self.__model.setData( index, valueToPropagate, QtCore.Qt.EditRole )
+			self.__propagatingDataChangesToSelection = False
+
+		self.__emitDataChangedSignal()
+
+	def __emitDataChangedSignal( self, *unusedArgs ) :
 	
 		self.dataChangedSignal()( self )
 		
@@ -256,7 +277,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		# tell the world
 		self.setData( data )
-		self.__dataChanged()
+		self.__emitDataChangedSignal()
 		
 	def __addRows( self, button ) :
 	
@@ -273,7 +294,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 			data[i].extend( newData[i] )
 					
 		self.setData( data )
-		self.__dataChanged()
+		self.__emitDataChangedSignal()
 		
 # Private implementation - a QTableView with custom size behaviour.
 class _TableView( QtGui.QTableView ) :
@@ -627,19 +648,18 @@ class _BoolDelegate( _Delegate ) :
 		return None
 
 	def editorEvent( self, event, model, option, index ) :
-		
+				
 		if event.type()==QtCore.QEvent.MouseButtonDblClick :
 			# eat event so an editor doesn't get created
 			return True
 		elif event.type()==QtCore.QEvent.MouseButtonPress :
 			# eat event so row isn't selected
-			return True
-		elif event.type()==QtCore.QEvent.MouseButtonRelease :
-			# toggle the data value
-			checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
-			model.setData( index, not checked, QtCore.Qt.EditRole )
-			return True
-
+			rect = self.__checkBoxRect( option.widget, option.rect )
+			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
+				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				model.setData( index, not checked, QtCore.Qt.EditRole )
+				return True
+		
 		return False
 
 	def __checkBoxRect( self, widget, viewItemRect ) :
