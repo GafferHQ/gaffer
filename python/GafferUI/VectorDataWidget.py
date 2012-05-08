@@ -659,7 +659,12 @@ class _BoolDelegate( _Delegate ) :
 				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
-		
+		elif event.type()==QtCore.QEvent.KeyPress :
+			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
+				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				model.setData( index, not checked, QtCore.Qt.EditRole )
+				return True
+
 		return False
 
 	def __checkBoxRect( self, widget, viewItemRect ) :
