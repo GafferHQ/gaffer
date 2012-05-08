@@ -5,6 +5,8 @@
 * VectorDataWidget size behaviour now works much better for large amounts of data. It is now possible to use the browser's FileIndexedIO preview tab to view large amounts of data
 from .cob and .fio files.
 
+* Fixed bug in VectorDataWidget, whereby the vertical header would disappear when rows were deleted.
+
 0.31.0
 ------
 

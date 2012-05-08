@@ -144,6 +144,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
 			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Maximum ) )
 		
+		# Somehow the QTableView can leave its header in a state where updates are disabled.
+		# If we didn't turn them back on, the header would disappear.
+		self.__tableView.verticalHeader().setUpdatesEnabled( True )
 		self.__tableView.updateGeometry()
 	
 	## Returns the data being displayed. This is always returned as a list of
@@ -272,8 +275,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.setData( data )
 		self.__dataChanged()
 		
-# Private implementation - a QTableView which is much more forceful about
-# requesting enough size if the scrollbars are off in a given direction.
+# Private implementation - a QTableView with custom size behaviour.
 class _TableView( QtGui.QTableView ) :
 
 	def __init__( self ) :
@@ -294,8 +296,6 @@ class _TableView( QtGui.QTableView ) :
 			model.rowsInserted.connect( self.__sizeShouldChange )
 			model.rowsRemoved.connect( self.__sizeShouldChange )
 			model.dataChanged.connect( self.__sizeShouldChange )
-			
-		self.updateGeometry()
 
 	def minimumSizeHint( self ) :
 		
