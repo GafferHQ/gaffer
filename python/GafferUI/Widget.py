@@ -1066,12 +1066,20 @@ class Widget( object ) :
 			border: 1px solid $backgroundDark;
 			gridline-color: $backgroundDark;
 			padding: 0px;
+			background-color: transparent;
 		}
 		
 		QTableView#vectorDataWidgetEditable {
 			padding: 0px;
-			background-color: $backgroundLighter;
 			gridline-color: $backgroundDark;
+		}
+
+		QTableView::item#vectorDataWidgetEditable {
+			background-color: $backgroundLighter;
+		}
+		
+		QTableView::item:selected#vectorDataWidgetEditable {
+			background-color: $brightColor;
 		}
 			
 		QHeaderView::section#vectorDataWidgetVerticalHeader {

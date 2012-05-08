@@ -2,6 +2,9 @@
 
 * Added a ParameterHandler and ParameterValueWidget for DateTimeParameters.
 
+* VectorDataWidget size behaviour now works much better for large amounts of data. It is now possible to use the browser's FileIndexedIO preview tab to view large amounts of data
+from .cob and .fio files.
+
 0.31.0
 ------
 

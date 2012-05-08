@@ -69,7 +69,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
 
 		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
 		
 		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
 		self.__tableView.setCornerButtonEnabled( False )
@@ -142,7 +142,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 			self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents if haveResizeableContents else QtGui.QHeaderView.Fixed )
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
-			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Maximum ) )
 		
 		self.__tableView.updateGeometry()
 	
@@ -298,29 +298,39 @@ class _TableView( QtGui.QTableView ) :
 		self.updateGeometry()
 
 	def minimumSizeHint( self ) :
-	
-		return QtCore.QSize()
+		
+		# compute the minimum height to be the size of the header plus
+		# a single row of data.
+		
+		margins = self.contentsMargins()
+		minimumHeight = margins.top() + margins.bottom()
+		
+		if not self.horizontalHeader().isHidden() :
+			minimumHeight += self.horizontalHeader().sizeHint().height()
+		if self.verticalHeader().count() :
+			minimumHeight += self.verticalHeader().sectionSize( 0 )
+		
+		# horizontal direction doesn't matter, as we don't allow shrinking
+		# in that direction anyway.		
+		return QtCore.QSize( 1, minimumHeight )
 		
 	def sizeHint( self ) :
-		
-		result = QtGui.QTableView.sizeHint( self )
-				
+						
 		margins = self.contentsMargins()
-			
-		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-			w = self.horizontalHeader().length() + margins.left() + margins.right()
-			if not self.verticalHeader().isHidden() :
-				w += self.verticalHeader().sizeHint().width()
+		
+		w = self.horizontalHeader().length() + margins.left() + margins.right()
+		if not self.verticalHeader().isHidden() :
+			w += self.verticalHeader().sizeHint().width()
+		# always allow room for a scrollbar even though we don't always need one. we
+		# make sure the background in the stylesheet is transparent so that when the
+		# scrollbar is hidden we don't draw an empty gap where it otherwise would be.
+		w += self.verticalScrollBar().sizeHint().width()
 				
-			result.setWidth( w )
-
-		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-			h = self.verticalHeader().length() + margins.top() + margins.bottom()
-			if not self.horizontalHeader().isHidden() :
-				h += self.horizontalHeader().sizeHint().height()
-			result.setHeight( h )		
+		h = self.verticalHeader().length() + margins.top() + margins.bottom()
+		if not self.horizontalHeader().isHidden() :
+			h += self.horizontalHeader().sizeHint().height()
 										
-		return result
+		return QtCore.QSize( w, h )
 
 	def __sizeShouldChange( self, *unusedArgs ) :
 		
