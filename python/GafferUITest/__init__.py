@@ -72,6 +72,7 @@ from NumericSliderTest import NumericSliderTest
 from RenderableGadgetTest import RenderableGadgetTest
 from PlugValueWidgetTest import PlugValueWidgetTest
 from PathListingWidgetTest import PathListingWidgetTest
+from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

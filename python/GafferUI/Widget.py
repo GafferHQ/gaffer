@@ -121,6 +121,7 @@ class Widget( object ) :
  		self._leaveSignal = None
  		self._wheelSignal = None
  		self._visibilityChangedSignal = None
+ 		self._contextMenuSignal = None
  				
 		self.setToolTip( toolTip )
 		
@@ -301,6 +302,13 @@ class Widget( object ) :
 		if self._visibilityChangedSignal is None :
 			self._visibilityChangedSignal = GafferUI.WidgetSignal()
 		return self._visibilityChangedSignal
+
+	def contextMenuSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._contextMenuSignal is None :
+			self._contextMenuSignal = GafferUI.WidgetSignal()
+		return self._contextMenuSignal
 		
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
@@ -461,7 +469,7 @@ class Widget( object ) :
 			
 		}
 		
-		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit {
+		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit, QDateTimeEdit {
 		
 			color: $foreground;
 			font: 10px;
@@ -572,6 +580,48 @@ class Widget( object ) :
 
 		}
 
+		QDateTimeEdit {
+
+			background-color: $backgroundLighter;
+			padding: 1px;
+			margin: 0px;
+			border: 1px solid $backgroundDark;	
+		}
+		
+		QDateTimeEdit::drop-down {
+			width: 15px;
+			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		}
+
+		#qt_calendar_navigationbar {
+		
+			background-color : $brightColor;
+		
+		}
+		
+		#qt_calendar_monthbutton, #qt_calendar_yearbutton {
+		
+			color : $foreground;
+			font-weight : bold;
+			font-size : 16pt;
+		
+		}
+		
+		#qt_calendar_monthbutton::menu-indicator {
+			image : none;
+		}
+		
+		#qt_calendar_calendarview {
+		
+			color : $foreground;
+			font-weight : normal;
+			font-size : 14pt;
+			selection-background-color: $brightColor;
+			background-color : $backgroundMid;
+			gridline-color: $backgroundDark;
+
+		}
+		
 		QPushButton, QComboBox {
 		
 			font-weight: bold;
@@ -1016,12 +1066,20 @@ class Widget( object ) :
 			border: 1px solid $backgroundDark;
 			gridline-color: $backgroundDark;
 			padding: 0px;
+			background-color: transparent;
 		}
 		
 		QTableView#vectorDataWidgetEditable {
 			padding: 0px;
-			background-color: $backgroundLighter;
 			gridline-color: $backgroundDark;
+		}
+
+		QTableView::item#vectorDataWidgetEditable {
+			background-color: $backgroundLighter;
+		}
+		
+		QTableView::item:selected#vectorDataWidgetEditable {
+			background-color: $brightColor;
 		}
 			
 		QHeaderView::section#vectorDataWidgetVerticalHeader {
@@ -1110,7 +1168,8 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.Leave,
 			QtCore.QEvent.Wheel,			
 			QtCore.QEvent.Show,			
-			QtCore.QEvent.Hide,			
+			QtCore.QEvent.Hide,
+			QtCore.QEvent.ContextMenu,		
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
@@ -1262,7 +1321,13 @@ class _EventFilter( QtCore.QObject ) :
 					Widget._modifiers( qEvent.modifiers() ),
 				)
 	
-				return widget._wheelSignal( widget, event )	
+				return widget._wheelSignal( widget, event )
+				
+		elif qEventType==qEvent.ContextMenu :
+		
+			widget = Widget._owner( qObject )
+			if widget._contextMenuSignal is not None :
+				return widget._contextMenuSignal( widget )
 			
 		return False
 

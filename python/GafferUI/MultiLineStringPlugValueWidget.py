@@ -1,6 +1,7 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,33 +37,53 @@
 
 from __future__ import with_statement
 
-import IECore
-
 import Gaffer
 import GafferUI
 
-## Supported userData entries :
-#
-# ["UI"]["password"]
-# ["UI"]["multiLine"]
-class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, parameterHandler, **kw ) :
-		
-		multiLine = False
-		with IECore.IgnoredExceptions( KeyError ) :
-			multiLine = parameterHandler.parameter().userData()["UI"]["multiLine"].value
-				
-		if multiLine :
-			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
-		else :
-			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
-			with IECore.IgnoredExceptions( KeyError ) :
-				if parameterHandler.parameter().userData()["UI"]["password"].value :
-					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
-		
-		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
-		
-		self._addPopupMenu( plugValueWidget.textWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
+	def __init__( self, plug, **kw ) :
 	
-GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), StringParameterValueWidget )
+		self.__textWidget = GafferUI.MultiLineTextWidget()
+			
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, **kw )
+
+		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
+		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
+
+		self.updateFromPlug()
+
+	def textWidget( self ) :
+	
+		return self.__textWidget
+
+	def updateFromPlug( self ) :
+
+		if self.getPlug() is not None :
+			with self.getContext() :
+				self.__textWidget.setText( self.getPlug().getValue() )
+
+		self.__textWidget.setEditable( self._editable() )
+
+	def __keyPress( self, widget, event ) :
+	
+		assert( widget is self.__textWidget )
+	
+		if not self.__textWidget.getEditable() :
+			return False
+				
+		# escape abandons everything
+		if event.key=="Escape" :
+			self.updateFromPlug()
+			return True
+
+		return False
+		
+	def __setPlugValue( self, *unused ) :
+		
+		text = self.__textWidget.getText()
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().setValue( text )
+	
+	

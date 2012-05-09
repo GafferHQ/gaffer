@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 from __future__ import with_statement
 
 import unittest
+import datetime
 
 import IECore
 
@@ -491,7 +492,38 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph.setParameterisedValues()
 		
 		self.assertEqual( p["o"].getValue(), p["o"].defaultValue )
+		
+	def testDateTimeParameter( self ) :
 	
+		p = IECore.Parameterised( "" )
+		
+		now = datetime.datetime.now()
+		p.parameters().addParameters(
+		
+			[
+				IECore.DateTimeParameter(
+					"dt",
+					"",
+					now
+				)			
+			]
+		
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.failUnless( isinstance( ph["parameters"]["dt"], Gaffer.StringPlug ) )
+		
+		ph.parameterHandler().setParameterValue()
+		self.assertEqual( p["dt"].getValue(), IECore.DateTimeData( now ) )
+		
+		tomorrow = now + datetime.timedelta( days=1 )
+		p["dt"].setValue( IECore.DateTimeData( tomorrow ) )
+		ph.parameterHandler().setPlugValue()
+		ph.parameterHandler().setParameterValue()
+		self.assertEqual( p["dt"].getValue(), IECore.DateTimeData( tomorrow ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

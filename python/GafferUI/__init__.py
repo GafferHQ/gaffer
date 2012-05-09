@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -128,6 +128,7 @@ from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from IndexedIODataPathPreview import IndexedIODataPathPreview
 from OpPathPreview import OpPathPreview
 from NumericSlider import NumericSlider
+from NotificationMessageHandler import NotificationMessageHandler
 
 # then stuff specific to graph uis
 
@@ -165,6 +166,7 @@ from AboutWindow import AboutWindow
 import ApplicationMenu
 from BrowserEditor import BrowserEditor
 from TimeEditor import TimeEditor
+from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 
 # then stuff specific to parameterised objects
 
@@ -178,6 +180,7 @@ from PathVectorParameterValueWidget import PathVectorParameterValueWidget
 from StringParameterValueWidget import StringParameterValueWidget
 from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
 from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
+from DateTimeParameterValueWidget import DateTimeParameterValueWidget
 
 # and specific node uis
 

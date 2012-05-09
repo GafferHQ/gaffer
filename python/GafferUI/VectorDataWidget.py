@@ -62,7 +62,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView = _TableView()
 						
 		self.__tableView.horizontalHeader().setVisible( bool( header ) )
-		self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents )
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 		
 		self.__tableView.verticalHeader().setVisible( showIndices )
@@ -70,9 +69,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
 
 		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
 		
-		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectRows )
+		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectItems )
 		self.__tableView.setCornerButtonEnabled( False )
 	
 		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
@@ -106,6 +105,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		else :
 			self.__headerOverride = None
 		
+		self.__propagatingDataChangesToSelection = False
+		
 		self.setData( data )
 		self.setEditable( editable )
 	
@@ -120,9 +121,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 			if not isinstance( data, list ) :
 				data = [ data ]
 			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride )
-			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__dataChanged ) )
-			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__dataChanged ) )
-			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__dataChanged ) )
+			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
+			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
+			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 		else :
 			self.__model = None
 		
@@ -131,17 +132,23 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.__model :
 		
 			columnIndex = 0
+			haveResizeableContents = False
 			for accessor in self.__model.vectorDataAccessors() :
 				for i in range( 0, accessor.numColumns() ) :
 					delegate = _Delegate.create( accessor.data() )
 					delegate.setParent( self.__model )
 					self.__tableView.setItemDelegateForColumn( columnIndex, delegate )
 					canStretch = delegate.canStretch()
+					haveResizeableContents = haveResizeableContents or canStretch
 					columnIndex += 1
 
+			self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents if haveResizeableContents else QtGui.QHeaderView.Fixed )
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
-			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Maximum ) )
 		
+		# Somehow the QTableView can leave its header in a state where updates are disabled.
+		# If we didn't turn them back on, the header would disappear.
+		self.__tableView.verticalHeader().setUpdatesEnabled( True )
 		self.__tableView.updateGeometry()
 	
 	## Returns the data being displayed. This is always returned as a list of
@@ -189,7 +196,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.getEditable() :
 
 			m.append( "/divider", { "divider" : True } )
-			m.append( "/Remove Selection", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
+			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
 		
 		return m
 	
@@ -209,7 +216,26 @@ class VectorDataWidget( GafferUI.Widget ) :
 			
 		return newData
 	
-	def __dataChanged( self, *unusedArgs ) :
+	def __modelDataChanged( self, topLeft, bottomRight ) :
+	
+		if self.__propagatingDataChangesToSelection :
+			return
+			
+		if topLeft == bottomRight and self.__tableView.selectionModel().isSelected( topLeft ) :
+			self.__propagatingDataChangesToSelection = True
+			valueToPropagate = self.__model.data( topLeft, QtCore.Qt.EditRole )
+			for index in self.__tableView.selectedIndexes() :
+				if index == topLeft :
+					continue
+				# we have to ignore exceptions, as the items we're setting might
+				# have a different data type than the value we're passing.
+				with IECore.IgnoredExceptions( Exception ) :
+					self.__model.setData( index, valueToPropagate, QtCore.Qt.EditRole )
+			self.__propagatingDataChangesToSelection = False
+
+		self.__emitDataChangedSignal()
+
+	def __emitDataChangedSignal( self, *unusedArgs ) :
 	
 		self.dataChangedSignal()( self )
 		
@@ -251,7 +277,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		# tell the world
 		self.setData( data )
-		self.__dataChanged()
+		self.__emitDataChangedSignal()
 		
 	def __addRows( self, button ) :
 	
@@ -268,10 +294,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 			data[i].extend( newData[i] )
 					
 		self.setData( data )
-		self.__dataChanged()
+		self.__emitDataChangedSignal()
 		
-# Private implementation - a QTableView which is much more forceful about
-# requesting enough size if the scrollbars are off in a given direction.
+# Private implementation - a QTableView with custom size behaviour.
 class _TableView( QtGui.QTableView ) :
 
 	def __init__( self ) :
@@ -292,33 +317,41 @@ class _TableView( QtGui.QTableView ) :
 			model.rowsInserted.connect( self.__sizeShouldChange )
 			model.rowsRemoved.connect( self.__sizeShouldChange )
 			model.dataChanged.connect( self.__sizeShouldChange )
-			
-		self.updateGeometry()
 
 	def minimumSizeHint( self ) :
-	
-		return QtCore.QSize()
+		
+		# compute the minimum height to be the size of the header plus
+		# a single row of data.
+		
+		margins = self.contentsMargins()
+		minimumHeight = margins.top() + margins.bottom()
+		
+		if not self.horizontalHeader().isHidden() :
+			minimumHeight += self.horizontalHeader().sizeHint().height()
+		if self.verticalHeader().count() :
+			minimumHeight += self.verticalHeader().sectionSize( 0 )
+		
+		# horizontal direction doesn't matter, as we don't allow shrinking
+		# in that direction anyway.		
+		return QtCore.QSize( 1, minimumHeight )
 		
 	def sizeHint( self ) :
-		
-		result = QtGui.QTableView.sizeHint( self )
-				
+						
 		margins = self.contentsMargins()
-			
-		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-			w = self.horizontalHeader().length() + margins.left() + margins.right()
-			if not self.verticalHeader().isHidden() :
-				w += self.verticalHeader().sizeHint().width()
+		
+		w = self.horizontalHeader().length() + margins.left() + margins.right()
+		if not self.verticalHeader().isHidden() :
+			w += self.verticalHeader().sizeHint().width()
+		# always allow room for a scrollbar even though we don't always need one. we
+		# make sure the background in the stylesheet is transparent so that when the
+		# scrollbar is hidden we don't draw an empty gap where it otherwise would be.
+		w += self.verticalScrollBar().sizeHint().width()
 				
-			result.setWidth( w )
-
-		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOff :
-			h = self.verticalHeader().length() + margins.top() + margins.bottom()
-			if not self.horizontalHeader().isHidden() :
-				h += self.horizontalHeader().sizeHint().height()
-			result.setHeight( h )		
+		h = self.verticalHeader().length() + margins.top() + margins.bottom()
+		if not self.horizontalHeader().isHidden() :
+			h += self.horizontalHeader().sizeHint().height()
 										
-		return result
+		return QtCore.QSize( w, h )
 
 	def __sizeShouldChange( self, *unusedArgs ) :
 		
@@ -615,18 +648,22 @@ class _BoolDelegate( _Delegate ) :
 		return None
 
 	def editorEvent( self, event, model, option, index ) :
-		
+				
 		if event.type()==QtCore.QEvent.MouseButtonDblClick :
 			# eat event so an editor doesn't get created
 			return True
 		elif event.type()==QtCore.QEvent.MouseButtonPress :
 			# eat event so row isn't selected
-			return True
-		elif event.type()==QtCore.QEvent.MouseButtonRelease :
-			# toggle the data value
-			checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
-			model.setData( index, not checked, QtCore.Qt.EditRole )
-			return True
+			rect = self.__checkBoxRect( option.widget, option.rect )
+			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
+				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				model.setData( index, not checked, QtCore.Qt.EditRole )
+				return True
+		elif event.type()==QtCore.QEvent.KeyPress :
+			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
+				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				model.setData( index, not checked, QtCore.Qt.EditRole )
+				return True
 
 		return False
 

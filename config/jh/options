@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -66,7 +66,7 @@ PYOPENGL_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyOpenGL-3.0.1"
 QT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/qt-everywhere-opensource-src-4.8.0"
 SIP_SRC_DIR = "$DEPENDENCIES_SRC_DIR/sip-4.13.1"
 PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.9"
-RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.4"
+RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.41"
 ARNOLD_ROOT = "/Applications/Graphics/Arnold-4.0.0.0"
 NUKE_ROOT = "/Applications/Nuke6.3v6/Nuke6.3v6.app/Contents/MacOS"
 

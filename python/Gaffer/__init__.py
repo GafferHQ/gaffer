@@ -59,3 +59,4 @@ from IndexedIOPath import IndexedIOPath
 from ClassLoaderPath import ClassLoaderPath
 from PythonExpressionEngine import PythonExpressionEngine
 from SequencePath import SequencePath
+from OpMatcher import OpMatcher

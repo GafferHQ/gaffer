@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,35 +34,46 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
+import unittest
+import weakref
 
-import IECore
-
-import Gaffer
 import GafferUI
+import GafferTest
 
-## Supported userData entries :
-#
-# ["UI"]["password"]
-# ["UI"]["multiLine"]
-class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class MultiLineTextWidgetTest( unittest.TestCase ) :
 
-	def __init__( self, parameterHandler, **kw ) :
-		
-		multiLine = False
-		with IECore.IgnoredExceptions( KeyError ) :
-			multiLine = parameterHandler.parameter().userData()["UI"]["multiLine"].value
-				
-		if multiLine :
-			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
-		else :
-			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
-			with IECore.IgnoredExceptions( KeyError ) :
-				if parameterHandler.parameter().userData()["UI"]["password"].value :
-					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
-		
-		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
-		
-		self._addPopupMenu( plugValueWidget.textWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
+	def testLifespan( self ) :
 	
-GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), StringParameterValueWidget )
+		w = GafferUI.MultiLineTextWidget()
+		r = weakref.ref( w )
+		
+		self.failUnless( r() is w )
+		
+		del w
+		
+		self.failUnless( r() is None )
+	
+	def testEditable( self ) :
+	
+		w = GafferUI.MultiLineTextWidget( editable=False )
+		self.assertEqual( w.getEditable(), False )
+		
+		w.setEditable( True )
+		self.assertEqual( w.getEditable(), True )
+	
+	def testTextChangedSignal( self ) :
+
+		w = GafferUI.TextWidget()
+		c = GafferTest.CapturingSlot( w.textChangedSignal() )
+
+		w.setText( "hi" )
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( c[0], ( w, ) )
+
+		# shouldn't do anything as text is the same
+		w.setText( "hi" )
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( c[0], ( w, ) )
+		
+if __name__ == "__main__":
+	unittest.main()

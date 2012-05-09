@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,35 +34,58 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
+import os
+import unittest
 
 import IECore
 
 import Gaffer
-import GafferUI
 
-## Supported userData entries :
-#
-# ["UI"]["password"]
-# ["UI"]["multiLine"]
-class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class OpMatcherTest( unittest.TestCase ) :
 
-	def __init__( self, parameterHandler, **kw ) :
-		
-		multiLine = False
-		with IECore.IgnoredExceptions( KeyError ) :
-			multiLine = parameterHandler.parameter().userData()["UI"]["multiLine"].value
-				
-		if multiLine :
-			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
-		else :
-			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
-			with IECore.IgnoredExceptions( KeyError ) :
-				if parameterHandler.parameter().userData()["UI"]["password"].value :
-					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
-		
-		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
-		
-		self._addPopupMenu( plugValueWidget.textWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
+	__sequence = IECore.FileSequence( "/tmp/a.#.exr 1-10" )
+
+	def setUp( self ) :
 	
-GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), StringParameterValueWidget )
+		for f in self.__sequence.fileNames() :
+			os.system( "touch %s" % f )
+
+	def testFile( self ) :
+	
+		matcher = Gaffer.OpMatcher.defaultInstance()
+		
+		exrFile = os.path.dirname( __file__ ) + "/images/checker.exr"
+		path = Gaffer.FileSystemPath( exrFile )
+		
+		ops = matcher.matches( path )
+		self.failUnless( len( ops ) )
+
+	def testSequences( self ) :
+	
+		matcher = Gaffer.OpMatcher.defaultInstance()
+	
+		path = Gaffer.SequencePath( str( self.__sequence ) )
+		ops = matcher.matches( path )
+		
+		sequenceRenumber = None
+		for op, parameter in ops :
+			if isinstance( op, IECore.SequenceRenumberOp ) :
+				sequenceRenumber = op
+				
+		self.failUnless( sequenceRenumber is not None )
+		self.assertEqual( sequenceRenumber["src"].getTypedValue(), str( self.__sequence ) )
+	
+	def testDefaultInstance( self ) :
+	
+		self.failUnless( isinstance( Gaffer.OpMatcher.defaultInstance(), Gaffer.OpMatcher ) )
+		self.failUnless( Gaffer.OpMatcher.defaultInstance() is Gaffer.OpMatcher.defaultInstance() )
+	
+	def tearDown( self ) :
+	
+		for f in self.__sequence.fileNames() :
+			if os.path.exists( f ) :
+				os.remove( f )
+								
+if __name__ == "__main__":
+	unittest.main()
+	

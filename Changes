@@ -1,3 +1,26 @@
+* Added GafferUI.NotificationMessageHandler, for displaying IECore messages in a little window.
+
+* Added a ParameterHandler and ParameterValueWidget for DateTimeParameters.
+
+* VectorDataWidget size behaviour now works much better for large amounts of data. It is now possible to use the browser's FileIndexedIO preview tab to view large amounts of data
+from .cob and .fio files.
+
+* Fixed bug in VectorDataWidget, whereby the vertical header would disappear when rows were deleted.
+
+* Multiple fields may now be edited simultaneously in the VectorDataWidget, by selecting several fields before editing one of the selected fields. Changes are automatically copied to the rest of the selection. Columns may be selected by clicking on the horizontal header
+and rows by clicking on the vertical header.
+
+* The enter and return keys can now be used to edit the checkbox fields of a VectorDataWidget.
+
+* The MultiLineTextWidget now has setEditable, getEditable, textChangedSignal, editingFinishedSignal and activatedSignal methods equivalent to the existing methods on TextWidget.
+
+* Added a MultiLineStringPlugValueWidget class.
+
+* StringParameterValueWidget now supports the ["UI"]["multiLine"] user data item.
+
+0.31.0
+------
+
 * Fixed getText method of Label widget.
 
 * TextInputDialogue now has all text in the textfield selected by default.
@@ -17,6 +40,13 @@
 * Added Gaffer.SequencePath class and used it to implement a file sequence browsing mode for the BrowserEditor and a FileSequenceParameterValueWidget.
 
 * Added PathListingWidget setColumns() and getColumns() methods.
+
+* Added a Gaffer.OpMatcher class, to provide lists of ops which are suitable for application to particular objects.
+
+* Added a contextMenuSignal() to the Widget class.
+
+* Added a right click menu to the BrowserEditor, allowing suitable ops to be applied to
+files and file sequences.
 
 0.30.0
 ------
