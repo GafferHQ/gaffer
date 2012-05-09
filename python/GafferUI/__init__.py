@@ -164,6 +164,7 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 from AboutWindow import AboutWindow
 import ApplicationMenu
 from BrowserEditor import BrowserEditor
+from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 
 # then stuff specific to parameterised objects
 

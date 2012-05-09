@@ -14,6 +14,10 @@ and rows by clicking on the vertical header.
 
 * The MultiLineTextWidget now has setEditable, getEditable, textChangedSignal, editingFinishedSignal and activatedSignal methods equivalent to the existing methods on TextWidget.
 
+* Added a MultiLineStringPlugValueWidget class.
+
+* StringParameterValueWidget now supports the ["UI"]["multiLine"] user data item.
+
 0.31.0
 ------
 
