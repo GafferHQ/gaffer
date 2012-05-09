@@ -12,6 +12,8 @@ and rows by clicking on the vertical header.
 
 * The enter and return keys can now be used to edit the checkbox fields of a VectorDataWidget.
 
+* The MultiLineTextWidget now has setEditable, getEditable, textChangedSignal, editingFinishedSignal and activatedSignal methods equivalent to the existing methods on TextWidget.
+
 0.31.0
 ------
 

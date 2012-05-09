@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,40 +34,46 @@
 #  
 ##########################################################################
 
-from WidgetTest import WidgetTest
-from MenuTest import MenuTest
-from SplitContainerTest import SplitContainerTest
-from WindowTest import WindowTest
-from ListContainerTest import ListContainerTest
-from EventSignalCombinerTest import EventSignalCombinerTest
-from FrameTest import FrameTest
-from NameGadgetTest import NameGadgetTest
-from LinearContainerTest import LinearContainerTest
-from NodeGadgetTest import NodeGadgetTest
-from GadgetTest import GadgetTest
-from TabbedContainerTest import TabbedContainerTest
-from GraphEditorTest import GraphEditorTest
-from WidgetSignalTest import WidgetSignalTest
-from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
-from TextWidgetTest import TextWidgetTest
-from CheckBoxTest import CheckBoxTest
-from ImageTest import ImageTest
-from ButtonTest import ButtonTest
-from CollapsibleTest import CollapsibleTest
-from ImageGadgetTest import ImageGadgetTest
-from StandardNodeGadgetTest import StandardNodeGadgetTest
-from ColorSwatchTest import ColorSwatchTest
-from VariantTest import VariantTest
-from GridContainerTest import GridContainerTest
-from NoduleTest import NoduleTest
-from ProgressBarTest import ProgressBarTest
-from ContainerWidgetTest import ContainerWidgetTest
-from SelectionMenuTest import SelectionMenuTest
-from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
-from EditorWidgetTest import EditorWidgetTest
-from StandardStyleTest import StandardStyleTest
-from MultiLineTextWidgetTest import MultiLineTextWidgetTest
+import unittest
+import weakref
 
+import GafferUI
+import GafferTest
+
+class MultiLineTextWidgetTest( unittest.TestCase ) :
+
+	def testLifespan( self ) :
+	
+		w = GafferUI.MultiLineTextWidget()
+		r = weakref.ref( w )
+		
+		self.failUnless( r() is w )
+		
+		del w
+		
+		self.failUnless( r() is None )
+	
+	def testEditable( self ) :
+	
+		w = GafferUI.MultiLineTextWidget( editable=False )
+		self.assertEqual( w.getEditable(), False )
+		
+		w.setEditable( True )
+		self.assertEqual( w.getEditable(), True )
+	
+	def testTextChangedSignal( self ) :
+
+		w = GafferUI.TextWidget()
+		c = GafferTest.CapturingSlot( w.textChangedSignal() )
+
+		w.setText( "hi" )
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( c[0], ( w, ) )
+
+		# shouldn't do anything as text is the same
+		w.setText( "hi" )
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( c[0], ( w, ) )
+		
 if __name__ == "__main__":
 	unittest.main()

@@ -35,9 +35,11 @@
 #  
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
+QtCore = GafferUI._qtImport( "QtCore" )
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
@@ -46,9 +48,9 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit(), **kw )
 
 		self.setText( text )
+		self.setEditable( editable )
 		
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
-		self._qtWidget().setReadOnly( not editable )
 
 	def getText( self ) :
 	
@@ -61,6 +63,14 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def appendText( self, text ) :
 	
 		self._qtWidget().appendPlainText( text )
+	
+	def setEditable( self, editable ) :
+	
+		self._qtWidget().setReadOnly( not editable )
+		
+	def getEditable( self ) :
+	
+		return not self._qtWidget().isReadOnly()
 		
 	def selectedText( self ) :
 	
@@ -68,3 +78,66 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		text = cursor.selectedText()
 		text = text.replace( u"\u2029", "\n" )
 		return str( text )
+		
+	def textChangedSignal( self ) :
+	
+		try :
+			return self.__textChangedSignal
+		except :
+			self.__textChangedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
+
+		return self.__textChangedSignal
+	
+	## A signal emitted when the widget loses focus.
+	def editingFinishedSignal( self ) :
+	
+		try :
+			return self.__editingFinishedSignal
+		except :
+			self.__editingFinishedSignal = GafferUI.WidgetSignal()
+			self._qtWidget().installEventFilter( _focusOutEventFilter )
+			
+		return self.__editingFinishedSignal
+	
+	## A signal emitted when enter (or Ctrl-Return) is pressed.	
+	def activatedSignal( self ) :
+	
+		try :
+			return self.__activatedSignal
+		except :
+			self.__activatedSignal = GafferUI.WidgetSignal()
+			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+
+		return self.__activatedSignal
+		
+	def __textChanged( self ) :
+	
+		self.__textChangedSignal( self )
+
+	def __keyPress( self, widget, event ) :
+	
+		assert( widget is self )
+		
+		if event.key=="Enter" or ( event.key=="Return" and event.modifiers==event.Modifiers.Control ) :
+			self.__activatedSignal( self )
+			return True
+			
+		return False
+		
+class _FocusOutEventFilter( QtCore.QObject ) :
+
+	def __init__( self ) :
+	
+		QtCore.QObject.__init__( self )
+		
+	def eventFilter( self, qObject, qEvent ) :
+	
+		if qEvent.type()==QtCore.QEvent.FocusOut :
+			widget = GafferUI.Widget._owner( qObject )
+			widget.editingFinishedSignal()( widget )
+			
+		return False
+
+# this single instance is used by all MultiLineTextWidgets		
+_focusOutEventFilter = _FocusOutEventFilter()

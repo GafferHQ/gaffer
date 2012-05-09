@@ -68,7 +68,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
 	
-		self.__inputWidgetKeyPressConnection = self.__inputWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__inputWidgetActivatedConnection = self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 
 	def setScriptNode( self, scriptNode ) :
 	
@@ -96,30 +96,24 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		text = script + "\nResult : " + str( result ) + "\n"
 		self.__outputWidget.appendText( text )
 		
-	def __keyPress( self, widget, event ) :
+	def __activated( self, widget ) :
 		
-		assert( widget is self.__inputWidget )
-				
-		if event.key=="Enter" or ( event.key=="Return" and event.modifiers==event.Modifiers.Control ) :
-			
-			haveSelection = True
-			toExecute = widget.selectedText()
-			if not toExecute :
-				haveSelection = False
-				toExecute = widget.getText()
-			
-			try :
-			
-				self.getScriptNode().execute( toExecute )
-				if not haveSelection :
-					widget.setText( "" )
-			
-			except Exception, e :
-			
-				self.__outputWidget.appendText( str( e ) )
-			
-			return True
-			
-		return False
+		haveSelection = True
+		toExecute = widget.selectedText()
+		if not toExecute :
+			haveSelection = False
+			toExecute = widget.getText()
+		
+		try :
+		
+			self.getScriptNode().execute( toExecute )
+			if not haveSelection :
+				widget.setText( "" )
+		
+		except Exception, e :
+		
+			self.__outputWidget.appendText( str( e ) )
+		
+		return True
 		
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
