@@ -18,6 +18,8 @@ and rows by clicking on the vertical header.
 
 * StringParameterValueWidget now supports the ["UI"]["multiLine"] user data item.
 
+* The browser app now has an "initialPath" parameter to allows the browsing location to be set from the command line.
+
 0.31.0
 ------
 
