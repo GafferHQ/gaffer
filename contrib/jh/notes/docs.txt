@@ -38,8 +38,73 @@ By creating an equivalent layout in another location, and adding that location t
 
 HELLO WORLD APP. SOME MENTION OF THE APPLICATION ROOT AND STARTUP FILES.
 
+Hello World Tutorial
+====================
+
+In this tutorial we'll get our first taste of the GafferUI module, and write our first Gaffer based application.
+
+So without further ado, here's some familiar looking code...
+
+import GafferUI
+
+window = GafferUI.Window()
+text = GafferUI.TextWidget( "Hello World!" )
+window.setWidget( text )
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()
+
+Save this in a file helloWorld.py, and we can run it as follows :
+
+gaffer python helloWorld.py
+
+Here we're using the built in "python" application to run our script in an environment where all the Gaffer modules are available. Shortly we'll turn our simple script into an application of its own, so we can handle command line arguments in a nice straightforward way.
+
+Before we do that though, we can simplify our script a little...
+
+import GafferUI
+
+with GafferUI.Window() as window :
+	GafferUI.TextWidget( "Hello World!" )
+
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()
+
+When we use the "with" syntax above, Gaffer automatically keeps a track of the current parent (the widget following the "with") and automatically parents any new widgets underneath it. This cuts down on typing, and pleasingly results in code where the structure of the ui is represented in the indentation of the code.
+
+Let's make our simple UI ever so slightly more functional...
+
+import GafferUI
+
+with GafferUI.Window( title = "Hello World" ) as window :
+	with GafferUI.ListContainer() :
+		with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
+			GafferUI.Label( "Greeting" )
+			greeting = GafferUI.TextWidget( "Hello" )
+		with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
+			GafferUI.Label( "Greetee" )
+			greetee = GafferUI.TextWidget( "World" )
+			
+		button = GafferUI.Button( "Greet" )
+
+def greet( button ) :
+
+	print greeting, greetee	 !!!!!!!!!!!!!!!!!
+
+clickedConnection = button.clickedSignal().connect( greet )
+			
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()
+
+
 Anatomy of the main GUI application
 ===================================
 
 scripts, nodes, plugs, clipboard, windows
 
+Plugins
+=======
+
+As Gaffer is heavily python based, a Gaffer plugin is in fact just a standard Python module.
