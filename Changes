@@ -20,6 +20,8 @@ and rows by clicking on the vertical header.
 
 * The browser app now has an "initialPath" parameter to allows the browsing location to be set from the command line.
 
+* Added Gaffer.AttributeCachePath and GafferUI.AttributeCachePathPreview classes, to allow browsing of attribute caches.
+
 0.31.0
 ------
 

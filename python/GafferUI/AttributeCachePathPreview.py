@@ -41,11 +41,11 @@ import IECore
 import Gaffer
 import GafferUI
 
-class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
+class AttributeCachePathPreview( GafferUI.DeferredPathPreview ) :
 
 	def __init__( self, path ) :
 	
-		tmpPath = Gaffer.DictPath( {}, "/" ) # empty path we can use till we get an indexed io file
+		tmpPath = Gaffer.DictPath( {}, "/" ) # empty path we can use till we get an attribute cache file
 		with GafferUI.ListContainer( borderWidth = 8, spacing = 8 ) as column :
 		
 			self.__pathWidget = GafferUI.PathWidget( tmpPath )
@@ -54,10 +54,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 		
 				self.__pathListing = GafferUI.PathListingWidget(
 					tmpPath,
-					columns = [
-						GafferUI.PathListingWidget.defaultNameColumn,
-						GafferUI.PathListingWidget.defaultIndexedIODataTypeColumn,	
-					],
+					columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
 					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				)
 				
@@ -73,36 +70,38 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 		if not isinstance( self.getPath(), Gaffer.FileSystemPath ) or not self.getPath().isLeaf() :
 			return False
 			
-		if os.path.splitext( self.getPath()[-1] )[1] not in ( ".cob", ".fio" ) :
+		if os.path.splitext( self.getPath()[-1] )[1] not in ( ".fio" ) :
 			return False
+			
+		# not doing further checks as opening an attribute cache can be an expensive operation
 			
 		return True
 
 	def _load( self ) :
 		
-		return IECore.FileIndexedIO( str( self.getPath() ), "/", IECore.IndexedIOOpenMode.Read )
+		return IECore.AttributeCache( str( self.getPath() ), IECore.IndexedIOOpenMode.Read )
 
-	def _deferredUpdate( self, indexedIO ) :
+	def _deferredUpdate( self, attributeCache ) :
 	
-		self.__indexedIOPath = Gaffer.IndexedIOPath( indexedIO, "/" )
-		self.__indexedIOPathChangedConnection = self.__indexedIOPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__indexedIOPathChanged ) )
+		self.__attributeCachePath = Gaffer.AttributeCachePath( attributeCache, "/" )
+		self.__attributeCachePathChangedConnection = self.__attributeCachePath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__attributeCachePathChanged ) )
 		
-		self.__pathWidget.setPath( self.__indexedIOPath )
-		self.__pathPreview.setPath( self.__indexedIOPath )
+		self.__pathWidget.setPath( self.__attributeCachePath )
+		self.__pathPreview.setPath( self.__attributeCachePath )
 
 		# we use a separate path for the listing so it'll always be rooted at the start		
-		listingPath = Gaffer.IndexedIOPath( indexedIO, "/" )
+		listingPath = Gaffer.AttributeCachePath( attributeCache, "/" )
 		self.__pathListing.setPath( listingPath )
 		self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__pathListingSelectionChanged ) )	
 
-	def __indexedIOPathChanged( self, path ) :
+	def __attributeCachePathChanged( self, path ) :
 	
 		pathCopy = path.copy()
 		pathCopy.truncateUntilValid()
 				
 		with Gaffer.BlockedConnection( self.__pathListingSelectionChangedConnection ) :
-			## \todo This functionality might be nice in the PathChooserWidget. We could
-			# maybe even use a PathChooserWidget here anyway.
+			## \todo This functionality is copied from IndexedIOPathPreview - can we
+			# share it somehow? Is it some sort of Behaviour class?
 			self.__pathListing.setSelectedPaths( [ pathCopy ], expandNonLeaf=False )
 			# expand as people type forwards
 			if len( pathCopy ) > len( self.__prevPath ) :
@@ -119,7 +118,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 	
 		selection = pathListing.getSelectedPaths()
 		if len( selection ) :
-			with Gaffer.BlockedConnection( self.__indexedIOPathChangedConnection ) :
-				self.__indexedIOPath[:] = selection[0][:]
+			with Gaffer.BlockedConnection( self.__attributeCachePathChangedConnection ) :
+				self.__attributeCachePath[:] = selection[0][:]
 
-GafferUI.PathPreviewWidget.registerType( "Indexed IO", FileIndexedIOPathPreview )
+GafferUI.PathPreviewWidget.registerType( "Attribute Cache", AttributeCachePathPreview )

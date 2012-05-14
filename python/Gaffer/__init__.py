@@ -58,3 +58,4 @@ from IndexedIOPath import IndexedIOPath
 from ClassLoaderPath import ClassLoaderPath
 from SequencePath import SequencePath
 from OpMatcher import OpMatcher
+from AttributeCachePath import AttributeCachePath

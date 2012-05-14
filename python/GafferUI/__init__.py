@@ -125,9 +125,10 @@ from HeaderPathPreview import HeaderPathPreview
 from InfoPathPreview import InfoPathPreview
 from ReaderPathPreview import ReaderPathPreview
 from FileIndexedIOPathPreview import FileIndexedIOPathPreview
-from IndexedIODataPathPreview import IndexedIODataPathPreview
+from DataPathPreview import DataPathPreview
 from OpPathPreview import OpPathPreview
 from NotificationMessageHandler import NotificationMessageHandler
+from AttributeCachePathPreview import AttributeCachePathPreview
 
 # then stuff specific to graph uis
 
