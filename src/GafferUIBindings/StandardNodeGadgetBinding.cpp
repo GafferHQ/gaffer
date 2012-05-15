@@ -71,6 +71,5 @@ void GafferUIBindings::bindStandardNodeGadget()
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", (GadgetPtr (StandardNodeGadget::*)())&StandardNodeGadget::getContents )
-		.def( "addNodules", &StandardNodeGadget::addNodules )
 	;
 }

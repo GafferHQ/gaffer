@@ -81,14 +81,12 @@ class StandardNodeGadget : public NodeGadget
 		
 	private :
 		
-		void addNodules();
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 	
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
 				
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
-		bool m_addNodulesCalled;
 				
 		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
 		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );

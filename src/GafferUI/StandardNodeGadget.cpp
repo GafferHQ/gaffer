@@ -60,7 +60,7 @@ static const float g_minWidth = 10.0f;
 static const float g_verticalSpacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
-	:	NodeGadget( node ), m_addNodulesCalled( false )
+	:	NodeGadget( node )
 {
 	LinearContainerPtr column = new LinearContainer( "column", LinearContainer::Y, LinearContainer::Centre, g_verticalSpacing );
 
@@ -88,7 +88,10 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
 	
-	addNodules();
+	for( Gaffer::PlugIterator it=node->plugsBegin(); it!=node->plugsEnd(); it++ )
+	{
+		addNodule( *it );
+	}
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -181,20 +184,6 @@ ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 	return it->second;
 }
 
-void StandardNodeGadget::addNodules()
-{
-	if( m_addNodulesCalled )
-	{
-		throw IECore::Exception( "StandardNodeGadget::addNodules has already been called. Perhaps you need to specify deferNoduleCreation as false to the constructor?" );
-	}
-	
-	for( Gaffer::PlugIterator it=node()->plugsBegin(); it!=node()->plugsEnd(); it++ )
-	{
-		addNodule( *it );
-	}
-	m_addNodulesCalled = true;
-}
-	
 NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 {
 	if( plug->getName().compare( 0, 2, "__" )==0 )
