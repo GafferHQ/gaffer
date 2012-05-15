@@ -40,12 +40,6 @@
 
 #include "GafferUI/NodeGadget.h"
 
-namespace GafferUIBindings
-{
-// forward declaration for friend statement below
-void bindStandardNodeGadget();
-}; 
-
 namespace GafferUI
 {
 
@@ -99,10 +93,7 @@ class StandardNodeGadget : public NodeGadget
 		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
 		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
 		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-		
-		// because we need to bind addNodules() which is protected
-		friend void GafferUIBindings::bindStandardNodeGadget();
-		
+				
 };
 
 } // namespace GafferUI
