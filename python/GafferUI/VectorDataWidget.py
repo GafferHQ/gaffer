@@ -660,7 +660,7 @@ class _BoolDelegate( _Delegate ) :
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
 		elif event.type()==QtCore.QEvent.KeyPress :
-			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
+			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter, QtCore.Qt.Key_Space ) :
 				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
