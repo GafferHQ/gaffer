@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -62,17 +62,6 @@ static const float g_verticalSpacing = 0.5f;
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ), m_addNodulesCalled( false )
 {
-	constructCommon( false );
-}
-
-StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation )
-	:	NodeGadget( node ), m_addNodulesCalled( false )
-{
-	constructCommon( deferNoduleCreation );
-}
-
-void StandardNodeGadget::constructCommon( bool deferNoduleCreation )
-{
 	LinearContainerPtr column = new LinearContainer( "column", LinearContainer::Y, LinearContainer::Centre, g_verticalSpacing );
 
 	LinearContainerPtr inputNoduleRow = new LinearContainer( "inputNoduleRow", LinearContainer::X, LinearContainer::Centre, 2.0f );
@@ -87,22 +76,19 @@ void StandardNodeGadget::constructCommon( bool deferNoduleCreation )
 	column->addChild( inputNoduleRow );
 
 	setChild( column );
-	setContents( new NameGadget( node() ) );
+	setContents( new NameGadget( node ) );
 	
-	Gaffer::ScriptNodePtr script = node()->scriptNode();
+	Gaffer::ScriptNodePtr script = node->scriptNode();
 	if( script )
 	{
 		script->selection()->memberAddedSignal().connect( boost::bind( &StandardNodeGadget::selectionChanged, this, ::_1,  ::_2 ) );
 		script->selection()->memberRemovedSignal().connect( boost::bind( &StandardNodeGadget::selectionChanged, this, ::_1,  ::_2 ) );
 	}
 	
-	node()->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
-	node()->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
+	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
+	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
 	
-	if( !deferNoduleCreation )
-	{
-		addNodules();
-	}
+	addNodules();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -195,16 +181,6 @@ ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 	return it->second;
 }
 
-bool StandardNodeGadget::acceptsNodule( const Gaffer::Plug *plug ) const
-{
-	if( plug->getName().compare( 0, 2, "__" )==0 )
-	{
-		return false;
-	}
-
-	return true;
-}	
-
 void StandardNodeGadget::addNodules()
 {
 	if( m_addNodulesCalled )
@@ -221,7 +197,7 @@ void StandardNodeGadget::addNodules()
 	
 NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 {
-	if( !acceptsNodule( plug ) )
+	if( plug->getName().compare( 0, 2, "__" )==0 )
 	{
 		return 0;
 	}

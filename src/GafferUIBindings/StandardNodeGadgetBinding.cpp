@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -53,23 +53,13 @@ class StandardNodeGadgetWrapper : public StandardNodeGadget, public IECorePython
 	
 	public :
 
-		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node, bool deferNoduleCreation )
-			:	StandardNodeGadget( node, deferNoduleCreation ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
+		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
+			:	StandardNodeGadget( node ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
 		{
 		}
 				
 		GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( StandardNodeGadget )
-		
-		virtual bool acceptsNodule( const Gaffer::Plug *plug ) const
-		{
-			override f = this->get_override( "acceptsNodule" );\
-			if( f )
-			{
-				return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) );
-			}
-			return StandardNodeGadget::acceptsNodule( plug );
-		}
-				
+						
 };
 
 IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
@@ -77,7 +67,7 @@ IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
 void GafferUIBindings::bindStandardNodeGadget()
 {
 	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
-		.def( init<Gaffer::NodePtr, bool>( ( arg( "node" ), arg( "deferNoduleCreation" ) = false ) ) )
+		.def( init<Gaffer::NodePtr>( ( arg( "node" ) ) ) )
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", (GadgetPtr (StandardNodeGadget::*)())&StandardNodeGadget::getContents )

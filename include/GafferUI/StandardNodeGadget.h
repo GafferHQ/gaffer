@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -83,22 +83,11 @@ class StandardNodeGadget : public NodeGadget
 		/// derived class is fully constructed).
 		StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation );
 		
-		/// Should be called once from the end of a derived class constructor
-		/// if deferNoduleCreation==true was passed to the base class constructor.
-		void addNodules();
-		/// May be reimplemented by child classes to determine whether
-		/// or not a Nodule will be created for the specified Plug.
-		/// \deprecated
-		/// \todo Remove this, and rely entirely on the Nodule::registerNodule()
-		/// functionality instead.
-		virtual bool acceptsNodule( const Gaffer::Plug *plug ) const;
-
 		virtual void doRender( const Style *style ) const;
 		
 	private :
-	
-		void constructCommon( bool deferNoduleCreation );
-	
+		
+		void addNodules();
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 	
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;

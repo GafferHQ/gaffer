@@ -31,3 +31,5 @@
 * Added PathListingWidget setPathExpanded, getPathExpanded, setExpandedPaths, getExpandedPaths and expansionChangedSignal methods.
 
 * Added the GafferImage and GafferImageUI modules, for tile based image processing.
+
+* Removed deprecated StandardNodeGadget::acceptsNodule() method, and associated StandardNodeGadget( node, deferNoduleCreation ) constructor. Nodule creation should now be controlled entirely by the Nodule factory mechanism.
