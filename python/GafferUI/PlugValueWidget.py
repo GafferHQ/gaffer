@@ -50,7 +50,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		self.__plug = plug
 		
-		context = None
+		context = self.__fallbackContext
 		
 		if self.__plug is not None :
 			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
@@ -170,3 +170,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			self.__contextChangedConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 		else :
 			self.__contextChangedConnection = None
+	
+	# we use this when the plug being viewed doesn't have a ScriptNode ancestor
+	# to provide a context.
+	__fallbackContext = Gaffer.Context()		
