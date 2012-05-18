@@ -60,7 +60,6 @@ class OpMatcher() :
 		# these are filled with tuples of the form ( opClass, parameter, parameterPath )
 		self.__ops = []
 		
-		classNamesMatchString = "common/*"
 		for className in classLoader.classNames( classNamesMatchString ) :
 					
 			try :
