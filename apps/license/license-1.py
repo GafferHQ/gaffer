@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@ class license( Gaffer.Application ) :
 		
 		)
 		
-	def doRun( self, args ) :
+	def _run( self, args ) :
 
 		sys.stderr.write( Gaffer.About.name() + " " + Gaffer.About.versionString() + "\n" )
 		sys.stderr.write( Gaffer.About.copyright() + "\n" )

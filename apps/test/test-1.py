@@ -62,7 +62,7 @@ class test( Gaffer.Application ) :
 			}
 		)
 				
-	def doRun( self, args ) :
+	def _run( self, args ) :
 	
 		import sys
 		import unittest

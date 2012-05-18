@@ -70,35 +70,21 @@ class gui( Gaffer.Application ) :
 			}
 		)
 		
-	def doRun( self, args ) :
-	
-		# we must make the application root a member variable because we need to
-		# make sure it stays alive for as long as the ui is alive.
-		# normally it would be fine to have it as a local variable because
-		# GafferUI.EventLoop.mainEventLoop().start() won't return until the
-		# user has closed all the script windows, after which we don't need
-		# the application root any longer. however, when we run embedded in maya,
-		# GafferUI.EventLoop.mainEventLoop().start() returns immediately.
-		# we therefore hold onto our application root, and assume that the
-		# invoker of the application will hold a reference to us to keep it
-		# alive.
-		self.__application = Gaffer.ApplicationRoot( "gui" )
-
-		self._executeStartupFiles( [ "gui" ], { "application" : self.__application } )
-	
-		GafferUI.ScriptWindow.connect( self.__application )
+	def _run( self, args ) :
+		
+		GafferUI.ScriptWindow.connect( self.root() )
 		
 		if len( args["scripts"] ) :
 			for fileName in args["scripts"] :
 				scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( fileName ) )[0] )
 				scriptNode["fileName"].setValue( os.path.abspath( fileName ) )
 				scriptNode.load()
-				self.__application["scripts"].addChild( scriptNode )
+				self.root()["scripts"].addChild( scriptNode )
 		else :
-			self.__application["scripts"]["script1"] = Gaffer.ScriptNode()
+			self.root()["scripts"]["script1"] = Gaffer.ScriptNode()
 		
 		if args["fullScreen"].value :
-			primaryScript = self.__application["scripts"][-1]
+			primaryScript = self.root()["scripts"][-1]
 			primaryWindow = GafferUI.ScriptWindow.acquire( primaryScript )
 			primaryWindow.setFullScreen( True )
 			

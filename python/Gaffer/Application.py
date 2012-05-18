@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@ import cProfile
 
 import IECore
 
+import Gaffer
+
 class Application( IECore.Parameterised ) :
 
 	def __init__( self ) :
@@ -49,7 +51,7 @@ class Application( IECore.Parameterised ) :
 		self.parameters().addParameters(
 			
 			[
-				IECore.FileNameParameter(	
+				IECore.FileNameParameter(
 					name = "profileFileName",
 					description = "If this is specified, then the application"
 						"is run using the cProfile profiling module, and the "
@@ -60,7 +62,16 @@ class Application( IECore.Parameterised ) :
 			]
 		
 		)
+		
+		self.__root = Gaffer.ApplicationRoot( self.__class__.__name__ )
 
+	## All Applications have an ApplicationRoot which forms the root of the
+	# hierarchy for all scripts, preferences, nodes etc.
+	def root( self ) :
+	
+		return self.__root
+
+	## Called to run the application and return a status value.
 	def run( self ) :
 	
 		args = self.parameters().getValidatedValue()
@@ -70,25 +81,34 @@ class Application( IECore.Parameterised ) :
 				"self" : self,
 				"args" : args,
 			}
-			cProfile.runctx( "result = self.doRun( args )", contextDict, contextDict, args["profileFileName"].value )
+			cProfile.runctx( "result = self.__Application_run( args )", contextDict, contextDict, args["profileFileName"].value )
 			return contextDict["result"]
 		else :
-			return self.doRun( args )
+			return self.__run( args )
 
-	def _executeStartupFiles( self, subdirectories, contextDict = {} ) :
+	## Must be implemented by subclasses to do the actual work of
+	# running the application and returning a status value. The args
+	# argument contains the already validated parameter values.
+	def _run( self, args ) :
+	
+		raise NotImplementedError
+
+	def __executeStartupFiles( self ) :
 	
 		sp = os.environ.get( "GAFFER_STARTUP_PATHS", "" )
 		if not sp :
-			IECore.msg( IECore.Msg.Level.Warning, "Gaffer.Application._executeStartupFiles", "GAFFER_STARTUP_PATHS environment variable not set" )
+			IECore.msg( IECore.Msg.Level.Warning, "Gaffer.Application.__executeStartupFiles", "GAFFER_STARTUP_PATHS environment variable not set" )
 			return
 	
 		sp = IECore.SearchPath( sp, ":" )
-		rootPaths = sp.paths
-	
-		for d in subdirectories :
+		paths = [ os.path.join( p, self.root().getName() ) for p in sp.paths ]
+		sp = IECore.SearchPath( ":".join( paths ), ":" )
 		
-			paths = [ os.path.join( p, d ) for p in rootPaths ]
-			spd = IECore.SearchPath( ":".join( paths ), ":" )
-			
-			IECore.loadConfig( spd, contextDict )
+		contextDict = {	"application" : self.root() }	
+		IECore.loadConfig( sp, contextDict )
+		
+	def __run( self, args ) :
+	
+		self.__executeStartupFiles()
+		return self._run( args )
 			

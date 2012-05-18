@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -75,16 +75,12 @@ class execute( Gaffer.Application ) :
 			}
 		)
 		
-	def doRun( self, args ) :
-	
-		application = Gaffer.ApplicationRoot( "execute" )
-
-		self._executeStartupFiles( [ "execute" ], { "application" : application } )
+	def _run( self, args ) :
 			
 		scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( args["script"].value ) )[0] )
 		scriptNode["fileName"].setValue( os.path.abspath( args["script"].value ) )
 		scriptNode.load()
-		application["scripts"].addChild( scriptNode )
+		self.root()["scripts"].addChild( scriptNode )
 		
 		nodes = []
 		if len( args["nodes"] ) :

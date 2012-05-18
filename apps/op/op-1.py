@@ -89,7 +89,7 @@ class op( Gaffer.Application ) :
 			}
 		)
 		
-	def doRun( self, args ) :
+	def _run( self, args ) :
 		
 		classLoader = IECore.ClassLoader.defaultOpLoader()
 		
