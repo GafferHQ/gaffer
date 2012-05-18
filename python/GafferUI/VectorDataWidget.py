@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -243,8 +244,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		# build the menu and pop it up
 		m = self._contextMenuDefinition( self.__selectedIndices() )
-		m = GafferUI.Menu( m )
-		m.popup( self )
+		self.__popupMenu = GafferUI.Menu( m )
+		self.__popupMenu.popup( self )
 			
 	def __selectAll( self ) :
 	

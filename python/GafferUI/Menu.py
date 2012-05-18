@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ import weakref
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -51,7 +52,7 @@ class Menu( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else QtGui.QMenu(), **kw )
 			
-		self._qtWidget().aboutToShow.connect( IECore.curry( self.__show, self._qtWidget(), definition ) )
+		self._qtWidget().aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), self._qtWidget(), definition ) )
 		
 		self._setStyleSheet()
 		
@@ -135,7 +136,7 @@ class Menu( GafferUI.Widget ) :
 										
 					subMenu = qtMenu.addMenu( name )
 					subMenuDefinition = definition.reRooted( "/" + name + "/" )					
-					subMenu.aboutToShow.connect( IECore.curry( self.__show, subMenu, subMenuDefinition ) )
+					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), subMenu, subMenuDefinition ) )
 					
 				else :
 				
@@ -146,7 +147,7 @@ class Menu( GafferUI.Widget ) :
 					if item.subMenu is not None :
 										
 						subMenu = qtMenu.addMenu( label )
-						subMenu.aboutToShow.connect( IECore.curry( self.__show, subMenu, item.subMenu ) )
+						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), subMenu, item.subMenu ) )
 					
 					else :
 				
@@ -174,8 +175,7 @@ class Menu( GafferUI.Widget ) :
 							else :
 								signal = qtAction.triggered[bool]
 
-							## \todo Check we're not making unbreakable circular references here
-							signal.connect( IECore.curry( self.__commandWrapper, qtAction, item.command ) )
+							signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command ) )
 
 						active = item.active
 						if callable( active ) :
