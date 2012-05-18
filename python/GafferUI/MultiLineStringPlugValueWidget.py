@@ -52,13 +52,13 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
-		self.updateFromPlug()
+		self._updateFromPlug()
 
 	def textWidget( self ) :
 	
 		return self.__textWidget
 
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 
 		if self.getPlug() is not None :
 			with self.getContext() :
@@ -75,7 +75,7 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 		# escape abandons everything
 		if event.key=="Escape" :
-			self.updateFromPlug()
+			self._updateFromPlug()
 			return True
 
 		return False
