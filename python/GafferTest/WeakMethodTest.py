@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,24 +34,37 @@
 #  
 ##########################################################################
 
+import unittest
 import weakref
-import new
 
-## Implements an object similar to weakref.proxy, except that
-# it can work with bound methods.
-class WeakMethod( object ) :
+import Gaffer
 
-	def __init__( self, boundMethod ) :
+class WeakMethodTest( unittest.TestCase ) :
+
+	def test( self ) :
 	
-		self.__class = boundMethod.im_class
-		self.__method = boundMethod.im_func
-		self.__self = weakref.ref( boundMethod.im_self )
+		p = Gaffer.Path( "/" )
+		pw = weakref.ref( p )
+		self.failUnless( pw() is p )
+		del p
+		self.failUnless( pw() is None )
 		
-	def __call__( self, *args, **kwArgs ) :
-	
-		s = self.__self()
-		if s is None :
-			raise weakref.ReferenceError( "Attempt to call WeakMethod for %s on expired instance" % self.__method.__name__ )
-					
-		m = new.instancemethod( self.__method, s, self.__class )
-		return m( *args, **kwArgs )
+		p = Gaffer.Path( "/" )
+		pw = weakref.ref( p )
+		self.failUnless( pw() is p )
+		
+		setFromString = Gaffer.WeakMethod( p.setFromString )
+		setFromString( "/a/b" )
+		self.assertEqual( str( p ), "/a/b" )
+		
+		del p
+		self.failUnless( pw() is None )
+		self.assertRaises( weakref.ReferenceError, setFromString, "/g" )
+		
+		try :
+			setFromString( "/g" )
+		except weakref.ReferenceError as e :
+			self.failUnless( "setFromString" in str( e ) )
+		
+if __name__ == "__main__":
+	unittest.main()

@@ -36,3 +36,5 @@
 
 * The Application base class now automatically creates an ApplicationRoot and makes it available via the root() method. Derived classes should use this rather than create their own. The Application base class now also makes sure that all startup files have been executed before the application is run, so derived classes may not now call _executeStartupFiles themselves (it is now protected). Additionally the doRun() method has
 been renamed to _run, to be more in keeping with general python philosophy.
+
+* The WeakMethod class now throws a more useful exception when called on expired instances.
