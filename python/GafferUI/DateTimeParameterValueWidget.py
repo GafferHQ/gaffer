@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -76,9 +77,9 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self.__dateTimeChangedConnection = self._qtWidget().dateTimeChanged.connect( Gaffer.WeakMethod( self.__dateTimeChanged ) )
 		
-		self.updateFromPlug()
+		self._updateFromPlug()
 		
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 	
 		# convert from the undelimited form boost likes (and the DateTimeParameterHandler uses)
 		# to the delimited form qt likes
