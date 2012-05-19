@@ -40,3 +40,5 @@ been renamed to _run, to be more in keeping with general python philosophy.
 * The WeakMethod class now throws a more useful exception when called on expired instances.
 
 * Fixed bug whereby menus were never destroyed due to a circular reference. This masked other bugs whereby some uis weren't maintaining a reference to their menus to keep them alive - it's now essential that this is done.
+
+* Fixed bug which prevented dynamic output CompoundNumericPlugs serialising correctly.

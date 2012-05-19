@@ -65,7 +65,9 @@ class AddNode( Gaffer.Node ) :
 
 	def compute( self, plug, context ) :
 
-		assert( plug.isSame( self.getChild( "sum" ) ) )
+		# we're allowing the addition of dynamic output plugs which will also receive the sum
+		# in order to support GafferTest.ScriptNodeTest.testDynamicPlugSerialisation().
+		assert( plug.isSame( self.getChild( "sum" ) ) or plug.getFlags() & plug.Flags.Dynamic )
 		assert( isinstance( context, Gaffer.Context ) )
 
 		plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )

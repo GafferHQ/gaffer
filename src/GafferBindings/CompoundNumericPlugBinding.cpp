@@ -89,14 +89,17 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
 	}
 	
-	std::string value = "( ";
-	PlugIterator pIt( plug->children().begin(), plug->children().end() );
-	while( pIt!=plug->children().end() )
+	if( plug->direction() == Plug::In )
 	{
-		value += serialisePlugValue( s, IECore::staticPointerCast<ValuePlug>( *pIt++ ) ) + ", ";
+		std::string value = "( ";
+		PlugIterator pIt( plug->children().begin(), plug->children().end() );
+		while( pIt!=plug->children().end() )
+		{
+			value += serialisePlugValue( s, IECore::staticPointerCast<ValuePlug>( *pIt++ ) ) + ", ";
+		}
+		value += " )";
+		result += "value = " + value + ", ";
 	}
-	value += " )";
-	result += "value = " + value + ", ";
 	
 	result += ")";
 

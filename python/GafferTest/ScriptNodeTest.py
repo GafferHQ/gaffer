@@ -145,6 +145,8 @@ class ScriptNodeTest( unittest.TestCase ) :
 		s1["n1"]["dynamicPlug2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s1["n1"]["dynamicPlug2"].setValue( 100 )
 		s1["n1"]["dynamicStringPlug"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, value="hiThere" )
+		s1["n1"]["dynamicOutPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
+		s1["n1"]["dynamicColorOutPlug"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
 				
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s1.serialise() )
@@ -152,6 +154,8 @@ class ScriptNodeTest( unittest.TestCase ) :
 		self.assert_( s2["n1"]["dynamicPlug"].getInput().isSame( s2["n2"]["sum"] ) )
 		self.assertEqual( s2["n1"]["dynamicPlug2"].getValue(), 100 )
 		self.assertEqual( s2["n1"]["dynamicStringPlug"].getValue(), "hiThere" )
+		self.failUnless( isinstance( s2["n1"]["dynamicOutPlug"], Gaffer.IntPlug ) )
+		self.failUnless( isinstance( s2["n1"]["dynamicColorOutPlug"], Gaffer.Color3fPlug ) )
 		
 	def testLifetime( self ) :
 	
