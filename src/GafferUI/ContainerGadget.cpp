@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -42,12 +42,13 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace Imath;
 using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( ContainerGadget );
 
 ContainerGadget::ContainerGadget( const std::string &name )
-	:	Gadget( name )
+	:	Gadget( name ), m_padding( Box3f( V3f( 0 ), V3f( 0 ) ) )
 {
 	childAddedSignal().connect( boost::bind( &ContainerGadget::childAdded, this, ::_1, ::_2 ) );
 	childRemovedSignal().connect( boost::bind( &ContainerGadget::childRemoved, this, ::_1, ::_2 )  );
@@ -73,9 +74,27 @@ Imath::Box3f ContainerGadget::bound() const
 		b = Imath::transform( b, c->getTransform() );
 		result.extendBy( b );
 	}
+	result.min += m_padding.min;
+	result.max += m_padding.max;
 	return result;
 }
 
+
+void ContainerGadget::setPadding( const Imath::Box3f &padding )
+{
+	if( padding == m_padding )
+	{
+		return;
+	}
+	m_padding = padding;
+	renderRequestSignal()( this );	
+}
+
+const Imath::Box3f &ContainerGadget::getPadding() const
+{
+	return m_padding;
+}
+		
 void ContainerGadget::doRender( const Style *style ) const
 {
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )

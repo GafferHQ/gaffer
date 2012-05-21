@@ -48,3 +48,4 @@ been renamed to _run, to be more in keeping with general python philosophy.
 * ColorPlugValueWidget now has numeric fields for editing the colour, in addition to the
 swatch.
 
+* ContainerGadget can now add padding around the children, accessed using the new setPadding() and getPadding() methods.

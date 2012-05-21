@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -138,7 +138,23 @@ class LinearContainerTest( unittest.TestCase ) :
 		self.assertEqual( twoByFour.getTransform(), IECore.M44f.createTranslated( IECore.V3f( -1, -3, 0 ) ) )
 		self.assertEqual( fourByFour.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, 1, 0 ) ) )
 		self.assertEqual( fourByTwo.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, 4, 0 ) ) )
-				
+		
+	def testPadding( self ) :
+	
+		twoByFour = GafferUI.RenderableGadget(
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
+		)
+		
+		c = GafferUI.LinearContainer( orientation=GafferUI.LinearContainer.Orientation.Y )
+		c.addChild( twoByFour )
+		
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
+		self.assertEqual( c.getPadding(), IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 0 ) ) )
+			
+		c.setPadding( IECore.Box3f( IECore.V3f( -1, -2, -3 ), IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( c.getPadding(), IECore.Box3f( IECore.V3f( -1, -2, -3 ), IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -2, -4, -3 ), IECore.V3f( 2, 4, 3 ) ) )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

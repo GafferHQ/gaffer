@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,13 @@ class ContainerGadget : public Gadget
 		virtual Imath::Box3f bound() const;
 		//@}
 		
+		/// The padding is a region added around the contents of the children.
+		/// It is specified as the final bounding box when the child bounding
+		/// box is ( ( 0, 0, 0 ), ( 0, 0, 0 ) ). That is, padding.min is added to bound.min
+		/// and padding.max is added to bound.max. 
+		void setPadding( const Imath::Box3f &padding );
+		const Imath::Box3f &getPadding() const;
+		
 	protected :
 	
 		/// Implemented to render all the children.
@@ -70,6 +77,8 @@ class ContainerGadget : public Gadget
 		void childAdded( GraphComponent *parent, GraphComponent *child );
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 		void childRenderRequest( Gadget *child );
+		
+		Imath::Box3f m_padding;
 		
 };
 
