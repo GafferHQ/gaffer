@@ -42,3 +42,9 @@ been renamed to _run, to be more in keeping with general python philosophy.
 * Fixed bug whereby menus were never destroyed due to a circular reference. This masked other bugs whereby some uis weren't maintaining a reference to their menus to keep them alive - it's now essential that this is done.
 
 * Fixed bug which prevented dynamic output CompoundNumericPlugs serialising correctly.
+
+* Fixed problems caused by PlugValueWidget.__init__ calling _updateFromPlug() at a point when the derived class is not fully constructed. PlugValueWidget.__init__ no longer calls _updateFromPlug(), so derived classes should now call it at the end of their __init__ method.
+
+* ColorPlugValueWidget now has numeric fields for editing the colour, in addition to the
+swatch.
+
