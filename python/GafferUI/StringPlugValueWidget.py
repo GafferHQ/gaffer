@@ -66,11 +66,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__textWidget
 
 	def _updateFromPlug( self ) :
-
-		if not hasattr( self, "_StringPlugValueWidget__textWidget" ) :
-			# we're still constructing
-			return
-		
+	
 		if self.getPlug() is not None :
 			with self.getContext() :
 				self.__textWidget.setText( self.getPlug().getValue() )

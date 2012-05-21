@@ -44,30 +44,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
-		self.setPlug( plug )
+		# we don't want to call _updateFromPlug yet because the derived
+		# classes haven't constructed yet. they can call it themselves
+		# upon completing construction.
+		self.__setPlugInternal( plug, callUpdateFromPlug=False )
 		
 	def setPlug( self, plug ) :
 	
-		self.__plug = plug
-		
-		context = self.__fallbackContext
-		
-		if self.__plug is not None :
-			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
-			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
-			if scriptNode is not None :
-				context = scriptNode.context()
-		else :
-			self.__plugSetConnection = None
-			self.__plugDirtiedConnection = None
-			self.__plugInputChangedConnection = None
-
-		self.__context = context
-		self.__updateContextConnection()		
-		self._updateFromPlug()
-		
+		self.__setPlugInternal( plug, callUpdateFromPlug=True )
+			
 	def getPlug( self ) :
 	
 		return self.__plug
@@ -154,6 +139,30 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def __contextChanged( self, context, key ) :
 	
 		self._updateFromPlug()
+
+	def __setPlugInternal( self, plug, callUpdateFromPlug ) :
+	
+		self.__plug = plug
+		
+		context = self.__fallbackContext
+		
+		if self.__plug is not None :
+			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
+			if scriptNode is not None :
+				context = scriptNode.context()
+		else :
+			self.__plugSetConnection = None
+			self.__plugDirtiedConnection = None
+			self.__plugInputChangedConnection = None
+
+		self.__context = context
+		self.__updateContextConnection()
+		
+		if callUpdateFromPlug :		
+			self._updateFromPlug()	
 
 	def __updateContextConnection( self ) :
 	

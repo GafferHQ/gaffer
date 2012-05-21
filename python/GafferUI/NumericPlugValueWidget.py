@@ -62,10 +62,6 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__numericWidget
 		
 	def _updateFromPlug( self ) :
-
-		if not hasattr( self, "_NumericPlugValueWidget__numericWidget" ) :
-			# we're still constructing
-			return
 		
 		if self.getPlug() is not None :
 			with self.getContext() :

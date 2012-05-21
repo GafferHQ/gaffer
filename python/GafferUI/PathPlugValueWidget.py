@@ -73,10 +73,6 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 	def _updateFromPlug( self ) :
 
-		if not hasattr( self, "_PathPlugValueWidget__path" ) :
-			# still constructing
-			return
-
 		with self.getContext() :
 			with IECore.IgnoredExceptions( ValueError ) :
 				self.__path.setFromString( self.getPlug().getValue() )

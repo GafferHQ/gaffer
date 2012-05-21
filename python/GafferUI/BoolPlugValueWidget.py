@@ -55,10 +55,6 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._updateFromPlug()
 		
 	def _updateFromPlug( self ) :
-
-		if not hasattr( self, "_BoolPlugValueWidget__checkBox" ) :
-			# we're still constructing
-			return
 		
 		if self.getPlug() is not None :
 			with self.getContext() :
