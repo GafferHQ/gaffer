@@ -40,21 +40,22 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
-class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
+class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 			
+		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plug, **kw )
+
 		self.__swatch = GafferUI.ColorSwatch()
-		
-		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug, **kw )
-				
+		self._row().append( self.__swatch, expand=True )
+						
 		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		
 		self.__colorChooserDialogue = None
 		
 	def _updateFromPlug( self ) :
+	
+		GafferUI.CompoundNumericPlugValueWidget._updateFromPlug( self )
 	
 		plug = self.getPlug()
 		if plug is not None :

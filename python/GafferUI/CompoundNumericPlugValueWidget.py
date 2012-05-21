@@ -53,7 +53,13 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 	def _updateFromPlug( self ) :
 
-		pass		
+		pass
+	
+	## Returns the ListContainer used as the main layout for this Widget.
+	# Derived classes may use it to add to the layout.	
+	def _row( self ) :
+	
+		return self.__row	
 		
 GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
