@@ -39,7 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-class IndexedIODataPathPreview( GafferUI.DeferredPathPreview ) :
+class DataPathPreview( GafferUI.DeferredPathPreview ) :
 
 	def __init__( self, path ) :
 	
@@ -51,7 +51,7 @@ class IndexedIODataPathPreview( GafferUI.DeferredPathPreview ) :
 	
 	def isValid( self ) :
 
-		if not isinstance( self.getPath(), Gaffer.IndexedIOPath ) or not self.getPath().isLeaf() :
+		if not hasattr( self.getPath(), "data" ) or not self.getPath().isLeaf() :
 			return False
 			
 		return True
@@ -73,4 +73,4 @@ class IndexedIODataPathPreview( GafferUI.DeferredPathPreview ) :
 			
 		self.__vectorDataWidget.setData( data )
 
-GafferUI.PathPreviewWidget.registerType( "Data", IndexedIODataPathPreview )
+GafferUI.PathPreviewWidget.registerType( "Data", DataPathPreview )

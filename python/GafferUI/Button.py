@@ -115,5 +115,14 @@ class Button( GafferUI.Widget ) :
 		return self.__clickedSignal
 		
 	def __clicked( self, *unusedArgs ) : # currently PyQt passes a "checked" argument and PySide doesn't
-				
+		
+		# workaround problem whereby not all text fields will have committed their contents
+		# into plugs when the button is pressed - this occurs particularly in the OpDialogue, and causes
+		# the op to run without the values the user sees in the ui. normally editingFinished is emitted by
+		# the text widget itself on a loss of focus, but unfortunately clicking on a button doesn't cause that
+		# focus loss. so we helpfully emit the signal ourselves here.
+		focusWidget = GafferUI.Widget._owner( QtGui.QApplication.focusWidget() )
+		if focusWidget is not None and hasattr( focusWidget, "editingFinishedSignal" ) :
+			focusWidget.editingFinishedSignal()( focusWidget )
+		
 		self.clickedSignal()( self )	

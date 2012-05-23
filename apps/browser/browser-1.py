@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import os
+
 import IECore
 import Gaffer
 import GafferUI
@@ -45,6 +47,26 @@ class browser( Gaffer.Application ) :
 	
 		Gaffer.Application.__init__( self )
 		
+		self.parameters().addParameters(
+		
+			[
+				IECore.PathParameter(
+					"initialPath",
+					"The path to browse to initially",
+					"",
+					allowEmptyString = True,
+					check = IECore.PathParameter.CheckType.MustExist,
+				)
+			]
+			
+		)
+		
+		self.parameters().userData()["parser"] = IECore.CompoundObject(
+			{
+				"flagless" : IECore.StringVectorData( [ "initialPath" ] )
+			}
+		)
+		
 	def _run( self, args ) :
 	
 		self.root()["scripts"]["script1"] = Gaffer.ScriptNode()
@@ -52,6 +74,10 @@ class browser( Gaffer.Application ) :
 		with GafferUI.Window( "Gaffer Browser" ) as window :
 			browser = GafferUI.BrowserEditor( self.root()["scripts"]["script1"] )
 		
+		if args["initialPath"].value :
+			initialPath = os.path.abspath( args["initialPath"].value )
+			browser.pathChooser().getPath().setFromString( initialPath )
+					
 		window.setVisible( True )
 		
 		GafferUI.EventLoop.mainEventLoop().start()		

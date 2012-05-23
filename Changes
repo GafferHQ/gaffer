@@ -1,3 +1,10 @@
+0.32.1
+------
+* Added workaround for problems where string values were not always committed into parameters before the Execute button of the OpDialogue was clicked.
+
+0.32.0
+------
+
 * Added GafferUI.NotificationMessageHandler, for displaying IECore messages in a little window.
 
 * Added a ParameterHandler and ParameterValueWidget for DateTimeParameters.
@@ -17,6 +24,12 @@ and rows by clicking on the vertical header.
 * Added a MultiLineStringPlugValueWidget class.
 
 * StringParameterValueWidget now supports the ["UI"]["multiLine"] user data item.
+
+* The browser app now has an "initialPath" parameter to allows the browsing location to be set from the command line.
+
+* Added Gaffer.AttributeCachePath and GafferUI.AttributeCachePathPreview classes, to allow browsing of attribute caches.
+
+* Browsing for paths from a PathPlugValueWidget where the path is presumed empty now starts from the current working directory.
 
 0.31.0
 ------

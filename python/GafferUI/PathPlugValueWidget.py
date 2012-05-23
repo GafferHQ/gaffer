@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import os
+
 import IECore
 
 import Gaffer
@@ -88,6 +90,14 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		# make a copy so we're not updating the main path (and therefore plug) as users browse
 		pathCopy = self.__path.copy()
+		## \todo Currently we can't distinguish between "/" and an empty path. There are a lot
+		# more occurrences of empty paths (parameter default values) than there are "/" root paths,
+		# so start browsing from the current directory rather than the root if the path is "/".
+		# We should update the path class to have the concept of empty paths and relative paths
+		# and remove this code.
+		if isinstance( pathCopy, ( Gaffer.SequencePath, Gaffer.FileSystemPath ) ) and len( pathCopy ) == 0 :
+			pathCopy.setFromString( os.getcwd() )
+		
 		dialogue = GafferUI.PathChooserDialogue( pathCopy, **self.__pathChooserDialogueKeywords )
 		chosenPath = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 		
