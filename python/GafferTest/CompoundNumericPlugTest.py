@@ -173,6 +173,12 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
 
+	def testRunTimeTyped( self ) :
+	
+		p = Gaffer.Color3fPlug()
+		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		self.failUnless( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
+
 if __name__ == "__main__":
 	unittest.main()
 	
