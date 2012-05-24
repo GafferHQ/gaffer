@@ -42,11 +42,14 @@ import Gaffer
 
 def __enter( self ) :
 
-	self.__scope = Gaffer.Context._Scope( self )
+	if not hasattr( self, "_scopes" ) :
+		self._scopes = []
+		
+	self._scopes.append( Gaffer.Context._Scope( self ) )
 	
 def __exit( self, type, value, traceBack ) :
 
-	del self.__scope
+	del self._scopes[-1]
 	
 Gaffer.Context.__enter__ = __enter
 Gaffer.Context.__exit__ = __exit

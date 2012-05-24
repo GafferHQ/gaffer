@@ -36,6 +36,7 @@
 
 import unittest
 import threading
+import weakref
 
 import IECore
 
@@ -203,6 +204,28 @@ class ContextTest( unittest.TestCase ) :
 		self.assertEqual( c.get( "f", 10 ), 10 )
 		c["f"] = 1.0
 		self.assertEqual( c.get( "f" ), 1.0 )
+	
+	def testReentrancy( self ) :
+	
+		c = Gaffer.Context()
+		with c :
+			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+			with c :
+				self.failUnless( c.isSame( Gaffer.Context.current() ) )
+				
+	def testLifeTime( self ) :
+	
+		c = Gaffer.Context()
+		w = weakref.ref( c )
+		
+		self.failUnless( w() is c )
+
+		with c :
+			pass
+
+		del c
+		
+		self.failUnless( w() is None )
 		
 if __name__ == "__main__":
 	unittest.main()
