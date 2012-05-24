@@ -39,11 +39,10 @@
 #define GAFFERUI_STANDARDNODEGADGET_H
 
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/LinearContainer.h"
 
 namespace GafferUI
 {
-
-IE_CORE_FORWARDDECLARE( LinearContainer )
 
 class StandardNodeGadget : public NodeGadget
 {
@@ -52,11 +51,12 @@ class StandardNodeGadget : public NodeGadget
 	
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardNodeGadget, StandardNodeGadgetTypeId, NodeGadget );
 
-		StandardNodeGadget( Gaffer::NodePtr node );
+		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
 		virtual ~StandardNodeGadget();
 
 		virtual NodulePtr nodule( Gaffer::ConstPlugPtr plug );
 		virtual ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
 		
 		/// The central content of the Gadget may be customised. By default
 		/// the contents is a simple NameGadget for the node, but any Gadget or

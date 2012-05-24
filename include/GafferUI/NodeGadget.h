@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,10 @@ class NodeGadget : public IndividualContainer
 		/// the plug if it has one, and 0 otherwise.
 		virtual NodulePtr nodule( Gaffer::ConstPlugPtr plug );
 		virtual ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		/// Returns the tangent for a nodule - this is a direction which
+		/// can be considered to be "away" from the NodeGadget for the
+		/// purposes of drawing connections.
+		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
 				
 		/// Creates a NodeGadget for the specified node.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );

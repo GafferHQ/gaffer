@@ -49,3 +49,5 @@ been renamed to _run, to be more in keeping with general python philosophy.
 swatch.
 
 * ContainerGadget can now add padding around the children, accessed using the new setPadding() and getPadding() methods.
+
+* StandardNodeGadget can now be used in a vertical orientation as well as a horizontal one. This will be useful for making graphs which better suit a horizontal flow (shaders for example).

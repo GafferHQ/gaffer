@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/NodeGadget.h"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/UndoContext.h"
@@ -86,7 +87,13 @@ void StandardNodule::doRender( const Style *style ) const
 		glGetIntegerv( GL_RENDER_MODE, &renderMode );
 		if( renderMode != GL_SELECT )
 		{
-			style->renderConnection( V3f( 0 ), m_dragPosition );
+			V3f srcTangent( 0.0f, 1.0f, 0.0f );
+			const NodeGadget *nodeGadget = ancestor<NodeGadget>();
+			if( nodeGadget )
+			{
+				srcTangent = nodeGadget->noduleTangent( this );
+			}
+			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, -srcTangent );
 		}
 	}
 	

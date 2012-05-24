@@ -170,22 +170,19 @@ void StandardStyle::renderNodule( float radius, State state ) const
 	glEnd();
 }
 
-void StandardStyle::renderConnection( const Imath::V3f &src, const Imath::V3f &dst, State state ) const
+void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state ) const
 {
 	glUniform1i( m_borderParameter, 0 );
 	glUniform1i( m_edgeAntiAliasingParameter, 1 );
 	glUniform1i( m_textureTypeParameter, 0 );
 
-	V3f view = IECoreGL::Camera::viewDirectionInObjectSpace();
-	V3f o = view.cross( dst - src ).normalized() * 0.2;
-
-	V3f d = V3f( 0, (src.y - dst.y) / 2.0f, 0 );
+	float d = (srcPosition - dstPosition).length() / 2.0f;
 	
 	glUniform1i( m_bezierParameter, 1 );
-	glUniform3fv( m_v0Parameter, 1, src.getValue() ); 
-	glUniform3fv( m_v1Parameter, 1, (src - d).getValue() ); 
-	glUniform3fv( m_v2Parameter, 1, (dst + d).getValue() ); 
-	glUniform3fv( m_v3Parameter, 1, dst.getValue() ); 
+	glUniform3fv( m_v0Parameter, 1, srcPosition.getValue() ); 
+	glUniform3fv( m_v1Parameter, 1, ( srcPosition + srcTangent * d ).getValue() ); 
+	glUniform3fv( m_v2Parameter, 1, ( dstPosition + dstTangent * d ).getValue() ); 
+	glUniform3fv( m_v3Parameter, 1, dstPosition.getValue() ); 
 
 	glColor( colorForState( ConnectionColor, state ) );
 

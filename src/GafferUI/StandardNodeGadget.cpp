@@ -49,6 +49,7 @@
 #include "GafferUI/CompoundNodule.h"
 
 using namespace GafferUI;
+using namespace Gaffer;
 using namespace Imath;
 
 IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
@@ -57,25 +58,29 @@ NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_
 
 static const float g_borderWidth = 0.5f;
 static const float g_minWidth = 10.0f;
-static const float g_verticalSpacing = 0.5f;
+static const float g_spacing = 0.5f;
 
-StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
+StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
 	:	NodeGadget( node )
 {
-	LinearContainerPtr column = new LinearContainer( "column", LinearContainer::Y, LinearContainer::Centre, g_verticalSpacing );
+	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
-	LinearContainerPtr inputNoduleRow = new LinearContainer( "inputNoduleRow", LinearContainer::X, LinearContainer::Centre, 2.0f );
-	LinearContainerPtr outputNoduleRow = new LinearContainer( "outputNoduleRow", LinearContainer::X, LinearContainer::Centre, 2.0f );
+	LinearContainerPtr mainContainer = new LinearContainer( "mainContainer", oppositeOrientation, LinearContainer::Centre, g_spacing );
 
-	column->addChild( outputNoduleRow );
+	const float noduleSpacing = orientation == LinearContainer::X ? 2.0f : 0.2f;
+	LinearContainerPtr inputNoduleContainer = new LinearContainer( "inputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing );
+	LinearContainerPtr outputNoduleContainer = new LinearContainer( "outputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing );
+
+	mainContainer->addChild( orientation == LinearContainer::X ? outputNoduleContainer : inputNoduleContainer );
 	
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
+	contentsContainer->setPadding( Box3f( V3f( -g_borderWidth ), V3f( g_borderWidth ) ) );
 	
-	column->addChild( contentsContainer );
-	column->addChild( inputNoduleRow );
+	mainContainer->addChild( contentsContainer );
+	mainContainer->addChild( orientation == LinearContainer::X ? inputNoduleContainer : outputNoduleContainer );
 
-	setChild( column );
+	setChild( mainContainer );
 	setContents( new NameGadget( node ) );
 	
 	Gaffer::ScriptNodePtr script = node->scriptNode();
@@ -101,21 +106,57 @@ StandardNodeGadget::~StandardNodeGadget()
 Imath::Box3f StandardNodeGadget::bound() const
 {
 	Box3f b = IndividualContainer::bound();
-	float width = std::max( b.size().x + 2 * g_borderWidth, g_minWidth );
-	float c = b.center().x;
-	b.min.x = c - width / 2.0f;
-	b.max.x = c + width / 2.0f;
+	
+	LinearContainer::Orientation orientation = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->getOrientation();
 
-	Box3f inputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleRow" )->transformedBound( this );
-	Box3f outputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleRow" )->transformedBound( this );
-	if( inputRowBound.isEmpty() )
+	if( orientation == LinearContainer::X )
 	{
-		b.max.y += g_verticalSpacing + g_borderWidth;
+		// enforce a minimum width
+		float width = std::max( b.size().x, g_minWidth );
+		float c = b.center().x;
+		b.min.x = c - width / 2.0f;
+		b.max.x = c + width / 2.0f;
 	}
 	
-	if( outputRowBound.isEmpty() )
+	// add the missing spacing to the border if we have no nodules on a given side
+			
+	Box3f inputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->transformedBound( this );
+	Box3f outputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleContainer" )->transformedBound( this );
+	if( inputContainerBound.isEmpty() )
 	{
-		b.min.y -= g_verticalSpacing + g_borderWidth;
+		if( orientation == LinearContainer::X )
+		{
+			b.max.y += g_spacing + g_borderWidth;
+		}
+		else
+		{
+			b.min.x -= g_spacing + g_borderWidth;		
+		}
+	}
+	
+	if( outputContainerBound.isEmpty() )
+	{
+		if( orientation == LinearContainer::X )
+		{
+			b.min.y -= g_spacing + g_borderWidth;
+		}
+		else
+		{
+			b.max.x += g_spacing + g_borderWidth;
+		}
+	}
+	
+	// add on a little bit in the major axis, so that the nodules don't get drawn in the frame corner
+	
+	if( orientation == LinearContainer::X )
+	{
+		b.min.x -= g_borderWidth;
+		b.max.x += g_borderWidth;
+	}
+	else
+	{
+		b.min.y -= g_borderWidth;
+		b.max.y += g_borderWidth;
 	}
 	
 	return b;
@@ -123,6 +164,7 @@ Imath::Box3f StandardNodeGadget::bound() const
 
 void StandardNodeGadget::doRender( const Style *style ) const
 {
+	// decide what state we're rendering in
 	Gaffer::ConstScriptNodePtr script = node()->scriptNode();
 	
 	Style::State state = Style::NormalState;
@@ -131,17 +173,35 @@ void StandardNodeGadget::doRender( const Style *style ) const
 		state = Style::HighlightedState;
 	}
 	
+	// draw 
 	Box3f b = bound();
-	Box3f inputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleRow" )->transformedBound( this );
-	Box3f outputRowBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleRow" )->transformedBound( this );
+
+	LinearContainer::Orientation orientation = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->getOrientation();
 	
-	if( !inputRowBound.isEmpty() )
+	Box3f inputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->transformedBound( this );
+	Box3f outputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleContainer" )->transformedBound( this );
+	
+	if( !inputContainerBound.isEmpty() )
 	{
-		b.max.y -= inputRowBound.size().y / 2.0f;
+		if( orientation == LinearContainer::X )
+		{
+			b.max.y -= inputContainerBound.size().y / 2.0f;
+		}
+		else
+		{
+			b.min.x += inputContainerBound.size().x / 2.0f;
+		}
 	}
-	if( !outputRowBound.isEmpty() )
+	if( !outputContainerBound.isEmpty() )
 	{
-		b.min.y += outputRowBound.size().y / 2.0f;
+		if( orientation == LinearContainer::X )
+		{
+			b.min.y += outputContainerBound.size().y / 2.0f;
+		}
+		else
+		{
+			b.max.x -= outputContainerBound.size().x / 2.0f;		
+		}
 	}
 
 	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ), g_borderWidth, state );
@@ -184,6 +244,17 @@ ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 	return it->second;
 }
 
+Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
+{
+	LinearContainer::Orientation orientation = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->getOrientation();
+	Plug::Direction direction = nodule->plug()->direction();
+	if( orientation == LinearContainer::X )
+	{
+		return direction == Plug::In ? V3f( 0, 1, 0 ) : V3f( 0, -1, 0 );
+	}
+	return direction == Plug::In ? V3f( -1, 0, 0 ) : V3f( 1, 0, 0 );
+}
+
 NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 {
 	if( plug->getName().compare( 0, 2, "__" )==0 )
@@ -199,11 +270,11 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 	
 	if( plug->direction()==Gaffer::Plug::In )
 	{
-		getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleRow" )->addChild( nodule );
+		getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->addChild( nodule );
 	}
 	else
 	{
-		getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleRow" )->addChild( nodule );
+		getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleContainer" )->addChild( nodule );
 	}
 	
 	m_nodules[plug.get()] = nodule.get();

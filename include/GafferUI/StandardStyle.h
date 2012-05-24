@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ class StandardStyle : public Style
 
 		virtual void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const;
 		virtual void renderNodule( float radius, State state = NormalState ) const;
-		virtual void renderConnection( const Imath::V3f &src, const Imath::V3f &dst, State state = NormalState ) const;
+		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const;
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const;
 		

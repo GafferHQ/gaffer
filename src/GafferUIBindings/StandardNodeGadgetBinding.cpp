@@ -53,8 +53,8 @@ class StandardNodeGadgetWrapper : public StandardNodeGadget, public IECorePython
 	
 	public :
 
-		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
-			:	StandardNodeGadget( node ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
+		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node, LinearContainer::Orientation orientation )
+			:	StandardNodeGadget( node, orientation ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
 		{
 		}
 				
@@ -67,7 +67,7 @@ IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
 void GafferUIBindings::bindStandardNodeGadget()
 {
 	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
-		.def( init<Gaffer::NodePtr>( ( arg( "node" ) ) ) )
+		.def( init<Gaffer::NodePtr, LinearContainer::Orientation>( ( arg( "node" ), arg( "orientation" )=LinearContainer::X ) ) )
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", (GadgetPtr (StandardNodeGadget::*)())&StandardNodeGadget::getContents )

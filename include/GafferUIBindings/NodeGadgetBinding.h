@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -57,18 +57,35 @@ namespace GafferUIBindings
 			return f( IECore::constPointerCast<Gaffer::Plug>( plug ) );\
 		}\
 		return CLASSNAME::nodule( plug );\
+	}\
+	virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule )\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		override f = this->get_override( "noduleTangent" );\
+		if( f )\
+		{\
+			return f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) );\
+		}\
+		return CLASSNAME::noduleTangent( nodule );\
 	}
 
 /// This must be used in /every/ NodeGadget binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.
 #define GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( CLASSNAME )\
 	GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CLASSNAME )\
-	.def( "nodule", &nodule<CLASSNAME> )
+	.def( "nodule", &nodule<CLASSNAME> )\
+	.def( "noduleTangent", &noduleTangent<CLASSNAME> )
 
 template<typename T>
 GafferUI::NodulePtr nodule( T &p, Gaffer::ConstPlugPtr plug )
 {
 	return p.T::nodule( plug );
+}
+
+template<typename T>
+Imath::V3f noduleTangent( T &p, const GafferUI::Nodule *nodule )
+{
+	return p.T::noduleTangent( nodule );
 }
 
 void bindNodeGadget();
