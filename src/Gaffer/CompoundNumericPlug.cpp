@@ -39,6 +39,9 @@
 using namespace Gaffer;
 
 template<typename T>
+const IECore::RunTimeTyped::TypeDescription<CompoundNumericPlug<T> > CompoundNumericPlug<T>::g_typeDescription;
+
+template<typename T>
 CompoundNumericPlug<T>::CompoundNumericPlug(
 	const std::string &name,
 	Direction direction,

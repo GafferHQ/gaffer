@@ -91,6 +91,8 @@ class CompoundNumericPlug : public CompoundPlug
 		
 	private :
 	
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( CompoundNumericPlug<T> );
+
 		static const char **childNames();
 	
 };
