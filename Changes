@@ -2,6 +2,8 @@
 
 * The GafferUI.Spacer class now specifies a maximumSize in addition to the previous minimumSize.
 
+* Added support for ClassParameters.
+
 0.32.1
 ------
 
