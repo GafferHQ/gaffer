@@ -181,6 +181,7 @@ from StringParameterValueWidget import StringParameterValueWidget
 from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
 from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
 from DateTimeParameterValueWidget import DateTimeParameterValueWidget
+from ClassParameterValueWidget import ClassParameterValueWidget
 
 # and specific node uis
 

@@ -700,7 +700,7 @@ env.Alias( "build", gafferUIModuleInstall )
 
 for module in ( "GafferTest", "GafferUITest" ) :
 
-	moduleFiles = glob.glob( "python/%s/*.py" % module ) + glob.glob( "python/%s/*/*" % module )
+	moduleFiles = glob.glob( "python/%s/*.py" % module ) + glob.glob( "python/%s/*/*" % module ) + glob.glob( "python/%s/*/*/*" % module )
 	for moduleFile in moduleFiles :
 		moduleFileInstall = env.InstallAs( "$BUILD_DIR/python/" + moduleFile.partition( "/" )[2], moduleFile )
 		env.Alias( "build", moduleFileInstall ) 

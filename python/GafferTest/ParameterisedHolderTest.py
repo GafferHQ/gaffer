@@ -37,6 +37,7 @@
 
 from __future__ import with_statement
 
+import os
 import unittest
 import datetime
 
@@ -523,7 +524,63 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph.parameterHandler().setPlugValue()
 		ph.parameterHandler().setParameterValue()
 		self.assertEqual( p["dt"].getValue(), IECore.DateTimeData( tomorrow ) )
+	
+	def testClassParameter( self ) :
+			
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "classParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = ph.getParameterised()[0]
 		
+		with ph.parameterModificationContext() :
+			p["class"].setClass( *self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" ) )
+
+		seqLsParameterNames = p["class"].keys()	
+		for n in seqLsParameterNames :
+			self.failUnless( n in ph["parameters"]["class"] )
+			
+		with ph.parameterModificationContext() :
+			p["class"].setClass( "", 0 )
+		
+		for n in seqLsParameterNames :
+			self.failIf( n in ph["parameters"]["class"] )
+		
+	def testClassParameterSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["ph"] = Gaffer.ParameterisedHolderNode()
+		s["ph"].setParameterised( "classParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		
+		p = s["ph"].getParameterised()[0]
+		
+		classSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )
+		with s["ph"].parameterModificationContext() :
+			p["class"].setClass( *classSpec )
+		
+		classPlugNames = s["ph"]["parameters"]["class"].keys()
+		for k in p["class"].keys() :
+			self.failUnless( k in classPlugNames )
+		
+		s["ph"]["parameters"]["class"]["recurse"].setValue( True )
+	
+		ss = s.serialise()
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+		
+		self.assertEqual( s2["ph"]["parameters"]["class"].keys(), classPlugNames )
+		
+		p2 = s2["ph"].getParameterised()[0]
+		
+		self.assertEqual( p2["class"].getClass( True )[1:], classSpec )
+		
+		s2["ph"].parameterHandler().setParameterValue()
+		self.assertEqual( p2["class"]["recurse"].getTypedValue(), True )
+						
+	def setUp( self ) :
+	
+		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"
+					
 if __name__ == "__main__":
 	unittest.main()
 	

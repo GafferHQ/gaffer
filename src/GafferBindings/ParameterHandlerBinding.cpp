@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,13 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 			return o();
 		}
 		
+		virtual void restore( GraphComponent *plugParent )
+		{
+			/// \todo Implement this to call through to python. We're not
+			/// doing that right now to maintain compatibility with existing
+			/// python-based parameter handlers in other packages.
+		}
+		
 		virtual PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -143,6 +150,7 @@ void GafferBindings::bindParameterHandler()
 	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapperPtr>( "ParameterHandler" )
 		.def( init<>() )
 		.def( "parameter", (IECore::ParameterPtr (ParameterHandler::*)())&ParameterHandler::parameter )
+		.def( "restore", &ParameterHandler::restore, ( arg( "plugParent" ) ) )
 		.def( "setupPlug", &ParameterHandler::setupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In ) )
 		.def( "plug", (PlugPtr (ParameterHandler::*)())&ParameterHandler::plug )
 		.def( "setParameterValue", &ParameterHandler::setParameterValue )

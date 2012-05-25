@@ -72,6 +72,10 @@ void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr pa
 	
 	m_parameterised = parameterised;
 	m_parameterHandler = new CompoundParameterHandler( interface->parameters() );
+	if( keepExistingValues )
+	{
+		m_parameterHandler->restore( this );
+	}
 	m_parameterHandler->setupPlug( this );
 	if( !keepExistingValues )
 	{

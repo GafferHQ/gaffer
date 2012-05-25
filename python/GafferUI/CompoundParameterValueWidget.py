@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import traceback
+
 import IECore
 
 import Gaffer
@@ -99,13 +101,17 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 	
 		for childPlug in self.plug().children() :
 		
+			if childPlug.getName().startswith( "__" ) :
+				continue
+		
 			childParameter = self.parameter()[childPlug.getName()]
 			
 			with IECore.IgnoredExceptions( KeyError ) :
 				if not childParameter.userData()["UI"]["visible"].value :
 					continue
 			
-			valueWidget = GafferUI.ParameterValueWidget.create( self.parameterHandler().childParameterHandler( childParameter ) )
+			childParameterHandler = self.parameterHandler().childParameterHandler( childParameter )
+			valueWidget = GafferUI.ParameterValueWidget.create( childParameterHandler )
 			if not valueWidget :
 				continue
 				
@@ -118,15 +124,10 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 				row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 )
 				
 				label = GafferUI.Label(
-					IECore.CamelCase.toSpaced( childPlug.getName() ),
+					self._parameterLabelText( childParameterHandler ),
 					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 				)
-				label.setToolTip( IECore.StringUtil.wrap(
-						childPlug.relativeName( childPlug.node() ) + "\n\n" +
-						childParameter.description,
-						60
-					)
-				)
+				label.setToolTip( self._parameterToolTip( childParameterHandler ) )
 				
 				## \todo Decide how we allow this sort of tweak using the public
 				# interface. Perhaps we should have a SizeableContainer or something?
@@ -137,6 +138,24 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 				row.append( valueWidget )
 				
 				self.__column.append( row )
+
+	## Returns True if this ui is collapsible.
+	def _collapsible( self ) :
+	
+		return self.__collapsible is not None
+		
+	def _parameterLabelText( self, parameterHandler ) :
+	
+		return IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
+		
+	def _parameterToolTip( self, parameterHandler ) :
+	
+		plug = parameterHandler.plug()
+		return IECore.StringUtil.wrap(
+			plug.relativeName( plug.node() ) + "\n\n" +
+			parameterHandler.parameter().description,
+			60
+		)
 
 	def __collapsibleStateChanged( self, *unusedArgs ) :
 	
@@ -156,17 +175,17 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			self.__childrenChangedPending = True
 			
 	def __childrenChanged( self ) :
-	
-		if self.__collapsible is not None and not self.__collapsible.getCollapsed() :
+			
+		if self.__collapsible is not None and self.__collapsible.getCollapsed() :
 			return
 	
 		try :
 			self._buildChildParameterUIs( self.__column )
-		except :
+		except Exception, e :
 			# catching errors because not returning False from this
 			# function causes the callback to not be removed, the error
 			# to be repeated etc...
-			pass
+			IECore.msg( IECore.Msg.Level.Error, "CompoundParameterValueWidget", "".join( traceback.format_exc( e ) ) )
 			
 		self.__childrenChangedPending = False
 		

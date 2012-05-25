@@ -61,6 +61,10 @@ IECore::ConstParameterPtr DateTimeParameterHandler::parameter() const
 	return m_parameter;
 }
 
+void DateTimeParameterHandler::restore( GraphComponent *plugParent )
+{
+}
+
 Gaffer::PlugPtr DateTimeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<StringPlug>( m_parameter->name() );
