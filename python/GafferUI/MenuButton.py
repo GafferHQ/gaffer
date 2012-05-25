@@ -1,0 +1,78 @@
+##########################################################################
+#  
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#  
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#  
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#  
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#  
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  
+##########################################################################
+
+import IECore
+
+import Gaffer
+import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+
+class MenuButton( GafferUI.Button ) :
+
+	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
+	
+		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
+		
+		self.setMenu( menu )
+	
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		
+	def setMenu( self, menu ) :
+	
+		self.__menu = menu
+		
+		self.setEnabled( self.__menu is not None )
+		
+	def getMenu( self ) :
+	
+		return self.__menu
+		
+	def __clicked( self, button ) :
+	
+		if self.__menu is None :
+			return
+		
+		kw = {}
+		if self.getHasFrame() :
+			## \todo Provide this functionality in the public Widget API
+			p = self._qtWidget().mapToGlobal( QtCore.QPoint( 0, self._qtWidget().height() ) )
+			p = IECore.V2i( p.x(), p.y() )
+			kw["position"] = p
+			kw["forcePosition"] = True
+			
+		self.__menu.popup( parent = self, **kw )
+		

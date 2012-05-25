@@ -1,5 +1,8 @@
+* Added a MenuButton class to GafferUI.
+
 0.32.1
 ------
+
 * Added workaround for problems where string values were not always committed into parameters before the Execute button of the OpDialogue was clicked.
 
 0.32.0

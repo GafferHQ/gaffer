@@ -129,6 +129,7 @@ from DataPathPreview import DataPathPreview
 from OpPathPreview import OpPathPreview
 from NotificationMessageHandler import NotificationMessageHandler
 from AttributeCachePathPreview import AttributeCachePathPreview
+from MenuButton import MenuButton
 
 # then stuff specific to graph uis
 
