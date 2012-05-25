@@ -1,5 +1,7 @@
 * Added a MenuButton class to GafferUI.
 
+* The GafferUI.Spacer class now specifies a maximumSize in addition to the previous minimumSize.
+
 0.32.1
 ------
 

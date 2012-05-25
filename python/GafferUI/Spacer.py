@@ -42,11 +42,16 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## \todo Size accessors
 class Spacer( GafferUI.Widget ) :
 
-	def __init__( self, size, **kw ) :
+	## \todo Rename size to minimumSize. We're just keeping the name
+	# for backwards compatibility for now.
+	def __init__( self, size, maximumSize=None, **kw ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
 		
 		self._qtWidget().setMinimumWidth( size.x )
 		self._qtWidget().setMinimumHeight( size.y )
 		
-	
+		if maximumSize is not None :
+			self._qtWidget().setMaximumWidth( maximumSize.x )
+			self._qtWidget().setMaximumHeight( maximumSize.y )
+		
