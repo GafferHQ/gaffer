@@ -617,7 +617,7 @@ class Widget( object ) :
 			font-weight : normal;
 			font-size : 14pt;
 			selection-background-color: $brightColor;
-			background-color : $backgroundMid;
+			background-color : $backgroundLighter;
 			gridline-color: $backgroundDark;
 
 		}
