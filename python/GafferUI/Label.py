@@ -70,8 +70,8 @@ class Label( GafferUI.Widget ) :
 	def setAlignment( self, horizontalAlignment, verticalAlignment ) :
 		
 		self._qtWidget().setAlignment(
-			QtCore.Qt.AlignRight | 
-			QtCore.Qt.AlignTop
+			self.__gafferAlignmentToQt[horizontalAlignment] | 
+			self.__gafferAlignmentToQt[verticalAlignment]
 		)
 				
 	def getAlignment( self ) :

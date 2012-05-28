@@ -6,6 +6,8 @@
 
 * Improved formatting of Parameter tooltips, and worked around Qt crash caused by having "\n\n" in the tooltip text.
 
+* Fixed bug which meant that Labels were always aligned to the right and centre. Note that this changes the behaviour of default constructed Labels, which have always specified left alignment, but have been ignored till now.
+
 0.32.1
 ------
 
