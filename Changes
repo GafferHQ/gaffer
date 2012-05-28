@@ -4,6 +4,8 @@
 
 * Added support for ClassParameters.
 
+* Improved formatting of Parameter tooltips, and worked around Qt crash caused by having "\n\n" in the tooltip text.
+
 0.32.1
 ------
 

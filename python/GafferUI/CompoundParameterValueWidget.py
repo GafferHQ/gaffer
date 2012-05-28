@@ -151,11 +151,12 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 	def _parameterToolTip( self, parameterHandler ) :
 	
 		plug = parameterHandler.plug()
-		return IECore.StringUtil.wrap(
-			plug.relativeName( plug.node() ) + "\n\n" +
-			parameterHandler.parameter().description,
-			60
-		)
+		
+		result = "<h3>" + plug.relativeName( plug.node() ) + "</h3>"
+		if parameterHandler.parameter().description :
+			result += "\n\n" + parameterHandler.parameter().description
+		
+		return result
 
 	def __collapsibleStateChanged( self, *unusedArgs ) :
 	
