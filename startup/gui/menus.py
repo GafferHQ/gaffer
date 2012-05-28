@@ -42,9 +42,14 @@ import Gaffer
 import GafferScene
 import GafferImage
 
+## \todo We can't simply import every module during startup - perhaps we should have
+# a plugin autoload mechanism accessible in the preferences? It's important that we
+# don't make that too complicated though, and that plugins remain as standard python
+# modules and nothing more.
 import GafferUI
 import GafferSceneUI
 import GafferImageUI
+import GafferArnoldUI
 
 # ScriptWindow menu
 

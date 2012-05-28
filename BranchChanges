@@ -53,3 +53,5 @@ swatch.
 * StandardNodeGadget can now be used in a vertical orientation as well as a horizontal one. This will be useful for making graphs which better suit a horizontal flow (shaders for example).
 
 * Fixed IECore::RunTimeTyped registration for CompoundNumericPlug types.
+
+* Added GafferArnold module.

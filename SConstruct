@@ -531,6 +531,10 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 	runCommand( "cd $OIIO_SRC_DIR && make clean && make THIRD_PARTY_TOOLS_HOME=$BUILD_DIR OCIO_PATH=$BUILD_DIR USE_OPENJPEG=0" )
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/macosx/* $BUILD_DIR" )
+		## \todo Come up with something better.
+		# move the library to a new name so it doesn't conflict with the libOpenImageIO that arnold uses.
+		# Ideally they'd both use the same one but currently Arnold is using a pre-version-1 version.
+		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
 	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH' SAVE_OPTIONS=gaffer.options" )
@@ -691,7 +695,7 @@ libraries = {
 	
 	"GafferImage" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "OpenImageIO" ],
+			"LIBS" : [ "Gaffer", "OpenImageIO-1" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage" ],
@@ -701,6 +705,23 @@ libraries = {
 	"GafferImageTest" : {},
 	
 	"GafferImageUI" : {},
+	
+	"GafferArnold" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			"LIBS" : [ "Gaffer", "ai", "IECoreArnold" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			"LIBS" : [ "GafferBindings", "GafferArnold" ],
+		},
+	},
+
+	"GafferArnoldTest" : {},
+
+	"GafferArnoldUI" : {},
 	
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
@@ -971,6 +992,8 @@ manifest = [
 	"lib/libfreetype*$SHLIBSUFFIX*",
 	"lib/libjpeg*$SHLIBSUFFIX*",
 	"lib/libpng*$SHLIBSUFFIX*",
+	
+	"lib/libOpenImageIO-1$SHLIBSUFFIX",
 	
 	"lib/libpython*$SHLIBSUFFIX*",
 	"lib/Python.framework",

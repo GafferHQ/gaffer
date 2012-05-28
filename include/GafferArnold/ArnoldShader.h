@@ -34,24 +34,35 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDSHADER_H
+#define GAFFERARNOLD_ARNOLDSHADER_H
 
-namespace GafferImage
+#include "Gaffer/Node.h"
+
+#include "GafferArnold/TypeIds.h"
+
+namespace GafferArnold
 {
 
-enum TypeId
+/// \todo Probably need a Shader base class in GafferScene.
+class ArnoldShader : public Gaffer::Node
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	
-	LastTypeId = 110899
+
+	public :
+
+		ArnoldShader( const std::string &name=staticTypeName() );
+		virtual ~ArnoldShader();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, Gaffer::Node );
+		
+		void setShader( const std::string &shaderName );
+		
+	protected :
+			
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
 };
 
-} // namespace GafferImage
+} // namespace GafferArnold
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDSHADER_H

@@ -34,24 +34,20 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferImage
-{
+#include "GafferBindings/NodeBinding.h"
 
-enum TypeId
+#include "GafferArnold/ArnoldShader.h"
+
+using namespace boost::python;
+using namespace GafferArnold;
+
+BOOST_PYTHON_MODULE( _GafferArnold )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
 	
-	LastTypeId = 110899
-};
+	GafferBindings::NodeClass<ArnoldShader>()
+		.def( "setShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::setShader )
+	;
 
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+}
