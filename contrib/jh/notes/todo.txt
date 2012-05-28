@@ -14,6 +14,8 @@ PRIORITIES!!!!
 
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
+
+* does plugSetSignal() get emitted even when the value is the same as before?
 	
 * Contexts need to have parents from which they inherit stuff
 
