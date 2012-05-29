@@ -77,6 +77,7 @@ from ClassLoaderPathTest import ClassLoaderPathTest
 from BlockedConnectionTest import BlockedConnectionTest
 from SequencePathTest import SequencePathTest
 from OpMatcherTest import OpMatcherTest
+from WeakMethodTest import WeakMethodTest
 
 if __name__ == "__main__":
 	import unittest

@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,34 +34,42 @@
 #  
 ##########################################################################
 
+import unittest
 import weakref
-import new
 
-## Implements an object similar to weakref.proxy, except that
-# it can work with bound methods.
-class WeakMethod( object ) :
+import Gaffer
 
-	def __init__( self, boundMethod ) :
+class WeakMethodTest( unittest.TestCase ) :
+
+	def test( self ) :
 	
-		self.__method = boundMethod.im_func
-		self.__self = weakref.ref( boundMethod.im_self )
+		class A() :
 		
-	def __call__( self, *args, **kwArgs ) :
-	
-		s = self.instance()
-		if s is None :
-			raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
+			def f( self ) :
+			
+				return 10
+				
+		a = A()
+		w = weakref.ref( a )
+		wm = Gaffer.WeakMethod( a.f )
 		
-		m = new.instancemethod( self.__method, s, s.__class__ )
-		return m( *args, **kwArgs )
+		self.assertEqual( w(), a )
+		self.assertEqual( wm(), 10 )
+		
+		self.failUnless( wm.instance() is a )
+		self.failUnless( wm.method() is A.f.im_func )
+		
+		del a
+		
+		self.assertEqual( w(), None )
+		self.assertRaises( ReferenceError, wm )
+		self.assertEqual( wm.instance(), None )
+		
+		try :
+			wm()
+		except ReferenceError, e :
+			self.failUnless( "f()" in str( e ) )
 	
-	## Returns the function that implements the method.	
-	def method( self ) :
+if __name__ == "__main__":
+	unittest.main()
 	
-		return self.__method
-	
-	## Returns the instance the method is bound to, or None if
-	# it has expired.
-	def instance( self ) :
-	
-		return self.__self()

@@ -10,6 +10,8 @@
 
 * ListContainer now supports slices when setting children. For instance container[2:4] = [ list, of, children ]. ListContainer also now implements the index() method in the same way a list would, and allows access to the expand attribute of children using the new setExpand() and getExpand() methods.
 
+* Improved WeakMethod behaviour when called after the instance has expired. Now a descriptive ReferenceError exception is thrown rather than the previous cryptic exception. Also added instance() and method() member functions to return the underlying member data.
+
 0.32.1
 ------
 
