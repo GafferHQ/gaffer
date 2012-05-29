@@ -8,6 +8,8 @@
 
 * Fixed bug which meant that Labels were always aligned to the right and centre. Note that this changes the behaviour of default constructed Labels, which have always specified left alignment, but have been ignored till now.
 
+* ListContainer now supports slices when setting children. For instance container[2:4] = [ list, of, children ]. ListContainer also now implements the index() method in the same way a list would, and allows access to the expand attribute of children using the new setExpand() and getExpand() methods.
+
 0.32.1
 ------
 
