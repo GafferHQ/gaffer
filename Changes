@@ -12,6 +12,8 @@
 
 * Improved WeakMethod behaviour when called after the instance has expired. Now a descriptive ReferenceError exception is thrown rather than the previous cryptic exception. Also added instance() and method() member functions to return the underlying member data.
 
+* GafferUI.Menu now allows WeakMethods to be used for the command field of a menu item.
+
 0.32.1
 ------
 

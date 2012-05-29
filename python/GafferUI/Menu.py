@@ -37,9 +37,11 @@
 
 import inspect
 import weakref
+import types
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -95,8 +97,12 @@ class Menu( GafferUI.Widget ) :
 	
 		args = []
 		kw = {}
-		commandArgs = inspect.getargspec( command )[0]
-
+		
+		if isinstance( command, types.FunctionType ) :
+			commandArgs = inspect.getargspec( command )[0]
+		elif isinstance( command, Gaffer.WeakMethod ) :
+			commandArgs = inspect.getargspec( command.method() )[0][1:]
+	
 		if "menu" in commandArgs :
 			kw["menu"] = self
 		
