@@ -125,8 +125,13 @@ class Widget( object ) :
  				
 		self.setToolTip( toolTip )
 		
-		if len( self.__parentStack ) :
-			if self.__initNesting() == self.__parentStack[-1][1] + 1 :					
+		# perform automatic parenting if necessary. we don't want to do this
+		# for menus, because they don't have the same parenting semantics. if other
+		# types end up with similar requirements then we should probably just have
+		# a mechanism for them to say they don't want to participate rather than
+		# hardcoding stuff here.
+		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
+			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
 				self.__parentStack[-1][0].addChild( self, **kw )
 				
 		self.__eventFilterInstalled = False		
