@@ -14,6 +14,10 @@
 
 * GafferUI.Menu now allows WeakMethods to be used for the command field of a menu item.
 
+* Improved file selector for PathVectorParameters, and added custom file selector for FileSequenceVectorParameters.
+
+* Fixed problem where the automatic Widget parenting mechanism was attempting to parent Menus unnecessarily.
+
 0.32.1
 ------
 
