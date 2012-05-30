@@ -98,6 +98,7 @@ class Menu( GafferUI.Widget ) :
 		args = []
 		kw = {}
 		
+		commandArgs = []
 		if isinstance( command, types.FunctionType ) :
 			commandArgs = inspect.getargspec( command )[0]
 		elif isinstance( command, Gaffer.WeakMethod ) :
