@@ -182,6 +182,7 @@ from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidge
 from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
 from DateTimeParameterValueWidget import DateTimeParameterValueWidget
 from ClassParameterValueWidget import ClassParameterValueWidget
+from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
 
 # and specific node uis
 

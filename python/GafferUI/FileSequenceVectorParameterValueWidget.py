@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,7 +34,6 @@
 #  
 ##########################################################################
 
-import re
 import os
 
 import IECore
@@ -42,51 +41,18 @@ import IECore
 import Gaffer
 import GafferUI
 
-class PathVectorParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class FileSequenceVectorParameterValueWidget( GafferUI.PathVectorParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
-		
-		self.__pathVectorWidget = GafferUI.PathVectorDataPlugValueWidget(
-			parameterHandler.plug(),
-			self._path(),
-		)
-					
-		GafferUI.ParameterValueWidget.__init__(
-			
+				
+		GafferUI.PathVectorParameterValueWidget.__init__(
 			self,
-			self.__pathVectorWidget,
 			parameterHandler,
 			**kw
 		)
-		
+	
 	def _path( self ) :
 	
-		return Gaffer.FileSystemPath( os.getcwd(), filter = self._filter() )
-	
-	def _filter( self ) :
-	
-		result = Gaffer.CompoundPathFilter()	
-		result.addFilter(
-			Gaffer.FileNamePathFilter(
-				[ re.compile( "^[^.].*" ) ],
-				leafOnly=False,
-				userData = {
-					"UI" : {
-						"label" : "Show hidden files",
-						"invertEnabled" : True,
-					}
-				}
-			) 
-		)
-		
-		result.addFilter(
-			Gaffer.InfoPathFilter(
-				infoKey = "name",
-				matcher = None, # the ui will fill this in
-				leafOnly = False,
-			)
-		)
-		
-		return result
-		
-GafferUI.ParameterValueWidget.registerType( IECore.PathVectorParameter.staticTypeId(), PathVectorParameterValueWidget )
+		return Gaffer.SequencePath( os.getcwd(), filter = self._filter() )
+			
+GafferUI.ParameterValueWidget.registerType( IECore.FileSequenceVectorParameter.staticTypeId(), FileSequenceVectorParameterValueWidget )
