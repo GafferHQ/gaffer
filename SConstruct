@@ -209,7 +209,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_OCIO", "Set this to build OCIO.", "0" )
+	BoolVariable( "BUILD_DEPENDENCY_OCIO", "Set this to build OCIO", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
@@ -219,7 +219,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_OIIO", "Set this to build OIIO.", "0" )
+	BoolVariable( "BUILD_DEPENDENCY_OIIO", "Set this to build OIIO.", "$BUILD_DEPENDENCIES" )
 )
 
 options.Add(
@@ -419,7 +419,7 @@ env = Environment(
 	GAFFER_MINOR_VERSION = "32",
 	GAFFER_PATCH_VERSION = "1",
 	
-	PYTHON_VERSION = "2.7", # \todo need some way of getting this magically
+	PYTHON_VERSION = "2.6", # \todo need some way of getting this magically
 
 )
 
@@ -537,13 +537,13 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH' SAVE_OPTIONS=gaffer.options" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
 
 if depEnv["BUILD_DEPENDENCY_QT"] :
-	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -no-qt3support && make -j 4 && make install" )
+	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -no-qt3support -I $BUILD_DIR/include -L $BUILD_DIR/lib && make -j 4 && make install" )
 	
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make clean && make && make install" )
@@ -677,7 +677,7 @@ libraries = {
 			"LIBS" : [ "Gaffer" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferBindings", "GafferScene", "GafferSceneBindings" ],
+			"LIBS" : [ "GafferBindings", "GafferScene" ],
 		},
 	},
 	
@@ -700,6 +700,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage" ],
 		},
+		"requiredOptions" : [ "OIIO_SRC_DIR" ],
 	},
 	
 	"GafferImageTest" : {},
@@ -755,6 +756,18 @@ else :
 ###############################################################################################
 
 for libraryName, libraryDef in libraries.items() :
+
+	# skip this library if we don't have the config we need
+	
+	haveRequiredOptions = True
+	for requiredOption in libraryDef.get( "requiredOptions", [] ) :
+		if not env[requiredOption] :
+			haveRequiredOptions = False
+			break
+	if not haveRequiredOptions :
+		continue
+
+	# environment
 
 	libEnv = baseLibEnv.Clone()
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
