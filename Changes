@@ -1,3 +1,5 @@
+* Fixed circular reference in menu that was causing popup windows
+
 0.33.1
 ------
 * Fixed bug in Menu

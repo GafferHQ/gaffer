@@ -162,8 +162,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		m.append( "/Split Bottom", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
 		m.append( "/Split Top", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
 
-		m = GafferUI.Menu( m )
-		m.popup()
+		self.__layoutMenu = GafferUI.Menu( m ) # must store it somewhere else it'll die
+		self.__layoutMenu.popup()
 		
 	def __keyPress( self, unused, event ) :
 	

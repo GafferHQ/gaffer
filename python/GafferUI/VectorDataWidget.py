@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -243,8 +244,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		# build the menu and pop it up
 		m = self._contextMenuDefinition( self.__selectedIndices() )
-		m = GafferUI.Menu( m )
-		m.popup( self )
+		self.__popupMenu = GafferUI.Menu( m )
+		self.__popupMenu.popup( self )
 			
 	def __selectAll( self ) :
 	
@@ -660,7 +661,7 @@ class _BoolDelegate( _Delegate ) :
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
 		elif event.type()==QtCore.QEvent.KeyPress :
-			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter, QtCore.Qt.Key_Space ) :
+			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
 				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
