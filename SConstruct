@@ -416,10 +416,10 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "32",
+	GAFFER_MINOR_VERSION = "33",
 	GAFFER_PATCH_VERSION = "1",
 	
-	PYTHON_VERSION = "2.6", # \todo need some way of getting this magically
+	PYTHON_VERSION = "2.7", # \todo need some way of getting this magically
 
 )
 
@@ -658,7 +658,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferTest", "GafferBindings" ],
 		},
-		"additionalFiles" : glob.glob( "python/GafferTest/*/*" )
+		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferTest/*/*/*" ),
 	},
 	
 	"GafferUI" : {

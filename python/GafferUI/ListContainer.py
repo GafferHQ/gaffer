@@ -43,7 +43,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The ListContainer holds a series of Widgets either in a column or a row.
 # It attempts to provide a list like interface for manipulation of the widgets.
-# \todo Support more list-like operations including slicing.
 class ListContainer( GafferUI.ContainerWidget ) :
 
 	Orientation = Enum.create( "Vertical", "Horizontal" )
@@ -101,12 +100,32 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 		stretch = 1 if expand else 0
 		self.__qtLayout.insertWidget( index, child._qtWidget(), stretch )
+
+	def index( self, child ) :
+	
+		return self.__widgets.index( child )
 	
 	def __setitem__( self, index, child ) :
 	
-		stretch = self.__qtLayout.stretch( index )
+		if isinstance( index, slice ) :
+			assert( isinstance( child, list ) )
+			children = child
+			insertionIndex = index.start if index.start is not None else 0
+		else :
+			children = [ child ]
+			insertionIndex = index
+			
+		expands = []
+		for i in range( insertionIndex, insertionIndex + len( children ) ) :
+			if i < len( self ) :
+				expands.append( self.__qtLayout.stretch( i ) > 0 )
+			else :
+				expands.append( False )
+
 		del self[index]
-		self.insert( index, child, True if stretch > 0 else False )
+		
+		for i in range( len( children ) - 1, -1, -1 ) :
+			self.insert( insertionIndex, children[i], expands[i] )
 	
 	def __getitem__( self, index ) :
 	
@@ -135,3 +154,13 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	
 		self.__widgets.remove( child )
 		child._qtWidget().setParent( None )
+		
+	def setExpand( self, child, expand ) :
+	
+		self.__qtLayout.setStretchFactor( child._qtWidget(), 1 if expand else 0 )
+	
+	def getExpand( self, child ) :
+	
+		stretch = self.__qtLayout.stretch( self.index( child ) )
+		return stretch > 0
+		

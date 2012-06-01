@@ -1,5 +1,32 @@
+0.33.1
+------
+* Fixed bug in Menu
+
+0.33.0
+------
+* Added a MenuButton class to GafferUI.
+
+* The GafferUI.Spacer class now specifies a maximumSize in addition to the previous minimumSize.
+
+* Added support for ClassParameters.
+
+* Improved formatting of Parameter tooltips, and worked around Qt crash caused by having "\n\n" in the tooltip text.
+
+* Fixed bug which meant that Labels were always aligned to the right and centre. Note that this changes the behaviour of default constructed Labels, which have always specified left alignment, but have been ignored till now.
+
+* ListContainer now supports slices when setting children. For instance container[2:4] = [ list, of, children ]. ListContainer also now implements the index() method in the same way a list would, and allows access to the expand attribute of children using the new setExpand() and getExpand() methods.
+
+* Improved WeakMethod behaviour when called after the instance has expired. Now a descriptive ReferenceError exception is thrown rather than the previous cryptic exception. Also added instance() and method() member functions to return the underlying member data.
+
+* GafferUI.Menu now allows WeakMethods to be used for the command field of a menu item.
+
+* Improved file selector for PathVectorParameters, and added custom file selector for FileSequenceVectorParameters.
+
+* Fixed problem where the automatic Widget parenting mechanism was attempting to parent Menus unnecessarily.
+
 0.32.1
 ------
+
 * Added workaround for problems where string values were not always committed into parameters before the Execute button of the OpDialogue was clicked.
 
 0.32.0

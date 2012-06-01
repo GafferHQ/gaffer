@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,15 +44,25 @@ class WeakMethod( object ) :
 
 	def __init__( self, boundMethod ) :
 	
-		self.__class = boundMethod.im_class
 		self.__method = boundMethod.im_func
 		self.__self = weakref.ref( boundMethod.im_self )
 		
 	def __call__( self, *args, **kwArgs ) :
 	
-		s = self.__self()
+		s = self.instance()
 		if s is None :
-			raise weakref.ReferenceError( "Attempt to call WeakMethod for %s on expired instance" % self.__method.__name__ )
-					
-		m = new.instancemethod( self.__method, s, self.__class )
+			raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
+		
+		m = new.instancemethod( self.__method, s, s.__class__ )
 		return m( *args, **kwArgs )
+	
+	## Returns the function that implements the method.	
+	def method( self ) :
+	
+		return self.__method
+	
+	## Returns the instance the method is bound to, or None if
+	# it has expired.
+	def instance( self ) :
+	
+		return self.__self()

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,9 +46,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class TestWidget( GafferUI.Widget ) :
 
-	def __init__( self, s ) :
+	def __init__( self, s, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QLabel( s ) )
+		GafferUI.Widget.__init__( self, QtGui.QLabel( s ), **kw )
 		
 		self.s = s
 
@@ -158,6 +158,20 @@ class ListContainerTest( unittest.TestCase ) :
 		self.assert_( ca.parent() is None )
 		self.assert_( cb.parent() is None )
 		self.assert_( cc.parent() is c )
+	
+	def testSliceDelWithOpenRange( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		with c :
+			ca = TestWidget( "a" )
+			cb = TestWidget( "b" )
+			cc = TestWidget( "c" )
+		
+		self.assertEqual( c[:], [ ca, cb, cc ] )
+		
+		del c[:2]
+		
+		self.assertEqual( c[:], [ cc ] )
 		
 	def testEnabled( self ) :
 			
@@ -188,7 +202,121 @@ class ListContainerTest( unittest.TestCase ) :
 		self.assertEqual( c.getEnabled(), True )
 		self.assertEqual( w.enabled(), True )
 		self.assertEqual( w.getEnabled(), True )
-				
+		
+	def testSliceGetItem( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		with c :
+			ca = TestWidget( "a" )
+			cb = TestWidget( "b" )
+			cc = TestWidget( "c" )
+		
+		self.assertEqual( c[:2], [ ca, cb ] )
+	
+	def testSetItem( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		with c :
+			ca = TestWidget( "a" )
+			cb = TestWidget( "b" )
+			cc = TestWidget( "c" )
+		
+		self.assertEqual( c[:], [ ca, cb, cc ] )
+		self.assertEqual( c.index( ca ), 0 )
+		self.assertEqual( c.index( cb ), 1 )
+		self.assertEqual( c.index( cc ), 2 )
+		self.assertRaises( ValueError, c.index, c )
+		
+		cd = TestWidget( "d" )
+		
+		c[0] = cd
+		
+		self.assertEqual( c[:], [ cd, cb, cc ] )
+		self.assertEqual( c.index( cd ), 0 )
+		self.assertEqual( c.index( cb ), 1 )
+		self.assertEqual( c.index( cc ), 2 )
+		self.assertRaises( ValueError, c.index, ca )
+		 
+		self.failUnless( ca.parent() is None )
+		self.failUnless( cb.parent() is c )
+		self.failUnless( cc.parent() is c )
+		self.failUnless( cd.parent() is c )
+		
+	def testSliceSetItem( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		with c :
+			ca = TestWidget( "a" )
+			cb = TestWidget( "b" )
+			cc = TestWidget( "c" )
+		
+		self.assertEqual( c[:], [ ca, cb, cc ] )
+		
+		cd = TestWidget( "d" )
+		ce = TestWidget( "e" )
+		
+		c[:2] = [ cd, ce ]
+
+		self.assertEqual( c[:], [ cd, ce, cc ] )
+		
+		self.failUnless( ca.parent() is None )
+		self.failUnless( cb.parent() is None )
+		self.failUnless( cd.parent() is c )
+		self.failUnless( ce.parent() is c )
+		self.failUnless( cc.parent() is c )
+	
+	def testSliceSetItemOnEmptyContainer( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		ca = TestWidget( "a" )
+	
+		c[:] = [ ca ]
+		self.assertEqual( c[:], [ ca ] )
+
+	def testSliceSetItemWithEmptySlice( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+
+		with c :
+			ca = TestWidget( "a" )
+			cb = TestWidget( "b" )
+
+		self.assertEqual( c[:], [ ca, cb ] )
+
+		cc = TestWidget( "c" )
+		cd = TestWidget( "d" )
+
+		c[1:1] = [ cc, cd ]
+		
+		self.assertEqual( c[:], [ ca, cc, cd, cb ] )
+							
+	def testExpand( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		with c :
+			ca = TestWidget( "a" )
+			cb = TestWidget( "b", expand=True )
+			cc = TestWidget( "c", expand=True )
+		
+		self.assertEqual( c.getExpand( ca ), False )
+		self.assertEqual( c.getExpand( cb ), True )
+		self.assertEqual( c.getExpand( cc ), True )
+		
+		c.setExpand( ca, True )
+		c.setExpand( cb, False )
+
+		self.assertEqual( c.getExpand( ca ), True )
+		self.assertEqual( c.getExpand( cb ), False )
+		self.assertEqual( c.getExpand( cc ), True )
+		
+		# setItem should keep the expand status for the new widget
+		cd = TestWidget( "d" )
+		c[0] = cd 
+		
+		self.assertEqual( c.getExpand( cd ), True )
+		self.assertEqual( c.getExpand( cb ), False )
+		self.assertEqual( c.getExpand( cc ), True )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

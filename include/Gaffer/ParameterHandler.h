@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -63,6 +63,7 @@ class ParameterHandler : public IECore::RefCounted
 		virtual IECore::ParameterPtr parameter() = 0;
 		virtual IECore::ConstParameterPtr parameter() const = 0;
 
+		virtual void restore( GraphComponent *plugParent ) = 0;
 		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In ) = 0;
 
 		virtual Gaffer::PlugPtr plug() = 0;

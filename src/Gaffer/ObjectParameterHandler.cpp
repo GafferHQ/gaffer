@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -59,6 +60,10 @@ IECore::ParameterPtr ObjectParameterHandler::parameter()
 IECore::ConstParameterPtr ObjectParameterHandler::parameter() const
 {
 	return m_parameter;
+}
+
+void ObjectParameterHandler::restore( GraphComponent *plugParent )
+{
 }
 
 Gaffer::PlugPtr ObjectParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )

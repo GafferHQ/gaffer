@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,6 +63,7 @@ class BoxParameterHandler : public ParameterHandler
 		
 		virtual IECore::ParameterPtr parameter();
 		virtual IECore::ConstParameterPtr parameter() const;
+		virtual void restore( GraphComponent *plugParent );
 		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
 		virtual Gaffer::PlugPtr plug();
 		virtual Gaffer::ConstPlugPtr plug() const;

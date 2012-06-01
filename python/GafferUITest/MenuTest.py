@@ -83,7 +83,21 @@ class MenuTest( unittest.TestCase ) :
 		del menu
 		
 		self.assertEqual( w(), None )
+		
+	def testAutomaticParenting( self ) :
+	
+		with GafferUI.ListContainer() as l :
+		
+			md = IECore.MenuDefinition()
+			md.append( "/Something", { "divider" : True } )
+			
+			m = GafferUI.Menu( md )
+			b = GafferUI.MenuButton( menu=m )
 
+		self.assertEqual( len( l ), 1 )
+		self.failUnless( l[0] is b )
+		self.failUnless( b.getMenu() is m )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

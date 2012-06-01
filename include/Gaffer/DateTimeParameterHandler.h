@@ -57,6 +57,7 @@ class DateTimeParameterHandler : public ParameterHandler
 				
 		virtual IECore::ParameterPtr parameter();
 		virtual IECore::ConstParameterPtr parameter() const;
+		virtual void restore( GraphComponent *plugParent );
 		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
 		virtual Gaffer::PlugPtr plug();
 		virtual Gaffer::ConstPlugPtr plug() const;

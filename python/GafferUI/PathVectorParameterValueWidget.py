@@ -34,6 +34,9 @@
 #  
 ##########################################################################
 
+import re
+import os
+
 import IECore
 
 import Gaffer
@@ -45,7 +48,7 @@ class PathVectorParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		self.__pathVectorWidget = GafferUI.PathVectorDataPlugValueWidget(
 			parameterHandler.plug(),
-			Gaffer.FileSystemPath( "/" ),
+			self._path(),
 		)
 					
 		GafferUI.ParameterValueWidget.__init__(
@@ -55,5 +58,35 @@ class PathVectorParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			parameterHandler,
 			**kw
 		)
+		
+	def _path( self ) :
+	
+		return Gaffer.FileSystemPath( os.getcwd(), filter = self._filter() )
+	
+	def _filter( self ) :
+	
+		result = Gaffer.CompoundPathFilter()	
+		result.addFilter(
+			Gaffer.FileNamePathFilter(
+				[ re.compile( "^[^.].*" ) ],
+				leafOnly=False,
+				userData = {
+					"UI" : {
+						"label" : "Show hidden files",
+						"invertEnabled" : True,
+					}
+				}
+			) 
+		)
+		
+		result.addFilter(
+			Gaffer.InfoPathFilter(
+				infoKey = "name",
+				matcher = None, # the ui will fill this in
+				leafOnly = False,
+			)
+		)
+		
+		return result
 		
 GafferUI.ParameterValueWidget.registerType( IECore.PathVectorParameter.staticTypeId(), PathVectorParameterValueWidget )

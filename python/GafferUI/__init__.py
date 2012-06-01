@@ -130,6 +130,7 @@ from OpPathPreview import OpPathPreview
 from NumericSlider import NumericSlider
 from NotificationMessageHandler import NotificationMessageHandler
 from AttributeCachePathPreview import AttributeCachePathPreview
+from MenuButton import MenuButton
 
 # then stuff specific to graph uis
 
@@ -182,6 +183,8 @@ from StringParameterValueWidget import StringParameterValueWidget
 from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
 from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
 from DateTimeParameterValueWidget import DateTimeParameterValueWidget
+from ClassParameterValueWidget import ClassParameterValueWidget
+from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
 
 # and specific node uis
 

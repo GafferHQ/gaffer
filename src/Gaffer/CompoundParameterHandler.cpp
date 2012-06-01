@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -66,26 +66,41 @@ IECore::ConstParameterPtr CompoundParameterHandler::parameter() const
 	return m_parameter;
 }
 
+void CompoundParameterHandler::restore( GraphComponent *plugParent )
+{
+	CompoundPlugPtr compoundPlug = plugParent->getChild<CompoundPlug>( plugName() );
+	if( !compoundPlug )
+	{
+		return;
+	}
+	
+	// call restore for our child handlers
+	
+	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
+	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
+	{
+		ParameterHandlerPtr h = handler( *it, true );
+		if( h )
+		{
+			h->restore( compoundPlug );
+		}
+	}
+	
+}
+
 Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	// decide what name our compound plug should have
-		
-	std::string plugName = m_parameter->name();
-	if( plugName=="" )
-	{
-		// the top level compound parameter on Parameterised classes usually has an empty name.
-		// there's probably a good case for forcing that name to always be "parameters" instead
-		// of doing what we do here.
-		plugName = "parameters";
-	}
+	
+	std::string name = plugName();
 	
 	// create the compound plug if necessary
 	
-	m_plug = plugParent->getChild<CompoundPlug>( plugName );
+	m_plug = plugParent->getChild<CompoundPlug>( name );
 	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new CompoundPlug( plugName, direction );
-		plugParent->setChild( plugName, m_plug );
+		m_plug = new CompoundPlug( name, direction );
+		plugParent->setChild( name, m_plug );
 	}
 
 	setupPlugFlags( m_plug );
@@ -95,6 +110,14 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent,
 	std::vector<PlugPtr> toRemove;
 	for( PlugIterator pIt( m_plug->children().begin(), m_plug->children().end() ); pIt!=pIt.end(); pIt++ )
 	{
+		if( (*pIt)->getName().compare( 0, 2, "__" ) == 0 )
+		{
+			// we leave any plugs prefixed with __ alone, on the assumption
+			// that they don't represent child parameters but instead are 
+			// used for bookkeeping by a derived parameter handler (ClassParameterHandler
+			// or ClassVectorParameterHandler for instance).
+			continue;
+		}
 		if( !m_parameter->parameter<Parameter>( (*pIt)->getName() ) )
 		{
 			toRemove.push_back( *pIt );
@@ -167,6 +190,19 @@ void CompoundParameterHandler::setPlugValue()
 			h->setPlugValue();
 		}
 	}
+}
+
+std::string CompoundParameterHandler::plugName() const
+{
+	std::string result = m_parameter->name();
+	if( result=="" )
+	{
+		// the top level compound parameter on Parameterised classes usually has an empty name.
+		// there's probably a good case for forcing that name to always be "parameters" instead
+		// of doing what we do here.
+		result = "parameters";
+	}
+	return result;
 }
 
 ParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore::ParameterPtr childParameter )

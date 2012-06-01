@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,6 +63,11 @@ template<typename T>
 IECore::ConstParameterPtr BoxParameterHandler<T>::parameter() const
 {
 	return m_parameter;
+}
+
+template<typename T>
+void BoxParameterHandler<T>::restore( GraphComponent *plugParent )
+{
 }
 
 template<typename T>

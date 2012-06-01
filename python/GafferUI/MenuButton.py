@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,30 +34,45 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
+import IECore
+
+import Gaffer
+import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+
+class MenuButton( GafferUI.Button ) :
+
+	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
+	
+		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
+		
+		self.setMenu( menu )
+	
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		
+	def setMenu( self, menu ) :
+	
+		self.__menu = menu
+		
+		self.setEnabled( self.__menu is not None )
+		
+	def getMenu( self ) :
+	
+		return self.__menu
+		
+	def __clicked( self, button ) :
+	
+		if self.__menu is None :
+			return
+		
+		kw = {}
+		if self.getHasFrame() :
+			## \todo Provide this functionality in the public Widget API
+			p = self._qtWidget().mapToGlobal( QtCore.QPoint( 0, self._qtWidget().height() ) )
+			p = IECore.V2i( p.x(), p.y() )
+			kw["position"] = p
+			kw["forcePosition"] = True
+			
+		self.__menu.popup( parent = self, **kw )
+		

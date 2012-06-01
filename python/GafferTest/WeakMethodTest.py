@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -65,6 +66,35 @@ class WeakMethodTest( unittest.TestCase ) :
 			setFromString( "/g" )
 		except weakref.ReferenceError as e :
 			self.failUnless( "setFromString" in str( e ) )
+			
+	def test( self ) :
+	
+		class A() :
+		
+			def f( self ) :
+			
+				return 10
+				
+		a = A()
+		w = weakref.ref( a )
+		wm = Gaffer.WeakMethod( a.f )
+		
+		self.assertEqual( w(), a )
+		self.assertEqual( wm(), 10 )
+		
+		self.failUnless( wm.instance() is a )
+		self.failUnless( wm.method() is A.f.im_func )
+		
+		del a
+		
+		self.assertEqual( w(), None )
+		self.assertRaises( ReferenceError, wm )
+		self.assertEqual( wm.instance(), None )
+		
+		try :
+			wm()
+		except ReferenceError, e :
+			self.failUnless( "f()" in str( e ) )
 		
 if __name__ == "__main__":
 	unittest.main()
