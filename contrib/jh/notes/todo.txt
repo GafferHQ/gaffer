@@ -4,6 +4,8 @@ PRIORITIES!!!!
 	* viewing a scene node and then connecting an input to it doesn't update
 	* selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
 		- do properly!
+
+* i'm pretty sure we've got circular references in the menu code for CompoundEditor.
 	
 * seeds derived from branchcreator
 	- with make sure we don't do expensive bounds propagation !!!!!!!!
