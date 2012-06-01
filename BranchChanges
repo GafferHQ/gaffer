@@ -55,3 +55,5 @@ swatch.
 * Fixed IECore::RunTimeTyped registration for CompoundNumericPlug types.
 
 * Added GafferArnold module.
+
+* Added Label.linkActivatedSignal(), for reacting to HTML links in label text.

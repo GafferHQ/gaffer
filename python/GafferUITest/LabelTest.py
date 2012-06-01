@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import GafferUI
 
@@ -50,6 +52,25 @@ class LabelTest( unittest.TestCase ) :
 		
 		l.setAlignment( GafferUI.Label.HorizontalAlignment.Center, GafferUI.Label.VerticalAlignment.Center )
 		self.assertEqual( l.getAlignment(), ( GafferUI.Label.HorizontalAlignment.Center, GafferUI.Label.VerticalAlignment.Center ) )
+	
+	def testLifespan( self ) :
+	
+		w = GafferUI.Label( "hi" )
+		r = weakref.ref( w )
 		
+		w.linkActivatedSignal()
+		
+		self.failUnless( r() is w )
+		del w
+		self.failUnless( r() is None )
+		
+	def testHtmlInText( self ) :
+	
+		w = GafferUI.Label( "<h3>hello</h3>" )
+		self.assertEqual( w.getText(), "<h3>hello</h3>" )
+		
+		w.setText( "<h2>goodbye</h2>" )
+		self.assertEqual( w.getText(), "<h2>goodbye</h2>" )
+					
 if __name__ == "__main__":
 	unittest.main()
