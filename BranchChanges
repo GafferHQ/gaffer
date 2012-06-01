@@ -57,3 +57,5 @@ swatch.
 * Added GafferArnold module.
 
 * Added Label.linkActivatedSignal(), for reacting to HTML links in label text.
+
+* Fixed flickering caused by MenuBars appearing briefly on screen before being parented.
