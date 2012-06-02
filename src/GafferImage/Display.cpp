@@ -41,6 +41,7 @@
 #include "IECore/LRUCache.h"
 #include "IECore/DisplayDriverServer.h"
 #include "IECore/ImageDisplayDriver.h"
+#include "IECore/MessageHandler.h"
 
 #include "GafferImage/Display.h"
 
@@ -188,7 +189,15 @@ void Display::plugSet( Gaffer::PlugPtr plug )
 
 void Display::setupServer()
 {
-	m_server = g_serverCache.get( portPlug()->getValue() );	
+	try
+	{
+		m_server = g_serverCache.get( portPlug()->getValue() );	
+	}
+	catch( const std::exception &e )
+	{
+		m_server = 0;
+		msg( Msg::Error, "Display::setupServer", e.what() );
+	}
 }
 
 void Display::driverCreated( GafferDisplayDriver *driver )
