@@ -136,7 +136,12 @@ class ListContainer( GafferUI.ContainerWidget ) :
 		if isinstance( index, slice ) :
 			indices = range( *(index.indices( len( self ) )) )
 			for i in indices :
+				if isinstance(self[i], GafferUI.ListContainer):  
+					del self[i][:]
+				else:
+					self[i]._qtWidget().setVisible( False )
 				self[i]._qtWidget().setParent( None )
+				
 			del self.__widgets[index]
 		else :
 			self.__widgets[index]._qtWidget().setParent( None )
