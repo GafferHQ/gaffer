@@ -1,3 +1,5 @@
+* Added support for ClassVectorParameters.
+
 0.33.2
 ------
 * Fixed the delete order of ListContainer that was causing popup windows

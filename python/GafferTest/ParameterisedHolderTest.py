@@ -576,7 +576,85 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		s2["ph"].parameterHandler().setParameterValue()
 		self.assertEqual( p2["class"]["recurse"].getTypedValue(), True )
-						
+			
+	def testClassVectorParameter( self ) :
+			
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = ph.getParameterised()[0]
+		
+		seqLsClassSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		classes = [
+			( "p0", ) + seqLsClassSpec,
+			( "p1", ) + gradeClassSpec,
+		]
+		
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( classes )
+
+		seqLsParameterNames = p["classes"]["p0"].keys()	
+		for n in seqLsParameterNames :
+			self.failUnless( n in ph["parameters"]["classes"]["p0"] )
+		
+		gradeParameterNames = p["classes"]["p1"].keys()	
+		for n in gradeParameterNames :
+			self.failUnless( n in ph["parameters"]["classes"]["p1"] )
+			
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( [] )
+		
+		for k in ph["parameters"]["classes"].keys() :
+			self.failUnless( k.startswith( "__" ) )
+	
+	def testClassVectorParameterMaintainsPlugValues( self ) :
+	
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = ph.getParameterised()[0]
+		
+		seqLsClassSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		classes = [
+			( "p0", ) + gradeClassSpec,
+		]
+		
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( classes )
+		
+		ph["parameters"]["classes"]["p0"]["multiply"].setValue( IECore.Color3f( 0.5, 0.25, 0.125 ) )
+		ph.setParameterisedValues()
+		
+		classes.append( ( "p1", ) + seqLsClassSpec )		
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( classes )
+			
+		self.assertEqual( ph["parameters"]["classes"]["p0"]["multiply"].getValue(), IECore.Color3f( 0.5, 0.25, 0.125 ) )	
+	
+	def testClassVectorParameterSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["ph"] = Gaffer.ParameterisedHolderNode()
+		s["ph"].setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = s["ph"].getParameterised()[0]
+		
+		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		classes = [
+			( "p0", ) + gradeClassSpec,
+		]
+		
+		with s["ph"].parameterModificationContext() :
+			p["classes"].setClasses( classes )
+		
+		s["ph"]["parameters"]["classes"]["p0"]["multiply"].setValue( IECore.Color3f( 0.5, 0.25, 0.125 ) )
+
+		ss = s.serialise()
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+		
+		self.assertEqual( s2["ph"]["parameters"]["classes"]["p0"]["multiply"].getValue(), IECore.Color3f( 0.5, 0.25, 0.125 ) )
+			
 	def setUp( self ) :
 	
 		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"

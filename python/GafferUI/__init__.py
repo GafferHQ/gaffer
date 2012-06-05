@@ -160,9 +160,6 @@ from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from NodeUI import NodeUI
 from ColorPlugValueWidget import ColorPlugValueWidget
-#from SplineWidget import SplineWidget
-#from SplinePlugValueWidget import SplinePlugValueWidget
-#from SplineEditor import SplineEditor
 from AboutWindow import AboutWindow
 import ApplicationMenu
 from BrowserEditor import BrowserEditor
@@ -183,6 +180,7 @@ from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
 from DateTimeParameterValueWidget import DateTimeParameterValueWidget
 from ClassParameterValueWidget import ClassParameterValueWidget
 from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
+from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
 
 # and specific node uis
 

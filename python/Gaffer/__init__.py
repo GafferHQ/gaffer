@@ -60,3 +60,4 @@ from SequencePath import SequencePath
 from OpMatcher import OpMatcher
 from AttributeCachePath import AttributeCachePath
 from ClassParameterHandler import ClassParameterHandler
+from ClassVectorParameterHandler import ClassVectorParameterHandler

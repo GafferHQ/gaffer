@@ -51,15 +51,15 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="93.423368"
-     inkscape:cy="934.86114"
+     inkscape:cx="223.87202"
+     inkscape:cy="960.719"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1440"
      inkscape:window-height="852"
-     inkscape:window-x="49"
-     inkscape:window-y="172"
+     inkscape:window-x="45"
+     inkscape:window-y="99"
      inkscape:window-maximized="0"
      inkscape:snap-global="true"
      showguides="true"
@@ -98,7 +98,7 @@
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc" />
     <path
-       style="opacity:0.98999999000000005;fill:#787878;fill-opacity:1;fill-rule:evenodd;stroke:#3c3c3c;stroke-width:0.5;stroke-miterlimit:4;stroke-opacity:1;stroke-linejoin:round;stroke-dasharray:none"
+       style="opacity:1;fill:#787878;fill-opacity:1;fill-rule:evenodd;stroke:#3c3c3c;stroke-width:0.50000000000000000;stroke-miterlimit:4;stroke-opacity:1;stroke-linejoin:round;stroke-dasharray:none"
        d="M 201 30.5 C 196.02944 30.5 192 34.529437 192 39.5 C 192 44.470563 196.02944 48.5 201 48.5 C 205.97056 48.5 210 44.470563 210 39.5 C 210 34.529437 205.97056 30.5 201 30.5 z M 200.9375 32.4375 C 201.69562 32.4375 202.3125 33.085626 202.3125 33.84375 C 202.3125 34.601873 201.69562 35.21875 200.9375 35.21875 C 200.16088 35.21875 199.53125 34.589114 199.53125 33.8125 C 199.53125 33.035885 200.14239 32.4375 200.9375 32.4375 z M 201.9375 36.78125 L 202.125 36.90625 L 202.125 43.65625 C 202.125 44.654754 202.20803 44.80677 202.78125 44.84375 L 203.4375 44.875 L 203.4375 45.5625 C 202.19861 45.52552 201.30731 45.5 200.9375 45.5 L 198.5625 45.5625 L 198.5625 44.875 L 199.21875 44.84375 C 199.79192 44.806768 199.875 44.654754 199.875 43.65625 L 199.875 39.59375 C 199.875 38.502792 199.83153 38.34948 199.40625 38.3125 L 198.5625 38.25 L 198.5625 37.59375 C 198.69193 37.57526 198.78825 37.5625 198.84375 37.5625 C 199.62037 37.470046 200.06455 37.372408 200.65625 37.1875 L 201.9375 36.78125 z "
        transform="translate(0,52.362183)"
        id="forExport:info" />
@@ -1062,5 +1062,33 @@
          id="tspan3940"
          x="111.72057"
          y="131.48718">z</tspan></text>
+    <path
+       sodipodi:nodetypes="sssss"
+       inkscape:connector-curvature="0"
+       style="opacity:1;fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       d="m 225,82.862183 c -4.97056,0 -9,4.029437 -9,9 0,4.970563 4.02944,8.999997 9,8.999997 4.97056,0 9,-4.029434 9,-8.999997 0,-4.970563 -4.02944,-9 -9,-9 z"
+       id="forExport:classVectorParameterHandle"
+       inkscape:label="#path3135" />
+    <rect
+       style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+       id="rect3139"
+       width="10"
+       height="1.0000004"
+       x="220"
+       y="88.362183" />
+    <rect
+       y="91.362183"
+       x="220"
+       height="1.0000004"
+       width="10"
+       id="rect3141"
+       style="fill:#3c3c3c;fill-opacity:1;stroke:none" />
+    <rect
+       style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+       id="rect3143"
+       width="10"
+       height="1.0000004"
+       x="220"
+       y="94.362183" />
   </g>
 </svg>
