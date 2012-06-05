@@ -316,6 +316,36 @@ class ListContainerTest( unittest.TestCase ) :
 		self.assertEqual( c.getExpand( cd ), True )
 		self.assertEqual( c.getExpand( cb ), False )
 		self.assertEqual( c.getExpand( cc ), True )
+	
+	def testDelDoesntAffectSubChildren( self ) :
+	
+		c1 = GafferUI.ListContainer()
+		c2 = GafferUI.ListContainer()
+		b = GafferUI.Button()
+		
+		c2.append( b )
+		self.assertEqual( len( c2 ), 1 )
+		
+		c1.append( c2 )
+		self.assertEqual( len( c1 ), 1 )
+		
+		del c1[:]
+		self.assertEqual( len( c1 ), 0 )
+		self.assertEqual( len( c2 ), 1 )
+		self.failUnless( b.parent() is c2 )
+	
+	def testDelDoesntAffectVisibility( self ) :
+	
+		with GafferUI.Window() as w :
+			with GafferUI.ListContainer() as l :
+				b = GafferUI.Button()
+		
+		self.assertEqual( b.getVisible(), True )		
+		del l[:]
+		
+		l2 = GafferUI.ListContainer()
+		l2.append( b )
+		self.assertEqual( b.getVisible(), True )
 		
 if __name__ == "__main__":
 	unittest.main()
