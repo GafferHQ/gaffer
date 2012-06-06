@@ -116,8 +116,8 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		if event.buttons & buttonMask :
 	
 			menuDefinition = self._popupMenuDefinition()
-			menu = GafferUI.Menu( menuDefinition )
-			menu.popup()
+			self.__popupMenu = GafferUI.Menu( menuDefinition )
+			self.__popupMenu.popup()
 			
 			return True
 			
