@@ -571,6 +571,7 @@ libEnv.Append(
 		"boost_system" + boostLibSuffix,
 		"tbb",
 		"Imath",
+		"IlmImf",
 		"IECore$CORTEX_LIB_SUFFIX",
 	],
 	

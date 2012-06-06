@@ -4,6 +4,8 @@
 
 * Fixed parameter menu bug introduced in version 0.33.2.
 
+* Added support for TimeCodeParameters.
+
 0.33.2
 ------
 * Fixed the delete order of ListContainer that was causing popup windows

@@ -181,6 +181,7 @@ from DateTimeParameterValueWidget import DateTimeParameterValueWidget
 from ClassParameterValueWidget import ClassParameterValueWidget
 from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
 from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
+from TimeCodeParameterValueWidget import TimeCodeParameterValueWidget
 
 # and specific node uis
 
