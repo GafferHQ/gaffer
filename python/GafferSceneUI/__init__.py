@@ -37,3 +37,4 @@
 from SceneEditor import SceneEditor
 import SceneNodeUI
 import SceneView
+from RenderUI import RenderUI

@@ -55,9 +55,13 @@ with IECoreArnold.UniverseBlock() :
 	while not arnold.AiNodeEntryIteratorFinished( it ) :
 		
 		nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
-		name = arnold.AiNodeEntryGetName( nodeEntry )		
-		GafferUI.NodeMenu.append( "/Arnold/" + name, IECore.curry( __shaderCreator, name ) )
+		shaderName = arnold.AiNodeEntryGetName( nodeEntry )
+		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+			
+		GafferUI.NodeMenu.append( "/Arnold/Shader/" + displayName, IECore.curry( __shaderCreator, shaderName ) )
 	
 	arnold.AiNodeEntryIteratorDestroy( it )
 	
 	arnold.AiEnd()
+
+GafferUI.NodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender )

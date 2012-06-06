@@ -51,7 +51,7 @@ BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" )
 INSTALL_DIR = os.path.expanduser( "~/dev/install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}" )
 DEPENDENCIES_SRC_DIR = os.path.expanduser( "~/dev/gafferDependencies" )
 PYTHON_SRC_DIR = "$DEPENDENCIES_SRC_DIR/Python-2.7.2"
-BOOST_SRC_DIR = "$DEPENDENCIES_SRC_DIR/boost_1_47_0"
+BOOST_SRC_DIR = "$DEPENDENCIES_SRC_DIR/boost_1_43_0"
 TBB_SRC_DIR = "$DEPENDENCIES_SRC_DIR/tbb22_004oss"
 ILMBASE_SRC_DIR = "$DEPENDENCIES_SRC_DIR/ilmbase-1.0.2"
 OPENEXR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/openexr-1.7.0"
@@ -69,6 +69,8 @@ PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-x11-gpl-4.9"
 RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.41"
 ARNOLD_ROOT = "/Applications/Graphics/Arnold-4.0.0.0"
 NUKE_ROOT = "/Applications/Nuke6.3v6/Nuke6.3v6.app/Contents/MacOS"
+DOXYGEN = "/usr/local/bin/doxygen"
+CXXFLAGS = [ "-pipe", "-Wall", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-D__USE_ISOC99" ]
 
 APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.9"
 GENERATORRUNNER_SRC_DIR = "$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.15"

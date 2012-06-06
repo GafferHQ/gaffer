@@ -34,6 +34,79 @@
 #  
 ##########################################################################
 
-from _GafferArnold import *
+import IECore
 
-from ArnoldRender import ArnoldRender
+import Gaffer
+import GafferScene
+
+class ScriptProcedural( IECore.ParameterisedProcedural ) :
+
+	def __init__( self ) :
+	
+		IECore.ParameterisedProcedural.__init__( self, "Generates geometry from a node within a .gfr script." )
+	
+		self.parameters().addParameters(
+			
+			[
+				
+				IECore.FileNameParameter(
+					name = "fileName",
+					description = "The gaffer script which contains a scene to generate geometry from.",
+					allowEmptyString = False,
+					check = IECore.FileNameParameter.CheckType.MustExist,
+					extensions = "gfr",
+				),
+				
+				IECore.StringParameter(
+					name = "node",
+					description = "The node to generate geometry from.",
+					defaultValue = "",
+				),
+				
+			]
+			
+		)
+	
+		self.__currentFileName = None
+	
+	def doBound( self, args ) :
+	
+		plug = self.__plug( args )
+		if plug is  None :
+			return IECore.Box3f()
+	
+		result = plug.bound( "/" )
+		result = result.transform( plug.transform( "/" ) )
+		
+		return result
+		
+	def doRender( self, renderer, args ) :
+	
+		plug = self.__plug( args )
+		if plug is None :
+			return
+			
+		sceneProcedural = GafferScene.SceneProcedural( plug, Gaffer.Context(), "/" )
+		renderer.procedural( sceneProcedural )
+		
+	def __plug( self, args ) :
+	
+		if args["fileName"].value != self.__currentFileName :
+		
+			if args["fileName"].value == "" :
+				self.__scriptNode = None
+			else :
+				self.__scriptNode = Gaffer.ScriptNode()
+				self.__scriptNode["fileName"].setValue( args["fileName"].value )
+				self.__scriptNode.load()
+				self.__currentFileName = args["fileName"].value
+			
+		if self.__scriptNode is None :
+			return None
+		
+		if not args["node"].value :
+			return None
+		
+		node = self.__scriptNode.getChild( args["node"].value )
+		return node["out"]
+		

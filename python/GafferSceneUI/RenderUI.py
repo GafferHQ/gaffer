@@ -34,6 +34,37 @@
 #  
 ##########################################################################
 
-from _GafferArnold import *
+import fnmatch
 
-from ArnoldRender import ArnoldRender
+import Gaffer
+import GafferScene
+import GafferUI
+
+class RenderUI( GafferUI.NodeUI ) :
+
+	def __init__( self, node, **kw ) :
+	
+		GafferUI.NodeUI.__init__( self, node, **kw )
+		
+	def _build( self ) :
+	
+		GafferUI.NodeUI._build( self )
+		
+		executeButton = GafferUI.Button( "Execute" )
+		self.__executeButtonConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
+		
+		self._addWidget( executeButton )
+		
+	def __executeClicked( self, button ) :
+	
+		self._node().execute()
+
+def __createParameterWidget( plug ) :
+
+	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
+
+GafferUI.NodeUI.registerNodeUI( GafferScene.Render.staticTypeId(), RenderUI )
+GafferUI.NodeUI.registerPlugValueWidget( GafferScene.Render.staticTypeId(), "in", None )
+
+GafferUI.Nodule.registerNodule( GafferScene.Render.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.Render.staticTypeId(), "in", GafferUI.StandardNodule )

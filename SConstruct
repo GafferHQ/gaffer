@@ -537,7 +537,7 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
@@ -679,6 +679,9 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene" ],
 		},
+		"classStubs" : [
+			( "ScriptProcedural", "procedurals/gaffer/script" ),
+		],
 	},
 	
 	"GafferSceneTest" : {
@@ -723,7 +726,7 @@ libraries = {
 	"GafferArnoldTest" : {},
 
 	"GafferArnoldUI" : {},
-	
+		
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
 	},
@@ -837,6 +840,30 @@ for libraryName, libraryDef in libraries.items() :
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
+		
+	# class stubs
+	
+	def buildClassStub( target, source, env ) :
+
+		dir = os.path.dirname( str( target[0] ) )
+		if not os.path.isdir( dir ) :
+			os.makedirs( dir )
+		
+		classLoadableName = dir.rpartition( "/" )[2]
+				
+		f = open( str( target[0] ), "w" )
+		f.write( "import IECore\n\n" )
+		f.write( env.subst( "from $GAFFER_STUB_MODULE import $GAFFER_STUB_CLASS as %s" % classLoadableName ) )
+		f.write( "\n\nIECore.registerRunTimeTyped( %s )\n" % classLoadableName )
+		
+	for classStub in libraryDef.get( "classStubs", [] ) :
+		stubFileName = "$BUILD_DIR/" + classStub[1] + "/" + classStub[1].rpartition( "/" )[2] + "-1.py"
+		stubEnv = env.Clone(
+			GAFFER_STUB_MODULE = libraryName,
+			GAFFER_STUB_CLASS = classStub[0],
+		)
+		stub = stubEnv.Command( stubFileName, "python/" + libraryName + "/__init__.py", buildClassStub )
+		stubEnv.Alias( "build", stub )
 	
 #########################################################################################################
 # Graphics

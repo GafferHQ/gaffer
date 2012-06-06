@@ -52,7 +52,9 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
 /// The SceneProcedural class passes the output from a ScenePlug to an IECore::Renderer
-/// in a tree of nested deferred procedurals.
+/// in a tree of nested deferred procedurals. See the python ScriptProcedural for 
+/// a procedural which will load a gaffer script and generate geometry from a named
+/// node.
 class SceneProcedural : public IECore::Renderer::Procedural
 {
 

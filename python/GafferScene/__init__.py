@@ -34,6 +34,10 @@
 #  
 ##########################################################################
 
+import Gaffer
+
 from _GafferScene import *
 
 from ScenePath import ScenePath
+from ScriptProcedural import ScriptProcedural
+from Render import Render

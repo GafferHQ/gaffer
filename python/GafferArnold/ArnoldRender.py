@@ -34,6 +34,58 @@
 #  
 ##########################################################################
 
-from _GafferArnold import *
+import os
+import arnold
 
-from ArnoldRender import ArnoldRender
+import IECore
+import IECoreArnold
+
+import Gaffer
+import GafferScene
+
+class ArnoldRender( GafferScene.Render ) :
+
+	def __init__( self, name="ArnoldRender", inputs={}, dynamicPlugs=() ) :
+	
+		GafferScene.Render.__init__( self, name )
+	
+		self.addChild(
+			Gaffer.StringPlug( 
+				"fileName",
+			)
+		)
+	
+		self._init( inputs, dynamicPlugs )
+			
+	def _createRenderer( self ) :
+	
+		return IECoreArnold.Renderer( self["fileName"].getValue() )
+		
+	def _outputProcedural( self, procedural, bound, renderer ) :
+	
+		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )
+	
+		node = arnold.AiNode( "procedural" )
+		arnold.AiNodeSetStr( node, "dso", os.path.expandvars( "$GAFFER_ROOT/arnoldProcedurals/ieProcedural.so" ) )
+		
+		arnold.AiNodeSetPnt( node, "min", bound.min.x, bound.min.y, bound.min.z );
+		arnold.AiNodeSetPnt( node, "max", bound.max.x, bound.max.y, bound.max.z );
+			
+		arnold.AiNodeDeclare( node, "className", "constant STRING" )
+		arnold.AiNodeDeclare( node, "classVersion", "constant INT" )
+		arnold.AiNodeDeclare( node, "parameterValues", "constant ARRAY STRING" )
+		
+		arnold.AiNodeSetStr( node, "className", "gaffer/script" )
+		arnold.AiNodeSetInt( node, "classVersion", 1 )
+		
+		serialised = IECore.ParameterParser().serialise( procedural.parameters() )
+		stringArray = arnold.AiArrayAllocate( len( serialised ), 1, arnold.AI_TYPE_STRING )
+		for i in range( 0, len( serialised ) ) :
+			arnold.AiArraySetStr( stringArray, i, serialised[i] )
+		arnold.AiNodeSetArray( node, "parameterValues", stringArray )
+	
+	def _commandAndArgs( self ) :
+		
+		return [ "kick", "-dp",  "-dw", "-v", "6", self["fileName"].getValue() ]
+		
+IECore.registerRunTimeTyped( ArnoldRender )
