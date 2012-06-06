@@ -1,5 +1,7 @@
 * Added support for ClassVectorParameters.
 
+* Added a -help flag to the gaffer command line.
+
 0.33.2
 ------
 * Fixed the delete order of ListContainer that was causing popup windows
