@@ -102,11 +102,23 @@ class GafferDisplayDriver : public IECore::ImageDisplayDriver
 			ImageDisplayDriver::imageData( box, data, dataSize );
 			dataReceivedSignal()( this, box );
 		}
+		
+		virtual void imageClose()
+		{
+			ImageDisplayDriver::imageClose();
+			imageReceivedSignal()( this );
+		}
 
 		typedef boost::signal<void ( GafferDisplayDriver *, const Imath::Box2i & )> DataReceivedSignal;
 		DataReceivedSignal &dataReceivedSignal()
 		{
 			return m_dataReceivedSignal;
+		}
+		
+		typedef boost::signal<void ( GafferDisplayDriver * )> ImageReceivedSignal;
+		ImageReceivedSignal &imageReceivedSignal()
+		{
+			return m_imageReceivedSignal;
 		}
 
 		typedef boost::signal<void ( GafferDisplayDriver * )> InstanceCreatedSignal;
@@ -122,6 +134,8 @@ class GafferDisplayDriver : public IECore::ImageDisplayDriver
 
 		IECore::ConstCompoundDataPtr m_parameters;
 		DataReceivedSignal m_dataReceivedSignal;
+		ImageReceivedSignal m_imageReceivedSignal;
+
 };
 
 const DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> GafferDisplayDriver::g_description;
@@ -174,6 +188,12 @@ Node::UnaryPlugSignal &Display::dataReceivedSignal()
 	return s;
 }
 
+Node::UnaryPlugSignal &Display::imageReceivedSignal()
+{
+	static UnaryPlugSignal s;
+	return s;
+}
+
 IECore::ConstImagePrimitivePtr Display::computeImagePrimitive( const Gaffer::Context *context ) const
 {
 	return m_driver ? m_driver->image() : 0;
@@ -214,16 +234,23 @@ void Display::setupDriver( GafferDisplayDriverPtr driver )
 	if( m_driver )
 	{
 		m_driver->dataReceivedSignal().disconnect( boost::bind( &Display::dataReceived, this, _1, _2 ) );
+		m_driver->imageReceivedSignal().disconnect( boost::bind( &Display::imageReceived, this, _1 ) );
 	}
 	
 	m_driver = driver;
 	if( m_driver )
 	{
 		m_driver->dataReceivedSignal().connect( boost::bind( &Display::dataReceived, this, _1, _2 ) );	
+		m_driver->imageReceivedSignal().connect( boost::bind( &Display::imageReceived, this, _1 ) );	
 	}
 }
 
 void Display::dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound )
 {
 	dataReceivedSignal()( outPlug() );
+}
+
+void Display::imageReceived( GafferDisplayDriver *driver )
+{
+	imageReceivedSignal()( outPlug() );
 }

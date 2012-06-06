@@ -63,7 +63,10 @@ class Display : public ImagePrimitiveNode
 				
 		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const;
 		
+		/// Emitted when a new bucket is received.
 		static UnaryPlugSignal &dataReceivedSignal();
+		/// Emitted when a complete image has been received.
+		static UnaryPlugSignal &imageReceivedSignal();
 		
 	protected :
 
@@ -79,6 +82,7 @@ class Display : public ImagePrimitiveNode
 		void driverCreated( GafferDisplayDriver *driver );
 		void setupDriver( GafferDisplayDriverPtr driver );
 		void dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound );
+		void imageReceived( GafferDisplayDriver *driver );
 		
 };
 

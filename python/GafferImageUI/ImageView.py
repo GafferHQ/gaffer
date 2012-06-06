@@ -49,7 +49,7 @@ def __imageViewCreator( plug, context ) :
 	
 GafferUI.Viewer.registerView( GafferImage.ImagePlug.staticTypeId(), __imageViewCreator )
 
-## Here we're taking a signal the Display node emits when it has new data, and using it
+## Here we're taking signals the Display node emits when it has new data, and using them
 # to trigger a plugDirtiedSignal on the main ui thread. This is necessary because the Display
 # receives data on a background thread, where we can't do ui stuff.
 
@@ -67,4 +67,9 @@ def __displayDataReceived( plug ) :
 	
 	__dataReceivedCount += 1
 
+def __displayImageReceived( plug ) :
+	
+	GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
+
 __displayDataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( __displayDataReceived )
+__displayImageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( __displayImageReceived )
