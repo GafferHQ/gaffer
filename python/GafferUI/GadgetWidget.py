@@ -72,10 +72,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		# being returned from the GafferUIBindings without the appropriate boost::python converters
 		# having been registered first.
 		IECoreGL.Renderer
-		
-		## \todo Decide if/how this goes in the public API
-		self._qtWidget().setMouseTracking( True )		
-				
+						
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )

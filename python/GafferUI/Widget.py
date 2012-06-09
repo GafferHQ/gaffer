@@ -275,6 +275,10 @@ class Widget( object ) :
 		self.__ensureEventFilter()
 		if self._mouseMoveSignal is None :
 			self._mouseMoveSignal = GafferUI.WidgetEventSignal()
+			if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
+				self._qtWidget().viewport().setMouseTracking( True )
+			else :
+				self._qtWidget().setMouseTracking( True )
 		return self._mouseMoveSignal
 	
 	def enterSignal( self ) :
@@ -449,6 +453,8 @@ class Widget( object ) :
 	
 		if not self.__eventFilterInstalled :
 			self._qtWidget().installEventFilter( _eventFilter )
+			if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
+				self._qtWidget().viewport().installEventFilter( _eventFilter )
 			self.__eventFilterInstalled = True
 
 	def _setStyleSheet( self ):
