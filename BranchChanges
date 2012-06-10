@@ -63,3 +63,5 @@ swatch.
 * Added MultiLineTextWidget setWrapMode, getWrapMode, appendHTML, linkAt and linkActivatedSignal methods.
 
 * Added a PopupWindow class.
+
+* Fixed the Slider button press handler to swallow the events it uses.

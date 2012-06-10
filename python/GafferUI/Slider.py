@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -122,6 +122,9 @@ class Slider( GafferUI.Widget ) :
 	
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
 			self.setPosition( float( event.line.p0.x ) / self.size().x )
+			return True
+			
+		return False
 
 	def __mouseMove( self, widget, event ) :
 	
