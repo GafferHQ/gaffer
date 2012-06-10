@@ -65,3 +65,5 @@ swatch.
 * Added a PopupWindow class.
 
 * Fixed the Slider button press handler to swallow the events it uses.
+
+* Added Window setPosition() and getPosition() methods.

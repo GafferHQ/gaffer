@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -254,6 +254,12 @@ class WindowTest( unittest.TestCase ) :
 
 		w.setResizeable( True )
 		self.failUnless( w.getResizeable() )
+
+	def testPosition( self ) :
+	
+		w = GafferUI.Window()
+		w.setPosition( IECore.V2i( 10, 20 ) )
+		self.assertEqual( w.getPosition(), IECore.V2i( 10, 20 ) )
 
 if __name__ == "__main__":
 	unittest.main()
