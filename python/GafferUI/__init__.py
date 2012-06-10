@@ -131,6 +131,7 @@ from NumericSlider import NumericSlider
 from NotificationMessageHandler import NotificationMessageHandler
 from AttributeCachePathPreview import AttributeCachePathPreview
 from MenuButton import MenuButton
+from PopupWindow import PopupWindow
 
 # then stuff specific to graph uis
 
