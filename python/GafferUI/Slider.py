@@ -47,17 +47,12 @@ class Slider( GafferUI.Widget ) :
 
 	def __init__( self, position = 0.5, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
-		
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum ) )
-		self._qtWidget().setMinimumSize( 18, 18 )
-		
+		GafferUI.Widget.__init__( self, _Widget(), **kw )
+				
 		self.__position = position
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
-
-		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 		
 	def setPosition( self, p ) :
 				
@@ -109,15 +104,7 @@ class Slider( GafferUI.Widget ) :
 		painter.setBrush( brush )
 		
 		painter.drawEllipse( QtCore.QPoint( self.__position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
-		
-	def __paintEvent( self, event ) :
-	
-		painter = QtGui.QPainter( self._qtWidget() )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-		
-		self._drawBackground( painter )
-		self._drawPosition( painter )
-			
+					
 	def __buttonPress( self, widget, event ) :
 	
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
@@ -131,3 +118,25 @@ class Slider( GafferUI.Widget ) :
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
 			self.setPosition( float( event.line.p0.x ) / self.size().x )
 
+class _Widget( QtGui.QWidget ) :
+
+	def __init__( self, parent=None ) :
+	
+		QtGui.QWidget.__init__( self, parent )
+		
+		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum ) )
+
+	def sizeHint( self ) :
+	
+		return QtCore.QSize( 150, 18 )
+		
+	def paintEvent( self, event ) :
+	
+		owner = GafferUI.Widget._owner( self )
+		
+		painter = QtGui.QPainter( self )
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		
+		owner._drawBackground( painter )
+		owner._drawPosition( painter )
+	
