@@ -1,3 +1,25 @@
+* Added support for ClassVectorParameters.
+
+* Added a -help flag to the gaffer command line.
+
+* Fixed parameter menu bug introduced in version 0.33.2.
+
+* Added support for TimeCodeParameters.
+
+* Menu.popup() method now takes an optional grabFocus parameter - if this is False and a key is pressed then the menu will close and pass the key to the previous focus widget.
+
+* PathWidget's helpful popup menus are now more helpful because they don't steal keypresses from the PathWidget itself.
+
+* TextWidget now supports having a fixed width defined in characters using the setCharacterWidth() and getCharacterWidth() methods.
+
+* NumericPlugValueWidget now sets maximum field width for integer plugs where max values has been set - this slightly improves the ui for the TimeCodeParameterValueWidget.
+
+0.33.2
+------
+* Fixed the delete order of ListContainer that was causing popup windows
+
+* Fixed circular reference in menu that was causing popup windows
+
 0.33.1
 ------
 * Fixed bug in Menu

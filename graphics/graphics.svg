@@ -50,16 +50,16 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="122.36703"
-     inkscape:cy="879.27657"
+     inkscape:zoom="11.313708"
+     inkscape:cx="205.90256"
+     inkscape:cy="944.02531"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1440"
      inkscape:window-height="852"
-     inkscape:window-x="173"
-     inkscape:window-y="371"
+     inkscape:window-x="4"
+     inkscape:window-y="264"
      inkscape:window-maximized="0"
      inkscape:snap-global="true">
     <inkscape:grid
@@ -1225,5 +1225,33 @@
          id="tspan3940"
          x="112.00182"
          y="130.95595">z</tspan></text>
+    <path
+       sodipodi:nodetypes="sssss"
+       inkscape:connector-curvature="0"
+       style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       d="m 225,82.862187 c -4.97056,0 -9,4.029437 -9,9 0,4.970563 4.02944,8.999993 9,8.999993 4.97056,0 9,-4.02943 9,-8.999993 0,-4.970563 -4.02944,-9 -9,-9 z"
+       id="forExport:classVectorParameterHandle"
+       inkscape:label="#path3135" />
+    <rect
+       style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+       id="rect3139"
+       width="10"
+       height="1.0000004"
+       x="220.00002"
+       y="88.36219" />
+    <rect
+       y="91.36219"
+       x="220.00002"
+       height="1.0000004"
+       width="10"
+       id="rect3141"
+       style="fill:#3c3c3c;fill-opacity:1;stroke:none" />
+    <rect
+       style="fill:#3c3c3c;fill-opacity:1;stroke:none"
+       id="rect3143"
+       width="10"
+       height="1.0000004"
+       x="220.00002"
+       y="94.36219" />
   </g>
 </svg>

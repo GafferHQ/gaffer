@@ -117,7 +117,7 @@ class PathWidget( GafferUI.TextWidget ) :
 			else :
 				text = self.getText()
 				position = self.getCursorPosition()
-				if position == len( text ) and text[-1]=="/" :
+				if position == len( text ) and len( text ) and text[-1]=="/" :
 					# select last character to trigger menu for next path entry
 					self.setSelection( -1, None )
 				else :
@@ -172,7 +172,7 @@ class PathWidget( GafferUI.TextWidget ) :
 			i += 1
 			
 		self.__popupMenu = GafferUI.Menu( md )
-		self.__popupMenu.popup( position = self.__popupPosition( 0 ), forcePosition=True )
+		self.__popupMenu.popup( position = self.__popupPosition( 0 ), forcePosition=True, grabFocus=False )
 			
 	def __popupListing( self, textIndex ) :
 	
@@ -195,7 +195,7 @@ class PathWidget( GafferUI.TextWidget ) :
 				)
 				
 			self.__popupMenu = GafferUI.Menu( md )
-			self.__popupMenu.popup( position = self.__popupPosition( textIndex ), forcePosition=True )
+			self.__popupMenu.popup( position = self.__popupPosition( textIndex ), forcePosition=True, grabFocus=False )
 		
 	def __replacePathEntry( self, position, newEntry ) :
 	

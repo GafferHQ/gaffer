@@ -576,7 +576,162 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		s2["ph"].parameterHandler().setParameterValue()
 		self.assertEqual( p2["class"]["recurse"].getTypedValue(), True )
-						
+			
+	def testClassVectorParameter( self ) :
+			
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = ph.getParameterised()[0]
+		
+		seqLsClassSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		classes = [
+			( "p0", ) + seqLsClassSpec,
+			( "p1", ) + gradeClassSpec,
+		]
+		
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( classes )
+
+		seqLsParameterNames = p["classes"]["p0"].keys()	
+		for n in seqLsParameterNames :
+			self.failUnless( n in ph["parameters"]["classes"]["p0"] )
+		
+		gradeParameterNames = p["classes"]["p1"].keys()	
+		for n in gradeParameterNames :
+			self.failUnless( n in ph["parameters"]["classes"]["p1"] )
+			
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( [] )
+		
+		for k in ph["parameters"]["classes"].keys() :
+			self.failUnless( k.startswith( "__" ) )
+	
+	def testClassVectorParameterMaintainsPlugValues( self ) :
+	
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = ph.getParameterised()[0]
+		
+		seqLsClassSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		classes = [
+			( "p0", ) + gradeClassSpec,
+		]
+		
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( classes )
+		
+		ph["parameters"]["classes"]["p0"]["multiply"].setValue( IECore.Color3f( 0.5, 0.25, 0.125 ) )
+		ph.setParameterisedValues()
+		
+		classes.append( ( "p1", ) + seqLsClassSpec )		
+		with ph.parameterModificationContext() :
+			p["classes"].setClasses( classes )
+			
+		self.assertEqual( ph["parameters"]["classes"]["p0"]["multiply"].getValue(), IECore.Color3f( 0.5, 0.25, 0.125 ) )	
+	
+	def testClassVectorParameterSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["ph"] = Gaffer.ParameterisedHolderNode()
+		s["ph"].setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		p = s["ph"].getParameterised()[0]
+		
+		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		classes = [
+			( "p0", ) + gradeClassSpec,
+		]
+		
+		with s["ph"].parameterModificationContext() :
+			p["classes"].setClasses( classes )
+		
+		s["ph"]["parameters"]["classes"]["p0"]["multiply"].setValue( IECore.Color3f( 0.5, 0.25, 0.125 ) )
+
+		ss = s.serialise()
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+		
+		self.assertEqual( s2["ph"]["parameters"]["classes"]["p0"]["multiply"].getValue(), IECore.Color3f( 0.5, 0.25, 0.125 ) )
+
+	def testTimeCodeParameter( self ) :
+		
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameters(
+		
+			[
+				IECore.TimeCodeParameter(
+					"t",
+					"",
+					IECore.TimeCode(
+						hours = 10,
+						minutes = 15,
+						seconds = 1,
+						frame = 12,
+					)
+				)			
+			]
+		
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+		
+		self.failUnless( "t" in ph["parameters"] )
+		self.failUnless( isinstance( ph["parameters"]["t"], Gaffer.CompoundPlug ) )
+
+		self.failUnless( isinstance( ph["parameters"]["t"]["hours"], Gaffer.IntPlug ) )
+		self.assertEqual( ph["parameters"]["t"]["hours"].minValue(), 0 )
+		self.assertEqual( ph["parameters"]["t"]["hours"].maxValue(), 23 )
+		self.assertEqual( ph["parameters"]["t"]["hours"].defaultValue(), 10 )
+		self.assertEqual( ph["parameters"]["t"]["hours"].getValue(), 10 )
+
+		self.failUnless( isinstance( ph["parameters"]["t"]["minutes"], Gaffer.IntPlug ) )
+		self.assertEqual( ph["parameters"]["t"]["minutes"].minValue(), 0 )
+		self.assertEqual( ph["parameters"]["t"]["minutes"].maxValue(), 59 )
+		self.assertEqual( ph["parameters"]["t"]["minutes"].defaultValue(), 15 )
+		self.assertEqual( ph["parameters"]["t"]["minutes"].getValue(), 15 )
+				
+		self.failUnless( isinstance( ph["parameters"]["t"]["seconds"], Gaffer.IntPlug ) )
+		self.assertEqual( ph["parameters"]["t"]["seconds"].minValue(), 0 )
+		self.assertEqual( ph["parameters"]["t"]["seconds"].maxValue(), 59 )
+		self.assertEqual( ph["parameters"]["t"]["seconds"].defaultValue(), 1 )
+		self.assertEqual( ph["parameters"]["t"]["seconds"].getValue(), 1 )
+
+		self.failUnless( isinstance( ph["parameters"]["t"]["frame"], Gaffer.IntPlug ) )
+		self.assertEqual( ph["parameters"]["t"]["frame"].minValue(), 0 )
+		self.assertEqual( ph["parameters"]["t"]["frame"].maxValue(), 29 )
+		self.assertEqual( ph["parameters"]["t"]["frame"].defaultValue(), 12 )
+		self.assertEqual( ph["parameters"]["t"]["frame"].getValue(), 12 )
+		
+		ph["parameters"]["t"]["hours"].setValue( 11 )
+		ph["parameters"]["t"]["minutes"].setValue( 10 )
+		ph["parameters"]["t"]["seconds"].setValue( 2 )
+		ph["parameters"]["t"]["frame"].setValue( 20 )
+		
+		ph.parameterHandler().setParameterValue()
+		
+		tc = p["t"].getTypedValue()
+		self.assertEqual( tc.hours(), 11 )
+		self.assertEqual( tc.minutes(), 10 )
+		self.assertEqual( tc.seconds(), 2 )
+		self.assertEqual( tc.frame(), 20 )
+
+		with ph.parameterModificationContext() :
+		
+			tc.setHours( 1 )
+			tc.setMinutes( 2 )
+			tc.setSeconds( 3 )
+			tc.setFrame( 4 )
+			p["t"].setTypedValue( tc )
+		
+		self.assertEqual( ph["parameters"]["t"]["hours"].getValue(), 1 )
+		self.assertEqual( ph["parameters"]["t"]["minutes"].getValue(), 2 )
+		self.assertEqual( ph["parameters"]["t"]["seconds"].getValue(), 3 )
+		self.assertEqual( ph["parameters"]["t"]["frame"].getValue(), 4 )
+			
 	def setUp( self ) :
 	
 		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"

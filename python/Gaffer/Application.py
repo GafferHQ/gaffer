@@ -44,16 +44,16 @@ import Gaffer
 
 class Application( IECore.Parameterised ) :
 
-	def __init__( self ) :
+	def __init__( self, description="" ) :
 	
-		IECore.Parameterised.__init__( self, "" )
+		IECore.Parameterised.__init__( self, description )
 
 		self.parameters().addParameters(
 			
 			[
 				IECore.FileNameParameter(
 					name = "profileFileName",
-					description = "If this is specified, then the application"
+					description = "If this is specified, then the application "
 						"is run using the cProfile profiling module, and the "
 						"results saved to the file for later examination.",
 					defaultValue = "",

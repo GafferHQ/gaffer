@@ -70,7 +70,10 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		self.__collapsible = None
 		if collapsible :
 			collapsibleLabel = IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
-			self.__collapsible = GafferUI.Collapsible( label = collapsibleLabel, collapsed = True )
+			collapsed = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				collapsed = parameterHandler.parameter().userData()["UI"]["collapsed"].value
+			self.__collapsible = GafferUI.Collapsible( label = collapsibleLabel, collapsed = collapsed )
 			self.__collapsible.setChild( self.__column )
 			topLevelWidget = self.__collapsible
 		else :
@@ -82,14 +85,10 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 		self.__childrenChangedPending = False
 		
-		if collapsible :
-			collapsed = True
-			with IECore.IgnoredExceptions( KeyError ) :
-				collapsed = parameterHandler.parameter().userData()["UI"]["collapsed"].value
-			self.__collapsibleStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapsibleStateChanged ) )
-			self.__collapsible.setCollapsed( collapsed )
-		else :
-			self._buildChildParameterUIs( self.__column )
+		# arrange to build the rest of the ui when we become visible for the first time.
+		# this means that we will be fully constructed when we call _buildChildParameterUIs, rather
+		# than expecting derived class implementations to work even before their constructor has completed.
+		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 	## May be overridden by derived classes to customise the creation of the UI to represent child parameters.
 	# The UI elements created should be placed in the ListContainer passed as column. Note that this may be 
@@ -158,12 +157,13 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		return result
 
-	def __collapsibleStateChanged( self, *unusedArgs ) :
+	def __visibilityChanged( self, column ) :
 	
-		if len( self.__column ) :
-			return
-			
-		self._buildChildParameterUIs( self.__column )
+		assert( column is self.__column )
+		
+		if self.visible() :
+			self._buildChildParameterUIs( self.__column )
+			self.__visibilityChangedConnection = None # only need to build once
 
 	def __childAddedOrRemoved( self, *unusedArgs ) :
 	

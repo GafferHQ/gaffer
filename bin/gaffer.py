@@ -2,7 +2,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,19 +45,56 @@ signal.signal( signal.SIGINT, signal.SIG_DFL )
 
 import IECore
 
-appLoader = IECore.ClassLoader( IECore.SearchPath( os.environ["GAFFER_APP_PATHS"], ":" ) )
+helpText = """Usage :
 
-appName = "gui"
-appArgs = sys.argv[1:]
-if len( sys.argv ) > 1 :
+    gaffer -help                    Print this message
+    gaffer -help appName            Print help specific to named application
+    gaffer appName [flags]          Run named application with specified flags
+    gaffer fileName.gfr [flags]     Run gui application with specified script and flags
+    gaffer [flags]                  Run gui application with specified flags
+"""
 
-	if sys.argv[1] in appLoader.classNames() :
-		appName = sys.argv[1]
-		appArgs = appArgs[1:]
+appLoader = IECore.ClassLoader.defaultLoader( "GAFFER_APP_PATHS" )
+applicationText = "Installed applications :\n\n" + "\n".join( "    " + x for x in appLoader.classNames() ) + "\n"
 
-app = appLoader.load( appName )()
+def loadApp( appName ) :
+	
+	if appName in appLoader.classNames() :
+		return appLoader.load( appName )()
+	else :
+		sys.stderr.write( "ERROR : Application \"%s\" not installed on GAFFER_APP_PATHS\n" % appName )
+		sys.stderr.write( "\n" + applicationText )
+		sys.exit( 1 )
 
-IECore.ParameterParser().parse( appArgs, app.parameters() )
-
-result = app.run()
-sys.exit( result )
+args = sys.argv[1:]
+if args and args[0] in ( "-help", "-h", "--help", "-H" ) :
+	if len( args ) > 1 :
+		app = loadApp( args[1] )
+		formatter = IECore.WrappedTextFormatter( sys.stdout )
+		formatter.paragraph( "Name : " + app.path )
+		if app.description :
+			formatter.paragraph( app.description + "\n" )
+		if len( app.parameters().values() ):
+			formatter.heading( "Parameters" )
+			formatter.indent()
+			for p in app.parameters().values() :
+				IECore.formatParameterHelp( p, formatter )
+			formatter.unindent()
+		sys.exit( 0 )
+	else :
+		sys.stdout.write( helpText )
+		sys.stdout.write( "\n" + applicationText )
+		sys.exit( 0 )
+else :
+	appName = "gui"
+	appArgs = args
+	if len( args ) :
+		if not args[0].startswith( "-" ) and not args[0].endswith( ".gfr" ) :
+			appName = args[0]	
+			appArgs = args[1:]
+		
+	app = loadApp( appName )
+	IECore.ParameterParser().parse( appArgs, app.parameters() )
+	
+	result = app.run()
+	sys.exit( result )

@@ -206,6 +206,11 @@ class WidgetTest( unittest.TestCase ) :
 		self.assertEqual( t.getVisible(), False )
 		self.assertEqual( t.visible(), False )
 		self.assertEqual( t.visible( relativeTo = l ), False )
+	
+	def testGetVisibleForNewWidgets( self ) :
+	
+		w = TestWidget()
+		self.assertEqual( w.getVisible(), True )
 		
 	def testSignals( self ) :
 	
