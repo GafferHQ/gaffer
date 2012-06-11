@@ -66,11 +66,12 @@ class TimeEditor( GafferUI.EditorWidget ) :
 			self.__visibilityButton = GafferUI.Button( image="timeEditor3.png", hasFrame=False )
 			self.__visibilityButtonClickedConnection = self.__visibilityButton.clickedSignal().connect( Gaffer.WeakMethod( self.__visibilityButtonClicked ) )
 			
-			## \todo Make these fields a more sensible width
 			self.__scriptRangeStart = GafferUI.NumericPlugValueWidget( scriptNode["frameRange"]["start"] )
+			self.__scriptRangeStart.numericWidget().setCharacterWidth( 4 )
 			self.__scriptRangeStart.setToolTip( self.__scriptRangeStart.getPlug().fullName() )
 
 			self.__sliderRangeStart = GafferUI.NumericWidget( scriptNode["frameRange"]["start"].getValue() )
+			self.__sliderRangeStart.setCharacterWidth( 4 )
 			self.__sliderRangeStart.setToolTip( "Slider minimum" )
 			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 			
@@ -92,14 +93,17 @@ class TimeEditor( GafferUI.EditorWidget ) :
 			self.__endButtonClickedConnection = self.__endButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ) )
 			
 			self.__frame = GafferUI.NumericWidget( self.getContext().getFrame() )
+			self.__frame.setCharacterWidth( 5 )
 			self.__frame.setToolTip( "Current frame" )
 			self.__frameChangedConnection = self.__frame.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__frameChanged ) )
 			
 			self.__sliderRangeEnd = GafferUI.NumericWidget( scriptNode["frameRange"]["end"].getValue() )
+			self.__sliderRangeEnd.setCharacterWidth( 4 )
 			self.__sliderRangeEnd.setToolTip( "Slider maximum" )
 			self.__sliderRangeEndChangedConnection = self.__sliderRangeEnd.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
 			self.__scriptRangeEnd = GafferUI.NumericPlugValueWidget( scriptNode["frameRange"]["end"] )	
+			self.__scriptRangeEnd.numericWidget().setCharacterWidth( 4 )
 			self.__scriptRangeEnd.setToolTip( self.__scriptRangeEnd.getPlug().fullName() )
 	
 		self.__scriptNodePlugSetConnection = scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
