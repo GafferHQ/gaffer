@@ -47,13 +47,14 @@ class TextWidget( GafferUI.Widget ) :
 
 	DisplayMode = IECore.Enum.create( "Normal", "Password" )
 
-	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, **kw ) :
+	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, characterWidth=None, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QLineEdit(), **kw )
+		GafferUI.Widget.__init__( self, _LineEdit(), **kw )
 
 		self.setText( text )
 		self.setEditable( editable )
 		self.setDisplayMode( displayMode )
+		self.setCharacterWidth( characterWidth )
 		
 	def setText( self, text ) :
 	
@@ -120,6 +121,14 @@ class TextWidget( GafferUI.Widget ) :
 	
 		selectionStart = self._qtWidget().selectionStart()
 		return ( selectionStart, selectionStart + len( self._qtWidget().selectedText() ) )
+	
+	def setCharacterWidth( self, numCharacters ) :
+	
+		self._qtWidget().setCharacterWidth( numCharacters )
+					
+	def getCharacterWidth ( self ) :
+	
+		return self._qtWidget().getCharacterWidth()
 	
 	## \todo Should this be moved to the Widget class?
 	def grabFocus( self ) :
@@ -260,3 +269,57 @@ class TextWidget( GafferUI.Widget ) :
 			if selection != ( 0, 0 ) and selection != self.__lastSelection :
 				self.__selectingFinishedSignal( self )
 			self.__lastSelection = selection
+
+# Private implementation - QLineEdit with a sizeHint that implements the
+# fixed character width. Initially tried to simply call setFixedWidth() on
+# a standard QLineEdit, but when the style changes the calculated width is
+# no longer correct - doing it in the sizeHint allows it to respond to
+# style changes.			
+class _LineEdit( QtGui.QLineEdit ) :
+
+	def __init__( self, parent = None ) :
+	
+		QtGui.QLineEdit.__init__( self )
+	
+		self.__characterWidth = None
+	
+	def setCharacterWidth( self, numCharacters ) :
+	
+		if self.__characterWidth == numCharacters :
+			return
+			
+		self.__characterWidth = numCharacters
+		self.setSizePolicy(
+			QtGui.QSizePolicy.Expanding if self.__characterWidth is None else QtGui.QSizePolicy.Fixed,
+			QtGui.QSizePolicy.Fixed
+		)
+	
+	def getCharacterWidth( self ) :
+	
+		return self.__characterWidth
+	
+	def sizeHint( self ) :
+	
+		result = QtGui.QLineEdit.sizeHint( self )
+			
+		if self.__characterWidth is not None :
+			
+			width = self.fontMetrics().boundingRect( "M" * self.__characterWidth ).width()
+			margins = self.getTextMargins()
+			width += margins[0] + margins[2]
+	
+			options = QtGui.QStyleOptionFrameV2()
+			self.initStyleOption( options )
+			size = self.style().sizeFromContents(
+				QtGui.QStyle.CT_LineEdit,
+				options,
+				QtCore.QSize( width, 20, ),
+				self
+			)
+
+			## \todo The + 6 shouldn't be necessary at all, but otherwise the code
+			# above seems to be consistently a bit too small. Not sure if the problem
+			# is here or in qt.
+			result.setWidth( width + 6 )
+			
+		return result

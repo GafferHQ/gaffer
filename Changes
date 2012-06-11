@@ -10,6 +10,8 @@
 
 * PathWidget's helpful popup menus are now more helpful because they don't steal keypresses from the PathWidget itself.
 
+* TextWidget now supports having a fixed width defined in characters using the setCharacterWidth() and getCharacterWidth() methods.
+
 0.33.2
 ------
 * Fixed the delete order of ListContainer that was causing popup windows
