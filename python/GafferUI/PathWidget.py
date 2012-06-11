@@ -117,7 +117,7 @@ class PathWidget( GafferUI.TextWidget ) :
 			else :
 				text = self.getText()
 				position = self.getCursorPosition()
-				if position == len( text ) and text[-1]=="/" :
+				if position == len( text ) and len( text ) and text[-1]=="/" :
 					# select last character to trigger menu for next path entry
 					self.setSelection( -1, None )
 				else :
