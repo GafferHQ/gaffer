@@ -6,6 +6,10 @@
 
 * Added support for TimeCodeParameters.
 
+* Menu.popup() method now takes an optional grabFocus parameter - if this is False and a key is pressed then the menu will close and pass the key to the previous focus widget.
+
+* PathWidget's helpful popup menus are now more helpful because they don't steal keypresses from the PathWidget itself.
+
 0.33.2
 ------
 * Fixed the delete order of ListContainer that was causing popup windows

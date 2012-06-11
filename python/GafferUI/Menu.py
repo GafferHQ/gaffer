@@ -51,7 +51,7 @@ class Menu( GafferUI.Widget ) :
 
 	def __init__( self, definition, _qtMenu=None, **kw ) :
 	
-		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else QtGui.QMenu(), **kw )
+		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else _Menu(), **kw )
 			
 		self._qtWidget().aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), self._qtWidget(), definition ) )
 		
@@ -63,8 +63,10 @@ class Menu( GafferUI.Widget ) :
 	# an optional parent. If position is not specified then it 
 	# defaults to the current cursor position. If forcePosition is specified
 	# then the menu will be shown exactly at the requested position, even if
-	# doing so means some of it will be off screen.
-	def popup( self, parent=None, position=None, forcePosition=False ) :
+	# doing so means some of it will be off screen. If grabFocus is False, then
+	# the menu will not take keyboard events unless the first such event is a
+	# press of the down arrow.
+	def popup( self, parent=None, position=None, forcePosition=False, grabFocus=True ) :
 	
 		if parent is not None :
 			self.__popupParent = weakref.ref( parent )
@@ -75,9 +77,11 @@ class Menu( GafferUI.Widget ) :
 			position = QtGui.QCursor.pos()
 		else :
 			position = QtCore.QPoint( position.x, position.y )
+
+		self._qtWidget().grabFocus = grabFocus
 			
 		self._qtWidget().popup( position )
-
+	
 		# qt is helpful and tries to keep you menu on screen, but this isn't always
 		# what you want, so we override the helpfulness if requested.
 		if forcePosition :
@@ -191,3 +195,25 @@ class Menu( GafferUI.Widget ) :
 						qtMenu.addAction( qtAction )
 
 				done.add( name )
+
+class _Menu( QtGui.QMenu ) :
+
+	def __init__( self ) :
+	
+		QtGui.QMenu.__init__( self )
+
+		self.grabFocus = True
+			
+	def keyPressEvent( self, qEvent ) :
+	
+		if not self.grabFocus :
+			if qEvent.key() == QtCore.Qt.Key_Down :
+				self.grabFocus = True
+			else :
+				# pass the event on to the rightful recipient
+				self.hide()	
+				app = QtGui.QApplication.instance()
+				app.sendEvent( app.focusWidget(), qEvent )
+				return
+				
+		QtGui.QMenu.keyPressEvent( self, qEvent )
