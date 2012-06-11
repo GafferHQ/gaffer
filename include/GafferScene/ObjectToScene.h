@@ -37,17 +37,17 @@
 #ifndef GAFFERSCENE_OBJECTTOSCENE_H
 #define GAFFERSCENE_OBJECTTOSCENE_H
 
-#include "GafferScene/RenderableSource.h"
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-class ObjectToScene : public RenderableSceneNode
+class ObjectToScene : public ObjectSourceSceneNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToScene, ObjectToSceneTypeId, RenderableSceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToScene, ObjectToSceneTypeId, ObjectSourceSceneNode );
 
 		ObjectToScene( const std::string &name=staticTypeName() );
 		virtual ~ObjectToScene();
@@ -59,7 +59,7 @@ class ObjectToScene : public RenderableSceneNode
 		
 	protected :
 
-		virtual IECore::VisibleRenderablePtr computeRenderable( const Gaffer::Context *context ) const;
+		virtual IECore::ObjectPtr computeSource( const Gaffer::Context *context ) const;
 
 };
 

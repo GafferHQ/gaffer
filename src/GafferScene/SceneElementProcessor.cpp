@@ -71,9 +71,9 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 	return processTransform( path, context, inPlug()->transformPlug()->getValue() );
 }
 
-IECore::PrimitivePtr SceneElementProcessor::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processGeometry( path, context, inPlug()->geometryPlug()->getValue() );
+	return processObject( path, context, inPlug()->objectPlug()->getValue() );
 }
 
 IECore::StringVectorDataPtr SceneElementProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -96,11 +96,11 @@ Imath::M44f SceneElementProcessor::processTransform( const ScenePath &path, cons
 	return inputTransform;
 }
 
-IECore::PrimitivePtr SceneElementProcessor::processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const
+IECore::ObjectPtr SceneElementProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
-	if( inputGeometry )
+	if( inputObject )
 	{
-		return inputGeometry->copy();
+		return inputObject->copy();
 	}
 	return 0;
 }

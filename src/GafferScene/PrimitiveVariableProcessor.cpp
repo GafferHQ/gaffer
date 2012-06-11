@@ -38,6 +38,7 @@
 
 #include "GafferScene/PrimitiveVariableProcessor.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -78,12 +79,13 @@ void PrimitiveVariableProcessor::affects( const Gaffer::ValuePlug *input, Affect
 {
 	if( input == namesPlug() || input == invertNamesPlug() )
 	{
-		outputs.push_back( outPlug()->geometryPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
 	}
 }
 
-IECore::PrimitivePtr PrimitiveVariableProcessor::processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const
+IECore::ObjectPtr PrimitiveVariableProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
+	ConstPrimitivePtr inputGeometry = runTimeCast<const Primitive>( inputObject );
 	if( !inputGeometry )
 	{
 		return 0;

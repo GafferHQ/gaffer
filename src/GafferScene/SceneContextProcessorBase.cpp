@@ -63,9 +63,9 @@ Imath::M44f SceneContextProcessorBase::computeTransform( const ScenePath &path, 
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeTransform" );
 }
 
-IECore::PrimitivePtr SceneContextProcessorBase::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr SceneContextProcessorBase::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	throw Exception( "Unexpected call to SceneContextProcessorBase::computeGeometry" );
+	throw Exception( "Unexpected call to SceneContextProcessorBase::computeObject" );
 }
 
 IECore::StringVectorDataPtr SceneContextProcessorBase::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const

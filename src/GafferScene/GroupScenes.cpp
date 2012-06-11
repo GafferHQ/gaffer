@@ -127,7 +127,7 @@ Imath::M44f GroupScenes::computeTransform( const ScenePath &path, const Gaffer::
 	}
 }
 
-IECore::PrimitivePtr GroupScenes::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr GroupScenes::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	std::string source = sourcePath( path, groupName );
@@ -138,8 +138,8 @@ IECore::PrimitivePtr GroupScenes::computeGeometry( const ScenePath &path, const 
 	}
 	else
 	{
-		ConstPrimitivePtr g = inPlug()->geometry( source );
-		return g ? g->copy() : 0;
+		ConstObjectPtr o = inPlug()->object( source );
+		return o ? o->copy() : 0;
 	}
 }
 

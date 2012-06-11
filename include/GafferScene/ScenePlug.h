@@ -80,9 +80,9 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// The plug used to pass the transform for the current node.
 		Gaffer::M44fPlug *transformPlug();
 		const Gaffer::M44fPlug *transformPlug() const;
-		/// The plug used to pass the geometry for the current node.
-		Gaffer::PrimitivePlug *geometryPlug();
-		const Gaffer::PrimitivePlug *geometryPlug() const;
+		/// The plug used to pass the object for the current node.
+		Gaffer::ObjectPlug *objectPlug();
+		const Gaffer::ObjectPlug *objectPlug() const;
 		/// The plug used to pass the names of the child nodes of the current node
 		/// in the scene graph.
 		Gaffer::StringVectorDataPlug *childNamesPlug();
@@ -99,7 +99,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		//@{
 		Imath::Box3f bound( const std::string &scenePath ) const;
 		Imath::M44f transform( const std::string &scenePath ) const;
-		IECore::ConstPrimitivePtr geometry( const std::string &scenePath ) const;
+		IECore::ConstObjectPtr object( const std::string &scenePath ) const;
 		IECore::ConstStringVectorDataPtr childNames( const std::string &scenePath ) const;
 		//@}
 	

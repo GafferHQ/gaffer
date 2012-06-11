@@ -64,6 +64,7 @@ GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 
 GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
 GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
+GafferUI.NodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
 GafferUI.NodeMenu.append( "/Scene/Primitive/Plane", GafferScene.Plane )
 GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCache )
 GafferUI.NodeMenu.append( "/Scene/Add/Seeds", GafferScene.Seeds )

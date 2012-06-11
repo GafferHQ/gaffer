@@ -46,6 +46,7 @@ from SceneProceduralTest import SceneProceduralTest
 from PlaneTest import PlaneTest
 from InstancerTest import InstancerTest
 from ObjectToSceneTest import ObjectToSceneTest
+from CameraTest import CameraTest
 
 if __name__ == "__main__":
 	import unittest

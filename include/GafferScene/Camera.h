@@ -34,14 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/RenderableSource.inl"
+#ifndef GAFFERSCENE_CAMERA_H
+#define GAFFERSCENE_CAMERA_H
+
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( RenderableSceneNode, RenderableSceneNodeTypeId )
+class Camera : public ObjectSourceSceneNode
+{
 
-// explicit instantiation
-template class GafferScene::RenderableSource<SceneNode>;
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Camera, CameraTypeId, ObjectSourceSceneNode );
+
+		Camera( const std::string &name=staticTypeName() );
+		virtual ~Camera();
+		
+		Gaffer::V2iPlug *resolutionPlug();
+		const Gaffer::V2iPlug *resolutionPlug() const;
+		
+		Gaffer::StringPlug *projectionPlug();
+		const Gaffer::StringPlug *projectionPlug() const;
+		
+		Gaffer::FloatPlug *fieldOfViewPlug();
+		const Gaffer::FloatPlug *fieldOfViewPlug() const;
+				
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual IECore::ObjectPtr computeSource( const Gaffer::Context *context ) const;
+
+};
 
 } // namespace GafferScene
+
+#endif // GAFFERSCENE_CAMERA_H

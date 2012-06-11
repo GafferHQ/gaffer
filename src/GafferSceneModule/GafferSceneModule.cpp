@@ -52,18 +52,19 @@
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
 #include "GafferScene/ObjectToScene.h"
+#include "GafferScene/Camera.h"
 
 using namespace boost::python;
 using namespace GafferScene;
 
-IECore::PrimitivePtr geometry( const ScenePlug &plug, const std::string &scenePath )
+static IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const std::string &scenePath )
 {
-	IECore::ConstPrimitivePtr g = plug.geometry( scenePath );
-	return g ? g->copy() : 0;
+	IECore::ConstObjectPtr o = plug.object( scenePath );
+	return o ? o->copy() : 0;
 }
 
 
-IECore::StringVectorDataPtr childNames( const ScenePlug &plug, const std::string &scenePath )
+static IECore::StringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const std::string &scenePath )
 {
 	IECore::ConstStringVectorDataPtr n = plug.childNames( scenePath );
 	return n ? n->copy() : 0;
@@ -85,8 +86,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		)
 		.def( "bound", &ScenePlug::bound )
 		.def( "transform", &ScenePlug::transform )
-		.def( "geometry", &geometry )
-		.def( "childNames", &childNames )
+		.def( "object", &objectWrapper )
+		.def( "childNames", &childNamesWrapper )
 	;
 	
 	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
@@ -115,11 +116,12 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<SceneContextProcessorBase>();
 	GafferBindings::NodeClass<SceneContextProcessor>();
 	GafferBindings::NodeClass<SceneTimeWarp>();
-	GafferBindings::NodeClass<RenderableSceneNode>();
+	GafferBindings::NodeClass<ObjectSourceSceneNode>();
 	GafferBindings::NodeClass<Plane>();
 	GafferBindings::NodeClass<BranchCreator>();
 	GafferBindings::NodeClass<Seeds>();
 	GafferBindings::NodeClass<Instancer>();
 	GafferBindings::NodeClass<ObjectToScene>();
+	GafferBindings::NodeClass<Camera>();
 
 }

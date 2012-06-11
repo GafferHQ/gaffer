@@ -83,7 +83,7 @@ void Seeds::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	
 	if( input == densityPlug() || input == pointTypePlug() )
 	{
-		outputs.push_back( outPlug()->geometryPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
 	}
 }
 
@@ -101,12 +101,12 @@ Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const Sc
 	return M44f();
 }
 
-IECore::PrimitivePtr Seeds::computeBranchGeometry( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	if( branchPath == "/" )
 	{
 		// do what we came for
-		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->geometry( parentPath ) );
+		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->object( parentPath ) );
 		if( !mesh )
 		{
 			return 0;

@@ -63,7 +63,7 @@ class AttributeCache : public SceneElementProcessor
 		
 		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
-		virtual IECore::PrimitivePtr processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const;
+		virtual IECore::ObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 
 		std::string entryForPath( const ScenePath &path ) const;
 		

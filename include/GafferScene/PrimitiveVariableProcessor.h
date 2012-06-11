@@ -60,13 +60,13 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 		Gaffer::BoolPlug *invertNamesPlug();
 		const Gaffer::BoolPlug *invertNamesPlug() const;
 
-		/// Implemented so that namesPlug() affects outPlug()->geometryPlug().
+		/// Implemented so that namesPlug() affects outPlug()->objectPlug().
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		
-		/// Implemented to call processPrimitiveVariable() for the appropriate variables of inputGeometry.
-		virtual IECore::PrimitivePtr processGeometry( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry ) const;
+		/// Implemented to call processPrimitiveVariable() for the appropriate variables of inputObject.
+		virtual IECore::ObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 		/// Must be implemented by subclasses to process the primitive variable and return it.
 		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const;
 	

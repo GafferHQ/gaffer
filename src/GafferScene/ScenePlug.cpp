@@ -68,8 +68,8 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 	);
 	
 	addChild(
-		new PrimitivePlug(
-			"geometry",
+		new ObjectPlug(
+			"object",
 			direction,
 			0,
 			flags
@@ -129,14 +129,14 @@ const Gaffer::M44fPlug *ScenePlug::transformPlug() const
 	return getChild<M44fPlug>( "transform" );
 }
 
-Gaffer::PrimitivePlug *ScenePlug::geometryPlug()
+Gaffer::ObjectPlug *ScenePlug::objectPlug()
 {
-	return getChild<PrimitivePlug>( "geometry" );
+	return getChild<ObjectPlug>( "object" );
 }
 
-const Gaffer::PrimitivePlug *ScenePlug::geometryPlug() const
+const Gaffer::ObjectPlug *ScenePlug::objectPlug() const
 {
-	return getChild<PrimitivePlug>( "geometry" );
+	return getChild<ObjectPlug>( "object" );
 }
 
 Gaffer::StringVectorDataPlug *ScenePlug::childNamesPlug()
@@ -173,16 +173,16 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 	return transformPlug()->getValue();
 }
 
-IECore::ConstPrimitivePtr ScenePlug::geometry( const std::string &scenePath ) const
+IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const
 {
 	if( direction()==In && !getInput<Plug>() )
 	{
-		throw IECore::Exception( "ScenePlug::geometry called on unconnected input plug" );
+		throw IECore::Exception( "ScenePlug::object called on unconnected input plug" );
 	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
-	return geometryPlug()->getValue();
+	return objectPlug()->getValue();
 }
 
 IECore::ConstStringVectorDataPtr ScenePlug::childNames( const std::string &scenePath ) const

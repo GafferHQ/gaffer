@@ -34,37 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PLANE_H
-#define GAFFERSCENE_PLANE_H
-
-#include "Gaffer/CompoundNumericPlug.h"
-
-#include "GafferScene/ObjectSource.h"
+#include "GafferScene/ObjectSource.inl"
 
 namespace GafferScene
 {
 
-class Plane : public ObjectSourceSceneNode
-{
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectSourceSceneNode, ObjectSourceSceneNodeTypeId )
 
-	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Plane, PlaneTypeId, ObjectSourceSceneNode );
-
-		Plane( const std::string &name=staticTypeName() );
-		virtual ~Plane();
-		
-		Gaffer::V2fPlug *dimensionsPlug();
-		const Gaffer::V2fPlug *dimensionsPlug() const;
-		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-		
-	protected :
-
-		virtual IECore::ObjectPtr computeSource( const Gaffer::Context *context ) const;
-
-};
+// explicit instantiation
+template class GafferScene::ObjectSource<SceneNode>;
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PLANE_H

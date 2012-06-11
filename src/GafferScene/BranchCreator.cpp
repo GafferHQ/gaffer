@@ -126,18 +126,18 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 	return M44f();
 }
 
-IECore::PrimitivePtr BranchCreator::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
 	parentAndBranchPaths( path, parentPath, branchPath );
 	if( branchPath.size() )
 	{
-		return computeBranchGeometry( parentPath, branchPath, context );
+		return computeBranchObject( parentPath, branchPath, context );
 	}
 	else
 	{
-		ConstPrimitivePtr primitive = inPlug()->geometryPlug()->getValue();
-		return primitive ? primitive->copy() : 0;
+		ConstObjectPtr object = inPlug()->objectPlug()->getValue();
+		return object ? object->copy() : 0;
 	}
 }
 

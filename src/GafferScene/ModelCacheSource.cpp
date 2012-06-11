@@ -137,7 +137,7 @@ Imath::M44f ModelCacheSource::computeTransform( const ScenePath &path, const Gaf
 	return result;
 }
 
-IECore::PrimitivePtr ModelCacheSource::computeGeometry( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string entry = entryForPath( path ) + "/geometry";
 	

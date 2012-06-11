@@ -36,60 +36,60 @@
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
-#include "GafferScene/RenderableSource.h"
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
 template<typename BaseType>
-const IECore::RunTimeTyped::TypeDescription<RenderableSource<BaseType> > RenderableSource<BaseType>::g_typeDescription;
+const IECore::RunTimeTyped::TypeDescription<ObjectSource<BaseType> > ObjectSource<BaseType>::g_typeDescription;
 
 template<typename BaseType>
-RenderableSource<BaseType>::RenderableSource( const std::string &name, const std::string &namePlugDefaultValue )
+ObjectSource<BaseType>::ObjectSource( const std::string &name, const std::string &namePlugDefaultValue )
 	:	BaseType( name )
 {
 	BaseType::addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
 	BaseType::addChild( new Gaffer::TransformPlug( "transform" ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__renderable", Gaffer::Plug::Out ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__inputRenderable", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
-	inputRenderablePlug()->setInput( renderablePlug() );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out ) );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__inputSource", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
+	inputSourcePlug()->setInput( sourcePlug() );
 }
 
 template<typename BaseType>
-RenderableSource<BaseType>::~RenderableSource()
+ObjectSource<BaseType>::~ObjectSource()
 {
 }
 
 template<typename BaseType>
-Gaffer::StringPlug *RenderableSource<BaseType>::namePlug()
-{
-	return BaseType::template getChild<Gaffer::StringPlug>( "name" );
-}
-
-template<typename BaseType>
-const Gaffer::StringPlug *RenderableSource<BaseType>::namePlug() const
+Gaffer::StringPlug *ObjectSource<BaseType>::namePlug()
 {
 	return BaseType::template getChild<Gaffer::StringPlug>( "name" );
 }
 
 template<typename BaseType>
-Gaffer::TransformPlug *RenderableSource<BaseType>::transformPlug()
+const Gaffer::StringPlug *ObjectSource<BaseType>::namePlug() const
+{
+	return BaseType::template getChild<Gaffer::StringPlug>( "name" );
+}
+
+template<typename BaseType>
+Gaffer::TransformPlug *ObjectSource<BaseType>::transformPlug()
 {
 	return BaseType::template getChild<Gaffer::TransformPlug>( "transform" );
 }
 
 template<typename BaseType>
-const Gaffer::TransformPlug *RenderableSource<BaseType>::transformPlug() const
+const Gaffer::TransformPlug *ObjectSource<BaseType>::transformPlug() const
 {
 	return BaseType::template getChild<Gaffer::TransformPlug>( "transform" );
 }
 
 template<typename BaseType>
-void RenderableSource<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const
+void ObjectSource<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
 	
-	if( input == inputRenderablePlug() )
+	if( input == inputSourcePlug() )
 	{
 		outputs.push_back( BaseType::outPlug() );
 	}
@@ -107,35 +107,35 @@ void RenderableSource<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer
 }
 
 template<typename BaseType>
-Gaffer::ObjectPlug *RenderableSource<BaseType>::renderablePlug()
+Gaffer::ObjectPlug *ObjectSource<BaseType>::sourcePlug()
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__renderable" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( "__source" );
 }
 
 template<typename BaseType>
-const Gaffer::ObjectPlug *RenderableSource<BaseType>::renderablePlug() const
+const Gaffer::ObjectPlug *ObjectSource<BaseType>::sourcePlug() const
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__renderable" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( "__source" );
 }
 
 template<typename BaseType>
-Gaffer::ObjectPlug *RenderableSource<BaseType>::inputRenderablePlug()
+Gaffer::ObjectPlug *ObjectSource<BaseType>::inputSourcePlug()
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputRenderable" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputSource" );
 }
 
 template<typename BaseType>
-const Gaffer::ObjectPlug *RenderableSource<BaseType>::inputRenderablePlug() const
+const Gaffer::ObjectPlug *ObjectSource<BaseType>::inputSourcePlug() const
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputRenderable" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputSource" );
 }
 		
 template<typename BaseType>
-void RenderableSource<BaseType>::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+void ObjectSource<BaseType>::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
-	if( output == renderablePlug() )
+	if( output == sourcePlug() )
 	{
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeRenderable( context ) );
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeSource( context ) );
 		return;
 	}
 	
@@ -143,10 +143,10 @@ void RenderableSource<BaseType>::compute( Gaffer::ValuePlug *output, const Gaffe
 }
 
 template<typename BaseType>
-Imath::Box3f RenderableSource<BaseType>::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::Box3f ObjectSource<BaseType>::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Imath::Box3f result;
-	IECore::ConstVisibleRenderablePtr renderable = IECore::staticPointerCast<const IECore::VisibleRenderable>( inputRenderablePlug()->getValue() );
+	IECore::ConstVisibleRenderablePtr renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( inputSourcePlug()->getValue() );
 	if( renderable )
 	{
 		result = renderable->bound();
@@ -159,7 +159,7 @@ Imath::Box3f RenderableSource<BaseType>::computeBound( const SceneNode::ScenePat
 }
 
 template<typename BaseType>
-Imath::M44f RenderableSource<BaseType>::computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::M44f ObjectSource<BaseType>::computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path != "/" )
 	{
@@ -169,18 +169,18 @@ Imath::M44f RenderableSource<BaseType>::computeTransform( const SceneNode::Scene
 }
 
 template<typename BaseType>
-IECore::PrimitivePtr RenderableSource<BaseType>::computeGeometry( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr ObjectSource<BaseType>::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path != "/" )
 	{
-		IECore::ConstPrimitivePtr primitive = IECore::runTimeCast<const IECore::Primitive>( inputRenderablePlug()->getValue() );
-		return primitive ? primitive->copy() : 0;
+		IECore::ConstObjectPtr object = inputSourcePlug()->getValue();
+		return object ? object->copy() : 0;
 	}
 	return 0;
 }
 
 template<typename BaseType>
-IECore::StringVectorDataPtr RenderableSource<BaseType>::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::StringVectorDataPtr ObjectSource<BaseType>::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path == "/" )
 	{

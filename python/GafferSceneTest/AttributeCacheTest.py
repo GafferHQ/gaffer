@@ -49,7 +49,7 @@ class AttributeCacheTest( unittest.TestCase ) :
 			inputs = {
 				"in.bound" : m["out.bound"],
 				"in.transform" : m["out.transform"],
-				"in.geometry" : m["out.geometry"],
+				"in.object" : m["out.object"],
 				"in.childNames" : m["out.childNames"],
 			}
 		)

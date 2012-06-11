@@ -34,46 +34,79 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/ObjectToScene.h"
+#include "IECore/Camera.h"
+#include "IECore/Transform.h"
+
+#include "GafferScene/Camera.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
-using namespace IECore;
+using namespace Imath;
 
-IE_CORE_DEFINERUNTIMETYPED( ObjectToScene );
+IE_CORE_DEFINERUNTIMETYPED( Camera );
 
-ObjectToScene::ObjectToScene( const std::string &name )
-	:	ObjectSourceSceneNode( name, "object" )
+Camera::Camera( const std::string &name )
+	:	ObjectSourceSceneNode( name, "camera" )
 {
-	addChild( new ObjectPlug( "object" ) );
+	addChild( new V2iPlug( "resolution", Plug::In, V2i( 1024, 778 ) ) );
+	addChild( new StringPlug( "projection", Plug::In, "perspective" ) );
+	addChild( new FloatPlug( "fieldOfView", Plug::In, 50.0f, 0.0f, 180.0f ) );
 }
 
-ObjectToScene::~ObjectToScene()
+Camera::~Camera()
 {
 }
 
-Gaffer::ObjectPlug *ObjectToScene::objectPlug()
+Gaffer::V2iPlug *Camera::resolutionPlug()
 {
-	return getChild<ObjectPlug>( "object" );
+	return getChild<V2iPlug>( "resolution" );
 }
 
-const Gaffer::ObjectPlug *ObjectToScene::objectPlug() const
+const Gaffer::V2iPlug *Camera::resolutionPlug() const
 {
-	return getChild<ObjectPlug>( "object" );
+	return getChild<V2iPlug>( "resolution" );
 }
 
-void ObjectToScene::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+Gaffer::StringPlug *Camera::projectionPlug()
+{
+	return getChild<StringPlug>( "projection" );
+}
+
+const Gaffer::StringPlug *Camera::projectionPlug() const
+{
+	return getChild<StringPlug>( "projection" );
+}
+
+Gaffer::FloatPlug *Camera::fieldOfViewPlug()
+{
+	return getChild<FloatPlug>( "fieldOfView" );
+}
+
+const Gaffer::FloatPlug *Camera::fieldOfViewPlug() const
+{
+	return getChild<FloatPlug>( "fieldOfView" );
+}
+
+void Camera::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
 {
 	ObjectSourceSceneNode::affects( input, outputs );
 	
-	if( input == objectPlug() )
+	if(
+		input == resolutionPlug() ||
+		input == projectionPlug() ||
+		input == fieldOfViewPlug()
+	)
 	{
 		outputs.push_back( sourcePlug() );
 	}
 }
 
-IECore::ObjectPtr ObjectToScene::computeSource( const Context *context ) const
+IECore::ObjectPtr Camera::computeSource( const Context *context ) const
 {
-	ConstObjectPtr o = objectPlug()->getValue();
-	return o ? o->copy() : 0;
+	IECore::CameraPtr result = new IECore::Camera;
+	result->parameters()["resolution"] = new IECore::V2iData( resolutionPlug()->getValue() );
+	result->parameters()["projection"] = new IECore::StringData( projectionPlug()->getValue() );
+	result->parameters()["projection:fov"] = new IECore::FloatData( fieldOfViewPlug()->getValue() );
+	result->addStandardParameters();
+	return result;
 }

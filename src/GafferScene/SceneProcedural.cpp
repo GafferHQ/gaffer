@@ -108,7 +108,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
 			
-		ConstPrimitivePtr primitive = m_scenePlug->geometryPlug()->getValue();
+		ConstPrimitivePtr primitive = runTimeCast<const Primitive>( m_scenePlug->objectPlug()->getValue() );
 		if( primitive )
 		{
 			primitive->render( renderer );

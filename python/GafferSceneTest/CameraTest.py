@@ -39,68 +39,38 @@ import unittest
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferScene
-import GafferSceneTest
 
-class PlaneTest( unittest.TestCase ) :
+class CameraTest( unittest.TestCase ) :
 
 	def testConstruct( self ) :
 	
-		p = GafferScene.Plane()
-		self.assertEqual( p.getName(), "Plane" )
+		p = GafferScene.Camera()
+		self.assertEqual( p.getName(), "Camera" )
+		self.assertEqual( p["name"].getValue(), "camera" )
 	
 	def testCompute( self ) :
 	
-		p = GafferScene.Plane()
+		p = GafferScene.Camera( inputs = {
+			"resolution" : IECore.V2i( 200, 100 ),
+			"projection" : "perspective",
+			"fieldOfView" : 45,
+		} )
 	
 		self.assertEqual( p["out"].object( "/" ), None )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
+		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f() )
+		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "camera" ] ) )
 		
-		self.assertEqual( p["out"].object( "/plane" ), IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
-		self.assertEqual( p["out"].transform( "/plane" ), IECore.M44f() )
-		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-		self.assertEqual( p["out"].childNames( "/plane" ), None )
-	
-	def testAffects( self ) :
-	
-		p = GafferScene.Plane()
-
-		s = GafferTest.CapturingSlot( p.plugDirtiedSignal() )
+		self.assertEqual( p["out"].transform( "/camera" ), IECore.M44f() )
+		self.assertEqual( p["out"].bound( "/camera" ), IECore.Box3f() )
+		self.assertEqual( p["out"].childNames( "/camera" ), None )
 		
-		p["name"].setValue( "ground" )
-		self.assertEqual( len( s ), 2 )
-		self.failUnless( s[0][0].isSame( p["out"]["childNames"] ) )
-		self.failUnless( s[1][0].isSame( p["out"] ) )
-		
-		del s[:]
-		
-		p["dimensions"]["x"].setValue( 10 )
-		found = False
-		for ss in s :
-			if ss[0].isSame( p["out"] ) :
-				found = True
-		self.failUnless( found )
-	
-	def testTransform( self ) :
-	
-		p = GafferScene.Plane()
-		p["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
-		
-		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( p["out"].transform( "/plane" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
-		
-		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0.5, -0.5, 0 ), IECore.V3f( 1.5, 0.5, 0 ) ) )
-		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-
-	def testSerialise( self ) :
-	
-		s = Gaffer.ScriptNode()
-		s["p"] = GafferScene.Plane()
-		
-		ss = s.serialise()
+		o = p["out"].object( "/camera" )
+		self.failUnless( isinstance( o, IECore.Camera ) )
+		self.assertEqual( o.parameters()["resolution"].value, IECore.V2i( 200, 100 ) )
+		self.assertEqual( o.parameters()["projection"].value, "perspective" )
+		self.assertEqual( o.parameters()["projection:fov"].value, 45 )
 	
 if __name__ == "__main__":
 	unittest.main()

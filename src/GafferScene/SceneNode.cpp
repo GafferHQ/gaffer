@@ -84,10 +84,10 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 				computeTransform( scenePath, context, scenePlug )
 			);
 		}
-		else if( output == scenePlug->geometryPlug() )
+		else if( output == scenePlug->objectPlug() )
 		{
-			static_cast<PrimitivePlug *>( output )->setValue(
-				computeGeometry( scenePath, context, scenePlug )
+			static_cast<ObjectPlug *>( output )->setValue(
+				computeObject( scenePath, context, scenePlug )
 			);
 		}
 		else if( output == scenePlug->childNamesPlug() )

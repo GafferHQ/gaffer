@@ -129,14 +129,14 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	return result;
 }
 
-IECore::PrimitivePtr Instancer::computeBranchGeometry( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ObjectPtr Instancer::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );
 	if( ic )
 	{
 		Context::Scope scopedContext( ic );
-		ConstPrimitivePtr instanceGeometry = instancePlug()->geometryPlug()->getValue();
-		return instanceGeometry ? instanceGeometry->copy() : 0;
+		ConstObjectPtr instanceObject = instancePlug()->objectPlug()->getValue();
+		return instanceObject ? instanceObject->copy() : 0;
 	}
 	return 0;
 }
@@ -175,7 +175,7 @@ IECore::StringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath 
 
 ConstV3fVectorDataPtr Instancer::sourcePoints( const ScenePath &parentPath ) const
 {
-	ConstPrimitivePtr primitive = inPlug()->geometry( parentPath );
+	ConstPrimitivePtr primitive = runTimeCast<const Primitive>( inPlug()->object( parentPath ) );
 	if( !primitive )
 	{
 		return 0;

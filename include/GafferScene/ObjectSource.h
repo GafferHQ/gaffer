@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_RENDERABLESOURCE_H
-#define GAFFERSCENE_RENDERABLESOURCE_H
+#ifndef GAFFERSCENE_OBJECTSOURCE_H
+#define GAFFERSCENE_OBJECTSOURCE_H
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TransformPlug.h"
@@ -47,15 +47,15 @@ namespace GafferScene
 
 /// \todo Support turning IECore::Groups into a proper scene hierarchy.
 template<typename BaseType>
-class RenderableSource : public BaseType
+class ObjectSource : public BaseType
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( RenderableSource<BaseType>, BaseType );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( RenderableSource<BaseType> );
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ObjectSource<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ObjectSource<BaseType> );
 
-		virtual ~RenderableSource();
+		virtual ~ObjectSource();
 		
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -67,29 +67,29 @@ class RenderableSource : public BaseType
 		
 	protected :
 
-		RenderableSource( const std::string &name, const std::string &namePlugDefaultValue );
+		ObjectSource( const std::string &name, const std::string &namePlugDefaultValue );
 
-		Gaffer::ObjectPlug *renderablePlug();
-		const Gaffer::ObjectPlug *renderablePlug() const;
+		Gaffer::ObjectPlug *sourcePlug();
+		const Gaffer::ObjectPlug *sourcePlug() const;
 
-		virtual IECore::VisibleRenderablePtr computeRenderable( const Gaffer::Context *context ) const = 0;		
+		virtual IECore::ObjectPtr computeSource( const Gaffer::Context *context ) const = 0;		
 		
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		virtual Imath::Box3f computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::PrimitivePtr computeGeometry( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ObjectPtr computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::StringVectorDataPtr computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 	private :
 	
-		Gaffer::ObjectPlug *inputRenderablePlug();
-		const Gaffer::ObjectPlug *inputRenderablePlug() const;
+		Gaffer::ObjectPlug *inputSourcePlug();
+		const Gaffer::ObjectPlug *inputSourcePlug() const;
 		
 };
 
-typedef RenderableSource<SceneNode> RenderableSceneNode;
-IE_CORE_DECLAREPTR( RenderableSceneNode );
+typedef ObjectSource<SceneNode> ObjectSourceSceneNode;
+IE_CORE_DECLAREPTR( ObjectSourceSceneNode );
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_RENDERABLESOURCE_H
+#endif // GAFFERSCENE_OBJECTSOURCE_H
