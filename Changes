@@ -12,6 +12,8 @@
 
 * TextWidget now supports having a fixed width defined in characters using the setCharacterWidth() and getCharacterWidth() methods.
 
+* NumericPlugValueWidget now sets maximum field width for integer plugs where max values has been set - this slightly improves the ui for the TimeCodeParameterValueWidget.
+
 0.33.2
 ------
 * Fixed the delete order of ListContainer that was causing popup windows

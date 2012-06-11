@@ -57,7 +57,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 						
 		self.updateFromPlug()
 		
-	def numericWidget(self):
+	def numericWidget( self ) :
+	
 		return self.__numericWidget
 		
 	def updateFromPlug( self ) :
@@ -66,8 +67,16 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# we're still constructing
 			return
 		
-		if self.getPlug() is not None :
-			self.__numericWidget.setValue( self.getPlug().getValue() )
+		plug = self.getPlug()
+		if plug is not None :
+			
+			self.__numericWidget.setValue( plug.getValue() )
+
+			charWidth = None
+			if isinstance( plug, Gaffer.IntPlug ) :
+				if plug.hasMaxValue() :
+					charWidth = len( str( plug.maxValue() ) )
+			self.__numericWidget.setCharacterWidth( charWidth )
 					
 		self.__numericWidget.setEditable( self._editable() )
 	
