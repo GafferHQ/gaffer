@@ -113,6 +113,14 @@ typedef SplinePlug<IECore::SplinefColor3f> SplinefColor3fPlug;
 IE_CORE_DECLAREPTR( SplineffPlug );
 IE_CORE_DECLAREPTR( SplinefColor3fPlug );
 
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug> > SplineffPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, SplineffPlug> > InputSplineffPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplineffPlug> > OutputSplineffPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug> > SplinefColor3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug> > InputSplinefColor3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug> > OutputSplinefColor3fPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_SPLINEPLUG_H

@@ -82,6 +82,10 @@ class CompoundPlug : public ValuePlug
 
 IE_CORE_DECLAREPTR( CompoundPlug );
 
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, CompoundPlug> > CompoundPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, CompoundPlug> > InputCompoundPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, CompoundPlug> > OutputCompoundPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_COMPOUNDPLUG_H

@@ -67,6 +67,10 @@ class TransformPlug : public CompoundPlug
 
 IE_CORE_DECLAREPTR( TransformPlug );
 
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, TransformPlug> > TransformPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, TransformPlug> > InputTransformPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, TransformPlug> > OutputTransformPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_TRANSFORMPLUG_H

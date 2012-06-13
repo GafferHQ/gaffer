@@ -38,6 +38,7 @@
 #define GAFFER_VALUEPLUG_H
 
 #include "Gaffer/Plug.h"
+#include "Gaffer/PlugIterator.h"
 
 namespace Gaffer
 {
@@ -114,6 +115,10 @@ class ValuePlug : public Plug
 };
 
 IE_CORE_DECLAREPTR( ValuePlug )
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ValuePlug> > ValuePlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, ValuePlug> > InputValuePlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, ValuePlug> > OutputValuePlugIterator;
 
 } // namespace Gaffer
 
