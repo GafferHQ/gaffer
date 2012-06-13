@@ -53,6 +53,9 @@
 #include "GafferScene/Instancer.h"
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Camera.h"
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/Displays.h"
+#include "GafferScene/ParameterListPlug.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -68,6 +71,28 @@ static IECore::StringVectorDataPtr childNamesWrapper( const ScenePlug &plug, con
 {
 	IECore::ConstStringVectorDataPtr n = plug.childNames( scenePath );
 	return n ? n->copy() : 0;
+}
+
+static Gaffer::CompoundPlugPtr addDisplayWrapper( Displays &displays, const std::string &name, const std::string &type, const std::string &data )
+{
+	return displays.addDisplay( name, type, data );
+}
+
+static ParameterListPlugPtr parameterListPlugConstructor( const char *name, Gaffer::Plug::Direction direction, unsigned flags, tuple children )
+{
+	ParameterListPlugPtr result = new ParameterListPlug( name, direction, flags );
+	size_t s = extract<size_t>( children.attr( "__len__" )() );
+	for( size_t i=0; i<s; i++ )
+	{
+		Gaffer::PlugPtr c = extract<Gaffer::PlugPtr>( children[i] );
+		result->addChild( c );
+	}
+	return result;
+}
+
+static Gaffer::CompoundPlugPtr addParameterWrapper( ParameterListPlug &p, const std::string &name, IECore::DataPtr value )
+{
+	return p.addParameter( name, value );
 }
 
 BOOST_PYTHON_MODULE( _GafferScene )
@@ -88,6 +113,19 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		.def( "transform", &ScenePlug::transform )
 		.def( "object", &objectWrapper )
 		.def( "childNames", &childNamesWrapper )
+	;
+	
+	IECorePython::RunTimeTypedClass<ParameterListPlug>()
+		.def( "__init__", make_constructor( parameterListPlugConstructor, default_call_policies(),  
+				(
+					arg( "name" ) = ScenePlug::staticTypeName(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default,
+					arg( "children" ) = tuple()
+				)
+			)	
+		)
+		.def( "addParameter", &addParameterWrapper )
 	;
 	
 	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
@@ -123,5 +161,10 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<Instancer>();
 	GafferBindings::NodeClass<ObjectToScene>();
 	GafferBindings::NodeClass<Camera>();
+	GafferBindings::NodeClass<GlobalsProcessor>();
+
+	GafferBindings::NodeClass<Displays>()
+		.def( "addDisplay", &addDisplayWrapper )
+	;
 
 }

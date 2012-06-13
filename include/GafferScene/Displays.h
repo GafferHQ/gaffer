@@ -34,36 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MODELCACHESOURCE_H
-#define GAFFERSCENE_MODELCACHESOURCE_H
+#ifndef GAFFERSCENE_DISPLAYS_H
+#define GAFFERSCENE_DISPLAYS_H
 
-#include "GafferScene/FileSource.h"
+#include "GafferScene/GlobalsProcessor.h"
 
 namespace GafferScene
 {
 
-class ModelCacheSource : public FileSource
+class Displays : public GlobalsProcessor
 {
 
 	public :
 
-		ModelCacheSource( const std::string &name=staticTypeName() );
-		virtual ~ModelCacheSource();
+		Displays( const std::string &name=staticTypeName() );
+		virtual ~Displays();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ModelCacheSource, ModelCacheSourceTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Displays, DisplaysTypeId, GlobalsProcessor );
 		
-	private :
-	
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		Gaffer::CompoundPlug *displaysPlug();
+		const Gaffer::CompoundPlug *displaysPlug() const;
 		
-		std::string entryForPath( const ScenePath &path ) const;
+		Gaffer::CompoundPlug *addDisplay( const std::string &name, const std::string &type, const std::string &data );
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual IECore::ObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
 		
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_MODELCACHESOURCE_H
+#endif // GAFFERSCENE_DISPLAYS_H

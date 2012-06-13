@@ -62,6 +62,9 @@ enum TypeId
 	BranchCreatorTypeId = 110518,
 	ObjectToSceneTypeId = 110519,
 	CameraTypeId = 110520,
+	GlobalsProcessorTypeId = 110521,
+	DisplaysTypeId = 110522,
+	ParameterListPlugTypeId = 110523,
 	
 	LastTypeId = 110700
 };

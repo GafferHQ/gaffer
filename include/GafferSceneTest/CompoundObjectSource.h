@@ -69,6 +69,7 @@ class CompoundObjectSource : public GafferScene::SceneNode
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
 		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
 		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
+		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
 		
 		const IECore::CompoundObject *entryForPath( const ScenePath &path ) const;
 		

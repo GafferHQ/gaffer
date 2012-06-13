@@ -185,6 +185,11 @@ IECore::StringVectorDataPtr ModelCacheSource::computeChildNames( const ScenePath
 	return resultData;
 }
 
+IECore::ObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return 0;
+}
+
 std::string ModelCacheSource::entryForPath( const ScenePath &path ) const
 {
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;

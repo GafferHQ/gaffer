@@ -34,23 +34,23 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/GlobalsProcessor.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( SceneElementProcessor );
+IE_CORE_DEFINERUNTIMETYPED( GlobalsProcessor );
 
-SceneElementProcessor::SceneElementProcessor( const std::string &name )
+GlobalsProcessor::GlobalsProcessor( const std::string &name )
 	:	SceneProcessor( name )
 {
 }
 
-SceneElementProcessor::~SceneElementProcessor()
+GlobalsProcessor::~GlobalsProcessor()
 {
 }
 
-void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void GlobalsProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 	
@@ -61,52 +61,30 @@ void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContai
 	}
 }
 
-Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::Box3f GlobalsProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processBound( path, context, inPlug()->boundPlug()->getValue() );
+	return inPlug()->boundPlug()->getValue();
 }
 
-Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::M44f GlobalsProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processTransform( path, context, inPlug()->transformPlug()->getValue() );
+	return inPlug()->transformPlug()->getValue();
 }
 
-IECore::ObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr GlobalsProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processObject( path, context, inPlug()->objectPlug()->getValue() );
+	IECore::ConstObjectPtr o = inPlug()->objectPlug()->getValue();
+	return o ? o->copy() : 0;
 }
 
-IECore::StringVectorDataPtr SceneElementProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::StringVectorDataPtr GlobalsProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstStringVectorDataPtr names = inPlug()->childNamesPlug()->getValue();
-	if( names )
-	{
-		return names->copy();
-	}
-	return 0;
+	return names ? names->copy() : 0;
 }
 
-IECore::ObjectVectorPtr SceneElementProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectVectorPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
-	return globals ? globals->copy() : 0;
-}
-
-Imath::Box3f SceneElementProcessor::processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
-{
-	return inputBound;
-}
-
-Imath::M44f SceneElementProcessor::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
-{
-	return inputTransform;
-}
-
-IECore::ObjectPtr SceneElementProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
-{
-	if( inputObject )
-	{
-		return inputObject->copy();
-	}
-	return 0;
+	return processGlobals( context, globals );
 }

@@ -174,7 +174,7 @@ static void addDynamicPlugs( Node *node, const boost::python::tuple &dynamicPlug
 	for( long i=0; i<l; i++ )
 	{
 		PlugPtr p = extract<PlugPtr>( dynamicPlugs[i] );
-		node->addChild( p );
+		node->setChild( p->getName(), p );
 	}
 }
 

@@ -161,6 +161,12 @@ IECore::StringVectorDataPtr GroupScenes::computeChildNames( const ScenePath &pat
 	}
 }
 
+IECore::ObjectVectorPtr GroupScenes::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
+	return globals ? globals->copy() : 0;
+}
+
 std::string GroupScenes::sourcePath( const std::string &outputPath, const std::string &groupName ) const
 {
 	// we're a pass through if no group name is given

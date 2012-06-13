@@ -74,26 +74,17 @@ class Render( Gaffer.Node ) :
 		#!! HAVE OPTION TO SAVE TO EXISTING FILE OR TO A NEW ONE !! 
 	
 		renderer = self._createRenderer()
-		
-		## \todo We need a node to add displays to the scene rather than hardcoding this here.
-		renderer.display(
-			"test",
-			"ieDisplay",
-			"rgba",
-			{
-				"displayHost" : "localhost",
-				"displayPort" : "1559",
-				"remoteDisplayType" : "GafferDisplayDriver",
-				"driverType" : "ClientDisplayDriver",
-				"fileName" : "untitled.fullRenderPass.beauty.0001.exr",
-				"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
-			}
-		)
+				
+		scenePlug = self["in"].getInput()
+		globals = scenePlug["globals"].getValue()
+		if globals :
+			for g in globals :
+				if isinstance( g, IECore.PreWorldRenderable ) :
+					g.render( renderer )
 		
 		with IECore.WorldBlock( renderer ) :
 		
 			scriptNode = self.ancestor( Gaffer.ScriptNode.staticTypeId() )
-			scenePlug = self["in"].getInput()
 			
 			procedural = GafferScene.ScriptProcedural()
 			procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )

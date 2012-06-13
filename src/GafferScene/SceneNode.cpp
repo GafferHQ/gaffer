@@ -71,29 +71,38 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 	ScenePlug *scenePlug = output->ancestor<ScenePlug>();
 	if( scenePlug )
 	{
-		std::string scenePath = context->get<std::string>( "scene:path" );
 		if( output == scenePlug->boundPlug() )
 		{
+			std::string scenePath = context->get<std::string>( "scene:path" );
 			static_cast<AtomicBox3fPlug *>( output )->setValue(
 				computeBound( scenePath, context, scenePlug )
 			);
 		}
 		else if( output == scenePlug->transformPlug() )
 		{
+			std::string scenePath = context->get<std::string>( "scene:path" );
 			static_cast<M44fPlug *>( output )->setValue(
 				computeTransform( scenePath, context, scenePlug )
 			);
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
+			std::string scenePath = context->get<std::string>( "scene:path" );
 			static_cast<ObjectPlug *>( output )->setValue(
 				computeObject( scenePath, context, scenePlug )
 			);
 		}
 		else if( output == scenePlug->childNamesPlug() )
 		{
+			std::string scenePath = context->get<std::string>( "scene:path" );
 			static_cast<StringVectorDataPlug *>( output )->setValue(
 				computeChildNames( scenePath, context, scenePlug )
+			);
+		}
+		else if( output == scenePlug->globalsPlug() )
+		{
+			static_cast<ObjectVectorPlug *>( output )->setValue(
+				computeGlobals( context, scenePlug )
 			);
 		}
 	}

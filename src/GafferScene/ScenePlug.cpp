@@ -85,6 +85,15 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 	
+	addChild(
+		new ObjectVectorPlug(
+			"globals",	
+			direction,
+			0,
+			flags
+		)
+	);
+	
 }
 
 ScenePlug::~ScenePlug()
@@ -93,7 +102,7 @@ ScenePlug::~ScenePlug()
 
 bool ScenePlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
 {
-	return children().size() != 4;
+	return children().size() != 5;
 }
 
 bool ScenePlug::acceptsInput( Gaffer::ConstPlugPtr input ) const
@@ -147,6 +156,16 @@ Gaffer::StringVectorDataPlug *ScenePlug::childNamesPlug()
 const Gaffer::StringVectorDataPlug *ScenePlug::childNamesPlug() const
 {
 	return getChild<StringVectorDataPlug>( "childNames" );
+}
+
+Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug()
+{
+	return getChild<ObjectVectorPlug>( "globals" );
+}
+
+const Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug() const
+{
+	return getChild<ObjectVectorPlug>( "globals" );
 }
 
 Imath::Box3f ScenePlug::bound( const std::string &scenePath ) const

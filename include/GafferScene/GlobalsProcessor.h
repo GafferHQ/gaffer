@@ -34,36 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MODELCACHESOURCE_H
-#define GAFFERSCENE_MODELCACHESOURCE_H
+#ifndef GAFFERSCENE_GLOBALSPROCESSOR_H
+#define GAFFERSCENE_GLOBALSPROCESSOR_H
 
-#include "GafferScene/FileSource.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
-class ModelCacheSource : public FileSource
+/// The SceneElementProcessor class provides a base class for modifying the globals
+/// of a scene while passing everything else through unchanged.
+class GlobalsProcessor : public SceneProcessor
 {
 
 	public :
 
-		ModelCacheSource( const std::string &name=staticTypeName() );
-		virtual ~ModelCacheSource();
+		GlobalsProcessor( const std::string &name=staticTypeName() );
+		virtual ~GlobalsProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ModelCacheSource, ModelCacheSourceTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
 		
-	private :
-	
+		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+		
+		/// Implemented as pass throughs.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+
+		/// Implemented to call processGlobals.
 		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
-		std::string entryForPath( const ScenePath &path ) const;
+		/// Must be implemented by derived classes.
+		virtual IECore::ObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const = 0;
 		
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_MODELCACHESOURCE_H
+#endif // GAFFERSCENE_GLOBALSPROCESSOR_H

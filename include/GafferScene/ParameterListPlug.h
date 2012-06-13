@@ -34,36 +34,53 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MODELCACHESOURCE_H
-#define GAFFERSCENE_MODELCACHESOURCE_H
+#ifndef GAFFERSCENE_PARAMETERLISTPLUG_H
+#define GAFFERSCENE_PARAMETERLISTPLUG_H
 
-#include "GafferScene/FileSource.h"
+#include "IECore/CompoundData.h"
+
+#include "Gaffer/CompoundPlug.h"
+#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
 
-class ModelCacheSource : public FileSource
+/// This plug provides an easy means of generating arbitrary numbers of parameters
+/// for use in IECore::Display, IECore::Camera and IECore::AttributeState etc. Note
+/// that parameters in this context are not IECore::Parameters, but just simple
+/// named Data values for passing to IECore::Renderer.
+/// \todo Could this belong in the Gaffer namespace as simply CompoundDataPlug?. It
+/// could be used to make a useful ContextProcessor.
+class ParameterListPlug : public Gaffer::CompoundPlug
 {
 
 	public :
+		
+		ParameterListPlug(
+			const std::string &name = staticTypeName(),
+			Direction direction=In,
+			unsigned flags = Default
+		);
+		virtual ~ParameterListPlug();
 
-		ModelCacheSource( const std::string &name=staticTypeName() );
-		virtual ~ModelCacheSource();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ParameterListPlug, ParameterListPlugTypeId, Gaffer::CompoundPlug );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ModelCacheSource, ModelCacheSourceTypeId, FileSource )
-		
-	private :
-	
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
-		
-		std::string entryForPath( const ScenePath &path ) const;
-		
+		/// Accepts only children that can generate values for a parameter list.
+		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+
+		Gaffer::CompoundPlug *addParameter( const std::string &name, const IECore::Data *value );
+
+		/// Fills the parameter list with values based on the child plugs of this node.
+		void fillParameterList( IECore::CompoundDataMap &parameterList ) const;
+
 };
+
+IE_CORE_DECLAREPTR( ParameterListPlug );
+
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ParameterListPlug> > ParameterListPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ParameterListPlug> > InputParameterListPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ParameterListPlug> > OutputParameterListPlugIterator;
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_MODELCACHESOURCE_H
+#endif // GAFFERSCENE_PARAMETERLISTPLUG_H

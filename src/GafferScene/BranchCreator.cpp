@@ -167,6 +167,12 @@ IECore::StringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &p
 	}
 }
 
+IECore::ObjectVectorPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
+	return globals ? globals->copy() : 0;
+}
+
 void BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
 {
 	string parent = parentPlug()->getValue();

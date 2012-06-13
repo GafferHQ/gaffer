@@ -199,4 +199,10 @@ IECore::StringVectorDataPtr ObjectSource<BaseType>::computeChildNames( const Sce
 	return 0;
 }
 
+template<typename BaseType>
+IECore::ObjectVectorPtr ObjectSource<BaseType>::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return 0;
+}
+
 } // namespace GafferScene

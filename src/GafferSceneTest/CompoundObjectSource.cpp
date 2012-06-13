@@ -109,6 +109,11 @@ IECore::StringVectorDataPtr CompoundObjectSource::computeChildNames( const Scene
 	return result;
 }
 
+IECore::ObjectVectorPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+{
+	return 0;
+}
+
 const IECore::CompoundObject *CompoundObjectSource::entryForPath( const ScenePath &path ) const
 {
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;

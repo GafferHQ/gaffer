@@ -69,7 +69,9 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// child plugs. Plugs are expected to be evaluated in the context
 		/// of a particular parent in the scenegraph, so that the
 		/// scenegraph can be evaluated piecemeal, rather than all needing
-		/// to exist at once.
+		/// to exist at once. This parent should be specified as a string
+		/// context entry named "scene:path" - see below for utility functions
+		/// which construct such a context automatically.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// The plug used to pass the bounding box of the current node in
@@ -87,6 +89,12 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// in the scene graph.
 		Gaffer::StringVectorDataPlug *childNamesPlug();
 		const Gaffer::StringVectorDataPlug *childNamesPlug() const;
+		/// The plug used to pass renderer options including displays etc,
+		/// represented as an ObjectVector of IECore::PreWorldRenderables.
+		/// Note that this is not sensitive to the "scene:path" context
+		/// entry.
+		Gaffer::ObjectVectorPlug *globalsPlug();
+		const Gaffer::ObjectVectorPlug *globalsPlug() const;
 		//@}
 		
 		/// @name Convenience accessors
