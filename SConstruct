@@ -722,6 +722,7 @@ libraries = {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
 			"LIBS" : [ "GafferBindings", "GafferArnold" ],
 		},
+		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
 
 	"GafferArnoldTest" : {},
