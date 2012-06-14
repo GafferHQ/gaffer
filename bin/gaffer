@@ -98,7 +98,7 @@ export PATH=$GAFFER_ROOT/bin:$PATH
 # Run gaffer itself
 
 if [[ -n $GAFFER_DEBUG ]] ; then 
-	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
 else
-	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
 fi
