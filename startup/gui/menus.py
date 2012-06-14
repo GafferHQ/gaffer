@@ -40,7 +40,6 @@ import IECore
 
 import Gaffer
 import GafferScene
-import GafferImage
 
 ## \todo We can't simply import every module during startup - perhaps we should have
 # a plugin autoload mechanism accessible in the preferences? It's important that we
@@ -48,9 +47,11 @@ import GafferImage
 # modules and nothing more.
 import GafferUI
 import GafferSceneUI
-import GafferImageUI
-import GafferArnoldUI
-
+try :
+	import GafferArnoldUI
+except ImportError :
+	pass
+	
 # ScriptWindow menu
 
 scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
@@ -74,9 +75,15 @@ GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
 
-GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
-GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
+try :	
+	import GafferImage
+	import GafferImageUI
 
+	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
+	GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
+except ImportError :
+	pass
+	
 GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
 
