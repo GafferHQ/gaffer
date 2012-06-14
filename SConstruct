@@ -816,7 +816,7 @@ for libraryName, libraryDef in libraries.items() :
 		
 		pythonModuleEnv = pythonEnv.Clone()
 		if bindingsSource :
-			pythonModuleEnv.Append( LIBS = [ bindingsLibrary ] )
+			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
 		pythonModuleEnv["SHLIBPREFIX"] = ""
 		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 	
