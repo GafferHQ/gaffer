@@ -107,7 +107,12 @@ class Image( GafferUI.Widget ) :
 		s = interleaved.toString()
 		image = QtGui.QImage( s, imageSize.x, imageSize.y, format )
 		
-		return QtGui.QPixmap( image )
+		pixmap = QtGui.QPixmap( image )
+		# seems like we have to keep the data alive for as long as the
+		# pixmap is going to be alive.
+		pixmap.__data = s
+
+		return pixmap
 
 	__pixmapCache = None
 	@classmethod
