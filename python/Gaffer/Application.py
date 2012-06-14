@@ -81,7 +81,7 @@ class Application( IECore.Parameterised ) :
 				"self" : self,
 				"args" : args,
 			}
-			cProfile.runctx( "result = self.__Application_run( args )", contextDict, contextDict, args["profileFileName"].value )
+			cProfile.runctx( "result = self._Application__run( args )", contextDict, contextDict, args["profileFileName"].value )
 			return contextDict["result"]
 		else :
 			return self.__run( args )
