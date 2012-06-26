@@ -1,5 +1,8 @@
+* OpDialogue now supports op.userData()["UI"]["buttonLabel"], for specifying a custom label for the OK button.
+
 0.34.0
 ------
+
 * Added support for ClassVectorParameters.
 
 * Added a -help flag to the gaffer command line.
