@@ -70,9 +70,6 @@ class Render( Gaffer.Node ) :
 	
 	def execute( self ) :
 	
-		#!! NEED TO SAVE GFR FILE !!
-		#!! HAVE OPTION TO SAVE TO EXISTING FILE OR TO A NEW ONE !! 
-	
 		renderer = self._createRenderer()
 				
 		scenePlug = self["in"].getInput()
@@ -82,16 +79,21 @@ class Render( Gaffer.Node ) :
 				if isinstance( g, IECore.PreWorldRenderable ) :
 					g.render( renderer )
 		
+		## \todo Need to get camera from the scene too
+		camera = IECore.Camera()
+		camera.addStandardParameters()		
+		camera.render( renderer )
+		
 		with IECore.WorldBlock( renderer ) :
 		
 			scriptNode = self.ancestor( Gaffer.ScriptNode.staticTypeId() )
+			scriptNode.save()			
 			
 			procedural = GafferScene.ScriptProcedural()
 			procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )
 			procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
 			
 			bound = scenePlug.bound( "/" )
-			## \todo This needs to be here but is crashing 3delight
 			bound = bound.transform( scenePlug.transform( "/" ) )
 			
 			with IECore.AttributeBlock( renderer ) :
