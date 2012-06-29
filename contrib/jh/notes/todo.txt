@@ -6,10 +6,21 @@ PRIORITIES!!!!
 		- do properly!
 
 * i'm pretty sure we've got circular references in the menu code for CompoundEditor.
+
+* do we have circular references between SplitContainer and its animation
 	
 * seeds derived from branchcreator
 	- with make sure we don't do expensive bounds propagation !!!!!!!!
 
+* look at giving child windows the Tool flag
+	- keeps them on top even when non-modal
+	- keeps them out of the system tray
+	- makes color pickers crash on close
+
+* popupwindow overlays with any editor in them
+	- come up on a keypress
+	- allow them to be specified using the layout menu
+	
 * fix the camera movement
 	
 * fix script open directory location
