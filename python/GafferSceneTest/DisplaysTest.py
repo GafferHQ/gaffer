@@ -71,7 +71,14 @@ class DisplaysTest( unittest.TestCase ) :
 		self.assertEqual( len( g ), 2 )
 		self.assertEqual( g[0], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
 		self.assertEqual( g[1], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
-	
+		
+		# check that we can turn 'em off as well
+		display["active"].setValue( False )
+		
+		g = displays["out"]["globals"].getValue()
+		self.assertEqual( len( g ), 1 )
+		self.assertEqual( g[0], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
+			
 	def testSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()

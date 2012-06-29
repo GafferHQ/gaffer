@@ -77,6 +77,10 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name, const std::
 	CompoundPlugPtr displayPlug = new CompoundPlug( "display1" );
 	displayPlug->setFlags( Plug::Dynamic, true );
 	
+	BoolPlugPtr activePlug = new BoolPlug( "active", Plug::In, true );
+	activePlug->setFlags( Plug::Dynamic, true );
+	displayPlug->addChild( activePlug );
+	
 	StringPlugPtr namePlug = new StringPlug( "name" );
 	namePlug->setValue( name );
 	namePlug->setFlags( Plug::Dynamic, true );
@@ -121,15 +125,18 @@ IECore::ObjectVectorPtr Displays::processGlobals( const Gaffer::Context *context
 	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
 	{
 		const CompoundPlug *displayPlug = *it;
-		std::string name = displayPlug->getChild<StringPlug>( "name" )->getValue();
-		std::string type = displayPlug->getChild<StringPlug>( "type" )->getValue();
-		std::string data = displayPlug->getChild<StringPlug>( "data" )->getValue();
-		if( name.size() && type.size() && data.size() )
+		if( displayPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
-			DisplayPtr d = new Display( name, type, data );
-			displayPlug->getChild<ParameterListPlug>( "parameters" )->fillParameterList( d->parameters() );
-			result->members().push_back( d );
-			displaysCreated.insert( name );
+			std::string name = displayPlug->getChild<StringPlug>( "name" )->getValue();
+			std::string type = displayPlug->getChild<StringPlug>( "type" )->getValue();
+			std::string data = displayPlug->getChild<StringPlug>( "data" )->getValue();
+			if( name.size() && type.size() && data.size() )
+			{
+				DisplayPtr d = new Display( name, type, data );
+				displayPlug->getChild<ParameterListPlug>( "parameters" )->fillParameterList( d->parameters() );
+				result->members().push_back( d );
+				displaysCreated.insert( name );
+			}
 		}
 	}
 	
