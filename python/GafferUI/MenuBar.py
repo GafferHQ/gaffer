@@ -83,6 +83,8 @@ class _MenuBar( QtGui.QMenuBar ) :
 	
 		QtGui.QMenuBar.__init__( self, parent )
 		
+		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
+
 		# disable menu merging on mac
 		self.setNativeMenuBar( False )
 
