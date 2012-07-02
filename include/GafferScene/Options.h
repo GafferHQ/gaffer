@@ -34,42 +34,36 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_OPTIONS_H
+#define GAFFERSCENE_OPTIONS_H
+
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/ParameterListPlug.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class Options : public GlobalsProcessor
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	
-	LastTypeId = 110700
+
+	public :
+
+		Options( const std::string &name=staticTypeName() );
+		virtual ~Options();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Options, OptionsTypeId, GlobalsProcessor );
+		
+		GafferScene::ParameterListPlug *optionsPlug();
+		const GafferScene::ParameterListPlug *optionsPlug() const;
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual IECore::ObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
+		
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_OPTIONS_H

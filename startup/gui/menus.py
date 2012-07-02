@@ -71,6 +71,7 @@ GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCach
 GafferUI.NodeMenu.append( "/Scene/Add/Seeds", GafferScene.Seeds )
 GafferUI.NodeMenu.append( "/Scene/Add/Instancer", GafferScene.Instancer )
 GafferUI.NodeMenu.append( "/Scene/Add/Displays", GafferScene.Displays )
+GafferUI.NodeMenu.append( "/Scene/Add/Options", GafferScene.Options )
 GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.GroupScenes )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )

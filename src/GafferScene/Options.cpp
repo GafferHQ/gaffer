@@ -34,42 +34,59 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "IECore/Options.h"
 
-namespace GafferScene
-{
+#include "GafferScene/Options.h"
 
-enum TypeId
+using namespace std;
+using namespace Gaffer;
+using namespace GafferScene;
+
+IE_CORE_DEFINERUNTIMETYPED( Options );
+
+Options::Options( const std::string &name )
+	:	GlobalsProcessor( name )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
+	addChild(
+		new ParameterListPlug(
+			"options",
+			Plug::In,
+			Plug::Default | Plug::Dynamic
+		)
+	);
+}
+
+Options::~Options()
+{
+}
+
+GafferScene::ParameterListPlug *Options::optionsPlug()
+{
+	return getChild<ParameterListPlug>( "options" );
+}
+
+const GafferScene::ParameterListPlug *Options::optionsPlug() const
+{
+	return getChild<ParameterListPlug>( "options" );
+}
+
+void Options::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	GlobalsProcessor::affects( input, outputs );
 	
-	LastTypeId = 110700
-};
+	if( optionsPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->globalsPlug() );
+	}
+}
 
-} // namespace GafferScene
+IECore::ObjectVectorPtr Options::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
+{
+	IECore::ObjectVectorPtr result = inputGlobals ? inputGlobals->copy() : IECore::ObjectVectorPtr( new IECore::ObjectVector );
 
-#endif // GAFFERSCENE_TYPEIDS_H
+	IECore::OptionsPtr options = new IECore::Options;
+	optionsPlug()->fillParameterList( options->options() );
+	result->members().push_back( options );
+
+	return result;
+}

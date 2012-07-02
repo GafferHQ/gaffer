@@ -56,6 +56,7 @@
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/Displays.h"
 #include "GafferScene/ParameterListPlug.h"
+#include "GafferScene/Options.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -166,5 +167,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<Displays>()
 		.def( "addDisplay", &addDisplayWrapper )
 	;
+
+	GafferBindings::NodeClass<Options>();
 
 }

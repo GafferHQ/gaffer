@@ -48,6 +48,7 @@ from InstancerTest import InstancerTest
 from ObjectToSceneTest import ObjectToSceneTest
 from CameraTest import CameraTest
 from DisplaysTest import DisplaysTest
+from OptionsTest import OptionsTest
 
 if __name__ == "__main__":
 	import unittest
