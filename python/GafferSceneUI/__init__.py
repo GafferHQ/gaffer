@@ -37,4 +37,7 @@
 from SceneEditor import SceneEditor
 import SceneNodeUI
 import SceneView
-from RenderUI import RenderUI
+import RenderUI
+from ParameterListPlugValueWidget import ParameterListPlugValueWidget
+import DisplaysUI
+import OptionsUI

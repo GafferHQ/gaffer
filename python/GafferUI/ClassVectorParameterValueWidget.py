@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,41 +44,49 @@ class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
 		
-		GafferUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, **kw )
+		GafferUI.CompoundParameterValueWidget.__init__(
+			self,
+			parameterHandler,
+			collapsible,
+			_PlugValueWidget,
+			**kw
+		)
+
+class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
+
+	def __init__( self, parameterHandler, collapsible ) :
+
+		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsible )
 
 		self.__buttonRow = None
-		self.__childParameterUIs = {} # mapping from child parameter name to ui
 
-	def _buildChildParameterUIs( self, column ) :
-				
-		if self.__buttonRow is None :
-			self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-			self.__buttonRow.append(
-				GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__classMenuDefinition() ) )
-			)
-			self.__buttonRow.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
-		
-		# throw away child uis we don't need any more
-		childParameterNames = set( self.parameter().keys() )
-		for childParameterName in self.__childParameterUIs.keys() :
-			if childParameterName not in childParameterNames :
-				del self.__childParameterUIs[childParameterName]
-		
-		# make (or reuse existing) child uis for each child parameter
-		orderedChildUIs = []
-		for childParameterName, childParameter in self.parameter().items() :
-			if childParameterName not in self.__childParameterUIs :
-				self.__childParameterUIs[childParameterName] = _ChildParameterUI( self.parameterHandler().childParameterHandler( childParameter ) )
-			orderedChildUIs.append( self.__childParameterUIs[childParameterName] )			
+	def _footerWidget( self ) :
 	
-		# and update the column to display them
-		column[:] = orderedChildUIs + [ self.__buttonRow ]
+		if self.__buttonRow is not None :
+			return self.__buttonRow
+			
+		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		self.__buttonRow.append(
+			GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__classMenuDefinition() ) )
+		)
+		self.__buttonRow.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
+
+		return self.__buttonRow
+
+	def _childPlugWidget( self, childPlug ) :
 	
+		return _ChildParameterUI( self._parameterHandler().childParameterHandler( self._parameterHandler().parameter()[childPlug.getName()] ) )
+
+	def _childPlugs( self ) :
+	
+		parentPlug = self.getPlug()
+		return [ parentPlug[p] for p in self._parameter().keys() ]
+		
 	def _layerMenuDefinition( self, childParameterName ) :
 	
 		result = IECore.MenuDefinition()	
 	
-		layerNames = self.parameter().keys()
+		layerNames = self._parameter().keys()
 		layerIndex = layerNames.index( childParameterName )
 	
 		result.append(
@@ -120,8 +129,8 @@ class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 			}
 		)
 		
-		cls = self.parameter().getClass( childParameterName, True )
-		loader = IECore.ClassLoader.defaultLoader( self.parameter().searchPathEnvVar() )
+		cls = self._parameter().getClass( childParameterName, True )
+		loader = IECore.ClassLoader.defaultLoader( self._parameter().searchPathEnvVar() )
 		versions = loader.versions( cls[1] )
 		if len( versions ) > 1 :
 			result.append( "/VersionDivider", { "divider" : True } )
@@ -142,10 +151,10 @@ class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
  				
  		classNameFilter = "*"
  		with IECore.IgnoredExceptions( KeyError ) :
- 			classNameFilter = self.parameter().userData()["UI"]["classNameFilter"].value
+ 			classNameFilter = self._parameter().userData()["UI"]["classNameFilter"].value
 		menuPathStart = max( 0, classNameFilter.find( "*" ) )
 		
-		loader = IECore.ClassLoader.defaultLoader( self.parameter().searchPathEnvVar() )
+		loader = IECore.ClassLoader.defaultLoader( self._parameter().searchPathEnvVar() )
 		for className in loader.classNames( classNameFilter ) :
 			
 			classVersions = loader.versions( className )
@@ -166,122 +175,150 @@ class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 	
 	def __removeClass( self, childParameterName ) :
 	
-		node = self.plug().node()
+		node = self.getPlug().node()
 		node.setParameterisedValues()
 		
 		with node.parameterModificationContext() :
-			self.parameter().removeClass( childParameterName )
+			self._parameter().removeClass( childParameterName )
 		
 	def __setClass( self, childParameterName, className, classVersion ) :
 	
 		if not childParameterName :
-			childParameterName = self.parameter().newParameterName()
+			childParameterName = self._parameter().newParameterName()
 		
-		node = self.plug().node()
+		node = self.getPlug().node()
 		node.setParameterisedValues()
 						
 		with node.parameterModificationContext() :
-			self.parameter().setClass( childParameterName, className, classVersion )
+			self._parameter().setClass( childParameterName, className, classVersion )
 
 	def __moveLayer( self, oldIndex, newIndex ) :
 	
-		classes = [ c[1:] for c in self.parameter().getClasses( True ) ]
+		classes = [ c[1:] for c in self._parameter().getClasses( True ) ]
 		cl = classes[oldIndex]
 		del classes[oldIndex]
 		classes[newIndex:newIndex] = [ cl ]
 
-		node = self.plug().node()
+		node = self.getPlug().node()
 		node.setParameterisedValues()
 				
 		with node.parameterModificationContext() :
-			self.parameter().setClasses( classes )
+			self._parameter().setClasses( classes )
 
 		# just moving the layer won't actually add or remove plugs, so it won't trigger
 		# a rebuild of the ui automatically via CompoundParameterValueWidget. so we
 		# do that ourselves here.
-		self._buildChildParameterUIs( self.__childParameterUIs.values()[0].parent() )
+		## \todo Have the CompoundParameterHandler reflect the changing parameter order
+		# by changing the plug order, and have the CompoundPlugValueWidget pick up on this
+		# and reorder things automatically.
+		self._CompoundPlugValueWidget__updateChildPlugUIs()
 		
 GafferUI.ParameterValueWidget.registerType( IECore.ClassVectorParameter.staticTypeId(), ClassVectorParameterValueWidget )
 
-class _ChildParameterUI( GafferUI.CompoundParameterValueWidget ) :
+class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
-			
-		GafferUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible=False, **kw )
 		
-	def _buildChildParameterUIs( self, column ) :
+		GafferUI.CompoundPlugValueWidget.__init__(
+			self,
+			parameterHandler.plug(),
+			collapsible = False,
+			**kw
+		)
 		
-		del column[:]
-		with column :		
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+		self.__parameterHandler = parameterHandler
+	
+		self.__footerWidget = None
+	
+	def _headerWidget( self ) :
+	
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) as result :
 			
-				collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
-				self.__collapseButtonConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
-				
-				# find parameters which belong in the header
-				############################################
-				
-				preHeaderParameters = []
-				headerParameters = []
-				for parameter in self.parameter().values() :
-					with IECore.IgnoredExceptions( KeyError ) :
-						if parameter.userData()["UI"]["classVectorParameterPreHeader"].value :
-							preHeaderParameters.append( parameter )
-					with IECore.IgnoredExceptions( KeyError ) :
-						if parameter.userData()["UI"]["classVectorParameterHeader"].value :
-							headerParameters.append( parameter )
-				
-				# make the header
-				#################
-				
-				# things before the layer button
-
-				for parameter in preHeaderParameters :
-					GafferUI.ParameterValueWidget.create( self.parameterHandler().childParameterHandler( parameter ) )
-				
-				# the layer button	
-				
-				layerButton = GafferUI.MenuButton( image="classVectorParameterHandle.png", hasFrame=False )
-
-				parent = self.ancestor( ClassVectorParameterValueWidget )		
-				cls = parent.parameter().getClass( self.parameter().name, True )
-
-				layerButtonToolTip = "<h3>%s v%d</h3>" % ( cls[1], cls[2] )
-				if cls[0].description :
-					layerButtonToolTip += "<p>%s</p>" % cls[0].description
-				layerButtonToolTip += "<p>Click to reorder or remove.</p>"
-				layerButton.setToolTip( layerButtonToolTip )
-				
-				layerButton.setMenu( GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( parent._layerMenuDefinition ), self.parameter().name ) ) )
-
-				# the label
-
-				if "label" in self.plug() :
-					self.__label = GafferUI.Label( self.plug()["label"].getValue(), horizontalAlignment = GafferUI.Label.HorizontalAlignment.Left )
-					self.__label._qtWidget().setMinimumWidth( self._labelWidth ) ## \todo Naughty!
-					self.__label._qtWidget().setMaximumWidth( self._labelWidth )
-					self.__label.setToolTip( self._parameterToolTip( self.parameterHandler().childParameterHandler( self.parameter()["label"] ) ) )
-					self.__labelButtonPressConnection = self.__label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__labelButtonPress ) )
-					self.__plugSetConnection = self.plug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-				
-				# parameters after the label	
-				for parameter in headerParameters :
-					GafferUI.ParameterValueWidget.create( self.parameterHandler().childParameterHandler( parameter ) )
-				
-				# prevent things expanding in an unwanted way
-				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), expand = True )
+			collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
+			self.__collapseButtonConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 			
-		# use a standard CompoundParameterValueWidget to actually house the
-		# standard child parameters.
+			# find parameters which belong in the header
+			############################################
+			
+			preHeaderParameters = []
+			headerParameters = []
+			for parameter in self.__parameterHandler.parameter().values() :
+				with IECore.IgnoredExceptions( KeyError ) :
+					if parameter.userData()["UI"]["classVectorParameterPreHeader"].value :
+						preHeaderParameters.append( parameter )
+				with IECore.IgnoredExceptions( KeyError ) :
+					if parameter.userData()["UI"]["classVectorParameterHeader"].value :
+						headerParameters.append( parameter )
+			
+			# make the header
+			#################
+			
+			# things before the layer button
+
+			for parameter in preHeaderParameters :
+				GafferUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
+			
+			# the layer button	
+			
+			layerButton = GafferUI.MenuButton( image="classVectorParameterHandle.png", hasFrame=False )
+
+			parentParameter = self.ancestor( ClassVectorParameterValueWidget ).parameter()		
+			cls = parentParameter.getClass( self.__parameterHandler.parameter().name, True )
+
+			layerButtonToolTip = "<h3>%s v%d</h3>" % ( cls[1], cls[2] )
+			if cls[0].description :
+				layerButtonToolTip += "<p>%s</p>" % cls[0].description
+			layerButtonToolTip += "<p>Click to reorder or remove.</p>"
+			layerButton.setToolTip( layerButtonToolTip )
+			
+			compoundPlugValueWidget = self.ancestor( _PlugValueWidget )	
+			layerButton.setMenu( GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( compoundPlugValueWidget._layerMenuDefinition ), self.__parameterHandler.parameter().name ) ) )
+
+			# the label
+
+			if "label" in self.getPlug() :
+				self.__label = GafferUI.Label( self.getPlug()["label"].getValue(), horizontalAlignment = GafferUI.Label.HorizontalAlignment.Left )
+				self.__label._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() ) ## \todo Naughty!
+				self.__label.setToolTip(
+					compoundPlugValueWidget._parameterToolTip(
+						self.__parameterHandler.childParameterHandler( self.__parameterHandler.parameter()["label"] ),
+					),
+				)
+				self.__labelButtonPressConnection = self.__label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__labelButtonPress ) )
+				self.__plugSetConnection = self.getPlug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+			
+			# parameters after the label	
+			for parameter in headerParameters :
+				GafferUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
+			
+			# prevent things expanding in an unwanted way
+			GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), expand = True )
+
+		return result
+	
+	def _childPlugWidget( self, childPlug ) :
+	
+		# _childPlugs() should prevent us arriving here
+		assert( False )
+	
+	def _footerWidget( self ) :
 		
-		self.__compoundParameterValueWidget = GafferUI.CompoundParameterValueWidget( self.parameterHandler(), collapsible=False )
-		self.__compoundParameterValueWidget.setVisible( False )
-		column.append( self.__compoundParameterValueWidget )
+		if self.__footerWidget is not None :
+			return self.__footerWidget
 			
+		self.__footerWidget = GafferUI.CompoundParameterValueWidget( self.__parameterHandler, collapsible=False )
+		self.__footerWidget.setVisible( False )
+		return self.__footerWidget
+	
+	def _childPlugs( self ) :
+	
+		# we draw them all ourselves, either in the header or the footer.
+		return []
+					
 	def __collapseButtonClicked( self, button ) :
 	
-		visible = not self.__compoundParameterValueWidget.getVisible()
-		self.__compoundParameterValueWidget.setVisible( visible )
+		visible = not self.__footerWidget.getVisible()
+		self.__footerWidget.setVisible( visible )
 		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
 	
 	def __labelButtonPress( self, label, event ) :
@@ -293,14 +330,14 @@ class _ChildParameterUI( GafferUI.CompoundParameterValueWidget ) :
 	
 	def __changeLabel( self, menu ) :
 	
-		labelPlug = self.parameterHandler().plug()["label"]
+		labelPlug = self.__parameterHandler.plug()["label"]
 		dialogue = GafferUI.TextInputDialogue( initialText = labelPlug.getValue(), title="Enter new label" )
 		labelText = dialogue.waitForText( parentWindow=menu.ancestor( GafferUI.Window ) )
 		labelPlug.setValue( labelText )
 	
 	def __plugSet( self, plug ) :
 	
-		labelPlug = self.plug()["label"]
+		labelPlug = self.__parameterHandler.plug()["label"]
 		if plug.isSame( labelPlug ) :
 			self.__label.setText( labelPlug.getValue() )
 	

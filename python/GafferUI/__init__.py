@@ -167,6 +167,7 @@ import ApplicationMenu
 from BrowserEditor import BrowserEditor
 from TimeEditor import TimeEditor
 from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
+from CompoundPlugValueWidget import CompoundPlugValueWidget
 
 # then stuff specific to parameterised objects
 

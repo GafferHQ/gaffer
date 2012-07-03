@@ -54,7 +54,7 @@ GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.tr
 
 # ImageReader
 
-GafferUI.NodeUI.registerPlugValueWidget(
+GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.ImageReader.staticTypeId(),
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,

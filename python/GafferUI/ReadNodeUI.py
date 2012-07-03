@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,7 +44,7 @@ import GafferUI
 GafferUI.Nodule.registerNodule( Gaffer.ReadNode.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
 GafferUI.Nodule.registerNodule( Gaffer.ReadNode.staticTypeId(), "output", GafferUI.StandardNodule )
 
-GafferUI.NodeUI.registerPlugValueWidget(
+GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.ReadNode.staticTypeId(),
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget(
@@ -63,4 +63,4 @@ def __createParameterWidget( plug ) :
 
 	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
-GafferUI.NodeUI.registerPlugValueWidget( Gaffer.ReadNode.staticTypeId(), "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ReadNode.staticTypeId(), "parameters", __createParameterWidget )

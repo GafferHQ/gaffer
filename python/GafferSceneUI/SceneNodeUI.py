@@ -51,11 +51,12 @@ def __noduleCreator( plug ) :
 	return None
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
-GafferUI.NodeUI.registerPlugValueWidget( GafferScene.SceneNode.staticTypeId(), "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "out", None )
 
 # Instancer
 
-GafferUI.NodeUI.registerPlugValueWidget( GafferScene.Instancer.staticTypeId(), "instance", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer.staticTypeId(), "instance", None )
 
 # ObjectToScene
 
@@ -63,7 +64,7 @@ GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene.staticTypeId(), "objec
 
 # ModelCacheSource
 
-GafferUI.NodeUI.registerPlugValueWidget(
+GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.ModelCacheSource.staticTypeId(),
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
@@ -73,7 +74,7 @@ GafferUI.NodeUI.registerPlugValueWidget(
 
 # AttributeCache
 
-GafferUI.NodeUI.registerPlugValueWidget(
+GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.AttributeCache.staticTypeId(),
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget(
@@ -84,7 +85,7 @@ GafferUI.NodeUI.registerPlugValueWidget(
 
 # BranchCreator
 
-GafferUI.NodeUI.registerPlugValueWidget(
+GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.BranchCreator.staticTypeId(),
 	"parent",
 	lambda plug : GafferUI.PathPlugValueWidget(

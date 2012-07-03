@@ -35,6 +35,11 @@
 #  
 ##########################################################################
 
+import re
+import fnmatch
+
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -100,23 +105,61 @@ class PlugValueWidget( GafferUI.Widget ) :
 	@classmethod
 	def create( cls, plug ) :
 
-		typeId = plug.typeId()
-		if typeId in cls.__typesToCreators :
+		# first try to create one using a creator registered for the specific plug
+		node = plug.node()
+		if node is not None :
+			plugPath = plug.relativeName( node )
+			nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+			for nodeTypeId in [ node.typeId() ] + nodeHierarchy :	
+				creators = cls.__nodeTypesToCreators.get( nodeTypeId, None )
+				if creators :
+					for creator in creators :
+						if creator.plugPathMatcher.match( plugPath ) :
+							if creator.creator is not None :
+								return creator.creator( plug, **(creator.creatorKeywordArgs) )
+							else :
+								return None
 		
-			return cls.__typesToCreators[typeId]( plug )
-			
+		# if that failed, then just create something based on the type of the plug
+		typeId = plug.typeId()
+		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
+			creator = cls.__plugTypesToCreators.get( plugTypeId )
+			if creator is not None :
+				return creator( plug )
+		
 		return None
 	
 	## Registers a PlugValueWidget type for a specific Plug type. Note
-	# that the NodeUI.registerPlugValueWidget function provides the
-	# opportunity to further customise the type of Widget used by the NodeUI
-	# based on the node type and plug name.
+	# that the registerCreator function below provides the
+	# opportunity to further customise the type of Widget used for specific
+	# plug instances based on the node type and plug name.
 	@classmethod
-	def registerType( cls, typeId, creator ) :
+	def registerType( cls, plugTypeId, creator ) :
 	
-		cls.__typesToCreators[typeId] = creator
+		cls.__plugTypesToCreators[plugTypeId] = creator
+		
+	## Registers a function to create a PlugWidget. None may be passed as creator, to
+	# disable the creation of uis for specific plugs.
+	@classmethod
+	def registerCreator( cls, nodeTypeId, plugPath, creator, **creatorKeywordArgs ) :
 	
-	__typesToCreators = {}	
+		if isinstance( plugPath, basestring ) :
+			plugPath = re.compile( fnmatch.translate( plugPath ) )
+		else :
+			assert( type( plugPath ) is type( re.compile( "" ) ) )
+		
+		creators = cls.__nodeTypesToCreators.setdefault( nodeTypeId, [] )
+		
+		creator = IECore.Struct(
+			plugPathMatcher = plugPath,
+			creator = creator,
+			creatorKeywordArgs = creatorKeywordArgs,
+		)
+		
+		creators.insert( 0, creator )
+
+	__plugTypesToCreators = {}
+	__nodeTypesToCreators = {}
 		
 	def __plugSet( self, plug ) :
 	

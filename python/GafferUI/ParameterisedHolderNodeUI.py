@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -48,45 +48,27 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 	def __init__( self, node, **kw ) :
 	
-		GafferUI.NodeUI.__init__( self, node, **kw )
-
-	def _build( self ) :
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		
-		self._addClassInfoRow()
+		GafferUI.NodeUI.__init__( self, node, column, **kw )
 		
-		with self._scrollable() :
-			self._addParameterWidgets()
-
-	def _addClassInfoRow( self ) :
+		with column :
+		
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
+				GafferUI.Spacer( IECore.V2i( 10 ), expand=True )
+				infoIcon = GafferUI.Image( "info.png" )
+				infoIcon.setToolTip( self.node().getParameterised()[0].description )
+		
+			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
+				GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
 	
-		infoRow = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
-		
-		infoRow.append( GafferUI.Spacer( IECore.V2i( 10 ) ), expand=True )
-		
-		infoIcon = GafferUI.Image( "info.png" )
-		infoIcon.setToolTip( self._node().getParameterised()[0].description )
-		infoRow.append( infoIcon )
-		
-		self._addWidget( infoRow )
-
-	def _addParameterWidgets( self, collapsible = False ) :
-	
-		self._addWidget(
-		
-			GafferUI.CompoundParameterValueWidget( self._node().parameterHandler(), collapsible = collapsible )
-		
-		)
-			
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
 
 def __parameterNoduleCreator( plug ) :
 	
-	if isinstance( plug, Gaffer.ObjectPlug ) :
-	
+	if isinstance( plug, Gaffer.ObjectPlug ) :	
 		return GafferUI.StandardNodule( plug )
-		
 	else :
-	
 		return None
 
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
