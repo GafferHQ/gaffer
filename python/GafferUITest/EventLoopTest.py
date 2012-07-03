@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -123,7 +123,44 @@ class EventLoopTest( unittest.TestCase ) :
 		# we shouldn't be waiting for the result of ui thread, so the return should be quicker
 		# than the actual function called
 		self.failUnless( self.__executeOnUIThreadDuration < 2 )
+	
+	def testExceptionsInIdleCallbacks( self ) :
+
+		self.__idle1Calls = 0
+		self.__idle2Calls = 0
+			
+		def idle1() :
 		
+			self.__idle1Calls += 1
+			raise RuntimeError( "I am a very naughty boy" )
+		
+		def idle2() :
+		
+			self.__idle2Calls += 1
+			return True
+			
+		def stop() :
+			
+			if self.__idle2Calls==4 :
+				GafferUI.EventLoop.mainEventLoop().stop()
+				return False
+				
+			return True
+			
+		GafferUI.EventLoop.addIdleCallback( idle1 )
+		GafferUI.EventLoop.addIdleCallback( idle2 )
+		GafferUI.EventLoop.addIdleCallback( stop )
+		
+		mh = IECore.CapturingMessageHandler()
+		with mh :
+			GafferUI.EventLoop.mainEventLoop().start()
+	
+		self.assertEqual( self.__idle1Calls, 1 )
+		self.failUnless( self.__idle2Calls >= 4 )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.failUnless( "I am a very naughty boy" in mh.messages[0].message )
+				
 	def setUp( self ) :
 	
 		self.__uiThreadFunctionCalled = False
