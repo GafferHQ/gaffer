@@ -17,6 +17,16 @@ PRIORITIES!!!!
 	- keeps them out of the system tray
 	- makes color pickers crash on close
 
+* EnumPlugValueWidget
+
+* group with multiple inputs
+
+* setrendercamera node
+
+* tidy up scripting context
+	- just a parent() method (or weak reference or whatever)
+		- and no addChild() blah blah blah
+
 * popupwindow overlays with any editor in them
 	- come up on a keypress
 	- allow them to be specified using the layout menu
@@ -34,6 +44,9 @@ PRIORITIES!!!!
 
 * stop camera moving all the bloody time
 	- and fix the bloody controls
+
+* make read and write and execute nodes accept time
+	- write a scripting tutorial that makes read nodes for all file sequences in a directory
 
 * how do we deal with exceptions in compute()
 	- i think we turn them into error signals and return the plug default value
