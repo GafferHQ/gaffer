@@ -118,6 +118,13 @@ void Plug::setFlags( unsigned flags, bool enable )
 
 bool Plug::acceptsInput( ConstPlugPtr input ) const
 {
+	if( const Node *n = node() )
+	{
+		if( !n->acceptsInput( this, input.get() ) )
+		{
+			return false;
+		}
+	}
 	/// \todo Possibly allow in->out connections as long
 	/// as the Plugs share the same parent (for internal shortcuts).
 	return m_direction!=Out;

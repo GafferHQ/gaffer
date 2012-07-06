@@ -117,9 +117,8 @@ class Plug : public GraphComponent
 		/// should call their base class and only accept an
 		/// input if their base class does too. The default
 		/// implementation accepts any input, provided that 
-		/// direction()==In. Note that this method will be
-		/// called with input==0 to check that the existing
-		/// input may be removed.
+		/// direction()==In, and node()->acceptsInput() also
+		/// accepts the input.
 		virtual bool acceptsInput( ConstPlugPtr input ) const;
 		/// Sets the input to this plug if acceptsInput( input )
 		/// returns true, otherwise throws an IECore::Exception.

@@ -66,6 +66,19 @@ class NodeClass : public IECorePython::RunTimeTypedClass<T, Ptr>
 #define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 \
+	virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "acceptsInput" ) )\
+		{\
+			boost::python::override f = this->get_override( "acceptsInput" );\
+			if( f )\
+			{\
+				return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );\
+			}\
+		}\
+		return CLASSNAME::acceptsInput( plug, inputPlug );\
+	}\
 	virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\

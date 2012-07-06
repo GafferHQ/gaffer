@@ -343,7 +343,28 @@ class NodeTest( unittest.TestCase ) :
 	
 		n = GafferTest.BadNode()
 		self.assertRaises( RuntimeError, n["out3"].getValue )
+		
+	def testOverrideAcceptsInput( self ) :
 	
+		class AcceptsInputTestNode( Gaffer.Node ) :
+		
+			def __init__( self, name = "AcceptsInputTestNode" ) :
+			
+				Gaffer.Node.__init__( self, name )
+				
+				self.addChild( Gaffer.IntPlug( "in" ) )
+				self.addChild( Gaffer.IntPlug( "out", Gaffer.Plug.Direction.Out ) )
+				
+			def acceptsInput( self, plug, inputPlug ) :
+			
+				return isinstance( inputPlug.node(), AcceptsInputTestNode )
+	
+		n1 = AcceptsInputTestNode()
+		n2 = AcceptsInputTestNode()
+		n3 = GafferTest.AddNode()
+	
+		self.assertEqual( n1["in"].acceptsInput( n2["out"] ), True )
+		self.assertEqual( n1["in"].acceptsInput( n3["sum"] ), False )
+		
 if __name__ == "__main__":
 	unittest.main()
-	

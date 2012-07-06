@@ -73,3 +73,5 @@ swatch.
 * Removed NodeUI._build() method. Derived classes should instead pass a topLevelWidget to the constructor if they wish to be in control of the ui construction.
 
 * GafferUI.EventLoop now disables any idle callbacks which error during execution.
+
+* Added Node::acceptsInput virtual method, to allow nodes to reject connections.

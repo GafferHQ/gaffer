@@ -102,12 +102,21 @@ class Node : public GraphComponent
 		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-		
+				
 		/// Must be implemented to fill outputs with all the plugs whose computation
 		/// will be affected by the specified input.
 		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
+
+		/// May be overridden to restrict the inputs that plugs on this node will
+		/// accept. Default implementation accepts all plugs. Note that
+		/// PlugType::acceptsInput() must also be true to allow a successful
+		/// connection, so this function may only place additional restrictions on
+		/// inputs - it cannot enable inputs that the plugs themselves will not accept.
+		/// This is protected, and its results are made public by Plug::acceptsInput()
+		/// which calls through to this.
+		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
 		
 		/// Called to compute the values for output Plugs. Must be implemented to compute
 		/// an appropriate value and apply it using output->setValue().
