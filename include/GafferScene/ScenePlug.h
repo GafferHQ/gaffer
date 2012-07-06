@@ -59,7 +59,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ScenePlug, ScenePlugTypeId, CompoundPlug );
 
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 				
 		/// Only accepts ScenePlug inputs.
 		virtual bool acceptsInput( const Gaffer::Plug *input ) const;

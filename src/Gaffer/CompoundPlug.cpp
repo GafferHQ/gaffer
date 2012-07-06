@@ -58,7 +58,7 @@ CompoundPlug::~CompoundPlug()
 {
 }
 
-bool CompoundPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool CompoundPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	ConstPlugPtr p = IECore::runTimeCast<const Plug>( potentialChild );
 	if( !p )

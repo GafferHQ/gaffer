@@ -100,7 +100,7 @@ ScenePlug::~ScenePlug()
 {
 }
 
-bool ScenePlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool ScenePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 5;
 }

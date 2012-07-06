@@ -66,7 +66,7 @@ CompoundNumericPlug<T>::~CompoundNumericPlug()
 }
 
 template<typename T>
-bool CompoundNumericPlug<T>::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool CompoundNumericPlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != T::dimensions();
 }

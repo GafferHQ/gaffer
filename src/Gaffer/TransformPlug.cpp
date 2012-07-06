@@ -84,7 +84,7 @@ TransformPlug::~TransformPlug()
 {
 }
 
-bool TransformPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool TransformPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 3;
 }

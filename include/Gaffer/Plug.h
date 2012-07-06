@@ -86,7 +86,7 @@ class Plug : public GraphComponent
 		//////////////////////////////////////////////////////////////////////
 		//@{
 		/// Accepts no children.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes or Plugs as a parent.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		/// Just returns ancestor<Node>() as a syntactic convenience.

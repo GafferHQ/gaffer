@@ -96,7 +96,7 @@ ImagePlug::~ImagePlug()
 {
 }
 
-bool ImagePlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 4;
 }

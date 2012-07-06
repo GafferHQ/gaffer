@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@ ApplicationRoot::~ApplicationRoot()
 {
 }
 		
-bool ApplicationRoot::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool ApplicationRoot::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( children().size()<2 )
 	{

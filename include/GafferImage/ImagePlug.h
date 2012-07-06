@@ -60,7 +60,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImagePlug, ImagePlugTypeId, CompoundPlug );
 
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 				
 		/// Only accepts ImagePlug inputs.
 		virtual bool acceptsInput( const Gaffer::Plug *input ) const;

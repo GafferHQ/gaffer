@@ -66,7 +66,7 @@ class BoxPlug : public CompoundPlug
 		virtual ~BoxPlug();
 
 		/// Accepts no children following construction.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 
 		ChildType *min();
 		const ChildType *min() const;	

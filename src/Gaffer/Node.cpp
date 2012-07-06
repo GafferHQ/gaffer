@@ -105,7 +105,7 @@ ConstScriptNodePtr Node::scriptNode() const
 	return ancestor<ScriptNode>();
 }
 		
-bool Node::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool Node::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !GraphComponent::acceptsChild( potentialChild ) )
 	{

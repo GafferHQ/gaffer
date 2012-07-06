@@ -99,7 +99,7 @@ class Node : public GraphComponent
 		ConstScriptNodePtr scriptNode() const;
 		
 		/// Accepts only Nodes and Plugs.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 				

@@ -171,7 +171,7 @@ GraphComponent::UnarySignal &GraphComponent::nameChangedSignal()
 	return m_nameChangedSignal;
 }
 
-bool GraphComponent::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool GraphComponent::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return true;
 }

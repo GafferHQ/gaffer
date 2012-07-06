@@ -54,7 +54,7 @@ class PreferencesNode : public Node
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PreferencesNode, PreferencesNodeTypeId, Node );
 		
 		/// Accepts only Plugs.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only ApplicationRoots.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		

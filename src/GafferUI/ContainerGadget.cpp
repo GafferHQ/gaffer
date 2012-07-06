@@ -58,7 +58,7 @@ ContainerGadget::~ContainerGadget()
 {
 }
 
-bool ContainerGadget::acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const
+bool ContainerGadget::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
 	return potentialChild->isInstanceOf( Gadget::staticTypeId() );
 }

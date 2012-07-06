@@ -74,7 +74,7 @@ BoxPlug<T>::~BoxPlug()
 }
 
 template<typename T>
-bool BoxPlug<T>::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool BoxPlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 2;
 }

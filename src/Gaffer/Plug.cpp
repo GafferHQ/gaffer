@@ -67,7 +67,7 @@ Plug::~Plug()
 	}
 }
 
-bool Plug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool Plug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return false;
 }

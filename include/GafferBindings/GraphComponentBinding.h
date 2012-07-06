@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ namespace GafferBindings
 #define GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 	IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( CLASSNAME )\
 \
-	virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const\
+	virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "acceptsChild" ) )\
@@ -56,7 +56,7 @@ namespace GafferBindings
 			boost::python::override f = this->get_override( "acceptsChild" );\
 			if( f )\
 			{\
-				return f( IECore::constPointerCast<Gaffer::GraphComponent>( potentialChild ) );\
+				return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialChild ) ) );\
 			}\
 		}\
 		return CLASSNAME::acceptsChild( potentialChild );\
@@ -83,13 +83,13 @@ namespace GafferBindings
 	.def( "acceptsParent", &GafferBindings::acceptsParent<CLASSNAME> )
 
 template<typename T>
-static bool acceptsChild( const T &p, Gaffer::ConstGraphComponentPtr potentialChild )
+static bool acceptsChild( const T &p, const Gaffer::GraphComponent *potentialChild )
 {
 	return p.T::acceptsChild( potentialChild );
 }
 
 template<typename T>
-static bool acceptsParent( T &p, const Gaffer::GraphComponent *potentialParent )
+static bool acceptsParent( const T &p, const Gaffer::GraphComponent *potentialParent )
 {
 	return p.T::acceptsParent( potentialParent );
 }

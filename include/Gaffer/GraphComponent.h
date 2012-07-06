@@ -108,7 +108,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		typedef ChildContainer::const_iterator ChildIterator;
 		/// Components can accept or reject potential children by implementing this
 		/// call. By default all children are accepted.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Components can accept or reject potential parents by implementing this
 		/// call. By default all parents are accepted.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;

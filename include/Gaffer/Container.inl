@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -95,7 +95,7 @@ bool Container<Base, T>::inheritsFrom( const char *typeName )
 }
 
 template<typename Base, typename T>
-bool Container<Base, T>::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool Container<Base, T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return potentialChild->isInstanceOf( T::staticTypeId() );
 }

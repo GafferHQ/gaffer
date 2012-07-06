@@ -54,7 +54,7 @@ ParameterListPlug::~ParameterListPlug()
 {
 }
 
-bool ParameterListPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool ParameterListPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !CompoundPlug::acceptsChild( potentialChild ) )
 	{

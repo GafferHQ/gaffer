@@ -55,7 +55,7 @@ class ContainerGadget : public Gadget
 
 		/// ContainerGadgets accept any number of other Gadgets as children. Derived classes
 		/// may further restrict this if they wish, but they must not accept non-Gadget children.
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		/// Returns the union of the transformed bounding boxes of all children.
 		virtual Imath::Box3f bound() const;
 		//@}

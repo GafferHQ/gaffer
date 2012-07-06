@@ -66,7 +66,7 @@ class ParameterListPlug : public Gaffer::CompoundPlug
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ParameterListPlug, ParameterListPlugTypeId, Gaffer::CompoundPlug );
 
 		/// Accepts only children that can generate values for a parameter list.
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
 		Gaffer::CompoundPlug *addParameter( const std::string &name, const IECore::Data *value );
 

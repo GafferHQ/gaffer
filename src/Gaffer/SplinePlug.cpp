@@ -63,7 +63,7 @@ SplinePlug<T>::~SplinePlug()
 }
 
 template<typename T>
-bool SplinePlug<T>::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !children().size() )
 	{

@@ -50,7 +50,7 @@ PreferencesNode::~PreferencesNode()
 {
 }
 
-bool PreferencesNode::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool PreferencesNode::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !Node::acceptsChild( potentialChild ) )
 	{

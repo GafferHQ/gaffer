@@ -68,7 +68,7 @@ class CompoundNumericPlug : public CompoundPlug
 		virtual ~CompoundNumericPlug();
 
 		/// Accepts no children following construction.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 
 		typename ChildType::Ptr getChild( unsigned i );
 		typename ChildType::ConstPtr getChild( unsigned i ) const;	

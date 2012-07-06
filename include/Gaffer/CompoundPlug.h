@@ -54,7 +54,7 @@ class CompoundPlug : public ValuePlug
 
 		/// Accepts any child provided it's a Plug and has the same direction
 		/// as this CompoundPlug.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 				
 		/// Only accepts inputs which are CompoundPlugs with child
 		/// Plugs compatible with this plug.

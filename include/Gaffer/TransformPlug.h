@@ -52,7 +52,7 @@ class TransformPlug : public CompoundPlug
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TransformPlug, TransformPlugTypeId, CompoundPlug );
 
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 
 		V3fPlug *translatePlug();
 		const V3fPlug *translatePlug() const;
