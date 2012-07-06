@@ -62,7 +62,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
 				
 		/// Only accepts ScenePlug inputs.
-		virtual bool acceptsInput( Gaffer::ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
 	
 		/// @name Child plugs
 		/// Different aspects of the scene are passed through different

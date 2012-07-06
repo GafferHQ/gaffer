@@ -119,7 +119,7 @@ class Plug : public GraphComponent
 		/// implementation accepts any input, provided that 
 		/// direction()==In, and node()->acceptsInput() also
 		/// accepts the input.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 		/// Sets the input to this plug if acceptsInput( input )
 		/// returns true, otherwise throws an IECore::Exception.
 		/// Pass 0 to remove the current input.

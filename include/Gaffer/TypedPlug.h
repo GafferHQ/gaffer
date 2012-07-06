@@ -66,7 +66,7 @@ class TypedPlug : public ValuePlug
 		virtual ~TypedPlug();
 
 		/// Accepts only instances of TypedPlug<T> or derived classes.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 
 		const T &defaultValue() const;
 

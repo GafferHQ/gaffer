@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ namespace GafferBindings
 \
 	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( BASECLASS )\
 \
-	virtual bool acceptsInput( ConstPlugPtr input ) const\
+	virtual bool acceptsInput( const Plug *input ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "acceptsInput" ) )\
@@ -57,7 +57,7 @@ namespace GafferBindings
 			override f = this->get_override( "acceptsInput" );\
 			if( f )\
 			{\
-				return f( IECore::constPointerCast<Plug>( input ) );\
+				return f( PlugPtr( const_cast<Plug *>( input ) ) );\
 			}\
 		}\
 		return BASECLASS::acceptsInput( input );\

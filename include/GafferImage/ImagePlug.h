@@ -63,7 +63,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
 				
 		/// Only accepts ImagePlug inputs.
-		virtual bool acceptsInput( Gaffer::ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
 	
 		/// @name Child plugs
 		/// Different aspects of the image are passed through different

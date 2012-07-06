@@ -62,7 +62,7 @@ class ValuePlug : public Plug
 		/// Derived classes may accept more types provided they
 		/// derive from ValuePlug too, and they can deal with them
 		/// in setFrom().
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 		/// Reimplemented so that values can be propagated from inputs.
 		virtual void setInput( PlugPtr input );
 

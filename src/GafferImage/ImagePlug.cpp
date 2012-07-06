@@ -101,7 +101,7 @@ bool ImagePlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
 	return children().size() != 4;
 }
 
-bool ImagePlug::acceptsInput( Gaffer::ConstPlugPtr input ) const
+bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
 	if( !CompoundPlug::acceptsInput( input ) )
 	{

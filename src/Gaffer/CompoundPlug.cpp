@@ -68,7 +68,7 @@ bool CompoundPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
 	return p->direction()==direction();
 }
 
-bool CompoundPlug::acceptsInput( ConstPlugPtr input ) const
+bool CompoundPlug::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{
@@ -76,7 +76,7 @@ bool CompoundPlug::acceptsInput( ConstPlugPtr input ) const
 	}
 	if( input )
 	{
-		ConstCompoundPlugPtr p = IECore::runTimeCast<const CompoundPlug>( input );
+		const CompoundPlug *p = IECore::runTimeCast<const CompoundPlug>( input );
 		if( !p )
 		{
 			return false;

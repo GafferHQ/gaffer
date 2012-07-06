@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -116,11 +116,11 @@ void Plug::setFlags( unsigned flags, bool enable )
 	m_flags = (m_flags & ~flags) | ( enable ? flags : 0 );
 }
 
-bool Plug::acceptsInput( ConstPlugPtr input ) const
+bool Plug::acceptsInput( const Plug *input ) const
 {
 	if( const Node *n = node() )
 	{
-		if( !n->acceptsInput( this, input.get() ) )
+		if( !n->acceptsInput( this, input ) )
 		{
 			return false;
 		}

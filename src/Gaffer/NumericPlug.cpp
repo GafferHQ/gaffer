@@ -76,7 +76,7 @@ NumericPlug<T>::~NumericPlug()
 }
 
 template<class T>
-bool NumericPlug<T>::acceptsInput( ConstPlugPtr input ) const
+bool NumericPlug<T>::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{

@@ -62,7 +62,7 @@ TypedPlug<T>::~TypedPlug()
 }
 
 template<class T>
-bool TypedPlug<T>::acceptsInput( ConstPlugPtr input ) const
+bool TypedPlug<T>::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{

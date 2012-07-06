@@ -105,7 +105,7 @@ bool ScenePlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
 	return children().size() != 5;
 }
 
-bool ScenePlug::acceptsInput( Gaffer::ConstPlugPtr input ) const
+bool ScenePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
 	if( !CompoundPlug::acceptsInput( input ) )
 	{

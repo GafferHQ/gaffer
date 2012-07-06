@@ -139,7 +139,7 @@ ValuePlug::~ValuePlug()
 {
 }
 
-bool ValuePlug::acceptsInput( ConstPlugPtr input ) const
+bool ValuePlug::acceptsInput( const Plug *input ) const
 {
 	if( !Plug::acceptsInput( input ) )
 	{

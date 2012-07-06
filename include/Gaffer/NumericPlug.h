@@ -67,7 +67,7 @@ class NumericPlug : public ValuePlug
 		virtual ~NumericPlug();
 
 		/// Accepts other NumericPlugs, including those of different types.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 
 		T defaultValue() const;
 		

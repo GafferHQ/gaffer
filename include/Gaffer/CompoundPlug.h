@@ -58,7 +58,7 @@ class CompoundPlug : public ValuePlug
 				
 		/// Only accepts inputs which are CompoundPlugs with child
 		/// Plugs compatible with this plug.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 		/// Makes connections between the corresponding child Plugs of
 		/// input and this Plug.
 		virtual void setInput( PlugPtr input );
