@@ -37,15 +37,14 @@
 #ifndef GAFFERARNOLD_ARNOLDSHADER_H
 #define GAFFERARNOLD_ARNOLDSHADER_H
 
-#include "Gaffer/Node.h"
+#include "GafferScene/Shader.h"
 
 #include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-/// \todo Probably need a Shader base class in GafferScene.
-class ArnoldShader : public Gaffer::Node
+class ArnoldShader : public GafferScene::Shader
 {
 
 	public :
@@ -53,14 +52,14 @@ class ArnoldShader : public Gaffer::Node
 		ArnoldShader( const std::string &name=staticTypeName() );
 		virtual ~ArnoldShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
 		
 		void setShader( const std::string &shaderName );
-		
+
 	protected :
-			
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		
+	
+		virtual IECore::ShaderPtr shader() const;
+					
 };
 
 } // namespace GafferArnold

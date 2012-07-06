@@ -58,7 +58,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( ArnoldShader );
 
 ArnoldShader::ArnoldShader( const std::string &name )
-	:	Node( name )
+	:	GafferScene::Shader( name )
 {
 	addChild( new StringPlug( "__shaderName" ) );
 }
@@ -294,25 +294,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 	
 }
 
-/// \todo Perhaps at some point we could run the shader using a shading context
-/// passed in context. For now we just compute all outputs to be 0.	
-void ArnoldShader::compute( ValuePlug *output, const Context *context ) const
+IECore::ShaderPtr ArnoldShader::shader() const
 {
-	switch( output->typeId() )
-	{
-		case FloatPlugTypeId :
-			static_cast<FloatPlug *>( output )->setValue( 0.0f );
-			break;
-		case IntPlugTypeId :
-			static_cast<IntPlug *>( output )->setValue( 0 );
-			break;
-		case StringPlugTypeId :
-			static_cast<StringPlug *>( output )->setValue( "" );
-			break;
-		default :
-			// we don't expect to get here. if we do then there'll be an
-			// error reported by ValuePlug when we don't call setValue()
-			// so we don't need to do our own error handling.
-			break;
-	}
+	return new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue() );
 }

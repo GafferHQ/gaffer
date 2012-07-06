@@ -71,6 +71,11 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 	return processTransform( path, context, inPlug()->transformPlug()->getValue() );
 }
 
+IECore::ObjectVectorPtr SceneElementProcessor::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return processState( path, context, inPlug()->statePlug()->getValue() );
+}
+
 IECore::ObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return processObject( path, context, inPlug()->objectPlug()->getValue() );
@@ -100,6 +105,15 @@ Imath::Box3f SceneElementProcessor::processBound( const ScenePath &path, const G
 Imath::M44f SceneElementProcessor::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	return inputTransform;
+}
+
+IECore::ObjectVectorPtr SceneElementProcessor::processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const
+{
+	if( inputState )
+	{
+		return inputState->copy();
+	}
+	return 0;
 }
 
 IECore::ObjectPtr SceneElementProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const

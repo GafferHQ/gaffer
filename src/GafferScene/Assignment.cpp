@@ -34,44 +34,58 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "GafferScene/Assignment.h"
+#include "GafferScene/Shader.h"
 
-namespace GafferScene
-{
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferScene;
 
-enum TypeId
+IE_CORE_DEFINERUNTIMETYPED( Assignment );
+
+Assignment::Assignment( const std::string &name )
+	:	SceneElementProcessor( name )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
+	addChild( new Plug( "shader" ) );
+}
+
+Assignment::~Assignment()
+{
+}
+
+Gaffer::Plug *Assignment::shaderPlug()
+{
+	return getChild<Plug>( "shader" );
+}
+
+const Gaffer::Plug *Assignment::shaderPlug() const
+{
+	return getChild<Plug>( "shader" );
+}
+
+bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( plug == shaderPlug() )
+	{
+		return inputPlug->ancestor<Shader>();
+	}
+	return true;
+}
+
+IECore::ObjectVectorPtr Assignment::processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const
+{
+	ObjectVectorPtr result = inputState ? inputState->copy() : ObjectVectorPtr( new ObjectVector );
 	
-	LastTypeId = 110700
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H
+	const Plug *in = shaderPlug()->getInput<Plug>();
+	const Shader *shader = in ? in->ancestor<Shader>() : 0;
+	if( shader )
+	{
+		IECore::ObjectVectorPtr state = shader->state();
+		for( IECore::ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
+		{
+			result->members().push_back( *it );
+		}
+	}
+	
+	return result;
+}

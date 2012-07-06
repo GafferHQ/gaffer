@@ -34,44 +34,35 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_ASSIGNMENT_H
+#define GAFFERSCENE_ASSIGNMENT_H
+
+#include "GafferScene/SceneElementProcessor.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class Assignment : public SceneElementProcessor
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
+
+	public :
+
+		Assignment( const std::string &name=staticTypeName() );
+		virtual ~Assignment();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Assignment, AssignmentTypeId, SceneElementProcessor );
+		
+		Gaffer::Plug *shaderPlug();
+		const Gaffer::Plug *shaderPlug() const;
+				
+	protected :
+		
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+		
+		virtual IECore::ObjectVectorPtr processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const;
 	
-	LastTypeId = 110700
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_ASSIGNMENT_H

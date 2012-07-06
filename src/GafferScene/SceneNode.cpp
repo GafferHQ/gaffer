@@ -85,6 +85,13 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 				computeTransform( scenePath, context, scenePlug )
 			);
 		}
+		else if( output == scenePlug->statePlug() )
+		{
+			std::string scenePath = context->get<std::string>( "scene:path" );
+			static_cast<ObjectVectorPlug *>( output )->setValue(
+				computeState( scenePath, context, scenePlug )
+			);
+		}
 		else if( output == scenePlug->objectPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );

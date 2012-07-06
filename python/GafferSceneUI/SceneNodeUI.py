@@ -93,3 +93,7 @@ GafferUI.PlugValueWidget.registerCreator(
 		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
 	),
 )
+
+# Assignment
+
+GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader", GafferUI.StandardNodule )

@@ -82,6 +82,10 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// The plug used to pass the transform for the current node.
 		Gaffer::M44fPlug *transformPlug();
 		const Gaffer::M44fPlug *transformPlug() const;
+		/// The plug used to pass the attribute state for the current node.
+		/// This is represented as a collection of IECore::StateRenderables.
+		Gaffer::ObjectVectorPlug *statePlug();
+		const Gaffer::ObjectVectorPlug *statePlug() const;
 		/// The plug used to pass the object for the current node.
 		Gaffer::ObjectPlug *objectPlug();
 		const Gaffer::ObjectPlug *objectPlug() const;
@@ -107,6 +111,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		//@{
 		Imath::Box3f bound( const std::string &scenePath ) const;
 		Imath::M44f transform( const std::string &scenePath ) const;
+		IECore::ConstObjectVectorPtr state( const std::string &scenePath ) const;
 		IECore::ConstObjectPtr object( const std::string &scenePath ) const;
 		IECore::ConstStringVectorDataPtr childNames( const std::string &scenePath ) const;
 		//@}

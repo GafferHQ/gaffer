@@ -129,6 +129,18 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	return result;
 }
 
+IECore::ObjectVectorPtr Instancer::computeBranchState( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+{
+	ContextPtr ic = instanceContext( context, branchPath );
+	if( ic )
+	{
+		Context::Scope scopedContext( ic );
+		ConstObjectVectorPtr instanceState = instancePlug()->statePlug()->getValue();
+		return instanceState ? instanceState->copy() : 0;
+	}
+	return 0;
+}
+
 IECore::ObjectPtr Instancer::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );

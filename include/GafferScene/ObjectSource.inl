@@ -169,6 +169,12 @@ Imath::M44f ObjectSource<BaseType>::computeTransform( const SceneNode::ScenePath
 }
 
 template<typename BaseType>
+IECore::ObjectVectorPtr ObjectSource<BaseType>::computeState( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return 0;
+}
+
+template<typename BaseType>
 IECore::ObjectPtr ObjectSource<BaseType>::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path != "/" )

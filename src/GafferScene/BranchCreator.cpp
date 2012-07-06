@@ -126,6 +126,21 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 	return M44f();
 }
 
+IECore::ObjectVectorPtr BranchCreator::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ScenePath parentPath, branchPath;
+	parentAndBranchPaths( path, parentPath, branchPath );
+	if( branchPath.size() )
+	{
+		return computeBranchState( parentPath, branchPath, context );
+	}
+	else
+	{
+		ConstObjectVectorPtr state = inPlug()->statePlug()->getValue();
+		return state ? state->copy() : 0;
+	}
+}
+
 IECore::ObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;

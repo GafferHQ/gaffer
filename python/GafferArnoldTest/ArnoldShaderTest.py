@@ -46,6 +46,19 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	
 		n = GafferArnold.ArnoldShader()
 		n.setShader( "noise" )
+		
+	def testState( self ) :
+	
+		n = GafferArnold.ArnoldShader()
+		n.setShader( "utility" )
+		
+		s = n.state()
+		self.failUnless( isinstance( s, IECore.ObjectVector ) )
+		self.assertEqual( len( s ), 1 )
+		self.failUnless( isinstance( s[0], IECore.Shader ) )
+		
+		s = s[0]
+		self.assertEqual( s.name, "utility" )		
 	
 if __name__ == "__main__":
 	unittest.main()

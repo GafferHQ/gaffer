@@ -68,6 +68,15 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 	);
 	
 	addChild(
+		new ObjectVectorPlug(
+			"state",
+			direction,
+			0,
+			flags
+		)
+	);
+	
+	addChild(
 		new ObjectPlug(
 			"object",
 			direction,
@@ -102,7 +111,7 @@ ScenePlug::~ScenePlug()
 
 bool ScenePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	return children().size() != 5;
+	return children().size() != 6;
 }
 
 bool ScenePlug::acceptsInput( const Gaffer::Plug *input ) const
@@ -136,6 +145,16 @@ Gaffer::M44fPlug *ScenePlug::transformPlug()
 const Gaffer::M44fPlug *ScenePlug::transformPlug() const
 {
 	return getChild<M44fPlug>( "transform" );
+}
+
+Gaffer::ObjectVectorPlug *ScenePlug::statePlug()
+{
+	return getChild<ObjectVectorPlug>( "state" );
+}
+
+const Gaffer::ObjectVectorPlug *ScenePlug::statePlug() const
+{
+	return getChild<ObjectVectorPlug>( "state" );
 }
 
 Gaffer::ObjectPlug *ScenePlug::objectPlug()
@@ -190,6 +209,18 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return transformPlug()->getValue();
+}
+
+IECore::ConstObjectVectorPtr ScenePlug::state( const std::string &scenePath ) const
+{
+	if( direction()==In && !getInput<Plug>() )
+	{
+		throw IECore::Exception( "ScenePlug::state called on unconnected input plug" );
+	}
+	ContextPtr tmpContext = new Context( *Context::current() );
+	tmpContext->set( "scene:path", scenePath );
+	Context::Scope scopedContext( tmpContext );
+	return statePlug()->getValue();
 }
 
 IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const

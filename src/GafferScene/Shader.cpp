@@ -34,44 +34,55 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/NumericPlug.h"
 
-namespace GafferScene
+#include "GafferScene/Shader.h"
+
+using namespace Imath;
+using namespace GafferScene;
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( Shader );
+
+Shader::Shader( const std::string &name )
+	:	Node( name )
 {
+}
 
-enum TypeId
+Shader::~Shader()
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	
-	LastTypeId = 110700
-};
+}
 
-} // namespace GafferScene
+IECore::ObjectVectorPtr Shader::state() const
+{
+	IECore::ObjectVectorPtr s = new IECore::ObjectVector;
+	s->members().push_back( shader() );
+	return s;
+}
 
-#endif // GAFFERSCENE_TYPEIDS_H
+/// \todo We should perhaps move the compute() method onto a new DependencyNode class,
+/// so that nodes like Shader can derive straight from Node and not have any requirement
+/// to implement compute().
+void Shader::compute( ValuePlug *output, const Context *context ) const
+{
+	/// \todo If ValuePlug had a setToDefault() method then we could
+	/// simply call that here.
+	switch( output->typeId() )
+	{
+		case FloatPlugTypeId :
+			static_cast<FloatPlug *>( output )->setValue( 0.0f );
+			break;
+		case IntPlugTypeId :
+			static_cast<IntPlug *>( output )->setValue( 0 );
+			break;
+		case StringPlugTypeId :
+			static_cast<StringPlug *>( output )->setValue( "" );
+			break;
+		default :
+			// we don't expect to get here. if we do then there'll be an
+			// error reported by ValuePlug when we don't call setValue()
+			// so we don't need to do our own error handling.
+			break;
+	}
+}

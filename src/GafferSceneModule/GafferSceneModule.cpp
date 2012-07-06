@@ -57,6 +57,8 @@
 #include "GafferScene/Displays.h"
 #include "GafferScene/ParameterListPlug.h"
 #include "GafferScene/Options.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/Assignment.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -169,5 +171,11 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	;
 
 	GafferBindings::NodeClass<Options>();
+	
+	GafferBindings::NodeClass<Shader>()
+		.def( "state", &Shader::state )
+	;
+	
+	GafferBindings::NodeClass<Assignment>();
 
 }

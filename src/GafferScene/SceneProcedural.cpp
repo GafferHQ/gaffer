@@ -39,6 +39,7 @@
 #include "IECore/AttributeBlock.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/CurvesPrimitive.h"
+#include "IECore/StateRenderable.h"
 
 #include "Gaffer/Context.h"
 
@@ -107,7 +108,20 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	try
 	{
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
-			
+		
+		ConstObjectVectorPtr state = runTimeCast<const ObjectVector>( m_scenePlug->statePlug()->getValue() );
+		if( state )
+		{
+			for( ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
+			{
+				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+				if( s )
+				{
+					s->render( renderer );
+				}
+			}
+		}
+		
 		ConstPrimitivePtr primitive = runTimeCast<const Primitive>( m_scenePlug->objectPlug()->getValue() );
 		if( primitive )
 		{
