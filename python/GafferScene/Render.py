@@ -110,8 +110,8 @@ class Render( Gaffer.Node ) :
 				self._outputProcedural( procedural, bound, renderer )
 			
 		commandAndArgs = self._commandAndArgs()
-		
-		self.__launchExternalRender( commandAndArgs )
+		if commandAndArgs :
+			self.__launchExternalRender( commandAndArgs )
 		
 	def _createRenderer( self ) :
 	

@@ -50,8 +50,24 @@ class ArnoldRender( GafferScene.Render ) :
 		GafferScene.Render.__init__( self, name )
 	
 		self.addChild(
+			Gaffer.StringPlug(
+				"mode",
+				Gaffer.Plug.Direction.In,
+				"render",
+			)
+		)
+	
+		self.addChild(
 			Gaffer.StringPlug( 
 				"fileName",
+			)
+		)
+				
+		self.addChild(
+			Gaffer.IntPlug(
+				"verbosity",
+				Gaffer.Plug.Direction.In,
+				2
 			)
 		)
 	
@@ -86,6 +102,12 @@ class ArnoldRender( GafferScene.Render ) :
 	
 	def _commandAndArgs( self ) :
 		
-		return [ "kick", "-dp",  "-dw", "-v", "6", self["fileName"].getValue() ]
+		mode = self["mode"].getValue()
+		if mode == "render" :
+			return [ "kick", "-dp",  "-dw", "-v", str( self["verbosity"].getValue() ), self["fileName"].getValue() ]
+		elif mode == "expand" :
+			return [ "kick", "-v", str( self["verbosity"].getValue() ), "-resaveop", self["fileName"].getValue(), self["fileName"].getValue() ]
+		
+		return []
 		
 IECore.registerRunTimeTyped( ArnoldRender )
