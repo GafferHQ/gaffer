@@ -211,6 +211,36 @@ class WidgetTest( unittest.TestCase ) :
 	
 		w = TestWidget()
 		self.assertEqual( w.getVisible(), True )
+	
+	def testVisibilityOfParentlessWidgets( self ) :
+	
+		w = GafferUI.Window()
+		t = TestWidget()
+		
+		# windows must be explicitly shown
+		self.assertEqual( w.getVisible(), False )
+		self.assertEqual( w.visible(), False )
+		
+		# widgets don't need to be explicitly shown but
+		# must not be visible on screen until parented
+		# to a window
+		self.assertEqual( t.getVisible(), True )
+		self.assertEqual( t.visible(), False )
+		
+		w.setVisible( True )
+		self.assertEqual( w.getVisible(), True )
+		self.assertEqual( w.visible(), True )
+		
+		w.setChild( t )
+		self.assertEqual( t.getVisible(), True )
+		self.assertEqual( t.visible(), True )
+		
+		# removing a widget from its parent must not
+		# leave it visible on screen.
+		w.removeChild( t )
+		self.assertEqual( t.parent(), None )
+		self.assertEqual( t.getVisible(), True )
+		self.assertEqual( t.visible(), False )
 		
 	def testSignals( self ) :
 	

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,7 +57,7 @@ class SignalsTest( unittest.TestCase ) :
 		c = s.connect( f )
 		self.assertEqual( c.blocked(), False )
 		self.assertEqual( c.connected(), True )
-		self.assert_( c.slot is f )
+		self.assert_( c.slot() is f )
 		
 		self.assertEqual( s( 5.5 ), 5 )
 		
@@ -115,23 +115,19 @@ class SignalsTest( unittest.TestCase ) :
 		self.assertEqual( a2.signal( 2 ), -1 )
 		
 		# connect a method in
-		a1.c = a2.signal.connect( a1.f )
+		a1.c = a2.signal.connect( Gaffer.WeakMethod( a1.f ) )
 		self.assertEqual( a2.signal( 2 ), 4 )
 		
 		# connect a method of a2 to the signal on a1
-		a2.c = a1.signal.connect( a2.f )
+		a2.c = a1.signal.connect( Gaffer.WeakMethod( a2.f ) )
 		self.assert_( a2.c.connected() )
 		
-		#self.assert_( a1.signal( 2 ), 4 )
+		self.assertEqual( a1.signal( 2 ), 4 )
 		
-		# just deleting a1 won't destroy it yet, as it has a
-		# circular reference (a1.connection holds a1.f which
-		# holds a1 which holds a1.connection)
+		# we should be able to delete a1 and have it die
+		# straight away, because the use of WeakMethods in
+		# the connections should prevent any circular references.
 		del a1
-		self.assertEqual( a2.signal( 2 ), 4 )
-		# running the garbage collector will destroy a1
-		# and remove the signal
-		gc.collect()
 		self.assertEqual( a2.signal( 2 ), -1 )
 		
 		# as a1 is now dead, a2's connection to a1.signal
@@ -211,7 +207,10 @@ class SignalsTest( unittest.TestCase ) :
 		
 			def __init__( self, s ) :
 			
-				self.connection = s.memberAddedSignal().connect( self.callback )
+				# note the use of Gaffer.WeakMethod to avoid creating a circular reference
+				# from self -> self.connection -> self.callback -> self. this is critical
+				# when connecting methods of class to a signal.
+				self.connection = s.memberAddedSignal().connect( Gaffer.WeakMethod( self.callback ) )
 				
 			def callback( self, s, n ) :
 			
@@ -230,8 +229,6 @@ class SignalsTest( unittest.TestCase ) :
 			sys.stderr = realStdErr
 			
 		del t
-		while gc.collect() :
-			pass
 			
 		self.assert_( w() is None )
 		self.assert_( "Exception" in sio.getvalue() )

@@ -63,7 +63,11 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		self.__cancelButton = self._addButton( "Cancel" )
 		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__executeButton = self._addButton( "Execute" )
+		
+		executeLabel = "OK"
+		with IECore.IgnoredExceptions( KeyError ) :
+			executeLabel = opInstance.userData()["UI"]["buttonLabel"].value
+		self.__executeButton = self._addButton( executeLabel )
 		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
 		self.__opExecutedSignal = Gaffer.Signal1()
