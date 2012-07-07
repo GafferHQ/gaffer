@@ -46,6 +46,7 @@
 
 #include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILLock.h"
 
 #include "boost/tokenizer.hpp"
 
@@ -69,43 +70,6 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 		ScriptNodeWrapper( PyObject *self, const std::string &name=staticTypeName() )
 			:	ScriptNode( name ), IECorePython::Wrapper<ScriptNode>( self, this )
 		{
-			// this dict will form both the locals and the globals for the execute()
-			// and evaluate() methods. it's not possible to have a separate locals
-			// and globals dictionary and have things work as intended. see
-			// ScriptNodeTest.testClassScope() for an example, and 
-			// http://bugs.python.org/issue991196 for an explanation.
-			dict executionDict;
-			
-			object builtIn = import( "__builtin__" );
-			executionDict["__builtins__"] = builtIn;
-			
-			object gafferModule = import( "Gaffer" );
-			executionDict["Gaffer"] = gafferModule;
-			
-			object weakMethod = gafferModule.attr( "WeakMethod" );
-			
-			object selfO( handle<>( borrowed( self ) ) );
-			
-			executionDict["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
-			executionDict["getChild"] = weakMethod( object( selfO.attr( "getChild" ) ) );
-			executionDict["childAddedSignal"] = weakMethod( object( selfO.attr( "childAddedSignal" ) ) );
-			executionDict["childRemovedSignal"] = weakMethod( object( selfO.attr( "childRemovedSignal" ) ) );
-			executionDict["selection"] = weakMethod( object( selfO.attr( "selection" ) ) );
-			executionDict["undo"] = weakMethod( object( selfO.attr( "undo" ) ) );
-			executionDict["redo"] = weakMethod( object( selfO.attr( "redo" ) ) );
-			executionDict["deleteNodes"] = weakMethod( object( selfO.attr( "deleteNodes" ) ) );
-			executionDict["serialise"] = weakMethod( object( selfO.attr( "serialise" ) ) );
-			executionDict["save"] = weakMethod( object( selfO.attr( "save" ) ) );
-			executionDict["load"] = weakMethod( object( selfO.attr( "load" ) ) );
-			
-			// ideally we'd just store the execution scope as a normal
-			// c++ member variable but we can't as it may hold
-			// references back to us. by storing it in self.__dict__
-			// we allow it to participate in garbage collection, thus breaking
-			// the cycle and allowing the ScriptNode to die.
-			object selfDict = selfO.attr( "__dict__" );
-			selfDict["__executionDict"] = executionDict;
-			
 		}
 
 		virtual ~ScriptNodeWrapper()
@@ -185,13 +149,61 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 		GAFFERBINDINGS_NODEWRAPPERFNS( ScriptNode )
 		
 	private :
+
+		virtual void parentChanging( Gaffer::GraphComponent *newParent )
+		{
+			if( !newParent )
+			{
+				// we ditch m_executionDict when we lose our parent, so
+				// that we're not kept alive unecessarily by potential
+				// circular references created by variables in the dict.
+				// see GafferTest.ScriptNodeTest.testLifeTimeAfterExecution()
+				// for further discussion.
+				IECorePython::ScopedGILLock gilLock;
+				m_executionDict = object();
+			}
+		}
 	
+		// the dict returned will form both the locals and the globals for the execute()
+		// and evaluate() methods. it's not possible to have a separate locals
+		// and globals dictionary and have things work as intended. see
+		// ScriptNodeTest.testClassScope() for an example, and 
+		// http://bugs.python.org/issue991196 for an explanation.
 		object executionDict()
 		{
-			object selfO( handle<>( borrowed( m_pyObject ) ) );
-			object selfDict = selfO.attr( "__dict__" );
-			return selfDict["__executionDict"];
+			if( !m_executionDict.is_none() )
+			{
+				return m_executionDict;
+			}
+			
+			m_executionDict = dict();
+				
+			object builtIn = import( "__builtin__" );
+			m_executionDict["__builtins__"] = builtIn;
+			
+			object gafferModule = import( "Gaffer" );
+			m_executionDict["Gaffer"] = gafferModule;
+			
+			object weakMethod = gafferModule.attr( "WeakMethod" );
+			
+			object selfO( ScriptNodePtr( this ) );
+			
+			m_executionDict["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
+			m_executionDict["getChild"] = weakMethod( object( selfO.attr( "getChild" ) ) );
+			m_executionDict["childAddedSignal"] = weakMethod( object( selfO.attr( "childAddedSignal" ) ) );
+			m_executionDict["childRemovedSignal"] = weakMethod( object( selfO.attr( "childRemovedSignal" ) ) );
+			m_executionDict["selection"] = weakMethod( object( selfO.attr( "selection" ) ) );
+			m_executionDict["undo"] = weakMethod( object( selfO.attr( "undo" ) ) );
+			m_executionDict["redo"] = weakMethod( object( selfO.attr( "redo" ) ) );
+			m_executionDict["deleteNodes"] = weakMethod( object( selfO.attr( "deleteNodes" ) ) );
+			m_executionDict["serialise"] = weakMethod( object( selfO.attr( "serialise" ) ) );
+			m_executionDict["save"] = weakMethod( object( selfO.attr( "save" ) ) );
+			m_executionDict["load"] = weakMethod( object( selfO.attr( "load" ) ) );
+
+			return m_executionDict;
 		}
+		
+		object m_executionDict;
 		
 };
 

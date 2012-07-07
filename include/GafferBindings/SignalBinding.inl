@@ -107,7 +107,7 @@ boost::python::class_<Signal, boost::noncopyable> SignalBinder<Signal, SignalCal
 {
 
 	boost::python::class_<Signal, boost::noncopyable> c( className );
-		c.def( "connect", &Connection::create<Signal, SlotCaller> )
+		c.def( "connect", &Connection::create<Signal, SlotCaller>, boost::python::return_value_policy<boost::python::manage_new_object>() )
 		.def( "__call__", &SignalCaller::call )
 	;
 

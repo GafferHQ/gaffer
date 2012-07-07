@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,7 +37,6 @@
 
 import unittest
 import weakref
-import gc
 
 import IECore
 
@@ -90,8 +90,9 @@ class WidgetSignalTest( unittest.TestCase ) :
 				GafferUI.TabbedContainer.__init__( self )
 				
 				self.signal = GafferUI.WidgetSignal()
-				
-			def f( self ) :
+			
+			@staticmethod	
+			def f( widget ) :
 			
 				return True
 				
@@ -113,13 +114,14 @@ class WidgetSignalTest( unittest.TestCase ) :
 		a2 = A()
 		self.assertEqual( a2.signal( a2 ), False )	
 
-		a2.c = a2.signal.connect( a2.ff )
+		# it is imperative to connect to a WeakMethod to prevent
+		# unbreakable circular references from forming.
+		a2.c = a2.signal.connect( Gaffer.WeakMethod( a2.ff ) )
 		self.assertEqual( a2.signal( a2 ), True )
 		
 		w = weakref.ref( a2 )
 		self.assert_( w() is a2 )
 		del a2
-		gc.collect()
 		self.assertEqual( w(), None )
 		
 if __name__ == "__main__":

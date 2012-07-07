@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -75,9 +76,7 @@ bool Connection::blocked() const
 
 boost::python::object Connection::slot()
 {
-	object o( handle<>( borrowed( m_pyObject ) ) );
-	dict d = extract<dict>( o.attr( "__dict__" ) );
-	return d["slot"];
+	return m_slot;
 }
 
 void GafferBindings::bindConnection()
@@ -88,5 +87,6 @@ void GafferBindings::bindConnection()
 		.def( "block", &Connection::block )
 		.def( "unblock", &Connection::unblock )
 		.def( "blocked", &Connection::blocked )
+		.def( "slot", &Connection::slot )
 	;
 }

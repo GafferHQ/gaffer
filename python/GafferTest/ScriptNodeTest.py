@@ -158,8 +158,6 @@ class ScriptNodeTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		w = weakref.ref( s )
 		del s
-		while gc.collect() :
-			pass
 		IECore.RefCounted.collectGarbage()
 	
 		self.assertEqual( w(), None )
@@ -341,7 +339,31 @@ a = A()"""
 		a = Gaffer.ApplicationRoot()
 		a["scripts"]["one"] = s
 		
-		self.failUnless( s.applicationRoot().isSame( a ) )	
+		self.failUnless( s.applicationRoot().isSame( a ) )
+			
+	def testLifeTimeAfterExecution( self ) :
+	
+		a = Gaffer.ApplicationRoot()
+		a["scripts"]["s"] = Gaffer.ScriptNode()
+		
+		# because the script editor allows execution of arbitrary code,
+		# there's nothing stopping a user from making variables that refer
+		# to the ScriptNode itself, causing circular references.
+		a["scripts"]["s"].execute( "addChild( Gaffer.Node( \"a\" ) )" )
+		a["scripts"]["s"].execute( "circularRef = getChild( \"a\" ).parent()" )
+		
+		w = weakref.ref( a["scripts"]["s"] )
+		
+		# we use the removal of the script from its parent to trigger a cleanup
+		# of the execution context, allowing the ScriptNode to die. it's still
+		# possible to create circular references that never die if the ScriptNode
+		# never has a parent, but that is unlikely to be the case in the real world.
+		## \todo Should it instead be the ScriptEditor that owns the execution
+		# context perhaps? Then this wouldn't be an issue.
+		del a["scripts"]["s"]
+		IECore.RefCounted.collectGarbage()
+	
+		self.assertEqual( w(), None )
 	
 if __name__ == "__main__":
 	unittest.main()
