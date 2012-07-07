@@ -9,7 +9,7 @@ move things into more modules :
 	gaffergraph
 	gaffergraphui
 
-	gafferparameterised
+	gafferparameterised - or gaffercortex?
 	gafferparameterisedui
 	
 distinguish widgets and gadgets by module namespace?
