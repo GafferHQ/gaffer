@@ -75,3 +75,5 @@ swatch.
 * GafferUI.EventLoop now disables any idle callbacks which error during execution.
 
 * Added Node::acceptsInput virtual method, to allow nodes to reject connections.
+
+* Added a Widget.bound() method.

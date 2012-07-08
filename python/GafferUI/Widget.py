@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -229,11 +229,24 @@ class Widget( object ) :
 				return w
 				
 		return None
-		
+	
+	## \deprecated Use bound().size() instead.	
 	def size( self ) :
 	
 		return IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
-
+	
+	## Returns the bounding box of the Widget as a Box2i. If relativeTo
+	# is None then the bound is provided in screen coordinates, if a
+	# Widget is passed then it is provided relative to that Widget.
+	def bound( self, relativeTo=None ) :
+	
+		pos = self.__qtWidget.mapToGlobal( QtCore.QPoint( 0, 0 ) )
+		if relativeTo is not None :
+			pos -= relativeTo._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) )
+		
+		pos = IECore.V2i( pos.x(), pos.y() )
+		return IECore.Box2i( pos, pos + IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() ) )
+	
 	def keyPressSignal( self ) :
 	
 		self.__ensureEventFilter()

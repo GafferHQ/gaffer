@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -261,7 +261,25 @@ class WidgetTest( unittest.TestCase ) :
 			self.failUnless( isinstance( getattr( w, s[0] )(), s[1] ) )
 			self.failUnless( getattr( w, s[0] )() is getattr( w, s[0] )() )
 			
-
+	def testBound( self ) :
+	
+		w = GafferUI.Window( borderWidth = 8 )
+		b = GafferUI.Button()
+		w.setChild( b )
+		w.setVisible( True )
+		
+		wb = w.bound()
+		bb = b.bound()
+		bbw = b.bound( relativeTo = w )
+		
+		self.failUnless( isinstance( wb, IECore.Box2i ) )
+		self.failUnless( isinstance( bb, IECore.Box2i ) )
+		self.failUnless( isinstance( bbw, IECore.Box2i ) )
+		
+		self.assertEqual( bb.size(), bbw.size() )
+		self.assertEqual( bbw.min, bb.min - wb.min )
+		self.assertEqual( b.size(), bb.size() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
