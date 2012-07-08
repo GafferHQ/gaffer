@@ -81,3 +81,5 @@ swatch.
 * Added GadgetWidget.positionToGadgetSpace() method, for converting Widget-relative positions into Gadget-relative lines.
 
 * Added a GraphEditor.graphGadgetWidget() method.
+
+* Nodes created via the NodeMenu are now automatically connected to the selected nodes, and positioned based on those connections.
