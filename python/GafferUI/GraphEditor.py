@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -78,12 +78,18 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			gadget = GraphGadget( scriptNode )
 			
 		self.__gadgetWidget.setGadget( gadget )
+		
+	## Returns the internal GadgetWidget holding the GraphGadget.	
+	def graphGadgetWidget( self ) :
 	
+		return self.__gadgetWidget
+
 	## Returns the internal Gadget used to draw the graph. This may be
-	# modified directly to set up appropriate filters etc.
+	# modified directly to set up appropriate filters etc. This is just
+	# a convenience method returning graphGadgetWidget().getGadget()
 	def graphGadget( self ) :
 	
-		return self.__gadgetWidget.getGadget()
+		return self.graphGadgetWidget().getGadget()
 	
 	__nodeContextMenuSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted to create a context menu for a

@@ -79,3 +79,5 @@ swatch.
 * Added a Widget.bound() method.
 
 * Added GadgetWidget.positionToGadgetSpace() method, for converting Widget-relative positions into Gadget-relative lines.
+
+* Added a GraphEditor.graphGadgetWidget() method.
