@@ -152,6 +152,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		return self.__select( position )
 	
+	## Takes a Widget-relative position and returns a line through Gadget space.
+	def positionToGadgetSpace( self, position ) :
+	
+		return IECore.LineSegment3f( *self.__cameraController.unproject( position ) )
+	
 	## Frames the specified bounding box so it is entirely visible in the Widget.
 	# \todo I think the entire camera management needs to be shifted to a ViewportGadget.
 	def frame( self, bound, viewDirection=None, upVector=IECore.V3f( 0, 1, 0 ) ) :

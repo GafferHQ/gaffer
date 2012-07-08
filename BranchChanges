@@ -77,3 +77,5 @@ swatch.
 * Added Node::acceptsInput virtual method, to allow nodes to reject connections.
 
 * Added a Widget.bound() method.
+
+* Added GadgetWidget.positionToGadgetSpace() method, for converting Widget-relative positions into Gadget-relative lines.
