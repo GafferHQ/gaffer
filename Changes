@@ -2,6 +2,8 @@
 
 * Removed requirement of the boost build having a patched python library capable of participating in garbage collection.
 
+* Fixed bug in Collapsible when calling setChild() with a widget currently parented elsewhere.
+
 0.34.0
 ------
 

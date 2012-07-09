@@ -107,6 +107,11 @@ class Collapsible( GafferUI.ContainerWidget ) :
 			self.removeChild( self.__child )
 		
 		if child is not None :
+			
+			oldParent = child.parent()
+			if oldParent is not None :
+				oldParent.removeChild( child )
+
 			self._qtWidget().layout().addWidget( child._qtWidget() )
 			child.setVisible( not self.getCollapsed() )
 			self.__child = child
