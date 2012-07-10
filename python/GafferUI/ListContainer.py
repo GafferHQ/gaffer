@@ -81,6 +81,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 		
 		stretch = 1 if expand else 0
 		self.__qtLayout.addWidget( child._qtWidget(), stretch )	
+		child._applyVisibility()
 	
 	def remove( self, child ) :
 	
@@ -100,7 +101,8 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 		stretch = 1 if expand else 0
 		self.__qtLayout.insertWidget( index, child._qtWidget(), stretch )
-
+		child._applyVisibility()
+		
 	def index( self, child ) :
 	
 		return self.__widgets.index( child )
@@ -137,9 +139,11 @@ class ListContainer( GafferUI.ContainerWidget ) :
 			indices = range( *(index.indices( len( self ) )) )
 			for i in indices :
 				self[i]._qtWidget().setParent( None )
+				self[i]._applyVisibility()
 			del self.__widgets[index]
 		else :
 			self.__widgets[index]._qtWidget().setParent( None )
+			self.__widgets[index]._applyVisibility()
 			del self.__widgets[index]
 
 	def __len__( self ) :
@@ -154,6 +158,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	
 		self.__widgets.remove( child )
 		child._qtWidget().setParent( None )
+		child._applyVisibility()
 		
 	def setExpand( self, child, expand ) :
 	

@@ -69,7 +69,8 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 	
 		assert( child is self.__child )
 		
-		child.setParent( None )
+		child._qtWidget().setParent( None )
+		child._applyVisibility()
 		self.__child = None
 		
 	def setChild( self, child ) :
@@ -77,8 +78,15 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 		if self.__child :
 			self.removeChild( self.__child )
 		
-		self._qtWidget().setWidget( child._qtWidget() )
-		self.__child = child
+		if child is not None :
+		
+			oldParent = child.parent()
+			if oldParent is not None :
+				oldParent.removeChild( child )
+		
+			self._qtWidget().setWidget( child._qtWidget() )
+			child._applyVisibility()
+			self.__child = child
 		
 	def getChild( self ) :
 	

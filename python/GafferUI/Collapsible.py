@@ -96,6 +96,7 @@ class Collapsible( GafferUI.ContainerWidget ) :
 		assert( childOrCornerWidget is self.__child or childOrCornerWidget is self.__cornerWidget )
 		
 		childOrCornerWidget._qtWidget().setParent( None )
+		childOrCornerWidget._applyVisibility()
 		if childOrCornerWidget is self.__child :
 			self.__child = None
 		else :
@@ -152,7 +153,8 @@ class Collapsible( GafferUI.ContainerWidget ) :
 			
 			self.__headerLayout.addWidget( cornerWidget._qtWidget(), stretch )
 			self.__cornerWidget = cornerWidget
-		
+			self.__cornerWidget._applyVisibility()
+			
 	def getCornerWidget( self ) :
 	
 		return self.__cornerWidget

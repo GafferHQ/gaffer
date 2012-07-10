@@ -78,7 +78,9 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 			
 		self.__widgets.append( child )
 		self._qtWidget().addWidget( child._qtWidget() )
-	
+		child._applyVisibility()
+		assert( child._qtWidget().parent() is self._qtWidget() )
+		
 	def remove( self, child ) :
 		
 		self.removeChild( child )
@@ -91,8 +93,10 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		if oldParent :
 			oldParent.removeChild( child )
 			
-		self._qtWidget().insertWidget( index,  child._qtWidget() )
 		self.__widgets.insert( index, child )
+		self._qtWidget().insertWidget( index,  child._qtWidget() )
+		child._applyVisibility()
+		assert( child._qtWidget().parent() is self._qtWidget() )
 	
 	def index( self, child ) :
 	
@@ -106,6 +110,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	
 		assert( child in self.__widgets )
 		child._qtWidget().setParent( None )
+		child._applyVisibility()
 		self.__widgets.remove( child )
 	
 	## Returns a list of actual pixel sizes for each of the children.
@@ -162,6 +167,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 			raise IndexError()
 	
 		qtHandle = self._qtWidget().handle( index + 1 )
+		assert( qtHandle.parent() is self._qtWidget() )
 		handle = self.__handleWidgets.get( qtHandle, None )
 		if handle is None :
 			handle = GafferUI.Widget( qtHandle )
@@ -201,7 +207,7 @@ class _Splitter( QtGui.QSplitter ) :
 		# There seems to be an odd interaction between this and the stylesheet, and
 		# setting this to the desired size and then using the stylesheet to divide it into
 		# margins seems the only reliable way of sizing the handle.
-		## \todo This should come from the style once we've unified the Gadgetand Widget
+		## \todo This should come from the style once we've unified the Gadget and Widget
 		# styling.
 		self.setHandleWidth( 6 )
 		

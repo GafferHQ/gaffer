@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,48 @@
 #  
 ##########################################################################
 
+import unittest
+
+import Gaffer
 import GafferUI
 
-## The ContainerWidget class provides a base for all
-# Widgets which may hold other Widgets as children.
-class ContainerWidget( GafferUI.Widget ) :
+class ScrolledContainerTest( unittest.TestCase ) :
 
-	def __init__( self, topLevelWidget, **kw ) :
+	def testChildAccessors( self ) :
 	
-		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
-	
-	## Must be implemented in subclasses to add a child.
-	# This is used by the automatic parenting mechanism.
-	# In the case of a Container with a limited number of
-	# children, this function should throw an exception when
-	# no more children may be added. Please note that after
-	# changing the parent of Widget._qtWidget(), you must call
-	# Widget._applyVisibility().
-	def addChild( self, child, **kw ) :
-	
-		raise NotImplementedError
-	
-	## Must be implemented in subclasses to remove
-	# any references to the specified child. This allows
-	# reparenting of that child into another ContainerWidget.
-	# Please note that after changing the parent of Widget._qtWidget(),
-	# you must call Widget._applyVisibility().
-	def removeChild( self, child ) :
-	
-		raise NotImplementedError
+		s = GafferUI.ScrolledContainer()
+		b = GafferUI.Button()
 		
-	def __enter__( self ) :
-	
-		GafferUI.Widget._pushParent( self )
+		s.setChild( b )
+		self.assertEqual( s.getChild(), b )
+		self.assertEqual( b.parent(), s )
 		
-		return self
+		s.setChild( None )
+		self.assertEqual( s.getChild(), None )
+		self.assertEqual( b.parent(), None )
 		
-	def __exit__( self, type, value, traceBack ) :
+		s.setChild( b )
+		self.assertEqual( s.getChild(), b )
+		self.assertEqual( b.parent(), s )
+		
+		s.removeChild( b )
+		self.assertEqual( s.getChild(), None )
+		self.assertEqual( b.parent(), None )
+		
+	def testTransferChild( self ) :
 	
-		assert( GafferUI.Widget._popParent() is self )
+		s = GafferUI.ScrolledContainer()
+		l = GafferUI.ListContainer()
+		b = GafferUI.Button()
+		
+		l.append( b )
+		self.assertEqual( len( l ), 1 )
+		
+		s.setChild( b )
+		self.failUnless( b.parent() is s )
+		self.failUnless( s.getChild() is b )
+		self.assertEqual( len( l ), 0 )
+		
+if __name__ == "__main__":
+	unittest.main()
+	

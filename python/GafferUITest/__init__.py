@@ -70,6 +70,7 @@ from EditorWidgetTest import EditorWidgetTest
 from StandardStyleTest import StandardStyleTest
 from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 from LabelTest import LabelTest
+from ScrolledContainerTest import ScrolledContainerTest
 
 if __name__ == "__main__":
 	unittest.main()

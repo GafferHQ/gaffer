@@ -72,6 +72,7 @@ class Frame( GafferUI.ContainerWidget ) :
 		assert( child is self.__child )
 		
 		child._qtWidget().setParent( None )
+		child._applyVisibility()
 		self.__child = None
 
 	def addChild( self, child ) :
@@ -86,9 +87,15 @@ class Frame( GafferUI.ContainerWidget ) :
 		if self.__child is not None :
 			self.removeChild( self.__child )
 		
-		if child is not None :	
+		if child is not None :
+			
+			oldParent = child.parent()
+			if oldParent is not None :
+				oldParent.removeChild( child )
+			
 			self._qtWidget().layout().addWidget( child._qtWidget(), 0, 0 )
-		
+			child._applyVisibility()
+					
 		self.__child = child	
 
 	def getChild( self ) :

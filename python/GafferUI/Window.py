@@ -92,6 +92,7 @@ class Window( GafferUI.ContainerWidget ) :
 	
 		assert( child is self.__child or child in self.__childWindows )
 		child._qtWidget().setParent( None )
+		child._applyVisibility()
 		if child is self.__child :
 			self.__child = None
 		else :
@@ -120,7 +121,8 @@ class Window( GafferUI.ContainerWidget ) :
 							
 			self.__child = child
 			self.__qtLayout.addWidget( child._qtWidget(), 0, 0 )
-
+			child._applyVisibility()
+			
 	def getChild( self ) :
 	
 		return self.__child
