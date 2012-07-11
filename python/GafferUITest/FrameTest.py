@@ -67,7 +67,21 @@ class FrameTest( unittest.TestCase ) :
 		
 		f.removeChild( b )
 		self.failUnless( b.parent() is None )
+		
+	def testTransferChild( self ) :
 	
+		f = GafferUI.Frame()
+		l = GafferUI.ListContainer()
+		b = GafferUI.Button()
+		
+		l.append( b )
+		self.assertEqual( len( l ), 1 )
+		
+		f.setChild( b )
+		self.failUnless( b.parent() is f )
+		self.failUnless( f.getChild() is b )
+		self.assertEqual( len( l ), 0 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

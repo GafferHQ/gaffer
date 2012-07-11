@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -107,6 +107,22 @@ class CollapsibleTest( unittest.TestCase ) :
 		c.removeChild( b2 )
 		self.failUnless( c.getCornerWidget() is None )
 		self.failUnless( b2.parent() is None )
+		
+	def testTransferChildren( self ) :
+	
+		c = GafferUI.Collapsible()
+		b = GafferUI.Button()
+		l = GafferUI.ListContainer()
+		
+		self.assertEqual( b.parent(), None )
+		
+		l.append( b )
+		self.failUnless( b.parent() is l )
+		
+		c.setChild( b )
+		self.failUnless( b.parent() is c )
+		
+		self.assertEqual( len( l ), 0 )
 		
 if __name__ == "__main__":
 	unittest.main()

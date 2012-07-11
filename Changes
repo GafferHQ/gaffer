@@ -2,6 +2,12 @@
 
 * Removed requirement of the boost build having a patched python library capable of participating in garbage collection.
 
+* Fixed bug in Collapsible when calling setChild() with a widget currently parented elsewhere.
+
+* Fixed various GafferUI.Container bugs which prevented successful transfer of Widgets between containers.
+
+* Added workarounds for unwanted Qt behaviours - parentless Widgets becoming top-level windows, and widgets being hidden when reparented.
+
 0.34.0
 ------
 

@@ -37,6 +37,7 @@
 
 import unittest
 import weakref
+import sys
 
 import IECore
 
@@ -241,6 +242,52 @@ class WidgetTest( unittest.TestCase ) :
 		self.assertEqual( t.parent(), None )
 		self.assertEqual( t.getVisible(), True )
 		self.assertEqual( t.visible(), False )
+		
+	def testVisibilityWhenTransferringWidgets( self ) :
+	
+		w1 = GafferUI.Window()
+		w1.setVisible( True )
+		
+		w2 = GafferUI.Window()
+		w2.setVisible( True )
+		
+		v = TestWidget()
+		self.assertEqual( v.getVisible(), True )
+		self.assertEqual( v.visible(), False )
+		
+		h = TestWidget()
+		self.assertEqual( h.getVisible(), True )
+		h.setVisible( False )
+		self.assertEqual( h.getVisible(), False )
+		self.assertEqual( h.visible(), False )
+		
+		w1.setChild( v )
+		self.assertEqual( v.getVisible(), True )
+		self.assertEqual( v.visible(), True )
+
+		self.assertEqual( h.getVisible(), False )
+		self.assertEqual( h.visible(), False )
+		
+		w2.setChild( v )		
+		self.assertEqual( v.getVisible(), True )
+		self.assertEqual( v.visible(), True )
+
+		self.assertEqual( h.getVisible(), False )
+		self.assertEqual( h.visible(), False )
+		
+		w1.setChild( h )
+		self.assertEqual( v.getVisible(), True )
+		self.assertEqual( v.visible(), True )
+
+		self.assertEqual( h.getVisible(), False )
+		self.assertEqual( h.visible(), False )
+		
+		w2.setChild( h )
+		self.assertEqual( v.getVisible(), True )
+		self.assertEqual( v.visible(), False )
+
+		self.assertEqual( h.getVisible(), False )
+		self.assertEqual( h.visible(), False )
 		
 	def testSignals( self ) :
 	

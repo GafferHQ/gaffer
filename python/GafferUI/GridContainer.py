@@ -98,7 +98,8 @@ class GridContainer( GafferUI.ContainerWidget ) :
 					
 		self.__widgets.add( child )
 		self.__qtLayout.addWidget( child._qtWidget(), ranges[1][0], ranges[0][0], ranges[1][1] - ranges[1][0], ranges[0][1] - ranges[0][0] )
-		
+		child._applyVisibility()
+				
 		if self.__maxCoordinate is not None :
 			self.__maxCoordinate.x = max( self.__maxCoordinate[0], ranges[0][1] - 1 )
 			self.__maxCoordinate.y = max( self.__maxCoordinate[1], ranges[1][1] - 1 )
@@ -159,7 +160,8 @@ class GridContainer( GafferUI.ContainerWidget ) :
 	
 		self.__widgets.remove( child )
 		child._qtWidget().setParent( None )
-
+		child._applyVisibility()
+		
 		# force recomputation of gridSize()
 		self.__maxCoordinate = None
 

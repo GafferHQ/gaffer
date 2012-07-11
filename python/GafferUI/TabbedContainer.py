@@ -65,9 +65,10 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		oldParent = child.parent()
 		if oldParent :
 			oldParent.removeChild( child )
-		
+	
 		self.__widgets.append( child )
 		self._qtWidget().addTab( child._qtWidget(), label )
+		child._applyVisibility()
 				
 	def remove( self,  child ) :
 	
@@ -103,6 +104,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			for i in indices :
 				self._qtWidget().removeTab( self._qtWidget().indexOf( self[i]._qtWidget() ) )
 				self[i]._qtWidget().setParent( None )
+				self[i]._applyVisibility()
 			del self.__widgets[index]
 		else :
 			self.removeChild( self.__widgets[index] )
@@ -125,20 +127,26 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		
 		if child is self.__cornerWidget :
 			self._qtWidget().setCornerWidget( None )
-			child._qtWidget().setParent( None )
 			self.__cornerWidget = None
 		else :
 			self._qtWidget().removeTab( self.__widgets.index( child ) )
-			child._qtWidget().setParent( None )
 			self.__widgets.remove( child )
 
+		child._qtWidget().setParent( None )
+		child._applyVisibility()
+		
 	def setCornerWidget( self, cornerWidget ) :
 	
 		if self.__cornerWidget is not None :
 			self.removeChild( self.__cornerWidget )
 			
 		if cornerWidget is not None :
+			oldParent = cornerWidget.parent()
+			if oldParent is not None :
+				oldParent.removeChild( cornerWidget )
 			self._qtWidget().setCornerWidget( cornerWidget._qtWidget() )
+			cornerWidget._applyVisibility()
+			assert( cornerWidget._qtWidget().parent() is self._qtWidget() )
 		else :
 			self._qtWidget().setCornerWidget( None )
 			

@@ -74,6 +74,7 @@ from PlugValueWidgetTest import PlugValueWidgetTest
 from PathListingWidgetTest import PathListingWidgetTest
 from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 from LabelTest import LabelTest
+from ScrolledContainerTest import ScrolledContainerTest
 
 if __name__ == "__main__":
 	unittest.main()

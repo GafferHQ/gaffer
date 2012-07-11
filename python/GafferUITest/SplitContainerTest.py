@@ -90,7 +90,8 @@ class SplitContainerTest( unittest.TestCase ) :
 		self.assertRaises( IndexError, c.handle, 1 )
 	
 		self.failUnless( isinstance( c.handle( 0 ), GafferUI.Widget ) )
-	
+		self.assertEqual( c.handle( 0 ).parent(), c )
+		
 	def testGetHandleTwice( self ) :
 	
 		c = GafferUI.SplitContainer()
@@ -132,12 +133,16 @@ class SplitContainerTest( unittest.TestCase ) :
 		
 	def testGetSizes( self ) :
 	
+		w = GafferUI.Window()
 		c = GafferUI.SplitContainer()
+		w.setChild( c )
 		
 		c.append( GafferUI.Frame() )
 		c.append( GafferUI.Frame() )
 		
-		c.setVisible( True )
+		# SplitContainer must be visible on screen before we can
+		# rely on size information.
+		w.setVisible( True )
 		
 		sizes = c.getSizes()
 		self.assertEqual( sum( sizes ) + c.handle( 0 ).size().y, c.size().y )
@@ -160,7 +165,6 @@ class SplitContainerTest( unittest.TestCase ) :
 		s = c.getSizes()
 		self.assertAlmostEqual( float( s[0] ) / s[1], 1/3.0, 1 )
 		
-	
 if __name__ == "__main__":
 	unittest.main()
 	

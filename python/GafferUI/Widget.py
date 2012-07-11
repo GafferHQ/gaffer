@@ -122,7 +122,9 @@ class Widget( object ) :
  		self._wheelSignal = None
  		self._visibilityChangedSignal = None
  		self._contextMenuSignal = None
- 				
+ 		
+ 		self.__visible = not isinstance( self, GafferUI.Window )
+ 		
 		self.setToolTip( toolTip )
 		
 		# perform automatic parenting if necessary. we don't want to do this
@@ -150,14 +152,25 @@ class Widget( object ) :
 	# visible explicitly after creation.		
 	def setVisible( self, visible ) :
 	
-		# It's important that we only call __qtWidget.setVisible( True )
-		# if we actually need to (if setVisible( False ) has been
-		# called before or if we're a window that hasn't been shown yet),
-		# as otherwise extra sizing events seem to get thrown around,
-		# resulting in juddering as windows are opened for the first time.
-		if visible != self.getVisible() :
-			self.__qtWidget.setVisible( visible )
-
+		if visible == self.__visible :
+			return
+		
+		self.__visible = visible	
+		if (
+			not self.__visible or
+			isinstance( self, GafferUI.Window ) or
+			self.__qtWidget.parent() is not None
+		) :
+			self.__qtWidget.setVisible( self.__visible )
+		else :
+			# we're visible, but we're not a window and
+			# we have no parent. if we were to apply
+			# the visibility now then qt would turn us into
+			# a visible top level window. we don't want that
+			# so we'll wait to get a parent again and apply
+			# the visibility in _assignQtParent().
+			pass
+		
 	## Returns False if this Widget has been explicitly hidden
 	# using setVisible( False ), and True otherwise. Note that if
 	# a parent Widget has been hidden, then this function may still
@@ -166,8 +179,22 @@ class Widget( object ) :
 	# parent Widgets.
 	def getVisible( self ) :
 	
-		return not self.__qtWidget.isHidden()
-	
+ 		# I'm very reluctant to have an explicit visibility field on Widget like this,
+ 		# as you'd think that would be duplicating the real information Qt holds inside
+ 		# QWidget. But Qt shows and hides things behind your back when parenting widgets,
+ 		# so there's no real way of knowing whether the Qt visibility is a result of
+ 		# your explicit actions or of Qt's implicit actions. Qt does have a flag
+ 		# WA_WState_ExplicitShowHide which appears to record whether or not the current
+ 		# visibility was requested explicitly, but in the case that that is false, 
+ 		# I can't see a way of determining what the explicit visibility should be
+ 		# without tracking it separately. The only time our idea of visibility should
+ 		# differ from Qt's is if we're a parentless widget, so at least most of the time
+ 		# the assertion covers our asses a bit.
+ 		if self.__qtWidget.parent() or isinstance( self, GafferUI.Window ) :
+ 			assert( self.__visible == ( not self.__qtWidget.isHidden() ) )
+ 		
+ 		return self.__visible
+ 		
 	## Returns True if this Widget and all its parents up to the specified
 	# ancestor are visible.
 	def visible( self, relativeTo=None ) :
@@ -354,7 +381,7 @@ class Widget( object ) :
 	def _qtWidget( self ) :
 	
 		return self.__qtWidget
-		
+			
 	## Returns the GafferUI.Widget that owns the specified QtGui.QWidget
 	@classmethod
 	def _owner( cls, qtWidget ) :
@@ -370,6 +397,30 @@ class Widget( object ) :
 	
 	__qtWidgetOwners = weakref.WeakKeyDictionary()
 	
+	## Applies the current visibility to self._qtWidget(). It is
+	# essential that this is called whenever the Qt parent of the 
+	# widget is changed, to work around undesirable Qt behaviours
+	# (documented in the function body). In theory we could do this
+	# automatically in response to parent changed events, but that
+	# would mean an event filter on /every/ widget which would be
+	# slow.
+	## \todo Perhaps if we can implement a faster event filter we
+	# can do this automatically.
+	def _applyVisibility( self ) :
+	
+		if self.__qtWidget.parent() is None :
+			# When a QWidget becomes parentless, Qt will turn
+			# it into a toplevel window. We really don't want
+			# that, so we'll hide it until it gets a parent
+			# again.
+			self.__qtWidget.setVisible( False )
+		else :
+			# If the parent has changed, qt may have hidden
+			# the widget, so if necessary we reapply the visibility
+			# we actually want.
+			if self.__visible != ( not self.__qtWidget.isHidden() ) :
+				self.__qtWidget.setVisible( self.__visible )			
+			
 	## Used by the ContainerWidget classes to implement the automatic parenting
 	# using the with statement.
 	@classmethod

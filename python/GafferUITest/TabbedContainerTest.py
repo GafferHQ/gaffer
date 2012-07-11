@@ -138,7 +138,6 @@ class TabbedContainerTest( unittest.TestCase ) :
 		self.assertEqual( len( t ), 2 )
 		for b in ( b2, b3 ) :
 			self.failUnless( b.parent() is t )
-		print b1.parent()
 		self.failUnless( b1.parent() is None )
 		
 		del t[:]
@@ -156,6 +155,43 @@ class TabbedContainerTest( unittest.TestCase ) :
 	
 		t.setTabsVisible( True )
 		self.assertEqual( t.getTabsVisible(), True )
+	
+	def testParent( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		b = GafferUI.Button()
+		
+		t.append( b )
+		self.assertEqual( b.parent(), t )
+	
+	def testVisibilityWhenTransferringWidgets( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		b = GafferUI.Button()
+		l = GafferUI.ListContainer()
+		
+		l.append( b )
+		self.assertEqual( b.parent(), l )
+		self.assertEqual( b.getVisible(), True )
+		
+		t.append( b )
+		self.assertEqual( len( l ), 0 )
+		self.assertEqual( b.parent(), t )
+		self.assertEqual( b.getVisible(), True )
+	
+	def testTransferCornerWidget( self ) :
+	
+		t = GafferUI.TabbedContainer()
+		l = GafferUI.ListContainer()
+		b = GafferUI.Button()
+		
+		l.append( b )
+		self.assertEqual( len( l ), 1 )
+		self.assertEqual( b.parent(), l )
+		
+		t.setCornerWidget( b )
+		self.assertEqual( len( l ), 0 )
+		self.assertEqual( b.parent(), t )
 		
 if __name__ == "__main__":
 	unittest.main()
