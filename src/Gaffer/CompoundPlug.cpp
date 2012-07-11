@@ -99,6 +99,11 @@ bool CompoundPlug::acceptsInput( const Plug *input ) const
 
 void CompoundPlug::setInput( PlugPtr input )
 {
+	if( input.get() == getInput<Plug>() )
+	{
+		return;
+	}
+
 	if( !input )
 	{
 		for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
