@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class NumericPlugTest( unittest.TestCase ) :
 
@@ -128,7 +129,31 @@ class NumericPlugTest( unittest.TestCase ) :
 		
 		i.setValue( 11 )
 		self.assertEqual( i.getValue(), 10 )
+	
+	def testSetInputShortcut( self ) :
+	
+		n1 = GafferTest.AddNode()		
+		n2 = GafferTest.AddNode()
 		
+		inputChangedSignals = GafferTest.CapturingSlot( n1.plugInputChangedSignal() )
+		self.assertEqual( len( inputChangedSignals ), 0 )
+		
+		dirtiedSignals = GafferTest.CapturingSlot( n1.plugDirtiedSignal() )
+		self.assertEqual( len( dirtiedSignals ), 0 )
+		
+		n1["op1"].setInput( n2["sum"] )
+		# we should get signals the first time
+		self.assertEqual( len( inputChangedSignals ), 1 )
+		self.assertEqual( len( dirtiedSignals ), 2 )
+		self.assertEqual( dirtiedSignals[0][0].getName(), "op1" )
+		self.assertEqual( dirtiedSignals[1][0].getName(), "sum" )
+		
+		n1["op1"].setInput( n2["sum"] )
+		# but the second time there should be no signalling,
+		# because it was the same.
+		self.assertEqual( len( inputChangedSignals ), 1 )
+		self.assertEqual( len( dirtiedSignals ), 2 )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

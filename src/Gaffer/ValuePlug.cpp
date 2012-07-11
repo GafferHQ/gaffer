@@ -154,6 +154,11 @@ bool ValuePlug::acceptsInput( const Plug *input ) const
 
 void ValuePlug::setInput( PlugPtr input )
 {
+	if( input.get() == getInput<Plug>() )
+	{
+		return;
+	}
+	
 	Plug::setInput( input );
 	if( input )
 	{
