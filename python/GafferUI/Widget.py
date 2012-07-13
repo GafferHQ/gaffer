@@ -168,7 +168,7 @@ class Widget( object ) :
 			# the visibility now then qt would turn us into
 			# a visible top level window. we don't want that
 			# so we'll wait to get a parent again and apply
-			# the visibility in _assignQtParent().
+			# the visibility in _applyVisibility().
 			pass
 		
 	## Returns False if this Widget has been explicitly hidden
