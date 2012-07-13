@@ -99,6 +99,10 @@ class ImagePlug : public Gaffer::CompoundPlug
 
 IE_CORE_DECLAREPTR( ImagePlug );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ImagePlug> > ImagePlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ImagePlug> > InputImagePlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ImagePlug> > OutputImagePlugIterator;
+
 } // namespace GafferImage
 
 #endif // GAFFER_IMAGEPLUG_H

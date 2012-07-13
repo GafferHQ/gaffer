@@ -120,6 +120,10 @@ class ScenePlug : public Gaffer::CompoundPlug
 
 IE_CORE_DECLAREPTR( ScenePlug );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ScenePlug> > ScenePlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ScenePlug> > InputScenePlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ScenePlug> > OutputScenePlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_SCENEPLUG_H
