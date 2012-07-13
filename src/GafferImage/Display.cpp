@@ -199,7 +199,7 @@ IECore::ConstImagePrimitivePtr Display::computeImagePrimitive( const Gaffer::Con
 	return m_driver ? m_driver->image() : 0;
 }
 
-void Display::plugSet( Gaffer::PlugPtr plug )
+void Display::plugSet( Gaffer::Plug *plug )
 {
 	if( plug == portPlug() )
 	{
