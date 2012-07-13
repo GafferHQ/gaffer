@@ -59,7 +59,6 @@ GraphComponent::GraphComponent( const std::string &name )
 
 GraphComponent::~GraphComponent()
 {
-	std::cerr << "~GraphComponent " << this << " " << getName() << std::endl;
 	// notify all the children that the parent is gone.
 	// we don't call removeChild to achieve this, as that would also emit
 	// childRemoved signals for this object, which is undesirable as it's dying.
@@ -328,7 +327,7 @@ const GraphComponent *GraphComponent::ancestor( IECore::TypeId type ) const
 	return const_cast<GraphComponent *>( this )->ancestor( type );
 }
 
-GraphComponentPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other, IECore::TypeId ancestorType )
+GraphComponent *GraphComponent::commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType )
 {
 	set<GraphComponent *> candidates;
 	GraphComponent *ancestor = m_parent;
@@ -357,14 +356,14 @@ GraphComponentPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other, 
 
 }
 
-ConstGraphComponentPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other, IECore::TypeId ancestorType ) const
+const GraphComponent *GraphComponent::commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType ) const
 {
 	return const_cast<GraphComponent *>( this )->commonAncestor( other, ancestorType );
 }
 
-bool GraphComponent::isAncestorOf( ConstGraphComponentPtr other ) const
+bool GraphComponent::isAncestorOf( const GraphComponent *other ) const
 {
-	const GraphComponent *p = other.get();
+	const GraphComponent *p = other;
 	while( p )
 	{
 		if( p->m_parent==this )
