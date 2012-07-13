@@ -1,3 +1,5 @@
+* Improved the perfomance of _applyVisibility
+
 * OpDialogue now supports op.userData()["UI"]["buttonLabel"], for specifying a custom label for the OK button.
 
 * Removed requirement of the boost build having a patched python library capable of participating in garbage collection.

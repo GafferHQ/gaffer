@@ -401,8 +401,11 @@ class Widget( object ) :
 			# If the parent has changed, qt may have hidden
 			# the widget, so if necessary we reapply the visibility
 			# we actually want.
-			if self.__visible != ( not self.__qtWidget.isHidden() ) :
-				self.__qtWidget.setVisible( self.__visible )			
+			
+			# \todo in order to improve the performance the lines bellow were commented
+			#if self.__visible != ( not self.__qtWidget.isHidden() ) :
+			#	self.__qtWidget.setVisible( self.__visible )
+			pass
 			
 	## Used by the ContainerWidget classes to implement the automatic parenting
 	# using the with statement.
