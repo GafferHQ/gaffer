@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -72,9 +72,26 @@ class op( Gaffer.Application ) :
 			}
 		)
 		
+		self.__classLoader = None
+		
+	def setClassLoader( self, loader ) :
+	
+		self.__classLoader = loader
+		
+	def getClassLoader( self ) :
+	
+		if self.__classLoader is None :
+			self.__classLoader = IECore.ClassLoader.defaultOpLoader()
+		
+		return self.__classLoader
+		
 	def doRun( self, args ) :
 		
-		classLoader = IECore.ClassLoader.defaultOpLoader()
+		## \todo The gui app is passing an ApplicationRoot as "application",
+		# but should be made to instead pass an Application as we do here.
+		self._executeStartupFiles( [ "op" ], { "application" : self } )
+
+		classLoader = self.getClassLoader()
 		
 		matchingOpNames = classLoader.classNames( "*" + args["op"].value )
 		if not len( matchingOpNames ) :

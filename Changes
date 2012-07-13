@@ -8,6 +8,16 @@
 
 * Added workarounds for unwanted Qt behaviours - parentless Widgets becoming top-level windows, and widgets being hidden when reparented.
 
+* The op and browser applications now run config files found in the op and browser subdirectories of the GAFFER_STARTUP_PATHS.
+
+* Added setClassLoader and getClassLoader methods to the op application. These may be used by configuration files to customise the loading of ops (the application is available as an "application" variable to the startup scripts).
+
+* Calling BrowserEditor.registerMode() with the label of an existing mode now overrides the previous registration, rather than adding a second with an identical name.
+
+* The standard BrowserEditor modes are now accessible publicly as BrowserEditor.FileSystemMode, BrowserEditor.FileSequenceMode and BrowserEditor.OpMode.
+
+* The browser OpMode now takes an additional classLoader argument to the constructor, allowing the use of custom class loaders.
+
 0.34.0
 ------
 

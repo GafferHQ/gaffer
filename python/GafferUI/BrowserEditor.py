@@ -206,6 +206,9 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 	@classmethod
 	def registerMode( cls, label, modeCreator ) :
 	
+		# first remove any existing modes of the same label
+		cls.__modes = [ m for m in cls.__modes if m[0] != label ]
+		
 		cls.__modes.append( ( label, modeCreator ) )
 
 GafferUI.EditorWidget.registerType( "Browser", BrowserEditor )	
@@ -248,9 +251,10 @@ class FileSystemMode( BrowserEditor.Mode ) :
 		
 	def _initialColumns( self ) :
 	
-		return GafferUI.PathListingWidget.defaultFileSystemColumns
+		return list( GafferUI.PathListingWidget.defaultFileSystemColumns )
 			
 BrowserEditor.registerMode( "Files", FileSystemMode )
+BrowserEditor.FileSystemMode = FileSystemMode
 	
 class FileSequenceMode( BrowserEditor.Mode ) :
 
@@ -290,15 +294,21 @@ class FileSequenceMode( BrowserEditor.Mode ) :
 
 	def _initialColumns( self ) :
 	
-		return GafferUI.PathListingWidget.defaultFileSystemColumns
+		return list( GafferUI.PathListingWidget.defaultFileSystemColumns )
 		
 BrowserEditor.registerMode( "File Sequences", FileSequenceMode )
+BrowserEditor.FileSequenceMode = FileSequenceMode
 
 class OpMode( BrowserEditor.Mode ) :
 
-	def __init__( self, browser ) :
+	def __init__( self, browser, classLoader=None ) :
 	
 		BrowserEditor.Mode.__init__( self, browser )
+		
+		if classLoader is not None :
+			self.__classLoader = classLoader
+		else :
+			self.__classLoader = IECore.ClassLoader.defaultOpLoader()
 				
 	def connect( self ) :
 	
@@ -314,7 +324,7 @@ class OpMode( BrowserEditor.Mode ) :
 	
 	def _initialPath( self ) :
 	
-		return Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/" )
+		return Gaffer.ClassLoaderPath( self.__classLoader, "/" )
 		
 	def _initialDisplayMode( self ) :
 	
@@ -336,3 +346,4 @@ class OpMode( BrowserEditor.Mode ) :
 		opDialogue.setVisible( True )
 
 BrowserEditor.registerMode( "Ops", OpMode )
+BrowserEditor.OpMode = OpMode

@@ -70,6 +70,8 @@ class browser( Gaffer.Application ) :
 	
 		self.__application = Gaffer.ApplicationRoot( "browser" )
 		self.__application["scripts"]["script1"] = Gaffer.ScriptNode()
+
+		self._executeStartupFiles( [ "browser" ], { "application" : self } )
 		
 		with GafferUI.Window( "Gaffer Browser" ) as window :
 			browser = GafferUI.BrowserEditor( self.__application["scripts"]["script1"] )
