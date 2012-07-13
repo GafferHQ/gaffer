@@ -402,10 +402,8 @@ class Widget( object ) :
 			# the widget, so if necessary we reapply the visibility
 			# we actually want.
 			
-			# \todo in order to improve the performance the lines bellow were commented
-			#if self.__visible != ( not self.__qtWidget.isHidden() ) :
-			#	self.__qtWidget.setVisible( self.__visible )
-			pass
+			if self.__visible != ( not self.__qtWidget.isHidden() ) :
+				self.__qtWidget.setVisible( self.__visible )
 			
 	## Used by the ContainerWidget classes to implement the automatic parenting
 	# using the with statement.
