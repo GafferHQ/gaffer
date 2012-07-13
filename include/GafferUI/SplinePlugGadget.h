@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ class SplinePlugGadget : public Gadget
 	
 		void splineAdded( Gaffer::SetPtr splineSet, IECore::RunTimeTypedPtr splinePlug );
 		void splineRemoved( Gaffer::SetPtr splineSet, IECore::RunTimeTypedPtr splinePlug );
-		void plugSet( Gaffer::PlugPtr plug );
+		void plugSet( Gaffer::Plug *plug );
 		Gaffer::StandardSetPtr m_splines;
 		Gaffer::StandardSetPtr m_selection;
 		

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -199,7 +199,7 @@ void GraphGadget::memberRemoved( Gaffer::SetPtr set, IECore::RunTimeTypedPtr mem
 	}
 }
 
-void GraphGadget::inputChanged( Gaffer::PlugPtr dstPlug )
+void GraphGadget::inputChanged( Gaffer::Plug *dstPlug )
 {
 	removeConnectionGadget( dstPlug );
 
@@ -210,16 +210,16 @@ void GraphGadget::inputChanged( Gaffer::PlugPtr dstPlug )
 		return;
 	}
 	
-	addConnectionGadget( dstPlug.get() );
+	addConnectionGadget( dstPlug );
 }
 
-void GraphGadget::plugSet( Gaffer::PlugPtr plug )
+void GraphGadget::plugSet( Gaffer::Plug *plug )
 {
 	const std::string &name = plug->getName();
 	if( name=="__uiX" || name=="__uiY" )
 	{
-		Gaffer::NodePtr node = plug->node();
-		NodeGadget *ng = findNodeGadget( node.get() );
+		Gaffer::Node *node = plug->node();
+		NodeGadget *ng = findNodeGadget( node );
 		if( ng )
 		{
 			updateNodeGadgetTransform( ng );

@@ -213,7 +213,7 @@ void SplinePlugGadget::splineRemoved( SetPtr splineStandardSet, IECore::RunTimeT
 	}
 }
 
-void SplinePlugGadget::plugSet( PlugPtr plug )
+void SplinePlugGadget::plugSet( Plug *plug )
 {
 	if( m_splines->contains( plug ) )
 	{

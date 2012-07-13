@@ -77,7 +77,7 @@ class Display : public ImagePrimitiveNode
 		IECore::DisplayDriverServerPtr m_server;
 		GafferDisplayDriverPtr m_driver;
 				
-		void plugSet( Gaffer::PlugPtr plug );
+		void plugSet( Gaffer::Plug *plug );
 		void setupServer();
 		void driverCreated( GafferDisplayDriver *driver );
 		void setupDriver( GafferDisplayDriverPtr driver );

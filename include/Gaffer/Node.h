@@ -62,8 +62,8 @@ class Node : public GraphComponent
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Node, NodeTypeId, GraphComponent );
 
-		typedef boost::signal<void (PlugPtr)> UnaryPlugSignal;
-		typedef boost::signal<void (PlugPtr, PlugPtr)> BinaryPlugSignal;
+		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
+		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;
 		
 		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
 		

@@ -59,6 +59,7 @@ GraphComponent::GraphComponent( const std::string &name )
 
 GraphComponent::~GraphComponent()
 {
+	std::cerr << "~GraphComponent " << this << " " << getName() << std::endl;
 	// notify all the children that the parent is gone.
 	// we don't call removeChild to achieve this, as that would also emit
 	// childRemoved signals for this object, which is undesirable as it's dying.

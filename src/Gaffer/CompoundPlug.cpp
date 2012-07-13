@@ -155,7 +155,7 @@ void CompoundPlug::childAddedOrRemoved()
 	}
 }
 
-void CompoundPlug::plugInputChanged( PlugPtr plug )
+void CompoundPlug::plugInputChanged( Plug *plug )
 {
 	if( plug->parent<CompoundPlug>()==this )
 	{
@@ -163,7 +163,7 @@ void CompoundPlug::plugInputChanged( PlugPtr plug )
 	}
 }
 
-void CompoundPlug::plugSet( PlugPtr plug )
+void CompoundPlug::plugSet( Plug *plug )
 {
 	// the CompoundPlug immediately below the Node takes on the task
 	// of emitting the plugSet signals for all CompoundPlugs between
@@ -185,7 +185,7 @@ void CompoundPlug::plugSet( PlugPtr plug )
 	}
 }
 
-void CompoundPlug::updateInputFromChildInputs( PlugPtr checkFirst )
+void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
 {
 	if( !children().size() )
 	{

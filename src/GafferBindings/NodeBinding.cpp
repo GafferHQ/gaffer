@@ -184,6 +184,39 @@ void GafferBindings::initNode( Node *node, const boost::python::dict &inputs, co
 	addDynamicPlugs( node, dynamicPlugs );
 }
 
+struct UnaryPlugSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, PlugPtr p )
+	{
+		try
+		{
+			slot( p );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
+struct BinaryPlugSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, PlugPtr p1, PlugPtr p2 )
+	{
+		try
+		{
+			slot( p1, p2 );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 void GafferBindings::bindNode()
 {
 	
@@ -195,8 +228,8 @@ void GafferBindings::bindNode()
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
 	;
 	
-	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, CatchingSlotCaller<Node::UnaryPlugSignal> >::bind( "UnaryPlugSignal" );
-	SignalBinder<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, CatchingSlotCaller<Node::BinaryPlugSignal> >::bind( "BinaryPlugSignal" );
+	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >::bind( "UnaryPlugSignal" );
+	SignalBinder<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, BinaryPlugSlotCaller >::bind( "BinaryPlugSignal" );
 	
 	Serialiser::registerSerialiser( Node::staticTypeId(), serialiseNode );
 		

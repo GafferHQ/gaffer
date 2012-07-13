@@ -71,12 +71,12 @@ class CompoundPlug : public ValuePlug
 		void childAddedOrRemoved();
 	
 		boost::signals::connection m_plugInputChangedConnection;
-		void plugInputChanged( PlugPtr plug );
+		void plugInputChanged( Plug *plug );
 
 		boost::signals::connection m_plugSetConnection;
-		void plugSet( PlugPtr plug );
+		void plugSet( Plug *plug );
 		
-		void updateInputFromChildInputs( PlugPtr checkFirst );
+		void updateInputFromChildInputs( Plug *checkFirst );
 		
 };
 

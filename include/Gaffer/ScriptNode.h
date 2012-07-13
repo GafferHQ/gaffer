@@ -229,7 +229,7 @@ class ScriptNode : public Node
 		ContextPtr m_context;
 		
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
-		void plugSet( PlugPtr plug );
+		void plugSet( Plug *plug );
 	
 };
 

@@ -286,7 +286,7 @@ void ScriptNode::childRemoved( GraphComponent *parent, GraphComponent *child )
 	m_selection->remove( child );
 }
 
-void ScriptNode::plugSet( PlugPtr plug )
+void ScriptNode::plugSet( Plug *plug )
 {
 	/// \todo Should we introduce some plug constraints classes to assist in managing these
 	/// kinds of relationships?
