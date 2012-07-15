@@ -34,7 +34,40 @@
 #  
 ##########################################################################
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
+import Gaffer
+import GafferUI
+import GafferArnold
 
+GafferUI.PlugValueWidget.registerCreator(
+	GafferArnold.ArnoldRender.staticTypeId(),
+	"mode",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Render", "render" ),
+		( "Generate .ass only", "generate" ),
+		( "Generate expanded .ass", "expand" ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferArnold.ArnoldRender.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() )
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferArnold.ArnoldRender.staticTypeId(),
+	"verbosity",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "0", 0 ),
+		( "1", 1 ),
+		( "2", 2 ),
+		( "3", 3 ),
+		( "4", 4 ),
+		( "5", 5 ),
+		( "6", 6 ),
+	),
+)

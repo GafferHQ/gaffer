@@ -17,8 +17,6 @@ PRIORITIES!!!!
 	- keeps them out of the system tray
 	- makes color pickers crash on close
 
-* EnumPlugValueWidget
-
 * group with multiple inputs
 
 * setrendercamera node

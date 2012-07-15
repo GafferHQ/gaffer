@@ -168,6 +168,7 @@ from BrowserEditor import BrowserEditor
 from TimeEditor import TimeEditor
 from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 from CompoundPlugValueWidget import CompoundPlugValueWidget
+from EnumPlugValueWidget import EnumPlugValueWidget
 
 # then stuff specific to parameterised objects
 
