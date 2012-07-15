@@ -40,6 +40,11 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
+## \todo Support cascading menus using "/" in labels. Rework API to
+# better match the rest of GafferUI - ditch index based methods, and
+# just have setCurrent(), getCurrent() passing strings, and a
+# currentChangedSignal(). Maybe use list style methods for managing
+# entries (append [] del etc).
 class SelectionMenu( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
