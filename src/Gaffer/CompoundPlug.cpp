@@ -103,23 +103,32 @@ void CompoundPlug::setInput( PlugPtr input )
 	{
 		return;
 	}
+	
+	// we use the plugInputChangedConnection to trigger calls to updateInputFromChildInputs()
+	// when child inputs are changed by code elsewhere. it would be counterproductive for
+	// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
+	// so we temporarily block the connection.
+	m_plugInputChangedConnection.block();
 
-	if( !input )
-	{
-		for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
+		if( !input )
 		{
-			IECore::staticPointerCast<Plug>( *it )->setInput( 0 );			
+			for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
+			{
+				IECore::staticPointerCast<Plug>( *it )->setInput( 0 );			
+			}
 		}
-	}
-	else
-	{
-		CompoundPlugPtr p = IECore::staticPointerCast<CompoundPlug>( input );
-		ChildContainer::const_iterator it1, it2;
-		for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
+		else
 		{
-			IECore::staticPointerCast<Plug>( *it1 )->setInput( IECore::staticPointerCast<Plug>( *it2 ) );
+			CompoundPlugPtr p = IECore::staticPointerCast<CompoundPlug>( input );
+			ChildContainer::const_iterator it1, it2;
+			for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
+			{
+				IECore::staticPointerCast<Plug>( *it1 )->setInput( IECore::staticPointerCast<Plug>( *it2 ) );
+			}
 		}
-	}
+
+	m_plugInputChangedConnection.unblock();
+	
 	ValuePlug::setInput( input );
 }
 
