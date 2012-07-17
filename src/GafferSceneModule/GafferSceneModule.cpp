@@ -60,21 +60,11 @@
 #include "GafferScene/Shader.h"
 #include "GafferScene/Assignment.h"
 
+#include "GafferSceneBindings/ScenePlugBinding.h"
+
 using namespace boost::python;
 using namespace GafferScene;
-
-static IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const std::string &scenePath )
-{
-	IECore::ConstObjectPtr o = plug.object( scenePath );
-	return o ? o->copy() : 0;
-}
-
-
-static IECore::StringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const std::string &scenePath )
-{
-	IECore::ConstStringVectorDataPtr n = plug.childNames( scenePath );
-	return n ? n->copy() : 0;
-}
+using namespace GafferSceneBindings;
 
 static Gaffer::CompoundPlugPtr addDisplayWrapper( Displays &displays, const std::string &name, const std::string &type, const std::string &data )
 {
@@ -101,22 +91,7 @@ static Gaffer::CompoundPlugPtr addParameterWrapper( ParameterListPlug &p, const 
 BOOST_PYTHON_MODULE( _GafferScene )
 {
 	
-	IECorePython::RunTimeTypedClass<ScenePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = ScenePlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)	
-		)
-		.def( "bound", &ScenePlug::bound )
-		.def( "transform", &ScenePlug::transform )
-		.def( "object", &objectWrapper )
-		.def( "childNames", &childNamesWrapper )
-	;
+	bindScenePlug();
 	
 	IECorePython::RunTimeTypedClass<ParameterListPlug>()
 		.def( "__init__", make_constructor( parameterListPlugConstructor, default_call_policies(),  

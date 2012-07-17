@@ -49,6 +49,17 @@ class ScenePlugTest( unittest.TestCase ) :
 		
 		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )	
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.CompoundPlug.staticTypeId() )
+	
+	def testDynamicSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = GafferScene.ScenePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		ss = s.serialise()
+				
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
 		
 if __name__ == "__main__":
 	unittest.main()
