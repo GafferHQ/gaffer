@@ -34,23 +34,52 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
+import Gaffer
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
+class SceneNodeTest( unittest.TestCase ) :
 
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupScenesTest import GroupScenesTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-
+	def testRootConstraints( self ) :
+	
+		# we don't allow the root of the scene ("/") to carry objects, transforms,
+		# or state. if we did, then there wouldn't be a sensible way of merging
+		# them (particularly transforms) when a Group node has multiple inputs.
+		# it's also pretty confusing to have stuff go on at the root level,
+		# particularly as the root isn't well represented in the SceneEditor,
+		# and applications like maya don't have stuff happening at the root
+		# level either.
+		
+		node = GafferSceneTest.CompoundObjectSource()
+		node["in"].setValue(
+			IECore.CompoundObject( {
+				"object" : IECore.SpherePrimitive()
+			} )
+		)
+		
+		self.assertRaises( Exception, node["out"].object, "/" )
+		
+		node = GafferSceneTest.CompoundObjectSource()
+		node["in"].setValue(
+			IECore.CompoundObject( {
+				"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1 ) ) )
+			} )
+		)
+		
+		self.assertRaises( Exception, node["out"].transform, "/" )
+		
+		node = GafferSceneTest.CompoundObjectSource()
+		node["in"].setValue(
+			IECore.CompoundObject( {
+				"state" : IECore.ObjectVector()
+			} )
+		)
+		
+		self.assertRaises( Exception, node["out"].state, "/" )
+	
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
