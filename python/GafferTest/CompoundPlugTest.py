@@ -290,6 +290,37 @@ class CompoundPlugTest( unittest.TestCase ) :
 		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
 		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
 		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+	
+	def testSetInputShortcut( self ) :
+	
+		n1 = Gaffer.Node()
+		n1["c"] = Gaffer.CompoundPlug()
+		
+		n2 = Gaffer.Node()
+		n2["c"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		cs = GafferTest.CapturingSlot( n1.plugInputChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		n1["c"].setInput( n2["c"] )
+		# we should get a signal the first time
+		self.assertEqual( len( cs ), 1 )
+		
+		n1["c"].setInput( n2["c"] )
+		# but the second time there should be no signal,
+		# because it was the same.
+		self.assertEqual( len( cs ), 1 )
+		
+	def testSetInputWithoutParent( self ) :
+	
+		c1 = Gaffer.CompoundPlug( direction=Gaffer.Plug.Direction.Out )
+		c1["n"] = Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out )
+		
+		c2 = Gaffer.CompoundPlug()
+		c2["n"] = Gaffer.IntPlug()
+		
+		c2.setInput( c1 )
+		self.assertEqual( c2.getInput(), c1 )
 		
 if __name__ == "__main__":
 	unittest.main()

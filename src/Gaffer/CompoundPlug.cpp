@@ -108,8 +108,13 @@ void CompoundPlug::setInput( PlugPtr input )
 	// when child inputs are changed by code elsewhere. it would be counterproductive for
 	// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
 	// so we temporarily block the connection.
-	m_plugInputChangedConnection.block();
-
+	/// \todo It'd be nice to have a C++ equivalent of the Python BlockedConnection object.
+	bool needBlock = m_plugInputChangedConnection.connected();
+	if( needBlock )
+	{
+		m_plugInputChangedConnection.block();
+	}
+	
 		if( !input )
 		{
 			for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
@@ -127,7 +132,10 @@ void CompoundPlug::setInput( PlugPtr input )
 			}
 		}
 
-	m_plugInputChangedConnection.unblock();
+	if( needBlock )
+	{
+		m_plugInputChangedConnection.unblock();
+	}
 	
 	ValuePlug::setInput( input );
 }
