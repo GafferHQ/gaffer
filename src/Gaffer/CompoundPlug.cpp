@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,8 @@
 using namespace Gaffer;
 using namespace boost;
 
+IE_CORE_DEFINERUNTIMETYPED( CompoundPlug )
+
 CompoundPlug::CompoundPlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
 {
@@ -56,7 +58,7 @@ CompoundPlug::~CompoundPlug()
 {
 }
 
-bool CompoundPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool CompoundPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	ConstPlugPtr p = IECore::runTimeCast<const Plug>( potentialChild );
 	if( !p )
@@ -66,7 +68,7 @@ bool CompoundPlug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
 	return p->direction()==direction();
 }
 
-bool CompoundPlug::acceptsInput( ConstPlugPtr input ) const
+bool CompoundPlug::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{
@@ -74,7 +76,7 @@ bool CompoundPlug::acceptsInput( ConstPlugPtr input ) const
 	}
 	if( input )
 	{
-		ConstCompoundPlugPtr p = IECore::runTimeCast<const CompoundPlug>( input );
+		const CompoundPlug *p = IECore::runTimeCast<const CompoundPlug>( input );
 		if( !p )
 		{
 			return false;
@@ -97,45 +99,50 @@ bool CompoundPlug::acceptsInput( ConstPlugPtr input ) const
 
 void CompoundPlug::setInput( PlugPtr input )
 {
-	if( !input )
+	if( input.get() == getInput<Plug>() )
 	{
-		for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
-		{
-			IECore::staticPointerCast<Plug>( *it )->setInput( 0 );			
-		}
+		return;
 	}
-	else
+	
+	// we use the plugInputChangedConnection to trigger calls to updateInputFromChildInputs()
+	// when child inputs are changed by code elsewhere. it would be counterproductive for
+	// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
+	// so we temporarily block the connection.
+	/// \todo It'd be nice to have a C++ equivalent of the Python BlockedConnection object.
+	bool needBlock = m_plugInputChangedConnection.connected();
+	if( needBlock )
 	{
-		CompoundPlugPtr p = IECore::staticPointerCast<CompoundPlug>( input );
-		ChildContainer::const_iterator it1, it2;
-		for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
-		{
-			IECore::staticPointerCast<Plug>( *it1 )->setInput( IECore::staticPointerCast<Plug>( *it2 ) );
-		}
+		m_plugInputChangedConnection.block();
 	}
+	
+		if( !input )
+		{
+			for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
+			{
+				IECore::staticPointerCast<Plug>( *it )->setInput( 0 );			
+			}
+		}
+		else
+		{
+			CompoundPlugPtr p = IECore::staticPointerCast<CompoundPlug>( input );
+			ChildContainer::const_iterator it1, it2;
+			for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
+			{
+				IECore::staticPointerCast<Plug>( *it1 )->setInput( IECore::staticPointerCast<Plug>( *it2 ) );
+			}
+		}
+
+	if( needBlock )
+	{
+		m_plugInputChangedConnection.unblock();
+	}
+	
 	ValuePlug::setInput( input );
 }
 
-void CompoundPlug::setDirty()
+void CompoundPlug::setFrom( const ValuePlug *other )
 {
-	ChildContainer::const_iterator it;
-	for( it = children().begin(); it!=children().end(); it++ )
-	{
-		ValuePlugPtr p = IECore::runTimeCast<ValuePlug>( *it );
-		if( p )
-		{
-			p->setDirty();
-		}
-	}
-	ValuePlug::setDirty();
-}
-
-void CompoundPlug::setFromInput()
-{
-	// no need to do anything, as our value is stored
-	// in the child plugs, and their setFromInput methods
-	// will be called anyway when their individual setInput()
-	// methods etc get called.
+	/// \todo Probably need to propagate the call to children, but not sure yet.
 }
 
 void CompoundPlug::parentChanged()
@@ -165,7 +172,7 @@ void CompoundPlug::childAddedOrRemoved()
 	}
 }
 
-void CompoundPlug::plugInputChanged( PlugPtr plug )
+void CompoundPlug::plugInputChanged( Plug *plug )
 {
 	if( plug->parent<CompoundPlug>()==this )
 	{
@@ -173,7 +180,7 @@ void CompoundPlug::plugInputChanged( PlugPtr plug )
 	}
 }
 
-void CompoundPlug::plugSet( PlugPtr plug )
+void CompoundPlug::plugSet( Plug *plug )
 {
 	// the CompoundPlug immediately below the Node takes on the task
 	// of emitting the plugSet signals for all CompoundPlugs between
@@ -195,7 +202,7 @@ void CompoundPlug::plugSet( PlugPtr plug )
 	}
 }
 
-void CompoundPlug::updateInputFromChildInputs( PlugPtr checkFirst )
+void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
 {
 	if( !children().size() )
 	{

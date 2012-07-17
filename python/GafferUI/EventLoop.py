@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 import time
 import weakref
 import threading
+import traceback
 
 import IECore
 
@@ -225,8 +226,15 @@ class EventLoop() :
 	
 		toRemove = []
 		for c in EventLoop.__idleCallbacks :
-			if not c() :
+			try :
+				if not c() :
+					toRemove.append( c )
+			except Exception, e :
+				# if the callback throws then we remove it anyway, because
+				# we don't want to keep invoking the same error over and over.
 				toRemove.append( c )
+				# report the error
+				IECore.msg( IECore.Msg.Level.Error, "EventLoop.__qtIdleCallback", "".join( traceback.format_exc( e ) ) )
 				
 		for c in toRemove :
 			EventLoop.removeIdleCallback( c )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -149,16 +149,16 @@ std::string GraphComponent::fullName() const
 	return relativeName( 0 );
 }
 
-std::string GraphComponent::relativeName( ConstGraphComponentPtr ancestor ) const
+std::string GraphComponent::relativeName( const GraphComponent *ancestor ) const
 {
 	string fullName = m_name;
 	GraphComponent *c = this->m_parent;
-	while( c && c!=ancestor.get() )
+	while( c && c!=ancestor )
 	{
 		fullName = c->m_name.value() + "." + fullName;
 		c = c->m_parent;
 	}
-	if( ancestor && c!=ancestor.get() )
+	if( ancestor && c!=ancestor )
 	{
 		string what = boost::str( boost::format( "Object \"%s\" is not an ancestor of \"%s\"." ) % ancestor->m_name.value() % m_name.value() );
 		throw Exception( what );
@@ -171,7 +171,7 @@ GraphComponent::UnarySignal &GraphComponent::nameChangedSignal()
 	return m_nameChangedSignal;
 }
 
-bool GraphComponent::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool GraphComponent::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return true;
 }
@@ -268,11 +268,24 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 	{
 		throw Exception( "Object is not a child." );
 	}
-	Action::enact(
-		this,
-		boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child, true ),
-		boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child )		
-	);
+	
+	if( refCount() )
+	{
+		// someone is pointing to us, so we may have a ScriptNode ancestor and we should do things
+		// in an undoable way.
+		Action::enact(
+			this,
+			boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child, true ),
+			boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child )		
+		);
+	}
+	else
+	{
+		// we have no references to us - chances are we're in construction still. adding ourselves to an
+		// undo queue is impossible, and creating temporary smart pointers to ourselves (as above) will
+		// cause our destruction before construction completes. just do the work directly.
+		removeChildInternal( child, true );
+	}
 }
 
 void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitParentChanged )
@@ -314,7 +327,7 @@ const GraphComponent *GraphComponent::ancestor( IECore::TypeId type ) const
 	return const_cast<GraphComponent *>( this )->ancestor( type );
 }
 
-GraphComponentPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other, IECore::TypeId ancestorType )
+GraphComponent *GraphComponent::commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType )
 {
 	set<GraphComponent *> candidates;
 	GraphComponent *ancestor = m_parent;
@@ -343,14 +356,14 @@ GraphComponentPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other, 
 
 }
 
-ConstGraphComponentPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other, IECore::TypeId ancestorType ) const
+const GraphComponent *GraphComponent::commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType ) const
 {
 	return const_cast<GraphComponent *>( this )->commonAncestor( other, ancestorType );
 }
 
-bool GraphComponent::isAncestorOf( ConstGraphComponentPtr other ) const
+bool GraphComponent::isAncestorOf( const GraphComponent *other ) const
 {
-	const GraphComponent *p = other.get();
+	const GraphComponent *p = other;
 	while( p )
 	{
 		if( p->m_parent==this )

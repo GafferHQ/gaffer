@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -59,19 +59,19 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
 
-		self.updateFromPlug()
+		self._updateFromPlug()
 
 	def textWidget( self ) :
 	
 		return self.__textWidget
 
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
+	
+		if self.getPlug() is not None :
+			with self.getContext() :
+				self.__textWidget.setText( self.getPlug().getValue() )
 
-		if not hasattr( self, "_StringPlugValueWidget__textWidget" ) :
-			# we're still constructing
-			return
-
-		self.__textWidget.setText( self.getPlug().getValue() )
+		self.__textWidget.setEditable( self._editable() )
 
 	def _keyPress( self, widget, event ) :
 	
@@ -82,7 +82,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 		# escape abandons everything
 		if event.key=="Escape" :
-			self.updateFromPlug()
+			self._updateFromPlug()
 			return True
 
 		return False

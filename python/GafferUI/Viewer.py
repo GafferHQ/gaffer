@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,8 @@ IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
+## The Viewer provides the primary means for the user to look at the output
+# of Nodes.
 class Viewer( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode=None, **kw ) :
@@ -73,6 +75,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		
 		self.__viewedPlug = None		
+		self.__viewCreator = None
 		self._updateFromSet()
 	
 	## Returns an IECore.MenuDefinition which is used to define the right click menu for all Viewers.
@@ -84,7 +87,19 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		return Viewer.__menuDefinition
 
 	__menuDefinition = IECore.MenuDefinition()
+	
+	## Registers a function which can extract a VisibleRenderable from
+	# a plug of a given type for viewing.
+	## \todo This will need to become much more complex to support incremental
+	# update, on screen editing handles etc. At that point we should probably
+	# define a new View class which the creator should return instances of.
+	@classmethod
+	def registerView( cls, plugTypeId, creator ) :
+	
+		cls.__typesToCreators[plugTypeId] = creator
 		
+	__typesToCreators = {}
+	
 	def __repr__( self ) :
 
 		return "GafferUI.Viewer()"
@@ -98,24 +113,34 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		node = self._lastAddedNode()
 		
 		self.__viewedPlug = None
+		self.__viewCreator = None
 		self.__plugDirtiedConnection = None
 		if node :
 		
 			for plug in node.children() :
-				if plug.direction() == Gaffer.Plug.Direction.Out and isinstance( plug, Gaffer.ObjectPlug ):
+				if plug.direction() == Gaffer.Plug.Direction.Out and plug.typeId() in self.__typesToCreators :
 					self.__viewedPlug = plug
+					self.__viewCreator = self.__typesToCreators[plug.typeId()]
 					break
 			
 			if self.__viewedPlug is not None :
 				self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		self.__update()	
-		
+	
+	def _updateFromContext( self ) :
+	
+		if not hasattr( self, "_Viewer__renderableGadget" ) :
+			# we're being called during construction
+			return
+			
+		self.__update()
+
 	def __update( self ) :
 
 		renderable = None		
 		if self.__viewedPlug is not None :
-			renderable = self.__viewedPlug.getValue()
+			renderable = self.__viewCreator( self.__viewedPlug, self.getContext() )
 			
 		self.__renderableGadget.setRenderable( renderable )
 		self.__gadgetWidget.setGadget( self.__renderableGadget )
@@ -153,3 +178,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__renderableGadget.renderRequestSignal()( self.__renderableGadget )
 		
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
+
+def __objectPlugViewCreator( plug, context ) :
+
+	with context :
+		return plug.getValue()
+	
+Viewer.registerView( Gaffer.ObjectPlug.staticTypeId(), __objectPlugViewCreator )

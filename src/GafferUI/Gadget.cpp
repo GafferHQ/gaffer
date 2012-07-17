@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ Gadget::~Gadget()
 {
 }
 
-bool Gadget::acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const
+bool Gadget::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
 	return false;
 }

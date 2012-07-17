@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -39,17 +39,10 @@
 #define GAFFERUI_STANDARDNODEGADGET_H
 
 #include "GafferUI/NodeGadget.h"
-
-namespace GafferUIBindings
-{
-// forward declaration for friend statement below
-void bindStandardNodeGadget();
-}; 
+#include "GafferUI/LinearContainer.h"
 
 namespace GafferUI
 {
-
-IE_CORE_FORWARDDECLARE( LinearContainer )
 
 class StandardNodeGadget : public NodeGadget
 {
@@ -58,11 +51,12 @@ class StandardNodeGadget : public NodeGadget
 	
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardNodeGadget, StandardNodeGadgetTypeId, NodeGadget );
 
-		StandardNodeGadget( Gaffer::NodePtr node );
+		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
 		virtual ~StandardNodeGadget();
 
 		virtual NodulePtr nodule( Gaffer::ConstPlugPtr plug );
 		virtual ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
 		
 		/// The central content of the Gadget may be customised. By default
 		/// the contents is a simple NameGadget for the node, but any Gadget or
@@ -83,37 +77,21 @@ class StandardNodeGadget : public NodeGadget
 		/// derived class is fully constructed).
 		StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation );
 		
-		/// Should be called once from the end of a derived class constructor
-		/// if deferNoduleCreation==true was passed to the base class constructor.
-		void addNodules();
-		/// May be reimplemented by child classes to determine whether
-		/// or not a Nodule will be created for the specified Plug.
-		/// \deprecated
-		/// \todo Remove this, and rely entirely on the Nodule::registerNodule()
-		/// functionality instead.
-		virtual bool acceptsNodule( const Gaffer::Plug *plug ) const;
-
 		virtual void doRender( const Style *style ) const;
 		
 	private :
-	
-		void constructCommon( bool deferNoduleCreation );
-	
+		
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 	
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
 				
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
-		bool m_addNodulesCalled;
 				
 		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
 		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
 		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-		
-		// because we need to bind addNodules() which is protected
-		friend void GafferUIBindings::bindStandardNodeGadget();
-		
+				
 };
 
 } // namespace GafferUI

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -67,15 +67,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __init__( self, gadget=None, bufferOptions=set(), cameraMode=CameraMode.Mode2D, **kw ) :
 		
 		GLWidget.__init__( self, bufferOptions, **kw )
-
+		
 		# Force the IECoreGL lazy loading to kick in /now/. Otherwise we can get IECoreGL objects
 		# being returned from the GafferUIBindings without the appropriate boost::python converters
 		# having been registered first.
 		IECoreGL.Renderer
-		
-		## \todo Decide if/how this goes in the public API
-		self._qtWidget().setMouseTracking( True )		
-		
+						
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -155,6 +152,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	
 		return self.__select( position )
 	
+	## Takes a Widget-relative position and returns a line through Gadget space.
+	def positionToGadgetSpace( self, position ) :
+	
+		return IECore.LineSegment3f( *self.__cameraController.unproject( position ) )
+	
 	## Frames the specified bounding box so it is entirely visible in the Widget.
 	# \todo I think the entire camera management needs to be shifted to a ViewportGadget.
 	def frame( self, bound, viewDirection=None, upVector=IECore.V3f( 0, 1, 0 ) ) :
@@ -194,7 +196,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		IECoreGL.ToGLCameraConverter( self.__camera ).convert().render( None )
 		IECoreGL.State.bindBaseState()
 		IECoreGL.State.defaultState().bind()
-		self.__gadget.render()
+		if self.__gadget :
+			self.__gadget.render()
 			
 	def __renderRequest( self, gadget ) :
 	
@@ -456,7 +459,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		selector = IECoreGL.Selector()		
 		selector.begin( region )
-
+		
 		GL.glClearColor( 0.0, 0.0, 0.0, 0.0 );
 		GL.glClearDepth( 1.0 )
 		GL.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -91,7 +91,9 @@ class ConnectionGadget : public Gadget
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		
 		Imath::V3f m_srcPos;
+		Imath::V3f m_srcTangent;
 		Imath::V3f m_dstPos;
+		Imath::V3f m_dstTangent;
 		
 		NodulePtr m_srcNodule;
 		NodulePtr m_dstNodule;

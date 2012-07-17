@@ -142,43 +142,16 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 	def testDirtyPropagation( self ) :
 	
-		c = Gaffer.CompoundPlug( direction=Gaffer.Plug.Direction.Out )
-		c["f1"] = Gaffer.FloatPlug( direction=Gaffer.Plug.Direction.Out )
-		c["f2"] = Gaffer.FloatPlug( direction=Gaffer.Plug.Direction.Out )
+		n = GafferTest.CompoundPlugNode()
 		
-		n = Gaffer.Node()
-		n["c"] = c
-
-		c["f1"].setValue( 10 )
-		c["f2"].setValue( 10 )
+		dirtyPlugs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 		
-		self.failIf( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failIf( n["c"].getDirty() )
+		n["p"]["f"].setValue( 100 )
 		
-		c["f1"].setDirty()
-
-		self.failUnless( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failUnless( n["c"].getDirty() )
+		self.assertEqual( len( dirtyPlugs ), 2 )
 		
-		c["f1"].setValue( 10 )
-						
-		self.failIf( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failIf( n["c"].getDirty() )
-
-		c.setDirty()
-		self.failUnless( c["f1"].getDirty() )
-		self.failUnless( c["f2"].getDirty() )
-		self.failUnless( n["c"].getDirty() )
-
-		c["f1"].setValue( 10 )
-		c["f2"].setValue( 10 )
-
-		self.failIf( c["f1"].getDirty() )
-		self.failIf( c["f2"].getDirty() )
-		self.failIf( n["c"].getDirty() )
+		self.failUnless( dirtyPlugs[0][0].isSame( n["o"]["f"] ) )
+		self.failUnless( dirtyPlugs[1][0].isSame( n["o"] ) )
 		
 	def testPlugSetPropagation( self ) :
 	
@@ -201,6 +174,10 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 		self.failUnless( self.set )
 	
+	## \todo We're not currently testing the order of propagation.
+	# If we wanted to guarantee a sensible order then we should move
+	# the propagation implementation from CompoundPlug onto ValuePlug,
+	# as is done for dirtiness.
 	def testMultipleLevelsOfPlugSetPropagation( self ) :
 	
 		c = Gaffer.CompoundPlug( "c" )
@@ -286,6 +263,64 @@ class CompoundPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.CompoundPlug( "hello" )
 		self.failUnless( p.acceptsInput( None ) )
+		
+	def testRunTimeTyped( self ) :
+	
+		p = Gaffer.CompoundPlug( "hello" )
+		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
+
+	def testSerialisationOfMasterConnection( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.CompoundPlugNode()
+		s["n2"] = GafferTest.CompoundPlugNode()
+		
+		s["n1"]["p"].setInput( s["n2"]["p"] )
+		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
+		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+		
+		ss = s.serialise()
+				
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
+		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+	
+	def testSetInputShortcut( self ) :
+	
+		n1 = Gaffer.Node()
+		n1["c"] = Gaffer.CompoundPlug()
+		
+		n2 = Gaffer.Node()
+		n2["c"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		cs = GafferTest.CapturingSlot( n1.plugInputChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		n1["c"].setInput( n2["c"] )
+		# we should get a signal the first time
+		self.assertEqual( len( cs ), 1 )
+		
+		n1["c"].setInput( n2["c"] )
+		# but the second time there should be no signal,
+		# because it was the same.
+		self.assertEqual( len( cs ), 1 )
+		
+	def testSetInputWithoutParent( self ) :
+	
+		c1 = Gaffer.CompoundPlug( direction=Gaffer.Plug.Direction.Out )
+		c1["n"] = Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out )
+		
+		c2 = Gaffer.CompoundPlug()
+		c2["n"] = Gaffer.IntPlug()
+		
+		c2.setInput( c1 )
+		self.assertEqual( c2.getInput(), c1 )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -59,7 +59,7 @@ using namespace Gaffer;
 static std::string serialisePlug( Serialiser &s, ConstGraphComponentPtr ancestor, PlugPtr plug )
 {
 	// not dynamic, we can just serialise the connection/value				
-	if( plug->isInstanceOf( CompoundPlug::staticTypeId() ) )
+	if( plug->isInstanceOf( CompoundPlug::staticTypeId() ) && !plug->getInput<Plug>() )
 	{
 		std::string result;
 		CompoundPlug *cPlug = static_cast<CompoundPlug *>( plug.get() );
@@ -174,7 +174,7 @@ static void addDynamicPlugs( Node *node, const boost::python::tuple &dynamicPlug
 	for( long i=0; i<l; i++ )
 	{
 		PlugPtr p = extract<PlugPtr>( dynamicPlugs[i] );
-		node->addChild( p );
+		node->setChild( p->getName(), p );
 	}
 }
 
@@ -184,20 +184,43 @@ void GafferBindings::initNode( Node *node, const boost::python::dict &inputs, co
 	addDynamicPlugs( node, dynamicPlugs );
 }
 
+struct UnaryPlugSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, PlugPtr p )
+	{
+		try
+		{
+			slot( p );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
+struct BinaryPlugSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, PlugPtr p1, PlugPtr p2 )
+	{
+		try
+		{
+			slot( p1, p2 );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 void GafferBindings::bindNode()
 {
 	
-	scope s = IECorePython::RunTimeTypedClass<Node, NodeWrapperPtr>()
-		.def( 	init< const std::string &, const dict &, const tuple & >
-				(
-					(
-						arg( "name" ) = Node::staticTypeName(),
-						arg( "inputs" ) = dict(),
-						arg( "dynamicPlugs" ) = tuple()
-					)
-				)
-		)
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( Node )
+	scope s = NodeClass<Node, NodeWrapperPtr>()
 		.def( "scriptNode", (ScriptNodePtr (Node::*)())&Node::scriptNode )
 		.def( "_init", &initNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
@@ -205,8 +228,8 @@ void GafferBindings::bindNode()
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
 	;
 	
-	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, CatchingSlotCaller<Node::UnaryPlugSignal> >::bind( "UnaryPlugSignal" );
-	SignalBinder<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, CatchingSlotCaller<Node::BinaryPlugSignal> >::bind( "BinaryPlugSignal" );
+	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >::bind( "UnaryPlugSignal" );
+	SignalBinder<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, BinaryPlugSlotCaller >::bind( "BinaryPlugSignal" );
 	
 	Serialiser::registerSerialiser( Node::staticTypeId(), serialiseNode );
 		

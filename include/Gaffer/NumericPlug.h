@@ -37,9 +37,11 @@
 #ifndef GAFFER_NUMERICPLUG_H
 #define GAFFER_NUMERICPLUG_H
 
-#include "Gaffer/ValuePlug.h"
-
 #include "OpenEXR/ImathLimits.h"
+
+#include "IECore/SimpleTypedData.h"
+
+#include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
 {
@@ -53,7 +55,6 @@ class NumericPlug : public ValuePlug
 		typedef T ValueType;
 
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( NumericPlug<T>, ValuePlug );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( NumericPlug<T> );
 
 		NumericPlug(
 			const std::string &name = staticTypeName(),
@@ -66,7 +67,7 @@ class NumericPlug : public ValuePlug
 		virtual ~NumericPlug();
 
 		/// Accepts other NumericPlugs, including those of different types.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 
 		T defaultValue() const;
 		
@@ -79,19 +80,18 @@ class NumericPlug : public ValuePlug
 		/// Clamps the value between min and max.
 		/// \undoable
 		void setValue( T value );
-		/// Returns the value. This isn't const as it may require a compute
-		/// and therefore a setValue().
-		T getValue();
+		/// Returns the value.
+		T getValue() const;
 
-	protected :
-
-		virtual void setFromInput();
+		virtual void setFrom( const ValuePlug *other );
 
 	private :
 	
-		void setValueInternal( T value );
-	
-		T m_value;
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( NumericPlug<T> );
+
+		typedef IECore::TypedData<T> DataType;
+		typedef typename DataType::Ptr DataTypePtr;
+			
 		T m_defaultValue;
 		T m_minValue;
 		T m_maxValue;
@@ -103,6 +103,14 @@ typedef NumericPlug<int> IntPlug;
 
 IE_CORE_DECLAREPTR( FloatPlug );
 IE_CORE_DECLAREPTR( IntPlug );
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, FloatPlug> > FloatPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, FloatPlug> > InputFloatPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, FloatPlug> > OutputFloatPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntPlug> > IntPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, IntPlug> > InputIntPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, IntPlug> > OutputIntPlugIterator;
 
 } // namespace Gaffer
 

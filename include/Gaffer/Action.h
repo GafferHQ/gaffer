@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,6 +53,8 @@ class Action : public IECore::RefCounted
 
 	public :
 	
+		IE_CORE_DECLAREMEMBERPTR( Action )
+
 		typedef boost::function<void ()> Function;
 
 		static void enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn );

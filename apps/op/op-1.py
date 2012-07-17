@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,8 +37,6 @@
 
 import IECore
 import Gaffer
-import GafferUI
-import os
 
 class op( Gaffer.Application ) :
 
@@ -59,7 +58,25 @@ class op( Gaffer.Application ) :
 					name = "version",
 					description = "The version of the op to run.",
 					defaultValue = -1,
+				),
 				
+				IECore.BoolParameter(
+					name = "gui",
+					description = "If this is true, then a gui is presented for the op. Otherwise "
+						"the op is run directly.",
+					defaultValue = False,
+				),
+				
+				IECore.StringVectorParameter(
+					name = "arguments",
+					description = "The arguments to be passed to the op. This should be the last "
+						"command line argument passed.",
+					defaultValue = IECore.StringVectorData( [] ),
+					userData = {
+						"parser" : {
+							"acceptFlags" : IECore.BoolData( True ),
+						},
+					},
 				),
 				
 			]
@@ -85,12 +102,8 @@ class op( Gaffer.Application ) :
 		
 		return self.__classLoader
 		
-	def doRun( self, args ) :
+	def _run( self, args ) :
 		
-		## \todo The gui app is passing an ApplicationRoot as "application",
-		# but should be made to instead pass an Application as we do here.
-		self._executeStartupFiles( [ "op" ], { "application" : self } )
-
 		classLoader = self.getClassLoader()
 		
 		matchingOpNames = classLoader.classNames( "*" + args["op"].value )
@@ -118,17 +131,22 @@ class op( Gaffer.Application ) :
 			opVersion = None # let loader choose default	
 		
 		op = classLoader.load( opName, opVersion )()
+		IECore.ParameterParser().parse( list( args["arguments"] ), op.parameters() )
 		
-		self.__dialogue = GafferUI.OpDialogue( op )
-		self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( self.__dialogueClosed )
-		self.__dialogue.setVisible( True )
-		
-		GafferUI.EventLoop.mainEventLoop().start()
-		
+		if args["gui"].value :
+			import GafferUI # delay import to improve startup times for non-gui case
+			self.__dialogue = GafferUI.OpDialogue( op )
+			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( self.__dialogueClosed )
+			self.__dialogue.setVisible( True )
+			GafferUI.EventLoop.mainEventLoop().start()
+		else :
+			op()
+			
 		return 0
 
 	def __dialogueClosed( self, dialogue ) :
 	
+		import GafferUI # delay import to improve startup times for non-gui case
 		GafferUI.EventLoop.mainEventLoop().stop()
 
 IECore.registerRunTimeTyped( op )

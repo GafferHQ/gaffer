@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,12 @@
 #  
 ##########################################################################
 
+from _GafferTest import *
+
 from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GraphComponentTest import GraphComponentTest
+from FrameNode import FrameNode
 from NodeTest import NodeTest
 from PlugTest import PlugTest
 from NumericPlugTest import NumericPlugTest
@@ -67,13 +70,19 @@ from ProceduralHolderTest import ProceduralHolderTest
 from ApplicationRootTest import ApplicationRootTest
 from WriteNodeTest import WriteNodeTest
 from ExecuteApplicationTest import ExecuteApplicationTest
+from ContextTest import ContextTest
 from CompoundPathFilterTest import CompoundPathFilterTest
-from LazyModuleTest import LazyModuleTest
+from BadNode import BadNode
 from CapturingSlot import CapturingSlot
+from LazyModuleTest import LazyModuleTest
+from NodeBindingTest import NodeBindingTest
 from DictPathTest import DictPathTest
 from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
+from ExpressionNodeTest import ExpressionNodeTest
 from BlockedConnectionTest import BlockedConnectionTest
+from TimeWarpNodeTest import TimeWarpNodeTest
+from TransformPlugTest import TransformPlugTest
 from SequencePathTest import SequencePathTest
 from OpMatcherTest import OpMatcherTest
 from WeakMethodTest import WeakMethodTest

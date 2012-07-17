@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,18 +50,8 @@ IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( ValuePlug )
 IE_CORE_FORWARDDECLARE( Node )
 IE_CORE_FORWARDDECLARE( ScriptNode )
+IE_CORE_FORWARDDECLARE( Context )
 
-/// Threading
-///
-///		- can we allow multiple computes() at once?
-///		- or do we have to resort to computes() being threaded internally?
-///		- perhaps we could have a method which takes a bunch of input plugs, and guarantees
-///		  that they'll have been computed upon return? that method could deal with the threading.
-///		- do we need to separate plugs from the values they hold? so we can deal with computes()
-///		  at different times? and if we did that then does that help with the threading?
-///			- if we did that and used CompoundObject as a DataBlock then we could map IECore::Parameters
-///			  straight to Plugs very very easily.
-///				- what is the overhead?
 class Node : public GraphComponent
 {
 
@@ -72,8 +62,10 @@ class Node : public GraphComponent
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Node, NodeTypeId, GraphComponent );
 
-		typedef boost::signal<void (PlugPtr)> UnaryPlugSignal;
-		typedef boost::signal<void (PlugPtr, PlugPtr)> BinaryPlugSignal;
+		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
+		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;
+		
+		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
 		
 		/// @name Plug iterators
 		//////////////////////////////////////////////////////////////
@@ -107,18 +99,28 @@ class Node : public GraphComponent
 		ConstScriptNodePtr scriptNode() const;
 		
 		/// Accepts only Nodes and Plugs.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
+				
+		/// Must be implemented to fill outputs with all the plugs whose computation
+		/// will be affected by the specified input.
+		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
+
+		/// May be overridden to restrict the inputs that plugs on this node will
+		/// accept. Default implementation accepts all plugs. Note that
+		/// PlugType::acceptsInput() must also be true to allow a successful
+		/// connection, so this function may only place additional restrictions on
+		/// inputs - it cannot enable inputs that the plugs themselves will not accept.
+		/// This is protected, and its results are made public by Plug::acceptsInput()
+		/// which calls through to this.
+		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
 		
-		/// Called when an input plug becomes dirty. Must be implemented to dirty any
-		/// output plugs which depend on the input.
-		virtual void dirty( ConstPlugPtr dirty ) const = 0;
-		/// Called when getValue() is called on an output plug which is dirty. Must
-		/// be implemented to calculate and set the value for this Plug.
-		virtual void compute( PlugPtr output ) const = 0;
+		/// Called to compute the values for output Plugs. Must be implemented to compute
+		/// an appropriate value and apply it using output->setValue().
+		virtual void compute( ValuePlug *output, const Context *context ) const;
 
 		/// Implemented to remove all connections when the node is being
 		/// unparented.

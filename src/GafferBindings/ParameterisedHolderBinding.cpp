@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -112,17 +112,7 @@ static ParameterModificationContextWrapper *parameterModificationContext( Parame
 
 void GafferBindings::bindParameterisedHolder()
 {
-	scope s = IECorePython::RunTimeTypedClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr>()
-		.def( 	init< const std::string &, const dict &, const tuple & >
-				(
-					(
-						arg( "name" ) = ParameterisedHolderNode::staticTypeName(),
-						arg( "inputs" ) = dict(),
-						arg( "dynamicPlugs" ) = tuple()
-					)
-				)
-		)
-		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( ParameterisedHolderNode )
+	scope s = NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr>()
 		.def(
 			"setParameterised",
 			(void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr, bool ))&ParameterisedHolderNode::setParameterised,

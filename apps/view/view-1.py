@@ -64,7 +64,7 @@ class view( Gaffer.Application ) :
 			}
 		)
 		
-	def doRun( self, args ) :
+	def _run( self, args ) :
 	
 		if len( args["files"] ) < 1 or len( args["files"] ) > 2 :
 		

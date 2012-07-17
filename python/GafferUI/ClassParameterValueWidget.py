@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,15 +44,23 @@ class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
 		
-		GafferUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, **kw )
+		GafferUI.CompoundParameterValueWidget.__init__(
+			self,
+			parameterHandler,
+			collapsible,
+			_PlugValueWidget,
+			**kw
+		)
 
-	def _buildChildParameterUIs( self, column ) :
-		
-		GafferUI.CompoundParameterValueWidget._buildChildParameterUIs( self, column )
-		
-		# insert a header which allows the class to be chosen.
+class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 )
+	def __init__( self, parameterHandler, collapsible ) :
+
+		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsible )
+
+	def _headerWidget( self ) :
+	
+		result = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 )
 		
 		# label
 		
@@ -61,41 +70,40 @@ class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 		)
 		## \todo Decide how we allow this sort of tweak using the public
 		# interface. Perhaps we should have a SizeableContainer or something?
-		label._qtWidget().setMinimumWidth( self._labelWidth )
-		label._qtWidget().setMaximumWidth( self._labelWidth )
-		label.setToolTip( self._parameterToolTip( self.parameterHandler() ) )
-		row.append( label )
+		label._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		label.setToolTip( self._parameterToolTip( self._parameterHandler() ) )
+		result.append( label )
 		
 		# space	
-		row.append( GafferUI.Spacer( IECore.V2i( 8, 1 ) ) )
+		result.append( GafferUI.Spacer( IECore.V2i( 8, 1 ) ) )
 		
 		# class button
-		className, classVersion = self.parameter().getClass( True )[1:3]
+		className, classVersion = self._parameter().getClass( True )[1:3]
 			
 		classButton = GafferUI.MenuButton( className if className else "Choose...", hasFrame=False )
 		classButton.setMenu( self.__classMenu() )
-		row.append( classButton )
+		result.append( classButton )
 		
 		# version button
 		if className :
 			versionButton = GafferUI.MenuButton( " v%d" % classVersion if className else "", hasFrame=False )
 			versionButton.setMenu( self.__versionMenu() )
-			row.append( versionButton )
+			result.append( versionButton )
 		
 		# a spacer to stop the buttons expanding
-		row.append( GafferUI.Spacer( IECore.V2i( 1, 1 ), IECore.V2i( 9999999, 1 ) ), expand=True )
-		
-		column.insert( 0, row )
-		
+		result.append( GafferUI.Spacer( IECore.V2i( 1, 1 ), IECore.V2i( 9999999, 1 ) ), expand=True )
+
+		return result
+
 	def __classMenu( self ) :
 	
 		md = IECore.MenuDefinition()
 		
-		classInfo = self.parameter().getClass( True )
+		classInfo = self._parameter().getClass( True )
 		
 		classNameFilter = "*"
 		with IECore.IgnoredExceptions( KeyError ) :
-			classNameFilter = self.parameter().userData()["UI"]["classNameFilter"].value
+			classNameFilter = self._parameter().userData()["UI"]["classNameFilter"].value
 		menuPathStart = max( 0, classNameFilter.find( "*" ) )
 	
 		if classInfo[1] :
@@ -128,7 +136,7 @@ class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 	
 		md = IECore.MenuDefinition()
 		
-		classInfo = self.parameter().getClass( True )
+		classInfo = self._parameter().getClass( True )
 		if classInfo[1] :
 			loader = IECore.ClassLoader.defaultLoader( classInfo[3] )
 			for version in loader.versions( classInfo[1] ) :
@@ -144,7 +152,7 @@ class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 		
 	def __setClass( self, className, classVersion ) :
 	
-		with self.plug().node().parameterModificationContext() :
-			self.parameter().setClass( className, classVersion )
+		with self.getPlug().node().parameterModificationContext() :
+			self._parameter().setClass( className, classVersion )
 
 GafferUI.ParameterValueWidget.registerType( IECore.ClassParameter.staticTypeId(), ClassParameterValueWidget )

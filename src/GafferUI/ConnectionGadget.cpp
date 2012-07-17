@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/Nodule.h"
+#include "GafferUI/NodeGadget.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -148,6 +149,9 @@ void ConnectionGadget::setPositionsFromNodules()
 		}
 		M44f m = m_dstNodule->fullTransform( p );
 		m_dstPos = V3f( 0 ) * m;
+		
+		const NodeGadget *dstNoduleNodeGadget = m_dstNodule->ancestor<NodeGadget>();
+		m_dstTangent = dstNoduleNodeGadget ? dstNoduleNodeGadget->noduleTangent( m_dstNodule ) : V3f( 0, 1, 0 );
 	}
 	
 	if( m_srcNodule && m_dragEnd!=Gaffer::Plug::Out )
@@ -160,13 +164,17 @@ void ConnectionGadget::setPositionsFromNodules()
 		}
 		M44f m = m_srcNodule->fullTransform( p );
 		m_srcPos = V3f( 0 ) * m;
+		
+		const NodeGadget *srcNoduleNodeGadget = m_srcNodule->ancestor<NodeGadget>();
+		m_srcTangent = srcNoduleNodeGadget ? srcNoduleNodeGadget->noduleTangent( m_srcNodule ) : V3f( 0, -1, 0 );
 	}
 	else if( m_dragEnd != Gaffer::Plug::Out )
 	{
 		// not dragging and don't have a source nodule.
 		// we're a dangling connection because the source
 		// node is hidden.
-		m_srcPos = m_dstPos + V3f( 0, 4, 0 );
+		m_srcPos = m_dstPos + m_dstTangent * 4.0f;
+		m_srcTangent = -m_dstTangent;
 	}
 	
 }
@@ -185,7 +193,7 @@ void ConnectionGadget::doRender( const Style *style ) const
 	
 	Style::State state = m_hovering ? Style::HighlightedState : Style::NormalState;
 	
-	style->renderConnection( m_srcPos, m_dstPos, state );
+	style->renderConnection( m_srcPos, m_srcTangent, m_dstPos, m_dstTangent, state );
 }
 
 bool ConnectionGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )

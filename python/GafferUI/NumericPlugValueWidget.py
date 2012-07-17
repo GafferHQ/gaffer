@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -55,22 +55,19 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
 						
-		self.updateFromPlug()
+		self._updateFromPlug()
 		
 	def numericWidget( self ) :
 	
 		return self.__numericWidget
 		
-	def updateFromPlug( self ) :
-
-		if not hasattr( self, "_NumericPlugValueWidget__numericWidget" ) :
-			# we're still constructing
-			return
+	def _updateFromPlug( self ) :
 		
 		plug = self.getPlug()
 		if plug is not None :
 			
-			self.__numericWidget.setValue( plug.getValue() )
+			with self.getContext() :
+				self.__numericWidget.setValue( plug.getValue() )
 
 			charWidth = None
 			if isinstance( plug, Gaffer.IntPlug ) :
@@ -89,7 +86,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 		# escape abandons everything
 		if event.key=="Escape" :
-			self.updateFromPlug()
+			self._updateFromPlug()
 			return True
 			
 		return False
@@ -108,7 +105,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			try :	
 				self.getPlug().setValue( self.__numericWidget.getValue() )
 			except :
-				self.updateFromPlug()	
+				self._updateFromPlug()	
 	
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug.staticTypeId(), NumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug.staticTypeId(), NumericPlugValueWidget )

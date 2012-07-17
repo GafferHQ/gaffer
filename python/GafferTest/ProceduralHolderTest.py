@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -62,25 +62,15 @@ class ProceduralHolderTest( unittest.TestCase ) :
 		self.failUnless( isinstance( p, IECore.ReadProcedural ) )
 		self.assertEqual( p.parameters().getValue(), n.getProcedural().parameters().getValue() )
 		
-	def testDirty( self ) :
+	def testAffects( self ) :
 	
 		n = Gaffer.ProceduralHolder()
 		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
 		n.setProcedural( *classSpec )
 		
-		self.failUnless( n["output"].getDirty() )
-		
-		n["output"].getValue()
-		
-		self.failIf( n["output"].getDirty() )
-		
-		n["parameters"]["motion"]["blur"].setValue( False )
-		
-		self.failUnless( n["output"].getDirty() )
-
-		n["output"].getValue()
-		
-		self.failIf( n["output"].getDirty() )		
+		a = n.affects( n["parameters"]["motion"]["blur"] )
+		self.assertEqual( len( a ), 1 )
+		self.failUnless( a[0].isSame( n["output"] ) )	
 	
 	def testRunTimeTyped( self ) :
 	

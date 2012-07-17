@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,6 @@
 #  
 ##########################################################################
 
-import gtk
-
 import Gaffer
 import GafferUI
 
@@ -46,24 +44,24 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.__splineWidget = GafferUI.SplineWidget()
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget.gtkWidget(), plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget, plug, **kw )
 
-		self.__splineWidget.gtkWidget().connect( "button-press-event", self.__buttonPress )
-		self.__splineWidget.gtkWidget().add_events( gtk.gdk.BUTTON_PRESS_MASK )
-
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		
 		self.__editorWindow = None
 
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 	
 		plug = self.getPlug()
-		s = plug.getValue()
-		self.__splineWidget.setSpline( s )
+		if plug is not None :
+			with self.getContext() :
+				self.__splineWidget.setSpline( plug.getValue() )
 		
-	def __buttonPress( self, widget, event ) :
+	def __buttonPress( self, button, event ) :
 	
-		if event.button==1 :
+		if event.buttons & event.Buttons.Left :
 						
-			if not self.__editorWindow :
+			if self.__editorWindow is None :
 			
 				self.__editorWindow = GafferUI.Window()
 				self.__editor = GafferUI.SplineEditor( None )
@@ -77,7 +75,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editor.splines().clear()
 			self.__editor.splines().add( self.getPlug() )
 			
-			self.__editorWindow.show()
+			self.__editorWindow.setVisible( True )
 				
 	def __editorWindowClosed( self, window ) :
 	

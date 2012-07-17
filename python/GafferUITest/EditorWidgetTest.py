@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -56,7 +57,25 @@ class EditorWidgetTest( unittest.TestCase ) :
 			self.assertEqual( w(), None )
 		
 		self.assertEqual( w(), None )
+	
+	def testContext( self ) :
+	
+		s = Gaffer.ScriptNode()
+		c = Gaffer.Context()
 		
+		editor = GafferUI.Viewer( s )
+	
+		self.failUnless( editor.getScriptNode().isSame( s ) )
+		self.failUnless( editor.getContext().isSame( s.context() ) )
+		
+		editor.setContext( c )
+		self.failUnless( editor.getScriptNode().isSame( s ) )
+		self.failUnless( editor.getContext().isSame( c ) )
+		
+		editor.setScriptNode( s )
+		self.failUnless( editor.getScriptNode().isSame( s ) )
+		self.failUnless( editor.getContext().isSame( s.context() ) )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

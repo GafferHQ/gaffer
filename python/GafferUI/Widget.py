@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -256,11 +256,24 @@ class Widget( object ) :
 				return w
 				
 		return None
-		
+	
+	## \deprecated Use bound().size() instead.	
 	def size( self ) :
 	
 		return IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
-
+	
+	## Returns the bounding box of the Widget as a Box2i. If relativeTo
+	# is None then the bound is provided in screen coordinates, if a
+	# Widget is passed then it is provided relative to that Widget.
+	def bound( self, relativeTo=None ) :
+	
+		pos = self.__qtWidget.mapToGlobal( QtCore.QPoint( 0, 0 ) )
+		if relativeTo is not None :
+			pos -= relativeTo._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) )
+		
+		pos = IECore.V2i( pos.x(), pos.y() )
+		return IECore.Box2i( pos, pos + IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() ) )
+	
 	def keyPressSignal( self ) :
 	
 		self.__ensureEventFilter()
@@ -302,6 +315,10 @@ class Widget( object ) :
 		self.__ensureEventFilter()
 		if self._mouseMoveSignal is None :
 			self._mouseMoveSignal = GafferUI.WidgetEventSignal()
+			if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
+				self._qtWidget().viewport().setMouseTracking( True )
+			else :
+				self._qtWidget().setMouseTracking( True )
 		return self._mouseMoveSignal
 	
 	def enterSignal( self ) :
@@ -401,9 +418,8 @@ class Widget( object ) :
 			# If the parent has changed, qt may have hidden
 			# the widget, so if necessary we reapply the visibility
 			# we actually want.
-			
 			if self.__visible != ( not self.__qtWidget.isHidden() ) :
-				self.__qtWidget.setVisible( self.__visible )
+				self.__qtWidget.setVisible( self.__visible )			
 			
 	## Used by the ContainerWidget classes to implement the automatic parenting
 	# using the with statement.
@@ -501,6 +517,8 @@ class Widget( object ) :
 	
 		if not self.__eventFilterInstalled :
 			self._qtWidget().installEventFilter( _eventFilter )
+			if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
+				self._qtWidget().viewport().installEventFilter( _eventFilter )
 			self.__eventFilterInstalled = True
 
 	def _setStyleSheet( self ):
@@ -514,7 +532,7 @@ class Widget( object ) :
 		QWidget#gafferWindow {
 
 			color: $foreground;
-			font: 8pt "Sans";
+			font: 10px;
 			etch-disabled-text: 0;
 			background-color: $backgroundMid;
 			border: 1px solid #555555;
@@ -1241,8 +1259,12 @@ class _EventFilter( QtCore.QObject ) :
 		if qEventType==qEvent.ToolTip :
 		
 			widget = Widget._owner( qObject )
-			QtGui.QToolTip.showText( qEvent.globalPos(), widget.getToolTip(), qObject )
-			return True
+			toolTip = widget.getToolTip()
+			if toolTip :
+				QtGui.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+				return True
+			else :
+				return False
 			
 		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
 				

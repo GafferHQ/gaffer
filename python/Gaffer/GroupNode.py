@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ class GroupNode( Gaffer.Node ) :
 		if plug.getName().startswith( "in" ) or plug.parent().getName() in ( "translate", "rotate", "scale" ) :
 			self["output"].setDirty()
 				
-	def compute( self, plug ) :
+	def compute( self, plug, context ) :
 				
 		assert( plug.isSame( self["output"] ) )
 	

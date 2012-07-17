@@ -54,21 +54,16 @@ class CompoundPlug : public ValuePlug
 
 		/// Accepts any child provided it's a Plug and has the same direction
 		/// as this CompoundPlug.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 				
 		/// Only accepts inputs which are CompoundPlugs with child
 		/// Plugs compatible with this plug.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 		/// Makes connections between the corresponding child Plugs of
 		/// input and this Plug.
 		virtual void setInput( PlugPtr input );
 
-		/// Sets all child plugs dirty.
-		virtual void setDirty();
-
-	protected :
-
-		virtual void setFromInput();
+		virtual void setFrom( const ValuePlug *other );
 		
 	private :
 	
@@ -76,16 +71,20 @@ class CompoundPlug : public ValuePlug
 		void childAddedOrRemoved();
 	
 		boost::signals::connection m_plugInputChangedConnection;
-		void plugInputChanged( PlugPtr plug );
+		void plugInputChanged( Plug *plug );
 
 		boost::signals::connection m_plugSetConnection;
-		void plugSet( PlugPtr plug );
+		void plugSet( Plug *plug );
 		
-		void updateInputFromChildInputs( PlugPtr checkFirst );
+		void updateInputFromChildInputs( Plug *checkFirst );
 		
 };
 
 IE_CORE_DECLAREPTR( CompoundPlug );
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, CompoundPlug> > CompoundPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, CompoundPlug> > InputCompoundPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, CompoundPlug> > OutputCompoundPlugIterator;
 
 } // namespace Gaffer
 

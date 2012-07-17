@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -70,7 +70,7 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
 	
 	ParameterisedHolderNode::setParameterised( parameterised );
 	
-	getChild<ObjectPlug>( "output" )->setDirty();
+	plugDirtiedSignal()( getChild<ObjectPlug>( "output" ) );
 }
 
 void ProceduralHolder::setProcedural( const std::string &className, int classVersion )
@@ -88,23 +88,20 @@ IECore::ConstParameterisedProceduralPtr ProceduralHolder::getProcedural( std::st
 	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
-void ProceduralHolder::dirty( ConstPlugPtr dirty ) const
+void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	ConstPlugPtr parametersPlug = getChild<Plug>( "parameters" );
-	if( parametersPlug && parametersPlug->isAncestorOf( dirty ) )
+	const Plug *parametersPlug = getChild<Plug>( "parameters" );
+	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
 	{
-		ConstObjectPlugPtr resultPlug = getChild<ObjectPlug>( "output" );
-		/// \todo Shouldn't need this cast, because I don't think this method should be const.
-		/// See other notes in OpHolder::dirty().
-		constPointerCast<ObjectPlug>( resultPlug )->setDirty();
+		outputs.push_back( getChild<ObjectPlug>( "output" ) );
 	}
 }
 
-void ProceduralHolder::compute( PlugPtr output ) const
+void ProceduralHolder::compute( Plug *output, const Context *context ) const
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
 	{	
 		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
-		staticPointerCast<ObjectPlug>( output )->setValue( getProcedural() );
+		static_cast<ObjectPlug *>( output )->setValue( getProcedural() );
 	}
 }

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,8 +37,6 @@
 
 from __future__ import with_statement
 
-import traceback
-
 import IECore
 
 import Gaffer
@@ -54,101 +52,83 @@ import GafferUI
 # ["UI"]["visible"]
 class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	_columnSpacing = 4
-	_labelWidth = 110
-
 	## If collapsible is not None then it overrides any ["UI]["collapsible"] userData the parameter might have.
-	def __init__( self, parameterHandler, collapsible=None, **kw ) :
-		
-		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = self._columnSpacing )
+	def __init__( self, parameterHandler, collapsible=None, _plugValueWidgetClass=None, **kw ) :
 		
 		if collapsible is None :
 			collapsible = True
 			with IECore.IgnoredExceptions( KeyError ) :
 				collapsible = parameterHandler.parameter().userData()["UI"]["collapsible"].value
 		
-		self.__collapsible = None
-		if collapsible :
-			collapsibleLabel = IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
-			collapsed = True
-			with IECore.IgnoredExceptions( KeyError ) :
-				collapsed = parameterHandler.parameter().userData()["UI"]["collapsed"].value
-			self.__collapsible = GafferUI.Collapsible( label = collapsibleLabel, collapsed = collapsed )
-			self.__collapsible.setChild( self.__column )
-			topLevelWidget = self.__collapsible
-		else :
-			topLevelWidget = self.__column
+		if _plugValueWidgetClass is None :
+			_plugValueWidgetClass = _PlugValueWidget
 			
-		GafferUI.ParameterValueWidget.__init__( self, topLevelWidget, parameterHandler, **kw )
-		
-		self.__plugAddedConnection = parameterHandler.plug().childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
-		self.__plugRemovedConnection = parameterHandler.plug().childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
-		self.__childrenChangedPending = False
-		
-		# arrange to build the rest of the ui when we become visible for the first time.
-		# this means that we will be fully constructed when we call _buildChildParameterUIs, rather
-		# than expecting derived class implementations to work even before their constructor has completed.
-		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		GafferUI.ParameterValueWidget.__init__(
+			self,
+			_plugValueWidgetClass( parameterHandler, collapsible ),
+			parameterHandler,
+			**kw
+		)
 
-	## May be overridden by derived classes to customise the creation of the UI to represent child parameters.
-	# The UI elements created should be placed in the ListContainer passed as column. Note that this may be 
-	# called multiple times, as it will be called again when plugs are added or removed. In this case you are
-	# responsible for removing any previous ui from column as appropriate.
-	def _buildChildParameterUIs( self, column ) :
-	
-		del column[:]
-	
-		for childPlug in self.plug().children() :
-		
-			if childPlug.getName().startswith( "__" ) :
-				continue
-		
-			childParameter = self.parameter()[childPlug.getName()]
-			
-			with IECore.IgnoredExceptions( KeyError ) :
-				if not childParameter.userData()["UI"]["visible"].value :
-					continue
-			
-			childParameterHandler = self.parameterHandler().childParameterHandler( childParameter )
-			valueWidget = GafferUI.ParameterValueWidget.create( childParameterHandler )
-			if not valueWidget :
-				continue
-				
-			if isinstance( valueWidget, CompoundParameterValueWidget ) :
-			
-				self.__column.append( valueWidget )
-				
-			else :
-			
-				row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 )
-				
-				label = GafferUI.Label(
-					self._parameterLabelText( childParameterHandler ),
-					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
-				)
-				label.setToolTip( self._parameterToolTip( childParameterHandler ) )
-				
-				## \todo Decide how we allow this sort of tweak using the public
-				# interface. Perhaps we should have a SizeableContainer or something?
-				label._qtWidget().setMinimumWidth( self._labelWidth )
-				label._qtWidget().setMaximumWidth( self._labelWidth )
-		
-				row.append( label )
-				row.append( valueWidget )
-				
-				self.__column.append( row )
+# CompoundParameterValueWidget is simply a lightweight wrapper around this CompoundPlugValueWidget
+# derived class. This allows us to take advantage of all the code in CompoundPlugValueWidget that
+# deals with dynamically adding and removing children etc.
+class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-	## Returns True if this ui is collapsible.
-	def _collapsible( self ) :
+	def __init__( self, parameterHandler, collapsible ) :
 	
-		return self.__collapsible is not None
+		GafferUI.CompoundPlugValueWidget.__init__( self, parameterHandler.plug(), collapsible )
+
+		self.__parameterHandler = parameterHandler
+
+	def _childPlugWidget( self, childPlug ) :
+
+		childParameter = self.__parameterHandler.parameter()[childPlug.getName()]
 		
+		with IECore.IgnoredExceptions( KeyError ) :
+			if not childParameter.userData()["UI"]["visible"].value :
+				return None
+		
+		childParameterHandler = self.__parameterHandler.childParameterHandler( childParameter )
+		valueWidget = GafferUI.ParameterValueWidget.create( childParameterHandler )
+		if not valueWidget :
+			return None
+			
+		if isinstance( valueWidget, CompoundParameterValueWidget ) :
+			return valueWidget
+					
+		result = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 )
+		
+		label = GafferUI.Label(
+			self._parameterLabelText( childParameterHandler ),
+			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
+		)
+		label.setToolTip( self._parameterToolTip( childParameterHandler ) )
+		
+		## \todo Decide how we allow this sort of tweak using the public
+		# interface. Perhaps we should have a SizeableContainer or something?
+		label._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
+		label._qtWidget().setMaximumWidth( GafferUI.PlugWidget.labelWidth() )
+
+		result.append( label )
+		result.append( valueWidget )
+		
+		return result
+
+	def _parameter( self ) :
+	
+		return self.__parameterHandler.parameter()
+
+	def _parameterHandler( self ) :
+	
+		return self.__parameterHandler
+
 	def _parameterLabelText( self, parameterHandler ) :
-	
-		return IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
-		
+ 	
+ 		return IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
+
 	def _parameterToolTip( self, parameterHandler ) :
-	
+ 	
 		plug = parameterHandler.plug()
 		
 		result = "<h3>" + plug.relativeName( plug.node() ) + "</h3>"
@@ -157,39 +137,8 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		return result
 
-	def __visibilityChanged( self, column ) :
-	
-		assert( column is self.__column )
-		
-		if self.visible() :
-			self._buildChildParameterUIs( self.__column )
-			self.__visibilityChangedConnection = None # only need to build once
-
-	def __childAddedOrRemoved( self, *unusedArgs ) :
-	
-		# typically many children are added and removed at once. we don't want to be rebuilding the
-		# ui for each individual event, so we add an idle callback to do the rebuild once the
-		# upheaval is over.
-	
-		if not self.__childrenChangedPending :
-			GafferUI.EventLoop.addIdleCallback( self.__childrenChanged )
-			self.__childrenChangedPending = True
-			
-	def __childrenChanged( self ) :
-			
-		if self.__collapsible is not None and self.__collapsible.getCollapsed() :
-			return
-	
-		try :
-			self._buildChildParameterUIs( self.__column )
-		except Exception, e :
-			# catching errors because not returning False from this
-			# function causes the callback to not be removed, the error
-			# to be repeated etc...
-			IECore.msg( IECore.Msg.Level.Error, "CompoundParameterValueWidget", "".join( traceback.format_exc( e ) ) )
-			
-		self.__childrenChangedPending = False
-		
-		return False # removes the callback
+# install implementation class as a protected member, so it can be used by
+# derived classes.
+CompoundParameterValueWidget._PlugValueWidget = _PlugValueWidget
 
 GafferUI.ParameterValueWidget.registerType( IECore.CompoundParameter.staticTypeId(), CompoundParameterValueWidget )

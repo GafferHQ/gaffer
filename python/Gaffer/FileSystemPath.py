@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import re
 import pwd
 import grp
 
@@ -91,3 +92,50 @@ class FileSystemPath( Gaffer.Path ) :
 			
 		return [ FileSystemPath( self[:] + [ x ] ) for x in c ]
 
+	@staticmethod
+	def createStandardFilter( extensions=[], extensionsLabel=None ) :
+	
+		result = Gaffer.CompoundPathFilter()
+		
+		if extensions :
+			extensions = [ e.lower() for e in extensions ]
+			if extensionsLabel is None :
+				extensionsLabel = "Show only " + ", ".join( [ "." + e for e in extensions ] ) + " files"
+			extensions += [ e.upper() for e in extensions ]
+			extensions = [ "*." + e for e in extensions ]
+			# the form below is for file sequences, where the frame range will
+			# come after the extension
+			extensions += [ "*.%s *" % e for e in extensions ]
+			result.addFilter(
+				Gaffer.FileNamePathFilter(
+					extensions,
+					userData = {
+						"UI" : {
+							"label" : extensionsLabel,
+						}
+					}
+				)
+			)
+		
+		result.addFilter(
+			Gaffer.FileNamePathFilter(
+				[ re.compile( "^[^.].*" ) ],
+				leafOnly=False,
+				userData = {
+					"UI" : {
+						"label" : "Show hidden files",
+						"invertEnabled" : True,
+					}
+				}
+			) 
+		)
+		
+		result.addFilter(
+			Gaffer.InfoPathFilter(
+				infoKey = "name",
+				matcher = None, # the ui will fill this in
+				leafOnly = False,
+			)
+		)
+		
+		return result

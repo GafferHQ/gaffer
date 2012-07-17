@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class NumericPlugTest( unittest.TestCase ) :
 
@@ -48,6 +49,7 @@ class NumericPlugTest( unittest.TestCase ) :
 		f = Gaffer.FloatPlug()
 		self.assertEqual( f.defaultValue(), 0 )
 		self.assertEqual( f.getName(), "FloatPlug" )
+		self.assertEqual( f.getValue(), 0 )
 		
 		f = Gaffer.FloatPlug( direction=Gaffer.Plug.Direction.Out, defaultValue = 1,
 			minValue = -1, maxValue = 10 )
@@ -56,11 +58,14 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( f.defaultValue(), 1 )
 		self.assertEqual( f.minValue(), -1 )
 		self.assertEqual( f.maxValue(), 10 )
+		# cannot get the value of an output plug unless it's on a Node
+		self.assertRaises( RuntimeError, f.getValue )
 		
 		f = Gaffer.FloatPlug( defaultValue=10, name="a" )
 		self.assertEqual( f.defaultValue(), 10 )
 		self.assertEqual( f.getName(), "a" )
 		self.assertEqual( f.typeName(), "FloatPlug" )
+		self.assertEqual( f.getValue(), 10 )
 	
 	def testHaveMinMaxValues( self ) :
 	
@@ -124,7 +129,31 @@ class NumericPlugTest( unittest.TestCase ) :
 		
 		i.setValue( 11 )
 		self.assertEqual( i.getValue(), 10 )
+	
+	def testSetInputShortcut( self ) :
+	
+		n1 = GafferTest.AddNode()		
+		n2 = GafferTest.AddNode()
 		
+		inputChangedSignals = GafferTest.CapturingSlot( n1.plugInputChangedSignal() )
+		self.assertEqual( len( inputChangedSignals ), 0 )
+		
+		dirtiedSignals = GafferTest.CapturingSlot( n1.plugDirtiedSignal() )
+		self.assertEqual( len( dirtiedSignals ), 0 )
+		
+		n1["op1"].setInput( n2["sum"] )
+		# we should get signals the first time
+		self.assertEqual( len( inputChangedSignals ), 1 )
+		self.assertEqual( len( dirtiedSignals ), 2 )
+		self.assertEqual( dirtiedSignals[0][0].getName(), "op1" )
+		self.assertEqual( dirtiedSignals[1][0].getName(), "sum" )
+		
+		n1["op1"].setInput( n2["sum"] )
+		# but the second time there should be no signalling,
+		# because it was the same.
+		self.assertEqual( len( inputChangedSignals ), 1 )
+		self.assertEqual( len( dirtiedSignals ), 2 )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,14 +54,9 @@ class PreferencesNode : public Node
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PreferencesNode, PreferencesNodeTypeId, Node );
 		
 		/// Accepts only Plugs.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only ApplicationRoots.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-		
-	protected :
-		
-		virtual void dirty( ConstPlugPtr dirty ) const;
-		virtual void compute( PlugPtr output ) const;
 		
 };
 

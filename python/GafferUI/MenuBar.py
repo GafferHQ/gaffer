@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import platform
+
 import IECore
 
 import GafferUI
@@ -45,14 +47,10 @@ class MenuBar( GafferUI.Widget ) :
 
 	def __init__( self, definition, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QMenuBar(), **kw )
-		
-		# disable menu merging on mac
-		self._qtWidget().setNativeMenuBar( False )
-		self._qtWidget().setVisible( True )
-		
+		GafferUI.Widget.__init__( self, _MenuBar(), **kw )
+				
 		self.definition = definition
-		
+				
 	def __setattr__( self, key, value ) :
 	
 		self.__dict__[key] = value
@@ -79,3 +77,28 @@ class MenuBar( GafferUI.Widget ) :
 					
 				done.add( name )		
 					
+class _MenuBar( QtGui.QMenuBar ) :
+
+	def __init__( self, parent=None ) :
+	
+		QtGui.QMenuBar.__init__( self, parent )
+		
+		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
+
+		# disable menu merging on mac
+		self.setNativeMenuBar( False )
+
+		self.__needsVisibilityKick = platform.system() == "Darwin"
+
+	def event( self, event ) :
+	
+		# for some reason on the mac, menubars start off invisible, which we don't
+		# want. here we make them visible when they first receive a parent - if we
+		# did it earlier then they would become independent top level windows briefly before
+		# they get parented, and they flicker onto and off the screen.
+		if self.__needsVisibilityKick and event.type() == event.ParentChange :
+			if self.parent() :
+				self.setVisible( True )
+				self.__needsVisibilityKick = False
+			
+		return QtGui.QMenuBar.event( self, event )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -38,34 +38,64 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_H
 #define GAFFERBINDINGS_NODEBINDING_H
 
+#include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Node.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
 
 namespace GafferBindings
 {
 
+void bindNode();
+
+template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
+class NodeClass : public IECorePython::RunTimeTypedClass<T, Ptr>
+{
+	public :
+	
+		NodeClass( const char *docString = 0 );
+		
+};
+
 #define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
 \
-	virtual void dirty( Gaffer::ConstPlugPtr dirty ) const\
+	virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "dirty" ) )\
+		if( PyObject_HasAttrString( m_pyObject, "acceptsInput" ) )\
 		{\
-			boost::python::override f = this->get_override( "dirty" );\
+			boost::python::override f = this->get_override( "acceptsInput" );\
 			if( f )\
 			{\
-				f( IECore::constPointerCast<Gaffer::Plug>( dirty ) );\
+				return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );\
+			}\
+		}\
+		return CLASSNAME::acceptsInput( plug, inputPlug );\
+	}\
+	virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const\
+	{\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "affects" ) )\
+		{\
+			boost::python::override f = this->get_override( "affects" );\
+			if( f )\
+			{\
+				boost::python::list pythonOutputs = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( input ) ) );\
+				boost::python::container_utils::extend_container( outputs, pythonOutputs );\
 				return;\
 			}\
 		}\
-		CLASSNAME::dirty( dirty );\
+		CLASSNAME::affects( input, outputs );\
 	}\
 \
-	virtual void compute( Gaffer::PlugPtr output ) const\
+	virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\
 		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
@@ -73,20 +103,17 @@ namespace GafferBindings
 			boost::python::override f = this->get_override( "compute" );\
 			if( f )\
 			{\
-				f( IECore::constPointerCast<Gaffer::Plug>( output ) );\
+				f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );\
 				return;\
 			}\
 		}\
-		CLASSNAME::compute( output );\
+		CLASSNAME::compute( output, context );\
 	}
-
-#define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
-	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )
-		
-void bindNode();
 
 void initNode( Gaffer::Node *node, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs );
 
 } // namespace GafferBindings
+
+#include "GafferBindings/NodeBinding.inl"
 
 #endif // GAFFERBINDINGS_NODEBINDING_H

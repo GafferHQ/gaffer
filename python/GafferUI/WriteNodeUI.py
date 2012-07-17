@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,32 +35,17 @@
 #  
 ##########################################################################
 
+import fnmatch
+
 import Gaffer
 import GafferUI
-
-class WriteNodeUI( GafferUI.NodeUI ) :
-
-	def __init__( self, node, **kw ) :
-	
-		GafferUI.NodeUI.__init__( self, node, **kw )
-		
-	def _build( self ) :
-	
-		GafferUI.NodeUI._build( self )
-		
-		executeButton = GafferUI.Button( "Execute" )
-		self.__executeButtonConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
-		
-		self._addWidget( executeButton )
-		
-	def __executeClicked( self, button ) :
-	
-		self._node().execute()
 
 def __createParameterWidget( plug ) :
 
 	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
-GafferUI.NodeUI.registerNodeUI( Gaffer.WriteNode.staticTypeId(), WriteNodeUI )
-GafferUI.NodeUI.registerPlugValueWidget( Gaffer.WriteNode.staticTypeId(), "fileName", GafferUI.PathPlugValueWidget )
-GafferUI.NodeUI.registerPlugValueWidget( Gaffer.WriteNode.staticTypeId(), "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.WriteNode.staticTypeId(), "fileName", GafferUI.PathPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.WriteNode.staticTypeId(), "parameters", __createParameterWidget )
+
+GafferUI.Nodule.registerNodule( Gaffer.WriteNode.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.WriteNode.staticTypeId(), "in", GafferUI.StandardNodule )

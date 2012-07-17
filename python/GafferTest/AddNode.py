@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -55,15 +55,20 @@ class AddNode( Gaffer.Node ) :
 		
 		self._init( inputs, dynamicPlugs )
 
-	def dirty( self, plug ) :
+	def affects( self, input ) :
+		
+		outputs = []
+		if input.getName() in ( "op1", "op2" ) :
+			outputs.append( self.getChild( "sum" ) )
 
-		if plug.getName()=="op1" or plug.getName()=="op2" :
+		return outputs
 
-			self.getChild( "sum" ).setDirty()
+	def compute( self, plug, context ) :
 
-	def compute( self, plug ) :
-
-		assert( plug.isSame( self.getChild( "sum" ) ) )
+		# we're allowing the addition of dynamic output plugs which will also receive the sum
+		# in order to support GafferTest.ScriptNodeTest.testDynamicPlugSerialisation().
+		assert( plug.isSame( self.getChild( "sum" ) ) or plug.getFlags() & plug.Flags.Dynamic )
+		assert( isinstance( context, Gaffer.Context ) )
 
 		plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
 

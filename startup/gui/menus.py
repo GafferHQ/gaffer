@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,19 +39,61 @@ import os
 import IECore
 
 import Gaffer
+import GafferScene
+
+## \todo We can't simply import every module during startup - perhaps we should have
+# a plugin autoload mechanism accessible in the preferences? It's important that we
+# don't make that too complicated though, and that plugins remain as standard python
+# modules and nothing more.
 import GafferUI
+import GafferSceneUI
+try :
+	import GafferArnoldUI
+except ImportError :
+	pass
+	
+# ScriptWindow menu
 
 scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
 
 GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
-
 GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
 GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 
-GafferUI.NodeMenu.append( "/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/File/Write", Gaffer.WriteNode )
-GafferUI.NodeMenu.append( "/Primitive/Sphere", Gaffer.SphereNode )
-GafferUI.NodeMenu.append( "/Group", Gaffer.GroupNode )
+# Node menu
+
+GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
+GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
+GafferUI.NodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
+GafferUI.NodeMenu.append( "/Scene/Primitive/Plane", GafferScene.Plane )
+GafferUI.NodeMenu.append( "/Scene/Add/AttributeCache", GafferScene.AttributeCache )
+GafferUI.NodeMenu.append( "/Scene/Add/Seeds", GafferScene.Seeds )
+GafferUI.NodeMenu.append( "/Scene/Add/Instancer", GafferScene.Instancer )
+GafferUI.NodeMenu.append( "/Scene/Add/Assignment", GafferScene.Assignment )
+GafferUI.NodeMenu.append( "/Scene/Add/Displays", GafferScene.Displays )
+GafferUI.NodeMenu.append( "/Scene/Add/Options", GafferScene.Options )
+GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.Group )
+GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
+GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
+
+try :	
+	import GafferImage
+	import GafferImageUI
+
+	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
+	GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
+except ImportError :
+	pass
+	
+GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
+GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
+
+GafferUI.NodeMenu.append( "/Cortex/Primitive/Sphere", Gaffer.SphereNode )
+GafferUI.NodeMenu.append( "/Cortex/Group", Gaffer.GroupNode )
+
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+
+GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
+GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )

@@ -40,6 +40,8 @@
 
 #include "OpenEXR/ImathMatrix.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
@@ -64,27 +66,24 @@ class TypedPlug : public ValuePlug
 		virtual ~TypedPlug();
 
 		/// Accepts only instances of TypedPlug<T> or derived classes.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		virtual bool acceptsInput( const Plug *input ) const;
 
 		const T &defaultValue() const;
 
 		/// \undoable
 		void setValue( const T &value );
-		/// Returns the value. This isn't const as it may require a compute
-		/// and therefore a setValue().
-		const T &getValue();
+		/// Returns the value.
+		T getValue() const;
 
-	protected :
-
-		virtual void setFromInput();
+		virtual void setFrom( const ValuePlug *other );
 
 	private :
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedPlug<T> );		
 
-		void setValueInternal( T value );
+		typedef IECore::TypedData<T> DataType;
+		typedef typename DataType::Ptr DataTypePtr;
 	
-		T m_value;
 		T m_defaultValue;
 
 };
@@ -93,11 +92,39 @@ typedef TypedPlug<bool> BoolPlug;
 typedef TypedPlug<std::string> StringPlug;
 typedef TypedPlug<Imath::M33f> M33fPlug;
 typedef TypedPlug<Imath::M44f> M44fPlug;
+typedef TypedPlug<Imath::Box3f> AtomicBox3fPlug;
+typedef TypedPlug<Imath::Box2i> AtomicBox2iPlug;
 
 IE_CORE_DECLAREPTR( BoolPlug );
 IE_CORE_DECLAREPTR( StringPlug );
 IE_CORE_DECLAREPTR( M33fPlug );
 IE_CORE_DECLAREPTR( M44fPlug );
+IE_CORE_DECLAREPTR( AtomicBox3fPlug );
+IE_CORE_DECLAREPTR( AtomicBox2iPlug );
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, BoolPlug> > BoolPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, BoolPlug> > InputBoolPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, BoolPlug> > OutputBoolPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, StringPlug> > StringPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, StringPlug> > InputStringPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringPlug> > OutputStringPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M33fPlug> > M33fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, M33fPlug> > InputM33fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, M33fPlug> > OutputM33fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M44fPlug> > M44fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, M44fPlug> > InputM44fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, M44fPlug> > OutputM44fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox3fPlug> > AtomicBox3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox3fPlug> > InputAtomicBox3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox3fPlug> > OutputAtomicBox3fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2iPlug> > AtomicBox2iPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox2iPlug> > InputAtomicBox2iPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox2iPlug> > OutputAtomicBox2iPlugIterator;
 
 } // namespace Gaffer
 

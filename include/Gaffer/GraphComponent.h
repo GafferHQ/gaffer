@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		std::string fullName() const;
 		/// Returns the relative path name from the specified ancestor to this component.
 		/// Passing 0 for ancestor yields the same result as calling fullName().
-		std::string relativeName( ConstGraphComponentPtr ancestor ) const;
+		std::string relativeName( const GraphComponent *ancestor ) const;
 		/// A signal which is emitted whenever a name is changed.
 		UnarySignal &nameChangedSignal();
 		//@}
@@ -108,7 +108,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		typedef ChildContainer::const_iterator ChildIterator;
 		/// Components can accept or reject potential children by implementing this
 		/// call. By default all children are accepted.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Components can accept or reject potential parents by implementing this
 		/// call. By default all parents are accepted.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
@@ -168,16 +168,16 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Returns the first ancestor of type T which
 		/// is also an ancestor of other.
 		template<typename T>
-		typename T::Ptr commonAncestor( ConstGraphComponentPtr other );
+		T *commonAncestor( const GraphComponent *other );
 		/// Returns the first ancestor of type T which
 		/// is also an ancestor of other.
 		template<typename T>
-		typename T::ConstPtr commonAncestor( ConstGraphComponentPtr other ) const;
+		const T *commonAncestor( const GraphComponent *other ) const;
 		/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
-		GraphComponentPtr commonAncestor( ConstGraphComponentPtr other, IECore::TypeId ancestorType );
-		ConstGraphComponentPtr commonAncestor( ConstGraphComponentPtr other, IECore::TypeId ancestorType ) const;
+		GraphComponent *commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType );
+		const GraphComponent *commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType ) const;
 		/// Returns true if this GraphComponent is an ancestor (or direct parent) of other.
-		bool isAncestorOf( ConstGraphComponentPtr other ) const;
+		bool isAncestorOf( const GraphComponent *other ) const;
 		/// A signal emitted when a child is added to this component. Slots should
 		/// be of the form void ( parent, child ).
 		BinarySignal &childAddedSignal();

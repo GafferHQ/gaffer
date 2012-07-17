@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -73,28 +73,14 @@ void BoxParameterHandler<T>::restore( GraphComponent *plugParent )
 template<typename T>
 Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
-	m_plug = plugParent->getChild<CompoundPlug>( m_parameter->name() );
+	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new CompoundPlug( m_parameter->name(), direction );
+		m_plug = new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
 	setupPlugFlags( m_plug );
-	
-	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
-	if( !minPlug || minPlug->direction()!=direction )
-	{
-		minPlug = new PointPlugType( "min", direction, m_parameter->typedDefaultValue().min );
-		m_plug->addChild( minPlug );
-	}
-	
-	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );
-	if( !maxPlug || maxPlug->direction()!=direction )
-	{
-		maxPlug = new PointPlugType( "max", direction, m_parameter->typedDefaultValue().max );
-		m_plug->addChild( maxPlug );
-	}
 	
 	return m_plug;
 }
@@ -114,22 +100,13 @@ Gaffer::ConstPlugPtr BoxParameterHandler<T>::plug() const
 template<typename T>
 void BoxParameterHandler<T>::setParameterValue()
 {
-	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
-	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );
-	
-	m_parameter->setTypedValue( T( minPlug->getValue(), maxPlug->getValue() ) );
+	m_parameter->setTypedValue( m_plug->getValue() );
 }
 
 template<typename T>
 void BoxParameterHandler<T>::setPlugValue()
 {
-	T v = m_parameter->getTypedValue();
-	
-	typename PointPlugType::Ptr minPlug = m_plug->getChild<PointPlugType>( "min" );
-	typename PointPlugType::Ptr maxPlug = m_plug->getChild<PointPlugType>( "max" );
-	
-	minPlug->setValue( v.min );
-	maxPlug->setValue( v.max );
+	m_plug->setValue( m_parameter->getTypedValue() );
 }
 		
 // explicit instantiations

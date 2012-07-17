@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,11 @@
 #  
 ##########################################################################
 
+import re
+import fnmatch
+
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -44,30 +49,40 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
-		self.setPlug( plug )
+		# we don't want to call _updateFromPlug yet because the derived
+		# classes haven't constructed yet. they can call it themselves
+		# upon completing construction.
+		self.__setPlugInternal( plug, callUpdateFromPlug=False )
 		
 	def setPlug( self, plug ) :
 	
-		self.__plug = plug
-
-		if self.__plug is not None :
-			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
-		else :
-			self.__plugSetConnection = None
-			self.__plugDirtiedConnection = None
-			self.__plugInputChangedConnection = None
-
-		self.updateFromPlug()
-		
+		self.__setPlugInternal( plug, callUpdateFromPlug=True )
+			
 	def getPlug( self ) :
 	
 		return self.__plug
 	
+	## By default, PlugValueWidgets operate in the main context held by the script node
+	# for the script the plug belongs to. This function allows an alternative context
+	# to be provided, making it possible to view a plug at a custom frame (or with any
+	# other context modification).
+	def setContext( self, context ) :
+
+		assert( isinstance( context, Gaffer.Context ) )
+		if context is self.__context :
+			return
+
+		self.__context = context
+		self.__updateContextConnection()
+		self._updateFromPlug()
+		
+	def getContext( self ) :
+	
+		return self.__context
+			
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plug.	
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 	
 		raise NotImplementedError
 	
@@ -90,38 +105,124 @@ class PlugValueWidget( GafferUI.Widget ) :
 	@classmethod
 	def create( cls, plug ) :
 
-		typeId = plug.typeId()
-		if typeId in cls.__typesToCreators :
+		# first try to create one using a creator registered for the specific plug
+		node = plug.node()
+		if node is not None :
+			plugPath = plug.relativeName( node )
+			nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+			for nodeTypeId in [ node.typeId() ] + nodeHierarchy :	
+				creators = cls.__nodeTypesToCreators.get( nodeTypeId, None )
+				if creators :
+					for creator in creators :
+						if creator.plugPathMatcher.match( plugPath ) :
+							if creator.creator is not None :
+								return creator.creator( plug, **(creator.creatorKeywordArgs) )
+							else :
+								return None
 		
-			return cls.__typesToCreators[typeId]( plug )
-			
+		# if that failed, then just create something based on the type of the plug
+		typeId = plug.typeId()
+		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
+			creator = cls.__plugTypesToCreators.get( plugTypeId )
+			if creator is not None :
+				return creator( plug )
+		
 		return None
 	
 	## Registers a PlugValueWidget type for a specific Plug type. Note
-	# that the NodeUI.registerPlugValueWidget function provides the
-	# opportunity to further customise the type of Widget used by the NodeUI
-	# based on the node type and plug name.
+	# that the registerCreator function below provides the
+	# opportunity to further customise the type of Widget used for specific
+	# plug instances based on the node type and plug name.
 	@classmethod
-	def registerType( cls, typeId, creator ) :
+	def registerType( cls, plugTypeId, creator ) :
 	
-		cls.__typesToCreators[typeId] = creator
+		cls.__plugTypesToCreators[plugTypeId] = creator
+		
+	## Registers a function to create a PlugWidget. None may be passed as creator, to
+	# disable the creation of uis for specific plugs.
+	@classmethod
+	def registerCreator( cls, nodeTypeId, plugPath, creator, **creatorKeywordArgs ) :
 	
-	__typesToCreators = {}	
+		if isinstance( plugPath, basestring ) :
+			plugPath = re.compile( fnmatch.translate( plugPath ) )
+		else :
+			assert( type( plugPath ) is type( re.compile( "" ) ) )
+		
+		creators = cls.__nodeTypesToCreators.setdefault( nodeTypeId, [] )
+		
+		creator = IECore.Struct(
+			plugPathMatcher = plugPath,
+			creator = creator,
+			creatorKeywordArgs = creatorKeywordArgs,
+		)
+		
+		creators.insert( 0, creator )
+
+	__plugTypesToCreators = {}
+	__nodeTypesToCreators = {}
 		
 	def __plugSet( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
 		
-			self.updateFromPlug()	
+			self._updateFromPlug()	
 
 	def __plugDirtied( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
 		
-			self.updateFromPlug()	
+			self._updateFromPlug()	
 
 	def __plugInputChanged( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
+			self.__updateContextConnection()
+			self._updateFromPlug()
+			
+	def __contextChanged( self, context, key ) :
+	
+		self._updateFromPlug()
+
+	def __setPlugInternal( self, plug, callUpdateFromPlug ) :
+	
+		self.__plug = plug
 		
-			self.updateFromPlug()	
+		context = self.__fallbackContext
+		
+		if self.__plug is not None :
+			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
+			if scriptNode is not None :
+				context = scriptNode.context()
+		else :
+			self.__plugSetConnection = None
+			self.__plugDirtiedConnection = None
+			self.__plugInputChangedConnection = None
+
+		self.__context = context
+		self.__updateContextConnection()
+		
+		if callUpdateFromPlug :		
+			self._updateFromPlug()	
+
+	def __updateContextConnection( self ) :
+	
+		# we only want to be notified of context changes if we have a plug and that
+		# plug has an incoming connection. otherwise context changes are irrelevant
+		# and we'd just be slowing things down by asking for notifications.
+	
+		context = self.__context
+		plug = self.getPlug()
+		if plug is None or plug.getInput() is None :
+			context = None
+		
+		if context is not None :
+			self.__contextChangedConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		else :
+			self.__contextChangedConnection = None
+	
+	# we use this when the plug being viewed doesn't have a ScriptNode ancestor
+	# to provide a context.
+	__fallbackContext = Gaffer.Context()		

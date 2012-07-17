@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
 #include "IECore/BoxTraits.h"
 
 #include "Gaffer/ParameterHandler.h"
-#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/BoxPlug.h"
 
 namespace Gaffer
 {
@@ -56,7 +56,7 @@ class BoxParameterHandler : public ParameterHandler
 		IE_CORE_DECLAREMEMBERPTR( BoxParameterHandler<T> );
 
 		typedef IECore::TypedParameter<T> ParameterType;
-		typedef CompoundNumericPlug<typename IECore::BoxTraits<T>::BaseType> PointPlugType;
+		typedef BoxPlug<T> PlugType;
 
 		BoxParameterHandler( typename ParameterType::Ptr parameter );
 		virtual ~BoxParameterHandler();
@@ -73,7 +73,7 @@ class BoxParameterHandler : public ParameterHandler
 	private :
 	
 		typename ParameterType::Ptr m_parameter;
-		typename CompoundPlug::Ptr m_plug;
+		typename PlugType::Ptr m_plug;
 	
 		static ParameterHandlerDescription<BoxParameterHandler<T>, ParameterType> g_description;
 

@@ -48,20 +48,8 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( Node )
 
-/// let's not have DoublePlug or DoubleVectorPlug
-///		- keep all real types as float ?? really?? why not use double if we use only one type?
-///		- and all integers as int? - except for maybe UIntVectorData?
-///
-/// Cannot dirty an input plug without a connection
-///		- and input plugs revert to default (or current value) on disconnect?
-/// Expressions
-///		- Node? or intrinsic to Plug somehow? do they dirty automatically? or compute each time?
-///		- it'd be nice not to have to call IntData::value() just to get values from Plugs in these
-/// Memory management
-///		- Is this where we flush less often used values into a disk cache? and load 'em again when needed?
-///
-/// Image plugs with partial computation - how would they work????
-///
+/// The Plug class defines a means of making point to point connections.
+/// A Plug may have many outputs but only one input.
 class Plug : public GraphComponent
 {
 
@@ -98,7 +86,7 @@ class Plug : public GraphComponent
 		//////////////////////////////////////////////////////////////////////
 		//@{
 		/// Accepts no children.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes or Plugs as a parent.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		/// Just returns ancestor<Node>() as a syntactic convenience.
@@ -129,10 +117,9 @@ class Plug : public GraphComponent
 		/// should call their base class and only accept an
 		/// input if their base class does too. The default
 		/// implementation accepts any input, provided that 
-		/// direction()==In. Note that this method will be
-		/// called with input==0 to check that the existing
-		/// input may be removed.
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
+		/// direction()==In, and node()->acceptsInput() also
+		/// accepts the input.
+		virtual bool acceptsInput( const Plug *input ) const;
 		/// Sets the input to this plug if acceptsInput( input )
 		/// returns true, otherwise throws an IECore::Exception.
 		/// Pass 0 to remove the current input.

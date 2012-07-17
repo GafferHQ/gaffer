@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -45,130 +45,63 @@ import IECore
 import Gaffer
 import GafferUI
 
-## This class forms the base class for all uis for nodes. It provides simple methods for building a ui
-# structured using tabs and collapsible elements, and allows customisation of the widget types used for
-# each Plug.
+## This class forms the base class for all uis for nodes.
 class NodeUI( GafferUI.Widget ) :
-
-	_columnSpacing = 4
-
-	def __init__( self, node, **kw ) :
 	
-		self.__currentColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=self._columnSpacing )
+	## Derived classes may override the default ui by passing
+	# their own top level widget - otherwise a standard ui is built
+	# using the result of _plugsWidget().
+	def __init__( self, node, topLevelWidget=None, **kw ) :
 		
-		GafferUI.Widget.__init__( self, self.__currentColumn, **kw )
+		buildUI = False
+		if topLevelWidget is None :
+			topLevelWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+			buildUI = True
+			
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
 		self.__node = node
+		self.__plugsWidget = None
 		
-		self._build()
-		
-	## Returns the node the ui is being created for.
-	def _node( self ) :
+		if buildUI :
+			topLevelWidget.append( self._plugsWidget() )
+			if hasattr( node, "execute" ) :
+				executeButton = GafferUI.Button( "Execute" )
+				topLevelWidget.append( executeButton )
+				self.__executeButtonConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
+				topLevelWidget.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
+			
+	## Returns the node the ui represents.
+	def node( self ) :
 	
 		return self.__node
 
-	def _tab( self, label ) :
+	## Returns a Widget representing the plugs for the node.
+	def _plugsWidget( self ) :
 	
-		raise NotImplementedError
+		if self.__plugsWidget is not None :
+			return self.__plugsWidget
 	
-	## \todo Consider if this is necessary or can be simplified now all containers
-	# can be used in a with statement.
-	def _scrollable( self ) :
-	
-		class ScrollableContext() :
-		
-			def __init__( self, nodeUI ) :
-			
-				self.__nodeUI = nodeUI
-			
-			def __enter__( self ) :
-			
-				sc = GafferUI.ScrolledContainer(
-					horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never,
-					verticalMode = GafferUI.ScrolledContainer.ScrollMode.Automatic,
-					borderWidth = 8
-				)
-				
-				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=NodeUI._columnSpacing )
-				sc.setChild( co )
-				
-				self.__prevColumn = self.__nodeUI._NodeUI__currentColumn
-				
-				self.__nodeUI._NodeUI__currentColumn.append( sc )
-				self.__nodeUI._NodeUI__currentColumn = co
-				
-			def __exit__( self, type, value, traceBack ) :
-			
-				self.__nodeUI._NodeUI__currentColumn = self.__prevColumn
-		
-		return ScrollableContext( self )
-								
-	def _collapsible( self, **kw ) :
-	
-		class CollapsibleContext() :
-		
-			def __init__( self, nodeUI, collapsibleKeywords ) :
-			
-				self.__nodeUI = nodeUI
-				self.__collapsibleKeywords = collapsibleKeywords
-		
-			def __enter__( self ) :
-			
-				cl = GafferUI.Collapsible( **self.__collapsibleKeywords )
-				co = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=NodeUI._columnSpacing )
-				cl.setChild( co )
-				
-				self.__prevColumn = self.__nodeUI._NodeUI__currentColumn
-				
-				self.__nodeUI._NodeUI__currentColumn.append( cl )
-				self.__nodeUI._NodeUI__currentColumn = co
-				
-			def __exit__( self, type, value, traceBack ) :
-			
-				self.__nodeUI._NodeUI__currentColumn = self.__prevColumn
-				
-		return CollapsibleContext( self, kw )
-		
-	def _addWidget( self, widget ) :
-		
-		self.__currentColumn.append( widget )
-		
-	def _addPlugWidget( self, plugOrPlugPath ) :
-	
-		if isinstance( plugOrPlugPath, basestring ) :
-			plug = self._node().getChild( plugOrPlugPath )
-		else :
-			plug = plugOrPlugPath
+		self.__plugsWidget = GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 )
 
-		w = self.createPlugValueWidget( plug )
-		if w is not None :
-			self._addWidget( GafferUI.PlugWidget( w ) )
-
-	## This method is called from the constructor to build the ui. It is
-	# intended to be overriden in derived classes.
-	def _build( self ) :
-		
-		with self._scrollable() :
-			self.__buildWalk( self._node() )
-
-	def __buildWalk( self, parent ) :
-	
-		plugs = [ x for x in parent.children() if x.isInstanceOf( Gaffer.Plug.staticTypeId() ) ]
-		plugs = [ x for x in plugs if x.direction()==Gaffer.Plug.Direction.In and not x.getName().startswith( "__" ) ]
-		for plug in plugs :
-
-			if plug.typeId()==Gaffer.CompoundPlug.staticTypeId() :
-			
-				widget = self.createPlugValueWidget( plug, registeredWidgetsOnly=True )
-				if widget is not None :
-					self._addWidget( widget )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
+		self.__plugsWidget.setChild( column )
+				
+		for plug in self.node().children() :
+			if plug.getName().startswith( "__" ) or plug.direction() == Gaffer.Plug.Direction.Out :
+				continue
+			plugValueWidget = GafferUI.PlugValueWidget.create( plug )
+			if plugValueWidget is not None :
+				if isinstance( plugValueWidget, GafferUI.PlugValueWidget ) and not isinstance( plugValueWidget, GafferUI.CompoundPlugValueWidget ) :
+					column.append( GafferUI.PlugWidget( plugValueWidget ) )
 				else :
-					with self._collapsible( label = IECore.CamelCase.toSpaced( plug.getName() ), collapsed=True ) :
-						self.__buildWalk( plug )
-				
-			else :
-			
-				self._addPlugWidget( plug )
+					column.append( plugValueWidget )
+
+		return self.__plugsWidget
+
+	def __executeClicked( self, button ) :
+	
+		self.node().execute()
 
 	## Creates a NodeUI instance for the specified node.
 	@classmethod
@@ -189,49 +122,6 @@ class NodeUI( GafferUI.Widget ) :
 	
 		assert( issubclass( nodeUIType, NodeUI ) )
 	
-		cls.__nodeUIs[nodeTypeId] = nodeUIType	
-
-	## Creates a PlugWidget for the specified plug. Specific widgets can be
-	# registered for particular plugs by using the registerPlugWidget method below.
-	# If registeredWidgetsOnly is True, then None will be returned unless a specific
-	# widget has been registered using registerPlugValueWidget().
-	@classmethod
-	def createPlugValueWidget( cls, plug, registeredWidgetsOnly=False ) :
-
-		node = plug.node()
-		plugPath = plug.relativeName( node )
-
-		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-		for typeId in [ node.typeId() ] + nodeHierarchy :	
-			creators = cls.__nodePlugUIs.get( typeId, None )
-			if creators :
-				for creator in creators :
-					if creator.plugPathMatcher.match( plugPath ) :
-						return creator.creator( plug, **(creator.creatorKeywordArgs) )
+		cls.__nodeUIs[nodeTypeId] = nodeUIType
 		
-		if registeredWidgetsOnly :
-			return None
-		else :
-			return GafferUI.PlugValueWidget.create( plug )
-	
-	__nodePlugUIs = {}
-	## Registers a function to create a PlugWidget.
-	@classmethod
-	def registerPlugValueWidget( cls, nodeTypeId, plugPath, creator, **creatorKeywordArgs ) :
-		
-		if isinstance( plugPath, basestring ) :
-			plugPath = re.compile( fnmatch.translate( plugPath ) )
-		else :
-			assert( type( plugPath ) is type( re.compile( "" ) ) )
-		
-		creators = cls.__nodePlugUIs.setdefault( nodeTypeId, [] )
-		
-		creator = IECore.Struct(
-			plugPathMatcher = plugPath,
-			creator = creator,
-			creatorKeywordArgs = creatorKeywordArgs,
-		)
-		
-		creators.insert( 0, creator )
-				
 NodeUI.registerNodeUI( Gaffer.Node.staticTypeId(), NodeUI )

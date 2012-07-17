@@ -1,3 +1,89 @@
+* Added a GafferBindings::NodeClass class, which simplifies the binding of Node derived classes. It is now a one liner to bind a typical extension node.
+
+* The op app now has an arguments parameter which can be used to specify the parameter values for the op.
+
+* The op app now has a gui parameter. When this is true a gui is presented, when it is false the op is executed directly on the command line.
+
+* Added the GafferScene and GafferSceneUI modules. These will allow the generation and editing of scene graphs.
+
+* Fixed RunTimeTyped registration of Gaffer::CompoundPlug.
+
+* Fixed behaviour when a Widget doesn't have a tooltip - it now correctly looks for tooltips on parent Widgets until one is found.
+
+* Added a GafferUI.NumericSlider widget.
+
+* The Viewer now correctly updates when the context has changed. The EditorWidget no longer calls _updateFromContext() at awkward times.
+
+* Added a simple TimeEditor for manipulating the current frame.
+
+* Fixed GIL problems caused by passing multithreaded python procedurals to RenderableGadget.
+
+* Fixed GIL problems when emitting signals with python slots from a thread which does not currently hold the GIL.
+
+* Added an ExpressionNode class.
+
+* PlugValueWidgets now have setContext and getContext methods, and update correctly when the context changes if a plug has input connections.
+
+* Added a Gaffer.TransformPlug class, for specifying transformations.
+
+* Removed NodeUI.createPlugValueWidget() registeredWidgets only parameter.
+
+* Added PathListingWidget setPathExpanded, getPathExpanded, setExpandedPaths, getExpandedPaths and expansionChangedSignal methods.
+
+* Added the GafferImage and GafferImageUI modules, for tile based image processing.
+
+* Removed deprecated StandardNodeGadget::acceptsNodule() method, and associated StandardNodeGadget( node, deferNoduleCreation ) constructor. Nodule creation should now be controlled entirely by the Nodule factory mechanism.
+
+* The Application base class now automatically creates an ApplicationRoot and makes it available via the root() method. Derived classes should use this rather than create their own. The Application base class now also makes sure that all startup files have been executed before the application is run, so derived classes may not now call _executeStartupFiles themselves (it is now protected). Additionally the doRun() method has
+been renamed to _run, to be more in keeping with general python philosophy.
+
+* The WeakMethod class now throws a more useful exception when called on expired instances.
+
+* Fixed bug whereby menus were never destroyed due to a circular reference. This masked other bugs whereby some uis weren't maintaining a reference to their menus to keep them alive - it's now essential that this is done.
+
+* Fixed bug which prevented dynamic output CompoundNumericPlugs serialising correctly.
+
+* Fixed problems caused by PlugValueWidget.__init__ calling _updateFromPlug() at a point when the derived class is not fully constructed. PlugValueWidget.__init__ no longer calls _updateFromPlug(), so derived classes should now call it at the end of their __init__ method.
+
+* ColorPlugValueWidget now has numeric fields for editing the colour, in addition to the
+swatch.
+
+* ContainerGadget can now add padding around the children, accessed using the new setPadding() and getPadding() methods.
+
+* StandardNodeGadget can now be used in a vertical orientation as well as a horizontal one. This will be useful for making graphs which better suit a horizontal flow (shaders for example).
+
+* Fixed IECore::RunTimeTyped registration for CompoundNumericPlug types.
+
+* Added GafferArnold module.
+
+* Added Label.linkActivatedSignal(), for reacting to HTML links in label text.
+
+* Fixed flickering caused by MenuBars appearing briefly on screen before being parented.
+
+* Added MultiLineTextWidget setWrapMode, getWrapMode, appendHTML, linkAt and linkActivatedSignal methods.
+
+* Added a PopupWindow class.
+
+* Fixed the Slider button press handler to swallow the events it uses.
+
+* Added Window setPosition() and getPosition() methods.
+
+* Moved NodeUI.registerPlugValueWidget() functionality into PlugValueWidget.registerCreator().
+
+* Removed NodeUI._build() method. Derived classes should instead pass a topLevelWidget to the constructor if they wish to be in control of the ui construction.
+
+* GafferUI.EventLoop now disables any idle callbacks which error during execution.
+
+* Added Node::acceptsInput virtual method, to allow nodes to reject connections.
+
+* Added a Widget.bound() method.
+
+* Added GadgetWidget.positionToGadgetSpace() method, for converting Widget-relative positions into Gadget-relative lines.
+
+* Added a GraphEditor.graphGadgetWidget() method.
+
+* Nodes created via the NodeMenu are now automatically connected to the selected nodes, and positioned based on those connections.
+
 * OpDialogue now supports op.userData()["UI"]["buttonLabel"], for specifying a custom label for the OK button.
 
 * Removed requirement of the boost build having a patched python library capable of participating in garbage collection.
@@ -7,8 +93,6 @@
 * Fixed various GafferUI.Container bugs which prevented successful transfer of Widgets between containers.
 
 * Added workarounds for unwanted Qt behaviours - parentless Widgets becoming top-level windows, and widgets being hidden when reparented.
-
-* The op and browser applications now run config files found in the op and browser subdirectories of the GAFFER_STARTUP_PATHS.
 
 * Added setClassLoader and getClassLoader methods to the op application. These may be used by configuration files to customise the loading of ops (the application is available as an "application" variable to the startup scripts).
 
@@ -141,8 +225,6 @@ files and file sequences.
 
 * Fixed bug which prevented selection using the up/down cursor keys from working in the PathChooserWidget.
 
-* Merged optimised Gadget drawing code from optimisedGadgetDrawing branch - drawing of the graph should now be much quicker.
-
 * ImageGadgets now have a linear to srgb conversion applied when they are drawn. This means they now match the Image widget behaviour.
 
 * PathChooserWidget and PathChooserDialogue now accept a new allowMultipleSelection argument to the constructor. Use the new PathChooserDialogue.waitForPaths() method to wait for paths selected in this way.
@@ -230,6 +312,8 @@ files and file sequences.
 0.28.0
 ------
 * Added an InfoPathFilter, which allows filtering with an arbitrary match function applied to an arbitrary field of Path.info(). Used this to implement a filter text box for path choosers.
+
+* PathParameterWidget now applies path filters, and has an _filter() method which can be overridden in derived classes to define the filter.
 
 * GridContainer now supports the automatic parenting mechanism
 
@@ -341,8 +425,6 @@ files and file sequences.
 * The Path class now adds "name" and "fullName" entries to the info() dictionary.
 
 * The Menu class now accepts booleans as well as callables for the checkBox MenuItemDefinition entry.
-
-* PathParameterWidget now applies path filters, and has an _filter() method which can be overridden in derived classes to define the filter.
 
 0.26.0
 ------

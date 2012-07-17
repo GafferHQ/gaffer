@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -55,7 +55,7 @@ class IndividualContainer : public ContainerGadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( IndividualContainer, IndividualContainerTypeId, ContainerGadget );
 
 		/// Accepts the child only if there are currently no children.
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		
 		/// Removes the current child if there is one, and replaces it
 		/// with the specified gadget.

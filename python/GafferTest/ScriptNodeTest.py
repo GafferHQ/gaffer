@@ -145,6 +145,8 @@ class ScriptNodeTest( unittest.TestCase ) :
 		s1["n1"]["dynamicPlug2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s1["n1"]["dynamicPlug2"].setValue( 100 )
 		s1["n1"]["dynamicStringPlug"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, value="hiThere" )
+		s1["n1"]["dynamicOutPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
+		s1["n1"]["dynamicColorOutPlug"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
 				
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s1.serialise() )
@@ -152,6 +154,8 @@ class ScriptNodeTest( unittest.TestCase ) :
 		self.assert_( s2["n1"]["dynamicPlug"].getInput().isSame( s2["n2"]["sum"] ) )
 		self.assertEqual( s2["n1"]["dynamicPlug2"].getValue(), 100 )
 		self.assertEqual( s2["n1"]["dynamicStringPlug"].getValue(), "hiThere" )
+		self.failUnless( isinstance( s2["n1"]["dynamicOutPlug"], Gaffer.IntPlug ) )
+		self.failUnless( isinstance( s2["n1"]["dynamicColorOutPlug"], Gaffer.Color3fPlug ) )
 		
 	def testLifetime( self ) :
 	
@@ -178,6 +182,17 @@ class ScriptNodeTest( unittest.TestCase ) :
 		
 		self.assert_( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
 
+	def testLoadClearsFirst( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a1"] = GafferTest.AddNode()
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s.load()
+		self.failIf( "a2" in s )
+		
 	def testSaveFailureHandling( self ) :
 	
 		s = Gaffer.ScriptNode()
@@ -330,6 +345,57 @@ a = A()"""
 		del s["n1"]
 		
 		self.failUnless( n1 not in s.selection() )
+		
+	def testContext( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		c = s.context()
+		c.setFrame( 10.0 )
+		
+		self.assertEqual( s.context().getFrame(), 10.0 )
+		self.failUnless( s.context().isSame( c ) )
+		
+	def testFrameRange( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		self.failUnless( isinstance( s["frameRange"]["start"], Gaffer.IntPlug ) )
+		self.failUnless( isinstance( s["frameRange"]["end"], Gaffer.IntPlug ) )
+		
+		self.assertEqual( s["frameRange"]["start"].getValue(), 1 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
+		
+		s["frameRange"]["start"].setValue( 110 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 110 )
+		
+		s["frameRange"]["end"].setValue( 200 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 200 )
+		
+		s["frameRange"]["end"].setValue( 100 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 100 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
+	
+	def testFrameRangeLoadAndSave( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["frameRange"]["start"].setValue( 110 )		
+		s["frameRange"]["end"].setValue( 200 )
+		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s["frameRange"]["end"].getValue(), 200 )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s2 = Gaffer.ScriptNode()
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.load()
+
+		self.assertEqual( s2["frameRange"]["start"].getValue(), 110 )
+		self.assertEqual( s2["frameRange"]["end"].getValue(), 200 )
 	
 	def testApplicationRoot( self ) :
 	

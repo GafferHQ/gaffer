@@ -223,30 +223,7 @@ class FileSystemMode( BrowserEditor.Mode ) :
 	
 		return Gaffer.FileSystemPath(
 			os.getcwd(),
-			filter = Gaffer.CompoundPathFilter(
-			
-				filters = [
-				
-					Gaffer.FileNamePathFilter(
-						[ re.compile( "^[^.].*" ) ],
-						leafOnly=False,
-						userData = {
-							"UI" : {
-								"label" : "Show hidden files",
-								"invertEnabled" : True,
-							}
-						}
-					),
-					
-					Gaffer.InfoPathFilter(
-						infoKey = "name",
-						matcher = None, # the ui will fill this in
-						leafOnly = False,
-					),
-					
-				],
-			
-			),
+			filter = Gaffer.FileSystemPath.createStandardFilter(),
 		)
 		
 	def _initialColumns( self ) :
@@ -266,30 +243,7 @@ class FileSequenceMode( BrowserEditor.Mode ) :
 	
 		return Gaffer.SequencePath(
 			Gaffer.FileSystemPath( os.getcwd() ),
-			filter = Gaffer.CompoundPathFilter(
-				
-				filters = [
-				
-					Gaffer.FileNamePathFilter(
-						[ re.compile( "^[^.].*" ) ],
-						leafOnly=False,
-						userData = {
-							"UI" : {
-								"label" : "Show hidden files",
-								"invertEnabled" : True,
-							}
-						}
-					),
-					
-					Gaffer.InfoPathFilter(
-						infoKey = "name",
-						matcher = None, # the ui will fill this in
-						leafOnly = False,
-					),
-					
-				],
-			
-			),
+			filter = Gaffer.FileSystemPath.createStandardFilter(),
 		)
 
 	def _initialColumns( self ) :

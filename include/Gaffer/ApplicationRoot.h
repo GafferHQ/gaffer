@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ class ApplicationRoot : public GraphComponent
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ApplicationRoot, ApplicationRootTypeId, GraphComponent );
 
 		/// Accepts no user added children.				
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts no parent.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,17 +77,7 @@ static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
 void GafferBindings::bindProceduralHolder()
 {
 	
-	IECorePython::RunTimeTypedClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
-		.def( 	init< const std::string &, const dict &, const tuple & >
-				(
-					(
-						arg( "name" ) = ProceduralHolder::staticTypeName(),
-						arg( "inputs" ) = dict(),
-						arg( "dynamicPlugs" ) = tuple()
-					)
-				)
-		)
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( ProceduralHolder )
+	GafferBindings::NodeClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
 		.def( "setProcedural", &ProceduralHolder::setProcedural )
 		.def( "getProcedural", &getProcedural )
 	;

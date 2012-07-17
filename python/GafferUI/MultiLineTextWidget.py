@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -43,12 +45,15 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
-	def __init__( self, text="", editable=True, **kw ) :
+	WrapMode = IECore.Enum.create( "None", "Word", "Character", "WordOrCharacter" )
+
+	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, **kw ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit(), **kw )
 
 		self.setText( text )
 		self.setEditable( editable )
+		self.setWrapMode( wrapMode )
 		
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
 
@@ -64,6 +69,13 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	
 		self._qtWidget().appendPlainText( text )
 	
+	## Appends HTML-formatted text - when links within
+	# this are clicked, the linkActivatedSignal will be
+	# triggered.
+	def appendHTML( self, html ) :
+	
+		self._qtWidget().appendHtml( html )
+			
 	def setEditable( self, editable ) :
 	
 		self._qtWidget().setReadOnly( not editable )
@@ -71,6 +83,26 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def getEditable( self ) :
 	
 		return not self._qtWidget().isReadOnly()
+	
+	def setWrapMode( self, wrapMode ) :
+	
+		self._qtWidget().setWordWrapMode( 
+			{
+				self.WrapMode.None : QtGui.QTextOption.NoWrap,
+				self.WrapMode.Word : QtGui.QTextOption.WordWrap,
+				self.WrapMode.Character : QtGui.QTextOption.WrapAnywhere,
+				self.WrapMode.WordOrCharacter : QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere,
+			}[wrapMode]
+		)
+	
+	def getWrapMode( self ) :
+	
+		return {
+			QtGui.QTextOption.NoWrap : self.WrapMode.None,
+			QtGui.QTextOption.WordWrap : self.WrapMode.Word,
+			QtGui.QTextOption.WrapAnywhere : self.WrapMode.Character,
+			QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,
+		}[self._qtWidget().wordWrapMode()]
 		
 	def selectedText( self ) :
 	
@@ -79,6 +111,11 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		text = text.replace( u"\u2029", "\n" )
 		return str( text )
 		
+	def linkAt( self, position ) :
+	
+		link = self._qtWidget().anchorAt( QtCore.QPoint( position[0], position[1] ) )
+		return str( link )
+				
 	def textChangedSignal( self ) :
 	
 		try :
@@ -108,8 +145,19 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		except :
 			self.__activatedSignal = GafferUI.WidgetSignal()
 			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-
+						
 		return self.__activatedSignal
+		
+	def linkActivatedSignal( self ) :
+	
+		try :
+			return self.__linkActivatedSignal
+		except :
+			self.__linkActivatedSignal = GafferUI.WidgetEventSignal()
+			self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+			self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			
+		return self.__linkActivatedSignal
 		
 	def __textChanged( self ) :
 	
@@ -123,6 +171,25 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			self.__activatedSignal( self )
 			return True
 			
+		return False
+		
+	def __mouseMove( self, widget, event ) :
+	
+		link = self.linkAt( event.line.p0 )
+		if link :
+			self._qtWidget().viewport().setCursor( QtGui.QCursor( QtCore.Qt.PointingHandCursor ) )
+		else :
+			self._qtWidget().viewport().setCursor( QtGui.QCursor( QtCore.Qt.IBeamCursor ) )
+			
+		return False
+		
+	def __buttonPress( self, widget, event ) :
+	
+		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
+			link = self.linkAt( event.line.p0 )
+			if link :
+				return self.__linkActivatedSignal( self, link )
+		
 		return False
 		
 class _FocusOutEventFilter( QtCore.QObject ) :

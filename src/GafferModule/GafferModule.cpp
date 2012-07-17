@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/TimeWarp.h"
+
 #include "GafferBindings/ConnectionBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/GraphComponentBinding.h"
@@ -59,7 +61,12 @@
 #include "GafferBindings/OpHolderBinding.h"
 #include "GafferBindings/ProceduralHolderBinding.h"
 #include "GafferBindings/PreferencesNodeBinding.h"
+#include "GafferBindings/ContextBinding.h"
+#include "GafferBindings/BoxPlugBinding.h"
+#include "GafferBindings/ExpressionNodeBinding.h"
+#include "GafferBindings/TransformPlugBinding.h"
 
+using namespace Gaffer;
 using namespace GafferBindings;
 
 BOOST_PYTHON_MODULE( _Gaffer )
@@ -89,5 +96,12 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindOpHolder();
 	bindProceduralHolder();
 	bindPreferencesNode();
+	bindContext();
+	bindBoxPlug();
+	bindExpressionNode();
+	bindTransformPlug();
+	
+	NodeClass<ContextProcessorNode>();
+	NodeClass<TimeWarpNode>();
 
 }

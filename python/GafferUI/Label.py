@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -81,6 +82,20 @@ class Label( GafferUI.Widget ) :
 			self.__qtAlignmentToGaffer[int(a & QtCore.Qt.AlignHorizontal_Mask)],
 			self.__qtAlignmentToGaffer[int(a & QtCore.Qt.AlignVertical_Mask)],
 		)
+	
+	def linkActivatedSignal( self ) :
+	
+		try :
+			return self.__linkActivatedSignal
+		except :
+			self.__linkActivatedSignal = GafferUI.WidgetEventSignal()
+			self._qtWidget().linkActivated.connect( Gaffer.WeakMethod( self.__linkActivated ) )
+			
+		return self.__linkActivatedSignal
+	
+	def __linkActivated( self, link ) :
+	
+		self.__linkActivatedSignal( self, str( link ) )
 		
 	__qtAlignmentToGaffer = {
 		int( QtCore.Qt.AlignLeft ) : HorizontalAlignment.Left,
@@ -99,3 +114,5 @@ class Label( GafferUI.Widget ) :
 		VerticalAlignment.Bottom : QtCore.Qt.AlignBottom,
 		VerticalAlignment.Center : QtCore.Qt.AlignVCenter,
 	}
+
+	

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -101,8 +101,8 @@ class GraphGadget : public ContainerGadget
 		
 		void memberAdded( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member );
 		void memberRemoved( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member );
-		void inputChanged( Gaffer::PlugPtr dstPlug );
-		void plugSet( Gaffer::PlugPtr plug );
+		void inputChanged( Gaffer::Plug *dstPlug );
+		void plugSet( Gaffer::Plug *plug );
 	
 		bool keyPressed( GadgetPtr gadget, const KeyEvent &event );
 		

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -187,6 +187,11 @@ static GraphComponentPtr ancestor( GraphComponent &g, IECore::TypeId t )
 	return g.ancestor( t );
 }
 
+static GraphComponentPtr commonAncestor( GraphComponent &g, const GraphComponent *other, IECore::TypeId t )
+{
+	return g.commonAncestor( other, t );
+}
+
 struct UnarySlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GraphComponentPtr g )
@@ -249,7 +254,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "children", &children )
 		.def( "parent", &parent )
 		.def( "ancestor", &ancestor )
-		.def( "commonAncestor", (GraphComponentPtr (GraphComponent::*)( ConstGraphComponentPtr, IECore::TypeId ))&GraphComponent::commonAncestor )
+		.def( "commonAncestor", &commonAncestor )
 		.def( "isAncestorOf", &GraphComponent::isAncestorOf )
 		.def( "childAddedSignal", &GraphComponent::childAddedSignal, return_internal_reference<1>() )
 		.def( "childRemovedSignal", &GraphComponent::childRemovedSignal, return_internal_reference<1>() )

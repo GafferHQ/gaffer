@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/Container.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/UndoContext.h"
@@ -54,6 +55,7 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Action );
 IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( ApplicationRoot );
+IE_CORE_FORWARDDECLARE( Context );
 
 typedef Container<GraphComponent, ScriptNode> ScriptContainer;
 IE_CORE_DECLAREPTR( ScriptContainer );
@@ -179,11 +181,27 @@ class ScriptNode : public Node
 		virtual void save() const;
 		//@}
 
-	protected :
-	
-		virtual void dirty( ConstPlugPtr dirty ) const;
-		virtual void compute( PlugPtr output ) const;
-			
+		//! @name Computation context
+		/// This is a default context for computations to be performed in when
+		/// no other context has been specified. There's no requirement to use it,
+		/// and in fact when requesting output from Nodes any context may be used.
+		/// The default context is typically used by the ui components.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		Context *context();
+		const Context *context() const;
+		//@}
+		
+		//! @name Frame range
+		/// The ScriptNode defines the valid frame range using two numeric plugs.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		IntPlug *frameStartPlug();
+		const IntPlug *frameStartPlug() const;
+		IntPlug *frameEndPlug();
+		const IntPlug *frameEndPlug() const;
+		//@}
+		
 	private :
 		
 		bool selectionSetAcceptor( Set::ConstPtr s, Set::ConstMemberPtr m );
@@ -208,7 +226,10 @@ class ScriptNode : public Node
 	
 		StringPlugPtr m_fileNamePlug;
 		
+		ContextPtr m_context;
+		
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
+		void plugSet( Plug *plug );
 	
 };
 

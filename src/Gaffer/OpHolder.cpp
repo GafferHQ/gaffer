@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -70,7 +70,8 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 	{
 		throw IECore::Exception( "Result plug is not derived from ValuePlug" );
 	}
-	resultPlug->setDirty();
+	
+	plugDirtiedSignal()( resultPlug );
 }
 
 void OpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
@@ -88,22 +89,20 @@ IECore::ConstOpPtr OpHolder::getOp( std::string *className, int *classVersion ) 
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-void OpHolder::dirty( ConstPlugPtr dirty ) const
+void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	ConstPlugPtr parametersPlug = getChild<Plug>( "parameters" );
-	if( parametersPlug && parametersPlug->isAncestorOf( dirty ) )
+	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
 	{
-		/// \todo Should the dirty() method really be const? Should it perhaps fill an array
-		/// of plugs instead? Then it could be used for dependency queries too, and remain const.
-		ConstValuePlugPtr resultPlug = getChild<ValuePlug>( "result" );
+		const ValuePlug *resultPlug = getChild<ValuePlug>( "result" );
 		if( resultPlug )
 		{
-			constPointerCast<ValuePlug>( resultPlug )->setDirty();
+			outputs.push_back( resultPlug );
 		}
 	}
 }
 
-void OpHolder::compute( PlugPtr output ) const
+void OpHolder::compute( Plug *output, const Context *context ) const
 {
 	if( output->getName()=="result" )
 	{	

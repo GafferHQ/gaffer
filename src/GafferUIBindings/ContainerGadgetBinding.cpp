@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -51,5 +51,7 @@ void GafferUIBindings::bindContainerGadget()
 {
 	IECorePython::RunTimeTypedClass<ContainerGadget>()
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ContainerGadget )
+		.def( "setPadding", &ContainerGadget::setPadding )
+		.def( "getPadding", &ContainerGadget::getPadding, return_value_policy<copy_const_reference>() )
 	;
 }

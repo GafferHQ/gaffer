@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@ from ReadNode import ReadNode
 from WriteNode import WriteNode
 from SphereNode import SphereNode
 from GroupNode import GroupNode
+from Context import Context
 from CompoundPathFilter import CompoundPathFilter
 from InfoPathFilter import InfoPathFilter
 from LazyModule import lazyImport, LazyModule
@@ -56,6 +57,7 @@ from LeafPathFilter import LeafPathFilter
 from DictPath import DictPath
 from IndexedIOPath import IndexedIOPath
 from ClassLoaderPath import ClassLoaderPath
+from PythonExpressionEngine import PythonExpressionEngine
 from SequencePath import SequencePath
 from OpMatcher import OpMatcher
 from AttributeCachePath import AttributeCachePath

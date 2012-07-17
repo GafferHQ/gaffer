@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -63,7 +63,7 @@ SplinePlug<T>::~SplinePlug()
 }
 
 template<typename T>
-bool SplinePlug<T>::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !children().size() )
 	{
@@ -123,7 +123,7 @@ void SplinePlug<T>::setValue( const T &value )
 }
 
 template<typename T>
-T SplinePlug<T>::getValue()
+T SplinePlug<T>::getValue() const
 {
 	T result;
 	result.basis.matrix = basisMatrixPlug()->getValue();

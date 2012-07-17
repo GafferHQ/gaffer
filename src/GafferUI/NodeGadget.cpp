@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -106,6 +106,11 @@ NodulePtr NodeGadget::nodule( Gaffer::ConstPlugPtr plug )
 ConstNodulePtr NodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 {
 	return 0;
+}
+
+Imath::V3f NodeGadget::noduleTangent( const Nodule *nodule ) const
+{
+	return V3f( 0, 1, 0 );
 }
 
 NodeGadget::CreatorMap &NodeGadget::creators()

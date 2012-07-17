@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -75,5 +76,14 @@ class MultiLineTextWidgetTest( unittest.TestCase ) :
 		self.assertEqual( len( c ), 1 )
 		self.assertEqual( c[0], ( w, ) )
 		
+	def testWrapMode( self ) :
+	
+		w = GafferUI.MultiLineTextWidget()
+		self.assertEqual( w.getWrapMode(), w.WrapMode.WordOrCharacter )
+		
+		for wm in w.WrapMode.values() :
+			w.setWrapMode( wm )
+			self.assertEqual( w.getWrapMode(), wm )
+					
 if __name__ == "__main__":
 	unittest.main()

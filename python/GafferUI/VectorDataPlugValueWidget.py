@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,12 +50,13 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self.__dataChangedConnection = self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 		
-		self.updateFromPlug()
+		self._updateFromPlug()
 		
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 				
 		if self.getPlug() is not None :
-			self.__dataWidget.setData( self.getPlug().getValue() )
+			with self.getContext() :
+				self.__dataWidget.setData( self.getPlug().getValue() )
 					
 		self.__dataWidget.setEditable( self._editable() )
 			

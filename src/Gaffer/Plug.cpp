@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ Plug::~Plug()
 	}
 }
 
-bool Plug::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool Plug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return false;
 }
@@ -116,8 +116,15 @@ void Plug::setFlags( unsigned flags, bool enable )
 	m_flags = (m_flags & ~flags) | ( enable ? flags : 0 );
 }
 
-bool Plug::acceptsInput( ConstPlugPtr input ) const
+bool Plug::acceptsInput( const Plug *input ) const
 {
+	if( const Node *n = node() )
+	{
+		if( !n->acceptsInput( this, input ) )
+		{
+			return false;
+		}
+	}
 	/// \todo Possibly allow in->out connections as long
 	/// as the Plugs share the same parent (for internal shortcuts).
 	return m_direction!=Out;
@@ -170,10 +177,10 @@ void Plug::setInputInternal( PlugPtr input, bool emit )
 	}
 	if( emit )
 	{
-		NodePtr n = node();
+		Node *n = node();
 		if( n )
 		{
-			node()->plugInputChangedSignal()( this );
+			n->plugInputChangedSignal()( this );
 		}
 	}
 }

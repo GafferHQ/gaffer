@@ -36,6 +36,8 @@
 ##########################################################################
 
 import unittest
+import threading
+import time
 
 import IECore
 
@@ -68,62 +70,58 @@ class NodeTest( unittest.TestCase ) :
 	
 	def testOperation( self ) :
 		
-		def dirtyCallback( plug ) :
-		
-			NodeTest.lastDirtied = plug.fullName()
-			
-		def setCallback( plug ) :
-		
-			NodeTest.lastSet = plug.fullName()
-						
 		n1 = GafferTest.AddNode()
-		self.assertEqual( n1["sum"].getDirty(), True )
 		n1["sum"].getValue()
-		self.assertEqual( n1["sum"].getDirty(), False )
 		
-		cb = []
-		cb.append( n1.plugSetSignal().connect( setCallback ) )	
-		cb.append( n1.plugDirtiedSignal().connect( dirtyCallback ) )	
+		dirtiedPlugs = GafferTest.CapturingSlot( n1.plugDirtiedSignal() )
+		setPlugs = GafferTest.CapturingSlot( n1.plugSetSignal() )	
 		
-		n1.getChild("op1").setValue( 2 )
-		self.assertEqual( NodeTest.lastSet, "AddNode.op1" )
-		self.assertEqual( n1.getChild("op1").getDirty(), False )
-		self.assertEqual( n1.getChild("op2").getDirty(), False )
-		self.assertEqual( n1.getChild("sum").getDirty(), True )
-		self.assertEqual( NodeTest.lastDirtied, "AddNode.sum" )
+		n1["op1"].setValue( 2 )
+		self.assertEqual( len( setPlugs ), 1 )
+		self.assertEqual( len( dirtiedPlugs ), 1 )
+		self.assertEqual( setPlugs[0][0].fullName(), "AddNode.op1" )
+		self.assertEqual( dirtiedPlugs[0][0].fullName(), "AddNode.sum" )
 		
-		NodeTest.lastDirtied = ""
-		
-		n1.getChild("op2").setValue( 3 )
-		self.assertEqual( NodeTest.lastSet, "AddNode.op2" )
-		self.assertEqual( n1.getChild("op1").getDirty(), False )
-		self.assertEqual( n1.getChild("op2").getDirty(), False )
-		self.assertEqual( n1.getChild("sum").getDirty(), True )
+		n1["op2"].setValue( 3 )
+		self.assertEqual( len( setPlugs ), 2 )
+		self.assertEqual( setPlugs[1][0].fullName(), "AddNode.op2" )
 		# the dirty callback shouldn't have been triggered this time,
-		# as the plug was already dirty
-		self.assertEqual( NodeTest.lastDirtied, "" )
+		# as the plug was already dirty.
+		## \todo Reintroduce me
+		#self.assertEqual( len( dirtiedPlugs ), 1 )
 		
+		del dirtiedPlugs[:]
+		del setPlugs[:]
+		
+		# plug set or dirty signals are not emitted during computation
 		self.assertEqual( n1.getChild("sum").getValue(), 5 )
-		self.assertEqual( NodeTest.lastSet, "AddNode.sum" )
+		self.assertEqual( len( setPlugs ), 0 )
+		self.assertEqual( len( dirtiedPlugs ), 0 )
 		
 		# connect another add node onto the output of this one
 		
-		n2 = GafferTest.AddNode()
-		n2.setName( "Add2" )
-		self.assertEqual( n2["sum"].getDirty(), True )
-		n2["sum"].getValue()
-		self.assertEqual( n2["sum"].getDirty(), False )
+		n2 = GafferTest.AddNode( "Add2" )
 		
-		cb.append( n2.plugSetSignal().connect( setCallback ) )
-		cb.append( n2.plugDirtiedSignal().connect( dirtyCallback) )
+		dirtiedPlugs2 = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
+		setPlugs2 = GafferTest.CapturingSlot( n2.plugSetSignal() )	
 		
-		n2.getChild( "op1" ).setInput( n1.getChild( "sum" ) )
-		self.assertEqual( NodeTest.lastSet,"Add2.op1" )
-		self.assertEqual( NodeTest.lastDirtied,"Add2.sum" )
-		self.assertEqual( n2.getChild( "op1" ).getValue(), 5 )
-		self.assertEqual( n2.getChild( "sum" ).getDirty(), True )
+		n2["op1"].setInput( n1["sum"] )
+		# connecting a plug doesn't set the value of the input plug
+		# immediately - the value is transferred only upon request.
+		self.assertEqual( len( setPlugs2 ), 0 )
+		self.assertEqual( len( dirtiedPlugs2 ), 2 )
+		self.assertEqual( dirtiedPlugs2[0][0].fullName(), "Add2.op1" )
+		self.assertEqual( dirtiedPlugs2[1][0].fullName(), "Add2.sum" )
 		
-		self.assertEqual( n2.getChild( "sum" ).getValue(), 5 )
+		del dirtiedPlugs2[:]
+		del setPlugs2[:]
+		
+		self.assertEqual( n2["op1"].getValue(), 5 )
+		self.assertEqual( n2["sum"].getValue(), 5 )
+
+		# plug set or dirty signals are not emitted during computation
+		self.assertEqual( len( setPlugs2 ), 0 )
+		self.assertEqual( len( dirtiedPlugs2 ), 0 )
 	
 	def testScriptNode( self ) :
 	
@@ -142,17 +140,22 @@ class NodeTest( unittest.TestCase ) :
 	
 	def testDirtyOfInputsWithConnections( self ) :
 	
-		n1 = GafferTest.AddNode()
-		n2 = GafferTest.AddNode()
+		n1 = GafferTest.AddNode( "n1" )
+		n2 = GafferTest.AddNode( "n2" )
 		
-		n2.getChild( "op1" ).setInput( n1.getChild( "sum" ) )
+		dirtied = GafferTest.CapturingSlot( n1.plugDirtiedSignal(), n2.plugDirtiedSignal() )
 		
-		n1.getChild( "op1" ).setValue( 10 )
-		
-		self.assertEqual( n1.getChild( "sum" ).getDirty(), True )
-		self.assertEqual( n2.getChild( "op1" ).getDirty(), True )
-		self.assertEqual( n2.getChild( "op2" ).getDirty(), False )
-		self.assertEqual( n2.getChild( "sum" ).getDirty(), True )
+		n2["op1"].setInput( n1["sum"] )
+		self.assertEqual( len( dirtied ), 2 )
+		self.failUnless( dirtied[0][0].isSame( n2["op1"] ) )
+		self.failUnless( dirtied[1][0].isSame( n2["sum"] ) )
+
+		del dirtied[:]
+		n1["op1"].setValue( 10 )
+		self.assertEqual( len( dirtied ), 3 )
+		self.failUnless( dirtied[0][0].isSame( n1["sum"] ) )
+		self.failUnless( dirtied[1][0].isSame( n2["op1"] ) )
+		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
 		
 		self.assertEqual( n2.getChild( "sum" ).getValue(), 10 )
 	
@@ -162,16 +165,9 @@ class NodeTest( unittest.TestCase ) :
 		n2 = GafferTest.AddNode( "N2" )
 		
 		n2.getChild( "op1" ).setInput( n1.getChild( "sum" ) )
-		self.assertEqual( n2.getChild( "sum" ).getDirty(), True )
 				
 		n1.getChild( "op1" ).setValue( 1 )
-		self.assertEqual( n1.getChild( "sum" ).getDirty(), True )
-		self.assertEqual( n2.getChild( "op1" ).getDirty(), True )
-		self.assertEqual( n2.getChild( "sum" ).getDirty(), True )
 		n1.getChild( "op2" ).setValue( -1 )
-		self.assertEqual( n2.getChild( "op1" ).getDirty(), True )
-		self.assertEqual( n1.getChild( "sum" ).getDirty(), True )
-		self.assertEqual( n2.getChild( "sum" ).getDirty(), True )
 		
 		self.assertEqual( n2.getChild( "sum" ).getValue(), 0 )
 	
@@ -195,8 +191,8 @@ class NodeTest( unittest.TestCase ) :
 	
 	def testOutputsDirtyForNewNodes( self ) :
 	
-		n = GafferTest.AddNode()
-		self.assertEqual( n["sum"].getDirty(), True )
+		n = GafferTest.AddNode( inputs = { "op1" : 1, "op2" : 2 } )
+		self.assertEqual( n["sum"].getValue(), 3 )
 	
 	def testDynamicPlugSerialisationOrder( self ) :
 	
@@ -227,6 +223,7 @@ class NodeTest( unittest.TestCase ) :
 		
 		n["p1"] = Gaffer.StringPlug( defaultValue = "default", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p1"].setValue( "value" )
+		self.assertEqual( n["p1"].getValue(), "value" )
 		
 		s = Gaffer.ScriptNode()
 		s["n"] = n
@@ -283,6 +280,91 @@ class NodeTest( unittest.TestCase ) :
 		
 		self.assertEqual( n2["op1"].getInput(), None )
 		
+	def testComputeInContext( self ) :
+	
+		n = GafferTest.FrameNode()
+		self.assertEqual( n["output"].getValue(), 1 )
+	
+		c = Gaffer.Context()
+		c.setFrame( 10 )
+		
+		with c :
+			self.assertEqual( n["output"].getValue(), 10 )
+	
+	def testComputeInThreads( self ) :
+	
+		n = GafferTest.FrameNode()
+		
+		def f( frame ) :
+		
+			c = Gaffer.Context()
+			c.setFrame( frame )
+			
+			with c :
+				time.sleep( 0.01 )
+				self.assertEqual( n["output"].getValue(), frame )
+		
+		threads = []
+		for i in range( 0, 1000 ) :
+		
+			t = threading.Thread( target = f, args = ( i, ) )
+			t.start()
+			threads.append( t )
+			
+		for t in threads :
+			t.join()
+			
+	def testDirtyNotPropagatedDuringCompute( self ) :
+					
+		n1 = GafferTest.AddNode( "n1" )
+		n2 = GafferTest.AddNode( "n2" )
+		
+		n1["op1"].setValue( 2 )
+		n1["op2"].setValue( 3 )
+		n2["op1"].setInput( n1["sum"] )
+		
+		dirtyCapturer = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
+				
+		self.assertEqual( n2["sum"].getValue(), 5 )
+		
+		self.assertEqual( len( dirtyCapturer ), 0 )
+	
+	def testWrongPlugSet( self ) :
+	
+		n = GafferTest.BadNode()
+		self.assertRaises( RuntimeError, n["out1"].getValue )
+	
+	def testWrongPlugPulled( self ) :
+	
+		n = GafferTest.BadNode()
+		self.assertRaises( RuntimeError, n["out2"].getValue )
+	
+	def testPlugNotSet( self ) :
+	
+		n = GafferTest.BadNode()
+		self.assertRaises( RuntimeError, n["out3"].getValue )
+		
+	def testOverrideAcceptsInput( self ) :
+	
+		class AcceptsInputTestNode( Gaffer.Node ) :
+		
+			def __init__( self, name = "AcceptsInputTestNode" ) :
+			
+				Gaffer.Node.__init__( self, name )
+				
+				self.addChild( Gaffer.IntPlug( "in" ) )
+				self.addChild( Gaffer.IntPlug( "out", Gaffer.Plug.Direction.Out ) )
+				
+			def acceptsInput( self, plug, inputPlug ) :
+			
+				return isinstance( inputPlug.node(), AcceptsInputTestNode )
+	
+		n1 = AcceptsInputTestNode()
+		n2 = AcceptsInputTestNode()
+		n3 = GafferTest.AddNode()
+	
+		self.assertEqual( n1["in"].acceptsInput( n2["out"] ), True )
+		self.assertEqual( n1["in"].acceptsInput( n3["sum"] ), False )
+		
 if __name__ == "__main__":
 	unittest.main()
-	

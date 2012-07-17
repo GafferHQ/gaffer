@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,17 +35,103 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/Node.h"
+#include <stack>
 
+#include "tbb/enumerable_thread_specific.h"
+
+#include "boost/bind.hpp"
 #include "boost/format.hpp"
 
+#include "Gaffer/ValuePlug.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/Action.h"
+
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Computation implementation
+// The computation class is responsible for managing the transient storage
+// necessary for computed results, and for managing the call to Node::compute().
+// One day it may also be responsible for managing a cache of previous
+// results and maybe even shipping some computations off over the network
+// to a special computation server of some sort.
+//////////////////////////////////////////////////////////////////////////
+
+class ValuePlug::Computation
+{
+	
+	public :
+	
+		Computation( const ValuePlug *resultPlug )
+			:	m_resultPlug( resultPlug ), m_resultWritten( false )
+		{
+			g_threadComputations.local().push( this );
+		
+			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
+			{
+				// cast is ok, because we know that the resulting setValue() call won't
+				// actually modify the plug, but will just place the value in our m_resultValue.
+				const_cast<ValuePlug *>( m_resultPlug )->setFrom( input );
+			}
+			else
+			{
+				assert( m_resultPlug->direction()==Out );
+				const Node *n = m_resultPlug->node();
+				if( !n )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
+				}
+				// cast is ok, because we know that the resulting setValue() call won't
+				// actually modify the plug, but will just place the value in our m_resultValue.
+				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
+			}
+			
+			// the call to compute() or setFromInput() above should cause setValue() to be called
+			// on the result plug, which in turn will call ValuePlug::setObjectValue, which will
+			// then store the result in the current computation.
+			
+		}
+		
+		~Computation()
+		{
+			g_threadComputations.local().pop();
+		}
+	
+		static Computation *current()
+		{
+			ComputationStack &s = g_threadComputations.local();
+			if( !s.size() )
+			{
+				return 0;
+			}
+			return s.top();
+		}
+	
+	/// \todo Make accessors
+	//private :
+	
+		const ValuePlug *m_resultPlug;
+		IECore::ConstObjectPtr m_resultValue;
+		bool m_resultWritten;
+
+		typedef std::stack<Computation *> ComputationStack;
+		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
+
+		static ThreadSpecificComputationStack g_threadComputations;
+		
+};
+
+ValuePlug::Computation::ThreadSpecificComputationStack ValuePlug::Computation::g_threadComputations;
+
+//////////////////////////////////////////////////////////////////////////
+// ValuePlug implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
 
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags ), m_dirty( direction==Out )
+	:	Plug( name, direction, flags )
 {
 }
 
@@ -53,7 +139,7 @@ ValuePlug::~ValuePlug()
 {
 }
 
-bool ValuePlug::acceptsInput( ConstPlugPtr input ) const
+bool ValuePlug::acceptsInput( const Plug *input ) const
 {
 	if( !Plug::acceptsInput( input ) )
 	{
@@ -68,61 +154,90 @@ bool ValuePlug::acceptsInput( ConstPlugPtr input ) const
 
 void ValuePlug::setInput( PlugPtr input )
 {
-	Plug::setInput( input );
-	if( input )
-	{
-		// cast safe because acceptsInput checks type.
-		ValuePlugPtr vInput = IECore::staticPointerCast<ValuePlug>( input );
-		if( vInput->getDirty() )
-		{
-			setDirty();
-		}
-		else
-		{
-			setFromInput();
-		}
-	}
-	/// \todo What should we do with the value on disconnect?
-}
-
-void ValuePlug::setDirty()
-{
-	if( m_dirty )
+	if( input.get() == getInput<Plug>() )
 	{
 		return;
 	}
-	if( direction()==In && !getInput<Plug>() )
+	
+	Plug::setInput( input );
+	if( input )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot set \"%s\" dirty as it's an input with no incoming connection." ) % fullName() ) );
+		emitDirtiness();
+		propagateDirtiness();
 	}
-	m_dirty = true;
-	NodePtr n = node();
-	if( n )
+	else
 	{
-		n->plugDirtiedSignal()( this );
-		if( direction()==In )
-		{
-			n->dirty( this );
-		}
-	}
-	for( OutputContainer::const_iterator it=outputs().begin(); it!=outputs().end(); it++ )
-	{
-		ValuePlugPtr o = IECore::runTimeCast<ValuePlug>( *it );
-		if( o )
-		{
-			o->setDirty();
-		}
+		/// \todo Need to revert to default value	
 	}
 }
 
-bool ValuePlug::getDirty() const
+IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 {
-	return m_dirty;
+	bool haveInput = getInput<Plug>();
+	if( direction()==In && !haveInput )
+	{
+		// input plug with no input connection. there can only ever be a single value,
+		// which is stored directly on the plug.
+		return m_staticValue;
+	}
+	
+	// an input plug with an input connection or an output plug. there can be many values -
+	// one per context. the computation class is responsible for providing storage for the result
+	// and also actually managing the computation.
+	Computation computation( this );
+
+	if( !computation.m_resultWritten )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % fullName() ) );			
+	}
+	
+	return computation.m_resultValue;
 }
 
-void ValuePlug::valueSet()
+void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 {
-	m_dirty = false;
+	bool haveInput = getInput<Plug>();
+	if( direction()==In && !haveInput )
+	{
+		// input plug with no input connection. there can only ever be a single value,
+		// which we store directly on the plug. when setting this we need to take care
+		// of undo, and also of triggering the plugValueSet signal and propagating the
+		// plugDirtiedSignal.
+		if( ( (bool)value != (bool)m_staticValue ) ||
+			( value && value->isNotEqualTo( m_staticValue ) )
+		)
+		{
+			Action::enact( 
+				this,
+				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), value ),
+				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), m_staticValue )
+			);
+		}		
+		return;
+	}
+
+	// an input plug with an input connection or an output plug. we must be currently in a computation
+	// triggered by getObjectValue() for a setObjectValue() call to be valid. we never trigger plugValueSet
+	// or plugDirtiedSignals during computation.
+	
+	Computation *computation = Computation::current();
+	if( !computation )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % fullName() ) );					
+	}
+	
+	if( computation->m_resultPlug != this )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % fullName() % computation->m_resultPlug->fullName() ) );						
+	}
+	
+	computation->m_resultValue = value;
+	computation->m_resultWritten = true;
+}
+
+void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
+{
+	m_staticValue = value;
 	Node *n = node();
 	if( n )
 	{
@@ -132,40 +247,50 @@ void ValuePlug::valueSet()
 		// are set, and listeners on output plugs may pull to get new
 		// output values as soon as the dirty signal is emitted. 
 		n->plugSetSignal()( this );
-		
+	}
+	propagateDirtiness();
+}
+
+void ValuePlug::emitDirtiness( Node *n )
+{
+	n = n ? n : node();
+	if( !n )
+	{
+		return;
+	}
+	
+	ValuePlug *p = this;
+	while( p )
+	{
+		n->plugDirtiedSignal()( p );
+		p = p->parent<ValuePlug>();
+	}
+}
+
+void ValuePlug::propagateDirtiness()
+{
+	Node *n = node();
+	if( n )
+	{
 		if( direction()==In )
 		{
-			n->dirty( this );
+			Node::AffectedPlugsContainer affected;
+			n->affects( this, affected );
+			for( Node::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
+			{
+				const_cast<ValuePlug *>( *it )->emitDirtiness( n );
+				const_cast<ValuePlug *>( *it )->propagateDirtiness();
+			}
 		}
 	}
+	
 	for( OutputContainer::const_iterator it=outputs().begin(); it!=outputs().end(); it++ )
 	{
 		ValuePlugPtr o = IECore::runTimeCast<ValuePlug>( *it );
 		if( o )
 		{
-			o->setFromInput();
+			o->emitDirtiness();
+			o->propagateDirtiness();
 		}
-	}
-}
-
-void ValuePlug::computeIfDirty()
-{
-	if( getDirty() )
-	{
-		if( getInput<Plug>() )
-		{
-			setFromInput();
-		}
-		else
-		{
-			NodePtr n = node();
-			if( !n )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % fullName() ) ); 
-			}
-			n->compute( this );
-		}
-		/// \todo we need a proper response to failure here - perhaps call setToDefault()?
-		/// and do we need some kind of error status for plugs?
 	}
 }

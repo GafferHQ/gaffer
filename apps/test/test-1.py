@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -62,12 +62,13 @@ class test( Gaffer.Application ) :
 			}
 		)
 				
-	def doRun( self, args ) :
+	def _run( self, args ) :
 	
 		import sys
 		import unittest
 		import GafferTest
 		import GafferUITest
+		import GafferSceneTest
 		
 		testSuite = unittest.TestSuite()
 		if args["testCase"].value :
@@ -77,7 +78,7 @@ class test( Gaffer.Application ) :
 			
 		else :
 		
-			for module in ( GafferTest, GafferUITest ) :
+			for module in ( GafferTest, GafferUITest, GafferSceneTest ) :
 		
 				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
 				testSuite.addTest( moduleTestSuite )

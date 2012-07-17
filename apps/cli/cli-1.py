@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ class cli( Gaffer.Application ) :
 	
 		Gaffer.Application.__init__( self )
 		
-	def doRun( self, args ) :
+	def _run( self, args ) :
 
 		console = code.InteractiveConsole()
 		console.runsource( "import IECore; import Gaffer" )

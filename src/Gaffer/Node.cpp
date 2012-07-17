@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -105,7 +105,7 @@ ConstScriptNodePtr Node::scriptNode() const
 	return ancestor<ScriptNode>();
 }
 		
-bool Node::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool Node::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !GraphComponent::acceptsChild( potentialChild ) )
 	{
@@ -123,11 +123,16 @@ bool Node::acceptsParent( const GraphComponent *potentialParent ) const
 	return potentialParent->isInstanceOf( (IECore::TypeId)NodeTypeId );
 }
 
-void Node::dirty( ConstPlugPtr dirty ) const
+bool Node::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	return true;
+}
+
+void Node::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 }
 
-void Node::compute( PlugPtr output ) const
+void Node::compute( ValuePlug *output, const Context *context ) const
 {
 }
 

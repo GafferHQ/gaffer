@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/Action.h"
 
 #include "OpenEXR/ImathFun.h"
-
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 
@@ -55,7 +52,6 @@ TypedPlug<T>::TypedPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, flags ),
-		m_value( defaultValue ),
 		m_defaultValue( defaultValue )
 {
 }
@@ -66,7 +62,7 @@ TypedPlug<T>::~TypedPlug()
 }
 
 template<class T>
-bool TypedPlug<T>::acceptsInput( ConstPlugPtr input ) const
+bool TypedPlug<T>::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{
@@ -88,34 +84,32 @@ const T &TypedPlug<T>::defaultValue() const
 template<class T>
 void TypedPlug<T>::setValue( const T &value )
 {
-	if( value!=m_value || getDirty() )
+	setObjectValue( new DataType( value ) );
+}
+
+template<class T>
+T TypedPlug<T>::getValue() const
+{
+	IECore::ConstObjectPtr o = getObjectValue();
+	if( o )
 	{
-		Action::enact(
-			this,
-			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), value ),
-			boost::bind( &TypedPlug<T>::setValueInternal, Ptr( this ), m_value )		
-		);
+		return static_cast<const DataType *>( o.get() )->readable();
 	}
+	return m_defaultValue;
 }
 
 template<class T>
-void TypedPlug<T>::setValueInternal( T value )
+void TypedPlug<T>::setFrom( const ValuePlug *other )
 {
-	m_value = value;
-	valueSet();
-}
-
-template<class T>
-const T &TypedPlug<T>::getValue()
-{
-	computeIfDirty();
-	return m_value;
-}
-
-template<class T>
-void TypedPlug<T>::setFromInput()
-{
-	setValue( getInput<TypedPlug<T> >()->getValue() );
+	const TypedPlug<T> *tOther = IECore::runTimeCast<const TypedPlug<T> >( other );
+	if( tOther )
+	{
+		setValue( tOther->getValue() );
+	}
+	else
+	{
+		throw IECore::Exception( "Unsupported plug type" );
+	}
 }
 
 namespace Gaffer
@@ -125,6 +119,8 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( BoolPlug, BoolPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringPlug, StringPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M33fPlug, M33fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M44fPlug, M44fPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox3fPlug, AtomicBox3fPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox2iPlug, AtomicBox2iPlugTypeId )
 
 }
 
@@ -133,3 +129,5 @@ template class TypedPlug<bool>;
 template class TypedPlug<std::string>;
 template class TypedPlug<Imath::M33f>;
 template class TypedPlug<Imath::M44f>;
+template class TypedPlug<Imath::Box3f>;
+template class TypedPlug<Imath::Box2i>;

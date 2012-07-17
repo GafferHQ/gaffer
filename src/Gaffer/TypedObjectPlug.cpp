@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/Action.h"
 
 #include "OpenEXR/ImathFun.h"
-
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 
@@ -55,7 +52,6 @@ TypedObjectPlug<T>::TypedObjectPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, flags ),
-		m_value( defaultValue ? defaultValue->copy() : 0 ),
 		m_defaultValue( defaultValue ? defaultValue->copy() : 0 )
 {
 }
@@ -66,7 +62,7 @@ TypedObjectPlug<T>::~TypedObjectPlug()
 }
 
 template<class T>
-bool TypedObjectPlug<T>::acceptsInput( ConstPlugPtr input ) const
+bool TypedObjectPlug<T>::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{
@@ -88,42 +84,32 @@ typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::defaultValue() co
 template<class T>
 void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 {
-	// the other plug types only actually do anything if the new value is different than the old.
-	// we don't do that here as it's assumed that the cost of testing large objects for equality
-	// is greater than the cost of the additional callbacks invoked if the value is set to the same
-	// again.
-	Action::enact(
-		this,
-		boost::bind( &TypedObjectPlug<T>::setValueInternal, Ptr( this ), value ),
-		boost::bind( &TypedObjectPlug<T>::setValueInternal, Ptr( this ), m_value )		
-	);
+	setObjectValue( value ? value->copy() : 0 );
 }
 
 template<class T>
-void TypedObjectPlug<T>::setValueInternal( ConstValuePtr value )
+typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue() const
 {
-	if( value )
+	IECore::ConstObjectPtr o = getObjectValue();
+	if( o )
 	{
-		m_value = value->copy();
+		return IECore::staticPointerCast<const ValueType>( o );
+	}
+	return m_defaultValue;
+}
+
+template<class T>
+void TypedObjectPlug<T>::setFrom( const ValuePlug *other )
+{
+	const TypedObjectPlug<T> *tOther = IECore::runTimeCast<const TypedObjectPlug>( other );
+	if( tOther )
+	{
+		setValue( tOther->getValue() );
 	}
 	else
 	{
-		m_value = 0;
+		throw IECore::Exception( "Unsupported plug type" );
 	}
-	valueSet();
-}
-
-template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue()
-{
-	computeIfDirty();
-	return m_value;
-}
-
-template<class T>
-void TypedObjectPlug<T>::setFromInput()
-{
-	setValue( getInput<TypedObjectPlug<T> >()->getValue() );
 }
 
 namespace Gaffer
@@ -135,6 +121,8 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( IntVectorDataPlug, IntVectorDa
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FloatVectorDataPlug, FloatVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fVectorDataPlug, V3fVectorDataPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectVectorPlug, ObjectVectorPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( PrimitivePlug, PrimitivePlugTypeId )
 
 }
 
@@ -145,3 +133,5 @@ template class TypedObjectPlug<IECore::IntVectorData>;
 template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
+template class TypedObjectPlug<IECore::ObjectVector>;
+template class TypedObjectPlug<IECore::Primitive>;

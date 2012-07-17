@@ -68,7 +68,7 @@ class CompoundNumericPlug : public CompoundPlug
 		virtual ~CompoundNumericPlug();
 
 		/// Accepts no children following construction.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 
 		typename ChildType::Ptr getChild( unsigned i );
 		typename ChildType::ConstPtr getChild( unsigned i ) const;	
@@ -84,13 +84,15 @@ class CompoundNumericPlug : public CompoundPlug
 		/// Calls setValue for each of the child plugs, passing the components
 		/// of value.
 		/// \undoable
-		void setValue( T value );
+		void setValue( const T &value );
 		/// Returns the value, calling getValue() on each child plug to compute a component
-		/// of the result. This isn't const as it may require a compute and therefore a setValue().
-		T getValue();
+		/// of the result.
+		T getValue() const;
 		
 	private :
 	
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( CompoundNumericPlug<T> );
+
 		static const char **childNames();
 	
 };
@@ -110,6 +112,30 @@ IE_CORE_DECLAREPTR( V2iPlug );
 IE_CORE_DECLAREPTR( V3iPlug );
 IE_CORE_DECLAREPTR( Color3fPlug );
 IE_CORE_DECLAREPTR( Color4fPlug );
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2fPlug> > V2fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, V2fPlug> > InputV2fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2fPlug> > OutputV2fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3fPlug> > V3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, V3fPlug> > InputV3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fPlug> > OutputV3fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2iPlug> > V2iPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, V2iPlug> > InputV2iPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2iPlug> > OutputV2iPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3iPlug> > V3iPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, V3iPlug> > InputV3iPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3iPlug> > OutputV3iPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug> > Color3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, Color3fPlug> > InputColor3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color3fPlug> > OutputColor3fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug> > Color4fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, Color4fPlug> > InputColor4fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color4fPlug> > OutputColor4fPlugIterator;
 
 } // namespace Gaffer
 

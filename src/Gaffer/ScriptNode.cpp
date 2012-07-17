@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/CompoundPlug.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
@@ -58,14 +60,22 @@ GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 
 ScriptNode::ScriptNode( const std::string &name )
-	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() )
+	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() ), m_context( new Context )
 {
 	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "" );
 	addChild( m_fileNamePlug );
 	
+	CompoundPlugPtr frameRangePlug = new CompoundPlug( "frameRange", Plug::In );
+	IntPlugPtr frameStartPlug = new IntPlug( "start", Plug::In, 1 );
+	IntPlugPtr frameEndPlug = new IntPlug( "end", Plug::In, 100 );
+	frameRangePlug->addChild( frameStartPlug );
+	frameRangePlug->addChild( frameEndPlug );
+	addChild( frameRangePlug );
+	
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
 	childRemovedSignal().connect( boost::bind( &ScriptNode::childRemoved, this, ::_1, ::_2 ) );
+	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
 }
 
 ScriptNode::~ScriptNode()
@@ -205,15 +215,6 @@ ConstStringPlugPtr ScriptNode::fileNamePlug() const
 {
 	return m_fileNamePlug;
 }
-	
-void ScriptNode::dirty( ConstPlugPtr dirty ) const
-{
-}
-
-void ScriptNode::compute( PlugPtr output ) const
-{
-	assert( 0 );
-}
 
 void ScriptNode::execute( const std::string &pythonScript )
 {
@@ -250,7 +251,51 @@ void ScriptNode::save() const
 	throw IECore::Exception( "Cannot save scripts on a ScriptNode not created in Python." );
 }
 
+Context *ScriptNode::context()
+{
+	return m_context.get();
+}
+
+const Context *ScriptNode::context() const
+{
+	return m_context.get();
+}
+
+IntPlug *ScriptNode::frameStartPlug()
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "start" );
+}
+
+const IntPlug *ScriptNode::frameStartPlug() const
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "start" );
+}
+
+IntPlug *ScriptNode::frameEndPlug()
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "end" );
+}
+
+const IntPlug *ScriptNode::frameEndPlug() const
+{
+	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "end" );
+}
+
 void ScriptNode::childRemoved( GraphComponent *parent, GraphComponent *child )
 {
 	m_selection->remove( child );
+}
+
+void ScriptNode::plugSet( Plug *plug )
+{
+	/// \todo Should we introduce some plug constraints classes to assist in managing these
+	/// kinds of relationships?
+	if( plug == frameStartPlug() )
+	{
+		frameEndPlug()->setValue( std::max( frameEndPlug()->getValue(), frameStartPlug()->getValue() ) );
+	}
+	else if( plug == frameEndPlug() )
+	{
+		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );	
+	}
 }

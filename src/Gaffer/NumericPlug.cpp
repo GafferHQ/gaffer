@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,13 +35,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/Action.h"
-
 #include "OpenEXR/ImathFun.h"
 
-#include "boost/bind.hpp"
+#include "Gaffer/NumericPlug.h"
 
+using namespace IECore;
 using namespace Gaffer;
 
 template<typename T>
@@ -66,7 +64,6 @@ NumericPlug<T>::NumericPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, flags ),
-		m_value( defaultValue ),
 		m_defaultValue( defaultValue ),
 		m_minValue( minValue ),
 		m_maxValue( maxValue )
@@ -79,7 +76,7 @@ NumericPlug<T>::~NumericPlug()
 }
 
 template<class T>
-bool NumericPlug<T>::acceptsInput( ConstPlugPtr input ) const
+bool NumericPlug<T>::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{
@@ -126,44 +123,33 @@ template<class T>
 void NumericPlug<T>::setValue( T value )
 {
 	value = Imath::clamp( value, m_minValue, m_maxValue );
-	if( value!=m_value || getDirty() )
+	setObjectValue( new DataType( value ) );
+}
+
+template<class T>
+T NumericPlug<T>::getValue() const
+{
+	ConstObjectPtr o = getObjectValue();
+	if( o )
 	{
-		Action::enact(
-			this,
-			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), value ),
-			boost::bind( &NumericPlug<T>::setValueInternal, Ptr( this ), m_value )		
-		);
+		return static_cast<const DataType *>( o.get() )->readable();
 	}
+	return m_defaultValue;
 }
 
 template<class T>
-void NumericPlug<T>::setValueInternal( T value )
+void NumericPlug<T>::setFrom( const ValuePlug *other )
 {
-	m_value = value;
-	valueSet();	
-}
-
-template<class T>
-T NumericPlug<T>::getValue()
-{
-	computeIfDirty();
-	return m_value;
-}
-
-template<class T>
-void NumericPlug<T>::setFromInput()
-{
-	PlugPtr i = getInput<Plug>();
-	switch( i->typeId() )
+	switch( other->typeId() )
 	{
 		case FloatPlugTypeId :
-			setValue( (T)IECore::staticPointerCast<FloatPlug>( i )->getValue() );
+			setValue( (T)static_cast<const FloatPlug *>( other )->getValue() );
 			break;
 		case IntPlugTypeId :
-			setValue( (T)IECore::staticPointerCast<IntPlug>( i )->getValue() );
+			setValue( (T)static_cast<const IntPlug *>( other )->getValue() );
 			break;
 		default :
-			assert( 0 ); // shouldn't have connections of any other type
+			throw IECore::Exception( "Unsupported plug type" );
 	}
 }
 

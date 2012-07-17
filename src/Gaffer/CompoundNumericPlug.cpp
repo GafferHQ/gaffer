@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,7 +37,9 @@
 #include "Gaffer/CompoundNumericPlug.h"
 
 using namespace Gaffer;
-using namespace boost;
+
+template<typename T>
+const IECore::RunTimeTyped::TypeDescription<CompoundNumericPlug<T> > CompoundNumericPlug<T>::g_typeDescription;
 
 template<typename T>
 CompoundNumericPlug<T>::CompoundNumericPlug(
@@ -64,7 +66,7 @@ CompoundNumericPlug<T>::~CompoundNumericPlug()
 }
 
 template<typename T>
-bool CompoundNumericPlug<T>::acceptsChild( ConstGraphComponentPtr potentialChild ) const
+bool CompoundNumericPlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != T::dimensions();
 }
@@ -153,7 +155,7 @@ T CompoundNumericPlug<T>::maxValue() const
 }
 
 template<typename T>
-void CompoundNumericPlug<T>::setValue( T value )
+void CompoundNumericPlug<T>::setValue( const T &value )
 {
 	for( unsigned i=0; i<T::dimensions(); i++ )
 	{
@@ -162,7 +164,7 @@ void CompoundNumericPlug<T>::setValue( T value )
 }
 
 template<typename T>
-T CompoundNumericPlug<T>::getValue()
+T CompoundNumericPlug<T>::getValue() const
 {
 	T result;
 	for( unsigned i=0; i<T::dimensions(); i++ )

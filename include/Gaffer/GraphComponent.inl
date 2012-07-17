@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ namespace Gaffer
 template<typename T>
 typename T::Ptr GraphComponent::getChild( const std::string &name )
 {
-	// preferring the nasty casts over mainaining two nearly identical implementations for getChild.
+	// preferring the nasty casts over maintaining two nearly identical implementations for getChild.
 	return IECore::constPointerCast<T>( const_cast<const GraphComponent *>( this )->getChild<T>( name ) );
 }
 
@@ -121,15 +121,15 @@ const T *GraphComponent::ancestor() const
 }
 
 template<typename T>
-typename T::Ptr GraphComponent::commonAncestor( ConstGraphComponentPtr other )
+T *GraphComponent::commonAncestor( const GraphComponent *other )
 {
-	return IECore::staticPointerCast<T>( commonAncestor( other, T::staticTypeId() ) );
+	return static_cast<T *>( commonAncestor( other, T::staticTypeId() ) );
 }
 
 template<typename T>
-typename T::ConstPtr GraphComponent::commonAncestor( ConstGraphComponentPtr other ) const
+const T *GraphComponent::commonAncestor( const GraphComponent *other ) const
 {
-	return IECore::staticPointerCast<const T>( commonAncestor( other, T::staticTypeId() ) );
+	return static_cast<const T *>( commonAncestor( other, T::staticTypeId() ) );
 }
 		
 } // namespace Gaffer

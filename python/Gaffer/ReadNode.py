@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -60,13 +60,15 @@ class ReadNode( Gaffer.Node ) :
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
 		self.__ensureReader()
 
-	def dirty( self, plug ) :
+	def affects( self, input ) :
 		
-		if ("parameters" in self and self["parameters"].isAncestorOf( plug )) or plug.getName()=="fileName" :
-						
-			self["output"].setDirty()
+		outputs = []
+		if ("parameters" in self and self["parameters"].isAncestorOf( input )) or input.isSame( self["fileName"] ) :
+			outputs.append( self["output"] )
 
-	def compute( self, plug ) :
+		return outputs
+		
+	def compute( self, plug, context ) :
 	
 		assert( plug.isSame( self["output"] ) )
 		

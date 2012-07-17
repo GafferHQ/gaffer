@@ -70,13 +70,13 @@ class SplinePlug : public CompoundPlug
 
 		/// Implemented to only accept children which are suitable for use as points
 		/// in the spline.
-		virtual bool acceptsChild( ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 
 		const T &defaultValue() const;
 		
 		/// \undoable
 		void setValue( const T &value );
-		T getValue();
+		T getValue() const;
 		
 		CompoundPlugPtr basisPlug();
 		ConstCompoundPlugPtr basisPlug() const;
@@ -112,6 +112,14 @@ typedef SplinePlug<IECore::SplinefColor3f> SplinefColor3fPlug;
 
 IE_CORE_DECLAREPTR( SplineffPlug );
 IE_CORE_DECLAREPTR( SplinefColor3fPlug );
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug> > SplineffPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, SplineffPlug> > InputSplineffPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplineffPlug> > OutputSplineffPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug> > SplinefColor3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug> > InputSplinefColor3fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug> > OutputSplinefColor3fPlugIterator;
 
 } // namespace Gaffer
 

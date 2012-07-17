@@ -67,18 +67,7 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		p["z"].setValue( 3 )
 		
 		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
-	
-	def testSetFromInput( self ) :
-	
-		p1 = Gaffer.V3fPlug( direction=Gaffer.Plug.Direction.Out )
-		p2 = Gaffer.V3fPlug( direction=Gaffer.Plug.Direction.In )
 		
-		p1.setValue( IECore.V3f( 1, 2, 3 ) )
-		
-		p2.setInput( p1 )
-		
-		self.assertEqual( p2.getValue(), IECore.V3f( 1, 2, 3 ) )
-	
 	def testMinMaxValues( self ) :
 	
 		p = Gaffer.V3fPlug()
@@ -183,6 +172,15 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		s.execute( ss )
 		
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
+
+	def testRunTimeTyped( self ) :
+	
+		p = Gaffer.Color3fPlug()
+		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		self.failUnless( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
+
+		t = p.typeId()
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.CompoundPlug.staticTypeId() )
 
 if __name__ == "__main__":
 	unittest.main()

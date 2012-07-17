@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -65,9 +65,13 @@ from NoduleTest import NoduleTest
 from ProgressBarTest import ProgressBarTest
 from ContainerWidgetTest import ContainerWidgetTest
 from SelectionMenuTest import SelectionMenuTest
+from StandardStyleTest import StandardStyleTest
 from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
 from EditorWidgetTest import EditorWidgetTest
-from StandardStyleTest import StandardStyleTest
+from NumericSliderTest import NumericSliderTest
+from RenderableGadgetTest import RenderableGadgetTest
+from PlugValueWidgetTest import PlugValueWidgetTest
+from PathListingWidgetTest import PathListingWidgetTest
 from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 from LabelTest import LabelTest
 from ScrolledContainerTest import ScrolledContainerTest

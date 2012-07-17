@@ -1,0 +1,112 @@
+##########################################################################
+#  
+#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#  
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#  
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#  
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#  
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  
+##########################################################################
+
+import IECore
+
+import Gaffer
+import GafferScene
+
+class ScriptProcedural( IECore.ParameterisedProcedural ) :
+
+	def __init__( self ) :
+	
+		IECore.ParameterisedProcedural.__init__( self, "Generates geometry from a node within a .gfr script." )
+	
+		self.parameters().addParameters(
+			
+			[
+				
+				IECore.FileNameParameter(
+					name = "fileName",
+					description = "The gaffer script which contains a scene to generate geometry from.",
+					allowEmptyString = False,
+					check = IECore.FileNameParameter.CheckType.MustExist,
+					extensions = "gfr",
+				),
+				
+				IECore.StringParameter(
+					name = "node",
+					description = "The node to generate geometry from.",
+					defaultValue = "",
+				),
+				
+			]
+			
+		)
+	
+		self.__currentFileName = None
+	
+	def doBound( self, args ) :
+	
+		plug = self.__plug( args )
+		if plug is  None :
+			return IECore.Box3f()
+	
+		result = plug.bound( "/" )
+		result = result.transform( plug.transform( "/" ) )
+		
+		return result
+		
+	def doRender( self, renderer, args ) :
+	
+		plug = self.__plug( args )
+		if plug is None :
+			return
+			
+		sceneProcedural = GafferScene.SceneProcedural( plug, Gaffer.Context(), "/" )
+		renderer.procedural( sceneProcedural )
+		
+	def __plug( self, args ) :
+	
+		if args["fileName"].value != self.__currentFileName :
+		
+			if args["fileName"].value == "" :
+				self.__scriptNode = None
+			else :
+				self.__scriptNode = Gaffer.ScriptNode()
+				self.__scriptNode["fileName"].setValue( args["fileName"].value )
+				self.__scriptNode.load()
+				self.__currentFileName = args["fileName"].value
+			
+		if self.__scriptNode is None :
+			return None
+		
+		if not args["node"].value :
+			return None
+		
+		node = self.__scriptNode.getChild( args["node"].value )
+		return node["out"]
+		

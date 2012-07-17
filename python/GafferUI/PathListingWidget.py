@@ -81,6 +81,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		defaultNameColumn,
 		defaultFileSystemOwnerColumn,
 		defaultFileSystemModificationTimeColumn,
+		defaultFileSystemIconColumn,
 	)
 	
 	## A collection of handy column definitions for IndexedIOPaths
@@ -115,6 +116,10 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setSortingEnabled( True )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		
+		self._qtWidget().expanded.connect( Gaffer.WeakMethod( self.__expanded ) )
+		self._qtWidget().collapsed.connect( Gaffer.WeakMethod( self.__collapsed ) )
+		self.__expandedPaths = set()
+		
 		self.__sortProxyModel = QtGui.QSortFilterProxyModel()
 		self.__sortProxyModel.setSortRole( QtCore.Qt.UserRole )
 		
@@ -135,6 +140,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
+		self.__expansionChangedSignal = GafferUI.WidgetSignal()
 	
 	def setPath( self, path ) :
 	
@@ -145,6 +151,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		self.__currentDir = None
 		self.__currentPath = ""
+		self.__expandedPaths.clear()
 		self.__update()
 
 	def getPath( self ) :
@@ -157,20 +164,47 @@ class PathListingWidget( GafferUI.Widget ) :
 		if index.isValid() :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )	
 	
+	## \deprecated Use setPathExpanded() instead.
 	def setPathCollapsed( self, path, collapsed ) :
+	
+		warnings.warn( "PathListingWidget.setPathCollapsed() is deprecated, use PathListingWidget.setPathExpanded() instead.", DeprecationWarning, 2 )		
+		self.setPathExpanded( self, path, not collapsed )
+		
+	## \deprecated Use getPathExpanded() instead.
+	def getPathCollapsed( self, path ) :
+	
+		warnings.warn( "PathListingWidget.getPathCollapsed() is deprecated, use PathListingWidget.getPathExpanded() instead.", DeprecationWarning, 2 )		
+		return not self.getPathExpaned( self, path )
+		
+	def setPathExpanded( self, path, expanded ) :
 	
 		index = self.__indexForPath( path )
 		if index.isValid() :
-			self._qtWidget().setExpanded( index, not collapsed )
-		
-	def getPathCollapsed( self, path ) :
+			self._qtWidget().setExpanded( index, expanded )
+				
+	def getPathExpanded( self, path ) :
 	
 		index = self.__indexForPath( path )
 		if index.isValid() :
 			return self._qtWidget().isExpanded( index )
 		
 		return False
+		
+	def setExpandedPaths( self, paths ) :
 	
+		self._qtWidget().collapseAll()
+		for path in paths :
+			self.setPathExpanded( path, True )
+		self.__expandedPaths = set( paths )
+		
+	def getExpandedPaths( self ) :
+	
+		return self.__expandedPaths
+		
+	def expansionChangedSignal( self ) :
+	
+		return self.__expansionChangedSignal
+		
 	def getDisplayMode( self ) :
 	
 		return self.__displayMode
@@ -308,7 +342,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __activated( self, modelIndex ) :
 				
-		activatedPath = self.__sortProxyModel.mapToSource( modelIndex ).internalPointer().path()
+		activatedPath = self.__pathForIndex( modelIndex )
 		
 		if self.__displayMode == self.DisplayMode.List :
 			self.__path[:] = activatedPath[:]
@@ -334,7 +368,21 @@ class PathListingWidget( GafferUI.Widget ) :
 		indexToSelect = self.__sortProxyModel.mapFromSource( indexToSelect )
 		
 		return indexToSelect
+		
+	def __pathForIndex( self, modelIndex ) :
+	
+		return self.__sortProxyModel.mapToSource( modelIndex ).internalPointer().path()
+		
+	def __expanded( self, modelIndex ) :
+	
+		self.__expandedPaths.add( self.__pathForIndex( modelIndex ) )
+		self.__expansionChangedSignal( self )
 
+	def __collapsed( self, modelIndex ) :
+	
+		self.__expandedPaths.remove( self.__pathForIndex( modelIndex ) )
+		self.__expansionChangedSignal( self )
+		
 # Private implementation - a QTreeView with some specific size behaviour
 class _TreeView( QtGui.QTreeView ) :
 

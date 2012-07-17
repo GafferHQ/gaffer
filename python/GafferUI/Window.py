@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -173,6 +173,14 @@ class Window( GafferUI.ContainerWidget ) :
 	def resizeToFitChild( self ) :
 	
 		self._qtWidget().setGeometry( QtCore.QRect( self._qtWidget().geometry().topLeft(), self._qtWidget().sizeHint() ) )
+
+	def setPosition( self, position ) :
+	
+		self._qtWidget().move( position.x, position.y )
+		
+	def getPosition( self ) :
+	
+		return IECore.V2i( self._qtWidget().x(), self._qtWidget().y() )
 
 	def setFullScreen( self, fullScreen ) :
 	

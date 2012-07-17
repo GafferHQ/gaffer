@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,22 +35,23 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "boost/python.hpp" // must be the first include
+
+#include <fstream>
+
+#include "boost/tokenizer.hpp"
+
+#include "IECorePython/Wrapper.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILLock.h"
 
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialiser.h"
 #include "GafferBindings/NodeBinding.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Context.h"
 #include "Gaffer/ApplicationRoot.h"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/ScopedGILLock.h"
-
-#include "boost/tokenizer.hpp"
-
-#include <fstream>
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -67,9 +68,10 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 
 	public :
 
-		ScriptNodeWrapper( PyObject *self, const std::string &name=staticTypeName() )
+		ScriptNodeWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
 			:	ScriptNode( name ), IECorePython::Wrapper<ScriptNode>( self, this )
 		{
+			initNode( this, inputs, dynamicPlugs );
 		}
 
 		virtual ~ScriptNodeWrapper()
@@ -100,7 +102,6 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 			return Serialiser::serialise( this, filter );
 		}
 		
-		/// \todo Clear the script before executing!!
 		/// We need to consider implementing a delete() method first though.
 		virtual void load()
 		{
@@ -123,7 +124,8 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 				std::getline( f, line );
 				s += line + "\n";
 			}
-						
+			
+			deleteNodes();			
 			execute( s );
 		}
 		
@@ -226,6 +228,11 @@ struct ScriptEvaluatedSlotCaller
 	}
 };
 
+static ContextPtr context( ScriptNode &s )
+{
+	return s.context();
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( serialiseOverloads, serialise, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( copyOverloads, copy, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( cutOverloads, cut, 0, 1 );
@@ -238,10 +245,7 @@ static ApplicationRootPtr applicationRoot( ScriptNode &s )
 
 void bindScriptNode()
 {
-	scope s = IECorePython::RunTimeTypedClass<ScriptNode, ScriptNodeWrapperPtr>()
-		.def( init<>() )
-		.def( init<const std::string &>() )
-		.GAFFERBINDINGS_DEFNODEWRAPPERFNS( ScriptNode )
+	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", (StandardSetPtr (ScriptNode::*)())&ScriptNode::selection )
 		.def( "undo", &ScriptNode::undo )
@@ -257,6 +261,7 @@ void bindScriptNode()
 		.def( "serialise", &ScriptNode::serialise, serialiseOverloads() )
 		.def( "save", &ScriptNode::save )
 		.def( "load", &ScriptNode::load )
+		.def( "context", &context )
 	;
 	
 	SignalBinder<ScriptNode::ScriptExecutedSignal>::bind( "ScriptExecutedSignal" );

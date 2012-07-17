@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class ReadNodeTest( unittest.TestCase ) :
 
@@ -67,9 +68,12 @@ class ReadNodeTest( unittest.TestCase ) :
 		
 		# check that changing the parameter plugs affects the loading
 		
+		dirtyCapturer = GafferTest.CapturingSlot( node.plugDirtiedSignal() )
+		
 		node["parameters"]["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 		
-		self.failUnless( node["output"].getDirty() )
+		self.assertEqual( len( dirtyCapturer ), 1 )
+		self.assertEqual( dirtyCapturer[0][0].getName(), "output" )
 		
 		reader["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 						

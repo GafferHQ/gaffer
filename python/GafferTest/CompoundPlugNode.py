@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 ## This class is used by the CompoundPlugTest.
@@ -50,12 +52,21 @@ class CompoundPlugNode( Gaffer.Node ) :
 		p.addChild( c2 )
 		self.addChild( p )
 		
+		po = Gaffer.CompoundPlug( name = "o", direction = Gaffer.Plug.Direction.Out )
+		co1 = Gaffer.FloatPlug( name = "f", direction = Gaffer.Plug.Direction.Out )
+		co2 = Gaffer.StringPlug( name = "s", direction = Gaffer.Plug.Direction.Out )
+		po.addChild( co1 )
+		po.addChild( co2 )
+		self.addChild( po )
+		
 		self._init( inputs, dynamicPlugs )
 		
-	def dirty( self, inputPlug ) :
+	def affects( self, inputPlug ) :
 	
-		pass
+		outputs = []
+		if inputPlug.parent().isSame( self["p"] ) :
+			outputs.append( self["o"][inputPlug.getName()] )
+			
+		return outputs
 		
-	def typeName( self ) :
-	
-		return "CompoundPlugNode"
+IECore.registerRunTimeTyped( CompoundPlugNode )

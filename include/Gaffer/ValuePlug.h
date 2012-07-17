@@ -38,6 +38,7 @@
 #define GAFFER_VALUEPLUG_H
 
 #include "Gaffer/Plug.h"
+#include "Gaffer/PlugIterator.h"
 
 namespace Gaffer
 {
@@ -45,9 +46,7 @@ namespace Gaffer
 /// The Plug base class defines the concept of a connection
 /// point with direction. The ValuePlug class extends this concept
 /// to allow the connections to pass values between connection
-/// points. The ValuePlug doesn't dictate how the value is stored,
-/// but defines the concept of whether the value is up to date (clean)
-/// or not (dirty).
+/// points.
 class ValuePlug : public Plug
 {
 
@@ -62,11 +61,15 @@ class ValuePlug : public Plug
 		/// Accepts the input only if it is derived from ValuePlug.
 		/// Derived classes may accept more types provided they
 		/// derive from ValuePlug too, and they can deal with them
-		/// in setFromInput().
-		virtual bool acceptsInput( ConstPlugPtr input ) const;
-		/// Reimplemented so that values and dirty status can be
-		/// propagated from inputs.
+		/// in setFrom().
+		virtual bool acceptsInput( const Plug *input ) const;
+		/// Reimplemented so that values can be propagated from inputs.
 		virtual void setInput( PlugPtr input );
+
+		/// Must be implemented to set the value of this Plug from the other Plug,
+		/// performing any necessary conversions on the input value. Should throw
+		/// an exception if other is of an unsupported type.
+		virtual void setFrom( const ValuePlug *other ) = 0;
 
 		/// Must be implemented by derived classes to set the value
 		/// to the default for this Plug.
@@ -74,41 +77,48 @@ class ValuePlug : public Plug
 		/// is removed, so we can revert to default.
 		///virtual void setToDefault() = 0;
 		
-		/// Marks the Plug as dirty (ie the value not being up to
-		/// date) and propagates the dirty status to any dependent
-		/// Plugs. This takes no arguments as a Plug is made clean
-		/// by using the implementation specific setValue() function.
-		virtual void setDirty();
-		/// Returns true if the Plug is dirty - ie the value held is
-		/// not valid.
-		bool getDirty() const;
-
 	protected :
 	
-		/// Must be called by derived classes when the value has been
-		/// set. This sets the Plug clean, emits any relevant signals
-		/// and propagates the value to the Plug's outputs.
-		void valueSet();
-		/// Must be called by derived classes before accessing the value
-		/// (for instance in a getValue() method). If the plug is dirty this
-		/// either calls node()->compute() if there is no input connection, or
-		/// setFromInput() if there is. This ensures that the value is updated before
-		/// it's accessed.
-		void computeIfDirty();
-		
-		/// Must be implemented to set the value of this Plug from the
-		/// value of its input. This allows the Plug to perform any
-		/// necessary conversions of the input value. Called by the valueSet()
-		/// function to propagate values through the graph.
-		virtual void setFromInput() = 0;
-
+		/// Internally all values are stored as instances of classes derived
+		/// from IECore::Object, although this isn't necessarily visible to the user.
+		/// This function updates the value using node()->compute()
+		/// or setFrom( getInput() ) as appropriate and then returns it. Typically
+		/// this will be called by a subclass getValue() method which will
+		/// extract a value from the object and return it to the user in a more
+		/// convenient form. Note that this function will often return different
+		/// objects with each query - this allows it to support the calculation
+		/// of values in different contexts and on different threads. It is also
+		/// possible for 0 to be returned, either if a computation fails or if
+		/// the value for the plug has not been set - in this case the subclass
+		/// should return the default value from it's getValue() method.
+		IECore::ConstObjectPtr getObjectValue() const;
+		/// Should be called by derived classes when they wish to set the plug
+		/// value.
+		void setObjectValue( IECore::ConstObjectPtr value );
+						
 	private :
-
-		bool m_dirty;
+	
+		class Computation;
+		friend class Computation;
+	
+		void setValueInternal( IECore::ConstObjectPtr value );
+		/// Emits the dirty signal for this plug, and all ancestor ValuePlugs up
+		/// to node(). The result of node() can be passed to avoid repeatedly
+		/// finding the node in the case of making repeated calls.
+		void emitDirtiness( Node *n = 0 );
+		/// Calls emitDirtiness() on affected plugs and output connections.
+		void propagateDirtiness();
+	
+		/// For holding the value of input plugs with no input connections.
+		IECore::ConstObjectPtr m_staticValue;
 
 };
 
 IE_CORE_DECLAREPTR( ValuePlug )
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ValuePlug> > ValuePlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, ValuePlug> > InputValuePlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, ValuePlug> > OutputValuePlugIterator;
 
 } // namespace Gaffer
 

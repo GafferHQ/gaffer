@@ -209,6 +209,26 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_OCIO", "Set this to build OCIO", "$BUILD_DEPENDENCIES" )
+)
+
+options.Add(
+	"OCIO_SRC_DIR",
+	"The location of the OCIO source to be used if BUILD_DEPENDENCY_OCIO is specified.",
+	"$DEPENDENCIES_SRC_DIR/imageworks-OpenColorIO-a16d9ac",
+)
+
+options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_OIIO", "Set this to build OIIO.", "$BUILD_DEPENDENCIES" )
+)
+
+options.Add(
+	"OIIO_SRC_DIR",
+	"The location of the OIIO source to be used if BUILD_DEPENDENCY_OIIO is specified.",
+	"$DEPENDENCIES_SRC_DIR/OpenImageIO-oiio-fa4b6ef",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_CORTEX", "Set this to build cortex.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -442,6 +462,7 @@ depEnv["ENV"].update(
 		"PYTHONPATH" : depEnv.subst( "$BUILD_DIR/python" ),
  		"M4PATH" : depEnv.subst( "$BUILD_DIR/share/aclocal" ),
 		"PKG_CONFIG_PATH" : depEnv.subst( "$BUILD_DIR/lib/pkgconfig" ),
+		"CMAKE_PREFIX_PATH" : depEnv.subst( "$BUILD_DIR" ),
 		"HOME" : os.environ["HOME"],
 	}
 )
@@ -502,15 +523,27 @@ if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	if depEnv["PLATFORM"]=="posix" :
 		runCommand( "mkdir -p $BUILD_DIR/lib64/pkgconfig" )
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
+
+if depEnv["BUILD_DEPENDENCY_OCIO"] :
+	runCommand( "cd $OCIO_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
+
+if depEnv["BUILD_DEPENDENCY_OIIO"] :
+	runCommand( "cd $OIIO_SRC_DIR && make clean && make THIRD_PARTY_TOOLS_HOME=$BUILD_DIR OCIO_PATH=$BUILD_DIR USE_OPENJPEG=0" )
+	if depEnv["PLATFORM"]=="darwin" :
+		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/macosx/* $BUILD_DIR" )
+		## \todo Come up with something better.
+		# move the library to a new name so it doesn't conflict with the libOpenImageIO that arnold uses.
+		# Ideally they'd both use the same one but currently Arnold is using a pre-version-1 version.
+		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH PATH' SAVE_OPTIONS=gaffer.options" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
 
 if depEnv["BUILD_DEPENDENCY_QT"] :
-	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -no-qt3support && make -j 4 && make install" )
+	runCommand( "cd $QT_SRC_DIR && ./configure -prefix $BUILD_DIR -opensource -no-rpath -no-declarative -no-gtkstyle -no-qt3support -I $BUILD_DIR/include -L $BUILD_DIR/lib && make -j 4 && make install" )
 	
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make clean && make && make install" )
@@ -529,7 +562,7 @@ if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
 		
 ###############################################################################################
-# Gaffer libraries
+# The basic environment for building libraries
 ###############################################################################################
 
 if buildingDependencies :
@@ -537,9 +570,9 @@ if buildingDependencies :
 else :
 	boostLibSuffix = env["BOOST_LIB_SUFFIX"]
 
-libEnv = env.Clone()
+baseLibEnv = env.Clone()
 
-libEnv.Append(
+baseLibEnv.Append(
 
 	CPPPATH = [
 		"include",
@@ -577,49 +610,13 @@ libEnv.Append(
 	
 )
 
-gafferLibrary = libEnv.SharedLibrary( "lib/Gaffer", glob.glob( "src/Gaffer/*.cpp" ) )
-libEnv.Default( gafferLibrary )
-
-gafferLibraryInstall = libEnv.Install( "$BUILD_DIR/lib", gafferLibrary )
-libEnv.Alias( "build", gafferLibraryInstall )
-
-uiEnv = libEnv.Clone()
-uiEnv.Append(
-
-	LIBS = [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
-
-)
-
-if env["PLATFORM"] == "darwin" :
-	uiEnv.Append( FRAMEWORKS = "OpenGL" )
-else :
-	uiEnv.Append( LIBS = "GL" )
-
-gafferUILibrary = uiEnv.SharedLibrary( "lib/GafferUI", glob.glob( "src/GafferUI/*.cpp" ) )
-uiEnv.Default( gafferUILibrary )
-
-gafferUILibraryInstall = uiEnv.Install( "$BUILD_DIR/lib", gafferUILibrary )
-uiEnv.Alias( "build", gafferUILibraryInstall )
-
 ###############################################################################################
-# Gaffer headers
+# The basic environment for building python modules
 ###############################################################################################
 
-for headerDir in glob.glob( "include/Gaffer*" ) :
-	headerInstall = libEnv.Install(
-		"$BUILD_DIR/" + headerDir,
-		glob.glob( headerDir + "/*.h" ) +
-		glob.glob( headerDir + "/*.inl" )
-	)
-	libEnv.Alias( "build", headerInstall )
-	
-###############################################################################################
-# Gaffer python modules
-###############################################################################################
+basePythonEnv = baseLibEnv.Clone()
 
-pythonEnv = libEnv.Clone()
-
-pythonEnv.Append(
+basePythonEnv.Append(
 
 	CPPFLAGS = [
 		"-DBOOST_PYTHON_MAX_ARITY=20",
@@ -633,100 +630,242 @@ pythonEnv.Append(
 	
 )
 
-pythonLinkFlags = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --ldflags" ) ).read().strip()
-pythonLinkFlags = pythonLinkFlags.replace( "Python.framework/Versions/" + pythonEnv["PYTHON_VERSION"] + "/Python", "" )
+pythonLinkFlags = os.popen( basePythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --ldflags" ) ).read().strip()
+pythonLinkFlags = pythonLinkFlags.replace( "Python.framework/Versions/" + basePythonEnv["PYTHON_VERSION"] + "/Python", "" )
 	
-pythonEnv.Append(
+basePythonEnv.Append(
 
-	CPPFLAGS = os.popen( pythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --includes" ) ).read().split(),
+	CPPFLAGS = os.popen( basePythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --includes" ) ).read().split(),
 
 	SHLINKFLAGS = pythonLinkFlags,
 
 )
 
-if pythonEnv["PLATFORM"]=="darwin" :
-	pythonEnv.Append( SHLINKFLAGS = "-single_module" )
-
-gafferBindingsLibrary = pythonEnv.SharedLibrary( "lib/GafferBindings", glob.glob( "src/GafferBindings/*.cpp" ) )
-pythonEnv.Default( gafferBindingsLibrary )
-
-gafferBindingsLibraryInstall = env.Install( "$BUILD_DIR/lib", gafferBindingsLibrary )
-env.Alias( "build", gafferBindingsLibraryInstall )
-
-pythonUIEnv = pythonEnv.Clone()
-pythonUIEnv.Append(
-	LIBS = [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
-)
-gafferUIBindingsLibrary = pythonUIEnv.SharedLibrary( "lib/GafferUIBindings", glob.glob( "src/GafferUIBindings/*.cpp" ) )
-pythonUIEnv.Default( gafferUIBindingsLibrary )
-
-gafferUIBindingsLibraryInstall = env.Install( "$BUILD_DIR/lib", gafferUIBindingsLibrary )
-env.Alias( "build", gafferUIBindingsLibraryInstall )
-
-pythonModuleEnv = pythonEnv.Clone()
-pythonModuleEnv.Append(
-
-	LIBS = [
-		"GafferBindings",
-	]
-
-)
-
-pythonModuleEnv["SHLIBPREFIX"] = ""
-pythonModuleEnv["SHLIBSUFFIX"] = ".so"
-
-gafferModule = pythonModuleEnv.SharedLibrary( "python/Gaffer/_Gaffer", glob.glob( "src/GafferModule/*.cpp" ) )
-pythonModuleEnv.Default( gafferModule )
-
-gafferModuleInstall = env.Install( "$BUILD_DIR/python/Gaffer", gafferModule )
-sedSubstitutions = "s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
-sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
-sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
-
-for f in glob.glob( "python/Gaffer/*.py" ) :
-	gafferModuleInstall += env.Command( "$BUILD_DIR/python/Gaffer/" + os.path.basename( f ), f, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
-
-env.Alias( "build", gafferModuleInstall )
-
-pythonUIModuleEnv = pythonModuleEnv.Clone()
-pythonUIModuleEnv.Append(
-	LIBS = [ "GafferUI", "GafferUIBindings" ],
-)
-gafferUIModule = pythonUIModuleEnv.SharedLibrary( "python/GafferUI/_GafferUI", glob.glob( "src/GafferUIModule/*.cpp" ) )
-pythonUIModuleEnv.Default( gafferUIModule )
-
-gafferUIModuleInstall = env.Install( "$BUILD_DIR/python/GafferUI", gafferUIModule )
-gafferUIModuleInstall += env.Install( "$BUILD_DIR/python/GafferUI", glob.glob( "python/GafferUI/*.py" ) )
-env.Alias( "build", gafferUIModuleInstall )
-
-for module in ( "GafferTest", "GafferUITest" ) :
-
-	moduleFiles = glob.glob( "python/%s/*.py" % module ) + glob.glob( "python/%s/*/*" % module ) + glob.glob( "python/%s/*/*/*" % module )
-	for moduleFile in moduleFiles :
-		moduleFileInstall = env.InstallAs( "$BUILD_DIR/python/" + moduleFile.partition( "/" )[2], moduleFile )
-		env.Alias( "build", moduleFileInstall ) 
+if basePythonEnv["PLATFORM"]=="darwin" :
+	basePythonEnv.Append( SHLINKFLAGS = "-single_module" )
 
 ###############################################################################################
-# Scripts and apps and stuff
+# Definitions for the libraries we wish to build
 ###############################################################################################
 
-scriptsInstall = env.Install( "$BUILD_DIR/bin", [ "bin/gaffer", "bin/gaffer.py" ] )
-env.Alias( "build", scriptsInstall )
+libraries = {
 
-for app in ( "gui", "view", "test", "cli", "license", "op", "python", "execute", "browser" ) :
-	appInstall = env.Install( "$BUILD_DIR/apps/%s" % app, "apps/%s/%s-1.py" % ( app, app ) )
-	env.Alias( "build", appInstall )
+	"Gaffer" : {},
+	
+	"GafferTest" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferTest", "GafferBindings" ],
+		},
+		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferTest/*/*/*" ),
+	},
+	
+	"GafferUI" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
+		},
+	},
+	
+	"GafferUITest" : {},
+	
+	"GafferScene" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferScene" ],
+		},
+		"classStubs" : [
+			( "ScriptProcedural", "procedurals/gaffer/script" ),
+		],
+	},
+	
+	"GafferSceneTest" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferScene" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "Gaffer", "GafferBindings", "GafferScene", "GafferSceneTest" ],
+		},
+	},
+	
+	"GafferSceneUI" : {
+	},
+	
+	"GafferImage" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "OpenImageIO-1" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferImage" ],
+		},
+		"requiredOptions" : [ "OIIO_SRC_DIR" ],
+	},
+	
+	"GafferImageTest" : {},
+	
+	"GafferImageUI" : {},
+	
+	"GafferArnold" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "ai", "IECoreArnold" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferArnold" ],
+		},
+		"requiredOptions" : [ "ARNOLD_ROOT" ],
+	},
 
-startupScriptsInstall = env.Install( "$BUILD_DIR/startup/gui", glob.glob( "startup/gui/*.py" ) )
-env.Alias( "build", startupScriptsInstall )
+	"GafferArnoldTest" : {},
 
-for d in ( "ui", "" ) :
-	shaderInstall = env.Install( "$BUILD_DIR/shaders/%s/" % d, glob.glob( "shaders/%s/*" % d ) )
-	env.Alias( "build", shaderInstall )
+	"GafferArnoldUI" : {},
+		
+	"apps" : {
+		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
+	},
+	
+	"scripts" : {
+		"additionalFiles" : [ "bin/gaffer", "bin/gaffer.py" ],
+	},
+	
+	"startupScripts" : {
+		"additionalFiles" : glob.glob( "startup/*/*.py" ),
+	},
+	
+	"shaders" : {
+		"additionalFiles" : glob.glob( "shaders/*" ) + glob.glob( "shaders/*/*" ),
+	},
+	
+	"misc" : {
+		"additionalFiles" : [ "LICENSE" ],
+	},
 
-for d in ( "LICENSE", ) :
-	miscInstall = env.InstallAs( "$BUILD_DIR/" + d, d )
-	env.Alias( "build", miscInstall )
+}
+
+if env["PLATFORM"] == "darwin" :
+	libraries["GafferUI"]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
+else :
+	libraries["GafferUI"]["envAppends"]["LIBS"].append( "GL" )
+
+###############################################################################################
+# The stuff that actually builds the libraries and python modules
+###############################################################################################
+
+for libraryName, libraryDef in libraries.items() :
+
+	# skip this library if we don't have the config we need
+	
+	haveRequiredOptions = True
+	for requiredOption in libraryDef.get( "requiredOptions", [] ) :
+		if not env[requiredOption] :
+			haveRequiredOptions = False
+			break
+	if not haveRequiredOptions :
+		continue
+
+	# environment
+
+	libEnv = baseLibEnv.Clone()
+	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
+
+	# library
+
+	librarySource = glob.glob( "src/" + libraryName + "/*.cpp" )
+	if librarySource :
+	
+		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
+		libEnv.Default( library )
+	
+		libraryInstall = libEnv.Install( "$BUILD_DIR/lib", library )
+		libEnv.Alias( "build", libraryInstall )
+	
+	# header install
+	
+	headerInstall = libEnv.Install(
+		"$BUILD_DIR/" + "include/" + libraryName,
+		glob.glob( "include/" + libraryName + "/*.h" ) +
+		glob.glob( "include/" + libraryName + "/*.inl" )
+	)
+	libEnv.Alias( "build", headerInstall )
+		
+	# bindings library and binary python modules
+
+	pythonEnv = basePythonEnv.Clone()
+	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
+	
+	bindingsSource = glob.glob( "src/" + libraryName + "Bindings/*.cpp" )
+	if bindingsSource :
+			
+		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
+		pythonEnv.Default( bindingsLibrary )
+		
+		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
+		env.Alias( "build", bindingsLibraryInstall )
+	
+	pythonModuleSource = glob.glob( "src/" + libraryName + "Module/*.cpp" )
+	if pythonModuleSource :
+		
+		pythonModuleEnv = pythonEnv.Clone()
+		if bindingsSource :
+			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
+		pythonModuleEnv["SHLIBPREFIX"] = ""
+		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
+	
+		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
+		pythonModuleEnv.Default( pythonModule )
+	
+		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
+		pythonModuleEnv.Default( moduleInstall )
+		pythonModuleEnv.Alias( "build", moduleInstall )
+	
+	# python component of python module
+
+	sedSubstitutions = "s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
+	sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
+	sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
+	
+	for pythonFile in glob.glob( "python/" + libraryName + "/*.py" ) :
+		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		env.Alias( "build", pythonFileInstall )
+
+	# additional files
+
+	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
+		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
+		env.Alias( "build", additionalFileInstall )
+		
+	# class stubs
+	
+	def buildClassStub( target, source, env ) :
+
+		dir = os.path.dirname( str( target[0] ) )
+		if not os.path.isdir( dir ) :
+			os.makedirs( dir )
+		
+		classLoadableName = dir.rpartition( "/" )[2]
+				
+		f = open( str( target[0] ), "w" )
+		f.write( "import IECore\n\n" )
+		f.write( env.subst( "from $GAFFER_STUB_MODULE import $GAFFER_STUB_CLASS as %s" % classLoadableName ) )
+		f.write( "\n\nIECore.registerRunTimeTyped( %s )\n" % classLoadableName )
+		
+	for classStub in libraryDef.get( "classStubs", [] ) :
+		stubFileName = "$BUILD_DIR/" + classStub[1] + "/" + classStub[1].rpartition( "/" )[2] + "-1.py"
+		stubEnv = env.Clone(
+			GAFFER_STUB_MODULE = libraryName,
+			GAFFER_STUB_CLASS = classStub[0],
+		)
+		stub = stubEnv.Command( stubFileName, "python/" + libraryName + "/__init__.py", buildClassStub )
+		stubEnv.Alias( "build", stub )
 	
 #########################################################################################################
 # Graphics
@@ -845,7 +984,7 @@ for v in ( "BUILD_DIR", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_
 docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "$DOXYGEN doc/config/Doxyfile" )
 env.NoCache( docs )
 
-for modulePath in ( "python/Gaffer", "python/GafferUI" ) :
+for modulePath in ( "python/Gaffer", "python/GafferUI", "python/GafferScene", "python/GafferSceneUI" ) :
 
 	module = os.path.basename( modulePath )
 	mungedModule = docEnv.Command( "doc/python/" + module, modulePath + "/__init__.py", createDoxygenPython )
@@ -895,6 +1034,8 @@ manifest = [
 	"lib/libfreetype*$SHLIBSUFFIX*",
 	"lib/libjpeg*$SHLIBSUFFIX*",
 	"lib/libpng*$SHLIBSUFFIX*",
+	
+	"lib/libOpenImageIO-1$SHLIBSUFFIX",
 	
 	"lib/libpython*$SHLIBSUFFIX*",
 	"lib/Python.framework",

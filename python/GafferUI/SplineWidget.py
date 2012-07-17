@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -37,12 +37,13 @@
 
 import sys
 
-import gtk
-import cairo
-
 import IECore
 
+import Gaffer
 import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## This Widget simply displays an IECore.Spline object. For representation and editing
 # of SplinePlugs use a SplineEditor instead.
@@ -52,12 +53,8 @@ class SplineWidget( GafferUI.Widget ) :
 
 	def __init__( self, spline=None, drawMode=DrawMode.Splines, **kw ) :
 	
-		GafferUI.Widget.__init__( self, gtk.DrawingArea(), **kw )
+		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
 				
-		self.gtkWidget().connect( "expose-event", self.__expose )		
-
-		self.gtkWidget().set_size_request( 20, 20 )
-
 		self.setDrawMode( drawMode )
 
 		if spline==None :
@@ -73,6 +70,8 @@ class SplineWidget( GafferUI.Widget ) :
 			
 		self.setSpline( spline )
 
+		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
+
 	def setSpline( self, spline ) :
 	
 		try :
@@ -83,7 +82,7 @@ class SplineWidget( GafferUI.Widget ) :
 					
 		self.__spline = spline
 		self.__splinesToDraw = None
-		self.gtkWidget().queue_draw()
+		self._qtWidget().update()
 		
 	def getSpline( self ) :
 	
@@ -98,63 +97,55 @@ class SplineWidget( GafferUI.Widget ) :
 			pass
 			
 		self.__drawMode = drawMode
-		self.gtkWidget().queue_draw()		
+		self._qtWidget().update()
 
-	def __expose( self, gtkWidget, event ) :
+	def __paintEvent( self, event ) :
 	
-		context = gtkWidget.window.cairo_create()
-		context.rectangle( event.area.x, event.area.y, event.area.width, event.area.height )
-		context.clip()
+		painter = QtGui.QPainter( self._qtWidget() )
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 		
-		if self.__drawMode==self.DrawMode.Ramp :
-			self.__drawRamp( context )
-		elif self.__drawMode==self.DrawMode.Splines :
-			self.__drawSplines( context )
+		if self.__drawMode == self.DrawMode.Ramp :
+			self.__paintRamp( painter )
+		elif self.__drawMode == self.DrawMode.Splines :
+			self.__paintSplines( painter )
 		
-	def __drawRamp( self, context ) :
+	def __paintRamp( self, painter ) :
 	
-		allocation = self.gtkWidget().get_allocation()
-		width = allocation.width
-		height = allocation.height
-
-		grad = cairo.LinearGradient( 0, 0, width, 0 )
+		size = self.size()
+		
+		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
 		numStops = 50
 		for i in range( 0, numStops ) :
 			t = float( i ) / ( numStops - 1 )
 			c = self.__spline( t )
 			if isinstance( c, float ) :
-				grad.add_color_stop_rgb( t, c, c, c )
-			elif isinstance( t, c, IECore.Color3f ) :
-				grad.add_color_stop_rgb( c[0], c[1], c[2] )
-			elif isinstance( t, c, IECore.Color43f ) :
-				grad.add_color_stop_rgba( t, c[0], c[1], c[2], c[3] )	
+				grad.setColorAt( t, self._qtColor( IECore.Color3f( c, c, c ) ) )
+			elif isinstance( c, I( ECore.Color3f, IECore.Color4f ) ) :
+				grad.setColorAt( t, self._qtColor( c ) )	
 		
-		context.set_source( grad )
-		
-		context.rectangle( 0, 0, width, height )
-		context.fill()
+		brush = QtGui.QBrush( grad )
+		painter.fillRect( 0, 0, size.x, size.y, brush )
 				
-	def __drawSplines( self, context ) :
+	def __paintSplines( self, painter ) :
 	
 		# update the evaluation of our splines if necessary
 		numPoints = 50
 		if not self.__splinesToDraw :
-			yMin = sys.float_info.max
-			yMax = sys.float_info.min
 			self.__splinesToDraw = []
 			interval = self.__spline.interval()
 			if isinstance( self.__spline, IECore.Splineff ) :
 				spline = IECore.Struct()
 				spline.color = IECore.Color3f( 1 )
-				spline.points = []
+				spline.path = QtGui.QPainterPath()
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
 					tt = interval[0] + (interval[1] - interval[0]) * t
 					c = self.__spline( tt )
-					yMin = min( c, yMin )
-					yMax = max( c, yMax )
-					spline.points.append( IECore.V2f( t, c ) )
+					if i==0 :
+						spline.path.moveTo( t, c )
+					else :
+						spline.path.lineTo( t, c )
 				self.__splinesToDraw.append( spline )
 			else :
 				for i in range( 0, self.__spline( 0 ).dimensions() ) :
@@ -165,32 +156,33 @@ class SplineWidget( GafferUI.Widget ) :
 						c = IECore.Color3f( 0 )
 						c[i] = 1
 						spline.color = c
-					spline.points = []
+					spline.path = QtGui.QPainterPath()
 					self.__splinesToDraw.append( spline )
 
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
 					tt = interval[0] + (interval[1] - interval[0]) * t
 					c = self.__spline( tt )
-					for i in range( 0, self.__spline( 0 ).dimensions() ) :
-						yMin = min( yMin, c[i] )
-						yMax = max( yMax, c[i] )
-						splines[i].points.append( IECore.V2f( t, c[i] ) )
-				
-			# scale and translate into 0-1 range in y 
-			yScale = 1.0 / ( yMax - yMin )
+					for j in range( 0, c.dimensions() ) :
+						if i == 0 :
+							self.__splinesToDraw[j].path.moveTo( t, c[j] )			
+						else :
+							self.__splinesToDraw[j].path.lineTo( t, c[j] )
+			
+			self.__splineBound = QtCore.QRectF()
 			for s in self.__splinesToDraw :
-				for i in range( 0, len( s.points ) ) :
-					s.points[i].y = 1.0 - (s.points[i].y - yMin) * yScale
-		
+				self.__splineBound = self.__splineBound.united( s.path.controlPointRect() )
+				
 		# draw the splines		
-		allocation = self.gtkWidget().get_allocation()
-		width = allocation.width
-		height = allocation.height
-
-		context.set_line_width( 1.0 )
+		size = self._qtWidget().size()
+		transform = QtGui.QTransform()
+		if self.__splineBound.width() :
+			transform.scale( size.width() / self.__splineBound.width(), 1 )
+		if self.__splineBound.height() :
+			transform.scale( 1, size.height() / self.__splineBound.height() )
+			
+		painter.setTransform( transform )
 		for s in self.__splinesToDraw :
-			context.set_source_rgb( s.color[0], s.color[1], s.color[2] )	
-			for p in s.points :
-				context.line_to( p[0] * width, p[1] * height )
-			context.stroke()
+			pen = QtGui.QPen( self._qtColor( s.color ) )
+			painter.setPen( pen )
+			painter.drawPath( s.path )

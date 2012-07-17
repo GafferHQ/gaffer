@@ -1,5 +1,6 @@
 ##########################################################################
 #  
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -51,15 +52,17 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
-		self.updateFromPlug()
+		self._updateFromPlug()
 
 	def textWidget( self ) :
 	
 		return self.__textWidget
 
-	def updateFromPlug( self ) :
+	def _updateFromPlug( self ) :
 
-		self.__textWidget.setText( self.getPlug().getValue() )
+		if self.getPlug() is not None :
+			with self.getContext() :
+				self.__textWidget.setText( self.getPlug().getValue() )
 
 		self.__textWidget.setEditable( self._editable() )
 
@@ -72,7 +75,7 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 		# escape abandons everything
 		if event.key=="Escape" :
-			self.updateFromPlug()
+			self._updateFromPlug()
 			return True
 
 		return False

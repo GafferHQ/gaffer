@@ -147,7 +147,7 @@ static void bind()
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &T::setValue )
-		.def( "getValue", &T::getValue, return_value_policy<copy_const_reference>() )
+		.def( "getValue", &T::getValue )
 	;
 	
 	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
@@ -159,4 +159,6 @@ void GafferBindings::bindTypedPlug()
 	bind<StringPlug>();
 	bind<M33fPlug>();
 	bind<M44fPlug>();	
+	bind<AtomicBox3fPlug>();	
+	bind<AtomicBox2iPlug>();
 }

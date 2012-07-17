@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -97,7 +97,7 @@ class Gadget : public Gaffer::GraphComponent
 		//@{
 		/// By default Gadgets do not accept children. Derive from ContainerGadget
 		/// if you wish to accept children.
-		virtual bool acceptsChild( Gaffer::ConstGraphComponentPtr potentialChild ) const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		/// Gadgets only accept other Gadgets as parent.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		
 		//@}
