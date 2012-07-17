@@ -104,7 +104,7 @@ class Application( IECore.Parameterised ) :
 		paths = [ os.path.join( p, self.root().getName() ) for p in sp.paths ]
 		sp = IECore.SearchPath( ":".join( paths ), ":" )
 		
-		contextDict = {	"application" : self.root() }	
+		contextDict = {	"application" : self }	
 		IECore.loadConfig( sp, contextDict )
 		
 	def __run( self, args ) :

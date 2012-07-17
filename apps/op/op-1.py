@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -89,9 +89,22 @@ class op( Gaffer.Application ) :
 			}
 		)
 		
+		self.__classLoader = None
+		
+	def setClassLoader( self, loader ) :
+	
+		self.__classLoader = loader
+		
+	def getClassLoader( self ) :
+	
+		if self.__classLoader is None :
+			self.__classLoader = IECore.ClassLoader.defaultOpLoader()
+		
+		return self.__classLoader
+		
 	def _run( self, args ) :
 		
-		classLoader = IECore.ClassLoader.defaultOpLoader()
+		classLoader = self.getClassLoader()
 		
 		matchingOpNames = classLoader.classNames( "*" + args["op"].value )
 		if not len( matchingOpNames ) :
