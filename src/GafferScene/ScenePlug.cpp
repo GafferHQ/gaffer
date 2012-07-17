@@ -189,10 +189,6 @@ const Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug() const
 
 Imath::Box3f ScenePlug::bound( const std::string &scenePath ) const
 {
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( "ScenePlug::bound called on unconnected input plug" );
-	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
@@ -201,10 +197,6 @@ Imath::Box3f ScenePlug::bound( const std::string &scenePath ) const
 
 Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 {
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( "ScenePlug::transform called on unconnected input plug" );
-	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
@@ -213,10 +205,6 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 
 IECore::ConstObjectVectorPtr ScenePlug::state( const std::string &scenePath ) const
 {
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( "ScenePlug::state called on unconnected input plug" );
-	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
@@ -225,10 +213,6 @@ IECore::ConstObjectVectorPtr ScenePlug::state( const std::string &scenePath ) co
 
 IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const
 {
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( "ScenePlug::object called on unconnected input plug" );
-	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
@@ -237,10 +221,6 @@ IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const
 
 IECore::ConstStringVectorDataPtr ScenePlug::childNames( const std::string &scenePath ) const
 {
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( "ScenePlug::childNames called on unconnected input plug" );
-	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );

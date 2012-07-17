@@ -64,6 +64,8 @@ class GroupScenes : public SceneProcessor
 	
 	protected :
 			
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		virtual IECore::ObjectPtr computeMapping( const Gaffer::Context *context ) const;
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ObjectVectorPtr computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -71,8 +73,24 @@ class GroupScenes : public SceneProcessor
 		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
-		std::string sourcePath( const std::string &outputPath, const std::string &groupName ) const;
+		std::string sourcePath( const std::string &outputPath, const std::string &groupName, ScenePlug **source ) const;
 		
+	private :
+	
+		Gaffer::ObjectPlug *mappingPlug();
+		const Gaffer::ObjectPlug *mappingPlug() const;
+		
+		Gaffer::ObjectPlug *inputMappingPlug();
+		const Gaffer::ObjectPlug *inputMappingPlug() const;
+	
+		void childAdded( GraphComponent *parent, GraphComponent *child );
+		void plugInputChanged( Gaffer::Plug *plug );
+		void addAndRemoveInputs();
+	
+		// we keep this up to date in childAdded(), so no matter how
+		// we get the plugs, we can access them quickly.
+		std::vector<ScenePlug *> m_inPlugs;
+			
 };
 
 } // namespace GafferScene

@@ -104,9 +104,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying the scenePath
 		/// and then return the result of calling getValue() on the appropriate child
-		/// plug. They therefore only make sense for output plugs or inputs which
-		/// have an input connection - if called on an unconnected input plug,
-		/// an Exception will be thrown.
+		/// plug.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		Imath::Box3f bound( const std::string &scenePath ) const;
