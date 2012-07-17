@@ -45,7 +45,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/GroupScenes.h"
+#include "GafferScene/Group.h"
 
 using namespace std;
 using namespace Imath;
@@ -53,9 +53,9 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( GroupScenes );
+IE_CORE_DEFINERUNTIMETYPED( Group );
 
-GroupScenes::GroupScenes( const std::string &name )
+Group::Group( const std::string &name )
 	:	SceneProcessor( name )
 {
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
@@ -65,35 +65,35 @@ GroupScenes::GroupScenes( const std::string &name )
 	addChild( new Gaffer::ObjectPlug( "__inputMapping", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputMappingPlug()->setInput( mappingPlug() );
 	
-	plugInputChangedSignal().connect( boost::bind( &GroupScenes::plugInputChanged, this, ::_1 ) );
-	childAddedSignal().connect( boost::bind( &GroupScenes::childAdded, this, ::_1, ::_2 ) );
+	plugInputChangedSignal().connect( boost::bind( &Group::plugInputChanged, this, ::_1 ) );
+	childAddedSignal().connect( boost::bind( &Group::childAdded, this, ::_1, ::_2 ) );
 }
 
-GroupScenes::~GroupScenes()
+Group::~Group()
 {
 }
 
-Gaffer::StringPlug *GroupScenes::namePlug()
-{
-	return getChild<StringPlug>( "name" );
-}
-
-const Gaffer::StringPlug *GroupScenes::namePlug() const
+Gaffer::StringPlug *Group::namePlug()
 {
 	return getChild<StringPlug>( "name" );
 }
 
-Gaffer::TransformPlug *GroupScenes::transformPlug()
+const Gaffer::StringPlug *Group::namePlug() const
+{
+	return getChild<StringPlug>( "name" );
+}
+
+Gaffer::TransformPlug *Group::transformPlug()
 {
 	return getChild<TransformPlug>( "transform" );
 }
 
-const Gaffer::TransformPlug *GroupScenes::transformPlug() const
+const Gaffer::TransformPlug *Group::transformPlug() const
 {
 	return getChild<TransformPlug>( "transform" );
 }
 
-void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 	
@@ -122,7 +122,7 @@ void GroupScenes::affects( const ValuePlug *input, AffectedPlugsContainer &outpu
 	
 }
 
-void GroupScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
 	if( output == mappingPlug() )
 	{
@@ -136,7 +136,7 @@ void GroupScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 static boost::regex g_namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
 static boost::format g_namePrefixSuffixFormatter( "%s%d" );
 
-IECore::ObjectPtr GroupScenes::computeMapping( const Gaffer::Context *context ) const
+IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 {
 	/// \todo It might be more optimal to make our own Object subclass better tailored
 	/// for passing the information we want.
@@ -144,7 +144,7 @@ IECore::ObjectPtr GroupScenes::computeMapping( const Gaffer::Context *context ) 
 	
 	StringVectorDataPtr childNamesData = new StringVectorData();
 	vector<string> &childNames = childNamesData->writable();
-	result->members()["__GroupScenesChildNames"] = childNamesData;
+	result->members()["__GroupChildNames"] = childNamesData;
 	
 	set<string> allNames;
 	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
@@ -194,7 +194,7 @@ IECore::ObjectPtr GroupScenes::computeMapping( const Gaffer::Context *context ) 
 	return result;
 }
 
-Imath::Box3f GroupScenes::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -223,7 +223,7 @@ Imath::Box3f GroupScenes::computeBound( const ScenePath &path, const Gaffer::Con
 	}
 }
 
-Imath::M44f GroupScenes::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -243,7 +243,7 @@ Imath::M44f GroupScenes::computeTransform( const ScenePath &path, const Gaffer::
 	}
 }
 
-IECore::ObjectVectorPtr GroupScenes::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectVectorPtr Group::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -262,7 +262,7 @@ IECore::ObjectVectorPtr GroupScenes::computeState( const ScenePath &path, const 
 	return 0;
 }
 
-IECore::ObjectPtr GroupScenes::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -279,7 +279,7 @@ IECore::ObjectPtr GroupScenes::computeObject( const ScenePath &path, const Gaffe
 	}
 }
 
-IECore::StringVectorDataPtr GroupScenes::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::StringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {	
 	std::string groupName = namePlug()->getValue();
 	
@@ -292,7 +292,7 @@ IECore::StringVectorDataPtr GroupScenes::computeChildNames( const ScenePath &pat
 	else if( path.size() == groupName.size() + 1 )
 	{
 		ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
-		ConstStringVectorDataPtr names = mapping->member<StringVectorData>( "__GroupScenesChildNames" );
+		ConstStringVectorDataPtr names = mapping->member<StringVectorData>( "__GroupChildNames" );
 		return names ? names->copy() : 0;
 	}
 	else
@@ -304,13 +304,13 @@ IECore::StringVectorDataPtr GroupScenes::computeChildNames( const ScenePath &pat
 	}
 }
 
-IECore::ObjectVectorPtr GroupScenes::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ObjectVectorPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
 	return globals ? globals->copy() : 0;
 }
 
-std::string GroupScenes::sourcePath( const std::string &outputPath, const std::string &groupName, ScenePlug **source ) const
+std::string Group::sourcePath( const std::string &outputPath, const std::string &groupName, ScenePlug **source ) const
 {	
 	size_t slashPos = outputPath.find( "/", groupName.size() + 2 );
 	std::string mappedChildName( outputPath, groupName.size() + 2, slashPos - groupName.size() - 2 );
@@ -332,27 +332,27 @@ std::string GroupScenes::sourcePath( const std::string &outputPath, const std::s
 	return result;
 }
 
-Gaffer::ObjectPlug *GroupScenes::mappingPlug()
+Gaffer::ObjectPlug *Group::mappingPlug()
 {
 	return getChild<Gaffer::ObjectPlug>( "__mapping" );
 }
 
-const Gaffer::ObjectPlug *GroupScenes::mappingPlug() const
+const Gaffer::ObjectPlug *Group::mappingPlug() const
 {
 	return getChild<Gaffer::ObjectPlug>( "__mapping" );
 }
 
-Gaffer::ObjectPlug *GroupScenes::inputMappingPlug()
+Gaffer::ObjectPlug *Group::inputMappingPlug()
 {
 	return getChild<Gaffer::ObjectPlug>( "__inputMapping" );
 }
 
-const Gaffer::ObjectPlug *GroupScenes::inputMappingPlug() const
+const Gaffer::ObjectPlug *Group::inputMappingPlug() const
 {
 	return getChild<Gaffer::ObjectPlug>( "__inputMapping" );
 }
 
-void GroupScenes::childAdded( GraphComponent *parent, GraphComponent *child )
+void Group::childAdded( GraphComponent *parent, GraphComponent *child )
 {
 	if( child->isInstanceOf( ScenePlug::staticTypeId() ) )
 	{
@@ -364,7 +364,7 @@ void GroupScenes::childAdded( GraphComponent *parent, GraphComponent *child )
 	}
 }
 
-void GroupScenes::plugInputChanged( Gaffer::Plug *plug )
+void Group::plugInputChanged( Gaffer::Plug *plug )
 {
 	if( plug->isInstanceOf( ScenePlug::staticTypeId() ) )
 	{
@@ -372,7 +372,7 @@ void GroupScenes::plugInputChanged( Gaffer::Plug *plug )
 	}
 }
 
-void GroupScenes::addAndRemoveInputs()
+void Group::addAndRemoveInputs()
 {
 	int lastConnected = -1;
 	std::vector<ScenePlug *> inputs;

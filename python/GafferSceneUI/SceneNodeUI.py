@@ -98,6 +98,6 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader", GafferUI.StandardNodule )
 
-# GroupScenes
+# Group
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.GroupScenes.staticTypeId(), "in[0-9]*", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Group.staticTypeId(), "in[0-9]*", None )

@@ -46,7 +46,7 @@
 #include "GafferScene/AttributeCache.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/GroupScenes.h"
+#include "GafferScene/Group.h"
 #include "GafferScene/SceneTimeWarp.h"
 #include "GafferScene/Plane.h"
 #include "GafferScene/Seeds.h"
@@ -128,7 +128,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<AttributeCache>();
 	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
 	GafferBindings::NodeClass<DeletePrimitiveVariables>();
-	GafferBindings::NodeClass<GroupScenes>();
+	GafferBindings::NodeClass<Group>();
 	GafferBindings::NodeClass<SceneContextProcessorBase>();
 	GafferBindings::NodeClass<SceneContextProcessor>();
 	GafferBindings::NodeClass<SceneTimeWarp>();

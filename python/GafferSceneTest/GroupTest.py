@@ -42,7 +42,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class GroupScenesTest( unittest.TestCase ) :
+class GroupTest( unittest.TestCase ) :
 		
 	def testTwoLevels( self ) :
 	
@@ -65,7 +65,7 @@ class GroupScenesTest( unittest.TestCase ) :
 			} ),
 		)
 		
-		group = GafferScene.GroupScenes( inputs = { "in" : input["out"], "name" : "topLevel" } )
+		group = GafferScene.Group( inputs = { "in" : input["out"], "name" : "topLevel" } )
 		self.assertEqual( group["name"].getValue(), "topLevel" )
 		
 		self.assertEqual( group["out"].object( "/" ), None )
@@ -108,7 +108,7 @@ class GroupScenesTest( unittest.TestCase ) :
 			} )
 		)
 		
-		group = GafferScene.GroupScenes( inputs = { "in" : input["out"], "transform.translate" : IECore.V3f( 0, 1, 0 ) } )
+		group = GafferScene.Group( inputs = { "in" : input["out"], "transform.translate" : IECore.V3f( 0, 1, 0 ) } )
 		self.assertEqual( group["name"].getValue(), "group" )
 		
 		groupedRootBound = IECore.Box3f( originalRootBound.min, originalRootBound.max )
@@ -132,7 +132,7 @@ class GroupScenesTest( unittest.TestCase ) :
 	
 	def testAddAndRemoveInputs( self ) :
 	
-		g = GafferScene.GroupScenes()
+		g = GafferScene.Group()
 		p = GafferScene.Plane()
 		
 		def scenePlugNames() :
@@ -204,7 +204,7 @@ class GroupScenesTest( unittest.TestCase ) :
 		combinedBound = sphere.bound()
 		combinedBound.extendBy( plane.bound() )
 		
-		group = GafferScene.GroupScenes()
+		group = GafferScene.Group()
 		group["name"].setValue( "topLevel" )
 		group["in"].setInput( input1["out"] )
 		group["in1"].setInput( input2["out"] )
@@ -272,7 +272,7 @@ class GroupScenesTest( unittest.TestCase ) :
 		combinedBound = sphere.bound()
 		combinedBound.extendBy( plane.bound() )
 		
-		group = GafferScene.GroupScenes()
+		group = GafferScene.Group()
 		group["name"].setValue( "topLevel" )
 		group["in"].setInput( input1["out"] )
 		group["in1"].setInput( input2["out"] )
@@ -301,7 +301,7 @@ class GroupScenesTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferScene.Camera()
-		s["g"] = GafferScene.GroupScenes()
+		s["g"] = GafferScene.Group()
 		s["g"]["in"].setInput( s["c"]["out"] )
 		s["g"]["in1"].setInput( s["c"]["out"] )
 		

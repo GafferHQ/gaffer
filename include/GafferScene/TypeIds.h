@@ -51,7 +51,7 @@ enum TypeId
 	AttributeCacheTypeId = 110507,
 	PrimitiveVariableProcessorTypeId = 110508,
 	DeletePrimitiveVariablesTypeId = 110509,
-	GroupScenesTypeId = 110510,
+	GroupTypeId = 110510,
 	SceneContextProcessorBaseTypeId = 110511,
 	SceneContextProcessorTypeId = 110512,
 	SceneTimeWarpTypeId = 110513,

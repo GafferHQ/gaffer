@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GROUPSCENES_H
-#define GAFFERSCENE_GROUPSCENES_H
+#ifndef GAFFERSCENE_GROUP_H
+#define GAFFERSCENE_GROUP_H
 
 #include "Gaffer/TransformPlug.h"
 
@@ -44,15 +44,15 @@
 namespace GafferScene
 {
 
-class GroupScenes : public SceneProcessor
+class Group : public SceneProcessor
 {
 
 	public :
 
-		GroupScenes( const std::string &name=staticTypeName() );
-		virtual ~GroupScenes();
+		Group( const std::string &name=staticTypeName() );
+		virtual ~Group();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GroupScenes, GroupScenesTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Group, GroupTypeId, SceneProcessor );
 		
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -95,4 +95,4 @@ class GroupScenes : public SceneProcessor
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_GROUPSCENES_H
+#endif // GAFFERSCENE_GROUP_H

@@ -40,7 +40,7 @@ from _GafferSceneTest import *
 
 from ScenePlugTest import ScenePlugTest
 from AttributeCacheTest import AttributeCacheTest
-from GroupScenesTest import GroupScenesTest
+from GroupTest import GroupTest
 from SceneTimeWarpTest import SceneTimeWarpTest
 from SceneProceduralTest import SceneProceduralTest
 from PlaneTest import PlaneTest
