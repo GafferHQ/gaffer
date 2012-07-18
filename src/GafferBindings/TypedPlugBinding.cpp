@@ -37,7 +37,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/IECoreBinding.h"
 

@@ -45,7 +45,6 @@
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;

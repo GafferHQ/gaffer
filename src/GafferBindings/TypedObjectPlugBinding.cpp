@@ -39,7 +39,6 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/NullObject.h"
-#include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/TypedObjectPlug.h"

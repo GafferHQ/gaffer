@@ -44,7 +44,6 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Node.h"
 
-#include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
