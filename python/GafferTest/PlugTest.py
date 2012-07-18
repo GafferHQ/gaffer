@@ -304,6 +304,18 @@ class PlugTest( unittest.TestCase ) :
 		s.execute( ss )
 		
 		self.assertEqual( s["n"]["p"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+	
+	def testAcceptsInputsFlag( self ) :
+	
+		pOut = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		
+		pIn1 = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs )
+		self.assertEqual( pIn1.getFlags( Gaffer.Plug.Flags.AcceptsInputs ), False )
+		self.assertEqual( pIn1.acceptsInput( pOut ), False )
+		
+		pIn2 = Gaffer.Plug()
+		self.assertEqual( pIn2.getFlags( Gaffer.Plug.Flags.AcceptsInputs ), True )
+		self.assertEqual( pIn2.acceptsInput( pOut ), True )
 		
 if __name__ == "__main__":
 	unittest.main()

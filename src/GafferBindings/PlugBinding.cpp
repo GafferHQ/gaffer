@@ -88,8 +88,8 @@ std::string GafferBindings::serialisePlugFlags( unsigned flags )
 		return "Gaffer.Plug.Flags.All";
 	}
 	
-	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::None };
-	static const char *names[] = { "Dynamic", "Serialisable", 0 };
+	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::None };
+	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", 0 };
 	
 	std::string result;
 	for( int i=0; names[i]; i++ )
@@ -180,6 +180,7 @@ void GafferBindings::bindPlug()
 			.value( "None", Plug::None )
 			.value( "Dynamic", Plug::Dynamic )
 			.value( "Serialisable", Plug::Serialisable )
+			.value( "AcceptsInputs", Plug::AcceptsInputs )
 			.value( "Default", Plug::Default )
 			.value( "All", Plug::All )
 		;

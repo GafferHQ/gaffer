@@ -73,8 +73,11 @@ class Plug : public GraphComponent
 			/// Serialisable plugs are saved into scripts, whereas non-serialisable plugs
 			/// are not.
 			Serialisable = 0x00000002,
-			Default = Serialisable,
-			All = Dynamic | Serialisable
+			/// If the AcceptsInputs flag is not set, then acceptsInput() always returns
+			/// false.
+			AcceptsInputs = 0x00000004,
+			Default = Serialisable | AcceptsInputs,
+			All = Dynamic | Serialisable | AcceptsInputs
 		};
 	
 		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
@@ -117,8 +120,8 @@ class Plug : public GraphComponent
 		/// should call their base class and only accept an
 		/// input if their base class does too. The default
 		/// implementation accepts any input, provided that 
-		/// direction()==In, and node()->acceptsInput() also
-		/// accepts the input.
+		/// direction()==In and the AcceptsInputs flag is set,
+		/// and that node()->acceptsInput() also accepts the input.
 		virtual bool acceptsInput( const Plug *input ) const;
 		/// Sets the input to this plug if acceptsInput( input )
 		/// returns true, otherwise throws an IECore::Exception.

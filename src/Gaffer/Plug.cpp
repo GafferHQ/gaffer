@@ -118,6 +118,11 @@ void Plug::setFlags( unsigned flags, bool enable )
 
 bool Plug::acceptsInput( const Plug *input ) const
 {
+	if( !getFlags( AcceptsInputs ) )
+	{
+		return false;
+	}
+	
 	if( const Node *n = node() )
 	{
 		if( !n->acceptsInput( this, input ) )
