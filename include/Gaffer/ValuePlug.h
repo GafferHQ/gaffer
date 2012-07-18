@@ -73,9 +73,7 @@ class ValuePlug : public Plug
 
 		/// Must be implemented by derived classes to set the value
 		/// to the default for this Plug.
-		/// \todo I think we need this for when an input connection
-		/// is removed, so we can revert to default.
-		///virtual void setToDefault() = 0;
+		virtual void setToDefault() = 0;
 		
 	protected :
 	

@@ -176,6 +176,18 @@ class TypedObjectPlugTest( unittest.TestCase ) :
  		
  		self.assertEqual( s2["n"]["p"].getValue(), IECore.IntData( 10 ) )
 	
+	def testSetToDefault( self ) :
+	
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 10 ) ) )
+		plug = Gaffer.ObjectPlug( defaultValue = plane )
+		self.assertEqual( plug.getValue(), plane )
+		
+		plug.setValue( IECore.SpherePrimitive() )
+		self.assertEqual( plug.getValue(), IECore.SpherePrimitive() )
+		
+		plug.setToDefault()
+		self.assertEqual( plug.getValue(), plane )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

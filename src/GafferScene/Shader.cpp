@@ -66,23 +66,5 @@ IECore::ObjectVectorPtr Shader::state() const
 /// to implement compute().
 void Shader::compute( ValuePlug *output, const Context *context ) const
 {
-	/// \todo If ValuePlug had a setToDefault() method then we could
-	/// simply call that here.
-	switch( output->typeId() )
-	{
-		case FloatPlugTypeId :
-			static_cast<FloatPlug *>( output )->setValue( 0.0f );
-			break;
-		case IntPlugTypeId :
-			static_cast<IntPlug *>( output )->setValue( 0 );
-			break;
-		case StringPlugTypeId :
-			static_cast<StringPlug *>( output )->setValue( "" );
-			break;
-		default :
-			// we don't expect to get here. if we do then there'll be an
-			// error reported by ValuePlug when we don't call setValue()
-			// so we don't need to do our own error handling.
-			break;
-	}
+	output->setToDefault();
 }

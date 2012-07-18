@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,17 @@ class TypedPlugTest( unittest.TestCase ) :
 		self.assertEqual( p.typeName(), "BoolPlug" )
 		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( p.typeId() ), "BoolPlug" )
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
+
+	def testSetToDefault( self ) :
+	
+		s = Gaffer.StringPlug( "s", defaultValue = "apple" )
+		self.assertEqual( s.getValue(), "apple" )
+		
+		s.setValue( "pear" )
+		self.assertEqual( s.getValue(), "pear" )
+		
+		s.setToDefault()
+		self.assertEqual( s.getValue(), "apple" )
 						
 if __name__ == "__main__":
 	unittest.main()

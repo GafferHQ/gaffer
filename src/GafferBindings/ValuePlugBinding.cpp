@@ -91,5 +91,6 @@ void GafferBindings::bindValuePlug()
 {
 	IECorePython::RunTimeTypedClass<ValuePlug>()
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( ValuePlug )
-	;	
+		.def( "setToDefault", &ValuePlug::setToDefault )
+	;
 }

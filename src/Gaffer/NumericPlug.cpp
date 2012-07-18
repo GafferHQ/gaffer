@@ -138,6 +138,12 @@ T NumericPlug<T>::getValue() const
 }
 
 template<class T>
+void NumericPlug<T>::setToDefault()
+{
+	setValue( m_defaultValue );
+}
+
+template<class T>
 void NumericPlug<T>::setFrom( const ValuePlug *other )
 {
 	switch( other->typeId() )

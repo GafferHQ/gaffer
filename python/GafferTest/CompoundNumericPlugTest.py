@@ -182,6 +182,17 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		t = p.typeId()
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.CompoundPlug.staticTypeId() )
 
+	def testSetToDefault( self ) :
+	
+		p = Gaffer.V3fPlug( defaultValue = IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
+		
+		p.setValue( IECore.V3f( 4 ) )
+		self.assertEqual( p.getValue(), IECore.V3f( 4 ) )
+		
+		p.setToDefault()
+		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

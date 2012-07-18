@@ -99,6 +99,12 @@ typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue() const
 }
 
 template<class T>
+void TypedObjectPlug<T>::setToDefault()
+{
+	setValue( m_defaultValue );
+}
+
+template<class T>
 void TypedObjectPlug<T>::setFrom( const ValuePlug *other )
 {
 	const TypedObjectPlug<T> *tOther = IECore::runTimeCast<const TypedObjectPlug>( other );

@@ -82,6 +82,7 @@ class TypedObjectPlug : public ValuePlug
 		/// Returns the value.
 		ConstValuePtr getValue() const;
 
+		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );
 
 	private :

@@ -99,6 +99,12 @@ T TypedPlug<T>::getValue() const
 }
 
 template<class T>
+void TypedPlug<T>::setToDefault()
+{
+	setValue( m_defaultValue );
+}
+
+template<class T>
 void TypedPlug<T>::setFrom( const ValuePlug *other )
 {
 	const TypedPlug<T> *tOther = IECore::runTimeCast<const TypedPlug<T> >( other );

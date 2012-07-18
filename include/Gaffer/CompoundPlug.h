@@ -63,6 +63,7 @@ class CompoundPlug : public ValuePlug
 		/// input and this Plug.
 		virtual void setInput( PlugPtr input );
 
+		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );
 		
 	private :

@@ -140,6 +140,19 @@ void CompoundPlug::setInput( PlugPtr input )
 	ValuePlug::setInput( input );
 }
 
+void CompoundPlug::setToDefault()
+{
+	ChildContainer::const_iterator it;
+	for( it = children().begin(); it!=children().end(); it++ )
+	{
+		ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
+		if( valuePlug )
+		{
+			valuePlug->setToDefault();
+		}
+	}
+}
+
 void CompoundPlug::setFrom( const ValuePlug *other )
 {
 	/// \todo Probably need to propagate the call to children, but not sure yet.

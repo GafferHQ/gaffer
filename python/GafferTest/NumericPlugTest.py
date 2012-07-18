@@ -153,7 +153,18 @@ class NumericPlugTest( unittest.TestCase ) :
 		# because it was the same.
 		self.assertEqual( len( inputChangedSignals ), 1 )
 		self.assertEqual( len( dirtiedSignals ), 2 )
-			
+	
+	def testSetToDefault( self ) :
+	
+		i = Gaffer.IntPlug( "i", defaultValue = 10 )
+		self.assertEqual( i.getValue(), 10 )
+		
+		i.setValue( 1 )
+		self.assertEqual( i.getValue(), 1 )
+		
+		i.setToDefault()
+		self.assertEqual( i.getValue(), 10 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
