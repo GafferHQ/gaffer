@@ -365,6 +365,30 @@ class NodeTest( unittest.TestCase ) :
 	
 		self.assertEqual( n1["in"].acceptsInput( n2["out"] ), True )
 		self.assertEqual( n1["in"].acceptsInput( n3["sum"] ), False )
+	
+	def testDirtyOnDisconnect( self ) :
+	
+		n1 = GafferTest.AddNode( "n1" )
+		n2 = GafferTest.AddNode( "n2" )
 		
+		n1["op1"].setValue( 2 )
+		n1["op2"].setValue( 3 )
+		
+		dirtied = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
+		set = GafferTest.CapturingSlot( n2.plugSetSignal() )
+		n2["op1"].setInput( n1["sum"] )
+				
+		self.assertEqual( len( set ), 0 )
+		self.assertEqual( len( dirtied ), 2 )
+		self.failUnless( dirtied[0][0].isSame( n2["op1"] ) )
+		self.failUnless( dirtied[1][0].isSame( n2["sum"] ) )
+
+		n2["op1"].setInput( None )
+		
+		self.assertEqual( len( set ), 1 )
+		self.failUnless( set[0][0].isSame( n2["op1"] ) )
+		self.assertEqual( len( dirtied ), 3 )
+		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
+	
 if __name__ == "__main__":
 	unittest.main()

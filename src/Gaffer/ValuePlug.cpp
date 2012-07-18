@@ -167,7 +167,9 @@ void ValuePlug::setInput( PlugPtr input )
 	}
 	else
 	{
-		/// \todo Need to revert to default value	
+		// set value back to what it was before
+		// we received a connection.
+		setValueInternal( m_staticValue );
 	}
 }
 

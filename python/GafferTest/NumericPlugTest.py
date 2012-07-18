@@ -165,6 +165,36 @@ class NumericPlugTest( unittest.TestCase ) :
 		i.setToDefault()
 		self.assertEqual( i.getValue(), 10 )
 		
+	def testDisconnectRevertsToPreviousValue( self ) :
+	
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+		
+		n2["op1"].setValue( 1010 )
+		self.assertEqual( n2["op1"].getValue(), 1010 )
+		
+		n2["op1"].setInput( n1["sum"] )
+		self.failUnless( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertEqual( n2["op1"].getValue(), 0 )
+		
+		n2["op1"].setInput( None )
+		self.assertEqual( n2["op1"].getInput(), None )
+		self.assertEqual( n2["op1"].getValue(), 1010 )
+	
+	def testDisconnectEmitsPlugSet( self ) :
+	
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+		
+		n2["op1"].setInput( n1["sum"] )
+	
+		set = GafferTest.CapturingSlot( n2.plugSetSignal() )
+		
+		n2["op1"].setInput( None )
+		
+		self.assertEqual( len( set ), 1 )
+		self.failUnless( set[0][0].isSame( n2["op1"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
