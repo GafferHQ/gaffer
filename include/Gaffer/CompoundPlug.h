@@ -73,9 +73,6 @@ class CompoundPlug : public ValuePlug
 	
 		boost::signals::connection m_plugInputChangedConnection;
 		void plugInputChanged( Plug *plug );
-
-		boost::signals::connection m_plugSetConnection;
-		void plugSet( Plug *plug );
 		
 		void updateInputFromChildInputs( Plug *checkFirst );
 		

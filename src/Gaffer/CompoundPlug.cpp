@@ -143,7 +143,7 @@ void CompoundPlug::setInput( PlugPtr input )
 void CompoundPlug::setToDefault()
 {
 	ChildContainer::const_iterator it;
-	for( it = children().begin(); it!=children().end(); it++ )
+	for( it=children().begin(); it!=children().end(); it++ )
 	{
 		ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
 		if( valuePlug )
@@ -161,13 +161,11 @@ void CompoundPlug::setFrom( const ValuePlug *other )
 void CompoundPlug::parentChanged()
 {
 	m_plugInputChangedConnection.disconnect();
-	m_plugSetConnection.disconnect();
 	
 	Node *n = node();
 	if( n )
 	{
 		m_plugInputChangedConnection = n->plugInputChangedSignal().connect( boost::bind( &CompoundPlug::plugInputChanged, this, ::_1 ) );
-		m_plugSetConnection = n->plugSetSignal().connect( boost::bind( &CompoundPlug::plugSet, this, ::_1 ) );
 	}
 }
 
@@ -190,28 +188,6 @@ void CompoundPlug::plugInputChanged( Plug *plug )
 	if( plug->parent<CompoundPlug>()==this )
 	{
 		updateInputFromChildInputs( plug );
-	}
-}
-
-void CompoundPlug::plugSet( Plug *plug )
-{
-	// the CompoundPlug immediately below the Node takes on the task
-	// of emitting the plugSet signals for all CompoundPlugs between
-	// the plug and the Node.
-	Node *n = node();
-	if( !n )
-	{
-		return;
-	}
-	if( this->isAncestorOf( plug ) )
-	{
-		PlugPtr p = plug;
-		m_plugSetConnection.block();
-			do {
-				p = p->parent<Plug>();
-				n->plugSetSignal()( p );
-			} while( p!=this );
-		m_plugSetConnection.unblock();
 	}
 }
 

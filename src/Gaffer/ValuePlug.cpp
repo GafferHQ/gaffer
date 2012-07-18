@@ -246,7 +246,12 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
 		// because the node may wish to perform some internal setup when plugs
 		// are set, and listeners on output plugs may pull to get new
 		// output values as soon as the dirty signal is emitted. 
-		n->plugSetSignal()( this );
+		ValuePlug *p = this;
+		while( p )
+		{
+			n->plugSetSignal()( p );
+			p = p->parent<ValuePlug>();
+		}
 	}
 	propagateDirtiness();
 }
