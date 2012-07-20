@@ -71,6 +71,7 @@ from StandardStyleTest import StandardStyleTest
 from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 from LabelTest import LabelTest
 from ScrolledContainerTest import ScrolledContainerTest
+from ParameterValueWidgetTest import ParameterValueWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()
