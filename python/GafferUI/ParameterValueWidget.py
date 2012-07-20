@@ -97,18 +97,25 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		if parameter.presetsOnly :
 			return GafferUI.PresetsOnlyParameterValueWidget( parameterHandler )
 	
+		uiTypeHint = None
+		with IECore.IgnoredExceptions( KeyError ) :
+			uiTypeHint = parameter.userData()["UI"]["typeHint"].value
+	
 		parameterHierarchy = IECore.RunTimeTyped.baseTypeIds( parameter.typeId() )
 		for typeId in [ parameter.typeId() ] + parameterHierarchy :	
-			creator = cls.__typesToCreators.get( typeId, None )
+			creator = cls.__typesToCreators.get( ( typeId, uiTypeHint ), None )
 			if creator is not None :
 				return creator( parameterHandler )
+			creator = cls.__typesToCreators.get( ( typeId, None ), None )
+			if creator is not None :
+				return creator( parameterHandler )	
 		
 		return GafferUI.PlugValueWidget.create( parameterHandler.plug() )
 		
 	@classmethod
-	def registerType( cls, parameterTypeId, creator ) :
+	def registerType( cls, parameterTypeId, creator, uiTypeHint = None ) :
 	
-		cls.__typesToCreators[parameterTypeId] = creator
+		cls.__typesToCreators[(parameterTypeId, uiTypeHint)] = creator
 
 	__typesToCreators = {}
 	

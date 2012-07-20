@@ -102,6 +102,8 @@ swatch.
 
 * The browser OpMode now takes an additional classLoader argument to the constructor, allowing the use of custom class loaders.
 
+* The ParameterValueWidget.registerType() method now accepts an optional uiTypeHint argument, which allows the registration of custom uis, which parameters can request using the standard ["UI"]["typeHint"] userData entry.
+
 0.34.0
 ------
 
