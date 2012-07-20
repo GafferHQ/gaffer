@@ -46,6 +46,7 @@ def __enter( self ) :
 		self._scopes = []
 		
 	self._scopes.append( Gaffer.Context._Scope( self ) )
+	return self
 	
 def __exit( self, type, value, traceBack ) :
 

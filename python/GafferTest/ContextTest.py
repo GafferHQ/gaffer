@@ -227,6 +227,12 @@ class ContextTest( unittest.TestCase ) :
 		
 		self.failUnless( w() is None )
 		
+	def testWithBlockReturnValue( self ) :
+	
+		with Gaffer.Context() as c :
+			self.failUnless( isinstance( c, Gaffer.Context ) )
+			self.failUnless( c.isSame( Gaffer.Context.current() ) ) 
+		
 if __name__ == "__main__":
 	unittest.main()
 	
