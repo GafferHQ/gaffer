@@ -34,46 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "GafferScene/Filter.h"
 
-namespace GafferScene
+using namespace GafferScene;
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( Filter );
+
+Filter::Filter( const std::string &name )
+	:	Node( name )
 {
+	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, Match ) );
+}
 
-enum TypeId
+Filter::~Filter()
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	FilterTypeId = 110527,
-	PathFilterTypeId = 110528,
-	
-	LastTypeId = 110700
-};
+}
 
-} // namespace GafferScene
+Gaffer::IntPlug *Filter::matchPlug()
+{
+	return getChild<Gaffer::IntPlug>( "match" );
+}
 
-#endif // GAFFERSCENE_TYPEIDS_H
+const Gaffer::IntPlug *Filter::matchPlug() const
+{
+	return getChild<Gaffer::IntPlug>( "match" );
+}
+				
+void Filter::compute( ValuePlug *output, const Context *context ) const
+{
+	if( output == matchPlug() )
+	{
+		static_cast<IntPlug *>( output )->setValue( computeMatch( context ) );
+	}
+}

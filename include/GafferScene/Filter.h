@@ -34,46 +34,46 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_FILTER_H
+#define GAFFERSCENE_FILTER_H
+
+#include "Gaffer/Node.h"
+#include "Gaffer/NumericPlug.h"
+
+#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class Filter : public Gaffer::Node
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	FilterTypeId = 110527,
-	PathFilterTypeId = 110528,
-	
-	LastTypeId = 110700
+
+	public :
+
+		enum Result
+		{
+			NoMatch = 0,
+			DescendantMatch = 1,
+			Match = 2
+		};
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Filter, FilterTypeId, Gaffer::Node );
+
+		Filter( const std::string &name=staticTypeName() );
+		virtual ~Filter();
+		
+		Gaffer::IntPlug *matchPlug();
+		const Gaffer::IntPlug *matchPlug() const;
+				
+	protected :
+
+		/// Implemented to call computeMatch() below when computing the value of matchPlug().
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		/// Must be implemented by derived classes.
+		virtual Result computeMatch( const Gaffer::Context *context ) const = 0;
+
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_FILTER_H

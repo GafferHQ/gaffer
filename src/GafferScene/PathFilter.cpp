@@ -34,46 +34,65 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "Gaffer/Context.h"
 
-namespace GafferScene
-{
+#include "GafferScene/PathFilter.h"
 
-enum TypeId
+using namespace GafferScene;
+using namespace Gaffer;
+using namespace IECore;
+using namespace std;
+
+IE_CORE_DEFINERUNTIMETYPED( PathFilter );
+
+PathFilter::PathFilter( const std::string &name )
+	:	Filter( name )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	FilterTypeId = 110527,
-	PathFilterTypeId = 110528,
+	addChild( new StringVectorDataPlug( "paths", Plug::In, 0, Plug::Default ) );
+}
+
+PathFilter::~PathFilter()
+{
+}
+
+Gaffer::StringVectorDataPlug *PathFilter::pathsPlug()
+{
+	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
+}
+
+const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
+{
+	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
+}
+
+void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	if( input == pathsPlug() )
+	{
+		outputs.push_back( matchPlug() );
+	}
+}
+
+Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
+{
+	string path = context->get<string>( "scene:path" );
 	
-	LastTypeId = 110700
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H
+	Result result = NoMatch;
+	ConstStringVectorDataPtr paths = pathsPlug()->getValue();
+	for( vector<string>::const_iterator it = paths->readable().begin(), eIt = paths->readable().end(); it != eIt; it++ )
+	{
+		if( it->compare( 0, path.size(), path ) == 0 )
+		{
+			if( it->size() == path.size() )
+			{
+				return Match;
+			}
+			else if( it->size() > path.size() && (*it)[path.size()] == '/' )
+			{
+				// don't return yet, because we're holding out for a full match
+				result = DescendantMatch;
+			}
+		}
+	}
+	return result;
+}

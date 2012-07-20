@@ -34,24 +34,59 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
+import Gaffer
 import GafferScene
 
-from _GafferSceneTest import *
+class PathFilterTest( unittest.TestCase ) :
 
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathFilterTest import PathFilterTest
-
+	def testConstruct( self ) :
+	
+		f = GafferScene.PathFilter()
+	
+	def testAffects( self ) :
+	
+		f = GafferScene.PathFilter()
+		a = f.affects( f["paths"] )
+		self.assertEqual( len( a ), 1 )
+		self.failUnless( a[0].isSame( f["match"] ) )
+	
+	def testMatch( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
+	
+		with Gaffer.Context() as c :
+		
+			c["scene:path"] = "/a"
+			self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
+		
+			c["scene:path"] = "/red"
+			self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
+			
+			c["scene:path"] = "/re"
+			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
+			
+			c["scene:path"] = "/redThing"
+			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
+			
+			c["scene:path"] = "/b/c/d"
+			self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
+		
+			c["scene:path"] = "/c"
+			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
+		
+			c["scene:path"] = "/a/b"
+			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
+		
+			c["scene:path"] = "/blue"
+			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
+		
+			c["scene:path"] = "/b/c"
+			self.assertEqual( f["match"].getValue(), int( f.Result.DescendantMatch ) )
+			
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

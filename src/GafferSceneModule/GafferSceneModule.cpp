@@ -59,6 +59,8 @@
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/Assignment.h"
+#include "GafferScene/Filter.h"
+#include "GafferScene/PathFilter.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 
@@ -152,5 +154,17 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	;
 	
 	GafferBindings::NodeClass<Assignment>();
+	
+	{
+		scope s = GafferBindings::NodeClass<Filter>();
+	
+		enum_<Filter::Result>( "Result" )
+			.value( "NoMatch", Filter::NoMatch )
+			.value( "DescendantMatch", Filter::DescendantMatch )
+			.value( "Match", Filter::Match )
+		;
+	}
+				
+	GafferBindings::NodeClass<PathFilter>();
 
 }
