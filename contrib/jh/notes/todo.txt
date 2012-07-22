@@ -11,6 +11,10 @@ PRIORITIES!!!!
 
 	* caching
 
+* allow SceneElementProcessors to not have filters if they don't want
+	- AttributeCache for instance
+		- although if it's not storing bounds then actually its fine
+
 * rename statePlug to attributesPlug and turn it from an ObjectVector to a CompoundObject
 
 * proper scenePath class so we don't have to do loads of string manipulation
