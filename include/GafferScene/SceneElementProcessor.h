@@ -54,10 +54,16 @@ class SceneElementProcessor : public SceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, SceneProcessor );
 		
+		Gaffer::IntPlug *filterPlug();
+		const Gaffer::IntPlug *filterPlug() const;
+		
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
+
+		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 		
 		/// Implemented to call processBound().
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -72,10 +78,16 @@ class SceneElementProcessor : public SceneProcessor
 		/// Implemented as a pass-through.
 		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
-		/// May be reimplemented by derived classes - default implementations are pass-throughs.
+		/// May be reimplemented by derived classes to process the input scene. These methods will only be called for paths matching
+		/// the filter applied to this node. Note that in the case of processBound(), modifications will automatically be propagated to
+		/// parent paths. This comes at some expense, so subclasses that intend to process the bound must implement processesBound() to
+		/// return true to enable this behaviour.
 		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+		/// Defaults to false - if you override processBound, you /must/ reimplement this to return true.
+		virtual bool processesBound() const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 		virtual IECore::ObjectVectorPtr processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const;
+		/// Note that if you change the bound of object, you need to reimplement both processBound() and processesBound().
 		virtual IECore::ObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 		
 };

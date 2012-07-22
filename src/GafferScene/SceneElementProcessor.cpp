@@ -35,7 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/Filter.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -44,12 +46,23 @@ IE_CORE_DEFINERUNTIMETYPED( SceneElementProcessor );
 SceneElementProcessor::SceneElementProcessor( const std::string &name )
 	:	SceneProcessor( name )
 {
+	addChild( new IntPlug( "filter", Plug::In, Filter::Match, Filter::NoMatch, Filter::Match ) );
 }
 
 SceneElementProcessor::~SceneElementProcessor()
 {
 }
 
+Gaffer::IntPlug *SceneElementProcessor::filterPlug()
+{
+	return getChild<IntPlug>( "filter" );
+}
+
+const Gaffer::IntPlug *SceneElementProcessor::filterPlug() const
+{
+	return getChild<IntPlug>( "filter" );
+}
+		
 void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
@@ -59,26 +72,79 @@ void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContai
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
+	else if( input == filterPlug() )
+	{
+		outputs.push_back( outPlug() );
+	}
+}
+
+bool SceneElementProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( plug == filterPlug() )
+	{
+		const Node *n = inputPlug->node();
+		if( !n || !n->isInstanceOf( Filter::staticTypeId() ) )
+		{
+			return false;
+		}
+	}
+	return SceneProcessor::acceptsInput( plug, inputPlug );
 }
 
 Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processBound( path, context, inPlug()->boundPlug()->getValue() );
+	if( processesBound() )
+	{
+		Filter::Result f = (Filter::Result)filterPlug()->getValue();
+		if( f == Filter::Match )
+		{
+			return processBound( path, context, inPlug()->boundPlug()->getValue() );
+		}
+		else if( f == Filter::DescendantMatch )
+		{
+			return unionOfTransformedChildBounds( path, outPlug() );
+		}
+	}
+	
+	return inPlug()->boundPlug()->getValue();
 }
 
 Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processTransform( path, context, inPlug()->transformPlug()->getValue() );
+	if( filterPlug()->getValue() == Filter::Match )
+	{
+		return processTransform( path, context, inPlug()->transformPlug()->getValue() );
+	}
+	else
+	{
+		return inPlug()->transformPlug()->getValue();
+	}
 }
 
 IECore::ObjectVectorPtr SceneElementProcessor::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processState( path, context, inPlug()->statePlug()->getValue() );
+	if( filterPlug()->getValue() == Filter::Match )
+	{
+		return processState( path, context, inPlug()->statePlug()->getValue() );
+	}
+	else
+	{
+		ConstObjectVectorPtr s = inPlug()->statePlug()->getValue();
+		return s ? s->copy() : 0;
+	}
 }
 
 IECore::ObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return processObject( path, context, inPlug()->objectPlug()->getValue() );
+	if( filterPlug()->getValue() == Filter::Match )
+	{
+		return processObject( path, context, inPlug()->objectPlug()->getValue() );
+	}
+	else
+	{
+		ConstObjectPtr o = inPlug()->objectPlug()->getValue();
+		return o ? o->copy() : 0;
+	}
 }
 
 IECore::StringVectorDataPtr SceneElementProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -100,6 +166,11 @@ IECore::ObjectVectorPtr SceneElementProcessor::computeGlobals( const Gaffer::Con
 Imath::Box3f SceneElementProcessor::processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
 {
 	return inputBound;
+}
+
+bool SceneElementProcessor::processesBound() const
+{
+	return true;
 }
 
 Imath::M44f SceneElementProcessor::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
