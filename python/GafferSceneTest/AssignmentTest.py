@@ -34,25 +34,45 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
+class AssignmentTest( unittest.TestCase ) :
 
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-
+	def testFilter( self ) :
+	
+		sphere = IECore.SpherePrimitive()
+		input = GafferSceneTest.CompoundObjectSource()
+		input["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( sphere.bound() ),
+				"children" : {
+					"ball1" : {
+						"object" : sphere,
+						"bound" : IECore.Box3fData( sphere.bound() ),
+					},
+					"ball2" : {
+						"object" : sphere,
+						"bound" : IECore.Box3fData( sphere.bound() ),
+					},
+				},
+			} )
+		)
+	
+		a = GafferScene.Assignment()
+		a["in"].setInput( input["out"] )
+		
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
+		a["filter"].setInput( f["match"] )
+		
+		self.assertEqual( a["out"].state( "/" ), None )
+		self.assertNotEqual( len( a["out"].state( "/ball1" ) ), None )
+		self.assertEqual( a["out"].state( "/ball2" ), None )		
+			
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
