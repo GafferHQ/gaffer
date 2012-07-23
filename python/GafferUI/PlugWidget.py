@@ -48,7 +48,8 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## a V3fPlug for instance. I'm not even sure this class is necessary - perhaps the
 ## NodeUI should just make an appropriate label itself when needed. Perhaps we should
 ## also be using a non-editable NameWidget so that the name updates if the plug name
-## changes.
+## changes. In fact, I think what we want is a NameLabel class and possibly a PlugLabel
+## class derived from that.
 class PlugWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugOrPlugValueWidget, label=None, description=None, **kw ) :
