@@ -36,6 +36,8 @@ PRIORITIES!!!!
 
 * setrendercamera node
 
+* fix CompoundVectorParameter ui
+
 * tidy up scripting context
 	- just a parent() method (or weak reference or whatever)
 		- and no addChild() blah blah blah

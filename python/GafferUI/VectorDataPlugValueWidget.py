@@ -54,9 +54,15 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 	def _updateFromPlug( self ) :
 				
-		if self.getPlug() is not None :
+		plug = self.getPlug()
+		if plug is not None :
 			with self.getContext() :
-				self.__dataWidget.setData( self.getPlug().getValue() )
+				plugValue = plug.getValue()
+				if plugValue is None :
+					# the VectorDataWidget isn't so keen on not having data to work with,
+					# so we'll make an empty data of the right type.
+					plugValue = plug.ValueType()
+				self.__dataWidget.setData( plugValue )
 					
 		self.__dataWidget.setEditable( self._editable() )
 			

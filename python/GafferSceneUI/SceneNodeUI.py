@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 # SceneNode
 
@@ -70,6 +71,14 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "mdc" ] ) )
 	)
+)
+
+# SceneElementProcessor
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.SceneElementProcessor.staticTypeId(),
+	"filter",
+	GafferSceneUI.FilterPlugValueWidget,
 )
 
 # AttributeCache

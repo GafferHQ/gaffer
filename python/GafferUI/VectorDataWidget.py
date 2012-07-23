@@ -609,7 +609,6 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 
 	__typesToCreators = {}
 	
-_Delegate.registerType( IECore.StringVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.IntVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
