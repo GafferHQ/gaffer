@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,32 +34,68 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
+import IECore
+
+import Gaffer
+
+## \todo We need to emit the changed signal when children are added
+# and removed. It would be easiest to do this by having a descendantAddedSignal
+# on GraphComponent (otherwise we have to make connections to every child everywhere).
+class GraphComponentPath( Gaffer.Path ) :
+
+	def __init__( self, rootComponent, path, filter=None ) :
+		
+		Gaffer.Path.__init__( self, path, filter )
+	
+		assert( isinstance( rootComponent, Gaffer.GraphComponent ) )
+	
+		self.__rootComponent = rootComponent
+	
+	def isValid( self ) :
+	
+		try :
+			self.__graphComponent()
+			return True
+		except :
+			return False
+	
+	def isLeaf( self ) :
+	
+		return False
+			
+	def info( self ) :
+	
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
+					
+		gc = None
+		with IECore.IgnoredExceptions( Exception ) :
+			gc = self.__dictEntry()
+	
+		if gc is not None :
+			result["graphComponent:type"] = gc.typeName()
+	
+		return result
+		
+	def copy( self ) :
+	
+		return GraphComponentPath( self.__rootComponent, self[:], self.getFilter() )
+	
+	def _children( self ) :
+	
+		try :
+			e = self.__graphComponent()
+			return [ GraphComponentPath( self.__rootComponent, self[:] + [ x ] ) for x in e.keys() ]
+		except :
+			return []
+			
+		return []
+
+	def __graphComponent( self ) :
+		
+		e = self.__rootComponent
+		for p in self :
+			e = e[p]
+		
+		return e

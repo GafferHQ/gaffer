@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,32 +34,57 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
+import re
+
+import Gaffer
+import GafferUI
+
+class GraphComponentBrowserMode( GafferUI.BrowserEditor.Mode ) :
+
+	def __init__( self, browser ) :
+		
+		GafferUI.BrowserEditor.Mode.__init__( self, browser )
+		
+	def _initialPath( self ) :
+	
+		scriptWindow = self.browser().ancestor( GafferUI.ScriptWindow )
+		scriptNode = scriptWindow.getScript()
+		
+		return Gaffer.GraphComponentPath(
+			scriptNode,
+			"/",
+			filter = Gaffer.CompoundPathFilter(
+					
+				filters = [
+				
+					Gaffer.FileNamePathFilter(
+						[ re.compile( "^[^__].*" ) ],
+						leafOnly = False,
+						userData = {
+							"UI" : {
+								"label" : "Show hidden",
+								"invertEnabled" : True,
+							}
+						}
+					),
+					
+					Gaffer.InfoPathFilter(
+						infoKey = "name",
+						matcher = None, # the ui will fill this in
+						leafOnly = False,
+					),
+					
+				],				
+			),
+		)
+
+	def _initialDisplayMode( self ) :
+	
+		return GafferUI.PathListingWidget.DisplayMode.Tree
+		
+	def _initialColumns( self ) :
+	
+		return [ GafferUI.PathListingWidget.defaultNameColumn ]
+
+# not registering automatically, as this mode doesn't make sense in all contexts. instead,
+# it can be registered in application startup files (see startup/gui/browser.py).
