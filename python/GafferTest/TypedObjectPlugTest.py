@@ -187,7 +187,18 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 		
 		plug.setToDefault()
 		self.assertEqual( plug.getValue(), plane )
-		
+	
+	def testValueType( self ) :
+	
+		self.failUnless( Gaffer.ObjectPlug.ValueType is IECore.Object )
+		self.failUnless( Gaffer.BoolVectorDataPlug.ValueType is IECore.BoolVectorData )
+		self.failUnless( Gaffer.IntVectorDataPlug.ValueType is IECore.IntVectorData )
+		self.failUnless( Gaffer.FloatVectorDataPlug.ValueType is IECore.FloatVectorData )
+		self.failUnless( Gaffer.StringVectorDataPlug.ValueType is IECore.StringVectorData )
+		self.failUnless( Gaffer.V3fVectorDataPlug.ValueType is IECore.V3fVectorData )
+		self.failUnless( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
+		self.failUnless( Gaffer.PrimitivePlug.ValueType is IECore.Primitive )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -194,7 +194,7 @@ static void bind()
 {
 	typedef typename T::ValuePtr V;
 	
-	IECorePython::RunTimeTypedClass<T>()
+	scope s = IECorePython::RunTimeTypedClass<T>()
 		.def( "__init__", make_constructor( construct<T>, default_call_policies(), 
 				(
 					boost::python::arg_( "name" )=T::staticTypeName(),
@@ -214,6 +214,12 @@ static void bind()
 		.def( "getValue", getValue<T>, "Returns a copy of the value." )
 	;
 
+	PyTypeObject *valueType = boost::python::converter::registry::query(
+		boost::python::type_info( typeid( typename T::ValueType ) )
+	)->get_class_object();
+	
+	s.attr( "ValueType" ) = object( handle<>( borrowed( valueType ) ) );
+	
 	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 
 }

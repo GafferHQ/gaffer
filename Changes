@@ -104,6 +104,9 @@ swatch.
 
 * The ParameterValueWidget.registerType() method now accepts an optional uiTypeHint argument, which allows the registration of custom uis, which parameters can request using the standard ["UI"]["typeHint"] userData entry.
 
+* Added ValueType class members to TypedObjectPlug bindings, so that appropriate values
+can be constructed easily.
+
 0.34.0
 ------
 
