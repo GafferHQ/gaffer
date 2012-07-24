@@ -53,6 +53,8 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 		
 		self.__colorChooserDialogue = None
 		
+		self._updateFromPlug()
+		
 	def _updateFromPlug( self ) :
 	
 		GafferUI.CompoundNumericPlugValueWidget._updateFromPlug( self )

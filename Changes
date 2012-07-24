@@ -109,6 +109,8 @@ can be constructed easily.
 
 * GraphComponent.children() python method now accepts a typeId to filter the result.
 
+* Fixed bug which meant that colour swatches for plugs had the wrong colour when first shown.
+
 0.34.0
 ------
 
