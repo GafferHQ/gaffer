@@ -98,13 +98,16 @@ static boost::python::list values( GraphComponent &c )
 	return l;
 }
 
-static boost::python::tuple children( GraphComponent &c )
+static boost::python::tuple children( GraphComponent &c, IECore::TypeId typeId )
 {
 	const GraphComponent::ChildContainer &ch = c.children();
 	boost::python::list l;
 	for( GraphComponent::ChildContainer::const_iterator it=ch.begin(); it!=ch.end(); it++ )
 	{
-		l.append( *it );
+		if( (*it)->isInstanceOf( typeId ) )
+		{
+			l.append( *it );
+		}
 	}
 	return boost::python::tuple( l );
 }
@@ -251,7 +254,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "items", &items )
 		.def( "keys", &keys )
 		.def( "values", &values )
-		.def( "children", &children )
+		.def( "children", &children, ( arg_( "self" ), arg_( "typeId" ) = GraphComponent::staticTypeId() ) )
 		.def( "parent", &parent )
 		.def( "ancestor", &ancestor )
 		.def( "commonAncestor", &commonAncestor )

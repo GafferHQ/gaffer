@@ -546,6 +546,19 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.assertEqual( g[-2].getName(), "b" )
 		self.assertEqual( g[-3].getName(), "a" )
 	
+	def testChildrenByType( self ) :
+	
+		g = Gaffer.Node()
+		g["a"] = Gaffer.IntPlug()
+		g["b"] = Gaffer.Plug()
+		g["c"] = Gaffer.Node()
+		
+		self.assertEqual( len( g.children() ), 3 )
+		self.assertEqual( len( g.children( Gaffer.GraphComponent.staticTypeId() ) ), 3 )
+		self.assertEqual( len( g.children( Gaffer.Plug.staticTypeId() ) ), 2 )
+		self.assertEqual( len( g.children( Gaffer.Node.staticTypeId() ) ), 1 )
+		self.assertEqual( len( g.children( Gaffer.IntPlug.staticTypeId() ) ), 1 )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

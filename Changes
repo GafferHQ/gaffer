@@ -107,6 +107,8 @@ swatch.
 * Added ValueType class members to TypedObjectPlug bindings, so that appropriate values
 can be constructed easily.
 
+* GraphComponent.children() python method now accepts a typeId to filter the result.
+
 0.34.0
 ------
 
