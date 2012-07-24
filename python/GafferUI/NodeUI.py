@@ -87,7 +87,7 @@ class NodeUI( GafferUI.Widget ) :
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
 		self.__plugsWidget.setChild( column )
 				
-		for plug in self.node().children() :
+		for plug in self.node().children( Gaffer.Plug.staticTypeId() ) :
 			if plug.getName().startswith( "__" ) or plug.direction() == Gaffer.Plug.Direction.Out :
 				continue
 			plugValueWidget = GafferUI.PlugValueWidget.create( plug )
