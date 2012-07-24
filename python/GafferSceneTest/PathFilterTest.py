@@ -87,6 +87,13 @@ class PathFilterTest( unittest.TestCase ) :
 		
 			c["scene:path"] = "/b/c"
 			self.assertEqual( f["match"].getValue(), int( f.Result.DescendantMatch ) )
+	
+	def testNullPaths( self ) :
+	
+		f = GafferScene.PathFilter()
+		with Gaffer.Context() as c :
+			c["scene:path"] = "/a"
+			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
 			
 if __name__ == "__main__":
 	unittest.main()

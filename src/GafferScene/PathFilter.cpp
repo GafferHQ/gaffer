@@ -75,10 +75,14 @@ void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer
 
 Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
 {
-	string path = context->get<string>( "scene:path" );
-	
-	Result result = NoMatch;
 	ConstStringVectorDataPtr paths = pathsPlug()->getValue();
+	if( !paths )
+	{
+		return NoMatch;
+	}
+	
+	string path = context->get<string>( "scene:path" );
+	Result result = NoMatch;
 	for( vector<string>::const_iterator it = paths->readable().begin(), eIt = paths->readable().end(); it != eIt; it++ )
 	{
 		if( it->compare( 0, path.size(), path ) == 0 )
