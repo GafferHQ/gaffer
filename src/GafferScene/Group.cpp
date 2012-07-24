@@ -133,9 +133,6 @@ void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context )
 	return SceneProcessor::compute( output, context );
 }
 
-static boost::regex g_namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
-static boost::format g_namePrefixSuffixFormatter( "%s%d" );
-
 IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 {
 	/// \todo It might be more optimal to make our own Object subclass better tailored
@@ -146,6 +143,9 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	vector<string> &childNames = childNamesData->writable();
 	result->members()["__GroupChildNames"] = childNamesData;
 	
+	boost::regex namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
+	boost::format namePrefixSuffixFormatter( "%s%d" );
+
 	set<string> allNames;
 	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 	{
@@ -169,7 +169,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 				int suffix = 1;
 				
 				boost::cmatch match;
-				if( regex_match( name.c_str(), match, g_namePrefixSuffixRegex ) )
+				if( regex_match( name.c_str(), match, namePrefixSuffixRegex ) )
 				{
 					prefix = match[1];
 					suffix = boost::lexical_cast<int>( match[2] );
@@ -177,7 +177,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 				
 				do
 				{
-					name = boost::str( g_namePrefixSuffixFormatter % prefix % suffix );
+					name = boost::str( namePrefixSuffixFormatter % prefix % suffix );
 					suffix++;
 				} while( allNames.find( name ) != allNames.end() );
 			}

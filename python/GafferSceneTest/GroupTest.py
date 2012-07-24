@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import threading
 
 import IECore
 
@@ -317,6 +318,111 @@ class GroupTest( unittest.TestCase ) :
 		self.failUnless( s["g"]["in1"].getInput().isSame( s["c"]["out"] ) )
 		self.failUnless( "in2" in s["g"] )
 		self.assertEqual( s["g"]["in2"].getInput(), None )
+	
+	def testNameClashesWithNumericSuffixes( self ) :
+	
+		sphere = IECore.SpherePrimitive()
+		input1 = GafferSceneTest.CompoundObjectSource()
+		input1["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( sphere.bound() ),
+				"children" : {
+					"myLovelyObject1" : {
+						"bound" : IECore.Box3fData( sphere.bound() ),
+						"object" : sphere,
+					},
+				},
+			} ),
+		)
 		
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		input2 = GafferSceneTest.CompoundObjectSource()
+		input2["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( plane.bound() ),
+				"children" : {
+					"myLovelyObject1" : {
+						"bound" : IECore.Box3fData( plane.bound() ),
+						"object" : plane,
+					},
+				},
+			} ),
+		)
+		
+		combinedBound = sphere.bound()
+		combinedBound.extendBy( plane.bound() )
+		
+		group = GafferScene.Group()
+		group["name"].setValue( "topLevel" )
+		group["in"].setInput( input1["out"] )
+		group["in1"].setInput( input2["out"] )
+				
+		self.assertEqual( group["out"].object( "/" ), None )
+		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( group["out"].bound( "/" ), combinedBound )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "topLevel" ] ) )
+
+		self.assertEqual( group["out"].object( "/topLevel" ), None )
+		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
+		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
+		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.StringVectorData( [ "myLovelyObject1", "myLovelyObject2" ] ) )
+		
+		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject1" ), sphere )
+		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), IECore.M44f() )
+		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject1" ), sphere.bound() )
+		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), None )
+		
+		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject2" ), plane )
+		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject2" ), IECore.M44f() )
+		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject2" ), plane.bound() )
+		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject2" ), None )
+	
+	def testNameClashesWithThreading( self ) :
+	
+		sphere = IECore.SpherePrimitive()
+		input1 = GafferSceneTest.CompoundObjectSource()
+		input1["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( sphere.bound() ),
+				"children" : {
+					"myLovelyObject1" : {
+						"bound" : IECore.Box3fData( sphere.bound() ),
+						"object" : sphere,
+					},
+				},
+			} ),
+		)
+		
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		input2 = GafferSceneTest.CompoundObjectSource()
+		input2["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( plane.bound() ),
+				"children" : {
+					"myLovelyObject1" : {
+						"bound" : IECore.Box3fData( plane.bound() ),
+						"object" : plane,
+					},
+				},
+			} ),
+		)
+		
+		group = GafferScene.Group()
+		group["name"].setValue( "topLevel" )
+		group["in"].setInput( input1["out"] )
+		group["in1"].setInput( input2["out"] )
+		
+		sceneProcedural = GafferScene.SceneProcedural( group["out"], Gaffer.Context(), "/" )
+		
+		for i in range( 0, 1000 ) :
+			mh = IECore.CapturingMessageHandler()
+			with mh :
+				# we use a CapturingRenderer as it will invoke the procedural
+				# on multiple threads for us automatically.
+				renderer = IECore.CapturingRenderer()
+				with IECore.WorldBlock( renderer ) :
+					renderer.procedural( sceneProcedural )
+			self.assertEqual( len( mh.messages ), 0 )
+			
 if __name__ == "__main__":
 	unittest.main()
