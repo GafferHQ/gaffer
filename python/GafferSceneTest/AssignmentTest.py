@@ -38,6 +38,7 @@ import unittest
 
 import IECore
 
+import Gaffer
 import GafferScene
 import GafferSceneTest
 
@@ -73,6 +74,23 @@ class AssignmentTest( unittest.TestCase ) :
 		self.assertEqual( a["out"].state( "/" ), None )
 		self.assertNotEqual( len( a["out"].state( "/ball1" ) ), None )
 		self.assertEqual( a["out"].state( "/ball2" ), None )		
-			
+	
+	def testFilterSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferScene.Assignment()
+		s["a"]["f"] = GafferScene.PathFilter()
+		s["a"]["f"]["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
+		s["a"]["filter"].setInput( s["a"]["f"]["match"] )
+		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.failUnless( isinstance( s["a"]["f"], GafferScene.PathFilter ) )
+		self.assertEqual( s["a"]["f"]["paths"].getValue( IECore.StringVectorData( [ "/ball1" ] ) ) )
+		self.failUnless( s["a"]["filter"].getInput().isSame( s["a"]["f"]["match"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
