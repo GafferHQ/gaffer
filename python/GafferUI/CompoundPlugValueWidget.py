@@ -69,6 +69,10 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		self.__childPlugUIs = {} # mapping from child plug name to PlugWidget
 
+	def hasLabel( self ) :
+	
+		return True
+
 	def _updateFromPlug( self ) :
 	
 		pass

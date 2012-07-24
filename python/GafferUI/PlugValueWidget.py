@@ -79,6 +79,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def getContext( self ) :
 	
 		return self.__context
+	
+	## Should be reimplemented to return True if this widget includes
+	# some sort of labelling for the plug. This is used to prevent
+	# extra labels being created in the NodeUI when they're not necessary.
+	def hasLabel( self ) :
+	
+		return False
 			
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plug.	

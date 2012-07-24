@@ -92,7 +92,7 @@ class NodeUI( GafferUI.Widget ) :
 				continue
 			plugValueWidget = GafferUI.PlugValueWidget.create( plug )
 			if plugValueWidget is not None :
-				if isinstance( plugValueWidget, GafferUI.PlugValueWidget ) and not isinstance( plugValueWidget, GafferUI.CompoundPlugValueWidget ) :
+				if isinstance( plugValueWidget, GafferUI.PlugValueWidget ) and not plugValueWidget.hasLabel() :
 					column.append( GafferUI.PlugWidget( plugValueWidget ) )
 				else :
 					column.append( plugValueWidget )
