@@ -3,3 +3,4 @@
 * need embedded scriptnodes
 * need to tidy everything
 * need to have dynamic children on non-dynamic compound plugs
+* need to serialise circular connections
