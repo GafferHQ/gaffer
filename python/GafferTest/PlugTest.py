@@ -136,7 +136,7 @@ class PlugTest( unittest.TestCase ) :
 	
 		class TestPlug( Gaffer.Plug ) :
 		
-			def __init__( self, name = "TestPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
+			def __init__( self, name = "TestPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default ) :
 			
 				Gaffer.Plug.__init__( self, name, direction, flags )
 				
@@ -172,7 +172,7 @@ class PlugTest( unittest.TestCase ) :
 		p1 = TestPlug( "testIn" )
 		self.assertEqual( p1.getName(), "testIn" )
 		self.assertEqual( p1.direction(), Gaffer.Plug.Direction.In )
-		self.assertEqual( p1.getFlags(), Gaffer.Plug.Flags.None )
+		self.assertEqual( p1.getFlags(), Gaffer.Plug.Flags.Default )
 		
 		n1 = Gaffer.Node()
 		n1.addChild( p1 )
