@@ -59,13 +59,14 @@ def names() :
 
 	return __namedLayouts.keys()
 
-## Recreates a previously stored layout, returning it in the form of a CompoundEditor.
-def create( name ) :
+## Recreates a previously stored layout for the specified script,
+# returning it in the form of a CompoundEditor.
+def create( name, scriptNode ) :
 
 	layout = __namedLayouts[name]
 		
 	# first try to import the modules the layout needs
-	contextDict = {}
+	contextDict = { "scriptNode" : scriptNode }
 	imported = set()
 	classNameRegex = re.compile( "Gaffer[^(,]*\(" )
 	for className in classNameRegex.findall( layout ) :

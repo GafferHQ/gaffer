@@ -53,7 +53,7 @@ def appendDefinitions( menuDefinition, name="" ) :
 def restore( menu, name ) :
 	
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
-	layout = GafferUI.Layouts.create( name )
+	layout = GafferUI.Layouts.create( name, scriptWindow.script() )
 		
 	scriptWindow.setLayout( layout )
 
@@ -63,7 +63,7 @@ def delete( name, menu ) :
 	GafferUI.Layouts.remove( name )
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
-	__saveLayouts( scriptWindow.getScript().applicationRoot() )
+	__saveLayouts( scriptWindow.scriptNode().applicationRoot() )
 			
 ## A function suitable as the command for a Layout/Save... menu item. It must be invoked from
 # a menu which has a ScriptWindow in its ancestry. 
@@ -90,7 +90,7 @@ def save( menu ) :
 	
 	GafferUI.Layouts.add( "user:" + t, layout )
 	
-	__saveLayouts( scriptWindow.getScript().applicationRoot() )
+	__saveLayouts( scriptWindow.scriptNode().applicationRoot() )
 	
 def __saveLayouts( applicationRoot ) :
 

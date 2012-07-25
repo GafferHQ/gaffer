@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ def appendDefinitions( menuDefinition, prefix ) :
 def quit( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 
 	## \todo Check scripts aren't modified
 	for script in application["scripts"].children() :
@@ -74,7 +74,7 @@ __preferencesWindows = weakref.WeakKeyDictionary()
 def preferences( menu ) :
 	
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 
 	global __preferencesWindows
 	window = __preferencesWindows.get( application, None )
@@ -102,7 +102,7 @@ def __closePreferences( button ) :
 def __savePreferences( button ) :
 
 	scriptWindow = button.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 	application.savePreferences()
 	button.ancestor( type=GafferUI.Window ).setVisible( False )
 	

@@ -48,7 +48,7 @@ class GraphComponentBrowserMode( GafferUI.BrowserEditor.Mode ) :
 	def _initialPath( self ) :
 	
 		scriptWindow = self.browser().ancestor( GafferUI.ScriptWindow )
-		scriptNode = scriptWindow.getScript()
+		scriptNode = scriptWindow.scriptNode()
 		
 		return Gaffer.GraphComponentPath(
 			scriptNode,

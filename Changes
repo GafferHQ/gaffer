@@ -111,6 +111,8 @@ can be constructed easily.
 
 * Fixed bug which meant that colour swatches for plugs had the wrong colour when first shown.
 
+* Simplified EditorWidget implementations by removing setScriptNode() method - now the scriptNode is always provided at construction and cannot be subsequently changed. Renamed ScriptWindow.getScript() to ScriptWindow.scriptNode() and EditorWidget.getScriptNode() to EditorWidget.scriptNode() for consistency. 
+
 0.34.0
 ------
 

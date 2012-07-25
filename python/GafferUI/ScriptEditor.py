@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # that works in a specific namespace.
 class ScriptEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		self.__splittable = GafferUI.SplitContainer()
 		
@@ -70,29 +70,21 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 	
 		self.__inputWidgetActivatedConnection = self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 
-	def setScriptNode( self, scriptNode ) :
+		self.__execConnection = self.scriptNode().scriptExecutedSignal().connect( Gaffer.WeakMethod( self.__execSlot ) )
+		self.__evalConnection = self.scriptNode().scriptEvaluatedSignal().connect( Gaffer.WeakMethod( self.__evalSlot ) )
 	
-		GafferUI.EditorWidget.setScriptNode( self, scriptNode )
-		
-		if scriptNode :
-			self.__execConnection = self.getScriptNode().scriptExecutedSignal().connect( Gaffer.WeakMethod( self.__execSlot ) )
-			self.__evalConnection = self.getScriptNode().scriptEvaluatedSignal().connect( Gaffer.WeakMethod( self.__evalSlot ) )
-		else :
-			self.__execConnection = None
-			self.__evalConnection = None
-
 	def __repr__( self ) :
 
-		return "GafferUI.ScriptEditor()"
+		return "GafferUI.ScriptEditor( scriptNode )"
 			
 	def __execSlot( self, scriptNode, script ) :
 	
-		assert( scriptNode.isSame( self.getScriptNode() ) )
+		assert( scriptNode.isSame( self.scriptNode() ) )
 		self.__outputWidget.appendText( script )
 		
 	def __evalSlot( self, scriptNode, script, result ) :
 	
-		assert( scriptNode.isSame( self.getScriptNode() ) )
+		assert( scriptNode.isSame( self.scriptNode() ) )
 		text = script + "\nResult : " + str( result ) + "\n"
 		self.__outputWidget.appendText( text )
 		
@@ -106,7 +98,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		
 		try :
 		
-			self.getScriptNode().execute( toExecute )
+			self.scriptNode().execute( toExecute )
 			if not haveSelection :
 				widget.setText( "" )
 		

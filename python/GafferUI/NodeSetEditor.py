@@ -53,35 +53,13 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode, **kw )
 		
 		self.__updateScheduled = False
-			
-	def setScriptNode( self, scriptNode ) :
-	
-		GafferUI.EditorWidget.setScriptNode( self, scriptNode )
+		# allow derived classes to call _updateFromSet() themselves after construction,
+		# to avoid being called when they're only half constructed.
+		self.__setNodeSetInternal( self.scriptNode().selection(), callUpdateFromSet=False )
 		
-		if scriptNode :
-			self.setNodeSet( scriptNode.selection() )
-		else :
-			self.setNodeSet( Gaffer.StandardSet() )
-			
 	def setNodeSet( self, nodeSet ) :
 	
-		prevSet = self.__nodeSet
-		self.__nodeSet = nodeSet
-		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
-		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
-		
-		# only update if the nodes being held have actually changed,
-		# so we don't get unnecessary flicker in any of the uis.
-		needsUpdate = len( prevSet ) != len( self.__nodeSet )
-		if not needsUpdate :
-			for i in range( 0, len( prevSet ) ) :
-				if not prevSet[i].isSame( self.__nodeSet[i] ) :
-					needsUpdate = True
-					break
-		if needsUpdate :
-			self._updateFromSet()
-		
-		self.__nodeSetChangedSignal( self )
+		self.__setNodeSetInternal( nodeSet, callUpdateFromSet=True )
 		
 	def getNodeSet( self ) :
 	
@@ -101,6 +79,27 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	def _updateFromSet( self ) :
 	
 		raise NotImplementedError
+
+	def __setNodeSetInternal( self, nodeSet, callUpdateFromSet ) :
+	
+		prevSet = self.__nodeSet
+		self.__nodeSet = nodeSet
+		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		
+		if callUpdateFromSet :
+			# only update if the nodes being held have actually changed,
+			# so we don't get unnecessary flicker in any of the uis.
+			needsUpdate = len( prevSet ) != len( self.__nodeSet )
+			if not needsUpdate :
+				for i in range( 0, len( prevSet ) ) :
+					if not prevSet[i].isSame( self.__nodeSet[i] ) :
+						needsUpdate = True
+						break
+			if needsUpdate :
+				self._updateFromSet()
+			
+		self.__nodeSetChangedSignal( self )	
 
 	def __membersChanged( self, set, member ) :
 		

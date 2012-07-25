@@ -44,24 +44,17 @@ import GafferUI
 # manipulate a ScriptNode or its children.
 class EditorWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, scriptNode=None, **kw ) :
+	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 	
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 		
-		self.__scriptNode = None
-		self.setScriptNode( scriptNode )
-	
-	## Sets the script being edited. This will also call setContext( scriptNode.context() ).
-	def setScriptNode( self, scriptNode ) :
-	
-		if not ( scriptNode is None or scriptNode.isInstanceOf( Gaffer.ScriptNode.staticTypeId() ) ) :
-			raise TypeError( "Editor expects a ScriptNode instance or None.")
-				
+		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
+		
 		self.__scriptNode = scriptNode
 		self.__context = None
-		self.__setContextInternal( scriptNode.context() if scriptNode is not None else None, callUpdate=False )
-		
-	def getScriptNode( self ) :
+		self.__setContextInternal( scriptNode.context(), callUpdate=False )
+				
+	def scriptNode( self ) :
 	
 		return self.__scriptNode
 	
@@ -75,7 +68,7 @@ class EditorWidget( GafferUI.Widget ) :
 	def getContext( self ) :
 	
 		return self.__context
-	
+			
 	def __setContextInternal( self, context, callUpdate ) :
 	
 		assert( isinstance( context, ( Gaffer.Context, types.NoneType ) ) )
@@ -88,7 +81,7 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		if callUpdate :
 			self._updateFromContext()
-	
+		
 	## May be implemented by derived classes to update state based on a change of context.
 	# To temporarily suspend calls to this function, use Gaffer.BlockedConnection( self._contextChangedConnection() ).
 	def _updateFromContext( self ) :
@@ -99,9 +92,10 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		return self.__contextChangedConnection
 	
-	## This must be implemented by all derived classes as it used for serialisation of layouts.
+	## This must be implemented by all derived classes as it is used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation - 
-	# the intention is to create a copy of the layout with no script set yet.
+	# instead the new script will be provided later as a variable named scriptNode. So a suitable
+	# serialisation will look like "GafferUI.EditorWidget( scriptNode )".
 	def __repr__( self ) :
 	
 		raise NotImplementedError

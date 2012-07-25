@@ -40,28 +40,22 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
 class NodeEditor( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, **kw )
-				
+		
 		self._updateFromSet()
-				
+						
 	def __repr__( self ) :
 
-		return "GafferUI.NodeEditor()"
+		return "GafferUI.NodeEditor( scriptNode )"
 
 	def _updateFromSet( self ) :
-			
-		if not hasattr( self, "_NodeEditor__column" ) :
-			# we're being called during construction
-			return
-		
+				
 		del self.__column[:]
 		
 		node = self._lastAddedNode()

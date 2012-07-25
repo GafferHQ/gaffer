@@ -52,7 +52,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	__transitionDuration = 400
 
-	def __init__( self, scriptNode=None, children=None, **kw ) :
+	def __init__( self, scriptNode, children=None, **kw ) :
 		
 		self.__splitContainer = GafferUI.SplitContainer()
 		
@@ -66,24 +66,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		if children :		
 			self.__addChildren( self.__splitContainer, children )
-			
-	def setScriptNode( self, scriptNode ) :
-	
-		GafferUI.EditorWidget.setScriptNode( self, scriptNode )
-	
-		if not hasattr( self, "_CompoundEditor__splitContainer" ) :
-			return
-				
-		def __set( w, scriptNode ) :
-		
-			if isinstance( w, GafferUI.EditorWidget ) :
-				w.setScriptNode( scriptNode )
-			else :
-				for c in w :
-					__set( c, scriptNode )
-								
-		__set( self.__splitContainer, scriptNode )
-	
+							
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.
 	def editors( self, type = GafferUI.EditorWidget ) :
@@ -251,11 +234,11 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		tabbedContainer = splitContainer[0]
 		
 		if isinstance( nameOrEditor, basestring ) :
-			editor = GafferUI.EditorWidget.create( nameOrEditor, self.getScriptNode() )
+			editor = GafferUI.EditorWidget.create( nameOrEditor, self.scriptNode() )
 		else :
 			editor = nameOrEditor
-			editor.setScriptNode( self.getScriptNode() )
-			
+			assert( editor.scriptNode().isSame( self.scriptNode() ) )
+						
 		tabbedContainer.append( editor )
 		tabbedContainer.setLabel( editor, IECore.CamelCase.toSpaced( editor.__class__.__name__ ) )
 		tabbedContainer.setCurrent( editor )
@@ -419,11 +402,11 @@ class _TargetButton( GafferUI.Button ) :
 		
 	def __update( self, editor ) :
 	
-		if isinstance( editor, GafferUI.NodeSetEditor ) and editor.getScriptNode() is not None :
+		if isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
 									 
 			self.setVisible( True )
 			
-			if editor.getNodeSet().isSame( editor.getScriptNode().selection() ) :
+			if editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
 				self.setToolTip( "Click to lock view to current selection" )
 				self.setImage( "targetNodesUnlocked.png" )
 			else :
@@ -444,7 +427,7 @@ class _TargetButton( GafferUI.Button ) :
 		assert( isinstance( editor, GafferUI.NodeSetEditor ) )
 	
 		nodeSet = editor.getNodeSet()
-		selectionSet = editor.getScriptNode().selection()
+		selectionSet = editor.scriptNode().selection()
 		if nodeSet.isSame( selectionSet ) :
 			nodeSet = Gaffer.StandardSet( list( nodeSet ) )
 		else :

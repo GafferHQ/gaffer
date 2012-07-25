@@ -46,7 +46,7 @@ import GafferUI
 
 class BrowserEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( borderWidth = 8, spacing = 6 )
 		
@@ -77,7 +77,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 	
 	def __repr__( self ) :
 
-		return "GafferUI.BrowserEditor()"
+		return "GafferUI.BrowserEditor( scriptNode )"
 		
 	def __modeChanged( self, modeMenu ) :
 	

@@ -43,7 +43,7 @@ QtCore = GafferUI._qtImport( "QtCore" )
 # entry of a context.
 class TimeEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 4, spacing = 2 )
 	
@@ -51,16 +51,7 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		
 		self.__playTimer = QtCore.QTimer()
 		self.__playTimer.timeout.connect( Gaffer.WeakMethod( self.__playTimeout ) )
-		
-	def setScriptNode( self, scriptNode ) :
-	
-		GafferUI.EditorWidget.setScriptNode( self, scriptNode )
-		
-		del self.__row[:]
-		self.__scriptNodePlugSetConnection = None
-		if not scriptNode :
-			return
-			
+							
 		with self.__row :
 			
 			self.__visibilityButton = GafferUI.Button( image="timeEditor3.png", hasFrame=False )
@@ -109,11 +100,7 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		self.__scriptNodePlugSetConnection = scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
 	
 	def _updateFromContext( self ) :
-	
-		if not hasattr( self, "_TimeEditor__frame" ) :
-			# we're still constructing
-			return
-		
+			
 		# update the frame counter and slider position
 		with Gaffer.BlockedConnection( [ self.__frameChangedConnection, self.__sliderValueChangedConnection ] ) :
 			self.__frame.setValue( self.getContext().getFrame() )
@@ -125,8 +112,8 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		
 		# clamp value within range specified by script
 		value = widget.getValue()
-		value = max( self.getScriptNode()["frameRange"]["start"].getValue(), value )
-		value = min( self.getScriptNode()["frameRange"]["end"].getValue(), value )
+		value = max( self.scriptNode()["frameRange"]["start"].getValue(), value )
+		value = min( self.scriptNode()["frameRange"]["end"].getValue(), value )
 		
 		# move the other end of the range if necessary
 		if widget is self.__sliderRangeStart :
@@ -145,8 +132,8 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		assert( widget is self.__frame )
 				
 		frame = widget.getValue()
-		frame = max( frame, self.getScriptNode()["frameRange"]["start"].getValue() )
-		frame = min( frame, self.getScriptNode()["frameRange"]["end"].getValue() )
+		frame = max( frame, self.scriptNode()["frameRange"]["start"].getValue() )
+		frame = min( frame, self.scriptNode()["frameRange"]["end"].getValue() )
 		
 		self.__frame.setValue( frame )
 		self.getContext().setFrame( frame )
@@ -158,17 +145,17 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		# modifier to choose fractional frame values.
 		frame = int( self.__slider.getValue() )
 
-		frame = max( frame, self.getScriptNode()["frameRange"]["start"].getValue() )
-		frame = min( frame, self.getScriptNode()["frameRange"]["end"].getValue() )
+		frame = max( frame, self.scriptNode()["frameRange"]["start"].getValue() )
+		frame = min( frame, self.scriptNode()["frameRange"]["end"].getValue() )
 		
 		self.getContext().setFrame( frame )
 		
 	def __scriptNodePlugSet( self, plug ) :
 	
 		combineFunction = None
-		if plug.isSame( self.getScriptNode()["frameRange"]["start"] ) :
+		if plug.isSame( self.scriptNode()["frameRange"]["start"] ) :
 			combineFunction = max
-		elif plug.isSame( self.getScriptNode()["frameRange"]["end"] ) :
+		elif plug.isSame( self.scriptNode()["frameRange"]["end"] ) :
 			combineFunction = min
 		
 		if combineFunction is not None :
@@ -229,6 +216,6 @@ class TimeEditor( GafferUI.EditorWidget ) :
 	
 	def __repr__( self ) :
 
-		return "GafferUI.TimeEditor()"
+		return "GafferUI.TimeEditor( scriptNode )"
 	
 GafferUI.EditorWidget.registerType( "TimeEditor", TimeEditor )

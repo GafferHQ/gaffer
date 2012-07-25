@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,7 +59,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 def undo( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	script.undo()
 	
 ## A function suitable as the command for an Edit/Redo menu item. It must
@@ -67,7 +67,7 @@ def undo( menu ) :
 def redo( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	script.redo()
 
 ## A function suitable as the command for an Edit/Cut menu item. It must
@@ -75,7 +75,7 @@ def redo( menu ) :
 def cut( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 
 	with Gaffer.UndoContext( script ) :
 		script.cut( script.selection() )
@@ -85,7 +85,7 @@ def cut( menu ) :
 def copy( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	script.copy( script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
@@ -93,7 +93,7 @@ def copy( menu ) :
 def paste( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	
 	with Gaffer.UndoContext( script ) :
 	
@@ -104,7 +104,7 @@ def paste( menu ) :
 def delete( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	
 	with Gaffer.UndoContext( script ) :
 		
@@ -115,7 +115,7 @@ def delete( menu ) :
 def selectAll( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	
 	for c in script.children() :
 		if c.isInstanceOf( Gaffer.Node.staticTypeId() ) :

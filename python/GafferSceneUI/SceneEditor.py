@@ -42,7 +42,7 @@ import GafferUI
 
 class SceneEditor( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 		
@@ -64,14 +64,10 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				
 	def __repr__( self ) :
 
-		return "GafferSceneUI.SceneEditor()"
+		return "GafferSceneUI.SceneEditor( scriptNode )"
 
 	def _updateFromSet( self ) :
 		
-		if not hasattr( self, "_SceneEditor__plug" ) :
-			# we're being called during construction
-			return
-					
 		self.__plug = None
 		node = self._lastAddedNode()
 		if node and isinstance( node, GafferScene.SceneNode ) :

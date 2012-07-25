@@ -43,11 +43,9 @@ import Gaffer
 import GafferUI
 from GafferUI import EditorWidget, GraphGadget, GadgetWidget, GLWidget
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
 class GraphEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 		
 		self.__gadgetWidget = GadgetWidget(
 			bufferOptions = set( [
@@ -60,25 +58,10 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		
 		self.__gadgetWidget.setBackgroundColor( IECore.Color3f( 0.5 ) )
 		self.__gadgetWidget._framingBound = Gaffer.WeakMethod( self.__framingBound )
-		
+		self.__gadgetWidget.setGadget( GraphGadget( self.scriptNode() ) )
+
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-	
-		self.setScriptNode( scriptNode )
-			
-	def setScriptNode( self, scriptNode ) :
-	
-		if not hasattr( self, "_GraphEditor__gadgetWidget" ) :
-			# we're still constructing
-			return
-	
-		EditorWidget.setScriptNode( self, scriptNode )
-		
-		gadget = None
-		if scriptNode :
-			gadget = GraphGadget( scriptNode )
-			
-		self.__gadgetWidget.setGadget( gadget )
-		
+					
 	## Returns the internal GadgetWidget holding the GraphGadget.	
 	def graphGadgetWidget( self ) :
 	
@@ -102,10 +85,10 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	def nodeContextMenuSignal( cls ) :
 	
 		return cls.__nodeContextMenuSignal
-			
+		
 	def __repr__( self ) :
 
-		return "GafferUI.GraphEditor()"	
+		return "GafferUI.GraphEditor( scriptNode )"	
 
 	def __buttonPress( self, widget, event ) :
 				
@@ -141,7 +124,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			return IECore.Box3f()
 		
 		# get the bounds of the selected nodes
-		scriptNode = self.getScriptNode()
+		scriptNode = self.scriptNode()
 		selection = scriptNode.selection()
 		result = IECore.Box3f()
 		for node in selection :

@@ -65,17 +65,23 @@ class EditorWidgetTest( unittest.TestCase ) :
 		
 		editor = GafferUI.Viewer( s )
 	
-		self.failUnless( editor.getScriptNode().isSame( s ) )
+		self.failUnless( editor.scriptNode().isSame( s ) )
 		self.failUnless( editor.getContext().isSame( s.context() ) )
 		
 		editor.setContext( c )
-		self.failUnless( editor.getScriptNode().isSame( s ) )
+		self.failUnless( editor.scriptNode().isSame( s ) )
 		self.failUnless( editor.getContext().isSame( c ) )
-		
-		editor.setScriptNode( s )
-		self.failUnless( editor.getScriptNode().isSame( s ) )
-		self.failUnless( editor.getContext().isSame( s.context() ) )
 	
+	def testSerialisation( self ) :
+	
+		scriptNode = Gaffer.ScriptNode()
+		
+		for type in GafferUI.EditorWidget.types() :
+			editor = GafferUI.EditorWidget.create( type, scriptNode )
+			GafferUI.Layouts.add( "testLayout", editor )
+			editor2 = GafferUI.Layouts.create( "testLayout", scriptNode )
+			self.failUnless( editor2.scriptNode() is scriptNode )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

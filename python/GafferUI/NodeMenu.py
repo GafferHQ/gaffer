@@ -62,7 +62,7 @@ def __creatorWrapper( nodeCreator ) :
 	def f( menu ) :
 				
 		editor = menu.ancestor( GafferUI.EditorWidget )
-		script = editor.getScriptNode()
+		script = editor.scriptNode()
 
 		node = nodeCreator()
 

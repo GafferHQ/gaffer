@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -37,5 +37,5 @@
 
 import GafferUI
 
-GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( children = ( GafferUI.SplitContainer.Orientation.Horizontal, ( ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.Viewer(),), (GafferUI.GraphEditor(),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.NodeEditor(),), (GafferUI.ScriptEditor(),) ) ) ) ) )" )
-GafferUI.Layouts.add( "Empty", "GafferUI.CompoundEditor()" )
+GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, ( ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.GraphEditor( scriptNode ),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.NodeEditor( scriptNode ),), (GafferUI.ScriptEditor( scriptNode ),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Empty", "GafferUI.CompoundEditor( scriptNode )" )

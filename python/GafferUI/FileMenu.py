@@ -57,7 +57,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 def new( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.getScript().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 
 	newScript = Gaffer.ScriptNode( "script" )
 	application["scripts"].addChild( newScript )
@@ -67,7 +67,7 @@ def new( menu ) :
 def open( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	currentScript = scriptWindow.getScript()
+	currentScript = scriptWindow.scriptNode()
 	currentFileName = currentScript["fileName"].getValue()
 	
 	if currentFileName :
@@ -101,7 +101,7 @@ def open( menu ) :
 def save( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
 		script.save()
 	else :
@@ -112,7 +112,7 @@ def save( menu ) :
 def saveAs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 	currentFileName = script["fileName"].getValue()
 	
 	if currentFileName :
@@ -136,7 +136,7 @@ def saveAs( menu ) :
 def revertToSaved( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.getScript()
+	script = scriptWindow.scriptNode()
 
 	if script["fileName"].getValue() :
 		script.load()

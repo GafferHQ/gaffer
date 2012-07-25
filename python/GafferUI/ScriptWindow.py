@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -57,9 +57,9 @@ class ScriptWindow( GafferUI.Window ) :
 		self.__listContainer.append( m )
 		
 		if "Default" in GafferUI.Layouts.names() :
-			self.setLayout( GafferUI.Layouts.create( "Default" ) )
+			self.setLayout( GafferUI.Layouts.create( "Default", script ) )
 		else :
-			self.setLayout( GafferUI.CompoundEditor() )
+			self.setLayout( GafferUI.CompoundEditor( script ) )
 		
 		self.setChild( self.__listContainer )
 		
@@ -76,8 +76,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 		ScriptWindow.__instances.append( self )
 		
-	## \todo Implement setScript() - and decide on naming so it matches the Editor method (getScriptNode)
-	def getScript( self ) :
+	def scriptNode( self ) :
 	
 		return self.__script
 
@@ -86,7 +85,7 @@ class ScriptWindow( GafferUI.Window ) :
 		if len( self.__listContainer ) > 1 :
 			del self.__listContainer[1]
 	
-		compoundEditor.setScriptNode( self.__script )
+		assert( compoundEditor.scriptNode().isSame( self.scriptNode() ) )
 		self.__listContainer.append( compoundEditor, expand=True )
 		
 	def getLayout( self ) :
@@ -127,7 +126,7 @@ class ScriptWindow( GafferUI.Window ) :
 	def acquire( script ) :
 	
 		for i in ScriptWindow.__instances :
-			if i.getScript().isSame( script ) :
+			if i.scriptNode().isSame( script ) :
 				return i
 				
 		return ScriptWindow( script )

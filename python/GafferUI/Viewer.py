@@ -46,13 +46,11 @@ import GafferUI
 # import lazily to improve startup of apps which don't use GL functionality
 IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
 ## The Viewer provides the primary means for the user to look at the output
 # of Nodes.
 class Viewer( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode=None, **kw ) :
+	def __init__( self, scriptNode, **kw ) :
 	
 		self.__renderableGadget = GafferUI.RenderableGadget( None )
 		self.__gadgetWidget = GafferUI.GadgetWidget(
@@ -76,6 +74,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		self.__viewedPlug = None		
 		self.__viewCreator = None
+
 		self._updateFromSet()
 	
 	## Returns an IECore.MenuDefinition which is used to define the right click menu for all Viewers.
@@ -102,14 +101,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	
 	def __repr__( self ) :
 
-		return "GafferUI.Viewer()"
+		return "GafferUI.Viewer( scriptNode )"
 
 	def _updateFromSet( self ) :
-	
-		if not hasattr( self, "_Viewer__renderableGadget" ) :
-			# we're being called during construction
-			return
-		
+			
 		node = self._lastAddedNode()
 		
 		self.__viewedPlug = None
