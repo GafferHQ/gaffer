@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-/// The SceneElementProcessor class provides a base class for modifying the globals
+/// The GlobalsProcessor class provides a base class for modifying the globals
 /// of a scene while passing everything else through unchanged.
 class GlobalsProcessor : public SceneProcessor
 {
