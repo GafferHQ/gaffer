@@ -15,8 +15,6 @@ PRIORITIES!!!!
 	- AttributeCache for instance
 		- although if it's not storing bounds then actually its fine
 
-* rename statePlug to attributesPlug and turn it from an ObjectVector to a CompoundObject
-
 * proper scenePath class so we don't have to do loads of string manipulation
 	- can it be combined with a C++ version of Gaffer.Path?
 		- would that be confusing given the ScenePath class we already have

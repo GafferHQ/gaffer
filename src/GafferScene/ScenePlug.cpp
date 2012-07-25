@@ -68,8 +68,8 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 	);
 	
 	addChild(
-		new ObjectVectorPlug(
-			"state",
+		new CompoundObjectPlug(
+			"attributes",
 			direction,
 			0,
 			flags
@@ -147,14 +147,14 @@ const Gaffer::M44fPlug *ScenePlug::transformPlug() const
 	return getChild<M44fPlug>( "transform" );
 }
 
-Gaffer::ObjectVectorPlug *ScenePlug::statePlug()
+Gaffer::CompoundObjectPlug *ScenePlug::attributesPlug()
 {
-	return getChild<ObjectVectorPlug>( "state" );
+	return getChild<CompoundObjectPlug>( "attributes" );
 }
 
-const Gaffer::ObjectVectorPlug *ScenePlug::statePlug() const
+const Gaffer::CompoundObjectPlug *ScenePlug::attributesPlug() const
 {
-	return getChild<ObjectVectorPlug>( "state" );
+	return getChild<CompoundObjectPlug>( "attributes" );
 }
 
 Gaffer::ObjectPlug *ScenePlug::objectPlug()
@@ -203,12 +203,12 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 	return transformPlug()->getValue();
 }
 
-IECore::ConstObjectVectorPtr ScenePlug::state( const std::string &scenePath ) const
+IECore::ConstCompoundObjectPtr ScenePlug::attributes( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( "scene:path", scenePath );
 	Context::Scope scopedContext( tmpContext );
-	return statePlug()->getValue();
+	return attributesPlug()->getValue();
 }
 
 IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const

@@ -129,6 +129,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVe
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fVectorDataPlug, V3fVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectVectorPlug, ObjectVectorPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( PrimitivePlug, PrimitivePlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( CompoundObjectPlug, CompoundObjectPlugTypeId )
 
 }
 
@@ -141,3 +142,4 @@ template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
 template class TypedObjectPlug<IECore::Primitive>;
+template class TypedObjectPlug<IECore::CompoundObject>;

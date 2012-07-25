@@ -59,7 +59,7 @@ class Assignment : public SceneElementProcessor
 		
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 		
-		virtual IECore::ObjectVectorPtr processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const;
+		virtual IECore::CompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 	
 };
 

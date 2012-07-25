@@ -88,15 +88,15 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 			}
 			static_cast<M44fPlug *>( output )->setValue( transform );
 		}
-		else if( output == scenePlug->statePlug() )
+		else if( output == scenePlug->attributesPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );
-			ObjectVectorPtr state = computeState( scenePath, context, scenePlug );
-			if( scenePath == "/" && state )
+			CompoundObjectPtr attributes = computeAttributes( scenePath, context, scenePlug );
+			if( scenePath == "/" && attributes )
 			{
-				throw Exception( "Scene root must have no state" );
+				throw Exception( "Scene root must have no attributes" );
 			}
-			static_cast<ObjectVectorPlug *>( output )->setValue( state );
+			static_cast<CompoundObjectPlug *>( output )->setValue( attributes );
 		}
 		else if( output == scenePlug->objectPlug() )
 		{

@@ -169,7 +169,7 @@ Imath::M44f ObjectSource<BaseType>::computeTransform( const SceneNode::ScenePath
 }
 
 template<typename BaseType>
-IECore::ObjectVectorPtr ObjectSource<BaseType>::computeState( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::CompoundObjectPtr ObjectSource<BaseType>::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return 0;
 }

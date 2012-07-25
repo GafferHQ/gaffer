@@ -243,7 +243,7 @@ Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Contex
 	}
 }
 
-IECore::ObjectVectorPtr Group::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::CompoundObjectPtr Group::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -255,8 +255,8 @@ IECore::ObjectVectorPtr Group::computeState( const ScenePath &path, const Gaffer
 	{
 		ScenePlug *sourcePlug = 0;
 		std::string source = sourcePath( path, groupName, &sourcePlug );
-		ConstObjectVectorPtr s = sourcePlug->state( source );
-		return s ? s->copy() : 0;
+		ConstCompoundObjectPtr a = sourcePlug->attributes( source );
+		return a ? a->copy() : 0;
 	}
 	
 	return 0;

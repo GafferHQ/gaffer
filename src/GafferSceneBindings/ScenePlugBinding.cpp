@@ -63,10 +63,10 @@ static IECore::StringVectorDataPtr childNamesWrapper( const ScenePlug &plug, con
 	return n ? n->copy() : 0;
 }
 
-static IECore::ObjectVectorPtr stateWrapper( const ScenePlug &plug, const std::string &scenePath )
+static IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const std::string &scenePath )
 {
-	IECore::ConstObjectVectorPtr s = plug.state( scenePath );
-	return s ? s->copy() : 0;
+	IECore::ConstCompoundObjectPtr a = plug.attributes( scenePath );
+	return a ? a->copy() : 0;
 }
 
 static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
@@ -127,7 +127,7 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "transform", &ScenePlug::transform )
 		.def( "object", &objectWrapper )
 		.def( "childNames", &childNamesWrapper )
-		.def( "state", &stateWrapper )
+		.def( "attributes", &attributesWrapper )
 	;
 
 	Serialiser::registerSerialiser( ScenePlug::staticTypeId(), serialise );

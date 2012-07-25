@@ -83,7 +83,7 @@ Imath::Box3f SceneProcedural::bound() const
 	/// \todo I think we should be able to remove this exception handling in the future.
 	/// Either when we do better error handling in ValuePlug computations, or when 
 	/// the bug in IECoreGL that caused the crashes in SceneProceduralTest.testComputationErrors
-	/// if fixed.
+	/// is fixed.
 	try
 	{
 		Box3f b = m_scenePlug->boundPlug()->getValue();
@@ -109,15 +109,31 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
 		
-		ConstObjectVectorPtr state = runTimeCast<const ObjectVector>( m_scenePlug->statePlug()->getValue() );
-		if( state )
+		ConstCompoundObjectPtr attributes = runTimeCast<const CompoundObject>( m_scenePlug->attributesPlug()->getValue() );
+		if( attributes )
 		{
-			for( ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
+			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 			{
-				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+				const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() );
 				if( s )
 				{
 					s->render( renderer );
+				}
+				else
+				{
+					/// \todo We perhaps wouldn't need this chunk if we had a VectorStateRenderable or some such.
+					const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() );
+					if( o )
+					{
+						for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+						{
+							const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+							if( s )
+							{
+								s->render( renderer );
+							}
+						}
+					}
 				}
 			}
 		}

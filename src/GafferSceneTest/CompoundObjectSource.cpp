@@ -87,10 +87,10 @@ Imath::M44f CompoundObjectSource::computeTransform( const ScenePath &path, const
 	return Imath::M44f();
 }
 
-IECore::ObjectVectorPtr CompoundObjectSource::computeState( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::CompoundObjectPtr CompoundObjectSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	ConstObjectVectorPtr state = entryForPath( path )->member<ObjectVector>( "state" );
-	return state ? state->copy() : 0;
+	ConstCompoundObjectPtr attributes = entryForPath( path )->member<CompoundObject>( "attributes" );
+	return attributes ? attributes->copy() : 0;
 }
 
 IECore::ObjectPtr CompoundObjectSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const

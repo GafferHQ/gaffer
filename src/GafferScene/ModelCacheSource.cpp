@@ -137,9 +137,9 @@ Imath::M44f ModelCacheSource::computeTransform( const ScenePath &path, const Gaf
 	return result;
 }
 
-IECore::ObjectVectorPtr ModelCacheSource::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::CompoundObjectPtr ModelCacheSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	/// \todo Implement support for state in the file format and then support it here.
+	/// \todo Implement support for attributes in the file format and then support it here.
 	return 0;
 }
 

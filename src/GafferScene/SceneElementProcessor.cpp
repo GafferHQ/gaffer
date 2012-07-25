@@ -121,16 +121,16 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 	}
 }
 
-IECore::ObjectVectorPtr SceneElementProcessor::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::CompoundObjectPtr SceneElementProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( filterPlug()->getValue() == Filter::Match )
 	{
-		return processState( path, context, inPlug()->statePlug()->getValue() );
+		return processAttributes( path, context, inPlug()->attributesPlug()->getValue() );
 	}
 	else
 	{
-		ConstObjectVectorPtr s = inPlug()->statePlug()->getValue();
-		return s ? s->copy() : 0;
+		ConstCompoundObjectPtr a = inPlug()->attributesPlug()->getValue();
+		return a ? a->copy() : 0;
 	}
 }
 
@@ -178,11 +178,11 @@ Imath::M44f SceneElementProcessor::processTransform( const ScenePath &path, cons
 	return inputTransform;
 }
 
-IECore::ObjectVectorPtr SceneElementProcessor::processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const
+IECore::CompoundObjectPtr SceneElementProcessor::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	if( inputState )
+	if( inputAttributes )
 	{
-		return inputState->copy();
+		return inputAttributes->copy();
 	}
 	return 0;
 }

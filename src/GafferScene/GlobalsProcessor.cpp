@@ -71,10 +71,10 @@ Imath::M44f GlobalsProcessor::computeTransform( const ScenePath &path, const Gaf
 	return inPlug()->transformPlug()->getValue();
 }
 
-IECore::ObjectVectorPtr GlobalsProcessor::computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::CompoundObjectPtr GlobalsProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstObjectVectorPtr s = inPlug()->statePlug()->getValue();
-	return s ? s->copy() : 0;
+	IECore::ConstCompoundObjectPtr a = inPlug()->attributesPlug()->getValue();
+	return a ? a->copy() : 0;
 }
 
 IECore::ObjectPtr GlobalsProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const

@@ -69,8 +69,8 @@ class SceneElementProcessor : public SceneProcessor
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented to call processTransform().
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processState().
-		virtual IECore::ObjectVectorPtr computeState( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		/// Implemented to call processAttributes().
+		virtual IECore::CompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented to call processObject().
 		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
@@ -86,7 +86,7 @@ class SceneElementProcessor : public SceneProcessor
 		/// Defaults to false - if you override processBound, you /must/ reimplement this to return true.
 		virtual bool processesBound() const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
-		virtual IECore::ObjectVectorPtr processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const;
+		virtual IECore::CompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 		/// Note that if you change the bound of object, you need to reimplement both processBound() and processesBound().
 		virtual IECore::ObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 		

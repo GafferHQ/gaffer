@@ -47,7 +47,7 @@ class SceneNodeTest( unittest.TestCase ) :
 	def testRootConstraints( self ) :
 	
 		# we don't allow the root of the scene ("/") to carry objects, transforms,
-		# or state. if we did, then there wouldn't be a sensible way of merging
+		# or attributes. if we did, then there wouldn't be a sensible way of merging
 		# them (particularly transforms) when a Group node has multiple inputs.
 		# it's also pretty confusing to have stuff go on at the root level,
 		# particularly as the root isn't well represented in the SceneEditor,
@@ -75,11 +75,11 @@ class SceneNodeTest( unittest.TestCase ) :
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
 			IECore.CompoundObject( {
-				"state" : IECore.ObjectVector()
+				"attributes" : IECore.CompoundObject()
 			} )
 		)
 		
-		self.assertRaises( Exception, node["out"].state, "/" )
+		self.assertRaises( Exception, node["out"].attributes, "/" )
 	
 if __name__ == "__main__":
 	unittest.main()

@@ -72,19 +72,16 @@ bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inp
 	return true;
 }
 
-IECore::ObjectVectorPtr Assignment::processState( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputState ) const
+IECore::CompoundObjectPtr Assignment::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	ObjectVectorPtr result = inputState ? inputState->copy() : ObjectVectorPtr( new ObjectVector );
+	CompoundObjectPtr result = inputAttributes ? inputAttributes->copy() : CompoundObjectPtr( new CompoundObject );
 	
 	const Plug *in = shaderPlug()->getInput<Plug>();
 	const Shader *shader = in ? in->ancestor<Shader>() : 0;
 	if( shader )
 	{
 		IECore::ObjectVectorPtr state = shader->state();
-		for( IECore::ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
-		{
-			result->members().push_back( *it );
-		}
+		result->members()["shader"] = state;
 	}
 	
 	return result;

@@ -91,6 +91,7 @@ enum TypeId
 	TransformPlugTypeId = 110044,
 	AtomicBox3fPlugTypeId = 110045,
 	AtomicBox2iPlugTypeId = 110046,
+	CompoundObjectPlugTypeId = 110047,
 	
 	LastTypeId = 110200,
 	

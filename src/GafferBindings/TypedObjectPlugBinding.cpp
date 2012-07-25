@@ -234,4 +234,5 @@ void GafferBindings::bindTypedObjectPlug()
 	bind<V3fVectorDataPlug>();
 	bind<ObjectVectorPlug>();
 	bind<PrimitivePlug>();
+	bind<CompoundObjectPlug>();
 }
