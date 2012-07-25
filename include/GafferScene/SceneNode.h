@@ -70,10 +70,10 @@ class SceneNode : public Gaffer::Node
 		
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
-		virtual IECore::CompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
-		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
-		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
+		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
+		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
+		virtual IECore::ConstStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
+		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
 		
 		/// Convenience function to compute the correct bounding box for a path from the bounding box and transforms of its
 		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine

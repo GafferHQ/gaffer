@@ -101,7 +101,7 @@ void Camera::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outp
 	}
 }
 
-IECore::ObjectPtr Camera::computeSource( const Context *context ) const
+IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
 {
 	IECore::CameraPtr result = new IECore::Camera;
 	result->parameters()["resolution"] = new IECore::V2iData( resolutionPlug()->getValue() );

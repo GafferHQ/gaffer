@@ -131,7 +131,7 @@ Imath::Box2i ImagePrimitiveSource<BaseType>::computeDataWindow( const Gaffer::Co
 }
 
 template<typename BaseType>
-IECore::StringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	IECore::StringVectorDataPtr result;
 	IECore::ConstImagePrimitivePtr image = IECore::staticPointerCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
@@ -144,7 +144,7 @@ IECore::StringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelNames(
 }
 
 template<typename BaseType>
-IECore::FloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	IECore::ConstImagePrimitivePtr image = IECore::staticPointerCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( !image )

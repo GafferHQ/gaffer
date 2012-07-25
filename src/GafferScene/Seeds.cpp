@@ -101,12 +101,12 @@ Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const Sc
 	return M44f();
 }
 
-IECore::CompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return 0;
 }
 
-IECore::ObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	if( branchPath == "/" )
 	{
@@ -129,7 +129,7 @@ IECore::ObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const
 	return 0;
 }
 
-IECore::StringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return 0;
 }

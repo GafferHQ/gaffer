@@ -68,8 +68,8 @@ class ImageNode : public Gaffer::Node
 		
 		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
-		virtual IECore::StringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
-		virtual IECore::FloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		
 };
 

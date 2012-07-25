@@ -70,13 +70,13 @@ class SceneElementProcessor : public SceneProcessor
 		/// Implemented to call processTransform().
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented to call processAttributes().
-		virtual IECore::CompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented to call processObject().
-		virtual IECore::ObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
-		virtual IECore::StringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
-		virtual IECore::ObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
 		/// May be reimplemented by derived classes to process the input scene. These methods will only be called for paths matching
 		/// the filter applied to this node. Note that in the case of processBound(), modifications will automatically be propagated to
@@ -86,9 +86,9 @@ class SceneElementProcessor : public SceneProcessor
 		/// Defaults to false - if you override processBound, you /must/ reimplement this to return true.
 		virtual bool processesBound() const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
-		virtual IECore::CompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
+		virtual IECore::ConstCompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 		/// Note that if you change the bound of object, you need to reimplement both processBound() and processesBound().
-		virtual IECore::ObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		virtual IECore::ConstObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 		
 };
 

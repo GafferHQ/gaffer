@@ -91,7 +91,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		else if( output == scenePlug->attributesPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );
-			CompoundObjectPtr attributes = computeAttributes( scenePath, context, scenePlug );
+			ConstCompoundObjectPtr attributes = computeAttributes( scenePath, context, scenePlug );
 			if( scenePath == "/" && attributes )
 			{
 				throw Exception( "Scene root must have no attributes" );
@@ -101,7 +101,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		else if( output == scenePlug->objectPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );
-			ObjectPtr object = computeObject( scenePath, context, scenePlug );
+			ConstObjectPtr object = computeObject( scenePath, context, scenePlug );
 			if( scenePath == "/" && object )
 			{
 				throw Exception( "Scene root must not have an object" );			

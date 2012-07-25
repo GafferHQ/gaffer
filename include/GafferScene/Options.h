@@ -60,7 +60,7 @@ class Options : public GlobalsProcessor
 		
 	protected :
 
-		virtual IECore::ObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
+		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
 		
 };
 

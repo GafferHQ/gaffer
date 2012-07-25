@@ -75,7 +75,7 @@ void Plane::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outpu
 	}
 }
 
-IECore::ObjectPtr Plane::computeSource( const Context *context ) const
+IECore::ConstObjectPtr Plane::computeSource( const Context *context ) const
 {
 	V2f dimensions = dimensionsPlug()->getValue();
 	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ) );

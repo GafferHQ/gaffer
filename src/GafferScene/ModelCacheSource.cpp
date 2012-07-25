@@ -137,13 +137,13 @@ Imath::M44f ModelCacheSource::computeTransform( const ScenePath &path, const Gaf
 	return result;
 }
 
-IECore::CompoundObjectPtr ModelCacheSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr ModelCacheSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	/// \todo Implement support for attributes in the file format and then support it here.
 	return 0;
 }
 
-IECore::ObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string entry = entryForPath( path ) + "/geometry";
 	
@@ -161,7 +161,7 @@ IECore::ObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const 
 	return runTimeCast<Primitive>( result );
 }
 
-IECore::StringVectorDataPtr ModelCacheSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr ModelCacheSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string entry = entryForPath( path ) + "/children";
 
@@ -191,7 +191,7 @@ IECore::StringVectorDataPtr ModelCacheSource::computeChildNames( const ScenePath
 	return resultData;
 }
 
-IECore::ObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return 0;
 }

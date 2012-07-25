@@ -135,7 +135,7 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 	);
 }
 
-IECore::StringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
@@ -149,7 +149,7 @@ IECore::StringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Cont
 	return result;
 }
 
-IECore::FloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
 	ustring uFileName( fileName.c_str() );

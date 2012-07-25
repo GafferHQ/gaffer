@@ -72,8 +72,7 @@ void ObjectToScene::affects( const ValuePlug *input, Node::AffectedPlugsContaine
 	}
 }
 
-IECore::ObjectPtr ObjectToScene::computeSource( const Context *context ) const
+IECore::ConstObjectPtr ObjectToScene::computeSource( const Context *context ) const
 {
-	ConstObjectPtr o = objectPlug()->getValue();
-	return o ? o->copy() : 0;
+	return objectPlug()->getValue();
 }

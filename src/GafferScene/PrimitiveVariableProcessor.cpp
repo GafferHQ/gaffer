@@ -83,7 +83,7 @@ void PrimitiveVariableProcessor::affects( const Gaffer::ValuePlug *input, Affect
 	}
 }
 
-IECore::ObjectPtr PrimitiveVariableProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr PrimitiveVariableProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	ConstPrimitivePtr inputGeometry = runTimeCast<const Primitive>( inputObject );
 	if( !inputGeometry )

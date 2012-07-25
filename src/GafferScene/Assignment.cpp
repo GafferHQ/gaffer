@@ -72,7 +72,7 @@ bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inp
 	return true;
 }
 
-IECore::CompoundObjectPtr Assignment::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr Assignment::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	CompoundObjectPtr result = inputAttributes ? inputAttributes->copy() : CompoundObjectPtr( new CompoundObject );
 	

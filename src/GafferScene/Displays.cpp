@@ -115,7 +115,7 @@ void Displays::affects( const ValuePlug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-IECore::ObjectVectorPtr Displays::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
+IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
 {
 	ObjectVectorPtr result = new ObjectVector;
 	

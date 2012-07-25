@@ -157,6 +157,9 @@ PRIORITIES!!!!
 	- a whole load of wasted allocations
 	- could return const & for unconnected plugs?
 	- or somehow keep the thing guaranteed alive for a bit?
+	- or does that whole thing about the compiler being allowed to optimise return values like this
+	  make it ok? http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
+	  	- we should probably measure performance before we do anything
 
 * audit wrappers for things
 	- do we really want ScriptNode::typeId() to go into python? really?
@@ -165,10 +168,6 @@ PRIORITIES!!!!
 * make layout menu line up with button
 	* Widget.bound() method
 	* MenuButton?
-
-* maybe the compute*() methods could return ConstPtr and then we don't need all the something ? something->copy() : 0 nonsense everywhere?
-	- or does that mean unecessary copying sometimes?
-	- or can ObjectPlug::setValue() accept a ConstPtr?
 
 * fix the flickering widget on open
 	- it's the menu bar

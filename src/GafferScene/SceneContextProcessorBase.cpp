@@ -63,22 +63,22 @@ Imath::M44f SceneContextProcessorBase::computeTransform( const ScenePath &path, 
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeTransform" );
 }
 
-IECore::CompoundObjectPtr SceneContextProcessorBase::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr SceneContextProcessorBase::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeAttributes" );
 }
 
-IECore::ObjectPtr SceneContextProcessorBase::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr SceneContextProcessorBase::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeObject" );
 }
 
-IECore::StringVectorDataPtr SceneContextProcessorBase::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr SceneContextProcessorBase::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeChildNames" );
 }
 
-IECore::ObjectVectorPtr SceneContextProcessorBase::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr SceneContextProcessorBase::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeGlobals" );
 }

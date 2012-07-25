@@ -243,7 +243,7 @@ Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Contex
 	}
 }
 
-IECore::CompoundObjectPtr Group::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -255,14 +255,13 @@ IECore::CompoundObjectPtr Group::computeAttributes( const ScenePath &path, const
 	{
 		ScenePlug *sourcePlug = 0;
 		std::string source = sourcePath( path, groupName, &sourcePlug );
-		ConstCompoundObjectPtr a = sourcePlug->attributes( source );
-		return a ? a->copy() : 0;
+		return sourcePlug->attributes( source );
 	}
 	
 	return 0;
 }
 
-IECore::ObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string groupName = namePlug()->getValue();
 	
@@ -274,12 +273,11 @@ IECore::ObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Con
 	{
 		ScenePlug *sourcePlug = 0;
 		std::string source = sourcePath( path, groupName, &sourcePlug );
-		ConstObjectPtr o = sourcePlug->object( source );
-		return o ? o->copy() : 0;
+		return sourcePlug->object( source );
 	}
 }
 
-IECore::StringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {	
 	std::string groupName = namePlug()->getValue();
 	
@@ -292,22 +290,19 @@ IECore::StringVectorDataPtr Group::computeChildNames( const ScenePath &path, con
 	else if( path.size() == groupName.size() + 1 )
 	{
 		ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
-		ConstStringVectorDataPtr names = mapping->member<StringVectorData>( "__GroupChildNames" );
-		return names ? names->copy() : 0;
+		return mapping->member<StringVectorData>( "__GroupChildNames" );
 	}
 	else
 	{
 		ScenePlug *sourcePlug = 0;
 		std::string source = sourcePath( path, groupName, &sourcePlug );
-		ConstStringVectorDataPtr childNames = sourcePlug->childNames( source );
-		return childNames ? childNames->copy() : 0;
+		return sourcePlug->childNames( source );
 	}
 }
 
-IECore::ObjectVectorPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
-	return globals ? globals->copy() : 0;
+	return inPlug()->globalsPlug()->getValue();
 }
 
 std::string Group::sourcePath( const std::string &outputPath, const std::string &groupName, ScenePlug **source ) const

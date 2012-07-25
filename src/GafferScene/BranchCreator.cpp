@@ -126,7 +126,7 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 	return M44f();
 }
 
-IECore::CompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
 	parentAndBranchPaths( path, parentPath, branchPath );
@@ -136,12 +136,11 @@ IECore::CompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &pat
 	}
 	else
 	{
-		ConstCompoundObjectPtr attributes = inPlug()->attributesPlug()->getValue();
-		return attributes ? attributes->copy() : 0;
+		return inPlug()->attributesPlug()->getValue();
 	}
 }
 
-IECore::ObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
 	parentAndBranchPaths( path, parentPath, branchPath );
@@ -151,12 +150,11 @@ IECore::ObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaf
 	}
 	else
 	{
-		ConstObjectPtr object = inPlug()->objectPlug()->getValue();
-		return object ? object->copy() : 0;
+		return inPlug()->objectPlug()->getValue();
 	}
 }
 
-IECore::StringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
 	parentAndBranchPaths( path, parentPath, branchPath );
@@ -177,15 +175,13 @@ IECore::StringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &p
 	}
 	else
 	{
-		IECore::ConstStringVectorDataPtr inputNames = inPlug()->childNamesPlug()->getValue();
-		return inputNames ? inputNames->copy() : 0;
+		return inPlug()->childNamesPlug()->getValue();
 	}
 }
 
-IECore::ObjectVectorPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
-	return globals ? globals->copy() : 0;
+	return inPlug()->globalsPlug()->getValue();
 }
 
 void BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const

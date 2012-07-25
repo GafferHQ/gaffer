@@ -129,31 +129,29 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	return result;
 }
 
-IECore::CompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );
 	if( ic )
 	{
 		Context::Scope scopedContext( ic );
-		ConstCompoundObjectPtr instanceAttributes = instancePlug()->attributesPlug()->getValue();
-		return instanceAttributes ? instanceAttributes->copy() : 0;
+		return instancePlug()->attributesPlug()->getValue();
 	}
 	return 0;
 }
 
-IECore::ObjectPtr Instancer::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );
 	if( ic )
 	{
 		Context::Scope scopedContext( ic );
-		ConstObjectPtr instanceObject = instancePlug()->objectPlug()->getValue();
-		return instanceObject ? instanceObject->copy() : 0;
+		return instancePlug()->objectPlug()->getValue();
 	}
 	return 0;
 }
 
-IECore::StringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstStringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	if( branchPath == "/" )
 	{
@@ -180,8 +178,7 @@ IECore::StringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath 
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
-		ConstStringVectorDataPtr instanceChildNames = instancePlug()->childNamesPlug()->getValue();
-		return instanceChildNames ? instanceChildNames->copy() : 0;
+		return instancePlug()->childNamesPlug()->getValue();
 	}
 }
 

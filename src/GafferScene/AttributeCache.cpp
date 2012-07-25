@@ -133,10 +133,11 @@ Imath::M44f AttributeCache::processTransform( const ScenePath &path, const Gaffe
 	return inputTransform;
 }
 
-IECore::ObjectPtr AttributeCache::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	// we're obliged to pull on these whether we need them or not, so this
 	// comes before the early out for the no input geometry case.
+	/// \todo I'm not sure this is actually the case.
 	const std::string fileName = fileNamePlug()->getValue();
 	const float frame = context->getFrame();
 	
@@ -157,6 +158,7 @@ IECore::ObjectPtr AttributeCache::processObject( const ScenePath &path, const Ga
 	catch( const std::exception &e )
 	{
 		// it's ok to have no attributes
+		return inputGeometry;
 	}
 	
 	IECore::PrimitivePtr result = inputGeometry->copy();

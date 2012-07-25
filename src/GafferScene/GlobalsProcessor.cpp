@@ -71,25 +71,22 @@ Imath::M44f GlobalsProcessor::computeTransform( const ScenePath &path, const Gaf
 	return inPlug()->transformPlug()->getValue();
 }
 
-IECore::CompoundObjectPtr GlobalsProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr GlobalsProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstCompoundObjectPtr a = inPlug()->attributesPlug()->getValue();
-	return a ? a->copy() : 0;
+	return inPlug()->attributesPlug()->getValue();
 }
 
-IECore::ObjectPtr GlobalsProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr GlobalsProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstObjectPtr o = inPlug()->objectPlug()->getValue();
-	return o ? o->copy() : 0;
+	return inPlug()->objectPlug()->getValue();
 }
 
-IECore::StringVectorDataPtr GlobalsProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr GlobalsProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstStringVectorDataPtr names = inPlug()->childNamesPlug()->getValue();
-	return names ? names->copy() : 0;
+	return inPlug()->childNamesPlug()->getValue();
 }
 
-IECore::ObjectVectorPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
 	return processGlobals( context, globals );

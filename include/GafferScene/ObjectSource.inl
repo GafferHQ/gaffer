@@ -169,24 +169,23 @@ Imath::M44f ObjectSource<BaseType>::computeTransform( const SceneNode::ScenePath
 }
 
 template<typename BaseType>
-IECore::CompoundObjectPtr ObjectSource<BaseType>::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr ObjectSource<BaseType>::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return 0;
 }
 
 template<typename BaseType>
-IECore::ObjectPtr ObjectSource<BaseType>::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr ObjectSource<BaseType>::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path != "/" )
 	{
-		IECore::ConstObjectPtr object = inputSourcePlug()->getValue();
-		return object ? object->copy() : 0;
+		return inputSourcePlug()->getValue();
 	}
 	return 0;
 }
 
 template<typename BaseType>
-IECore::StringVectorDataPtr ObjectSource<BaseType>::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr ObjectSource<BaseType>::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path == "/" )
 	{
@@ -206,7 +205,7 @@ IECore::StringVectorDataPtr ObjectSource<BaseType>::computeChildNames( const Sce
 }
 
 template<typename BaseType>
-IECore::ObjectVectorPtr ObjectSource<BaseType>::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr ObjectSource<BaseType>::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return 0;
 }

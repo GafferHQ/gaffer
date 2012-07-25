@@ -79,6 +79,8 @@ class TypedObjectPlug : public ValuePlug
 
 		/// \undoable
 		/// \todo This is taking a copy - does that cause terrible performance?
+		/// I think the alternative would be to document that the caller must
+		/// under no circumstances modify value after calling setValue( value ).
 		void setValue( ConstValuePtr value );
 		/// Returns the value.
 		ConstValuePtr getValue() const;

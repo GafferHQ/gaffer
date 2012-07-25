@@ -87,19 +87,17 @@ Imath::M44f CompoundObjectSource::computeTransform( const ScenePath &path, const
 	return Imath::M44f();
 }
 
-IECore::CompoundObjectPtr CompoundObjectSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr CompoundObjectSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	ConstCompoundObjectPtr attributes = entryForPath( path )->member<CompoundObject>( "attributes" );
-	return attributes ? attributes->copy() : 0;
+	return entryForPath( path )->member<CompoundObject>( "attributes" );
 }
 
-IECore::ObjectPtr CompoundObjectSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstObjectPtr CompoundObjectSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	ConstObjectPtr object = entryForPath( path )->member<Object>( "object" );
-	return object ? object->copy() : 0;
+	return entryForPath( path )->member<Object>( "object" );
 }
 
-IECore::StringVectorDataPtr CompoundObjectSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstStringVectorDataPtr CompoundObjectSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	ConstCompoundObjectPtr entry = entryForPath( path );
 	ConstCompoundObjectPtr children = entry->member<CompoundObject>( "children" );
@@ -115,7 +113,7 @@ IECore::StringVectorDataPtr CompoundObjectSource::computeChildNames( const Scene
 	return result;
 }
 
-IECore::ObjectVectorPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstObjectVectorPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	return 0;
 }
