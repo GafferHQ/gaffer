@@ -52,7 +52,8 @@ class SceneNodeTest( unittest.TestCase ) :
 		# it's also pretty confusing to have stuff go on at the root level,
 		# particularly as the root isn't well represented in the SceneEditor,
 		# and applications like maya don't have stuff happening at the root
-		# level either.
+		# level either. we achieve this by having the SceneNode simply not
+		# call the various processing functions for the root.
 		
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
@@ -61,7 +62,7 @@ class SceneNodeTest( unittest.TestCase ) :
 			} )
 		)
 		
-		self.assertRaises( Exception, node["out"].object, "/" )
+		self.assertEqual( node["out"].object( "/" ), None )
 		
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
@@ -70,7 +71,7 @@ class SceneNodeTest( unittest.TestCase ) :
 			} )
 		)
 		
-		self.assertRaises( Exception, node["out"].transform, "/" )
+		self.assertEqual( node["out"].transform( "/" ), IECore.M44f() )
 		
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
@@ -79,7 +80,7 @@ class SceneNodeTest( unittest.TestCase ) :
 			} )
 		)
 		
-		self.assertRaises( Exception, node["out"].attributes, "/" )
+		self.assertEqual( node["out"].attributes( "/" ), None )
 	
 if __name__ == "__main__":
 	unittest.main()

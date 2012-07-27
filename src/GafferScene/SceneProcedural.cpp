@@ -114,26 +114,24 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		{
 			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 			{
-				const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() );
-				if( s )
+				if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 				{
 					s->render( renderer );
 				}
-				else
+				else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
 				{
-					/// \todo We perhaps wouldn't need this chunk if we had a VectorStateRenderable or some such.
-					const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() );
-					if( o )
+					for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
 					{
-						for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+						const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+						if( s )
 						{
-							const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-							if( s )
-							{
-								s->render( renderer );
-							}
+							s->render( renderer );
 						}
 					}
+				}
+				else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+				{
+					renderer->setAttribute( it->first, d );
 				}
 			}
 		}

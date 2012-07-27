@@ -52,6 +52,7 @@ from OptionsTest import OptionsTest
 from SceneNodeTest import SceneNodeTest
 from PathFilterTest import PathFilterTest
 from AssignmentTest import AssignmentTest
+from AttributesTest import AttributesTest
 
 if __name__ == "__main__":
 	import unittest

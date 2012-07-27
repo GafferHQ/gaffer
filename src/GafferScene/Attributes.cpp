@@ -34,47 +34,60 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "GafferScene/Attributes.h"
 
-namespace GafferScene
-{
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferScene;
 
-enum TypeId
+IE_CORE_DEFINERUNTIMETYPED( Attributes );
+
+Attributes::Attributes( const std::string &name )
+	:	SceneElementProcessor( name )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	FilterTypeId = 110527,
-	PathFilterTypeId = 110528,
-	AttributesTypeId = 110529,
+	addChild(
+		new ParameterListPlug(
+			"attributes",
+			Plug::In,
+			Plug::Default | Plug::Dynamic
+		)
+	);
+}
+
+Attributes::~Attributes()
+{
+}
+
+GafferScene::ParameterListPlug *Attributes::attributesPlug()
+{
+	return getChild<ParameterListPlug>( "attributes" );
+}
+
+const GafferScene::ParameterListPlug *Attributes::attributesPlug() const
+{
+	return getChild<ParameterListPlug>( "attributes" );
+}
+
+void Attributes::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	SceneElementProcessor::affects( input, outputs );
 	
-	LastTypeId = 110700
-};
+	if( attributesPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->attributesPlug() );
+	}
+}
 
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H
+IECore::ConstCompoundObjectPtr Attributes::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+{
+	const ParameterListPlug *ap = attributesPlug();
+	if( !ap->children().size() )
+	{
+		return inputAttributes;
+	}
+	
+	CompoundObjectPtr result = inputAttributes ? inputAttributes->copy() : CompoundObjectPtr( new CompoundObject );
+	ap->fillParameterList( result->members() );
+	
+	return result;
+}

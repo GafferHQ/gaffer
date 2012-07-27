@@ -38,6 +38,7 @@
 #define GAFFERSCENE_PARAMETERLISTPLUG_H
 
 #include "IECore/CompoundData.h"
+#include "IECore/CompoundObject.h"
 
 #include "Gaffer/CompoundPlug.h"
 #include "GafferScene/TypeIds.h"
@@ -72,6 +73,12 @@ class ParameterListPlug : public Gaffer::CompoundPlug
 
 		/// Fills the parameter list with values based on the child plugs of this node.
 		void fillParameterList( IECore::CompoundDataMap &parameterList ) const;
+		/// As above but fills a CompoundObject map instead.
+		void fillParameterList( IECore::CompoundObject::ObjectMap &parameterList ) const;
+
+	private :
+	
+		IECore::DataPtr parameterDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const;
 
 };
 

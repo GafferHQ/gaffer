@@ -81,30 +81,30 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		else if( output == scenePlug->transformPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );
-			M44f transform = computeTransform( scenePath, context, scenePlug );
-			if( scenePath == "/" && transform != M44f() )
+			M44f transform;
+			if( scenePath != "/" ) // scene root must have identity transform
 			{
-				throw Exception( "Scene root must have the identity transform" );
+				transform = computeTransform( scenePath, context, scenePlug );
 			}
 			static_cast<M44fPlug *>( output )->setValue( transform );
 		}
 		else if( output == scenePlug->attributesPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );
-			ConstCompoundObjectPtr attributes = computeAttributes( scenePath, context, scenePlug );
-			if( scenePath == "/" && attributes )
+			ConstCompoundObjectPtr attributes = 0;
+			if( scenePath != "/" ) // scene root must have no attributes
 			{
-				throw Exception( "Scene root must have no attributes" );
+				attributes = computeAttributes( scenePath, context, scenePlug );
 			}
 			static_cast<CompoundObjectPlug *>( output )->setValue( attributes );
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
 			std::string scenePath = context->get<std::string>( "scene:path" );
-			ConstObjectPtr object = computeObject( scenePath, context, scenePlug );
-			if( scenePath == "/" && object )
+			ConstObjectPtr object = 0;
+			if( scenePath != "/" ) // scene root must have no object
 			{
-				throw Exception( "Scene root must not have an object" );			
+				object = computeObject( scenePath, context, scenePlug );
 			}
 			static_cast<ObjectPlug *>( output )->setValue( object );
 		}

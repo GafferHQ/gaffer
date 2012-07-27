@@ -126,31 +126,54 @@ Gaffer::CompoundPlug *ParameterListPlug::addParameter( const std::string &name, 
 
 void ParameterListPlug::fillParameterList( IECore::CompoundDataMap &parameterList ) const
 {
+	std::string name;
 	for( CompoundPlugIterator it( this ); it != it.end(); it++ )
 	{
-		const CompoundPlug *parameterPlug = *it;
-		std::string name = parameterPlug->getChild<StringPlug>( "name" )->getValue();
-		if( !name.size() )
+		IECore::DataPtr data = parameterDataAndName( *it, name );
+		if( data )
 		{
-			continue;
+			parameterList[name] = data;
 		}
-		
-		const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( "value" );
-		switch( valuePlug->typeId() )
-		{
-			case FloatPlugTypeId :
-				parameterList[name] = new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
-				break;
-			case IntPlugTypeId :
-				parameterList[name] = new IntData( static_cast<const IntPlug *>( valuePlug )->getValue() );
-				break;
-			case StringPlugTypeId :
-				parameterList[name] = new StringData( static_cast<const StringPlug *>( valuePlug )->getValue() );
-				break;		
-			default :
-				throw IECore::Exception(
-					boost::str( boost::format( "Parameter \"%s\" has unsupported value plug type \"%s\"" ) % name % valuePlug->typeName() )
-				);
-		}		
 	}
 }
+
+void ParameterListPlug::fillParameterList( IECore::CompoundObject::ObjectMap &parameterList ) const
+{
+	std::string name;
+	for( CompoundPlugIterator it( this ); it != it.end(); it++ )
+	{
+		IECore::DataPtr data = parameterDataAndName( *it, name );
+		if( data )
+		{
+			parameterList[name] = data;
+		}
+	}
+}
+
+IECore::DataPtr ParameterListPlug::parameterDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const
+{	
+	name = parameterPlug->getChild<StringPlug>( "name" )->getValue();
+	if( !name.size() )
+	{
+		return 0;
+	}
+		
+	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( "value" );
+	switch( valuePlug->typeId() )
+	{
+		case FloatPlugTypeId :
+			return new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
+			break;
+		case IntPlugTypeId :
+			return new IntData( static_cast<const IntPlug *>( valuePlug )->getValue() );
+			break;
+		case StringPlugTypeId :
+			return new StringData( static_cast<const StringPlug *>( valuePlug )->getValue() );
+			break;		
+		default :
+			throw IECore::Exception(
+				boost::str( boost::format( "Parameter \"%s\" has unsupported value plug type \"%s\"" ) % name % valuePlug->typeName() )
+			);
+	}		
+}
+
