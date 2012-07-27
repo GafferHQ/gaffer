@@ -418,8 +418,6 @@ env = Environment(
 	GAFFER_MAJOR_VERSION = "0",
 	GAFFER_MINOR_VERSION = "34",
 	GAFFER_PATCH_VERSION = "0",
-	
-	PYTHON_VERSION = "2.7", # \todo need some way of getting this magically
 
 )
 
@@ -490,6 +488,16 @@ if depEnv["BUILD_DEPENDENCY_PYTHON"] :
 	else :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-shared --enable-unicode=ucs4 && make clean && make -j 4 && make install" )
 
+# get information about the python we just built
+pythonVersion = subprocess.Popen( [ "python", "--version" ], env=depEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().strip()
+pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
+pythonLinkFlags = os.popen( depEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --ldflags" ) ).read().strip()
+pythonLinkFlags = pythonLinkFlags.replace( "Python.framework/Versions/" + pythonVersion + "/Python", "" )
+depEnv["PYTHON_LINK_FLAGS"] = pythonLinkFlags
+env["PYTHON_LINK_FLAGS"] = pythonLinkFlags
+depEnv["PYTHON_VERSION"] = pythonVersion
+env["PYTHON_VERSION"] = pythonVersion
+
 if depEnv["BUILD_DEPENDENCY_TIFF"] :
 	runCommand( "cd $TIFF_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 
@@ -537,7 +545,7 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' PYTHON_LINK_FLAGS='$PYTHON_LINK_FLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
@@ -558,7 +566,7 @@ if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
 		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make VERBOSE=1 && make install" )
 	else :
-		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/include/python2.7 -DCMAKE_USE_PYTHON_VERSION=$PYTHON_VERSION && make clean && make && make install" )
+		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/include/python$PYTHON_VERSION -DCMAKE_USE_PYTHON_VERSION=$PYTHON_VERSION && make clean && make && make install" )
 		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
 		
 ###############################################################################################
@@ -629,15 +637,12 @@ basePythonEnv.Append(
 	],
 	
 )
-
-pythonLinkFlags = os.popen( basePythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --ldflags" ) ).read().strip()
-pythonLinkFlags = pythonLinkFlags.replace( "Python.framework/Versions/" + basePythonEnv["PYTHON_VERSION"] + "/Python", "" )
 	
 basePythonEnv.Append(
 
 	CPPFLAGS = os.popen( basePythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --includes" ) ).read().split(),
 
-	SHLINKFLAGS = pythonLinkFlags,
+	SHLINKFLAGS = "$PYTHON_LINK_FLAGS",
 
 )
 
