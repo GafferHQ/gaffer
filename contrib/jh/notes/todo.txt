@@ -20,6 +20,10 @@ PRIORITIES!!!!
 		- would that be confusing given the ScenePath class we already have
 		  and which is intended for a different purpose?
 
+* improved ui for arnold shaders
+	- enums
+	- support gaffer.metadata?
+
 * i'm pretty sure we've got circular references in the menu code for CompoundEditor.
 
 * do we have circular references between SplitContainer and its animation
