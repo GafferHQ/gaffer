@@ -113,6 +113,8 @@ can be constructed easily.
 
 * Simplified EditorWidget implementations by removing setScriptNode() method - now the scriptNode is always provided at construction and cannot be subsequently changed. Renamed ScriptWindow.getScript() to ScriptWindow.scriptNode() and EditorWidget.getScriptNode() to EditorWidget.scriptNode() for consistency. 
 
+* Menus now support a "shortCut" entry in the MenuItemDefinition to provide keyboard shortcuts. The standard application, file and edit menus now provide the expected shortcuts.
+
 0.34.0
 ------
 

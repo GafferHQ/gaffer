@@ -42,17 +42,18 @@ import GafferUI
 def appendDefinitions( menuDefinition, prefix="" ) :
 
 	## \todo Grey out options when they won't work.
-	menuDefinition.append( prefix + "/Undo", { "command" : undo } )
-	menuDefinition.append( prefix + "/Redo", { "command" : redo } )
+	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z" } )
+	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z" } )
 	menuDefinition.append( prefix + "/UndoDivider", { "divider" : True } )
 	
-	menuDefinition.append( prefix + "/Cut", { "command" : cut } )
-	menuDefinition.append( prefix + "/Copy", { "command" : copy } )
-	menuDefinition.append( prefix + "/Paste", { "command" : paste } )
-	menuDefinition.append( prefix + "/Delete", { "command" : delete } )
+	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X" } )
+	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C" } )
+	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V" } )
+	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace" } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select All", { "command" : selectAll } )
+	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
+	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A" } )
 
 ## A function suitable as the command for an Edit/Undo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -120,3 +121,12 @@ def selectAll( menu ) :
 	for c in script.children() :
 		if c.isInstanceOf( Gaffer.Node.staticTypeId() ) :
 			script.selection().add( c )	
+			
+## A function suitable as the command for an Edit/Select None menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectNone( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	script.selection().clear()				

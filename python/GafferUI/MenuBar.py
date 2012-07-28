@@ -57,7 +57,7 @@ class MenuBar( GafferUI.Widget ) :
 		if key=="definition" :
 		
 			self._qtWidget().clear()
-			self.__subMenus = []
+			self._subMenus = []
 
 			done = set()
 			for path, item in self.definition.items() :
@@ -73,7 +73,7 @@ class MenuBar( GafferUI.Widget ) :
 								
 					qMenu = self._qtWidget().addMenu( name )
 					menu = GafferUI.Menu( subMenuDefinition, qMenu )
-					self.__subMenus.append( menu )
+					self._subMenus.append( menu )
 					
 				done.add( name )		
 					
@@ -88,17 +88,16 @@ class _MenuBar( QtGui.QMenuBar ) :
 		# disable menu merging on mac
 		self.setNativeMenuBar( False )
 
-		self.__needsVisibilityKick = platform.system() == "Darwin"
-
 	def event( self, event ) :
 	
-		# for some reason on the mac, menubars start off invisible, which we don't
-		# want. here we make them visible when they first receive a parent - if we
-		# did it earlier then they would become independent top level windows briefly before
-		# they get parented, and they flicker onto and off the screen.
-		if self.__needsVisibilityKick and event.type() == event.ParentChange :
-			if self.parent() :
-				self.setVisible( True )
-				self.__needsVisibilityKick = False
-			
+		if event.type() == event.Show :
+			# normally, Menus aren't populated with items until they're shown,
+			# but we need them populated before so that the keyboard shortcuts
+			# become available. we wait until a menu bar show event because we
+			# know then that we're parented below a Window, and many of our menu
+			# commands and status items we use need to find their parent ScriptWindow
+			# before they work properly.
+			for subMenu in GafferUI.Widget._owner( self )._subMenus :
+				subMenu._buildFully()
+				
 		return QtGui.QMenuBar.event( self, event )

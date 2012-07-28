@@ -52,13 +52,17 @@ class Menu( GafferUI.Widget ) :
 	def __init__( self, definition, _qtMenu=None, **kw ) :
 	
 		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else _Menu(), **kw )
-			
-		self._qtWidget().aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), self._qtWidget(), definition ) )
 		
-		self._setStyleSheet()
+		self.__definition = definition
+		
+		# we rebuild each menu every time it's shown, to support the use of callable items to provide
+		# dynamic submenus and item states.
+		self._qtWidget().aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), self._qtWidget(), self.__definition ) )
+		
+		self._setStyleSheet()		
 		
 		self.__popupParent = None
-		
+
 	## Displays the menu at the specified position, and attached to
 	# an optional parent. If position is not specified then it 
 	# defaults to the current cursor position. If forcePosition is specified
@@ -123,7 +127,14 @@ class Menu( GafferUI.Widget ) :
 		
 		command( *args, **kw )
 
-	def __show( self, qtMenu, definition ) :
+	# May be called to fully build the menu /now/, rather than only do it lazily
+	# when it's shown. This is used by the MenuBar to make sure that keyboard shortcuts
+	# are available even before the menu has been shown.
+	def _buildFully( self ) :
+	
+		self.__build( self._qtWidget(), self.__definition, recurse=True )
+
+	def __build( self, qtMenu, definition, recurse=False ) :
 		
 		if callable( definition ) :
 			definition = definition()
@@ -146,7 +157,9 @@ class Menu( GafferUI.Widget ) :
 										
 					subMenu = qtMenu.addMenu( name )
 					subMenuDefinition = definition.reRooted( "/" + name + "/" )					
-					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), subMenu, subMenuDefinition ) )
+					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, subMenuDefinition ) )
+					if recurse :
+						self.__build( subMenu, subMenuDefinition, recurse )
 					
 				else :
 				
@@ -157,8 +170,10 @@ class Menu( GafferUI.Widget ) :
 					if item.subMenu is not None :
 										
 						subMenu = qtMenu.addMenu( label )
-						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__show ), subMenu, item.subMenu ) )
-					
+						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, item.subMenu ) )
+						if recurse :
+							self.__build( subMenu, subMenuDefinition, recurse )
+							
 					else :
 				
 						# it's not a submenu
@@ -191,7 +206,11 @@ class Menu( GafferUI.Widget ) :
 						if callable( active ) :
 							active = active()
 						qtAction.setEnabled( active )
-
+						
+						shortCut = getattr( item, "shortCut", None )
+						if shortCut is not None :
+							qtAction.setShortcut( QtGui.QKeySequence( shortCut ) ) 
+						
 						qtMenu.addAction( qtAction )
 
 				done.add( name )

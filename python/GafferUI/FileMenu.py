@@ -45,11 +45,11 @@ import GafferUI
 # standard open/save/revert/etc
 def appendDefinitions( menuDefinition, prefix="" ) :
 
-	menuDefinition.append( prefix + "/New", { "command" : new } )
-	menuDefinition.append( prefix + "/Open...", { "command" : open } )
+	menuDefinition.append( prefix + "/New", { "command" : new, "shortCut" : "Ctrl+N" } )
+	menuDefinition.append( prefix + "/Open...", { "command" : open, "shortCut" : "Ctrl+O" } )
 	menuDefinition.append( prefix + "/OpenDivider", { "divider" : True } )
-	menuDefinition.append( prefix + "/Save", { "command" : save }	)
-	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs }	)
+	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S" } )
+	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
 	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved }	)
 
 ## A function suitable as the command for a File/New menu item. It must be invoked from a menu which
