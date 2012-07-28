@@ -101,7 +101,9 @@ class ScriptNode : public Node
 		/// be active while those operations are being performed.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		bool undoAvailable() const;
 		void undo();
+		bool redoAvailable() const;
 		void redo();
 		//@}
 		

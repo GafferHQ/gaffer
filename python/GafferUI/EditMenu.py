@@ -36,24 +36,25 @@
 
 from __future__ import with_statement
 
+import IECore
+
 import Gaffer
 import GafferUI
 
 def appendDefinitions( menuDefinition, prefix="" ) :
 
-	## \todo Grey out options when they won't work.
-	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z" } )
-	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z" } )
+	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z", "active" : __undoAvailable } )
+	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z", "active" : __redoAvailable } )
 	menuDefinition.append( prefix + "/UndoDivider", { "divider" : True } )
 	
-	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X" } )
-	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C" } )
-	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V" } )
-	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace" } )
+	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
+	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
-	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A" } )
+	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : __selectionAvailable } )
 
 ## A function suitable as the command for an Edit/Undo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -61,7 +62,8 @@ def undo( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	script.undo()
+	if script.undoAvailable() :
+		script.undo()
 	
 ## A function suitable as the command for an Edit/Redo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -69,7 +71,8 @@ def redo( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	script.redo()
+	if script.redoAvailable() :
+		script.redo()
 
 ## A function suitable as the command for an Edit/Cut menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -130,3 +133,24 @@ def selectNone( menu ) :
 	script = scriptWindow.scriptNode()
 	
 	script.selection().clear()				
+
+def __selectionAvailable( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	return True if scriptWindow.scriptNode().selection().size() else False
+	
+def __pasteAvailable( menu ) :
+
+	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	root = scriptNode.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	return isinstance( root.getClipboardContents(), IECore.StringData )
+
+def __undoAvailable( menu ) :
+
+	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	return scriptNode.undoAvailable()
+	
+def __redoAvailable( menu ) :
+
+	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	return scriptNode.redoAvailable()

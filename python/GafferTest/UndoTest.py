@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,8 @@ class UndoTest( unittest.TestCase ) :
 	def testSetName( self ) :
 	
 		s = Gaffer.ScriptNode()
+		self.assertEqual( s.undoAvailable(), False )
+		self.assertEqual( s.redoAvailable(), False )
 		self.assertRaises( Exception, s.undo )
 		
 		n = Gaffer.Node()
@@ -57,15 +59,23 @@ class UndoTest( unittest.TestCase ) :
 
 		n.setName( "b" )
 		self.assertEqual( n.getName(), "b" )
+		self.assertEqual( s.undoAvailable(), False )
+		self.assertEqual( s.redoAvailable(), False )
 		self.assertRaises( Exception, s.undo )
 
 		with Gaffer.UndoContext( s ) :
 			n.setName( "c" )
 			
+		self.assertEqual( s.undoAvailable(), True )
+		self.assertEqual( s.redoAvailable(), False )
 		s.undo()
+		self.assertEqual( s.undoAvailable(), False )
+		self.assertEqual( s.redoAvailable(), True )
 		self.assertEqual( n.getName(), "b" )
 		
 		s.redo()
+		self.assertEqual( s.undoAvailable(), True )
+		self.assertEqual( s.redoAvailable(), False )
 		self.assertEqual( n.getName(), "c" )
 		self.assertRaises( Exception, s.redo )
 

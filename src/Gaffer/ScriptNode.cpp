@@ -117,9 +117,14 @@ ConstStandardSetPtr ScriptNode::selection() const
 	return m_selection;
 }
 
+bool ScriptNode::undoAvailable() const
+{
+	return m_undoIterator != m_undoList.begin();
+}
+
 void ScriptNode::undo()
 {
-	if( m_undoIterator==m_undoList.begin() )
+	if( !undoAvailable() )
 	{
 		throw IECore::Exception( "Nothing to undo" );
 	}
@@ -130,9 +135,14 @@ void ScriptNode::undo()
 	}
 }
 
+bool ScriptNode::redoAvailable() const
+{
+	return m_undoIterator != m_undoList.end();
+}
+
 void ScriptNode::redo()
 {
-	if( m_undoIterator==m_undoList.end() )
+	if( !redoAvailable() )
 	{
 		throw IECore::Exception( "Nothing to redo" );
 	}
