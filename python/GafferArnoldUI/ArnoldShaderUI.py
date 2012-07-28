@@ -34,14 +34,59 @@
 #  
 ##########################################################################
 
+import arnold
+
+import IECoreArnold
+
 import GafferUI
 import GafferArnold
 
 ## \todo This will belong with a Shader base class node at some point, probably in
-# GafferScene. But we do need to do some nice stuff in this file to create custom
-# shader uis based on Arnold metadata.
+# GafferScene.
 def __nodeGadgetCreator( node ) :
 
 	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
 
 GafferUI.NodeGadget.registerNodeGadget( GafferArnold.ArnoldShader.staticTypeId(), __nodeGadgetCreator )
+
+__plugValueWidgetCreators = {}
+
+with IECoreArnold.UniverseBlock() :
+
+	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER )
+	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
+		
+		nodeEntry = arnold.AiNodeEntryIteratorGetNext( nodeIt )
+		nodeName = arnold.AiNodeEntryGetName( nodeEntry )
+		
+		paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
+		while not arnold.AiParamIteratorFinished( paramIt ) :
+			
+			## \todo We could allow custom ui types to be specified using
+			# arnold metadata entries.
+			param = arnold.AiParamIteratorGetNext( paramIt )
+			paramPath = nodeName + "." + arnold.AiParamGetName( param )
+			paramType = arnold.AiParamGetType( param )
+			
+			if paramType == arnold.AI_TYPE_ENUM :
+				
+				enum = arnold.AiParamGetEnum( param )
+				namesAndValues = []
+				while True :
+					enumLabel = arnold.AiEnumGetString( enum, len( namesAndValues ) )
+					if not enumLabel :
+						break
+					namesAndValues.append( ( enumLabel, enumLabel ) )
+				
+				__plugValueWidgetCreators[paramPath] = ( GafferUI.EnumPlugValueWidget, namesAndValues )
+			
+def __plugValueWidgetCreator( plug ) :
+
+	paramPath = plug.node()["__shaderName"].getValue() + "." + plug.getName()
+	customCreator = __plugValueWidgetCreators.get( paramPath, None )
+	if customCreator is not None :
+		return customCreator[0]( plug, *customCreator[1:] )
+
+	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+	
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "*", __plugValueWidgetCreator )

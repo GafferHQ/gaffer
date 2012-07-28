@@ -108,24 +108,29 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return False
 		
 		return True
-			
+	
+	## Returns a PlugValueWidget suitable for representing the specified plug. If
+	# useTypeOnly is True, then custom registrations made by registerCreator() will
+	# be ignored and only the plug type will be taken into account in creating a
+	# PlugValueWidget.		
 	@classmethod
-	def create( cls, plug ) :
+	def create( cls, plug, useTypeOnly=False ) :
 
 		# first try to create one using a creator registered for the specific plug
-		node = plug.node()
-		if node is not None :
-			plugPath = plug.relativeName( node )
-			nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-			for nodeTypeId in [ node.typeId() ] + nodeHierarchy :	
-				creators = cls.__nodeTypesToCreators.get( nodeTypeId, None )
-				if creators :
-					for creator in creators :
-						if creator.plugPathMatcher.match( plugPath ) :
-							if creator.creator is not None :
-								return creator.creator( plug, **(creator.creatorKeywordArgs) )
-							else :
-								return None
+		if not useTypeOnly :
+			node = plug.node()
+			if node is not None :
+				plugPath = plug.relativeName( node )
+				nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+				for nodeTypeId in [ node.typeId() ] + nodeHierarchy :	
+					creators = cls.__nodeTypesToCreators.get( nodeTypeId, None )
+					if creators :
+						for creator in creators :
+							if creator.plugPathMatcher.match( plugPath ) :
+								if creator.creator is not None :
+									return creator.creator( plug, **(creator.creatorKeywordArgs) )
+								else :
+									return None
 		
 		# if that failed, then just create something based on the type of the plug
 		typeId = plug.typeId()
