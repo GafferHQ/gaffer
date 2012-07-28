@@ -226,7 +226,7 @@ class Menu( GafferUI.Widget ) :
 			kwArgs = {}
 			if "menu" in inspect.getargspec( itemValue )[0] :
 				kwArgs["menu"] = self
-				itemValue = itemValue( **kwArgs )
+			itemValue = itemValue( **kwArgs )
 				
 		return itemValue
 
