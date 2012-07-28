@@ -49,9 +49,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Menu( GafferUI.Widget ) :
 
-	def __init__( self, definition, _qtMenu=None, **kw ) :
+	def __init__( self, definition, _qtParent=None, **kw ) :
 	
-		GafferUI.Widget.__init__( self, _qtMenu if _qtMenu else _Menu(), **kw )
+		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
 		
 		self.__definition = definition
 		
@@ -101,8 +101,11 @@ class Menu( GafferUI.Widget ) :
 			
 		return GafferUI.Widget.parent( self )
 		
-	def __commandWrapper( self, qtAction, command, toggled ) :
+	def __commandWrapper( self, qtAction, command, active, toggled ) :
 	
+		if not self.__evaluateItemValue( active ) :
+			return
+		
 		args = []
 		kw = {}
 		
@@ -132,9 +135,17 @@ class Menu( GafferUI.Widget ) :
 	# are available even before the menu has been shown.
 	def _buildFully( self ) :
 	
-		self.__build( self._qtWidget(), self.__definition, recurse=True )
+		# Because we're building the menu before it's shown, we don't really know whether
+		# the items should be active or not - those which pass a callable for item.active
+		# may change status all the time, and we have no way of knowing. So we pass
+		# activeOverride=True so that all menu items are active while they're not on screen.
+		# We early-out in __commandWrapper if we later find out that a keyboard shortcut
+		# has triggered an item which is currently inactive (although we told qt it was
+		# active). See also hideEvent below().
 
-	def __build( self, qtMenu, definition, recurse=False ) :
+		self.__build( self._qtWidget(), self.__definition, activeOverride=True, recurse=True )
+
+	def __build( self, qtMenu, definition, activeOverride=None, recurse=False ) :
 		
 		if callable( definition ) :
 			definition = definition()
@@ -159,7 +170,7 @@ class Menu( GafferUI.Widget ) :
 					subMenuDefinition = definition.reRooted( "/" + name + "/" )					
 					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, subMenuDefinition ) )
 					if recurse :
-						self.__build( subMenu, subMenuDefinition, recurse )
+						self.__build( subMenu, subMenuDefinition, activeOverride, recurse )
 					
 				else :
 				
@@ -172,7 +183,7 @@ class Menu( GafferUI.Widget ) :
 						subMenu = qtMenu.addMenu( label )
 						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, item.subMenu ) )
 						if recurse :
-							self.__build( subMenu, subMenuDefinition, recurse )
+							self.__build( subMenu, subMenuDefinition, activeOverride, recurse )
 							
 					else :
 				
@@ -182,12 +193,7 @@ class Menu( GafferUI.Widget ) :
 
 						if item.checkBox is not None :
 							qtAction.setCheckable( True )
-							checked = item.checkBox
-							if callable( checked ) :
-								kwArgs = {}
-								if "menu" in inspect.getargspec( checked )[0] :
-									kwArgs["menu"] = self
-								checked = checked( **kwArgs )
+							checked = self.__evaluateItemValue( item.checkBox )
 							qtAction.setChecked( checked )
 
 						if item.divider :
@@ -200,11 +206,10 @@ class Menu( GafferUI.Widget ) :
 							else :
 								signal = qtAction.triggered[bool]
 
-							signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command ) )
+							signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command, item.active ) )
 
-						active = item.active
-						if callable( active ) :
-							active = active()
+						active = item.active if activeOverride is None else activeOverride
+						active = self.__evaluateItemValue( active )
 						qtAction.setEnabled( active )
 						
 						shortCut = getattr( item, "shortCut", None )
@@ -214,12 +219,22 @@ class Menu( GafferUI.Widget ) :
 						qtMenu.addAction( qtAction )
 
 				done.add( name )
+				
+	def __evaluateItemValue( self, itemValue ) :
+	
+		if callable( itemValue ) :
+			kwArgs = {}
+			if "menu" in inspect.getargspec( itemValue )[0] :
+				kwArgs["menu"] = self
+				itemValue = itemValue( **kwArgs )
+				
+		return itemValue
 
 class _Menu( QtGui.QMenu ) :
 
-	def __init__( self ) :
+	def __init__( self, parent ) :
 	
-		QtGui.QMenu.__init__( self )
+		QtGui.QMenu.__init__( self, parent )
 
 		self.grabFocus = True
 			
@@ -236,3 +251,13 @@ class _Menu( QtGui.QMenu ) :
 				return
 				
 		QtGui.QMenu.keyPressEvent( self, qEvent )
+
+	def hideEvent( self, qEvent ) :
+		
+		# Make all the menu items active, in case inactive items become active
+		# while the menu is hidden (in which case we need them to have active
+		# status for keyboard shortcuts to work). See also _buildFully() above.
+		for action in self.actions() :
+			action.setEnabled( True )
+		
+		QtGui.QMenu.hideEvent( self, qEvent )

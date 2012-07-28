@@ -62,8 +62,7 @@ def undo( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	if script.undoAvailable() :
-		script.undo()
+	script.undo()
 	
 ## A function suitable as the command for an Edit/Redo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -71,8 +70,7 @@ def redo( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	if script.redoAvailable() :
-		script.redo()
+	script.redo()
 
 ## A function suitable as the command for an Edit/Cut menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
