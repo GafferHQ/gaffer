@@ -60,7 +60,7 @@ GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader.staticTypeId(), "param
 
 def __parameterNoduleCreator( plug ) :
 
-	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.StringPlug ) ) :
+	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
 		return None
 		
 	return GafferUI.StandardNodule( plug )
