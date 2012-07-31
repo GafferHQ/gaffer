@@ -53,15 +53,14 @@ IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation )
 	:	Nodule( plug )
 {
-	m_row = new LinearContainer( "row", orientation, LinearContainer::Centre, 0.0f );
+	LinearContainer::Direction noduleDirection = orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing;
+	m_row = new LinearContainer( "row", orientation, LinearContainer::Centre, 0.0f, noduleDirection );
 	addChild( m_row );
 
 	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );
 	plug->childRemovedSignal().connect( boost::bind( &CompoundNodule::childRemoved, this, ::_1,  ::_2 ) );
 
-	Gaffer::PlugIterator it = Gaffer::PlugIterator( plug->children().begin(), plug->children().end() );
-	Gaffer::PlugIterator end = Gaffer::PlugIterator( plug->children().end(), plug->children().end() );
-	for( ; it!=end; it++ )
+	for( Gaffer::PlugIterator it( plug ); it!=it.end(); it++ )
 	{
 		NodulePtr nodule = Nodule::create( *it );
 		if( nodule )

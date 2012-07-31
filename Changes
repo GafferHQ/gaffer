@@ -121,6 +121,8 @@ can be constructed easily.
 
 * GafferUI.LinearContainer now supports decreasing as well as increasing child ordering, controlled with the setDirection() and getDirection() methods.
 
+* Fixed ordering of nodules in vertically oriented NodeGadgets.
+
 0.34.0
 ------
 

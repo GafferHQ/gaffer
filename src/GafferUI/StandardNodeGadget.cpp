@@ -68,8 +68,9 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	LinearContainerPtr mainContainer = new LinearContainer( "mainContainer", oppositeOrientation, LinearContainer::Centre, g_spacing );
 
 	const float noduleSpacing = orientation == LinearContainer::X ? 2.0f : 0.2f;
-	LinearContainerPtr inputNoduleContainer = new LinearContainer( "inputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing );
-	LinearContainerPtr outputNoduleContainer = new LinearContainer( "outputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing );
+	LinearContainer::Direction noduleDirection = orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing;
+	LinearContainerPtr inputNoduleContainer = new LinearContainer( "inputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing, noduleDirection );
+	LinearContainerPtr outputNoduleContainer = new LinearContainer( "outputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing, noduleDirection );
 
 	mainContainer->addChild( orientation == LinearContainer::X ? outputNoduleContainer : inputNoduleContainer );
 	
