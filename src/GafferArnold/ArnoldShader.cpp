@@ -46,12 +46,15 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferScene/ParameterListPlug.h"
+
 #include "GafferArnold/ArnoldShader.h"
 
 using namespace std;
 using namespace boost;
 using namespace Imath;
 using namespace IECore;
+using namespace GafferScene;
 using namespace GafferArnold;
 using namespace Gaffer;
 
@@ -79,9 +82,22 @@ void ArnoldShader::setShader( const std::string &shaderName )
 
 	getChild<StringPlug>( "__shaderName" )->setValue( AiNodeEntryGetName( shader ) );
 	
+	CompoundPlugPtr parametersPlug = getChild<CompoundPlug>( "parameters" );
+	if( !parametersPlug )
+	{
+		parametersPlug = new CompoundPlug( "parameters", Plug::In, Plug::Default | Plug::Dynamic );
+		addChild( parametersPlug );
+	}
+	
 	AtParamIterator *it = AiNodeEntryGetParamIterator( shader );  	
 	while( const AtParamEntry *param = AiParamIteratorGetNext( it ) )
 	{
+		std::string name = AiParamGetName( param );
+		if( name == "name" )
+		{
+			continue;
+		}
+		
 		PlugPtr plug = 0;
 		/// \todo Proper handler mechanism a bit like ParameterHandler? At least we need to deal with
 		/// reloading shaders and changing versions while using existing plugs.
@@ -90,7 +106,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_FLOAT :
 			
 				plug = new FloatPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					AiParamGetDefault( param )->FLT
 				);
@@ -100,7 +116,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_INT :
 			
 				plug = new IntPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					AiParamGetDefault( param )->INT
 				);
@@ -110,7 +126,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_BOOLEAN :
 			
 				plug = new BoolPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					AiParamGetDefault( param )->BOOL
 				);
@@ -120,7 +136,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_RGB :
 			
 				plug = new Color3fPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					Color3f(
 						AiParamGetDefault( param )->RGB.r,
@@ -134,7 +150,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_RGBA :
 			
 				plug = new Color4fPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					Color4f(
 						AiParamGetDefault( param )->RGBA.r,
@@ -149,7 +165,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_POINT2 :
 			
 				plug = new V2fPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					V2f(
 						AiParamGetDefault( param )->PNT2.x,
@@ -162,7 +178,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_POINT :
 			
 				plug = new V3fPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					V3f(
 						AiParamGetDefault( param )->PNT.x,
@@ -176,7 +192,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			case AI_TYPE_VECTOR :
 			
 				plug = new V3fPlug(
-					AiParamGetName( param ),
+					name,
 					Plug::In,
 					V3f(
 						AiParamGetDefault( param )->VEC.x,
@@ -192,7 +208,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 				{
 					AtEnum e = AiParamGetEnum( param );
 					plug = new StringPlug(
-						AiParamGetName( param ),
+						name,
 						Plug::In,
 						AiEnumGetString( e, AiParamGetDefault( param )->INT )
 					);
@@ -204,7 +220,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 			
 				{
 					plug = new StringPlug(
-						AiParamGetName( param ),
+						name,
 						Plug::In,
 						AiParamGetDefault( param )->STR
 					);
@@ -215,8 +231,8 @@ void ArnoldShader::setShader( const std::string &shaderName )
 		
 		if( plug )
 		{
-			addChild( plug );
 			plug->setFlags( Plug::Dynamic, true );
+			parametersPlug->addChild( plug );
 		}
 		else
 		{
@@ -296,5 +312,52 @@ void ArnoldShader::setShader( const std::string &shaderName )
 
 IECore::ShaderPtr ArnoldShader::shader() const
 {
-	return new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue() );
+	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue() );
+	
+	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
+	if( parametersPlug )
+	{
+		for( InputPlugIterator it( parametersPlug ); it!=it.end(); it++ )
+		{
+			switch( (*it)->typeId() )
+			{
+				case IntPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<IntPlug>( *it );
+					break;
+				case FloatPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<FloatPlug>( *it );
+					break;	
+				case Color3fPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<Color3fPlug>( *it );
+					break;
+				case Color4fPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<Color4fPlug>( *it );
+					break;
+				case BoolPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<BoolPlug>( *it );
+					break;
+				case StringPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<StringPlug>( *it );
+					break;
+				case V2fPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<V2fPlug>( *it );
+					break;	
+				case V3fPlugTypeId :
+					result->parameters()[(*it)->getName()] = shaderParameter<V3fPlug>( *it );
+					break;
+				default :
+					throw Exception( "Unexpected parameter plug type." );
+			}
+		}
+	}
+	
+	return result;
 }
+
+template<typename T>
+IECore::DataPtr ArnoldShader::shaderParameter( const Gaffer::Plug *plug ) const
+{
+	const T *typedPlug = static_cast<const T *>( plug );
+	return new TypedData<typename T::ValueType>( typedPlug->getValue() );
+}
+		

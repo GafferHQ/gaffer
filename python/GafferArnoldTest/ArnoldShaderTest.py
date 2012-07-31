@@ -38,6 +38,7 @@ import unittest
 
 import IECore
 
+import Gaffer
 import GafferArnold
 
 class ArnoldShaderTest( unittest.TestCase ) :
@@ -58,7 +59,53 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		self.failUnless( isinstance( s[0], IECore.Shader ) )
 		
 		s = s[0]
-		self.assertEqual( s.name, "utility" )		
+		self.assertEqual( s.name, "utility" )
+		
+	def testParameterRepresentation( self ) :
 	
+		n = GafferArnold.ArnoldShader()
+		n.setShader( "wireframe" )
+		
+		self.failUnless( isinstance( n["parameters"]["line_width"], Gaffer.FloatPlug ) )
+		self.failUnless( isinstance( n["parameters"]["fill_color"], Gaffer.Color3fPlug ) )
+		self.failUnless( isinstance( n["parameters"]["line_color"], Gaffer.Color3fPlug ) )
+		self.failUnless( isinstance( n["parameters"]["raster_space"], Gaffer.BoolPlug ) )
+		self.failUnless( isinstance( n["parameters"]["edge_type"], Gaffer.StringPlug ) )
+		self.failIf( "name" in n["parameters"] )
+		
+	def testParameterUse( self ) :
+	
+		n = GafferArnold.ArnoldShader()
+		n.setShader( "wireframe" )
+		
+		n["parameters"]["line_width"].setValue( 10 )
+		n["parameters"]["fill_color"].setValue( IECore.Color3f( .25, .5, 1 ) )
+		n["parameters"]["raster_space"].setValue( False )
+		n["parameters"]["edge_type"].setValue( "polygons" )
+	
+		s = n.state()[0]
+		self.assertEqual( s.parameters["line_width"], IECore.FloatData( 10 ) )
+		self.assertEqual( s.parameters["fill_color"], IECore.Color3fData( IECore.Color3f( .25, .5, 1 ) ) )
+		self.assertEqual( s.parameters["line_color"], IECore.Color3fData( IECore.Color3f( 0 ) ) )
+		self.assertEqual( s.parameters["raster_space"], IECore.BoolData( False ) )
+		self.assertEqual( s.parameters["edge_type"], IECore.StringData( "polygons" ) )
+	
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferArnold.ArnoldShader()
+		s["n"].setShader( "wireframe" )
+		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.failUnless( isinstance( s["n"]["parameters"]["line_width"], Gaffer.FloatPlug ) )
+		self.failUnless( isinstance( s["n"]["parameters"]["fill_color"], Gaffer.Color3fPlug ) )
+		self.failUnless( isinstance( s["n"]["parameters"]["line_color"], Gaffer.Color3fPlug ) )
+		self.failUnless( isinstance( s["n"]["parameters"]["raster_space"], Gaffer.BoolPlug ) )
+		self.failUnless( isinstance( s["n"]["parameters"]["edge_type"], Gaffer.StringPlug ) )
+		
 if __name__ == "__main__":
 	unittest.main()

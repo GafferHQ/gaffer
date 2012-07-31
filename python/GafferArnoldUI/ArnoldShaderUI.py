@@ -49,6 +49,12 @@ def __nodeGadgetCreator( node ) :
 
 GafferUI.NodeGadget.registerNodeGadget( GafferArnold.ArnoldShader.staticTypeId(), __nodeGadgetCreator )
 
+def __parametersNoduleCreator( plug ) :
+
+	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y )
+
+GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader.staticTypeId(), "parameters", __parametersNoduleCreator )
+
 __plugValueWidgetCreators = {}
 
 with IECoreArnold.UniverseBlock() :
@@ -89,4 +95,5 @@ def __plugValueWidgetCreator( plug ) :
 
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 	
-GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsible=False )

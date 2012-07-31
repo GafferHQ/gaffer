@@ -59,6 +59,11 @@ class ArnoldShader : public GafferScene::Shader
 	protected :
 	
 		virtual IECore::ShaderPtr shader() const;
+		
+	private :
+		
+		template<typename T>
+		IECore::DataPtr shaderParameter( const Gaffer::Plug *plug ) const;
 					
 };
 
