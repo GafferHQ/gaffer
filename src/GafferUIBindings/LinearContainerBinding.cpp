@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,8 @@ void GafferUIBindings::bindLinearContainer()
 		.def( "getAlignment", &LinearContainer::getAlignment )
 		.def( "setSpacing", &LinearContainer::setSpacing )
 		.def( "getSpacing", &LinearContainer::getSpacing )
+		.def( "setDirection", &LinearContainer::setDirection )
+		.def( "getDirection", &LinearContainer::getDirection )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( LinearContainer )
 	;
 	
@@ -78,10 +80,22 @@ void GafferUIBindings::bindLinearContainer()
 		.value( "Max", LinearContainer::Max )
 	;
 	
+	enum_<LinearContainer::Direction>( "Direction" )
+		.value( "InvalidDirection", LinearContainer::InvalidDirection )
+		.value( "Increasing", LinearContainer::Increasing )
+		.value( "Decreasing", LinearContainer::Decreasing )
+	;
+	
 	// we have to define the constructor after the enums, as they must be registered in order for boost::python to figure out the correct
 	// python values for the default arguments
-	c.def( init< optional<const std::string &, LinearContainer::Orientation, LinearContainer::Alignment, float> >(
-			( arg_( "name" )=LinearContainer::staticTypeName(), arg_( "orientation" )=LinearContainer::X, arg_( "alignment" )=LinearContainer::Centre, arg_( "spacing" )=0.0f )
+	c.def( init< optional<const std::string &, LinearContainer::Orientation, LinearContainer::Alignment, float, LinearContainer::Direction> >(
+			(
+				arg_( "name" )=LinearContainer::staticTypeName(),
+				arg_( "orientation" )=LinearContainer::X,
+				arg_( "alignment" )=LinearContainer::Centre,
+				arg_( "spacing" )=0.0f,
+				arg_( "direction" )=LinearContainer::Increasing
+			)
 		)
 	);
 
