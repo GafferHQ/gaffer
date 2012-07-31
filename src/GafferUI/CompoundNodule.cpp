@@ -50,10 +50,10 @@ using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 
-CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug )
+CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation )
 	:	Nodule( plug )
 {
-	m_row = new LinearContainer( "row", LinearContainer::X, LinearContainer::Centre, 0.0f );
+	m_row = new LinearContainer( "row", orientation, LinearContainer::Centre, 0.0f );
 	addChild( m_row );
 
 	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );

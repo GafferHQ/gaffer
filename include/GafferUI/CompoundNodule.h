@@ -39,6 +39,7 @@
 #define GAFFERUI_COMPOUNDNODULE_H
 
 #include "GafferUI/Nodule.h"
+#include "GafferUI/LinearContainer.h"
 
 namespace Gaffer
 {
@@ -62,7 +63,7 @@ class CompoundNodule : public Nodule
 
 	public :
 
-		CompoundNodule( Gaffer::CompoundPlugPtr plug );
+		CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X );
 		virtual ~CompoundNodule();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundNodule, CompoundNoduleTypeId, Nodule );

@@ -117,6 +117,8 @@ can be constructed easily.
 
 * Added ScriptNode undoAvailable() and redoAvailable() methods.
 
+* CompoundNodule now supports a vertical orientation, specified using a new argument to the constructor.
+
 0.34.0
 ------
 
