@@ -34,10 +34,13 @@
 #  
 ##########################################################################
 
+import fnmatch
+
 import arnold
 
 import IECoreArnold
 
+import Gaffer
 import GafferUI
 import GafferArnold
 
@@ -54,6 +57,15 @@ def __parametersNoduleCreator( plug ) :
 	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y )
 
 GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader.staticTypeId(), "parameters", __parametersNoduleCreator )
+
+def __parameterNoduleCreator( plug ) :
+
+	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.StringPlug ) ) :
+		return None
+		
+	return GafferUI.StandardNodule( plug )
+
+GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 __plugValueWidgetCreators = {}
 
