@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -48,8 +48,8 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( LinearContainer );
 
 LinearContainer::LinearContainer( const std::string &name, Orientation orientation,
-	Alignment alignment, float spacing )
-	:	ContainerGadget( name ), m_orientation( orientation ), m_alignment( alignment ), m_spacing( spacing ), m_clean( true )
+	Alignment alignment, float spacing, Direction direction )
+	:	ContainerGadget( name ), m_orientation( orientation ), m_alignment( alignment ), m_spacing( spacing ), m_direction( direction ), m_clean( true )
 {
 	// we already initialised these values above, but that didn't perform any range checking,
 	// so we set them here as well. the reason we initialize them at all is so that the set
@@ -58,6 +58,7 @@ LinearContainer::LinearContainer( const std::string &name, Orientation orientati
 	setOrientation( orientation );
 	setAlignment( alignment );
 	setSpacing( spacing );
+	setDirection( direction );
 
 	renderRequestSignal().connect( boost::bind( &LinearContainer::renderRequested, this, ::_1 ) );
 }
@@ -94,8 +95,8 @@ void LinearContainer::setAlignment( Alignment alignment )
 	if( alignment != m_alignment )
 	{
 		m_alignment = alignment;
-		renderRequestSignal()( this );
 		m_clean = false;
+		renderRequestSignal()( this );
 	}
 }
 
@@ -113,8 +114,8 @@ void LinearContainer::setSpacing( float spacing )
 	if( spacing!=m_spacing )
 	{
 		m_spacing = spacing;
-		renderRequestSignal()( this );
 		m_clean = false;
+		renderRequestSignal()( this );
 	}
 }
 
@@ -122,7 +123,26 @@ float LinearContainer::getSpacing() const
 {
 	return m_spacing;
 }
-		
+
+void LinearContainer::setDirection( Direction direction )
+{
+	if( direction != Increasing && direction != Decreasing )
+	{
+		throw IECore::InvalidArgumentException( "Invalid alignment" );
+	}
+	if( direction != m_direction )
+	{
+		m_direction = direction;
+		m_clean = false;
+		renderRequestSignal()( this );
+	}
+}
+
+LinearContainer::Direction LinearContainer::getDirection() const
+{
+	return m_direction;
+}
+				
 void LinearContainer::renderRequested( GadgetPtr gadget )
 {
 	/// \todo We don't need to recalculate the offsets every time a rerender is needed.
@@ -175,7 +195,7 @@ void LinearContainer::calculateChildTransforms() const
 	}
 	size[axis] += (children().size() - 1) * m_spacing;
 
-	float offset = -size[axis]/2.0f;
+	float offset = size[axis] / 2.0f  * ( m_direction==Increasing ? -1.0f : 1.0f );
 	
 	int i = 0;
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
@@ -189,7 +209,7 @@ void LinearContainer::calculateChildTransforms() const
 			{
 				if( a==axis )
 				{
-					childOffset[a] = offset - b.min[a];
+					childOffset[a] = offset - ( m_direction==Increasing ? b.min[a] : b.max[a] );
 				}
 				else
 				{
@@ -207,7 +227,7 @@ void LinearContainer::calculateChildTransforms() const
 					}
 				}
 			}
-			offset += b.size()[axis];
+			offset += b.size()[axis] * ( m_direction==Increasing ? 1.0f : -1.0f );
 		}
 		offset += m_spacing;
 		

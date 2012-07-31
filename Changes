@@ -119,6 +119,8 @@ can be constructed easily.
 
 * CompoundNodule now supports a vertical orientation, specified using a new argument to the constructor.
 
+* GafferUI.LinearContainer now supports decreasing as well as increasing child ordering, controlled with the setDirection() and getDirection() methods.
+
 0.34.0
 ------
 

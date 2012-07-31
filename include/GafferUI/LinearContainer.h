@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -64,8 +64,15 @@ class LinearContainer : public ContainerGadget
 			Max
 		};
 		
+		enum Direction
+		{
+			InvalidDirection,
+			Increasing,
+			Decreasing
+		};
+		
 		LinearContainer( const std::string &name=staticTypeName(), Orientation orientation=X,
-			Alignment alignment=Centre, float spacing = 0.0f );
+			Alignment alignment=Centre, float spacing = 0.0f, Direction=Increasing );
 			
 		virtual ~LinearContainer();
 
@@ -80,6 +87,9 @@ class LinearContainer : public ContainerGadget
 		void setSpacing( float spacing );
 		float getSpacing() const;
 
+		void setDirection( Direction direction );
+		Direction getDirection() const;
+
 		virtual Imath::Box3f bound() const;
 
 	protected :
@@ -93,6 +103,7 @@ class LinearContainer : public ContainerGadget
 		Orientation m_orientation;
 		Alignment m_alignment;
 		float m_spacing;
+		Direction m_direction;
 		
 		mutable bool m_clean;
 		void calculateChildTransforms() const;

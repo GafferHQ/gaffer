@@ -50,30 +50,42 @@ class LinearContainerTest( unittest.TestCase ) :
 		self.assertEqual( c.getOrientation(), GafferUI.LinearContainer.Orientation.X )
 		self.assertEqual( c.getAlignment(), GafferUI.LinearContainer.Alignment.Centre )
 		self.assertEqual( c.getSpacing(), 0 )
+		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Increasing )
 		
 		c = GafferUI.LinearContainer( name="a" )
 		self.assertEqual( c.getName(), "a" )
 		self.assertEqual( c.getOrientation(), GafferUI.LinearContainer.Orientation.X )
 		self.assertEqual( c.getAlignment(), GafferUI.LinearContainer.Alignment.Centre )
 		self.assertEqual( c.getSpacing(), 0 )
+		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Increasing )
 
 		c = GafferUI.LinearContainer( spacing=10 )
 		self.assertEqual( c.getName(), "LinearContainer" )
 		self.assertEqual( c.getOrientation(), GafferUI.LinearContainer.Orientation.X )
 		self.assertEqual( c.getAlignment(), GafferUI.LinearContainer.Alignment.Centre )
 		self.assertEqual( c.getSpacing(), 10 )
+		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Increasing )
 
 		c = GafferUI.LinearContainer( orientation=GafferUI.LinearContainer.Orientation.Y )
 		self.assertEqual( c.getName(), "LinearContainer" )
 		self.assertEqual( c.getOrientation(), GafferUI.LinearContainer.Orientation.Y )
 		self.assertEqual( c.getAlignment(), GafferUI.LinearContainer.Alignment.Centre )
 		self.assertEqual( c.getSpacing(), 0 )
+		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Increasing )
 
 		c = GafferUI.LinearContainer( alignment=GafferUI.LinearContainer.Alignment.Min )
 		self.assertEqual( c.getName(), "LinearContainer" )
 		self.assertEqual( c.getOrientation(), GafferUI.LinearContainer.Orientation.X )
 		self.assertEqual( c.getAlignment(), GafferUI.LinearContainer.Alignment.Min )
 		self.assertEqual( c.getSpacing(), 0 )
+		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Increasing )
+
+		c = GafferUI.LinearContainer( direction=GafferUI.LinearContainer.Direction.Decreasing )
+		self.assertEqual( c.getName(), "LinearContainer" )
+		self.assertEqual( c.getOrientation(), GafferUI.LinearContainer.Orientation.X )
+		self.assertEqual( c.getAlignment(), GafferUI.LinearContainer.Alignment.Centre )
+		self.assertEqual( c.getSpacing(), 0 )
+		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Decreasing )
 		
 		self.assert_( c.bound().isEmpty() )
 	
@@ -154,7 +166,32 @@ class LinearContainerTest( unittest.TestCase ) :
 		c.setPadding( IECore.Box3f( IECore.V3f( -1, -2, -3 ), IECore.V3f( 1, 2, 3 ) ) )
 		self.assertEqual( c.getPadding(), IECore.Box3f( IECore.V3f( -1, -2, -3 ), IECore.V3f( 1, 2, 3 ) ) )
 		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -2, -4, -3 ), IECore.V3f( 2, 4, 3 ) ) )
-			
+
+	def testDirection( self ) :
+	
+		first = GafferUI.RenderableGadget(
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
+		)
+		
+		second = GafferUI.RenderableGadget(
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
+		)
+		
+		c = GafferUI.LinearContainer( orientation=GafferUI.LinearContainer.Orientation.Y )
+		
+		c["c1"] = first
+		c["c2"] = second
+		
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -4, 0 ), IECore.V3f( 1, 4, 0 ) ) )
+		self.assertEqual( first.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, -2, 0 ) ) )
+		self.assertEqual( second.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, 2, 0 ) ) )
+		
+		c.setDirection( GafferUI.LinearContainer.Direction.Decreasing )
+		
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -4, 0 ), IECore.V3f( 1, 4, 0 ) ) )
+		self.assertEqual( first.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, 2, 0 ) ) )
+		self.assertEqual( second.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, -2, 0 ) ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
