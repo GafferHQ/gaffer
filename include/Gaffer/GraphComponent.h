@@ -142,14 +142,6 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
-		/// Returns an iterator to the start of a sequence of all children
-		/// of type T.
-		template<typename T>
-		FilteredChildIterator<TypePredicate<T> > childrenBegin() const;
-		/// Returns an iterator to the end of a sequence of all children
-		/// of type T.
-		template<typename T>
-		FilteredChildIterator<TypePredicate<T> > childrenEnd() const;
 		/// Returns the parent for this component, performing a runTimeCast to T.
 		template<typename T>
 		T *parent();

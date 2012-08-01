@@ -431,6 +431,31 @@ a = A()"""
 	
 		self.assertEqual( w(), None )
 	
+	def testDeleteNodes( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 3 )
+		
+		s.deleteNodes()
+		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 0 )
+		
+	def testDeleteNodesWithFilter( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 3 )
+		
+		s.deleteNodes( Gaffer.StandardSet( [ s["n1"] ] ) )
+		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 2 )
+		self.failUnless( "n" in s )
+		self.failUnless( "n1" not in s )
+		self.failUnless( "n2" in s )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

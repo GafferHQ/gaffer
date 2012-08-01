@@ -96,7 +96,7 @@ static std::string serialiseNode( Serialiser &s, ConstGraphComponentPtr g )
 
 	// non dynamic input plugs
 	std::string inputs = "";
-	for( InputPlugIterator pIt=node->inputPlugsBegin(); pIt!=pIt.end(); pIt++ )
+	for( InputPlugIterator pIt( node ); pIt!=pIt.end(); pIt++ )
 	{
 		PlugPtr plug = *pIt;
 		if( !plug->getFlags( Plug::Dynamic ) && plug->getFlags( Plug::Serialisable ) )
@@ -112,7 +112,7 @@ static std::string serialiseNode( Serialiser &s, ConstGraphComponentPtr g )
 
 	// dynamic plugs of any direction
 	std::string dynamicPlugs = "";
-	for( PlugIterator pIt=node->plugsBegin(); pIt!=pIt.end(); pIt++ )
+	for( PlugIterator pIt( node ); pIt!=pIt.end(); pIt++ )
 	{
 		PlugPtr plug = *pIt;
 		if( plug->getFlags( Plug::Dynamic ) && plug->getFlags( Plug::Serialisable ) )

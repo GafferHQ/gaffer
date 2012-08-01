@@ -67,17 +67,6 @@ class Node : public GraphComponent
 		
 		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
 		
-		/// @name Plug iterators
-		//////////////////////////////////////////////////////////////
-		//@{
-		PlugIterator plugsBegin() const;
-		PlugIterator plugsEnd() const;
-		InputPlugIterator inputPlugsBegin() const;
-		InputPlugIterator inputPlugsEnd() const;
-		OutputPlugIterator outputPlugsBegin() const;
-		OutputPlugIterator outputPlugsEnd() const;
-		//@}
-		
 		/// @name Plug signals
 		/// These signals are emitted on events relating to child Plugs
 		/// of this Node. They are implemented on the Node rather than

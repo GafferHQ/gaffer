@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -57,8 +57,7 @@ Serialiser::Serialiser( Gaffer::ConstNodePtr context, Gaffer::ConstSetPtr filter
 std::string Serialiser::serialise( Gaffer::ConstNodePtr context, Gaffer::ConstSetPtr filter )
 {
 	Serialiser s( context, filter );
-	Gaffer::ChildNodeIterator nIt;
-	for( nIt=context->childrenBegin<Gaffer::Node>(); nIt!=context->childrenEnd<Gaffer::Node>(); nIt++ )
+	for( Gaffer::ChildNodeIterator nIt( context ); nIt!=nIt.end(); nIt++ )
 	{
 		s.add( *nIt );
 	}

@@ -94,7 +94,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
 	
-	for( Gaffer::PlugIterator it=node->plugsBegin(); it!=node->plugsEnd(); it++ )
+	for( Gaffer::PlugIterator it( node ); it!=it.end(); it++ )
 	{
 		addNodule( *it );
 	}

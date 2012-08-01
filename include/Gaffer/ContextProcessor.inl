@@ -71,7 +71,7 @@ template<typename BaseType>
 void ContextProcessor<BaseType>::appendAffectedPlugs( Node::AffectedPlugsContainer &outputs ) const
 {
 	Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
-	for( OutputPlugIterator it = n->outputPlugsBegin(), e = n->outputPlugsEnd(); it != e; it++ )
+	for( OutputPlugIterator it( n ); it != it.end(); it++ )
 	{
 		const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
 		if( 0 == valuePlug->getName().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )

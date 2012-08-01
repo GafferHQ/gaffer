@@ -200,8 +200,7 @@ void ScriptNode::paste()
 
 void ScriptNode::deleteNodes( ConstSetPtr filter )
 {
-	ChildNodeIterator nIt;
-	for( nIt=childrenBegin<Node>(); nIt!=childrenEnd<Node>(); )
+	for( ChildNodeIterator nIt( this ); nIt!=nIt.end(); )
 	{
 	
 		ChildNodeIterator next = nIt; next++;

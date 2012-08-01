@@ -49,36 +49,6 @@ Node::Node( const std::string &name )
 Node::~Node()
 {
 }
-
-PlugIterator Node::plugsBegin() const
-{
-	return PlugIterator( children().begin(), children().end() );
-}
-
-PlugIterator Node::plugsEnd() const
-{
-	return PlugIterator( children().end(), children().end() );
-}
-
-InputPlugIterator Node::inputPlugsBegin() const
-{
-	return InputPlugIterator( children().begin(), children().end() );
-}
-
-InputPlugIterator Node::inputPlugsEnd() const
-{
-	return InputPlugIterator( children().end(), children().end() );
-}
-
-OutputPlugIterator Node::outputPlugsBegin() const
-{
-	return OutputPlugIterator( children().begin(), children().end() );
-}
-
-OutputPlugIterator Node::outputPlugsEnd() const
-{
-	return OutputPlugIterator( children().end(), children().end() );
-}
 		
 Node::UnaryPlugSignal &Node::plugSetSignal()
 {
@@ -145,12 +115,12 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 	
 	if( !newParent )
 	{
-		for( InputPlugIterator it=inputPlugsBegin(); it!=inputPlugsEnd(); it++ )
+		for( InputPlugIterator it( this ); it!=it.end(); it++ )
 		{
 			(*it)->setInput( 0 );
 		}
 
-		for( OutputPlugIterator it=outputPlugsBegin(); it!=outputPlugsEnd(); it++ )
+		for( OutputPlugIterator it( this ); it!=it.end(); it++ )
 		{
 			(*it)->removeOutputs();
 		}

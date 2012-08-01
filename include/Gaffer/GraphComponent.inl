@@ -83,18 +83,6 @@ typename T::ConstPtr GraphComponent::getChild( const std::string &name ) const
 	
 	return IECore::runTimeCast<const T>( result );
 }
-
-template<typename T>
-FilteredChildIterator<TypePredicate<T> > GraphComponent::childrenBegin() const
-{
-	return FilteredChildIterator<TypePredicate<T> >( m_children.begin(), m_children.end() );
-}
-		
-template<typename T>
-FilteredChildIterator<TypePredicate<T> > GraphComponent::childrenEnd() const
-{
-	return FilteredChildIterator<TypePredicate<T> >( m_children.end(), m_children.end() );
-}
 		
 template<typename T>
 T *GraphComponent::parent()
