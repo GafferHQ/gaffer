@@ -75,6 +75,7 @@ class AssignmentTest( unittest.TestCase ) :
 		self.assertNotEqual( len( a["out"].attributes( "/ball1" ) ), None )
 		self.assertEqual( a["out"].attributes( "/ball2" ), None )		
 	
+	@unittest.expectedFailure
 	def testFilterSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()

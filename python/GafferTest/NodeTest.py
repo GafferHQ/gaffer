@@ -334,6 +334,7 @@ class NodeTest( unittest.TestCase ) :
 		n = GafferTest.BadNode()
 		self.assertRaises( RuntimeError, n["out1"].getValue )
 	
+	@unittest.expectedFailure
 	def testWrongPlugPulled( self ) :
 	
 		n = GafferTest.BadNode()
