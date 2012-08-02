@@ -259,6 +259,12 @@ options.Add(
 )
 
 options.Add(
+	"CORTEX_BUILD_ARGS",
+	"Additional arguments to be passed when building Cortex.",
+	"",
+)
+
+options.Add(
 	"RMAN_ROOT",
 	"The directory in which your RenderMan renderer is installed. Used to build IECoreRI.",
 	"/usr/local",
@@ -569,12 +575,12 @@ if depEnv["BUILD_DEPENDENCY_HDF5"] :
 
 if depEnv["BUILD_DEPENDENCY_ALEMBIC"] :
 	# may need to hand edit build/AlembicBoost.cmake in the alembic distribution to remove Boost_USE_STATIC_LIBS.
-	runCommand( "cd $ALEMBIC_SRC_DIR && rm -f CMakeCache.txt && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DBOOST_ROOT=$BUILD_DIR -DILMBASE_ROOT=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $ALEMBIC_SRC_DIR && rm -f CMakeCache.txt && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DBoost_NO_SYSTEM_PATHS=TRUE -DBoost_NO_BOOST_CMAKE=TRUE -DBOOST_ROOT=$BUILD_DIR -DILMBASE_ROOT=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "mv $BUILD_DIR/alembic-*/include/* $BUILD_DIR/include" )
 	runCommand( "mv $BUILD_DIR/alembic-*/lib/static/* $BUILD_DIR/lib" )
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
-	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' PYTHON_LINK_FLAGS='$PYTHON_LINK_FLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options" )
+	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' PYTHON_LINK_FLAGS='$PYTHON_LINK_FLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options $CORTEX_BUILD_ARGS" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
