@@ -565,7 +565,7 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 
 if depEnv["BUILD_DEPENDENCY_HDF5"] :
-	runCommand( "cd $HDF5_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make -j 4 && make install" )
+	runCommand( "cd $HDF5_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-threadsafe --with-pthread=/usr/include && make clean && make -j 4 && make install" )
 
 if depEnv["BUILD_DEPENDENCY_ALEMBIC"] :
 	# may need to hand edit build/AlembicBoost.cmake in the alembic distribution to remove Boost_USE_STATIC_LIBS.
