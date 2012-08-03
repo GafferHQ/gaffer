@@ -118,7 +118,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		# only display directories and never be used to choose leaf files. we apply the necessary filter
 		# to achieve that in __updateFilter.
 		self.__dirPath = self.__path.copy()
-		if len( self.__dirPath ) :
+		if self.__dirPath.isLeaf() and len( self.__dirPath ) :
 			del self.__dirPath[-1]
 		self.__dirPathWidget.setPath( self.__dirPath )
 		
@@ -197,18 +197,20 @@ class PathChooserWidget( GafferUI.Widget ) :
 		
 		# update the directory path filter to include
 		# the new filter, but with the additional removal
-		# of leaf paths.
-		if newFilter is not None :
-			self.__dirPath.setFilter(
-				Gaffer.CompoundPathFilter( 
-					[
-						Gaffer.LeafPathFilter(),
-						newFilter,
-					]
+		# of leaf paths. block the signal because otherwise
+		# we'd end up truncating the main path in __dirPathChanged.
+		with Gaffer.BlockedConnection( self.__dirPathChangedConnection ) :
+			if newFilter is not None :
+				self.__dirPath.setFilter(
+					Gaffer.CompoundPathFilter( 
+						[
+							Gaffer.LeafPathFilter(),
+							newFilter,
+						]
+					)
 				)
-			)
-		else :
-			self.__dirPath.setFilter( Gaffer.LeafPathFilter() )
+			else :
+				self.__dirPath.setFilter( Gaffer.LeafPathFilter() )
 		
 		# update ui for displaying the filter
 		newFilterUI = None

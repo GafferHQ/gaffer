@@ -125,6 +125,8 @@ can be constructed easily.
 
 * PathPlugValueWidget doesn't update the plug value as you type any more - this was causing constant computation with invalid values. The value is now only set when editing finishes.
 
+* Fixed problems with PathChooserWidget which meant the wrong file/directory was displayed on opening (truncated by one).
+
 0.34.0
 ------
 
