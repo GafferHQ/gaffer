@@ -64,7 +64,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__buttonClickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__row.append( button )
 	
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		self.__editingFinishedConnection = pathWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 	
 		self._updateFromPlug()
 	
@@ -79,16 +79,14 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with IECore.IgnoredExceptions( ValueError ) :
 				self.__path.setFromString( self.getPlug().getValue() )
 		
-	def __pathChanged( self, path ) :
-				
-		assert( path is self.__path )
-		
+	def __setPlugValue( self, *args ) :
+								
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( str( self.__path ) )
 
 	def __buttonClicked( self, widget ) :
 	
-		# make a copy so we're not updating the main path (and therefore plug) as users browse
+		# make a copy so we're not updating the main path as users browse
 		pathCopy = self.__path.copy()
 		## \todo Currently we can't distinguish between "/" and an empty path. There are a lot
 		# more occurrences of empty paths (parameter default values) than there are "/" root paths,
@@ -103,3 +101,4 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		if chosenPath is not None :
 			self.__path[:] = chosenPath[:]
+			self.__setPlugValue()

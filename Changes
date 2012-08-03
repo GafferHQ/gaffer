@@ -123,6 +123,8 @@ can be constructed easily.
 
 * Fixed ordering of nodules in vertically oriented NodeGadgets.
 
+* PathPlugValueWidget doesn't update the plug value as you type any more - this was causing constant computation with invalid values. The value is now only set when editing finishes.
+
 0.34.0
 ------
 
