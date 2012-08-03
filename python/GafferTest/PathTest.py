@@ -148,6 +148,11 @@ class PathTest( unittest.TestCase ) :
 		p = TestPath( "/" )
 		self.assertEqual( p.info()["name"], "" )
 		self.assertEqual( p.info()["fullName"], "/" )
+	
+	def testRepr( self ) :
+	
+		p = Gaffer.Path( "/test/path" )
+		self.assertEqual( repr( p ), "Path( '/test/path' )" )
 		
 if __name__ == "__main__":
 	unittest.main()

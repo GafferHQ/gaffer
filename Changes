@@ -127,6 +127,16 @@ can be constructed easily.
 
 * Fixed problems with PathChooserWidget which meant the wrong file/directory was displayed on opening (truncated by one).
 
+* ParameterValueWidget popup menus may now be customised by external code, using the ParameterValueWidget.popupMenuSignal().
+
+* The Path class now implements a much more readable __repr__.
+
+* The DictPath class now accepts an additional "dictTypes" argument to the constructor, which can be used to define what types it considers to be branches in the path (all other types are considered leaves).
+
+* The OpMatcher.defaultInstance() function now takes an optional classLoader argument, which is used to create the shareable OpMatcher.
+
+* The BrowserEditor.Mode class now has a _createOpMatcher() method which may be overridden by derived classes. Typically this would be overridden to use a custom ClassLoader for the ops.
+
 0.34.0
 ------
 

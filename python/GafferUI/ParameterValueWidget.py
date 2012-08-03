@@ -87,8 +87,20 @@ class ParameterValueWidget( GafferUI.Widget ) :
 
 		menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.parameter().defaultValue ) } )
 
+		self.popupMenuSignal()( menuDefinition, self.parameterHandler() )
+
 		return menuDefinition
-		
+
+	__popupMenuSignal = Gaffer.Signal2()
+	## This signal is emitted whenever a popup menu for a parameter is about
+	# to be shown. This provides an opportunity to customise the menu from
+	# external code. The signature for slots is ( menuDefinition, parameterHandler ),
+	# and slots should just modify the menu definition in place.
+	@classmethod
+	def popupMenuSignal( cls ) :
+	
+		return cls.__popupMenuSignal
+			
 	@classmethod
 	def create( cls, parameterHandler ) :
 	

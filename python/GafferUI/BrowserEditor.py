@@ -151,6 +151,12 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 		def _initialColumns( self ) :
 		
 			raise NotImplementedError
+		
+		## May be reimplemented by derived classes to return a custom OpMatcher to be used
+		# to provide action menu items for the ui.
+		def _createOpMatcher( self ) :
+		
+			return Gaffer.OpMatcher.defaultInstance()
 			
 		def __contextMenu( self, pathListing ) :
 		
@@ -191,7 +197,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 				
 		def __createOpMatcher( self ) :
 		
-			self.__opMatcher = Gaffer.OpMatcher.defaultInstance()
+			self.__opMatcher = self._createOpMatcher()
 			
 		def __opDialogueCommand( self, op ) :
 		

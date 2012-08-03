@@ -36,6 +36,7 @@
 
 import threading
 import traceback
+import weakref
 
 import IECore
 
@@ -119,18 +120,27 @@ class OpMatcher() :
 		
 		return result
 				
-	__defaultInstance = None
-	__defaultInstanceMutex = threading.Lock()
-	## Returns an OpMatcher suitable for sharing by everyone.
+	__defaultInstances = weakref.WeakKeyDictionary()
+	__defaultInstancesMutex = threading.Lock()
+	## Returns an OpMatcher suitable for sharing by everyone - initialising one
+	# takes considerable time so it's preferable to reuse one if one has been created
+	# for the classLoader in question already. If classLoader is not specified then
+	# it defaults to IECore.ClassLoader.defaultOpLoader().
 	@classmethod
-	def defaultInstance( cls ) :
+	def defaultInstance( cls, classLoader=None ) :
 	
-		with cls.__defaultInstanceMutex :
-			if cls.__defaultInstance is None :
-				cls.__defaultInstance = OpMatcher( IECore.ClassLoader.defaultOpLoader() )
-				
-			return cls.__defaultInstance
-	
+		if classLoader is None :
+			classLoader = IECore.ClassLoader.defaultOpLoader()
+			
+		with cls.__defaultInstancesMutex :
+		
+			result = cls.__defaultInstances.get( classLoader, None )
+			if result is None :
+				result = OpMatcher( classLoader )
+				cls.__defaultInstances[classLoader] = result
+			
+			return result
+			
 	def __findParameters( self, parameter, result, path = None ) :
 	
 		if path is None :

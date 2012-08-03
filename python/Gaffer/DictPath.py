@@ -40,14 +40,13 @@ import Gaffer
 
 class DictPath( Gaffer.Path ) :
 
-	__dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject )
-
-	def __init__( self, dict, path, filter=None ) :
+	def __init__( self, dict, path, filter=None, dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject ) ) :
 		
 		Gaffer.Path.__init__( self, path, filter )
 	
-		assert( isinstance( dict, self.__dictTypes ) )
-	
+		assert( isinstance( dict, dictTypes ) )
+		
+		self.__dictTypes = dictTypes
 		self.__dict = dict
 	
 	def isValid( self ) :
@@ -83,14 +82,14 @@ class DictPath( Gaffer.Path ) :
 		
 	def copy( self ) :
 	
-		return DictPath( self.__dict, self[:], self.getFilter() )
+		return DictPath( self.__dict, self[:], self.getFilter(), self.__dictTypes )
 	
 	def _children( self ) :
 	
 		try :
 			e = self.__dictEntry()
 			if isinstance( e, self.__dictTypes ) :
-				return [ DictPath( self.__dict, self[:] + [ x ] ) for x in e.keys() ]
+				return [ DictPath( self.__dict, self[:] + [ x ], dictTypes=self.__dictTypes ) for x in e.keys() ]
 		except :
 			return []
 			

@@ -265,3 +265,7 @@ class Path( object ) :
 		assert( filter is self.__filter )
 		
 		self.__emitChangedSignal()
+		
+	def __repr__( self ) :
+	
+		return "%s( '%s' )" % ( self.__class__.__name__, str( self ) )

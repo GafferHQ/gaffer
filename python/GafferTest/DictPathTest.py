@@ -36,6 +36,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 
 class DictPathTest( unittest.TestCase ) :
@@ -95,8 +97,72 @@ class DictPathTest( unittest.TestCase ) :
 		self.assertNotEqual( str( pp ), str( p ) )
 		self.assertNotEqual( pp, p )
 		self.failUnless( pp != p )
-		
 	
+	def testRepr( self ) :
+	
+		d = {
+			"one" : 1,
+			"two" : 2,
+		}
+		
+		p = Gaffer.DictPath( d, "/one" )
+		
+		self.assertEqual( repr( p ), "DictPath( '/one' )" )
+		
+	def testDictTypes( self ) :
+	
+		d = {
+			"a" : IECore.CompoundObject( {
+				"b" : IECore.IntData( 10 ),
+			} ),
+			"c" : IECore.CompoundData( {
+				"d" : IECore.StringData( "e" ),
+			} ),
+		}
+		
+		self.assertEqual( Gaffer.DictPath( d, "/" ).isLeaf(), False )
+		self.assertEqual( Gaffer.DictPath( d, "/a" ).isLeaf(), False )
+		self.assertEqual( Gaffer.DictPath( d, "/a/b" ).isLeaf(), True )
+		self.assertEqual( Gaffer.DictPath( d, "/c" ).isLeaf(), False )
+		self.assertEqual( Gaffer.DictPath( d, "/c/d" ).isLeaf(), True )
+		
+		self.assertEqual( Gaffer.DictPath( d, "/", dictTypes=( dict, IECore.CompoundData ) ).isLeaf(), False )
+		self.assertEqual( Gaffer.DictPath( d, "/a", dictTypes=( dict, IECore.CompoundData ) ).isLeaf(), True )
+		self.assertEqual( Gaffer.DictPath( d, "/a/b" ).isLeaf(), True )
+		self.assertEqual( Gaffer.DictPath( d, "/c" ).isLeaf(), False )
+		self.assertEqual( Gaffer.DictPath( d, "/c/d" ).isLeaf(), True )		
+	
+	def testDictTypesCopy( self ) :
+	
+		d = {
+			"a" : IECore.CompoundObject( {
+				"b" : IECore.IntData( 10 ),
+			} ),
+			"c" : IECore.CompoundData( {
+				"d" : IECore.StringData( "e" ),
+			} ),
+		}
+
+		p = Gaffer.DictPath( d, "/a", dictTypes=( dict, IECore.CompoundData ) )
+		self.assertEqual( p.isLeaf(), True )
+	
+		pp = p.copy()
+		self.assertEqual( pp.isLeaf(), True )
+	
+	def testChildDictTypes( self ) :
+	
+		d = {
+			"a" : IECore.CompoundObject()
+		}
+		
+		p = Gaffer.DictPath( d, "/" )
+		c = p.children()[0]
+		self.assertEqual( c.isLeaf(), False )
+		
+		p = Gaffer.DictPath( d, "/", dictTypes = ( dict, ) )
+		c = p.children()[0]
+		self.assertEqual( c.isLeaf(), True )		
+		
 if __name__ == "__main__":
 	unittest.main()
 	

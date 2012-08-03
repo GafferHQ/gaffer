@@ -108,7 +108,6 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		## \todo Decide how we allow this sort of tweak using the public
 		# interface. Perhaps we should have a SizeableContainer or something?
 		label._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
-		label._qtWidget().setMaximumWidth( GafferUI.PlugWidget.labelWidth() )
 
 		result.append( label )
 		result.append( valueWidget )

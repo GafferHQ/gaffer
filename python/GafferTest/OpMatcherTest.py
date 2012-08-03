@@ -79,6 +79,12 @@ class OpMatcherTest( unittest.TestCase ) :
 	
 		self.failUnless( isinstance( Gaffer.OpMatcher.defaultInstance(), Gaffer.OpMatcher ) )
 		self.failUnless( Gaffer.OpMatcher.defaultInstance() is Gaffer.OpMatcher.defaultInstance() )
+		self.failUnless( Gaffer.OpMatcher.defaultInstance( IECore.ClassLoader.defaultOpLoader() ) is Gaffer.OpMatcher.defaultInstance() )
+	
+		alternativeClassLoader = IECore.ClassLoader( IECore.SearchPath( "wherever:i:want", ":" ) )
+	
+		self.failUnless( Gaffer.OpMatcher.defaultInstance( alternativeClassLoader ) is Gaffer.OpMatcher.defaultInstance( alternativeClassLoader ) )
+		self.failUnless( Gaffer.OpMatcher.defaultInstance( alternativeClassLoader ) is not Gaffer.OpMatcher.defaultInstance() )
 	
 	def tearDown( self ) :
 	
