@@ -11,6 +11,9 @@ PRIORITIES!!!!
 
 	* caching
 
+* optimise PathListingWidget and paths
+	- need hasChildren() and possibly fetchMore() and threading.
+
 * allow SceneElementProcessors to not have filters if they don't want
 	- AttributeCache for instance
 		- although if it's not storing bounds then actually its fine
