@@ -42,3 +42,4 @@ import RenderUI
 from ParameterListPlugValueWidget import ParameterListPlugValueWidget
 import DisplaysUI
 import OptionsUI
+from AlembicPathPreview import AlembicPathPreview

@@ -40,6 +40,7 @@ import os
 import IECore
 import Gaffer
 import GafferUI
+import GafferSceneUI # for alembic previews
 
 class browser( Gaffer.Application ) :
 

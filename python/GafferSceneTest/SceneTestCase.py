@@ -34,28 +34,48 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import GafferScene
 
-from _GafferSceneTest import *
+class SceneTestCase( unittest.TestCase ) :
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
+	def assertSceneValid( self, scenePlug ) :
+	
+		# check that the root doesn't have any properties it shouldn't
+		self.assertEqual( scenePlug.attributes( "/" ), None )
+		self.assertEqual( scenePlug.transform( "/" ), IECore.M44f() )
+		self.assertEqual( scenePlug.object( "/" ), None )
+		
+		# then walk the scene to check the bounds
+		self.__walkScene( scenePlug, "/" )
+		
+	def __walkScene( self, scenePlug, scenePath ) :
+	
+		thisBound = scenePlug.bound( scenePath )
+		
+		o = scenePlug.object( "/" )
+		if isinstance( o, IECore.VisibleRenderable ) :
+			 if not thisBound.contains( o.bound() ) :
+				self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+		unionOfTransformedChildBounds = IECore.Box3f()
+		for childName in scenePlug.childNames( scenePath ) :
+			
+			if scenePath == "/" :
+				childPath = scenePath + childName
+			else :
+				childPath = scenePath + "/" + childName
+			
+			childBound = scenePlug.bound( childPath )
+			childTransform = scenePlug.transform( childPath )
+			childBound = childBound.transform( childTransform )
+			
+			unionOfTransformedChildBounds.extendBy( childBound )
+			
+			self.__walkScene( scenePlug, childPath )
+		
+ 		if not thisBound.contains( unionOfTransformedChildBounds ) :
+			self.fail( "Bound ( %s ) does not contain children ( %s ) at %s" % ( thisBound, unionOfTransformedChildBounds, scenePath ) )

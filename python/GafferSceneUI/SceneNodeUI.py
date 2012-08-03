@@ -73,6 +73,16 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
+# AlembicSource
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.AlembicSource.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "abc" ] ) )
+	)
+)
+
 # SceneElementProcessor
 
 GafferUI.PlugValueWidget.registerCreator(

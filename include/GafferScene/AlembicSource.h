@@ -34,48 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_ALEMBICSOURCE_H
+#define GAFFERSCENE_ALEMBICSOURCE_H
+
+#include "IECoreAlembic/AlembicInput.h"
+
+#include "GafferScene/FileSource.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class AlembicSource : public FileSource
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	FilterTypeId = 110527,
-	PathFilterTypeId = 110528,
-	AttributesTypeId = 110529,
-	AlembicSourceTypeId = 110530,
+
+	public :
+
+		AlembicSource( const std::string &name=staticTypeName() );
+		virtual ~AlembicSource();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( AlembicSource, AlembicSourceTypeId, FileSource )
+		
+	private :
 	
-	LastTypeId = 110700
+		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+
+		IECoreAlembic::AlembicInputPtr inputForPath( const ScenePath &path ) const;
+				
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_ALEMBICSOURCE_H

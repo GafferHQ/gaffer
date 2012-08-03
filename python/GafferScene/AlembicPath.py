@@ -34,28 +34,58 @@
 #  
 ##########################################################################
 
-import GafferScene
+import IECore
+import IECoreAlembic
 
-from _GafferSceneTest import *
+import Gaffer
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
+class AlembicPath( Gaffer.Path ) :
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	__unique = set()
+
+	def __init__( self, fileNameOrAlembicInput, path, filter=None ) :
+	
+		Gaffer.Path.__init__( self, path, filter )
+				
+		if isinstance( fileNameOrAlembicInput, basestring ) :
+			self.__rootInput = IECoreAlembic( fileNameOrAlembicInput )
+		else :
+			assert( isinstance( fileNameOrAlembicInput, IECoreAlembic.AlembicInput ) )
+			self.__rootInput = fileNameOrAlembicInput
+	
+		self.__unique.add( str( self ) )
+		print len( self ), len( self.__unique )
+
+	def isValid( self ) :
+	
+		try :
+			self.__input()
+			return True
+		except :
+			return False
+	
+	def isLeaf( self ) :
+	
+		# any alembic object may have children.
+		return False
+		
+	def info( self ) :
+	
+		return Gaffer.Path.info( self )
+				
+	def _children( self ) :
+	
+		childNames = self.__input().childNames()
+		return [ AlembicPath( self.__rootInput, self[:] + [ x ] ) for x in childNames ]
+			
+	def copy( self ) :
+	
+		return AlembicPath( self.__rootInput, self[:], self.getFilter() )
+		
+	def __input( self ) :
+	
+		result = self.__rootInput
+		for p in self :
+			result = result.child( p )
+			
+		return result

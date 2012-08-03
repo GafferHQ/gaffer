@@ -62,6 +62,7 @@
 #include "GafferScene/Filter.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/Attributes.h"
+#include "GafferScene/AlembicSource.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 
@@ -168,5 +169,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 				
 	GafferBindings::NodeClass<PathFilter>();
 	GafferBindings::NodeClass<Attributes>();
+	GafferBindings::NodeClass<AlembicSource>();
 
 }

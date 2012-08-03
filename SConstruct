@@ -715,7 +715,7 @@ libraries = {
 	
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer" ],
+			"LIBS" : [ "Gaffer", "IECoreAlembic" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene" ],
@@ -732,6 +732,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "Gaffer", "GafferBindings", "GafferScene", "GafferSceneTest" ],
 		},
+		"additionalFiles" : glob.glob( "python/GafferSceneTest/*/*" ),
 	},
 	
 	"GafferSceneUI" : {
