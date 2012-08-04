@@ -34,15 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/multi_index_container.hpp"
+#include "boost/multi_index/sequenced_index.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+
 #include "IECore/Display.h"
 
 #include "GafferScene/ParameterListPlug.h"
 #include "GafferScene/Displays.h"
 
 using namespace std;
+using namespace boost;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+//////////////////////////////////////////////////////////////////////////
+// Data structure for the registry
+//////////////////////////////////////////////////////////////////////////
+
+typedef std::pair<std::string, DisplayPtr> NamedDisplay;
+typedef multi_index::multi_index_container<
+	NamedDisplay,
+	multi_index::indexed_by<
+		multi_index::ordered_unique<
+			multi_index::member<NamedDisplay, std::string, &NamedDisplay::first>
+		>,
+		multi_index::sequenced<>
+	>
+> DisplayMap;
+
+static DisplayMap &displayMap()
+{
+	static DisplayMap m;
+	return m;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Displays implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( Displays );
 
@@ -72,32 +102,49 @@ const Gaffer::CompoundPlug *Displays::displaysPlug() const
 	return getChild<CompoundPlug>( "displays" );
 }
 
-Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name, const std::string &type, const std::string &data )
+Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label )
+{
+	DisplayMap::nth_index<0>::type &index = displayMap().get<0>();
+	DisplayMap::const_iterator it = index.find( label );
+	if( it == index.end() )
+	{
+		throw Exception( "Display not registered" );
+	}
+	return addDisplay( it->first, it->second.get() );
+}
+
+Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label, const IECore::Display *display )
 {
 	CompoundPlugPtr displayPlug = new CompoundPlug( "display1" );
 	displayPlug->setFlags( Plug::Dynamic, true );
+	
+	StringPlugPtr labelPlug = new StringPlug( "label" );
+	labelPlug->setValue( label );
+	labelPlug->setFlags( Plug::Dynamic, true );
+	displayPlug->addChild( labelPlug );
 	
 	BoolPlugPtr activePlug = new BoolPlug( "active", Plug::In, true );
 	activePlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( activePlug );
 	
 	StringPlugPtr namePlug = new StringPlug( "name" );
-	namePlug->setValue( name );
+	namePlug->setValue( display->getName() );
 	namePlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( namePlug );
 
 	StringPlugPtr typePlug = new StringPlug( "type" );
-	typePlug->setValue( type );
+	typePlug->setValue( display->getType() );
 	typePlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( typePlug );
 	
 	StringPlugPtr dataPlug = new StringPlug( "data" );
-	dataPlug->setValue( data );
+	dataPlug->setValue( display->getData() );
 	dataPlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( dataPlug );
 	
 	ParameterListPlugPtr parametersPlug = new ParameterListPlug( "parameters" );
 	parametersPlug->setFlags( Plug::Dynamic, true );
+	parametersPlug->addParameters( const_cast<Display *>( display )->parametersData() );
 	displayPlug->addChild( parametersPlug );
 	
 	displaysPlug()->addChild( displayPlug );
@@ -162,4 +209,29 @@ IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *co
 	}
 	
 	return result;
+}
+
+void Displays::registerDisplay( const std::string &label, const IECore::Display *display )
+{
+	NamedDisplay d( label, display->copy() );
+	
+	DisplayMap::nth_index<0>::type &index = displayMap().get<0>();
+	DisplayMap::const_iterator it = index.find( label );
+	if( it == index.end() )
+	{
+		index.insert( d );
+	}
+	else
+	{
+		index.replace( it, d );
+	}
+}
+
+void Displays::registeredDisplays( std::vector<std::string> &labels )
+{
+	const DisplayMap::nth_index<1>::type &index = displayMap().get<1>();
+	for( DisplayMap::nth_index<1>::type::const_iterator it=index.begin(); it!=index.end(); it++ )
+	{
+		labels.push_back( it->first );
+	}
 }

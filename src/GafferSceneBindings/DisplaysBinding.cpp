@@ -34,44 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DISPLAYS_H
-#define GAFFERSCENE_DISPLAYS_H
+#include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECore/Display.h"
+#include "GafferBindings/NodeBinding.h"
 
-#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/Displays.h"
 
-namespace GafferScene
+#include "GafferSceneBindings/DisplaysBinding.h"
+
+using namespace std;
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
+
+static Gaffer::CompoundPlugPtr addDisplayWrapper1( Displays &displays, const std::string &label )
 {
+	return displays.addDisplay( label );
+}
 
-class Displays : public GlobalsProcessor
+static Gaffer::CompoundPlugPtr addDisplayWrapper2( Displays &displays, const std::string &label, const IECore::Display *d )
 {
+	return displays.addDisplay( label, d );
+}
 
-	public :
+static tuple registeredDisplaysWrapper()
+{
+	vector<string> labels;
+	Displays::registeredDisplays( labels );
+	boost::python::list l;
+	for( vector<string>::const_iterator it = labels.begin(); it!=labels.end(); it++ )
+	{
+		l.append( *it );
+	}
+	return boost::python::tuple( l );
+}
 
-		Displays( const std::string &name=staticTypeName() );
-		virtual ~Displays();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Displays, DisplaysTypeId, GlobalsProcessor );
-		
-		Gaffer::CompoundPlug *displaysPlug();
-		const Gaffer::CompoundPlug *displaysPlug() const;
-		
-		/// Add a display previously registered with registerDisplay().
-		Gaffer::CompoundPlug *addDisplay( const std::string &label );
-		Gaffer::CompoundPlug *addDisplay( const std::string &label, const IECore::Display *display );
-				
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-		
-		static void registerDisplay( const std::string &label, const IECore::Display *display );
-		static void registeredDisplays( std::vector<std::string> &labels );
-
-	protected :
-
-		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
-
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_DISPLAYS_H
+void GafferSceneBindings::bindDisplays()
+{
+	NodeClass<Displays>()
+		.def( "addDisplay", &addDisplayWrapper1 )
+		.def( "addDisplay", &addDisplayWrapper2 )
+		.def( "registerDisplay", &Displays::registerDisplay ).staticmethod( "registerDisplay" )
+		.def( "registeredDisplays", &registeredDisplaysWrapper ).staticmethod( "registeredDisplays" )
+	;
+}

@@ -54,7 +54,6 @@
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Camera.h"
 #include "GafferScene/GlobalsProcessor.h"
-#include "GafferScene/Displays.h"
 #include "GafferScene/ParameterListPlug.h"
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
@@ -65,15 +64,11 @@
 #include "GafferScene/AlembicSource.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
+#include "GafferSceneBindings/DisplaysBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
 using namespace GafferSceneBindings;
-
-static Gaffer::CompoundPlugPtr addDisplayWrapper( Displays &displays, const std::string &name, const std::string &type, const std::string &data )
-{
-	return displays.addDisplay( name, type, data );
-}
 
 static ParameterListPlugPtr parameterListPlugConstructor( const char *name, Gaffer::Plug::Direction direction, unsigned flags, tuple children )
 {
@@ -108,6 +103,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 			)	
 		)
 		.def( "addParameter", &addParameterWrapper )
+		.def( "addParameters", &ParameterListPlug::addParameters )
 	;
 	
 	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
@@ -145,9 +141,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<Camera>();
 	GafferBindings::NodeClass<GlobalsProcessor>();
 
-	GafferBindings::NodeClass<Displays>()
-		.def( "addDisplay", &addDisplayWrapper )
-	;
+	bindDisplays();
 
 	GafferBindings::NodeClass<Options>();
 	

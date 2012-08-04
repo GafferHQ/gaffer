@@ -62,10 +62,10 @@ class DisplaysTest( unittest.TestCase ) :
 		
 		# check that we have some displays
 		
-		display = displays.addDisplay( "beauty.exr", "exr", "rgba" )
+		display = displays.addDisplay( "beauty", IECore.Display( "beauty.exr", "exr", "rgba" ) )
 		display["parameters"].addParameter( "test", IECore.FloatData( 10 ) )
 
-		displays.addDisplay( "diffuse.exr", "exr", "color aov_diffuse" )
+		displays.addDisplay( "diffuse", IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 		
 		g = displays["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
@@ -83,7 +83,7 @@ class DisplaysTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["displaysNode"] = GafferScene.Displays()
-		display = s["displaysNode"].addDisplay( "beauty.exr", "exr", "rgba" )
+		display = s["displaysNode"].addDisplay( "beauty", IECore.Display( "beauty.exr", "exr", "rgba" ) )
 		display["parameters"].addParameter( "test", IECore.FloatData( 10 ) )
 		
 		ss = s.serialise()
@@ -94,6 +94,13 @@ class DisplaysTest( unittest.TestCase ) :
 		g = s2["displaysNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
 		self.assertEqual( g[0], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
+	
+	def testRegistry( self ) :
+	
+		GafferScene.Displays.registerDisplay( "test", IECore.Display( "test.exr", "exr", "rgba" ) )
+		GafferScene.Displays.registerDisplay( "test2", IECore.Display( "test.exr", "exr", "rgba" ) )
 		
+		self.assertEqual( GafferScene.Displays.registeredDisplays(), ( "test", "test2" ) )
+	
 if __name__ == "__main__":
 	unittest.main()

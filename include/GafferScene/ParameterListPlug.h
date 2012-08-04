@@ -70,7 +70,8 @@ class ParameterListPlug : public Gaffer::CompoundPlug
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
 		Gaffer::CompoundPlug *addParameter( const std::string &name, const IECore::Data *value );
-
+		void addParameters( const IECore::CompoundData *parameters );
+		
 		/// Fills the parameter list with values based on the child plugs of this node.
 		void fillParameterList( IECore::CompoundDataMap &parameterList ) const;
 		/// As above but fills a CompoundObject map instead.

@@ -124,6 +124,14 @@ Gaffer::CompoundPlug *ParameterListPlug::addParameter( const std::string &name, 
 	return plug;
 }
 
+void ParameterListPlug::addParameters( const IECore::CompoundData *parameters )
+{
+	for( CompoundDataMap::const_iterator it = parameters->readable().begin(); it!=parameters->readable().end(); it++ )
+	{
+		addParameter( it->first, it->second );
+	}
+}
+
 void ParameterListPlug::fillParameterList( IECore::CompoundDataMap &parameterList ) const
 {
 	std::string name;

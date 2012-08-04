@@ -44,6 +44,7 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+## \todo Decide how/where we show the display label.
 class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 	def __init__( self, plug ) :
@@ -59,10 +60,11 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		
 		self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		
-		addButton = GafferUI.Button( image="plus.png", hasFrame=False )
-		self.__addButtonClickedConnection = addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ) )
+		addButton = GafferUI.MenuButton(
+			image="plus.png", hasFrame=False, menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
+		)
 		self.__footerWidget.append( addButton )
-		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
+		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ) ), expand = True )
 				
 		return self.__footerWidget
 	
@@ -94,9 +96,32 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		visible = not parameterList.getVisible()
 		parameterList.setVisible( visible )
 		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
-
-	def __addClicked( self, button ) :
+		
+	def __addMenuDefinition( self ) :
 	
-		self.getPlug().node().addDisplay( "", "", "" )
+		node = self.getPlug().node()
+		currentLabels = set( [ display["label"].getValue() for display in node["displays"].children() ] )
+		
+		m = IECore.MenuDefinition()
+		
+		registeredDisplays = node.registeredDisplays()
+		for label in registeredDisplays :
+			menuPath = label
+			if not menuPath.startswith( "/" ) :
+				menuPath = "/" + menuPath
+			m.append(
+				menuPath,
+				{
+					"command" : IECore.curry( node.addDisplay, label ),
+					"active" : label not in currentLabels
+				}	
+			)
+
+		if len( registeredDisplays ) :
+			m.append( "/BlankDivider", { "divider" : True } )
+			
+		m.append( "/Blank", { "command" : IECore.curry( node.addDisplay, "", IECore.Display( "", "", "" ) ) } )
+	
+		return m
 	
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), "displays", DisplaysPlugValueWidget )
