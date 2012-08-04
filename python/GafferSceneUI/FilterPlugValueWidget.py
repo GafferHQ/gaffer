@@ -62,7 +62,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton()
 		self.__menuButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		row.append( self.__menuButton )
-		row.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
+		row.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 100000, 1 ) ), expand = True )
 		
 		self.__column.append( row )
 		
@@ -121,8 +121,10 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __addFilter( self, filterType ) :
 	
 		filterNode = filterType()
-		self.getPlug().node().addChild( filterNode )
-		self.getPlug().setInput( filterNode["match"] )
+		
+		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
+			self.getPlug().node().addChild( filterNode )
+			self.getPlug().setInput( filterNode["match"] )
 		
 	def __linkFilter( self ) :
 	
