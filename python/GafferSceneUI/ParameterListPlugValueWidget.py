@@ -42,9 +42,9 @@ import GafferScene
 
 class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-	def __init__( self, plug, collapsible=True, **kw ) :
+	def __init__( self, plug, collapsible=True, label=None, **kw ) :
 
-		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsible, **kw )
+		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsible, label, **kw )
 
 		self.__footerWidget = None
 
@@ -52,11 +52,10 @@ class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 	
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		
-		if False :
-			## \todo We need a Locked or Settable flag for Plugs, then when they
-			# are locked we can display them in static form.
+		label = self._label( childPlug["name"].getValue() )
+		if label is not None :
 			nameWidget = GafferUI.Label(
-				childPlug["name"].getValue(),
+				label,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 			)
@@ -64,7 +63,7 @@ class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 			nameWidget = GafferUI.PlugValueWidget.create( childPlug["name"] )
 			
 		## \todo This isn't working - maybe we need a FixedSizeContainer?
-		nameWidget._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		nameWidget._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
 		row.append( nameWidget )
 		
 		row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ) )
@@ -75,16 +74,26 @@ class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 	
 		if self.__footerWidget is not None :
 			return self.__footerWidget
-			
-		self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) ) )
-		self.__footerWidget.append(
-			GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
-		)
-		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
+		
+		if self.getPlug().getFlags( Gaffer.Plug.Flags.Dynamic ) :	
+			self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+			self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) ) )
+			self.__footerWidget.append(
+				GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
+			)
+			self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
 
 		return self.__footerWidget
-			
+	
+	## May be reimplemented by derived classes to return a suitable label
+	# for the parameter of the given name.
+	def _label( self, name ) :
+	
+		if not self.getPlug().getFlags( Gaffer.Plug.Flags.Dynamic ) :
+			return name
+		
+		return None
+		
 	def __addMenuDefinition( self ) :
 	
 		result = IECore.MenuDefinition()

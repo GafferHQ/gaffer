@@ -60,6 +60,10 @@ class Options : public GlobalsProcessor
 		
 	protected :
 
+		/// Can be used by derived classes to declare an options plug which isn't dynamic, so
+		/// they can add a predefined set of static options at construction.
+		Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags );
+
 		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
 		
 };

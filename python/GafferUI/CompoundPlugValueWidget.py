@@ -43,14 +43,14 @@ import GafferUI
 
 class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, collapsible=True, **kw ) :
+	def __init__( self, plug, collapsible=True, label=None, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		
 		self.__collapsible = None
 		if collapsible :
 			self.__collapsible = GafferUI.Collapsible(
-				IECore.CamelCase.toSpaced( plug.getName() ),
+				label if label else IECore.CamelCase.toSpaced( plug.getName() ),
 				collapsed = True,
 			)
 			self.__collapsible.setChild( self.__column )
@@ -106,7 +106,6 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 	## May be overridden by derived classes to specify which child plugs
 	# are represented and in what order.
-	## \todo Remove this and implement todo in __moveLayer in ClassVectorParameterValueWidget.py
 	def _childPlugs( self ) :
 	
 		return self.getPlug().children()

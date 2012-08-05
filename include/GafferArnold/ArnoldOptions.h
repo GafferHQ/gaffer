@@ -34,20 +34,28 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERSCENE_ARNOLDOPTIONS_H
+#define GAFFERSCENE_ARNOLDOPTIONS_H
+
+#include "GafferScene/Options.h"
+
+#include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+class ArnoldOptions : public GafferScene::Options
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	
-	LastTypeId = 110999
+
+	public :
+
+		ArnoldOptions( const std::string &name=staticTypeName() );
+		virtual ~ArnoldOptions();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldOptions, ArnoldOptionsTypeId, GafferScene::Options );
+				
 };
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERSCENE_ARNOLDOPTIONS_H

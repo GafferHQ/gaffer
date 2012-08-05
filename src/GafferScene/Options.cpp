@@ -56,6 +56,18 @@ Options::Options( const std::string &name )
 	);
 }
 
+Options::Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags )
+	:	GlobalsProcessor( name )
+{
+	addChild(
+		new ParameterListPlug(
+			"options",
+			Plug::In,
+			optionsPlugFlags
+		)
+	);
+}
+
 Options::~Options()
 {
 }

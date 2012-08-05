@@ -36,9 +36,11 @@
 
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferScene/ParameterListPlug.h"
 
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -114,6 +116,32 @@ Gaffer::CompoundPlug *ParameterListPlug::addParameter( const std::string &name, 
 			plug->addChild( valuePlug );
 			break;
 		}
+		case BoolDataTypeId :
+		{
+			BoolPlugPtr valuePlug = new BoolPlug(
+				"value",
+				direction(),
+				false,
+				getFlags()
+			);
+			valuePlug->setValue( static_cast<const BoolData *>( value )->readable() );
+			plug->addChild( valuePlug );
+			break;
+		}
+		case Color3fDataTypeId :
+		{
+			Color3fPlugPtr valuePlug = new Color3fPlug(
+				"value",
+				direction(),
+				Color3f( 0 ),
+				Color3f( Imath::limits<float>::min() ),
+				Color3f( Imath::limits<float>::max() ),
+				getFlags()
+			);
+			valuePlug->setValue( static_cast<const Color3fData *>( value )->readable() );
+			plug->addChild( valuePlug );
+			break;
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Parameter \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
@@ -177,7 +205,13 @@ IECore::DataPtr ParameterListPlug::parameterDataAndName( const CompoundPlug *par
 			break;
 		case StringPlugTypeId :
 			return new StringData( static_cast<const StringPlug *>( valuePlug )->getValue() );
-			break;		
+			break;
+		case BoolPlugTypeId :
+			return new BoolData( static_cast<const BoolPlug *>( valuePlug )->getValue() );
+			break;
+		case Color3fPlugTypeId :
+			return new Color3fData( static_cast<const Color3fPlug *>( valuePlug )->getValue() );
+			break;	
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Parameter \"%s\" has unsupported value plug type \"%s\"" ) % name % valuePlug->typeName() )
