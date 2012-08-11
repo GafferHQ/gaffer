@@ -34,25 +34,29 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferBindings/NodeBinding.h"
-
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
 #include "GafferArnold/ArnoldAttributes.h"
 
-using namespace boost::python;
+using namespace Imath;
 using namespace GafferArnold;
 
-BOOST_PYTHON_MODULE( _GafferArnold )
+IE_CORE_DEFINERUNTIMETYPED( ArnoldAttributes );
+
+ArnoldAttributes::ArnoldAttributes( const std::string &name )
+	:	GafferScene::Attributes( name, Gaffer::Plug::Default )
 {
+	GafferScene::ParameterListPlug *attributes = attributesPlug();
 	
-	GafferBindings::NodeClass<ArnoldShader>()
-		.def( "setShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::setShader )
-	;
+	// visibility parameters
+	
+	attributes->addParameter( "ai:visibility:camera", new IECore::BoolData( true ) );
+	attributes->addParameter( "ai:visibility:shadow", new IECore::BoolData( true ) );
+	attributes->addParameter( "ai:visibility:reflected", new IECore::BoolData( true ) );
+	attributes->addParameter( "ai:visibility:refracted", new IECore::BoolData( true ) );
+	attributes->addParameter( "ai:visibility:diffuse", new IECore::BoolData( true ) );
+	attributes->addParameter( "ai:visibility:glossy", new IECore::BoolData( true ) );
+	
+}
 
-	GafferBindings::NodeClass<ArnoldOptions>();
-	GafferBindings::NodeClass<ArnoldAttributes>();
-
+ArnoldAttributes::~ArnoldAttributes()
+{
 }

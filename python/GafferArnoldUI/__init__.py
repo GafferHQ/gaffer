@@ -38,3 +38,4 @@ import ArnoldShaderUI
 import ArnoldRenderUI
 import ShaderMenu
 import ArnoldOptionsUI
+import ArnoldAttributesUI

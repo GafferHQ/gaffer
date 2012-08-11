@@ -34,25 +34,28 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_ARNOLDATTRIBUTES_H
+#define GAFFERSCENE_ARNOLDATTRIBUTES_H
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferScene/Attributes.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
+#include "GafferArnold/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferArnold;
-
-BOOST_PYTHON_MODULE( _GafferArnold )
+namespace GafferArnold
 {
-	
-	GafferBindings::NodeClass<ArnoldShader>()
-		.def( "setShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::setShader )
-	;
 
-	GafferBindings::NodeClass<ArnoldOptions>();
-	GafferBindings::NodeClass<ArnoldAttributes>();
+class ArnoldAttributes : public GafferScene::Attributes
+{
 
-}
+	public :
+
+		ArnoldAttributes( const std::string &name=staticTypeName() );
+		virtual ~ArnoldAttributes();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldAttributes, ArnoldAttributesTypeId, GafferScene::Attributes );
+				
+};
+
+} // namespace GafferArnold
+
+#endif // GAFFERSCENE_ARNOLDATTRIBUTES_H

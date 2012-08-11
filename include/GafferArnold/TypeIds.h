@@ -44,6 +44,7 @@ enum TypeId
 {
 	ArnoldShaderTypeId = 110900,
 	ArnoldOptionsTypeId = 110901,
+	ArnoldAttributesTypeId = 110902,
 	
 	LastTypeId = 110999
 };

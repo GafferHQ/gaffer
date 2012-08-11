@@ -54,6 +54,18 @@ Attributes::Attributes( const std::string &name )
 	);
 }
 
+Attributes::Attributes( const std::string &name, Gaffer::Plug::Flags attributesPlugFlags )
+	:	SceneElementProcessor( name )
+{
+	addChild(
+		new ParameterListPlug(
+			"attributes",
+			Plug::In,
+			attributesPlugFlags
+		)
+	);
+}
+
 Attributes::~Attributes()
 {
 }

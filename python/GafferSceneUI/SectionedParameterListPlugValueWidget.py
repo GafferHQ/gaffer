@@ -34,13 +34,47 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneView
-import RenderUI
-from ParameterListPlugValueWidget import ParameterListPlugValueWidget
-from SectionedParameterListPlugValueWidget import SectionedParameterListPlugValueWidget
-import DisplaysUI
-import OptionsUI
-from AlembicPathPreview import AlembicPathPreview
+import GafferUI
+import GafferSceneUI
+
+class _Section( GafferSceneUI.ParameterListPlugValueWidget ) :
+
+	def __init__( self, plug, label, names, labels, **kw ) :
+	
+		GafferSceneUI.ParameterListPlugValueWidget.__init__( self, plug, True, label, **kw )
+		
+		self.__names = set( names )
+		self.__namesToLabels = dict( zip( names, labels ) )
+				
+	def _childPlugs( self ) :
+	
+		return [ p for p in self.getPlug().children() if p["name"].getValue() in self.__names ]
+
+	def _label( self, name ) :
+	
+		return self.__namesToLabels[name]
+
+class SectionedParameterListPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, sections, **kw ) :
+	
+		column = GafferUI.ListContainer( spacing = 8 )
+	
+		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
+		
+		with column :
+			for section in sections :
+				_Section(
+					self.getPlug(),
+					label = section[0],
+					names = [ e[0] for e in section[1] ],
+					labels = [ e[1] for e in section[1] ],
+				)
+	
+	def hasLabel( self ) :
+	
+		return True
+			
+	def _updateFromPlug( self ) :
+	
+		pass	

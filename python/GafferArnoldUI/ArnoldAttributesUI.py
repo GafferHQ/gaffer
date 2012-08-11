@@ -34,13 +34,28 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneView
-import RenderUI
-from ParameterListPlugValueWidget import ParameterListPlugValueWidget
-from SectionedParameterListPlugValueWidget import SectionedParameterListPlugValueWidget
-import DisplaysUI
-import OptionsUI
-from AlembicPathPreview import AlembicPathPreview
+import Gaffer
+import GafferUI
+import GafferSceneUI
+import GafferArnold
+
+GafferUI.PlugValueWidget.registerCreator(
+	
+	GafferArnold.ArnoldAttributes.staticTypeId(),
+	"attributes",
+	GafferSceneUI.SectionedParameterListPlugValueWidget,
+	sections = (
+		(
+			"Visibility",
+			(
+				( "ai:visibility:camera", "Camera" ),
+				( "ai:visibility:shadow", "Shadow" ),
+				( "ai:visibility:reflected", "Reflections" ),
+				( "ai:visibility:refracted", "Refractions" ),
+				( "ai:visibility:diffuse", "Diffuse" ),
+				( "ai:visibility:glossy", "Glossy" ),
+			),
+		),
+	),	
+	
+)

@@ -59,6 +59,10 @@ class Attributes : public SceneElementProcessor
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
+	
+		/// Can be used by derived classes to declare an attributes plug which isn't dynamic, so
+		/// they can add a predefined set of static attributes at construction.
+		Attributes( const std::string &name, Gaffer::Plug::Flags attributesPlugFlags );
 				
 		virtual IECore::ConstCompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 	
