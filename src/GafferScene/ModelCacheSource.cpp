@@ -145,6 +145,7 @@ IECore::ConstCompoundObjectPtr ModelCacheSource::computeAttributes( const SceneP
 
 IECore::ConstObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	/// \todo The entry in the file should be called "object"
 	std::string entry = entryForPath( path ) + "/geometry";
 	
 	FileAndMutexPtr f = g_fileCache.get( fileNamePlug()->getValue() );
