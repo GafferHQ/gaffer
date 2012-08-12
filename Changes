@@ -137,6 +137,20 @@ can be constructed easily.
 
 * The BrowserEditor.Mode class now has a _createOpMatcher() method which may be overridden by derived classes. Typically this would be overridden to use a custom ClassLoader for the ops.
 
+* Moved Label.VerticalAlignment and Label.HorizontalAlignment enums to GafferUI namespace - to allow their use in other parts of the API. They are temporarily available under their old names for backwards compatibility.
+
+* GridContainer.addChild() now accepts an alignment parameter to control alignment of the child within its cells.
+
+* Path setFromString, append and truncateUntilValid methods now return self, to allow easy chaining and use in list comprehensions.
+
+* Fixed problem which could cause MultiLineTextWidget to raise an Exception when losing focus as part of a ui being destroyed.
+
+* Fixed SelectionMenu so that standard python strings (and not QStrings) are returned from the getCurrentItem() and getItem() methods.
+
+* Added support for loading and saving presets for ops and other Parameterised classes.
+
+* The OpPathPreview is now more flexible in what it considers to be a ClassLoader for ops, to provide better support for custom ClassLoaders.
+
 0.34.0
 ------
 

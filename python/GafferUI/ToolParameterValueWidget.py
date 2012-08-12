@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,54 +34,23 @@
 #  
 ##########################################################################
 
-import unittest
+import IECore
 
+import Gaffer
 import GafferUI
 
-class SelectionMenuTest( unittest.TestCase ) :
+## This simple ui just provides a tool icon which opens the action menu for
+# a particular Parameter.
+class ToolParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def testAccessors( self ) :
-				
-		s = GafferUI.SelectionMenu()
-		
-		# adding new items
-		s.addItem( "Test1" )
-		s.addItem( "Test2" )
-		s.addItem( "Test3" )
-		self.assertEqual( s.getTotal(), 3 )
-					
-		# changing and checking the current item
-		s.setCurrentIndex( 1 )
-		self.assertEqual( s.getCurrentItem(), "Test2" )
-		self.assertEqual( s.getItem(s.getCurrentIndex()), "Test2" )
-		
-		# removing item
-		s.removeIndex( 0 )
-		self.assertEqual ( s.getTotal(), 2 )
-		
-	def testCurrentIndexChangedSignal( self ):
+	def __init__( self, parameterHandler ) :
 	
-		s = GafferUI.SelectionMenu()
+		self.__menuButton = GafferUI.MenuButton( image="gear.png", hasFrame=False )
 		
-		self.emissions = 0
-		def f( w ) :
-			self.emissions += 1
-		
-		c = s.currentIndexChangedSignal().connect(f)
-		
-		s.addItem("Test1")
-		s.addItem("Test2")
-		
-		self.assertEqual(self.emissions, 1)
+		GafferUI.ParameterValueWidget.__init__( self, self.__menuButton, parameterHandler )
 	
-	def testNoQString( self ) :
-	
-		s = GafferUI.SelectionMenu()
-		s.addItem( "Test" )
-		
-		self.failUnless( isinstance( s.getCurrentItem(), str ) )
-		self.failUnless( isinstance( s.getItem( 0 ), str ) )
-		
-if __name__ == "__main__":
-	unittest.main()
-	
+		self.__menuButton.setMenu(
+			GafferUI.Menu( 
+				Gaffer.WeakMethod( self._popupMenuDefinition )
+			)
+		)

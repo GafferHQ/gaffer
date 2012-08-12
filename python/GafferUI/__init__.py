@@ -76,6 +76,7 @@ from _GafferUI import *
 
 # general ui stuff first
 
+from Enums import *
 from Widget import Widget
 from Menu import Menu
 from ContainerWidget import ContainerWidget
@@ -188,6 +189,8 @@ from ClassParameterValueWidget import ClassParameterValueWidget
 from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
 from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
 from TimeCodeParameterValueWidget import TimeCodeParameterValueWidget
+from ToolParameterValueWidget import ToolParameterValueWidget
+import ParameterPresets
 
 # and specific node uis
 

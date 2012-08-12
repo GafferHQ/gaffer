@@ -202,7 +202,8 @@ class _FocusOutEventFilter( QtCore.QObject ) :
 	
 		if qEvent.type()==QtCore.QEvent.FocusOut :
 			widget = GafferUI.Widget._owner( qObject )
-			widget.editingFinishedSignal()( widget )
+			if widget is not None :
+				widget.editingFinishedSignal()( widget )
 			
 		return False
 

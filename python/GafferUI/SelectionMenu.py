@@ -100,7 +100,7 @@ class SelectionMenu( GafferUI.Widget ) :
 		return self._qtWidget().currentIndex()
 	
 	def getCurrentItem( self ):
-		return self._qtWidget().currentText()
+		return str( self._qtWidget().currentText() )
 		
 	def getTotal( self ):
 		return self._qtWidget().count()
@@ -109,7 +109,7 @@ class SelectionMenu( GafferUI.Widget ) :
 		self._qtWidget().setCurrentIndex( index )
 		
 	def getItem( self, index ):
-		return self._qtWidget().itemText( index )
+		return str( self._qtWidget().itemText( index ) )
 	
 	def removeIndex( self, index ):
 		self._qtWidget().removeItem( index )

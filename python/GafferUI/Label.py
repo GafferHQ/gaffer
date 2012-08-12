@@ -45,8 +45,9 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 class Label( GafferUI.Widget ) :
 
-	HorizontalAlignment = IECore.Enum.create( "Left", "Right", "Center" )
-	VerticalAlignment = IECore.Enum.create( "Top", "Bottom", "Center" )
+	## \todo Remove these and just reference them directly
+	HorizontalAlignment = GafferUI.HorizontalAlignment
+	VerticalAlignment = GafferUI.VerticalAlignment
 	
 	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center, **kw ) :
 	
@@ -71,16 +72,16 @@ class Label( GafferUI.Widget ) :
 	def setAlignment( self, horizontalAlignment, verticalAlignment ) :
 		
 		self._qtWidget().setAlignment(
-			self.__gafferAlignmentToQt[horizontalAlignment] | 
-			self.__gafferAlignmentToQt[verticalAlignment]
+			GafferUI.HorizontalAlignment._toQt( horizontalAlignment ) |
+			GafferUI.VerticalAlignment._toQt( verticalAlignment )
 		)
-				
+		
 	def getAlignment( self ) :
 	
 		a = self._qtWidget().alignment()
 		return (
-			self.__qtAlignmentToGaffer[int(a & QtCore.Qt.AlignHorizontal_Mask)],
-			self.__qtAlignmentToGaffer[int(a & QtCore.Qt.AlignVertical_Mask)],
+			GafferUI.HorizontalAlignment._fromQt( a ),
+			GafferUI.VerticalAlignment._fromQt( a ),
 		)
 	
 	def linkActivatedSignal( self ) :
@@ -96,23 +97,3 @@ class Label( GafferUI.Widget ) :
 	def __linkActivated( self, link ) :
 	
 		self.__linkActivatedSignal( self, str( link ) )
-		
-	__qtAlignmentToGaffer = {
-		int( QtCore.Qt.AlignLeft ) : HorizontalAlignment.Left,
-		int( QtCore.Qt.AlignRight ) : HorizontalAlignment.Right,
-		int( QtCore.Qt.AlignHCenter ) : HorizontalAlignment.Center,
-		int( QtCore.Qt.AlignTop ) : VerticalAlignment.Top,
-		int( QtCore.Qt.AlignBottom ) : VerticalAlignment.Bottom,
-		int( QtCore.Qt.AlignVCenter ) : VerticalAlignment.Center,
-	}
-	
-	__gafferAlignmentToQt = {
-		HorizontalAlignment.Left : QtCore.Qt.AlignLeft,
-		HorizontalAlignment.Right : QtCore.Qt.AlignRight,
-		HorizontalAlignment.Center : QtCore.Qt.AlignHCenter,
-		VerticalAlignment.Top : QtCore.Qt.AlignTop,
-		VerticalAlignment.Bottom : QtCore.Qt.AlignBottom,
-		VerticalAlignment.Center : QtCore.Qt.AlignVCenter,
-	}
-
-	

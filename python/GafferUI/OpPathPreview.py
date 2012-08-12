@@ -54,9 +54,13 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 		path = self.getPath()
 		if not isinstance( path, Gaffer.ClassLoaderPath ) :
 			return False
-			
-		if path.classLoader() is not IECore.ClassLoader.defaultOpLoader() :
-			return False
+		
+		if hasattr( path.classLoader(), "classType" ) :
+			if not issubclass( path.classLoader().classType(), IECore.Op ) :
+				return False
+		else :
+			if path.classLoader().searchPath() != IECore.ClassLoader.defaultOpLoader().searchPath() :
+				return False
 		
 		return path.isLeaf()
 		

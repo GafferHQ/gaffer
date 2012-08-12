@@ -174,6 +174,8 @@ class Path( object ) :
 
 		if prev!=self.__items :
 			self.__emitChangedSignal()
+			
+		return self
 	
 	def copy( self ) :
 	
@@ -187,6 +189,8 @@ class Path( object ) :
 		self.__checkElement( element )
 		self.__items.append( element )
 		self.__emitChangedSignal()
+		
+		return self
 	
 	def truncateUntilValid( self ) :
 	
@@ -197,7 +201,9 @@ class Path( object ) :
 			
 		if changed :
 			self.__emitChangedSignal()
-			
+		
+		return self
+		
 	def __len__( self ) :
 	
 		return len( self.__items )

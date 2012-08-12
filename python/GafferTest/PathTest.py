@@ -43,6 +43,16 @@ import Gaffer
 
 class PathTest( unittest.TestCase ) :
 
+	class TestPath( Gaffer.Path ) :
+		
+		def __init__( self, p ) :
+		
+			Gaffer.Path.__init__( self, p )
+			
+		def isValid( self ) :
+			
+			return True
+			
 	def test( self ) :
 	
 		self.assertRaises( ValueError, Gaffer.Path, "noStartingSlash" )
@@ -131,21 +141,11 @@ class PathTest( unittest.TestCase ) :
 		
 	def testInfo( self ) :
 	
-		class TestPath( Gaffer.Path ) :
-		
-			def __init__( self, p ) :
-			
-				Gaffer.Path.__init__( self, p )
-				
-			def isValid( self ) :
-				
-				return True
-	
-		p = TestPath( "/a/b/c" )
+		p = self.TestPath( "/a/b/c" )
 		self.assertEqual( p.info()["name"], "c" )
 		self.assertEqual( p.info()["fullName"], "/a/b/c" )
 		
-		p = TestPath( "/" )
+		p = self.TestPath( "/" )
 		self.assertEqual( p.info()["name"], "" )
 		self.assertEqual( p.info()["fullName"], "/" )
 	
@@ -153,6 +153,14 @@ class PathTest( unittest.TestCase ) :
 	
 		p = Gaffer.Path( "/test/path" )
 		self.assertEqual( repr( p ), "Path( '/test/path' )" )
+		
+	def testReturnSelf( self ) :
+	
+		p = self.TestPath( "/test/path" )
+		
+		self.failUnless( p.setFromString( "/test" ) is p )
+		self.failUnless( p.append( "a" ) is p )
+		self.failUnless( p.truncateUntilValid() is p )
 		
 if __name__ == "__main__":
 	unittest.main()

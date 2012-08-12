@@ -89,20 +89,7 @@ class GridContainer( GafferUI.ContainerWidget ) :
 	
 	def __setitem__( self, index, child ) :
 	
-		ranges = self.__indexToRanges( index )
-		self.__removeRanges( ranges )
-	
-		oldParent = child.parent()
-		if oldParent is not None :
-			oldParent.removeChild( child )
-					
-		self.__widgets.add( child )
-		self.__qtLayout.addWidget( child._qtWidget(), ranges[1][0], ranges[0][0], ranges[1][1] - ranges[1][0], ranges[0][1] - ranges[0][0] )
-		child._applyVisibility()
-				
-		if self.__maxCoordinate is not None :
-			self.__maxCoordinate.x = max( self.__maxCoordinate[0], ranges[0][1] - 1 )
-			self.__maxCoordinate.y = max( self.__maxCoordinate[1], ranges[1][1] - 1 )
+		self.addChild( child, index )
 			
 	def __getitem__( self, index ) :
 	
@@ -150,10 +137,31 @@ class GridContainer( GafferUI.ContainerWidget ) :
 			
 		return xRange, yRange	
 	
-	def addChild( self, child, index=( 1, 1 ) ) :
+	def addChild( self, child, index=( 1, 1 ), alignment = ( GafferUI.HorizontalAlignment.None, GafferUI.VerticalAlignment.None ) ) :
 	
-		self[index] = child
+		ranges = self.__indexToRanges( index )
+		self.__removeRanges( ranges )
 	
+		oldParent = child.parent()
+		if oldParent is not None :
+			oldParent.removeChild( child )
+					
+		self.__widgets.add( child )
+		self.__qtLayout.addWidget(
+			child._qtWidget(),
+			ranges[1][0],
+			ranges[0][0],
+			ranges[1][1] - ranges[1][0],
+			ranges[0][1] - ranges[0][0],
+			GafferUI.HorizontalAlignment._toQt( alignment[0] ) |
+			GafferUI.VerticalAlignment._toQt( alignment[1] )
+		)
+		child._applyVisibility()
+		
+		if self.__maxCoordinate is not None :
+			self.__maxCoordinate.x = max( self.__maxCoordinate[0], ranges[0][1] - 1 )
+			self.__maxCoordinate.y = max( self.__maxCoordinate[1], ranges[1][1] - 1 )
+
 	def removeChild( self, child ) :
 
 		assert( child in self.__widgets )
