@@ -37,6 +37,8 @@
 import unittest
 
 import Gaffer
+import GafferTest
+
 import GafferUI
 		
 class PathListingWidgetTest( unittest.TestCase ) :
@@ -72,10 +74,42 @@ class PathListingWidgetTest( unittest.TestCase ) :
 		self.assertEqual( w.getPathExpanded( p1 ), True )
 		self.assertEqual( w.getPathExpanded( p2 ), True )
 		self.assertEqual( w.getPathExpanded( p3 ), False )
-		self.assertEqual( w.getExpandedPaths(), set( [ p1, p2 ] ) )
+		self.assertEqual( w.getExpandedPaths(), [ p1, p2 ] )
 		
 		w.setPath( Gaffer.DictPath( {}, "/" ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 0 )
+		
+	def testExpansionSignalFrequency( self ) :
+	
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+		w = GafferUI.PathListingWidget( p )
+				
+		c = GafferTest.CapturingSlot( w.expansionChangedSignal() )
+		self.assertEqual( len( c ), 0 )
+		
+		w.setPathExpanded( Gaffer.DictPath( d, "/1" ), True )
+		self.assertEqual( len( c ), 1 )
+		w.setPathExpanded( Gaffer.DictPath( d, "/1" ), True )
+		self.assertEqual( len( c ), 1 )
+		
+		w.setPathExpanded( Gaffer.DictPath( d, "/2" ), True )
+		self.assertEqual( len( c ), 2 )
+		
+		e = w.getExpandedPaths()
+		self.assertEqual( len( e ), 2 )
+
+		w.setExpandedPaths( [] )
+		self.assertEqual( len( c ), 3 )
+
+		w.setExpandedPaths( e )
+		self.assertEqual( len( c ), 4 )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -116,10 +116,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setSortingEnabled( True )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		
-		self._qtWidget().expanded.connect( Gaffer.WeakMethod( self.__expanded ) )
-		self._qtWidget().collapsed.connect( Gaffer.WeakMethod( self.__collapsed ) )
-		self.__expandedPaths = set()
-		
+		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
+				
 		self.__sortProxyModel = QtGui.QSortFilterProxyModel()
 		self.__sortProxyModel.setSortRole( QtCore.Qt.UserRole )
 		
@@ -151,7 +149,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
 		self.__currentDir = None
 		self.__currentPath = ""
-		self.__expandedPaths.clear()
 		self.__update()
 
 	def getPath( self ) :
@@ -189,17 +186,20 @@ class PathListingWidget( GafferUI.Widget ) :
 			return self._qtWidget().isExpanded( index )
 		
 		return False
-		
+	
 	def setExpandedPaths( self, paths ) :
 	
-		self._qtWidget().collapseAll()
+		indices = []
 		for path in paths :
-			self.setPathExpanded( path, True )
-		self.__expandedPaths = set( paths )
+			index = self.__indexForPath( path )
+			if index.isValid() :
+				indices.append( index )
+		
+		self._qtWidget().setExpandedIndices( indices )
 		
 	def getExpandedPaths( self ) :
 	
-		return self.__expandedPaths
+		return [ self.__pathForIndex( i ) for i in self._qtWidget().getExpandedIndices() ]
 		
 	def expansionChangedSignal( self ) :
 	
@@ -240,10 +240,8 @@ class PathListingWidget( GafferUI.Widget ) :
 	# even when in single selection mode.
 	def getSelectedPaths( self ) :
 	
-		result = []
 		selectedRows = self._qtWidget().selectionModel().selectedRows()
-		selectedSourceRows = [ self.__sortProxyModel.mapToSource( x ) for x in selectedRows ]
-		return [ x.internalPointer().path() for x in selectedSourceRows ]
+		return [ self.__pathForIndex( index ) for index in selectedRows ]
 	
 	## Sets the currently selected paths. Paths which are not currently being displayed
 	# will be discarded, such that subsequent calls to getSelectedPaths will not include them.
@@ -373,18 +371,19 @@ class PathListingWidget( GafferUI.Widget ) :
 	
 		return self.__sortProxyModel.mapToSource( modelIndex ).internalPointer().path()
 		
-	def __expanded( self, modelIndex ) :
+	def __expansionChanged( self ) :
 	
-		self.__expandedPaths.add( self.__pathForIndex( modelIndex ) )
 		self.__expansionChangedSignal( self )
-
-	def __collapsed( self, modelIndex ) :
-	
-		self.__expandedPaths.remove( self.__pathForIndex( modelIndex ) )
-		self.__expansionChangedSignal( self )
-		
-# Private implementation - a QTreeView with some specific size behaviour
+				
+# Private implementation - a QTreeView with some specific size behaviour, and shift
+# clicking for recursive expand/collapse.
 class _TreeView( QtGui.QTreeView ) :
+
+	# This signal is called when some items are either collapsed or
+	# expanded. It can be preferable to use this over the expanded or
+	# collapsed signals as it is emitted only once when making several
+	# changes.
+	expansionChanged = QtCore.pyqtSignal()
 
 	def __init__( self ) :
 	
@@ -395,14 +394,16 @@ class _TreeView( QtGui.QTreeView ) :
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
 		
-		self.collapsed.connect( self.__recalculateColumnSizes )
-		self.expanded.connect( self.__recalculateColumnSizes )
+		self.collapsed.connect( self.__collapsed )
+		self.expanded.connect( self.__expanded )
 	
 		self.__recalculatingColumnWidths = False
 		# the ideal size for each column. we cache these because they're slow to compute
 		self.__idealColumnWidths = [] 
 		# offsets to the ideal sizes made by the user
-		self.__columnWidthAdjustments = [] 
+		self.__columnWidthAdjustments = []
+		
+		self.__currentEventModifiers = QtCore.Qt.NoModifier
 	
 	def setModel( self, model ) :
 	
@@ -411,6 +412,43 @@ class _TreeView( QtGui.QTreeView ) :
 		model.modelReset.connect( self.__recalculateColumnSizes )
 
 		self.__recalculateColumnSizes()
+	
+	def setExpandedIndices( self, indices ) :
+	
+		self.collapsed.disconnect( self.__collapsed )
+		self.expanded.disconnect( self.__expanded )
+
+		self.collapseAll()
+		for index in indices :
+			self.setExpanded( index, True )
+
+		self.collapsed.connect( self.__collapsed )
+		self.expanded.connect( self.__expanded )
+	
+		self.__recalculateColumnSizes()
+
+		self.expansionChanged.emit()
+	
+	## \todo This isn't returning expanded items which are
+	# parented below collapsed items. Changing this either
+	# means a full traversal of the entire tree, or keeping
+	# track of a set of expanded indices in __collapsed/__expanded.
+	# Traversing the entire tree might not be too expensive
+	# if we get the model populated lazily using fetchMore()
+	# though.	
+	def getExpandedIndices( self ) :
+	
+		result = []		
+		model = self.model()
+		def walk( index ) :
+			for i in range( 0, model.rowCount( index ) ) :
+				childIndex = model.index( i, 0, index )
+				if self.isExpanded( childIndex ) :
+					result.append( childIndex )
+					walk( childIndex )
+									
+		walk( QtCore.QModelIndex() )		
+		return result
 	
 	def sizeHint( self ) :
 	
@@ -422,9 +460,23 @@ class _TreeView( QtGui.QTreeView ) :
 		result.setHeight( max( result.width() * .5, result.height() ) )
 		
 		return result
+	
+	def mouseReleaseEvent( self, event ) :
+	
+		# we store the modifiers so that we can turn single
+		# expands/collapses into recursive ones in __propagateExpanded.
+		self.__currentEventModifiers = event.modifiers()
+		QtGui.QTreeView.mouseReleaseEvent( self, event )
+		self.__currentEventModifiers = QtCore.Qt.NoModifier
+	
+	def mouseDoubleClickEvent( self, event ) :
+	
+		self.__currentEventModifiers = event.modifiers()
+		QtGui.QTreeView.mouseDoubleClickEvent( self, event )
+		self.__currentEventModifiers = QtCore.Qt.NoModifier
 		
-	def __recalculateColumnSizes( self, *unusedArgs ) :
-		
+	def __recalculateColumnSizes( self ) :
+				
 		self.__recalculatingColumnWidths = True
 	
 		header = self.header()
@@ -451,7 +503,51 @@ class _TreeView( QtGui.QTreeView ) :
 		# we can apply it again in __recalculateColumnSizes
 		if len( self.__idealColumnWidths ) > index :
 			self.__columnWidthAdjustments[index] = newWidth - self.__idealColumnWidths[index]
+	
+	def __collapsed( self, index ) :
+	
+		self.__propagateExpanded( index, False )
+		self.__recalculateColumnSizes()
+
+		self.expansionChanged.emit()
 		
+	def __expanded( self, index ) :
+	
+		self.__propagateExpanded( index, True )
+		self.__recalculateColumnSizes()
+		
+		self.expansionChanged.emit()
+	
+	def __propagateExpanded( self, index, expanded ) :
+	
+		def __walk( index, expanded, numLevels ) :
+	
+			model = self.model()
+			while model.canFetchMore( index ) :
+				model.fetchMore( index )
+		
+			for i in range( 0, model.rowCount( index ) ) :
+				childIndex = model.index( i, 0, index )
+				self.setExpanded( childIndex, expanded )
+				if numLevels - 1 :
+					__walk( childIndex, expanded, numLevels - 1 )
+
+		numLevels = 0
+		if self.__currentEventModifiers & QtCore.Qt.ShiftModifier :
+			numLevels = 10000
+		elif self.__currentEventModifiers & QtCore.Qt.ControlModifier :
+			numLevels = 1
+		
+		if numLevels :
+			
+			self.collapsed.disconnect( self.__collapsed )
+			self.expanded.disconnect( self.__expanded )
+			
+			__walk( index, expanded, numLevels )
+			
+			self.collapsed.connect( self.__collapsed )
+			self.expanded.connect( self.__expanded )
+							
 class _PathItem() :
 
 	def __init__( self, path, columns, parent = None, row = 0 ) :
