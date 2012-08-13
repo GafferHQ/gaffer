@@ -53,7 +53,7 @@ def appendDefinitions( menuDefinition, name="" ) :
 def restore( menu, name ) :
 	
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
-	layout = GafferUI.Layouts.create( name, scriptWindow.script() )
+	layout = GafferUI.Layouts.create( name, scriptWindow.scriptNode() )
 		
 	scriptWindow.setLayout( layout )
 
