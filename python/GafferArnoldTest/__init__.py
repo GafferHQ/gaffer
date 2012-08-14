@@ -35,6 +35,7 @@
 ##########################################################################
 
 from ArnoldShaderTest import ArnoldShaderTest
+from ArnoldRenderTest import ArnoldRenderTest
 
 if __name__ == "__main__":
 	import unittest

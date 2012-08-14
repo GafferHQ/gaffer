@@ -39,7 +39,6 @@ import os
 import IECore
 
 import Gaffer
-import GafferUI
 
 class execute( Gaffer.Application ) :
 
@@ -65,6 +64,14 @@ class execute( Gaffer.Application ) :
 						"then all executable nodes will be found automatically.",
 					defaultValue = IECore.StringVectorData( [] ),
 				),
+				
+				IECore.FrameListParameter(
+					name = "frames",
+					description = "The frames to execute.",
+					defaultValue = "1",
+					allowEmptyList = False,
+				),
+				
 			]
 			
 		)
@@ -101,9 +108,12 @@ class execute( Gaffer.Application ) :
 				IECore.msg( IECore.Msg.Level.Error, "gaffer execute", "Script has no executable nodes" )
 				return 1
 		
-		## \todo Execution context including frame range etc.
-		for node in nodes :
-			node.execute()
+		context = Gaffer.Context()
+		for frame in self.parameters()["frames"].getFrameListValue().asList() :
+			context.setFrame( frame )
+			with context :
+				for node in nodes :
+					node.execute()
 		
 		return 0
 

@@ -157,6 +157,8 @@ can be constructed easily.
 
 * The ExpressionNode now supports string as well as numeric output types.
 
+* The execute app now operates over frame ranges defined using the -frames command line argument.
+
 0.34.0
 ------
 

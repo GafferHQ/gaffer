@@ -34,8 +34,52 @@
 #  
 ##########################################################################
 
+import os
+import unittest
+import subprocess
+
+import IECore
+
+import Gaffer
 import GafferScene
+import GafferArnold
 
-from _GafferArnold import *
+class ArnoldRenderTest( unittest.TestCase ) :
 
-from ArnoldRender import ArnoldRender
+	__scriptFileName = "/tmp/test.gfr"
+	
+	def testExecute( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["plane"] = GafferScene.Plane()
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["mode"].setValue( "generate" )
+		s["render"]["in"].setInput( s["plane"]["out"] )
+		
+		s["expression"] = Gaffer.ExpressionNode()
+		s["expression"]["engine"].setValue( "python" )
+		s["expression"]["expression"].setValue( "parent['render']['fileName'] = '/tmp/test.%d.ass' % int( context['frame'] )" )
+
+		s["fileName"].setValue( self.__scriptFileName )
+		s.save()
+		
+		p = subprocess.Popen(
+			"gaffer execute " + self.__scriptFileName + " -frames 1-3",
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+		self.failIf( p.returncode )
+		
+		for i in range( 1, 4 ) :
+			self.failUnless( os.path.exists( "/tmp/test.%d.ass" % i ) )
+	
+	def setUp( self ) :
+	
+		for i in range( 1, 4 ) :
+			if os.path.exists( "/tmp/test.%d.ass" % i ) :
+				os.remove( "/tmp/test.%d.ass" % i )
+	
+if __name__ == "__main__":
+	unittest.main()
