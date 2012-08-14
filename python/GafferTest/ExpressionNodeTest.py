@@ -109,6 +109,23 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s2.execute( ss )
 		
 		self.assertEqual( s2["m2"]["product"].getValue(), 400 )
+	
+	def testStringOutput( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.StringPlug()
+		
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent['n']['p'] = '#%d' % int( context['frame'] )" )
+	
+		context = Gaffer.Context()
+		for i in range( 0, 10 ) :
+			context.setFrame( i )
+			with context :
+				self.assertEqual( s["n"]["p"].getValue(), "#%d" % i )
 			
 if __name__ == "__main__":
 	unittest.main()

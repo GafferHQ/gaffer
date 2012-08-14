@@ -239,6 +239,15 @@ ValuePlugPtr ExpressionNode::createPlug( const ValuePlug *partner ) const
 			Plug::Default | Plug::Dynamic
 		);
 	}
+	else if( partner->isInstanceOf( StringPlug::staticTypeId() ) )
+	{
+		return new StringPlug(
+			"plug",
+			direction,
+			"",
+			Plug::Default | Plug::Dynamic
+		);
+	}
 	throw IECore::Exception( boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % partner->fullName() % partner->typeName() ) );
 }
 

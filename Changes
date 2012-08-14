@@ -155,6 +155,8 @@ can be constructed easily.
 
 * Layouts now remember their correct splitting ratios when they're saved. Added a useful layout for use with scenes.
 
+* The ExpressionNode now supports string as well as numeric output types.
+
 0.34.0
 ------
 
