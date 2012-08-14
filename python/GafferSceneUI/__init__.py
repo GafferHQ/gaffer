@@ -35,6 +35,7 @@
 ##########################################################################
 
 from SceneEditor import SceneEditor
+from SceneInspector import SceneInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
 import SceneNodeUI
 import SceneView

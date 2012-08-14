@@ -56,7 +56,8 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				allowMultipleSelection = True,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
-
+			
+			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 		
 		self.__plug = None		
@@ -91,5 +92,14 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		paths = IECore.StringVectorData( [ "/" ] + [ str( path ) for path in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
 			self.getContext().set( "ui:scene:expandedPaths", paths )
+	
+	def __selectionChanged( self, pathListing ) :
+	
+		assert( pathListing is self.__pathListing )
+
+		paths = pathListing.getSelectedPaths()
+		paths = IECore.StringVectorData( [ str( path ) for path in paths ] )
+		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
+			self.getContext().set( "ui:scene:selectedPaths", paths )
 		
 GafferUI.EditorWidget.registerType( "SceneEditor", SceneEditor )
