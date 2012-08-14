@@ -95,12 +95,14 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		
 			if len( w ) > 1 :
 				# it's split
-				return "( GafferUI.SplitContainer.Orientation.%s, ( %s, %s ) )" % ( str( w.getOrientation() ), __serialise( w[0] ), __serialise( w[1] ) )		
+				sizes = w.getSizes()
+				splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
+				return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, __serialise( w[0] ), __serialise( w[1] ) )		
 			else :
 				# not split
 				return repr( tuple( w[0][:] ) )
 			
-		return "GafferUI.CompoundEditor( children = %s )" % __serialise( self.__splitContainer )
+		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % __serialise( self.__splitContainer )
 
 	def __buttonPress( self, splitContainer, event ) :
 		
@@ -219,9 +221,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		if len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
 		
 			self.__split( splitContainer, children[0], 0 )
-			self.__addChildren( splitContainer[0], children[1][0] )
-			self.__addChildren( splitContainer[1], children[1][1] )
-
+			self.__addChildren( splitContainer[0], children[2][0] )
+			self.__addChildren( splitContainer[1], children[2][1] )
+			splitContainer.setSizes( [ children[1], 1.0 - children[1] ] )
+			
 		else :
 		
 			for c in children :

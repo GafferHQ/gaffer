@@ -153,6 +153,8 @@ can be constructed easily.
 
 * The PathListing widget now allows multiple levels of hierarchy to be expanded, by holding either Shift (all levels) or Control (one level) while expanding a level. In addition, expansionChangedSignal() is not emitted only once for batched changes, such as those caused by setExpandedPaths() and the new recursive expansion/collapsing.
 
+* Layouts now remember their correct splitting ratios when they're saved. Added a useful layout for use with scenes.
+
 0.34.0
 ------
 

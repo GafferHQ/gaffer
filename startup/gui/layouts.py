@@ -37,5 +37,6 @@
 
 import GafferUI
 
-GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, ( ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.GraphEditor( scriptNode ),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, ( (GafferUI.NodeEditor( scriptNode ),), (GafferUI.ScriptEditor( scriptNode ),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.5, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.GraphEditor( scriptNode ),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.NodeEditor( scriptNode ),), (GafferUI.ScriptEditor( scriptNode ),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Scene", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.772664, ( ( GafferUI.SplitContainer.Orientation.Horizontal, 0.255898, ( (GafferSceneUI.SceneEditor( scriptNode ),), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( ( GafferUI.SplitContainer.Orientation.Vertical, 1.000000, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.TimeEditor( scriptNode ),) ) ), (GafferUI.GraphEditor( scriptNode ),) ) ) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( (GafferUI.NodeEditor( scriptNode ),), (GafferSceneUI.SceneInspector( scriptNode ),) ) ) ) ) )" )
 GafferUI.Layouts.add( "Empty", "GafferUI.CompoundEditor( scriptNode )" )
