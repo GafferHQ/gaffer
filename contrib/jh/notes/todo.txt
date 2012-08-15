@@ -5,8 +5,6 @@ PRIORITIES!!!!
 	* selection in the viewer, and expansion in the SceneEditor driving expansion of the procedural
 		- do properly!
 
-	* filters!
-
 	* shaders with connections!
 
 	* caching
@@ -25,6 +23,10 @@ PRIORITIES!!!!
 
 * improved ui for arnold shaders
 	- support gaffer.metadata?
+
+* ### support in StringPlugs
+	- automatic expansion of arbitrary keys from the context in a new getExpandedValue() method
+		- or have getValue() automatically do the expansion if it detects that there is a current computation?
 
 * i'm pretty sure we've got circular references in the menu code for CompoundEditor.
 
@@ -174,9 +176,6 @@ PRIORITIES!!!!
 * make layout menu line up with button
 	* Widget.bound() method
 	* MenuButton?
-
-* fix the flickering widget on open
-	- it's the menu bar
 
 * read and write nodes using context
 	* maybe implemented in c++ too?
