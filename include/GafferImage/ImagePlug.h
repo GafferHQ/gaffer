@@ -89,6 +89,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		////////////////////////////////////////////////////////////////////
 		//@{
 		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		/// \todo This should be spawning threads.
 		IECore::ImagePrimitivePtr image() const;
 		//@}
 		

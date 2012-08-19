@@ -95,6 +95,9 @@ PRIORITIES!!!!
 * image nodes
 	- frame support for reader
 	- ocio node
+
+* config
+	- user config in ~/gaffer needs to be versioned by major version
 	
 * scene nodes 
 	- modelcachesource DONE
