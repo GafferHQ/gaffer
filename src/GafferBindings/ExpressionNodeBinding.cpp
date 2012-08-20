@@ -159,6 +159,18 @@ static void registerEngine( const std::string &engineType, object creator )
 	ExpressionNode::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
 }
 
+static tuple registeredEnginesWrapper()
+{
+	std::vector<std::string> engineTypes;
+	ExpressionNode::Engine::registeredEngines( engineTypes );
+	boost::python::list l;
+	for( std::vector<std::string>::const_iterator it = engineTypes.begin(); it!=engineTypes.end(); it++ )
+	{
+		l.append( *it );
+	}
+	return boost::python::tuple( l );
+}
+
 void GafferBindings::bindExpressionNode()
 {
 	
@@ -167,6 +179,7 @@ void GafferBindings::bindExpressionNode()
 	IECorePython::RefCountedClass<ExpressionNode::Engine, IECore::RefCounted, EngineWrapperPtr>( "Engine" )
 		.def( init<>() )
 		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )
+		.def( "registeredEngines", &registeredEnginesWrapper ).staticmethod( "registeredEngines" )
 	;
 
 }

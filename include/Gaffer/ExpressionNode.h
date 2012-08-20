@@ -84,6 +84,7 @@ class ExpressionNode : public Node
 				
 				typedef boost::function<EnginePtr ( const std::string &expression )> Creator;
 				static void registerEngine( const std::string engineType, Creator creator );
+				static void registeredEngines( std::vector<std::string> &engineTypes );
 
 			private :
 			

@@ -59,7 +59,7 @@ ExpressionNode::ExpressionNode( const std::string &name )
 		new StringPlug(
 			"engine",
 			Plug::In,
-			"",
+			"python",
 			Plug::Default & ~( Plug::AcceptsInputs | Plug::PerformsSubstitutions )
 		)
 	);
@@ -176,7 +176,11 @@ void ExpressionNode::parentChanged( GraphComponent *child, GraphComponent *oldPa
 	{
 		// assume we've just been created and parented during the loading of a script.
 		// our plugs are already set up, so we just need to make sure we have an engine.
-		m_engine = Engine::create( enginePlug()->getValue(), expressionPlug()->getValue() );	
+		std::string expression = expressionPlug()->getValue();
+		if( expression.size() )
+		{
+			m_engine = Engine::create( enginePlug()->getValue(), expression );	
+		}
 	}
 }
 
@@ -282,6 +286,15 @@ ExpressionNode::EnginePtr ExpressionNode::Engine::create( const std::string engi
 void ExpressionNode::Engine::registerEngine( const std::string engineType, Creator creator )
 {
 	creators()[engineType] = creator;
+}
+
+void ExpressionNode::Engine::registeredEngines( std::vector<std::string> &engineTypes )
+{
+	const CreatorMap &m = creators();
+	for( CreatorMap::const_iterator it = m.begin(); it!=m.end(); it++ )
+	{
+		engineTypes.push_back( it->first );
+	}
 }
 
 ExpressionNode::Engine::CreatorMap &ExpressionNode::Engine::creators()

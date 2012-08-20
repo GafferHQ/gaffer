@@ -171,6 +171,7 @@ from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
+import ExpressionNodeUI
 
 # then stuff specific to parameterised objects
 

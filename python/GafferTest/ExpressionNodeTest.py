@@ -126,6 +126,17 @@ class ExpressionNodeTest( unittest.TestCase ) :
 			context.setFrame( i )
 			with context :
 				self.assertEqual( s["n"]["p"].getValue(), "#%d" % i )
-			
+	
+	def testRegisteredEngines( self ) :
+	
+		e = Gaffer.ExpressionNode.Engine.registeredEngines()
+		self.failUnless( isinstance( e, tuple ) )
+		self.failUnless( "python" in e )
+		
+	def testDefaultEngine( self ) :
+	
+		e = Gaffer.ExpressionNode()
+		self.assertEqual( e["engine"].getValue(), "python" )
+	
 if __name__ == "__main__":
 	unittest.main()
