@@ -74,9 +74,42 @@ class ArnoldRenderTest( unittest.TestCase ) :
 		
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( "/tmp/test.%d.ass" % i ) )
+
+	def testWaitForImage( self ) :
 	
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		
+		s["displays"] = GafferScene.Displays()
+		s["displays"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"/tmp/test.tif",
+				"tiff",
+				"rgba",
+				{}
+			)
+		)
+		s["displays"]["in"].setInput( s["plane"]["out"] )
+		
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		
+		s["render"]["verbosity"].setValue( 1 )
+		s["render"]["fileName"].setValue( "/tmp/test.ass" )
+
+		s["fileName"].setValue( self.__scriptFileName )
+		
+		s["render"].execute()
+			
+		self.failUnless( os.path.exists( "/tmp/test.tif" ) )		
+			
 	def setUp( self ) :
 	
+		if os.path.exists( "/tmp/test.tif" ) :
+				os.remove( "/tmp/test.ass" )
+				
 		for i in range( 1, 4 ) :
 			if os.path.exists( "/tmp/test.%d.ass" % i ) :
 				os.remove( "/tmp/test.%d.ass" % i )

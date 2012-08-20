@@ -159,6 +159,8 @@ can be constructed easily.
 
 * The execute app now operates over frame ranges defined using the -frames command line argument.
 
+* When not in gui mode, the Render node waits for the render subprocess to complete before returning from execute().
+
 0.34.0
 ------
 

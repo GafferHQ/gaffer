@@ -133,6 +133,10 @@ class Render( Gaffer.Node ) :
 		
 	def __launchExternalRender( self, commandAndArgs ) :
 	
-		subprocess.Popen( commandAndArgs )
+		p = subprocess.Popen( commandAndArgs )
+		
+		applicationRoot = self.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+		if applicationRoot is None or applicationRoot.getName() != "gui" :
+			p.wait()
 		
 IECore.registerRunTimeTyped( Render )
