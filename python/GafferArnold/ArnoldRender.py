@@ -75,7 +75,7 @@ class ArnoldRender( GafferScene.Render ) :
 			
 	def _createRenderer( self ) :
 	
-		return IECoreArnold.Renderer( self["fileName"].getValue() )
+		return IECoreArnold.Renderer( self.__fileName() )
 		
 	def _outputProcedural( self, procedural, bound, renderer ) :
 	
@@ -104,10 +104,20 @@ class ArnoldRender( GafferScene.Render ) :
 		
 		mode = self["mode"].getValue()
 		if mode == "render" :
-			return [ "kick", "-dp",  "-dw", "-v", str( self["verbosity"].getValue() ), self["fileName"].getValue() ]
+			return [ "kick", "-dp",  "-dw", "-v", str( self["verbosity"].getValue() ), self.__fileName() ]
 		elif mode == "expand" :
-			return [ "kick", "-v", str( self["verbosity"].getValue() ), "-resaveop", self["fileName"].getValue(), self["fileName"].getValue() ]
+			return [ "kick", "-v", str( self["verbosity"].getValue() ), "-resaveop", self.__fileName(), self.__fileName() ]
 		
 		return []
+		
+	def __fileName( self ) : 
+	
+		result = self["fileName"].getValue()
+		# because execute() isn't called inside a compute(), we
+		# don't get string expansions automatically, and have to
+		# do them ourselves.
+		## \todo Can we improve this situation?
+		result = Gaffer.Context.current().substitute( result )
+		return result
 		
 IECore.registerRunTimeTyped( ArnoldRender )

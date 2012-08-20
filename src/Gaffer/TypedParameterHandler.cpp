@@ -80,6 +80,14 @@ Gaffer::PlugPtr TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent,
 	if( !m_plug || m_plug->direction()!=direction )
 	{
 		m_plug = new PlugType( m_parameter->name(), direction, m_parameter->typedDefaultValue() );
+		if( m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) )
+		{
+			// we have to turn off substitutions because they'd remove the #### destined
+			// for the parameter. it's a bit naughty to have FileSequenceParameter-specific
+			// code in here, but i think it's preferable to deriving off a whle new
+			// ParameterHandler just to add this one line of code.
+			m_plug->setFlags( Plug::PerformsSubstitutions, false );
+		}
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 

@@ -232,6 +232,17 @@ class ContextTest( unittest.TestCase ) :
 		with Gaffer.Context() as c :
 			self.failUnless( isinstance( c, Gaffer.Context ) )
 			self.failUnless( c.isSame( Gaffer.Context.current() ) ) 
+	
+	def testSubstitute( self ) :
+	
+		c = Gaffer.Context()
+		c.setFrame( 20 )
+		c["a"] = "apple"
+		c["b"] = "bear"
+		
+		self.assertEqual( c.substitute( "$a/$b/something.###.tif" ), "apple/bear/something.020.tif" )
+		self.assertEqual( c.substitute( "$a/$dontExist/something.###.tif" ), "apple//something.020.tif" )
+		self.assertEqual( c.substitute( "${badlyFormed" ), "" )
 		
 if __name__ == "__main__":
 	unittest.main()

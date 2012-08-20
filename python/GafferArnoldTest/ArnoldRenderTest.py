@@ -104,15 +104,79 @@ class ArnoldRenderTest( unittest.TestCase ) :
 		s["render"].execute()
 			
 		self.failUnless( os.path.exists( "/tmp/test.tif" ) )		
+	
+	def testExecuteWithStringSubstitutions( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["plane"] = GafferScene.Plane()
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["mode"].setValue( "generate" )
+		s["render"]["in"].setInput( s["plane"]["out"] )
+		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
+
+		s["fileName"].setValue( self.__scriptFileName )
+		s.save()
+		
+		p = subprocess.Popen(
+			"gaffer execute " + self.__scriptFileName + " -frames 1-3",
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+		self.failIf( p.returncode )
+		
+		for i in range( 1, 4 ) :
+			self.failUnless( os.path.exists( "/tmp/test.%04d.ass" % i ) )
+	
+	def testImageOutput( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		
+		s["displays"] = GafferScene.Displays()
+		s["displays"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"/tmp/test.####.tif",
+				"tiff",
+				"rgba",
+				{}
+			)
+		)
+		s["displays"]["in"].setInput( s["plane"]["out"] )
+		
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		
+		s["render"]["verbosity"].setValue( 1 )
+		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
+
+		s["fileName"].setValue( self.__scriptFileName )
+		s.save()
+		
+		c = Gaffer.Context()
+		for i in range( 1, 4 ) :
+			c.setFrame( i )
+			with c :
+				s["render"].execute()
 			
+		for i in range( 1, 4 ) :
+			self.failUnless( os.path.exists( "/tmp/test.%04d.tif" % i ) )		
+		
 	def setUp( self ) :
 	
 		if os.path.exists( "/tmp/test.tif" ) :
-				os.remove( "/tmp/test.ass" )
+			os.remove( "/tmp/test.tif" )
 				
 		for i in range( 1, 4 ) :
 			if os.path.exists( "/tmp/test.%d.ass" % i ) :
 				os.remove( "/tmp/test.%d.ass" % i )
-	
+			if os.path.exists( "/tmp/test.%04d.ass" % i ) :
+				os.remove( "/tmp/test.%04d.ass" % i )
+			if os.path.exists( "/tmp/test.%04d.tif" % i ) :
+				os.remove( "/tmp/test.%04d.tif" % i )
+				
 if __name__ == "__main__":
 	unittest.main()

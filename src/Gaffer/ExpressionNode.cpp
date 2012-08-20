@@ -55,9 +55,22 @@ IE_CORE_DEFINERUNTIMETYPED( ExpressionNode );
 ExpressionNode::ExpressionNode( const std::string &name )
 	:	Node( name ), m_engine( 0 )
 {
-	/// \todo Make both these plugs non-connectable when we have that flag.
-	addChild( new StringPlug( "engine" ) );
-	addChild( new StringPlug( "expression" ) );
+	addChild(
+		new StringPlug(
+			"engine",
+			Plug::In,
+			"",
+			Plug::Default & ~( Plug::AcceptsInputs | Plug::PerformsSubstitutions )
+		)
+	);
+	addChild(
+		new StringPlug(
+			"expression",
+			Plug::In,
+			"",
+			Plug::Default & ~( Plug::AcceptsInputs | Plug::PerformsSubstitutions )
+		)
+	);
 
 	plugSetSignal().connect( boost::bind( &ExpressionNode::plugSet, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &ExpressionNode::parentChanged, this, ::_1, ::_2 ) );

@@ -67,7 +67,15 @@ class ValuePlug::Computation
 			:	m_resultPlug( resultPlug ), m_resultWritten( false )
 		{
 			g_threadComputations.local().push( this );
+		}
 		
+		~Computation()
+		{
+			g_threadComputations.local().pop();
+		}
+
+		bool compute() 
+		{
 			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
 			{
 				// cast is ok, because we know that the resulting setValue() call won't
@@ -91,13 +99,9 @@ class ValuePlug::Computation
 			// on the result plug, which in turn will call ValuePlug::setObjectValue, which will
 			// then store the result in the current computation.
 			
+			return m_resultWritten;
 		}
-		
-		~Computation()
-		{
-			g_threadComputations.local().pop();
-		}
-	
+			
 		static Computation *current()
 		{
 			ComputationStack &s = g_threadComputations.local();
@@ -188,7 +192,7 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 	// and also actually managing the computation.
 	Computation computation( this );
 
-	if( !computation.m_resultWritten )
+	if( !computation.compute() )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % fullName() ) );			
 	}
@@ -235,6 +239,11 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 	
 	computation->m_resultValue = value;
 	computation->m_resultWritten = true;
+}
+
+bool ValuePlug::inCompute() const
+{
+	return Computation::current();
 }
 
 void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )

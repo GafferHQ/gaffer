@@ -35,9 +35,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedPlug.h"
-
 #include "OpenEXR/ImathFun.h"
+
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/Context.h"
 
 using namespace Gaffer;
 
@@ -128,7 +129,22 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M44fPlug, M44fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox3fPlug, AtomicBox3fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox2iPlug, AtomicBox2iPlugTypeId )
 
+// specialise StringPlug::getValue() to perform substitutions.
+template<>
+std::string StringPlug::getValue() const
+{	
+	bool performSubstitution = direction()==Plug::In && inCompute() && Plug::getFlags( Plug::PerformsSubstitutions );
+		
+	IECore::ConstObjectPtr o = getObjectValue();
+	if( o )
+	{
+		const std::string &s = static_cast<const IECore::StringData *>( o.get() )->readable();
+		return performSubstitution ? Context::current()->substitute( s ) : s;
+	}
+	return performSubstitution ? Context::current()->substitute( m_defaultValue ) : m_defaultValue;
 }
+
+} // namespace Gaffer
 
 // explicit instantiation
 template class TypedPlug<bool>;

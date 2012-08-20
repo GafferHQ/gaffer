@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,6 +45,7 @@ class WriteNodeTest( unittest.TestCase ) :
 
 	__exrFileName = "/tmp/checker.exr"
 	__tifFileName = "/tmp/checker.tif"
+	__exrSequence = IECore.FileSequence( "/tmp/checker.####.exr 1-4" )
 
 	def test( self ) :
 	
@@ -106,12 +107,30 @@ class WriteNodeTest( unittest.TestCase ) :
 
 		self.failIf( "parameters1" in s["n"] )
 		
+	def testStringSubstitutions( self ) :
+	
+		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
+		checker = IECore.Reader.create( checker ).read()
+		
+		node = Gaffer.WriteNode()
+		node["fileName"].setValue( self.__exrSequence.fileName )
+		node["in"].setValue( checker )
+		
+		for i in self.__exrSequence.frameList.asList() :
+			context = Gaffer.Context()
+			context.setFrame( i )
+			with context :
+				node.execute()
+		
+		for f in self.__exrSequence.fileNames() :
+			self.failUnless( os.path.exists( f ) )
+		
 	def tearDown( self ) :
 		
 		for f in [
 			self.__tifFileName,
 			self.__exrFileName,
-		] :
+		] + self.__exrSequence.fileNames() :
 			if os.path.exists( f ) :
 				os.remove( f )
 	

@@ -76,8 +76,14 @@ class Plug : public GraphComponent
 			/// If the AcceptsInputs flag is not set, then acceptsInput() always returns
 			/// false.
 			AcceptsInputs = 0x00000004,
-			Default = Serialisable | AcceptsInputs,
-			All = Dynamic | Serialisable | AcceptsInputs
+			/// If the PerformsSubstitutions flag is set then tokens from the plug value
+			/// will automatically be substituted with values from the context during
+			/// computation. Note that currently this only applies to the StringPlug.
+			PerformsSubstitutions = 0x00000008,
+			/// When adding values, don't forget to update the Default and All values below,
+			/// and to update PlugBinding.cpp too!
+			Default = Serialisable | AcceptsInputs | PerformsSubstitutions,
+			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions
 		};
 	
 		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );

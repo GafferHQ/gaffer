@@ -86,6 +86,7 @@ from TransformPlugTest import TransformPlugTest
 from SequencePathTest import SequencePathTest
 from OpMatcherTest import OpMatcherTest
 from WeakMethodTest import WeakMethodTest
+from StringPlugTest import StringPlugTest
 
 if __name__ == "__main__":
 	import unittest

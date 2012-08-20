@@ -46,7 +46,8 @@ namespace Gaffer
 /// The Plug base class defines the concept of a connection
 /// point with direction. The ValuePlug class extends this concept
 /// to allow the connections to pass values between connection
-/// points.
+/// points, and for Node::compute() to be used to compute output
+/// values.
 class ValuePlug : public Plug
 {
 
@@ -93,6 +94,10 @@ class ValuePlug : public Plug
 		/// Should be called by derived classes when they wish to set the plug
 		/// value.
 		void setObjectValue( IECore::ConstObjectPtr value );
+		
+		/// Returns true if a computation is currently being performed on this thread -
+		/// if we are inside Node::compute().
+		bool inCompute() const;
 						
 	private :
 	

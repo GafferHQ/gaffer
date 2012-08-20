@@ -96,6 +96,33 @@ class OpHolderTest( unittest.TestCase ) :
 				
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )
+		
+	def testFileSequenceParameters( self ) :
+	
+		class TestOp( IECore.Op ) :
+		
+			def __init__( self ) :
+			
+				IECore.Op.__init__( self, "", IECore.IntParameter( "result", "", 0 ) )
+				
+				self.parameters().addParameter(
+				
+					IECore.FileSequenceParameter(
+						"sequence",
+						"",
+						""
+					)
+				)
+				
+			def doOperation( self, args ) :
+			
+				return IECore.IntData( len( self["sequence"].getFileSequenceValue().fileNames() ) )
+	
+		holder = Gaffer.OpHolder()
+		holder.setParameterised( TestOp() )
+		holder["parameters"]["sequence"].setValue( "test.###.exr 1-3" )
+		
+		self.assertEqual( holder["result"].getValue(), 3 )
 	
 	def testRunTimeTyped( self ) :
 	

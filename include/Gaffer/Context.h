@@ -91,6 +91,14 @@ class Context : public IECore::RefCounted
 		bool operator == ( const Context &other );
 		bool operator != ( const Context &other );
 		
+		/// Performs variable substitution of $name, ${name} and ###
+		/// keys in input, using values from the context.
+		/// \todo I'm not entirely sure this belongs here. If we had
+		/// an abstract base class for dictionary-style access to things
+		/// then we could have a separate substitute() function capable
+		/// of accepting Contexts, CompoundData, CompoundObjects etc.
+		std::string substitute( const std::string &input ) const;
+		
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
 		class Scope

@@ -142,6 +142,7 @@ void bindContext()
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
 		.def( self == self )
 		.def( self != self )
+		.def( "substitute", &Context::substitute )
 		.def( "current", &current ).staticmethod( "current" )
 		;
 

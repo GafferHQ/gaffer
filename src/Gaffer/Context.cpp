@@ -38,6 +38,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "boost/lexical_cast.hpp"
+
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/Context.h"
@@ -90,6 +92,91 @@ bool Context::operator == ( const Context &other )
 bool Context::operator != ( const Context &other )
 {
 	return m_data->isNotEqualTo( other.m_data.get() );
+}
+
+std::string Context::substitute( const std::string &s ) const
+{
+	std::string result;
+	size_t size = s.size();
+	result.reserve( size ); // might need more or less, but this is a decent ballpark
+	for( size_t i=0; i<size; )
+	{
+		if( s[i] == '$' )
+		{
+			std::string variableName;
+			i++; // skip $
+			bool bracketed = ( i < size ) && s[i]=='{';
+			if( bracketed )
+			{
+				i++; // skip initial bracket
+				while( i < size && s[i] != '}' )
+				{
+					variableName.push_back( s[i] );
+					i++;
+				}
+				i++; // skip final bracket
+			}
+			else
+			{
+				while( i < size && isalnum( s[i] ) )
+				{
+					variableName.push_back( s[i] );
+					i++;
+				}
+			}
+			
+			const IECore::Data *d = 0;
+			try
+			{
+				d = get<IECore::Data>( variableName );
+			}
+			catch( ... )
+			{
+			}
+			
+			if( d )
+			{
+				switch( d->typeId() )
+				{
+					case IECore::StringDataTypeId :
+						result += static_cast<const IECore::StringData *>( d )->readable();
+						break;
+					case IECore::FloatDataTypeId :
+						result += boost::lexical_cast<std::string>(
+							static_cast<const IECore::FloatData *>( d )->readable()
+						);
+						break;
+					case IECore::IntDataTypeId :
+						result += boost::lexical_cast<std::string>(
+							static_cast<const IECore::IntData *>( d )->readable()
+						);
+						break;	
+					default :
+						break;
+				}
+			}
+		}
+		else if( s[i] == '#' )
+		{
+			int padding = 0;
+			while( i < size && s[i]=='#' )
+			{
+				padding++;
+				i++;
+			}
+			int frame = round( getFrame() );
+			std::ostringstream padder;
+			padder << std::setw( padding ) << std::setfill( '0' ) << frame;
+			result += padder.str();
+		}
+		else
+		{
+			result.push_back( s[i] );
+			i++;
+		}
+	}
+
+	return result;
 }
 
 //////////////////////////////////////////////////////////////////////////
