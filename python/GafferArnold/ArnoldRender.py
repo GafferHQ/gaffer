@@ -82,7 +82,7 @@ class ArnoldRender( GafferScene.Render ) :
 		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )
 	
 		node = arnold.AiNode( "procedural" )
-		arnold.AiNodeSetStr( node, "dso", os.path.expandvars( "$GAFFER_ROOT/arnoldProcedurals/ieProcedural.so" ) )
+		arnold.AiNodeSetStr( node, "dso", os.path.expandvars( "$GAFFER_ROOT/arnold/procedurals/ieProcedural.so" ) )
 		
 		arnold.AiNodeSetPnt( node, "min", bound.min.x, bound.min.y, bound.min.z );
 		arnold.AiNodeSetPnt( node, "max", bound.max.x, bound.max.y, bound.max.z );
