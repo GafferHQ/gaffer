@@ -74,7 +74,7 @@ class ValuePlug::Computation
 			g_threadComputations.local().pop();
 		}
 
-		bool compute() 
+		IECore::ConstObjectPtr compute()
 		{
 			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
 			{
@@ -96,12 +96,32 @@ class ValuePlug::Computation
 			}
 			
 			// the call to compute() or setFromInput() above should cause setValue() to be called
-			// on the result plug, which in turn will call ValuePlug::setObjectValue, which will
-			// then store the result in the current computation.
-			
-			return m_resultWritten;
+			// on the result plug, which in turn will call ValuePlug::setObjectValue(), which will
+			// then store the result in the current computation by calling receiveResult().
+			if( !m_resultWritten )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % m_resultPlug->fullName() ) );			
+			}
+			return m_resultValue;
 		}
+				
+		static void receiveResult( const ValuePlug *plug, IECore::ConstObjectPtr result )
+		{
+			Computation *computation = Computation::current();
+			if( !computation )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % plug->fullName() ) );					
+			}
 			
+			if( computation->m_resultPlug != plug )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % plug->fullName() % computation->m_resultPlug->fullName() ) );						
+			}
+			
+			computation->m_resultValue = result;
+			computation->m_resultWritten = true;
+		}
+		
 		static Computation *current()
 		{
 			ComputationStack &s = g_threadComputations.local();
@@ -112,8 +132,7 @@ class ValuePlug::Computation
 			return s.top();
 		}
 	
-	/// \todo Make accessors
-	//private :
+	private :
 	
 		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
@@ -191,13 +210,7 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 	// one per context. the computation class is responsible for providing storage for the result
 	// and also actually managing the computation.
 	Computation computation( this );
-
-	if( !computation.compute() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % fullName() ) );			
-	}
-	
-	return computation.m_resultValue;
+	return computation.compute();
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
@@ -223,22 +236,9 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 	}
 
 	// an input plug with an input connection or an output plug. we must be currently in a computation
-	// triggered by getObjectValue() for a setObjectValue() call to be valid. we never trigger plugValueSet
-	// or plugDirtiedSignals during computation.
-	
-	Computation *computation = Computation::current();
-	if( !computation )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % fullName() ) );					
-	}
-	
-	if( computation->m_resultPlug != this )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % fullName() % computation->m_resultPlug->fullName() ) );						
-	}
-	
-	computation->m_resultValue = value;
-	computation->m_resultWritten = true;
+	// triggered by getObjectValue() for a setObjectValue() call to be valid (receiveResult will check this).
+	// we never trigger plugValueSet or plugDirtiedSignals during computation.
+	Computation::receiveResult( this, value );
 }
 
 bool ValuePlug::inCompute() const
