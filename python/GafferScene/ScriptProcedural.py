@@ -109,4 +109,5 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		
 		node = self.__scriptNode.getChild( args["node"].value )
 		return node["out"]
-		
+
+IECore.registerRunTimeTyped( ScriptProcedural )
