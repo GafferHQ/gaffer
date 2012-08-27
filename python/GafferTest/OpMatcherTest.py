@@ -50,8 +50,12 @@ class OpMatcherTest( unittest.TestCase ) :
 		for f in self.__sequence.fileNames() :
 			os.system( "touch %s" % f )
 
+	@unittest.expectedFailure
 	def testFile( self ) :
 	
+		# we need a suitable op as part of the gaffer install before we
+		# can have this test pass.
+		
 		matcher = Gaffer.OpMatcher.defaultInstance()
 		
 		exrFile = os.path.dirname( __file__ ) + "/images/checker.exr"

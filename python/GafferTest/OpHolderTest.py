@@ -58,7 +58,7 @@ class OpHolderTest( unittest.TestCase ) :
 		self.failUnless( "renamed" not in m )
 		
 		n = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		
 		n["parameters"]["input"].setValue( m )
@@ -77,7 +77,7 @@ class OpHolderTest( unittest.TestCase ) :
 	def testAffects( self ) :
 	
 		n = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		
 		a = n.affects( n["parameters"]["input"] )
@@ -89,7 +89,7 @@ class OpHolderTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		
 		s["op"] = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		s["op"].setOp( *opSpec )
 	
 		ss = s.serialise()

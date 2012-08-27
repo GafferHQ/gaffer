@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -48,7 +49,7 @@ class ClassLoaderPathTest( unittest.TestCase ) :
 		self.failUnless( p.isValid() )
 		self.failIf( p.isLeaf() )
 		
-		p.append( "common" )
+		p.append( "files" )
 		self.failUnless( p.isValid() )
 		self.failIf( p.isLeaf() )
 
@@ -60,11 +61,11 @@ class ClassLoaderPathTest( unittest.TestCase ) :
 		self.failUnless( p.isValid() )
 		self.failIf( p.isLeaf() )
 
-		p.setFromString( "/common/primitive/mesh/addNormals" )
+		p.setFromString( "/files/sequenceRenumber" )
 		self.failUnless( p.isValid() )
 		self.failUnless( p.isLeaf() )
 
-		p.setFromString( "/common/primitive/mesh" )
+		p.setFromString( "/files" )
 		children = p.children()
 		for child in children :
 			self.failUnless( isinstance( child, Gaffer.ClassLoaderPath ) )
@@ -72,9 +73,9 @@ class ClassLoaderPathTest( unittest.TestCase ) :
 			self.failUnless( child.isLeaf() )
 			
 		children = [ str( x ) for x in children ]
-		self.failUnless( "/common/primitive/mesh/addNormals" in children )
-		self.failUnless( "/common/primitive/mesh/addTangents" in children )
-		self.failUnless( "/common/primitive/mesh/merge" in children )
+		self.failUnless( "/files/sequenceCopy" in children )
+		self.failUnless( "/files/sequenceLs" in children )
+		self.failUnless( "/files/sequenceMove" in children )
 		
 		p.setFromString( "/" )
 		children = p.children()
@@ -82,14 +83,14 @@ class ClassLoaderPathTest( unittest.TestCase ) :
 			self.failUnless( isinstance( child, Gaffer.ClassLoaderPath ) )
 			self.assertEqual( len( child ), len( p ) + 1 )
 		
-		p.setFromString( "/common/primitive/mesh/addNormals" )
+		p.setFromString( "/mesh/normals" )
 		versions = p.info()["classLoader:versions"]
 		self.failUnless( isinstance( versions, list ) )
 		self.failUnless( len( versions ) )
 		
 	def testLoad( self ) :
 	
-		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/common/primitive/mesh/addNormals" )
+		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/mesh/normals" )
 		
 		op = p.load()()
 		self.failUnless( isinstance( op, IECore.Op ) )

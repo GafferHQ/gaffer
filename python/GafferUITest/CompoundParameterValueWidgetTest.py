@@ -46,7 +46,7 @@ class CompoundParameterValueWidgetTest( unittest.TestCase ) :
 	def testLifetime( self ) :
 
 		n = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		
 		ui = GafferUI.CompoundParameterValueWidget( n.parameterHandler() )

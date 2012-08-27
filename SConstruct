@@ -816,6 +816,7 @@ libraries = {
 			
 			# primitives
 			( "TransformOp", "ops/primitive/transform" ),
+			( "RenamePrimitiveVariables", "ops/primitive/renameVariables" ),
 			
 			# files
 			( "SequenceLsOp", "ops/files/sequenceLs" ),

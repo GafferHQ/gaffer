@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -386,12 +386,12 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 	def testClassLoading( self ) :
 	
 		ph = Gaffer.ParameterisedHolderNode()
-		classSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )
+		classSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )
 		ph.setParameterised( *classSpec )
 		
 		p = ph.getParameterised()
 		self.assertEqual( p[0].typeName(), "SequenceLsOp" )
-		self.assertEqual( p[1], "common/fileSystem/seqLs" )
+		self.assertEqual( p[1], "files/sequenceLs" )
 		self.assertEqual( p[2], classSpec[1] )
 		self.assertEqual( p[3], "IECORE_OP_PATHS" )
 
@@ -406,7 +406,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 	def testSerialisation( self ) :
 	
 		ph = Gaffer.ParameterisedHolderNode()
-		classSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )
+		classSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )
 		ph.setParameterised( *classSpec )
 			
 		s = Gaffer.ScriptNode()
@@ -532,7 +532,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		p = ph.getParameterised()[0]
 		
 		with ph.parameterModificationContext() :
-			p["class"].setClass( *self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" ) )
+			p["class"].setClass( *self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" ) )
 
 		seqLsParameterNames = p["class"].keys()	
 		for n in seqLsParameterNames :
@@ -553,7 +553,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		
 		p = s["ph"].getParameterised()[0]
 		
-		classSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )
+		classSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )
 		with s["ph"].parameterModificationContext() :
 			p["class"].setClass( *classSpec )
 		
@@ -583,8 +583,8 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
 		p = ph.getParameterised()[0]
 		
-		seqLsClassSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )[:2]
-		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		seqLsClassSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:2]
 		classes = [
 			( "p0", ) + seqLsClassSpec,
 			( "p1", ) + gradeClassSpec,
@@ -613,8 +613,8 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
 		p = ph.getParameterised()[0]
 		
-		seqLsClassSpec = self.classSpecification( "common/fileSystem/seqLs", "IECORE_OP_PATHS" )[:2]
-		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		seqLsClassSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:2]
 		classes = [
 			( "p0", ) + gradeClassSpec,
 		]
@@ -638,7 +638,7 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		s["ph"].setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
 		p = s["ph"].getParameterised()[0]
 		
-		gradeClassSpec = self.classSpecification( "common/colorSpace/grade", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:2]
 		classes = [
 			( "p0", ) + gradeClassSpec,
 		]
