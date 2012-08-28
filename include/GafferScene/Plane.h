@@ -61,6 +61,7 @@ class Plane : public ObjectSourceSceneNode
 		
 	protected :
 
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
 
 };

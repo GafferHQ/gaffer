@@ -79,6 +79,8 @@ class SceneNode : public Gaffer::Node
 		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine
 		/// information about the parent - the last thing we want to be doing when defining large scenes procedurally.
 		Imath::Box3f unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
+		/// A hash for the result of the computation in unionOfTransformedChildBounds().
+		IECore::MurmurHash hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
 		
 };
 

@@ -65,6 +65,14 @@ class CompoundPlug : public ValuePlug
 
 		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );
+
+		/// Implemented to hash all the child plugs.
+		virtual IECore::MurmurHash hash() const;
+		/// Just calls ValuePlug::hash( h ) - only
+		/// exists to workaround the problem of the
+		/// function above masking this function on
+		/// the base class.
+		void hash( IECore::MurmurHash &h ) const;
 		
 	private :
 	

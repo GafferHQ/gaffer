@@ -52,6 +52,13 @@ ImagePrimitiveSource<BaseType>::ImagePrimitiveSource( const std::string &name )
 	BaseType::addChild( new Gaffer::ObjectPlug( "__imagePrimitive", Gaffer::Plug::Out ) );
 	BaseType::addChild( new Gaffer::ObjectPlug( "__inputImagePrimitive", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputImagePrimitivePlug()->setInput( imagePrimitivePlug() );
+
+	// disable caching on our outputs, as we're basically caching the entire
+	// image ourselves in __inputImagePrimitive.
+	for( Gaffer::OutputPlugIterator it( BaseType::outPlug() ); it!=it.end(); it++ )
+	{
+		(*it)->setFlags( Gaffer::Plug::Cacheable, false );
+	}
 }
 
 template<typename BaseType>
@@ -67,6 +74,21 @@ void ImagePrimitiveSource<BaseType>::affects( const Gaffer::ValuePlug *input, Ga
 	if( input == inputImagePrimitivePlug() )
 	{
 		outputs.push_back( BaseType::outPlug() );
+	}
+}
+
+template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	BaseType::hash( output, context, h );
+	
+	if( output == imagePrimitivePlug() )
+	{
+		hashImagePrimitive( context, h );
+	}
+	else if( output->parent<ImagePlug>() == BaseType::outPlug() )
+	{
+		inputImagePrimitivePlug()->hash( h );
 	}
 }
 

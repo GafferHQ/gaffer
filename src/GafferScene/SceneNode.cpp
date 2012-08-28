@@ -65,7 +65,7 @@ const ScenePlug *SceneNode::outPlug() const
 {
 	return getChild<ScenePlug>( "out" );
 }
-				
+			
 void SceneNode::compute( ValuePlug *output, const Context *context ) const
 {
 	ScenePlug *scenePlug = output->ancestor<ScenePlug>();
@@ -122,6 +122,33 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 			);
 		}
 	}
+}
+
+IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const
+{
+	IECore::MurmurHash result;
+	ConstStringVectorDataPtr childNames = out->childNames( path );
+	if( childNames )
+	{
+		for( vector<string>::const_iterator it = childNames->readable().begin(); it != childNames->readable().end(); it++ )
+		{
+			string childPath = path;
+			if( childPath.size() > 1 )
+			{	
+				childPath += "/";
+			}
+			childPath += *it;
+			
+			result.append( out->boundHash( childPath ) );
+			result.append( out->transformHash( childPath ) );
+		}
+	}
+	else
+	{
+		result.append( typeId() );
+		result.append( "emptyBound" );
+	}
+	return result;
 }
 
 Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const

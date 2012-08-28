@@ -34,7 +34,6 @@
 #  
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
@@ -43,41 +42,26 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
+class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
-	def testFileInput( self ) :
+	def test( self ) :
 	
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
+		p = GafferScene.Plane()
+		d = GafferScene.DeletePrimitiveVariables()
+		d["in"].setInput( p["out"] )
 		
-		read = Gaffer.ReadNode( inputs = { "fileName" : fileName } )
-		object = IECore.Reader.create( fileName ).read()
-		
-		objectToScene = GafferScene.ObjectToScene( inputs = { "object" : read["output"] } )
-		
-		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/" ), None )
-		self.assertEqual( objectToScene["out"].childNames( "/" ), IECore.StringVectorData( [ "object" ] ) )
-		
-		self.assertEqual( objectToScene["out"].bound( "/object" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/object" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/object" ), object )
-		self.assertEqual( objectToScene["out"].childNames( "/object" ), None )
-
-		self.assertSceneValid( objectToScene["out"] )		
+		self.assertEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
+		self.assertSceneHashesEqual( p["out"], d["out"] )
+		self.failUnless( "s" in d["out"].object( "/plane" ) )
+		self.failUnless( "t" in d["out"].object( "/plane" ) )
 	
-	def testMeshInput( self ) :
-	
-		p = GafferScene.ObjectToScene()
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		d["names"].setValue( "s t e" )
 		
-		self.assertSceneValid( p["out"] )		
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-	
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
-
-		self.assertSceneValid( p["out"] )		
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
+		self.assertNotEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
+		self.assertSceneHashesEqual( p["out"], d["out"], childPlugNames = ( "attributes", "bound", "transform", "globals", "childNames" ) )
+		self.assertSceneHashesEqual( p["out"], d["out"], pathsToIgnore = ( "/plane" ) )		
+		self.failUnless( "s" not in d["out"].object( "/plane" ) )
+		self.failUnless( "t" not in d["out"].object( "/plane" ) )
 	
 if __name__ == "__main__":
 	unittest.main()

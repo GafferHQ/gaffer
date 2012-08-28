@@ -38,44 +38,119 @@ import unittest
 
 import IECore
 
+import Gaffer
+import GafferTest
 import GafferScene
 
-class SceneTestCase( unittest.TestCase ) :
+class SceneTestCase( GafferTest.TestCase ) :
 
 	def assertSceneValid( self, scenePlug ) :
 	
+		def walkScene( scenePath ) :
+
+			thisBound = scenePlug.bound( scenePath )
+			
+			o = scenePlug.object( "/" )
+			if isinstance( o, IECore.VisibleRenderable ) :
+				 if not thisBound.contains( o.bound() ) :
+					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
+	
+			unionOfTransformedChildBounds = IECore.Box3f()
+			childNames = scenePlug.childNames( scenePath ) or []
+			for childName in childNames :
+				
+				if scenePath == "/" :
+					childPath = scenePath + childName
+				else :
+					childPath = scenePath + "/" + childName
+				
+				childBound = scenePlug.bound( childPath )
+				childTransform = scenePlug.transform( childPath )
+				childBound = childBound.transform( childTransform )
+				
+				unionOfTransformedChildBounds.extendBy( childBound )
+				
+				walkScene( childPath )
+			
+			if not thisBound.contains( unionOfTransformedChildBounds ) :
+				self.fail( "Bound ( %s ) does not contain children ( %s ) at %s" % ( thisBound, unionOfTransformedChildBounds, scenePath ) )
+
 		# check that the root doesn't have any properties it shouldn't
 		self.assertEqual( scenePlug.attributes( "/" ), None )
 		self.assertEqual( scenePlug.transform( "/" ), IECore.M44f() )
 		self.assertEqual( scenePlug.object( "/" ), None )
 		
 		# then walk the scene to check the bounds
-		self.__walkScene( scenePlug, "/" )
-		
-	def __walkScene( self, scenePlug, scenePath ) :
-	
-		thisBound = scenePlug.bound( scenePath )
-		
-		o = scenePlug.object( "/" )
-		if isinstance( o, IECore.VisibleRenderable ) :
-			 if not thisBound.contains( o.bound() ) :
-				self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
+		walkScene( "/" )
 
-		unionOfTransformedChildBounds = IECore.Box3f()
-		for childName in scenePlug.childNames( scenePath ) :
-			
-			if scenePath == "/" :
-				childPath = scenePath + childName
-			else :
-				childPath = scenePath + "/" + childName
-			
-			childBound = scenePlug.bound( childPath )
-			childTransform = scenePlug.transform( childPath )
-			childBound = childBound.transform( childTransform )
-			
-			unionOfTransformedChildBounds.extendBy( childBound )
-			
-			self.__walkScene( scenePlug, childPath )
+	def __childPlugNames( self, childPlugNames, childPlugNamesToIgnore ) :
+	
+		if childPlugNames is None :
+			childPlugNames = ( "bound", "transform", "attributes", "object", "childNames" )
+		childPlugNames = set( childPlugNames )	
+		childPlugNames -= set( childPlugNamesToIgnore )
 		
- 		if not thisBound.contains( unionOfTransformedChildBounds ) :
-			self.fail( "Bound ( %s ) does not contain children ( %s ) at %s" % ( thisBound, unionOfTransformedChildBounds, scenePath ) )
+		return childPlugNames
+
+	def assertPathHashesEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
+	
+		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+		for childPlugName in childPlugNames :
+			hashFn1 = getattr( scenePlug1, childPlugName + "Hash" )
+			hashFn2 = getattr( scenePlug2, childPlugName + "Hash" )
+			self.assertEqual( hashFn1( scenePath1 ), hashFn2( scenePath2 ) )
+
+	def assertPathHashesNotEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
+	
+		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+		for childPlugName in childPlugNames :
+			hashFn1 = getattr( scenePlug1, childPlugName + "Hash" )
+			hashFn2 = getattr( scenePlug2, childPlugName + "Hash" )
+			self.assertNotEqual( hashFn1( scenePath1 ), hashFn2( scenePath2 ) )
+		
+	def assertSceneHashesEqual( self, scenePlug1, scenePlug2, childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
+	
+		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+		
+		def walkScene( scenePath ) :
+
+			c = Gaffer.Context()
+			c["scene:path"] = scenePath
+			with c :
+				if scenePath not in pathsToIgnore :
+					for childPlugName in childPlugNames :
+						self.assertEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
+				childNames = scenePlug1["childNames"].getValue() or []
+				for childName in childNames :
+					if scenePath == "/" :
+						childPath = scenePath + childName
+					else :
+						childPath = scenePath + "/" + childName
+			
+					walkScene( childPath )
+		
+		walkScene( "/" )
+		
+	def assertSceneHashesNotEqual( self, scenePlug1, scenePlug2, childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
+	
+		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+		
+		def walkScene( scenePath ) :
+
+			c = Gaffer.Context()
+			c["scene:path"] = scenePath
+			with c :
+				if scenePath not in pathsToIgnore :
+					for childPlugName in childPlugNames :
+						self.assertNotEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
+				childNames = scenePlug1["childNames"].getValue() or []
+				for childName in childNames :
+					if scenePath == "/" :
+						childPath = scenePath + childName
+					else :
+						childPath = scenePath + "/" + childName
+			
+					walkScene( childPath )
+		
+		walkScene( "/" )
+		

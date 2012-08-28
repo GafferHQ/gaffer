@@ -132,7 +132,12 @@ T NumericPlug<T>::getValue() const
 	ConstObjectPtr o = getObjectValue();
 	if( o )
 	{
-		return static_cast<const DataType *>( o.get() )->readable();
+		const DataType *d = IECore::runTimeCast<const DataType>( o.get() );
+		if( !d )
+		{
+			throw IECore::Exception( "NumericPlug::getObjectValue() didn't return expected type - is the hash being computed correctly?" );
+		}
+		return d->readable();
 	}
 	return m_defaultValue;
 }

@@ -78,6 +78,23 @@ void Instancer::affects( const ValuePlug *input, AffectedPlugsContainer &outputs
 	}
 }
 
+void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ContextPtr ic = instanceContext( context, branchPath );
+	if( ic )
+	{
+		Context::Scope scopedContext( ic );
+		h = instancePlug()->boundPlug()->hash();
+		return;
+	}
+	
+	// branchPath == "/"
+	
+	/// \todo This is a massive cop-out. See if we can improve it.
+	h.append( computeBranchBound( parentPath, branchPath, context ) );
+	
+}
+
 Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );
@@ -105,6 +122,22 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	return result;
 }
 
+void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ContextPtr ic = instanceContext( context, branchPath );
+	if( ic )
+	{
+		Context::Scope scopedContext( ic );
+		h = instancePlug()->transformPlug()->hash();
+	}
+	
+	if( branchPath.size() > 1 && branchPath.find( '/', 1 ) == string::npos )
+	{
+		h.append( inPlug()->objectHash( parentPath ) );
+		h.append( instanceIndex( branchPath ) );
+	}
+}
+
 Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	M44f result;
@@ -129,6 +162,16 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	return result;
 }
 
+void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ContextPtr ic = instanceContext( context, branchPath );
+	if( ic )
+	{
+		Context::Scope scopedContext( ic );
+		h = instancePlug()->attributesPlug()->hash();
+	}
+}
+
 IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );
@@ -140,6 +183,16 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	return 0;
 }
 
+void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ContextPtr ic = instanceContext( context, branchPath );
+	if( ic )
+	{
+		Context::Scope scopedContext( ic );
+		h = instancePlug()->objectPlug()->hash();
+	}
+}
+
 IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ContextPtr ic = instanceContext( context, branchPath );
@@ -149,6 +202,21 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 		return instancePlug()->objectPlug()->getValue();
 	}
 	return 0;
+}
+
+void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( branchPath == "/" )
+	{
+		namePlug()->hash( h );
+		h.append( inPlug()->objectHash( parentPath ) );
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
+		Context::Scope scopedContext( ic );
+		h = instancePlug()->childNamesPlug()->hash();
+	}
 }
 
 IECore::ConstStringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const

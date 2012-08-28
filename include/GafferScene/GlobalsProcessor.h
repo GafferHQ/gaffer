@@ -59,6 +59,10 @@ class GlobalsProcessor : public SceneProcessor
 				
 	protected :
 		
+		/// Implemented to pass through hash for bound, transform, attributes, object and childNames, and to call
+		/// hashGlobals() for globals.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
 		/// Implemented as pass throughs.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -70,6 +74,7 @@ class GlobalsProcessor : public SceneProcessor
 		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
 		/// Must be implemented by derived classes.
+		virtual void hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const = 0;
 		
 };

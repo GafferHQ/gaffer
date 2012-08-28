@@ -43,7 +43,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class AttributesTest( unittest.TestCase ) :
+class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		
 	def test( self ) :
 	
@@ -178,6 +178,53 @@ class AttributesTest( unittest.TestCase ) :
 				"user:something" : IECore.IntData( 1 ),
 			} )
 		)
-			
+	
+	def testHashPassThrough( self ) :
+		
+		sphere = IECore.SpherePrimitive()
+		input = GafferSceneTest.CompoundObjectSource()
+		input["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( sphere.bound() ),
+				"children" : {
+					"ball1" : {
+						"object" : sphere,
+						"bound" : IECore.Box3fData( sphere.bound() ),
+					},
+					"ball2" : {
+						"object" : sphere,
+						"bound" : IECore.Box3fData( sphere.bound() ),
+					},
+				},
+			} )
+		)
+	
+		a = GafferScene.Attributes()
+		a["in"].setInput( input["out"] )
+		
+		# when we have no attributes at all, everything should be a pass-through
+		self.assertSceneHashesEqual( input["out"], a["out"] )
+		
+		# when we have some attributes, everything except the attributes plug should
+		# be a pass-through.
+		a["attributes"].addParameter( "ri:shadingRate", IECore.FloatData( 2.0 ) )
+		self.assertSceneHashesEqual( input["out"], a["out"], childPlugNames = ( "globals", "childNames", "transform", "bound", "object" ) )
+		self.assertSceneHashesNotEqual( input["out"], a["out"], childPlugNames = ( "attributes", ) )
+		
+		# when we add a filter, non-matching objects should become pass-throughs
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
+		a["filter"].setInput( f["match"] )
+		self.assertSceneHashesEqual( input["out"], a["out"], pathsToIgnore = ( "/ball1", ) )
+		
+		c = Gaffer.Context()
+		c["scene:path"] = "/ball1"
+		with c :
+			self.assertEqual( a["out"]["childNames"].hash(), input["out"]["childNames"].hash() )
+			self.assertEqual( a["out"]["transform"].hash(), input["out"]["transform"].hash() )
+			self.assertEqual( a["out"]["bound"].hash(), input["out"]["bound"].hash() )
+			self.assertEqual( a["out"]["object"].hash(), input["out"]["object"].hash() )
+			self.assertNotEqual( a["out"]["attributes"].hash(), input["out"]["attributes"].hash() )
+	
 if __name__ == "__main__":
 	unittest.main()

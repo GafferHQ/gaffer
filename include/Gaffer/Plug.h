@@ -80,10 +80,14 @@ class Plug : public GraphComponent
 			/// will automatically be substituted with values from the context during
 			/// computation. Note that currently this only applies to the StringPlug.
 			PerformsSubstitutions = 0x00000008,
+			/// If the Cacheable flag is set then values computed during getValue()
+			/// calls will be stored in a cache and reused if equivalent computations
+			/// are requested in the future.
+			Cacheable = 0x00000010,
 			/// When adding values, don't forget to update the Default and All values below,
 			/// and to update PlugBinding.cpp too!
-			Default = Serialisable | AcceptsInputs | PerformsSubstitutions,
-			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions
+			Default = Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable,
+			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable
 		};
 	
 		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );

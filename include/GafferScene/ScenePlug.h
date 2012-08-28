@@ -103,8 +103,8 @@ class ScenePlug : public Gaffer::CompoundPlug
 		
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying the scenePath
-		/// and then return the result of calling getValue() on the appropriate child
-		/// plug.
+		/// and then return the result of calling getValue() or hash() on the
+		/// appropriate child plug.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		Imath::Box3f bound( const std::string &scenePath ) const;
@@ -112,6 +112,12 @@ class ScenePlug : public Gaffer::CompoundPlug
 		IECore::ConstCompoundObjectPtr attributes( const std::string &scenePath ) const;
 		IECore::ConstObjectPtr object( const std::string &scenePath ) const;
 		IECore::ConstStringVectorDataPtr childNames( const std::string &scenePath ) const;
+		
+		IECore::MurmurHash boundHash( const std::string &scenePath ) const;
+		IECore::MurmurHash transformHash( const std::string &scenePath ) const;
+		IECore::MurmurHash attributesHash( const std::string &scenePath ) const;
+		IECore::MurmurHash objectHash( const std::string &scenePath ) const;
+		IECore::MurmurHash childNamesHash( const std::string &scenePath ) const;		
 		//@}
 	
 };

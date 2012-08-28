@@ -83,6 +83,29 @@ void PrimitiveVariableProcessor::affects( const Gaffer::ValuePlug *input, Affect
 	}
 }
 
+bool PrimitiveVariableProcessor::processesObject() const
+{
+	bool invert = invertNamesPlug()->getValue();
+	if( invert )
+	{
+		// we don't know if we're modifying the object till we find out what
+		// variables it has.
+		return true;
+	}
+	else
+	{
+		// if there are no names, then we know we're not modifying the object.
+		std::string names = namesPlug()->getValue();
+		return names.size();
+	}
+}
+
+void PrimitiveVariableProcessor::hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	namesPlug()->hash( h );
+	invertNamesPlug()->hash( h );
+}
+
 IECore::ConstObjectPtr PrimitiveVariableProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	ConstPrimitivePtr inputGeometry = runTimeCast<const Primitive>( inputObject );
@@ -90,7 +113,6 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::processObject( const ScenePat
 	{
 		return 0;
 	}
-	
 	/// \todo Support glob expressions. We could accelerate the regex conversion and compilation process
 	/// by storing them as member variables which we update on a plugSetSignal(). We'd have to either prevent
 	/// connections being made to namesPlug() or not use the acceleration when connections had been made.
@@ -99,8 +121,9 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::processObject( const ScenePat
 	/// the names string to the regexes. Yep. That's what we need. LRUCaches are going to be the way for nearly
 	/// everything like this I reckon.
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer names( namesPlug()->getValue(), boost::char_separator<char>( " " ) );
-	
+	std::string namesValue = namesPlug()->getValue();
+	Tokenizer names( namesValue, boost::char_separator<char>( " " ) );
+		
 	bool invert = invertNamesPlug()->getValue();
 	IECore::PrimitivePtr result = inputGeometry->copy();
 	IECore::PrimitiveVariableMap::iterator next;
@@ -120,8 +143,4 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::processObject( const ScenePat
 	}
 	
 	return result;
-}
-
-void PrimitiveVariableProcessor::processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &variable ) const
-{
 }

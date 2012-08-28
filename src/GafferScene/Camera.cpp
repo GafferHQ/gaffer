@@ -101,6 +101,13 @@ void Camera::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outp
 	}
 }
 
+void Camera::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	resolutionPlug()->hash( h );
+	projectionPlug()->hash( h );
+	fieldOfViewPlug()->hash( h );
+}
+
 IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
 {
 	IECore::CameraPtr result = new IECore::Camera;

@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class StringPlugTest( unittest.TestCase ) :
+class StringPlugTest( GafferTest.TestCase ) :
 
 	def testExpansion( self ) :
 	
@@ -63,12 +63,18 @@ class StringPlugTest( unittest.TestCase ) :
 				 	
 				 return []
 		
+			def hash( self, output, context, h ) :
+			
+				if output.isSame( self["out"] ) :
+					self["in"].hash( h )
+				
 			def compute( self, plug, context ) :
 			
 				if plug.isSame( self["out"] ) :
 					plug.setValue( self["in"].getValue() )
 					
 		n = TestNode()
+		self.assertHashesValid( n )
 		
 		# nothing should be expanded when we're in a non-computation context
 		n["in"].setValue( "testyTesty.##.exr" )
@@ -92,6 +98,9 @@ class StringPlugTest( unittest.TestCase ) :
 		n["in"].setValue( "what a lovely ${A}" )
 		with context :
 			self.assertEqual( n["out"].getValue(), "what a lovely apple" )
+		context["A"] = "peach"
+		with context :
+			self.assertEqual( n["out"].getValue(), "what a lovely peach" )		
 		
 		context["env:dir"] = "a/path"
 		n["in"].setValue( "a/${env:dir}/b" )

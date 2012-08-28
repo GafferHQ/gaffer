@@ -70,12 +70,14 @@ class Display : public ImagePrimitiveNode
 		
 	protected :
 
+		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const;		
 	
 	private :
 	
 		IECore::DisplayDriverServerPtr m_server;
 		GafferDisplayDriverPtr m_driver;
+		uint64_t m_dataCount;
 				
 		void plugSet( Gaffer::Plug *plug );
 		void setupServer();

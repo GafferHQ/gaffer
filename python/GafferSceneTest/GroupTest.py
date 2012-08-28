@@ -43,7 +43,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class GroupTest( unittest.TestCase ) :
+class GroupTest( GafferSceneTest.SceneTestCase ) :
 		
 	def testTwoLevels( self ) :
 	
@@ -423,6 +423,67 @@ class GroupTest( unittest.TestCase ) :
 				with IECore.WorldBlock( renderer ) :
 					renderer.procedural( sceneProcedural )
 			self.assertEqual( len( mh.messages ), 0 )
-			
+	
+	def testHashes( self ) :
+	
+		p = GafferScene.Plane()
+		
+		g = GafferScene.Group()
+		g["in"].setInput( p["out"] )
+
+		self.assertSceneValid( g["out"] )
+		self.assertSceneHashesEqual( g["out"], p["out"], childPlugNames = ( "globals", ) )
+	
+		self.assertPathHashesEqual( g["out"], "/group/plane", p["out"], "/plane" )
+	
+ 	def testTransformHash( self ) :
+
+		p = GafferScene.Plane()
+		
+		g1 = GafferScene.Group()
+		g1["in"].setInput( p["out"] )
+
+		g2 = GafferScene.Group()
+ 		g2["in"].setInput( p["out"] )
+ 		
+ 		self.assertSceneHashesEqual( g1["out"], g2["out"] )
+ 		
+	 	g2["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+	 		 	
+ 		self.assertSceneHashesEqual( g1["out"], g2["out"], pathsToIgnore = ( "/", "/group", ) )
+ 		self.assertSceneHashesEqual( g1["out"], g2["out"], childPlugNamesToIgnore = ( "transform", "bound" ) )
+		self.assertNotEqual( g1["out"].transformHash( "/group" ), g2["out"].transformHash( "/group" ) )
+		self.assertEqual( g1["out"].boundHash( "/group" ), g2["out"].boundHash( "/group" ) )
+		self.assertNotEqual( g1["out"].boundHash( "/" ), g2["out"].boundHash( "/" ) )
+		
+	def testChildNamesHash( self ) :
+	
+		p = GafferScene.Plane()
+		
+		g1 = GafferScene.Group()
+		g1["in"].setInput( p["out"] )
+		
+		g2 = GafferScene.Group()
+ 		g2["in"].setInput( p["out"] )
+ 		
+ 		self.assertSceneHashesEqual( g1["out"], g2["out"] )
+
+		g2["name"].setValue( "stuff" )
+		
+		equivalentPaths = [ 
+			( "/", "/" ),
+			( "/group", "/stuff" ),
+			( "/group/plane", "/stuff/plane" ),
+		]
+		for path1, path2 in equivalentPaths :
+			self.assertEqual( g1["out"].boundHash( path1 ), g2["out"].boundHash( path2 ) )
+			self.assertEqual( g1["out"].transformHash( path1 ), g2["out"].transformHash( path2 ) )
+			self.assertEqual( g1["out"].objectHash( path1 ), g2["out"].objectHash( path2 ) )
+			self.assertEqual( g1["out"].attributesHash( path1 ), g2["out"].attributesHash( path2 ) )
+			if path1 is not "/" :
+				self.assertEqual( g1["out"].childNamesHash( path1 ), g2["out"].childNamesHash( path2 ) )
+			else :
+				self.assertNotEqual( g1["out"].childNamesHash( path1 ), g2["out"].childNamesHash( path2 ) )
+		 		
 if __name__ == "__main__":
 	unittest.main()

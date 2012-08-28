@@ -39,6 +39,7 @@ import unittest
 
 import IECore
 
+import Gaffer
 import GafferImage
 
 class ImageReaderTest( unittest.TestCase ) :
@@ -75,6 +76,25 @@ class ImageReaderTest( unittest.TestCase ) :
 		
 		tile = n["out"].channelData( "R", IECore.V2i( 0 ) )
 		self.assertEqual( len( tile ), GafferImage.ImagePlug().tileSize() **2 )
+	
+	def testNoCaching( self ) :
+	
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.fileName )
+
+		c = Gaffer.Context()
+		c["image:channelName"] = "R"
+		c["image:tileOrigin"] = IECore.V2i( 0 )
+		with c :
+			# using _copy=False is not recommended anywhere outside
+			# of these tests.
+			t1 = n["out"]["channelData"].getValue( _copy=False )
+			t2 = n["out"]["channelData"].getValue( _copy=False )
+		
+		# we dont want the separate computations to result in the
+		# same value, because the ImageReader has its own cache in
+		# OIIO, so doing any caching on top of that would be wasteful.
+		self.failIf( t1.isSame( t2 ) )
 	
 if __name__ == "__main__":
 	unittest.main()

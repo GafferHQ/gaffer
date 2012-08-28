@@ -39,7 +39,7 @@
 
 #include "IECore/CompoundObject.h"
 
-#include "GafferScene/SceneNode.h"
+#include "GafferScene/Source.h"
 
 #include "GafferSceneTest/TypeIds.h"
 
@@ -48,7 +48,7 @@ namespace GafferSceneTest
 
 /// A source which turns a CompoundObject hierarchy into a scene.
 /// It's useful as a source node in unit tests.
-class CompoundObjectSource : public GafferScene::SceneNode
+class CompoundObjectSource : public GafferScene::Source
 {
 
 	public :
@@ -56,7 +56,7 @@ class CompoundObjectSource : public GafferScene::SceneNode
 		CompoundObjectSource( const std::string &name=staticTypeName() );
 		virtual ~CompoundObjectSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::SceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::Source );
 
 		Gaffer::ObjectPlug *inPlug();
 		const Gaffer::ObjectPlug *inPlug() const;
@@ -64,6 +64,8 @@ class CompoundObjectSource : public GafferScene::SceneNode
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;

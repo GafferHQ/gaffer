@@ -44,7 +44,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class NodeTest( unittest.TestCase ) :
+class NodeTest( GafferTest.TestCase ) :
 
 	def testParenting( self ) :
 	
@@ -391,5 +391,196 @@ class NodeTest( unittest.TestCase ) :
 		self.assertEqual( len( dirtied ), 3 )
 		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
 	
+	def testHash( self ) :
+	
+		n = GafferTest.MultiplyNode()
+		self.assertHashesValid( n )
+	
+	def testHashForPythonDerivedClasses( self ) :
+	
+		n = GafferTest.AddNode()
+		self.assertHashesValid( n )
+		
+	def testDisableCaching( self ) :
+	
+		class CachingTestNode( Gaffer.Node ) :
+		
+			def __init__( self, name="CachingTestNode", inputs={}, dynamicPlugs=() ) :
+		
+				Gaffer.Node.__init__( self, name )
+		
+				self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In ) )
+				self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out ) )
+		
+				self._init( inputs, dynamicPlugs )
+		
+			def affects( self, input ) :
+				
+				if input.isSame( self["in"] ) :
+					return [ self["out"] ]
+					
+				return []
+		
+			def hash( self, output, context, h ) :
+			
+				assert( output.isSame( self["out"] ) )
+		
+				self["in"].hash( h )
+		
+			def compute( self, plug, context ) :
+		
+				assert( plug.isSame( self["out"] ) )
+		
+				self["out"].setValue( IECore.StringData( self["in"].getValue() ) )
+		
+		n = CachingTestNode()
+		
+		n["in"].setValue( "d" )
+		
+		v1 = n["out"].getValue( _copy=False )
+		v2 = n["out"].getValue( _copy=False )
+		
+		self.assertEqual( v1, v2 )
+		self.assertEqual( v1, IECore.StringData( "d" ) )
+		
+		# the objects should be one and the same, as the second computation
+		# should have shortcut and returned a cached result.
+		self.failUnless( v1.isSame( v2 ) )
+		
+		n["out"].setFlags( Gaffer.Plug.Flags.Cacheable, False )
+		v3 = n["out"].getValue( _copy=False )
+		
+		self.assertEqual( v3, IECore.StringData( "d" ) )
+		self.assertEqual( v3, v1 )
+
+		# we disabled caching, so the two values should
+		# be distinct objects, even though they are equal.
+		self.failIf( v3.isSame( v1 ) )
+	
+	@unittest.expectedFailure
+	def testConnectedPlugsShareHashesAndCacheEntries( self ) :
+	
+		class Out( Gaffer.Node ) :
+		
+			def __init__( self, name="Out", inputs={}, dynamicPlugs=() ) :
+		
+				Gaffer.Node.__init__( self, name )
+		
+				self.addChild( Gaffer.ObjectPlug( "oOut", Gaffer.Plug.Direction.Out ) )	
+				self.addChild( Gaffer.FloatPlug( "fOut", Gaffer.Plug.Direction.Out ) )
+		
+				self._init( inputs, dynamicPlugs )
+		
+			def affects( self, input ) :
+					
+				return []
+		
+			def hash( self, output, context, h ) :
+			
+				h.append( context.getFrame() )
+		
+			def compute( self, plug, context ) :
+		
+				if plug.getName() == "oOut" :
+					plug.setValue( IECore.IntData( int( context.getFrame() ) ) )
+				else :
+					plug.setValue( context.getFrame() )
+
+		IECore.registerRunTimeTyped( Out )
+		
+		class In( Gaffer.Node ) :
+		
+			def __init__( self, name="In", inputs={}, dynamicPlugs=() ) :
+		
+				Gaffer.Node.__init__( self, name )
+		
+				self.addChild( Gaffer.ObjectPlug( "oIn", Gaffer.Plug.Direction.In ) )	
+				self.addChild( Gaffer.FloatPlug( "iIn", Gaffer.Plug.Direction.In ) )
+		
+				self._init( inputs, dynamicPlugs )
+	
+		IECore.registerRunTimeTyped( In )
+					
+		nOut = Out()
+		nIn = In()
+		
+		nIn["oIn"].setInput( nOut["oOut"] )
+		nIn["iIn"].setInput( nOut["fOut"] )
+		
+		for i in range( 0, 1000 ) :
+		
+			c = Gaffer.Context()
+			c.setFrame( i )
+			with c :
+			
+				# because oIn and oOut are connected, they should
+				# have the same hash and share the exact same value.
+				
+				self.assertEqual( nIn["oIn"].getValue(), IECore.IntData( i ) )
+				self.assertEqual( nOut["oOut"].getValue(), IECore.IntData( i ) )
+				
+				self.assertEqual( nIn["oIn"].hash(), nOut["oOut"].hash() )
+				self.failUnless( nIn["oIn"].getValue( _copy=False ).isSame( nOut["oOut"].getValue( _copy=False ) ) )
+		
+				# even though iIn and fOut are connected, they should have
+				# different hashes and different values, because type conversion
+				# is performed when connecting them.
+				
+				self.assertEqual( nIn["iIn"].getValue(), i )
+				self.assertEqual( nOut["fOut"].getValue(), float( i ) )
+				
+				self.assertNotEqual( nIn["iIn"].hash(), nOut["fOut"].hash() )
+
+	class PassThrough( Gaffer.Node ) :
+	
+		def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
+	
+			Gaffer.Node.__init__( self, name )
+	
+			self.addChild( Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In ) )	
+			self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out ) )	
+	
+			self._init( inputs, dynamicPlugs )
+	
+		def affects( self, input ) :
+				
+			assert( input.isSame( self["in"] ) )	
+				
+			return [ self["out"] ]
+	
+		def hash( self, output, context, h ) :
+
+			assert( output.isSame( self["out"] ) )	
+		
+			# by assigning directly to the hash rather than appending,
+			# we signify that we'll pass through the value unchanged.
+			h.copyFrom( self["in"].hash() )
+							
+		def compute( self, plug, context ) :
+	
+			assert( plug.isSame( self["out"] ) )
+
+			plug.setValue( self["in"].getValue( _copy=False ) )
+
+	IECore.registerRunTimeTyped( PassThrough )
+
+	def testPassThroughSharesHashes( self ) :
+		
+		n = self.PassThrough()
+		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		
+		self.assertEqual( n["in"].hash(), n["out"].hash() )
+		self.assertEqual( n["in"].getValue(), n["out"].getValue() )
+	
+	@unittest.expectedFailure	
+	def testPassThroughSharesCacheEntries( self ) :
+	
+		n = self.PassThrough()
+		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+
+		# this fails because TypedObjectPlug::setValue() currently does a copy. i think we can
+		# optimise things by allowing a copy-free setValue() function for use during computations.
+		self.failUnless( n["in"].getValue( _copy=False ).isSame( n["out"].getValue( _copy=False ) ) )
+		
 if __name__ == "__main__":
 	unittest.main()

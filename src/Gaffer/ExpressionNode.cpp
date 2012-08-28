@@ -43,6 +43,7 @@
 #include "Gaffer/ExpressionNode.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/Context.h"
 
 using namespace Gaffer;
 
@@ -111,6 +112,37 @@ void ExpressionNode::affects( const ValuePlug *input, AffectedPlugsContainer &ou
 		if( input->parent<CompoundPlug>() == in )
 		{
 			outputs.push_back( out );
+		}
+	}
+	else if( out )
+	{
+		if( input == expressionPlug() || input == enginePlug() )
+		{
+			outputs.push_back( out );
+		}
+	}
+}
+
+void ExpressionNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	Node::hash( output, context, h );
+	if( output == getChild<ValuePlug>( "out" ) )
+	{
+		enginePlug()->hash( h );
+		expressionPlug()->hash( h );
+		const CompoundPlug *in = getChild<CompoundPlug>( "in" );
+		if( in )
+		{
+			in->hash( h );
+		}
+		if( m_engine )
+		{
+			std::vector<std::string> contextNames;
+			m_engine->contextNames( contextNames );
+			for( std::vector<std::string>::const_iterator it = contextNames.begin(); it != contextNames.end(); it++ )
+			{
+				context->get<IECore::Data>( *it )->hash( h );
+			}
 		}
 	}
 }

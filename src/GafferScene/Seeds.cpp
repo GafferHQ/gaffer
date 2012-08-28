@@ -87,6 +87,14 @@ void Seeds::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	}
 }
 
+void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( branchPath=="/" )
+	{
+		h = inPlug()->boundHash( parentPath );
+	}
+}
+
 Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	if( branchPath=="/" )
@@ -96,14 +104,32 @@ Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const Scene
 	return Box3f();
 }
 
+void Seeds::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
 Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return M44f();
 }
 
+void Seeds::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
 IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return 0;
+}
+
+void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( branchPath=="/" )
+	{
+		h.append( inPlug()->objectHash( parentPath ) );
+		densityPlug()->hash( h );
+		pointTypePlug()->hash( h );
+	}
 }
 
 IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
@@ -127,6 +153,10 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 		return result;
 	}
 	return 0;
+}
+
+void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
 }
 
 IECore::ConstStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const

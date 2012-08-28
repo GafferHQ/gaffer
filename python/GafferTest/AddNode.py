@@ -63,6 +63,13 @@ class AddNode( Gaffer.Node ) :
 
 		return outputs
 
+	def hash( self, output, context, h ) :
+	
+		assert( output.isSame( self.getChild( "sum" ) ) or plug.getFlags() & plug.Flags.Dynamic )
+
+		self.getChild("op1").hash( h )
+		self.getChild("op2").hash( h )	
+
 	def compute( self, plug, context ) :
 
 		# we're allowing the addition of dynamic output plugs which will also receive the sum

@@ -62,6 +62,10 @@ class ContextProcessor : public BaseType
 		
 	protected :
 		
+		/// Implemented to return the hash of the matching input using a context modified by
+		/// processContext() - derived class should therefore not need to reimplement hash(),
+		/// and should only implemented processContext().
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( ValuePlug *output, const Context *context ) const;
 		
 		/// Should be called by derived class affects() methods when the input

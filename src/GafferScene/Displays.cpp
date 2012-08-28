@@ -162,6 +162,11 @@ void Displays::affects( const ValuePlug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
+void Displays::hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	displaysPlug()->hash( h );
+}
+
 IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
 {
 	ObjectVectorPtr result = new ObjectVector;

@@ -40,7 +40,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/SceneNode.h"
+#include "GafferScene/Source.h"
 
 namespace GafferScene
 {
@@ -72,8 +72,8 @@ class ObjectSource : public BaseType
 		Gaffer::ObjectPlug *sourcePlug();
 		const Gaffer::ObjectPlug *sourcePlug() const;
 
-		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const = 0;		
-		
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+				
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		virtual Imath::Box3f computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -82,6 +82,10 @@ class ObjectSource : public BaseType
 		virtual IECore::ConstStringVectorDataPtr computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
+		/// Must be implemented by derived classes.
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const = 0;		
+
 	private :
 	
 		Gaffer::ObjectPlug *inputSourcePlug();
@@ -89,7 +93,7 @@ class ObjectSource : public BaseType
 		
 };
 
-typedef ObjectSource<SceneNode> ObjectSourceSceneNode;
+typedef ObjectSource<Source> ObjectSourceSceneNode;
 IE_CORE_DECLAREPTR( ObjectSourceSceneNode );
 
 } // namespace GafferScene

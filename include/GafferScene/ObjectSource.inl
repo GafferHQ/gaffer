@@ -36,6 +36,8 @@
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
@@ -91,7 +93,8 @@ void ObjectSource<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer::No
 	
 	if( input == inputSourcePlug() )
 	{
-		outputs.push_back( BaseType::outPlug() );
+		outputs.push_back( BaseType::outPlug()->boundPlug() );
+		outputs.push_back( BaseType::outPlug()->objectPlug() );
 	}
 	else if( input == namePlug() )
 	{
@@ -99,11 +102,41 @@ void ObjectSource<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer::No
 	}
 	else if( transformPlug()->isAncestorOf( input ) )
 	{
-		/// \todo Strictly speaking I think we should just push outPlug()->transformPlug()
-		/// here, but the dirty propagation doesn't work for that just now. Get it working.
-		outputs.push_back( BaseType::outPlug() );
+		outputs.push_back( BaseType::outPlug()->transformPlug() );
 	}
 
+}
+
+template<typename BaseType>
+void ObjectSource<BaseType>::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	BaseType::hash( output, context, h );
+	
+	if( output == BaseType::outPlug()->transformPlug() )
+	{
+		transformPlug()->Gaffer::ValuePlug::hash( h );
+	}
+	else if( output == BaseType::outPlug()->childNamesPlug() )
+	{
+		namePlug()->hash( h );
+	}
+	else if( output == BaseType::outPlug()->objectPlug() )
+	{
+		inputSourcePlug()->hash( h );	
+	}
+	else if( output == BaseType::outPlug()->boundPlug() )
+	{
+		inputSourcePlug()->hash( h );	
+		if( context->get<std::string>( "scene:path" ) == "/" )
+		{
+			transformPlug()->hash( h );
+		}
+	}
+	else if( output == sourcePlug() )
+	{
+		hashSource( context, h );
+	}
+	
 }
 
 template<typename BaseType>

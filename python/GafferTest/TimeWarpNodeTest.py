@@ -50,8 +50,8 @@ class TimeWarpNodeTest( unittest.TestCase ) :
 		
 		s["e"] = Gaffer.ExpressionNode()
 		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context.getFrame() )" ) 
-					
+		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
+		
 		s["w"] = Gaffer.TimeWarpNode()
 		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
 		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
@@ -64,6 +64,39 @@ class TimeWarpNodeTest( unittest.TestCase ) :
 			with c :
 				self.assertEqual( s["m"]["product"].getValue(), i )
 				self.assertEqual( s["w"]["out"].getValue(), i * 2 + 2 )
+	
+	def testHash( self ) :
+	
+		# we want the output of the time warp to have the same hash
+		# as the input at the appropriate point in time. that way we get
+		# to share cache entries between the nodes and use less memory
+		# and do less computation.
 		
+		s = Gaffer.ScriptNode()
+		
+		s["m"] = GafferTest.MultiplyNode()
+		s["m"]["op2"].setValue( 1 )
+		
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
+					
+		s["w"] = Gaffer.TimeWarpNode()
+		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
+		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		s["w"]["offset"].setValue( 2 )
+		
+		for i in range( 0, 10 ) :
+			c = Gaffer.Context()
+			c.setFrame( i )
+			with c :
+				self.assertEqual( s["m"]["product"].getValue(), i )
+				self.assertEqual( s["w"]["out"].getValue(), i + 2 )
+				wh = s["w"]["out"].hash()	
+			c.setFrame( i + 2 )
+			with c :
+				mh = s["m"]["product"].hash()
+			self.assertEqual( wh, mh )
+				
 if __name__ == "__main__":
 	unittest.main()

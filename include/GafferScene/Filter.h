@@ -66,10 +66,14 @@ class Filter : public Gaffer::Node
 		const Gaffer::IntPlug *matchPlug() const;
 				
 	protected :
-
+		
+		/// Implemented to call hashMatch() below when computing the hash for matchPlug().
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Implemented to call computeMatch() below when computing the value of matchPlug().
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
 		/// Must be implemented by derived classes.
+		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Result computeMatch( const Gaffer::Context *context ) const = 0;
 
 };

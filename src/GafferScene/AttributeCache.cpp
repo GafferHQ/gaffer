@@ -92,6 +92,17 @@ void AttributeCache::affects( const Gaffer::ValuePlug *input, AffectedPlugsConta
 	}
 }
 
+bool AttributeCache::processesBound() const
+{
+	return true;
+}
+
+void AttributeCache::hashBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	fileNamePlug()->hash( h );
+	h.append( context->getFrame() );
+}
+
 Imath::Box3f AttributeCache::processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
 {
 	IECore::InterpolatedCachePtr cache = g_interpolatedCacheCache.get( fileNamePlug()->getValue() );
@@ -111,6 +122,17 @@ Imath::Box3f AttributeCache::processBound( const ScenePath &path, const Gaffer::
 	}
 	
 	return inputBound;
+}
+
+bool AttributeCache::processesTransform() const
+{
+	return true;
+}
+
+void AttributeCache::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	fileNamePlug()->hash( h );
+	h.append( context->getFrame() );
 }
 
 Imath::M44f AttributeCache::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
@@ -133,20 +155,27 @@ Imath::M44f AttributeCache::processTransform( const ScenePath &path, const Gaffe
 	return inputTransform;
 }
 
-IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+bool AttributeCache::processesObject() const
 {
-	// we're obliged to pull on these whether we need them or not, so this
-	// comes before the early out for the no input geometry case.
-	/// \todo I'm not sure this is actually the case.
-	const std::string fileName = fileNamePlug()->getValue();
-	const float frame = context->getFrame();
-	
+	return true;
+}
+
+void AttributeCache::hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	fileNamePlug()->hash( h );
+	h.append( context->getFrame() );
+}
+
+IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+{	
 	IECore::ConstPrimitivePtr inputGeometry = IECore::runTimeCast<const IECore::Primitive>( inputObject );
 	if( !inputGeometry )
 	{
 		return 0;
 	}
 
+	const std::string fileName = fileNamePlug()->getValue();
+	const float frame = context->getFrame();
 	std::string cacheObjectName = entryForPath( path );
 
 	IECore::InterpolatedCachePtr cache = g_interpolatedCacheCache.get( fileName );

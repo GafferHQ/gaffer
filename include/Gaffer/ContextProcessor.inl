@@ -82,6 +82,22 @@ void ContextProcessor<BaseType>::appendAffectedPlugs( Node::AffectedPlugsContain
 }
 
 template<typename BaseType>
+void ContextProcessor<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	const ValuePlug *input = oppositePlug( output );
+	if( input )
+	{
+		ContextPtr modifiedContext = new Context( *context );
+		processContext( modifiedContext.get() );
+		Context::Scope scopedContext( modifiedContext.get() );
+		h = input->hash();
+		return;
+	}
+
+	BaseType::hash( output, context, h );
+}
+
+template<typename BaseType>
 void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *context ) const
 {
 	const ValuePlug *input = oppositePlug( output );

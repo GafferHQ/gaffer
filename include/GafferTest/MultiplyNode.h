@@ -58,6 +58,7 @@ class MultiplyNode : public Gaffer::Node
 		
 	protected :
 		
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 };

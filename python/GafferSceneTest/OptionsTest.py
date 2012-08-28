@@ -40,8 +40,9 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
-class OptionsTest( unittest.TestCase ) :
+class OptionsTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
@@ -84,6 +85,16 @@ class OptionsTest( unittest.TestCase ) :
 		g = s2["optionsNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
 		self.assertEqual( g[0], IECore.Options( { "test" : 10, "test2" : "10" } ) )
+	
+	def testHashPassThrough( self ) :
+	
+		# the hash of the per-object part of the output should be
+		# identical to the input, so that they share cache entries.
+	
+		p = GafferScene.Plane()
+		options = GafferScene.Options( inputs = { "in" : p["out"] } )
 		
+		self.assertSceneHashesEqual( p["out"], options["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
+	
 if __name__ == "__main__":
 	unittest.main()

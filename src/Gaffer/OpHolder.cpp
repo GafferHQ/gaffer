@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/Op.h"
+#include "IECore/MurmurHash.h"
 
 #include "Gaffer/OpHolder.h"
 #include "Gaffer/CompoundParameterHandler.h"
@@ -98,6 +99,25 @@ void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs 
 		if( resultPlug )
 		{
 			outputs.push_back( resultPlug );
+		}
+	}
+}
+
+void OpHolder::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	ParameterisedHolderNode::hash( output, context, h );
+	if( output->getName()=="result" )
+	{
+		std::string className;
+		int classVersion;
+		getParameterised( &className, &classVersion );
+		h.append( className );
+		h.append( classVersion );
+	
+		const ValuePlug *parametersPlug = getChild<ValuePlug>( "parameters" );
+		if( parametersPlug )
+		{
+			parametersPlug->hash( h );
 		}
 	}
 }

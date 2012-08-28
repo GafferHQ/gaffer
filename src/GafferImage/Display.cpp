@@ -149,7 +149,7 @@ const DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> GafferDisplay
 IE_CORE_DEFINERUNTIMETYPED( Display );
 
 Display::Display( const std::string &name )
-	:	ImagePrimitiveNode( name )
+	:	ImagePrimitiveNode( name ), m_dataCount( 0 )
 {
 	/// \todo This plug should be made unconnectable when we have that functionality.
 	addChild( new IntPlug( "port", Plug::In, 1559 ) );
@@ -192,6 +192,11 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 {
 	static UnaryPlugSignal s;
 	return s;
+}
+
+void Display::hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( m_dataCount );
 }
 
 IECore::ConstImagePrimitivePtr Display::computeImagePrimitive( const Gaffer::Context *context ) const
@@ -247,6 +252,7 @@ void Display::setupDriver( GafferDisplayDriverPtr driver )
 
 void Display::dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound )
 {
+	m_dataCount++;
 	dataReceivedSignal()( outPlug() );
 }
 

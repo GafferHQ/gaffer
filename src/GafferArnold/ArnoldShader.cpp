@@ -310,6 +310,17 @@ void ArnoldShader::setShader( const std::string &shaderName )
 	
 }
 
+void ArnoldShader::shaderHash( IECore::MurmurHash &h ) const
+{
+	Shader::shaderHash( h );
+	getChild<StringPlug>( "__shaderName" )->hash( h );
+	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
+	if( parametersPlug )
+	{
+		parametersPlug->hash( h );
+	}
+}
+
 IECore::ShaderPtr ArnoldShader::shader() const
 {
 	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue() );

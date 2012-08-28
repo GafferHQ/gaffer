@@ -95,6 +95,25 @@ class NodeClass : public IECorePython::RunTimeTypedClass<T, Ptr>
 		CLASSNAME::affects( input, outputs );\
 	}\
 \
+	virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const\
+	{\
+		CLASSNAME::hash( output, context, h );\
+		IECorePython::ScopedGILLock gilLock;\
+		if( PyObject_HasAttrString( m_pyObject, "hash" ) )\
+		{\
+			boost::python::override f = this->get_override( "hash" );\
+			if( f )\
+			{\
+				boost::python::object pythonHash( h );\
+				f(\
+					Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),\
+					Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),\
+					pythonHash\
+				);\
+				h = boost::python::extract<IECore::MurmurHash>( pythonHash );\
+			}\
+		}\
+	}\
 	virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const\
 	{\
 		IECorePython::ScopedGILLock gilLock;\

@@ -139,13 +139,28 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	return result;
 }
 
+// generally we copy the value when returning to python, because in C++
+// it's const, and we can only send non-const objects to python. letting
+// someone modify the actual value in python could cause all sorts of problems,
+// because that value may be in the cache, and be returned as the result of
+// subsequent computations. the copy argument is provided mainly for the tests,
+// so that we can verify whether or not a returned value is shared with the
+// result of another computation. there might be a performance case for using it
+// in other scenarios, but in general copy==false should be avoided like the plague.
 template<typename T>
-static typename T::ValuePtr getValue( typename T::Ptr p )
+static IECore::ObjectPtr getValue( typename T::Ptr p, bool copy=true )
 {
-	typename T::ConstValuePtr v = p->getValue();
+	typename IECore::ConstObjectPtr v = p->getValue();
 	if( v )
 	{
-		return v->copy();
+		if( copy )
+		{
+			return v->copy();
+		}
+		else
+		{
+			return IECore::constPointerCast<IECore::Object>( v );
+		}
 	}
 	return 0;
 }
@@ -211,7 +226,7 @@ static void bind()
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &defaultValue<T> )
 		.def( "setValue", &T::setValue )
-		.def( "getValue", getValue<T>, "Returns a copy of the value." )
+		.def( "getValue", getValue<T>, ( boost::python::arg_( "_copy" ) = true ) )
 	;
 
 	PyTypeObject *valueType = boost::python::converter::registry::query(

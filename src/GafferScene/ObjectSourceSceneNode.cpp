@@ -42,6 +42,6 @@ namespace GafferScene
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectSourceSceneNode, ObjectSourceSceneNodeTypeId )
 
 // explicit instantiation
-template class GafferScene::ObjectSource<SceneNode>;
+template class GafferScene::ObjectSource<Source>;
 
 } // namespace GafferScene

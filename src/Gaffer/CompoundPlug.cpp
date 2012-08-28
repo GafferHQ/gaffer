@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "IECore/MurmurHash.h"
+
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Node.h"
 
@@ -156,6 +158,22 @@ void CompoundPlug::setToDefault()
 void CompoundPlug::setFrom( const ValuePlug *other )
 {
 	/// \todo Probably need to propagate the call to children, but not sure yet.
+}
+
+IECore::MurmurHash CompoundPlug::hash() const
+{
+	IECore::MurmurHash h;
+	for( ValuePlugIterator it( this ); it!=it.end(); it++ )
+	{
+		/// \todo Do we need to hash the child names too?
+		(*it)->hash( h );
+	}
+	return h;
+}
+
+void CompoundPlug::hash( IECore::MurmurHash &h ) const
+{
+	ValuePlug::hash( h );
 }
 
 void CompoundPlug::parentChanged()

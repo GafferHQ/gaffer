@@ -119,6 +119,18 @@ void TypedPlug<T>::setFrom( const ValuePlug *other )
 	}
 }
 
+template<class T>
+IECore::MurmurHash TypedPlug<T>::hash() const
+{
+	return ValuePlug::hash();
+}
+
+template<class T>
+void TypedPlug<T>::hash( IECore::MurmurHash &h ) const
+{
+	ValuePlug::hash( h );
+}
+
 namespace Gaffer
 {
 
@@ -130,6 +142,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox3fPlug, AtomicBox3fPl
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox2iPlug, AtomicBox2iPlugTypeId )
 
 // specialise StringPlug::getValue() to perform substitutions.
+
 template<>
 std::string StringPlug::getValue() const
 {	
@@ -138,10 +151,28 @@ std::string StringPlug::getValue() const
 	IECore::ConstObjectPtr o = getObjectValue();
 	if( o )
 	{
-		const std::string &s = static_cast<const IECore::StringData *>( o.get() )->readable();
-		return performSubstitution ? Context::current()->substitute( s ) : s;
+		const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
+		if( !s )
+		{
+			throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
+		}
+		return performSubstitution ? Context::current()->substitute( s->readable() ) : s->readable();
 	}
 	return performSubstitution ? Context::current()->substitute( m_defaultValue ) : m_defaultValue;
+}
+
+template<>
+IECore::MurmurHash StringPlug::hash() const
+{
+	bool performSubstitution = direction()==Plug::In && !getInput<ValuePlug>() && Plug::getFlags( Plug::PerformsSubstitutions );
+	if( !performSubstitution )
+	{
+		return ValuePlug::hash();
+	}
+	
+	IECore::MurmurHash result;
+	result.append( Context::current()->substitute( getValue() ) );
+	return result;
 }
 
 } // namespace Gaffer

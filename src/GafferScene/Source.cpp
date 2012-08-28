@@ -36,73 +36,39 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/PathFilter.h"
+#include "GafferScene/Source.h"
 
+using namespace std;
+using namespace Imath;
+using namespace IECore;
 using namespace GafferScene;
 using namespace Gaffer;
-using namespace IECore;
-using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( PathFilter );
+IE_CORE_DEFINERUNTIMETYPED( Source );
 
-PathFilter::PathFilter( const std::string &name )
-	:	Filter( name )
-{
-	addChild( new StringVectorDataPlug( "paths", Plug::In, 0, Plug::Default ) );
-}
-
-PathFilter::~PathFilter()
+Source::Source( const std::string &name )
+	:	SceneNode( name )
 {
 }
 
-Gaffer::StringVectorDataPlug *PathFilter::pathsPlug()
+Source::~Source()
 {
-	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
 }
 
-const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
+void Source::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
-}
+	SceneNode::hash( output, context, h );
 
-void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
-{
-	if( input == pathsPlug() )
+	const ScenePlug *scenePlug = output->ancestor<ScenePlug>();
+	if( scenePlug && (
+			output == scenePlug->boundPlug() ||
+			output == scenePlug->transformPlug() ||
+			output == scenePlug->attributesPlug() ||
+			output == scenePlug->objectPlug() ||
+			output == scenePlug->childNamesPlug()
+		)
+	)
 	{
-		outputs.push_back( matchPlug() );
+		h.append( context->get<std::string>( "scene:path" ) );
 	}
-}
-
-void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( context->get<string>( "scene:path" ) );
-	pathsPlug()->hash( h );
-}
-
-Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
-{
-	ConstStringVectorDataPtr paths = pathsPlug()->getValue();
-	if( !paths )
-	{
-		return NoMatch;
-	}
-	
-	string path = context->get<string>( "scene:path" );
-	Result result = NoMatch;
-	for( vector<string>::const_iterator it = paths->readable().begin(), eIt = paths->readable().end(); it != eIt; it++ )
-	{
-		if( it->compare( 0, path.size(), path ) == 0 )
-		{
-			if( it->size() == path.size() )
-			{
-				return Match;
-			}
-			else if( it->size() > path.size() && (*it)[path.size()] == '/' )
-			{
-				// don't return yet, because we're holding out for a full match
-				result = DescendantMatch;
-			}
-		}
-	}
-	return result;
 }

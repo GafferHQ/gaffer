@@ -37,6 +37,7 @@
 
 from _GafferTest import *
 
+from TestCase import TestCase
 from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GraphComponentTest import GraphComponentTest

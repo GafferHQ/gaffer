@@ -123,11 +123,18 @@ void GafferSceneBindings::bindScenePlug()
 				)
 			)
 		)
+		// value accessors
 		.def( "bound", &ScenePlug::bound )
 		.def( "transform", &ScenePlug::transform )
 		.def( "object", &objectWrapper )
 		.def( "childNames", &childNamesWrapper )
 		.def( "attributes", &attributesWrapper )
+		// hash accessors
+		.def( "boundHash", &ScenePlug::boundHash )
+		.def( "transformHash", &ScenePlug::transformHash )
+		.def( "objectHash", &ScenePlug::objectHash )
+		.def( "childNamesHash", &ScenePlug::childNamesHash )
+		.def( "attributesHash", &ScenePlug::attributesHash )
 	;
 
 	Serialiser::registerSerialiser( ScenePlug::staticTypeId(), serialise );

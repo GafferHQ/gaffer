@@ -103,9 +103,8 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	}
 	else if( transformPlug()->isAncestorOf( input ) )
 	{
-		/// \todo Strictly speaking I think we should just push outPlug()->transformPlug()
-		/// here, but the dirty propagation doesn't work for that just now. Get it working.
-		outputs.push_back( outPlug() );
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
 	}
 	else if( input == inputMappingPlug() )
 	{
@@ -120,6 +119,104 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 		}
 	}
 	
+}
+
+void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{	
+	SceneProcessor::hash( output, context, h );
+
+	if( output == mappingPlug() )
+	{
+		ContextPtr tmpContext = new Context( *Context::current() );
+		tmpContext->set( "scene:path", std::string( "/" ) );
+		Context::Scope scopedContext( tmpContext );
+		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+		{
+			(*it)->childNamesPlug()->hash( h );
+		}
+	}
+	else if( output->parent<ScenePlug>() == outPlug() )
+	{
+		if( output == outPlug()->globalsPlug() )
+		{
+			// pass-through for globals
+			h = inPlug()->globalsPlug()->hash();
+		}
+		else
+		{
+			std::string groupName = namePlug()->getValue();
+			// one of the plugs which varies with scene:path.
+			std::string path = context->get<std::string>( "scene:path" );
+			if( path=="/" )
+			{
+				// root. we only compute bound and childNames.
+				if( output == outPlug()->boundPlug() )
+				{
+					ContextPtr tmpContext = new Context( *Context::current() );
+					tmpContext->set( "scene:path", std::string( "/" ) );
+					Context::Scope scopedContext( tmpContext );
+					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+					{
+						(*it)->boundPlug()->hash( h );
+					}
+					transformPlug()->hash( h );
+				}
+				else if( output == outPlug()->childNamesPlug() )
+				{
+					namePlug()->hash( h );
+				}
+			}
+			else if( path.size() == groupName.size() + 1 )
+			{
+				// /groupName
+				if( output == outPlug()->boundPlug() )
+				{
+					ContextPtr tmpContext = new Context( *Context::current() );
+					tmpContext->set( "scene:path", std::string( "/" ) );
+					Context::Scope scopedContext( tmpContext );
+					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+					{
+						(*it)->boundPlug()->hash( h );
+					}
+				}
+				else if( output == outPlug()->transformPlug() )
+				{
+					transformPlug()->hash( h );
+				}
+				else if( output == outPlug()->childNamesPlug() )
+				{
+					inputMappingPlug()->hash( h );
+				}
+			}
+			else
+			{
+				// /groupName/something
+				// we're just a pass through of one of our inputs.
+				ScenePlug *sourcePlug = 0;
+				std::string source = sourcePath( path, groupName, &sourcePlug );
+				if( output == outPlug()->boundPlug() )
+				{
+					h = sourcePlug->boundHash( source );
+				}
+				else if( output == outPlug()->transformPlug() )
+				{
+					h = sourcePlug->transformHash( source );
+				}
+				else if( output == outPlug()->attributesPlug() )
+				{
+					h = sourcePlug->attributesHash( source );
+				}
+				else if( output == outPlug()->objectPlug() )
+				{
+					h = sourcePlug->objectHash( source );
+				}
+				else if( output == outPlug()->childNamesPlug() )
+				{
+					h = sourcePlug->childNamesHash( source );
+				}
+			}
+		}
+	}
 }
 
 void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
@@ -278,7 +375,7 @@ IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer
 }
 
 IECore::ConstStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{	
+{		
 	std::string groupName = namePlug()->getValue();
 	
 	if( path == "/" )
@@ -314,7 +411,7 @@ std::string Group::sourcePath( const std::string &outputPath, const std::string 
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{
-		throw Exception( "Unable to find mapping" );
+		throw Exception( boost::str( boost::format( "Unable to find mapping for output path \"%s\"" ) % outputPath ) );
 	}
 		
 	*source = m_inPlugs[entry->member<IntData>( "i" )->readable()];

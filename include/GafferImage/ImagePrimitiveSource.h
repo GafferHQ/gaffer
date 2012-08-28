@@ -64,8 +64,10 @@ class ImagePrimitiveSource : public BaseType
 		Gaffer::ObjectPlug *imagePrimitivePlug();
 		const Gaffer::ObjectPlug *imagePrimitivePlug() const;
 
+		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const = 0;		
 		
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;

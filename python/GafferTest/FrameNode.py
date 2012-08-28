@@ -52,6 +52,10 @@ class FrameNode( Gaffer.Node ) :
 				direction = Gaffer.Plug.Direction.Out,
 			)
 		)
+	
+	def hash( self, output, context, h ) :
+	
+		h.append( context.getFrame() )
 		
 	def compute( self, plug, context ) :
 	

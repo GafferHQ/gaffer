@@ -64,6 +64,8 @@ class Attributes : public SceneElementProcessor
 		/// they can add a predefined set of static attributes at construction.
 		Attributes( const std::string &name, Gaffer::Plug::Flags attributesPlugFlags );
 				
+		virtual bool processesAttributes() const;
+		virtual void hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstCompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 	
 };

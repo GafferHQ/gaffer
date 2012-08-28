@@ -90,6 +90,16 @@ void Attributes::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer
 	}
 }
 
+bool Attributes::processesAttributes() const
+{
+	return attributesPlug()->children().size();
+}
+
+void Attributes::hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	attributesPlug()->hash( h );
+}
+
 IECore::ConstCompoundObjectPtr Attributes::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	const ParameterListPlug *ap = attributesPlug();

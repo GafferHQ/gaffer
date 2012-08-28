@@ -67,6 +67,14 @@ class ReadNode( Gaffer.Node ) :
 			outputs.append( self["output"] )
 
 		return outputs
+	
+	def hash( self, output, context, h ) :
+	
+		assert( output.isSame( self["output"] ) )
+
+		self["fileName"].hash( h )
+		if "parameters" in self :
+			self["parameters"].hash( h )
 		
 	def compute( self, plug, context ) :
 	

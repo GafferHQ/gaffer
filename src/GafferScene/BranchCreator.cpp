@@ -93,6 +93,97 @@ void BranchCreator::affects( const ValuePlug *input, AffectedPlugsContainer &out
 	}
 }
 
+void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{	
+	if( output->parent<ScenePlug>() == outPlug() )
+	{
+		if( output == outPlug()->globalsPlug() )
+		{
+			h = inPlug()->globalsPlug()->hash();
+		}
+		else
+		{	
+			ScenePath path = context->get<ScenePath>( "scene:path" );
+			ScenePath parentPath, branchPath;
+			parentAndBranchPaths( path, parentPath, branchPath );
+			
+			if( output == outPlug()->boundPlug() )
+			{
+				if( branchPath.size() )
+				{
+					SceneProcessor::hash( output, context, h );
+					hashBranchBound( parentPath, branchPath, context, h );
+				}
+				else if( parentPath.size() )
+				{
+					h = hashOfTransformedChildBounds( path, outPlug() );
+				}
+				else
+				{
+					h = inPlug()->boundPlug()->hash();
+				}
+			}
+			else if( output == outPlug()->transformPlug() )
+			{
+				if( branchPath.size() )
+				{
+					SceneProcessor::hash( output, context, h );
+					hashBranchTransform( parentPath, branchPath, context, h );				
+				}
+				else
+				{
+					h = inPlug()->transformPlug()->hash();
+				}
+			}
+			else if( output == outPlug()->attributesPlug() )
+			{
+				if( branchPath.size() )
+				{
+					SceneProcessor::hash( output, context, h );
+					hashBranchAttributes( parentPath, branchPath, context, h );
+				}
+				else
+				{
+					h = inPlug()->attributesPlug()->hash();
+				}		
+			}
+			else if( output == outPlug()->objectPlug() )
+			{
+				if( branchPath.size() )
+				{
+					SceneProcessor::hash( output, context, h );
+					hashBranchObject( parentPath, branchPath, context, h );
+				}
+				else
+				{
+					h = inPlug()->objectPlug()->hash();
+				}
+			}
+			else if( output == outPlug()->childNamesPlug() )
+			{
+				if( branchPath.size() )
+				{
+					SceneProcessor::hash( output, context, h );
+					hashBranchChildNames( parentPath, branchPath, context, h );
+				}
+				else if( path == parentPath )
+				{
+					SceneProcessor::hash( output, context, h );
+					namePlug()->hash( h );
+				}
+				else
+				{
+					h = inPlug()->childNamesPlug()->hash();
+				}
+			}
+		}
+	}
+	else
+	{
+		SceneProcessor::hash( output, context, h );
+	}
+}
+
 Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
@@ -119,11 +210,10 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 	{
 		return computeBranchTransform( parentPath, branchPath, context );
 	}
-	else if( parentPath == path )
+	else
 	{
 		return inPlug()->transformPlug()->getValue();
 	}
-	return M44f();
 }
 
 IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const

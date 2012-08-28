@@ -92,6 +92,11 @@ void Options::affects( const ValuePlug *input, AffectedPlugsContainer &outputs )
 	}
 }
 
+void Options::hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	optionsPlug()->hash( h );
+}
+
 IECore::ConstObjectVectorPtr Options::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
 {
 	IECore::ObjectVectorPtr result = inputGlobals ? inputGlobals->copy() : IECore::ObjectVectorPtr( new IECore::ObjectVector );

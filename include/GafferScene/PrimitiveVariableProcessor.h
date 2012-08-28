@@ -66,9 +66,12 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 	protected :
 		
 		/// Implemented to call processPrimitiveVariable() for the appropriate variables of inputObject.
+		virtual bool processesObject() const;
+		virtual void hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		
 		/// Must be implemented by subclasses to process the primitive variable and return it.
-		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const;
+		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const = 0;
 	
 };
 

@@ -61,6 +61,27 @@ void GlobalsProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &
 	}
 }
 
+void GlobalsProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( output->parent<ScenePlug>() == outPlug() )
+	{
+		if( output == outPlug()->globalsPlug() )
+		{
+			SceneProcessor::hash( output, context, h );
+			hashGlobals( context, h );
+		}
+		else
+		{
+			// pass through
+			h = inPlug()->getChild<ValuePlug>( output->getName() )->hash();
+		}
+	}
+	else
+	{
+		SceneProcessor::hash( output, context, h );
+	}
+}
+
 Imath::Box3f GlobalsProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->boundPlug()->getValue();

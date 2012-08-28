@@ -42,6 +42,8 @@
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
 
+#include "IECore/LRUCache.h"
+
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
@@ -90,12 +92,34 @@ class ValuePlug::Computation
 				{
 					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
 				}
-				// cast is ok, because we know that the resulting setValue() call won't
-				// actually modify the plug, but will just place the value in our m_resultValue.
-				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
+								
+				if( m_resultPlug->getFlags( Plug::Cacheable ) )
+				{
+					IECore::MurmurHash hash = m_resultPlug->hash();
+					if( g_valueCache.cached( hash ) )
+					{
+						return g_valueCache.get( hash );
+					}
+					else
+					{
+						// cast is ok, because we know that the resulting setValue() call won't
+						// actually modify the plug, but will just place the value in our m_resultValue.
+						n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
+						if( m_resultWritten )
+						{
+							g_valueCache.set( hash, m_resultValue, m_resultValue ? m_resultValue->memoryUsage() : 8 );
+						}
+					}
+				}
+				else
+				{
+					// plug has requested no caching, so we compute from scratch every
+					// time. cast is ok - see comments above.
+					n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
+				}
 			}
 			
-			// the call to compute() or setFromInput() above should cause setValue() to be called
+			// the call to compute() or setFrom() above should cause setValue() to be called
 			// on the result plug, which in turn will call ValuePlug::setObjectValue(), which will
 			// then store the result in the current computation by calling receiveResult().
 			if( !m_resultWritten )
@@ -140,12 +164,20 @@ class ValuePlug::Computation
 
 		typedef std::stack<Computation *> ComputationStack;
 		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
-
 		static ThreadSpecificComputationStack g_threadComputations;
+		
+		static IECore::ObjectPtr nullGetter( const IECore::MurmurHash &h, size_t &cost )
+		{
+			throw IECore::Exception( "Getter not implemented." );
+		}
+		
+		typedef IECore::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
+		static ValueCache g_valueCache;
 		
 };
 
 ValuePlug::Computation::ThreadSpecificComputationStack ValuePlug::Computation::g_threadComputations;
+ValuePlug::Computation::ValueCache ValuePlug::Computation::g_valueCache( nullGetter, 1024 * 1024 * 500 );
 
 //////////////////////////////////////////////////////////////////////////
 // ValuePlug implementation
@@ -194,6 +226,57 @@ void ValuePlug::setInput( PlugPtr input )
 		// we received a connection.
 		setValueInternal( m_staticValue );
 	}
+}
+
+IECore::MurmurHash ValuePlug::hash() const
+{
+	IECore::MurmurHash h;
+	const ValuePlug *input = getInput<ValuePlug>();
+	if( input )
+	{
+		/// \todo There is potential wastage here when connecting a float plug
+		/// to an int plug - the hash from the latter would change less frequently
+		/// if we considered it properly. Maybe there should be a hashFromInput()
+		/// method?
+		h = input->hash();
+	}
+	else
+	{
+		if( direction() == Plug::In )
+		{
+			if( m_staticValue )
+			{
+				h = m_staticValue->hash();
+			}
+			else
+			{
+				/// \todo Is this a problem? Do we need hashFromDefault() or to force
+				/// m_staticValue to always have something?
+				h.append( 0 );
+			}
+		}
+		else
+		{
+			const Node *n = node();
+			if( !n )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for orphan Plug \"%s\"." ) % fullName() ) );			
+			}
+			IECore::MurmurHash emptyHash;
+			n->hash( this, Context::current(), h );
+			if( h == emptyHash )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Node::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
+			}
+		}
+	}
+	
+	return h;
+}
+
+void ValuePlug::hash( IECore::MurmurHash &h ) const
+{
+	h.append( hash() );
 }
 
 IECore::ConstObjectPtr ValuePlug::getObjectValue() const

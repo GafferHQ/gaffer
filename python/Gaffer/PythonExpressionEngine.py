@@ -54,6 +54,7 @@ class PythonExpressionEngine( Gaffer.ExpressionNode.Engine ) :
 		
 		self.__inPlugs = parser.plugReads
 		self.__outPlug = parser.plugWrites[0]
+		self.__contextNames = parser.contextReads
 	
 	def outPlug( self ) :
 	
@@ -62,6 +63,10 @@ class PythonExpressionEngine( Gaffer.ExpressionNode.Engine ) :
 	def inPlugs( self ) :
 	
 		return self.__inPlugs
+	
+	def contextNames( self ) :
+		
+		return self.__contextNames
 		
 	def execute( self, context, inputs, output ) :
 	
@@ -92,6 +97,7 @@ class _Parser( ast.NodeVisitor ) :
 
 		self.plugWrites = []
 		self.plugReads = []
+		self.contextReads = []
 		
 		self.visit( ast.parse( expression ) )
 		
@@ -99,7 +105,7 @@ class _Parser( ast.NodeVisitor ) :
 	
 		if len( node.targets ) == 1 :
 			if isinstance( node.targets[0], ast.Subscript ) :
-				plugPath = self.__plugPath( node.targets[0] )
+				plugPath = self.__plugPath( self.__path( node.targets[0] ) )
 				if plugPath :
 					self.plugWrites.append( plugPath )
 		
@@ -108,30 +114,46 @@ class _Parser( ast.NodeVisitor ) :
 	def visit_Subscript( self, node ) :
 	
 		if isinstance( node.ctx, ast.Load ) :
-			plugPath = self.__plugPath( node )
+			path = self.__path( node )
+			plugPath = self.__plugPath( path )
 			if plugPath :
 				self.plugReads.append( plugPath )
-			
-	def __plugPath( self, node ) :
+			else :
+				contextName = self.__contextName( path )
+				if contextName :
+					self.contextReads.append( contextName )
+				
+	def __path( self, node ) :
 	
-		path = []
+		result = []
 		while node is not None :
 			if isinstance( node, ast.Subscript ) :
 				if isinstance( node.slice, ast.Index ) :
 					if isinstance( node.slice.value, ast.Str ) :
-						path.insert( 0, node.slice.value.s )
+						result.insert( 0, node.slice.value.s )
 					else :
-						return ""
+						return []
 				node = node.value
 			elif isinstance( node, ast.Name ) :
-				path.insert( 0, node.id )
+				result.insert( 0, node.id )
 				node = None
 			else :
-				return ""
-
-		if path[0] != "parent" or len( path ) < 2 :
+				return []
+			
+		return result	
+			
+	def __plugPath( self, path ) :
+	
+		if len( path ) < 2 or path[0] != "parent" :
 			return ""
 		else :
 			return ".".join( path[1:] )
+			
+	def __contextName( self, path ) :
+	
+		if len( path ) !=2 or path[0] != "context" :
+			return ""
+		else :
+			return path[1]
 		
 Gaffer.ExpressionNode.Engine.registerEngine( "python", PythonExpressionEngine )

@@ -54,11 +54,28 @@ Shader::~Shader()
 {
 }
 
+IECore::MurmurHash Shader::stateHash() const
+{
+	IECore::MurmurHash h;
+	stateHash( h );
+	return h;
+}
+
+void Shader::stateHash( IECore::MurmurHash &h ) const
+{
+	shaderHash( h );
+}
+
 IECore::ObjectVectorPtr Shader::state() const
 {
 	IECore::ObjectVectorPtr s = new IECore::ObjectVector;
 	s->members().push_back( shader() );
 	return s;
+}
+
+void Shader::shaderHash( IECore::MurmurHash &h ) const
+{
+	h.append( typeName() );
 }
 
 /// \todo We should perhaps move the compute() method onto a new DependencyNode class,

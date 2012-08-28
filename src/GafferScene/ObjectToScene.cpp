@@ -72,6 +72,11 @@ void ObjectToScene::affects( const ValuePlug *input, Node::AffectedPlugsContaine
 	}
 }
 
+void ObjectToScene::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	objectPlug()->hash( h );
+}
+
 IECore::ConstObjectPtr ObjectToScene::computeSource( const Context *context ) const
 {
 	return objectPlug()->getValue();

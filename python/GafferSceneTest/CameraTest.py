@@ -40,8 +40,9 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
-class CameraTest( unittest.TestCase ) :
+class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstruct( self ) :
 	
@@ -71,6 +72,22 @@ class CameraTest( unittest.TestCase ) :
 		self.assertEqual( o.parameters()["resolution"].value, IECore.V2i( 200, 100 ) )
 		self.assertEqual( o.parameters()["projection"].value, "perspective" )
 		self.assertEqual( o.parameters()["projection:fov"].value, 45 )
+	
+		self.assertSceneValid( p["out"] )
+	
+	def testHashes( self ) :
+	
+		p = GafferScene.Camera( inputs = {
+			"resolution" : IECore.V2i( 200, 100 ),
+			"projection" : "perspective",
+			"fieldOfView" : 45,
+		} )
+	
+		for path in [ "/", "/camera" ] :
+			c = Gaffer.Context()
+			c["scene:path"] = path
+			with c :
+				self.assertHashesValid( p )	
 	
 if __name__ == "__main__":
 	unittest.main()

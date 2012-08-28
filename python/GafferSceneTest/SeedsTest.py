@@ -34,8 +34,8 @@
 #  
 ##########################################################################
 
-import os
 import unittest
+import threading
 
 import IECore
 
@@ -43,41 +43,58 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
+class SeedsTest( GafferSceneTest.SceneTestCase ) :
+	
+	def testChildNames( self ) :
+	
+		p = GafferScene.Plane()
+		s = GafferScene.Seeds()
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "seeds" )
+				
+		self.assertEqual( s["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.StringVectorData( [ "seeds" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane/seeds" ), None )
 
-	def testFileInput( self ) :
-	
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
+		s["name"].setValue( "points" )
 		
-		read = Gaffer.ReadNode( inputs = { "fileName" : fileName } )
-		object = IECore.Reader.create( fileName ).read()
-		
-		objectToScene = GafferScene.ObjectToScene( inputs = { "object" : read["output"] } )
-		
-		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/" ), None )
-		self.assertEqual( objectToScene["out"].childNames( "/" ), IECore.StringVectorData( [ "object" ] ) )
-		
-		self.assertEqual( objectToScene["out"].bound( "/object" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/object" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/object" ), object )
-		self.assertEqual( objectToScene["out"].childNames( "/object" ), None )
-
-		self.assertSceneValid( objectToScene["out"] )		
+		self.assertEqual( s["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.StringVectorData( [ "points" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane/points" ), None )
 	
-	def testMeshInput( self ) :
+	def testObject( self ) :
 	
-		p = GafferScene.ObjectToScene()
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		p = GafferScene.Plane()
+		s = GafferScene.Seeds()
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "seeds" )
 		
-		self.assertSceneValid( p["out"] )		
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		self.assertEqual( s["out"].objectHash( "/plane" ), p["out"].objectHash( "/plane" ) )
+		self.assertEqual( s["out"].object( "/plane" ), p["out"].object( "/plane" ) )
+		
+		self.failUnless( isinstance( s["out"].object( "/plane/seeds" ), IECore.PointsPrimitive ) )
+		numPoints = s["out"].object( "/plane/seeds" ).numPoints
+		
+		s["density"].setValue( 10 )
+		self.failUnless( s["out"].object( "/plane/seeds" ).numPoints > numPoints )
+		
+		h = s["out"].objectHash( "/plane/seeds" )
+		m = s["out"].object( "/plane/seeds" )
+		s["name"].setValue( "notSeeds" )
+		self.assertEqual( h, s["out"].objectHash( "/plane/notSeeds" ) )
+		self.assertEqual( m, s["out"].object( "/plane/notSeeds" ) )		
+		
+	def testHashes( self ) :
 	
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
-
-		self.assertSceneValid( p["out"] )		
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
-	
+		p = GafferScene.Plane()
+		s = GafferScene.Seeds()
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "seeds" )
+		
+		self.assertSceneValid( s["out"] )
+		 		
 if __name__ == "__main__":
 	unittest.main()

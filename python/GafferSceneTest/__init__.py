@@ -55,6 +55,8 @@ from PathFilterTest import PathFilterTest
 from AssignmentTest import AssignmentTest
 from AttributesTest import AttributesTest
 from AlembicSourceTest import AlembicSourceTest
+from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
+from SeedsTest import SeedsTest
 
 if __name__ == "__main__":
 	import unittest

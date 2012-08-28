@@ -79,6 +79,12 @@ ImageReader::ImageReader( const std::string &name )
 	:	ImageNode( name )
 {
 	addChild( new StringPlug( "fileName" ) );
+	
+	// disable caching on our outputs, as OIIO is already doing caching for us.
+	for( OutputPlugIterator it( outPlug() ); it!=it.end(); it++ )
+	{
+		(*it)->setFlags( Plug::Cacheable, false );
+	}
 }
 
 ImageReader::~ImageReader()
@@ -103,6 +109,12 @@ void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContaine
 	{
 		outputs.push_back( outPlug() );
 	}
+}
+
+void ImageReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hash( output, context, h );
+	fileNamePlug()->hash( h );
 }
 
 Imath::Box2i ImageReader::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const

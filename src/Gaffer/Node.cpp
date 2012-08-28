@@ -102,6 +102,12 @@ void Node::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) co
 {
 }
 
+void Node::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( typeId() );
+	h.append( output->relativeName( this ) );
+}
+
 void Node::compute( ValuePlug *output, const Context *context ) const
 {
 }

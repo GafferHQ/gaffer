@@ -45,7 +45,7 @@ using namespace GafferSceneTest;
 IE_CORE_DEFINERUNTIMETYPED( CompoundObjectSource )
 
 CompoundObjectSource::CompoundObjectSource( const std::string &name )
-	:	SceneNode( name )
+	:	Source( name )
 {
 	addChild( new ObjectPlug( "in" ) );
 }
@@ -66,9 +66,19 @@ const Gaffer::ObjectPlug *CompoundObjectSource::inPlug() const
 		
 void CompoundObjectSource::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
+	Source::affects( input, outputs );
 	if( input == inPlug() )
 	{
 		outputs.push_back( outPlug() );
+	}
+}
+
+void CompoundObjectSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	Source::hash( output, context, h );
+	if( output->parent<GafferScene::ScenePlug>() == outPlug() )
+	{
+		inPlug()->hash( h );
 	}
 }
 

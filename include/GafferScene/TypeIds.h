@@ -72,6 +72,7 @@ enum TypeId
 	PathFilterTypeId = 110528,
 	AttributesTypeId = 110529,
 	AlembicSourceTypeId = 110530,
+	SourceTypeId = 110531,
 	
 	LastTypeId = 110700
 };

@@ -76,6 +76,12 @@ class ValuePlug : public Plug
 		/// to the default for this Plug.
 		virtual void setToDefault() = 0;
 		
+		/// Returns a hash to represent the value of this plug
+		/// in the current context.
+		virtual IECore::MurmurHash hash() const;
+		/// Convenience function to append the hash to h.
+		void hash( IECore::MurmurHash &h ) const;
+		
 	protected :
 	
 		/// Internally all values are stored as instances of classes derived

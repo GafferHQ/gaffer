@@ -64,6 +64,7 @@ class Group : public SceneProcessor
 	
 	protected :
 			
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		virtual IECore::ObjectPtr computeMapping( const Gaffer::Context *context ) const;
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;

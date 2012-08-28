@@ -64,6 +64,7 @@ class Options : public GlobalsProcessor
 		/// they can add a predefined set of static options at construction.
 		Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags );
 
+		virtual void hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
 		
 };

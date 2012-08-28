@@ -65,6 +65,16 @@ const ImagePlug *ImageNode::outPlug() const
 {
 	return getChild<ImagePlug>( "out" );
 }
+
+void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	Node::hash( output, context, h );
+	if( output == outPlug()->channelDataPlug() )
+	{
+		h.append( context->get<string>( "image:channelName" ) );
+		h.append( context->get<V2i>( "image:tileOrigin" ) );		
+	}
+}
 				
 void ImageNode::compute( ValuePlug *output, const Context *context ) const
 {

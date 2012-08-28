@@ -34,50 +34,58 @@
 #  
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
 
 import Gaffer
-import GafferScene
-import GafferSceneTest
 
-class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
+## A useful base class for creating test cases for nodes.
+class TestCase( unittest.TestCase ) :
 
-	def testFileInput( self ) :
+	## Attempts to ensure that the hashes for a node
+	# are reasonable by jiggling around input values
+	# and checking that the hash changes when it should.
+	def assertHashesValid( self, node ) :
 	
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
+		# find all input ValuePlugs
+		inputPlugs = []
+		def __walkInputs( parent ) :
+			for child in parent.children() :
+				if isinstance( child, Gaffer.CompoundPlug ) :
+					__walkInputs( child )
+				elif isinstance( child, Gaffer.ValuePlug ) :
+					inputPlugs.append( child )
+		__walkInputs( node )
 		
-		read = Gaffer.ReadNode( inputs = { "fileName" : fileName } )
-		object = IECore.Reader.create( fileName ).read()
+		self.failUnless( len( inputPlugs ) > 0 )
 		
-		objectToScene = GafferScene.ObjectToScene( inputs = { "object" : read["output"] } )
-		
-		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/" ), None )
-		self.assertEqual( objectToScene["out"].childNames( "/" ), IECore.StringVectorData( [ "object" ] ) )
-		
-		self.assertEqual( objectToScene["out"].bound( "/object" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/object" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/object" ), object )
-		self.assertEqual( objectToScene["out"].childNames( "/object" ), None )
-
-		self.assertSceneValid( objectToScene["out"] )		
-	
-	def testMeshInput( self ) :
-	
-		p = GafferScene.ObjectToScene()
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		
-		self.assertSceneValid( p["out"] )		
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-	
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
-
-		self.assertSceneValid( p["out"] )		
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
-	
-if __name__ == "__main__":
-	unittest.main()
+		numTests = 0
+		for inputPlug in inputPlugs :
+			for outputPlug in node.affects( inputPlug ) :
+				
+				hash = outputPlug.hash()
+				
+				value = inputPlug.getValue()
+				if isinstance( value, float ) :
+					increment = 0.1
+				elif isinstance( value, int ) :
+					increment = 1
+				elif isinstance( value, basestring ) :
+					increment = "a"
+				else :
+					# don't know how to deal with this
+					# value type.
+					continue
+					
+				inputPlug.setValue( value + increment )
+				if inputPlug.getValue() == value :
+					inputPlug.setValue( value - increment )
+				if inputPlug.getValue() == value :
+					continue
+			
+				self.assertNotEqual( outputPlug.hash(), hash )
+				
+				numTests += 1
+				
+		self.failUnless( numTests > 0 )

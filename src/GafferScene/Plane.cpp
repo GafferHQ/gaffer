@@ -75,6 +75,11 @@ void Plane::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outpu
 	}
 }
 
+void Plane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	dimensionsPlug()->hash( h );	
+}
+
 IECore::ConstObjectPtr Plane::computeSource( const Context *context ) const
 {
 	V2f dimensions = dimensionsPlug()->getValue();

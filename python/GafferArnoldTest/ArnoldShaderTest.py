@@ -106,6 +106,21 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		self.failUnless( isinstance( s["n"]["parameters"]["line_color"], Gaffer.Color3fPlug ) )
 		self.failUnless( isinstance( s["n"]["parameters"]["raster_space"], Gaffer.BoolPlug ) )
 		self.failUnless( isinstance( s["n"]["parameters"]["edge_type"], Gaffer.StringPlug ) )
+	
+	def testHash( self ) :
+	
+		n = GafferArnold.ArnoldShader()
+		h = n.stateHash()
+		
+		n.setShader( "noise" )
+		h2 = n.stateHash()
+		
+		self.assertNotEqual( h, h2 )
+		
+		n["parameters"]["octaves"].setValue( 10 )
+		h3 = n.stateHash()
+		
+		self.assertNotEqual( h2, h3 )
 		
 if __name__ == "__main__":
 	unittest.main()

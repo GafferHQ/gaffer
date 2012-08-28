@@ -76,6 +76,9 @@ class ExpressionNode : public Node
 				/// Paths should be of the form nodeName.plugName, and are expected to be relative to
 				/// the parent of the expression node.
 				virtual void inPlugs( std::vector<std::string> &plugPaths ) = 0;
+				/// Must fill names with the names of all context values the expression
+				/// wishes to read.
+				virtual void contextNames( std::vector<std::string> &names ) = 0;
 				/// Must execute the expression in the specified context, using the values
 				/// provided by proxyInputs and setting the result in proxyOutput.
 				virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput ) = 0;
@@ -97,6 +100,7 @@ class ExpressionNode : public Node
 		
 	protected :
 		
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( ValuePlug *output, const Context *context ) const;
 		
 	private :

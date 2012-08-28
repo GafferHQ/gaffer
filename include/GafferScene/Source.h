@@ -34,75 +34,33 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
+#ifndef GAFFERSCENE_SOURCE_H
+#define GAFFERSCENE_SOURCE_H
 
-#include "GafferScene/PathFilter.h"
+#include "GafferScene/SceneNode.h"
 
-using namespace GafferScene;
-using namespace Gaffer;
-using namespace IECore;
-using namespace std;
-
-IE_CORE_DEFINERUNTIMETYPED( PathFilter );
-
-PathFilter::PathFilter( const std::string &name )
-	:	Filter( name )
+namespace GafferScene
 {
-	addChild( new StringVectorDataPlug( "paths", Plug::In, 0, Plug::Default ) );
-}
 
-PathFilter::~PathFilter()
+/// The Source class is the base class for all Nodes which are capable of generating
+/// a scene graph from scratch.
+class Source : public SceneNode
 {
-}
 
-Gaffer::StringVectorDataPlug *PathFilter::pathsPlug()
-{
-	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
-}
+	public :
 
-const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
-{
-	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
-}
+		Source( const std::string &name=staticTypeName() );
+		virtual ~Source();
 
-void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
-{
-	if( input == pathsPlug() )
-	{
-		outputs.push_back( matchPlug() );
-	}
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Source, SourceTypeId, SceneNode );
+				
+	protected :
+				
+		/// Implemented to hash in the scene:path context entry for all children of outPlug().
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+};
 
-void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( context->get<string>( "scene:path" ) );
-	pathsPlug()->hash( h );
-}
+} // namespace GafferScene
 
-Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
-{
-	ConstStringVectorDataPtr paths = pathsPlug()->getValue();
-	if( !paths )
-	{
-		return NoMatch;
-	}
-	
-	string path = context->get<string>( "scene:path" );
-	Result result = NoMatch;
-	for( vector<string>::const_iterator it = paths->readable().begin(), eIt = paths->readable().end(); it != eIt; it++ )
-	{
-		if( it->compare( 0, path.size(), path ) == 0 )
-		{
-			if( it->size() == path.size() )
-			{
-				return Match;
-			}
-			else if( it->size() > path.size() && (*it)[path.size()] == '/' )
-			{
-				// don't return yet, because we're holding out for a full match
-				result = DescendantMatch;
-			}
-		}
-	}
-	return result;
-}
+#endif // GAFFERSCENE_SOURCE_H

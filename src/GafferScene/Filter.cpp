@@ -60,7 +60,16 @@ const Gaffer::IntPlug *Filter::matchPlug() const
 {
 	return getChild<Gaffer::IntPlug>( "match" );
 }
-				
+
+void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	Node::hash( output, context, h );
+	if( output == matchPlug() )
+	{
+		hashMatch( context, h );
+	}
+}
+			
 void Filter::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == matchPlug() )

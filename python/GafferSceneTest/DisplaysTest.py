@@ -40,8 +40,9 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
-class DisplaysTest( unittest.TestCase ) :
+class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
@@ -102,5 +103,15 @@ class DisplaysTest( unittest.TestCase ) :
 		
 		self.assertEqual( GafferScene.Displays.registeredDisplays(), ( "test", "test2" ) )
 	
+	def testHashPassThrough( self ) :
+	
+		# the hash of the per-object part of a displays output should be
+		# identical to the input, so that they share cache entries.
+	
+		p = GafferScene.Plane()
+		displays = GafferScene.Displays( inputs = { "in" : p["out"] } )
+		
+		self.assertSceneHashesEqual( p["out"], displays["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
+					
 if __name__ == "__main__":
 	unittest.main()

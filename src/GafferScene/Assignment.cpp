@@ -72,6 +72,21 @@ bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inp
 	return true;
 }
 
+bool Assignment::processesAttributes() const
+{
+	return true;
+}
+
+void Assignment::hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	const Plug *in = shaderPlug()->getInput<Plug>();
+	const Shader *shader = in ? in->ancestor<Shader>() : 0;
+	if( shader )
+	{
+		shader->stateHash( h );
+	}
+}
+		
 IECore::ConstCompoundObjectPtr Assignment::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	CompoundObjectPtr result = inputAttributes ? inputAttributes->copy() : CompoundObjectPtr( new CompoundObject );

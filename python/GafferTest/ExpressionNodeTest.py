@@ -127,6 +127,13 @@ class ExpressionNodeTest( unittest.TestCase ) :
 			with context :
 				self.assertEqual( s["n"]["p"].getValue(), "#%d" % i )
 	
+	@unittest.expectedFailure
+	def testContextMethodCallsDisallowed( self ) :
+	
+		# we need to prevent expressions calling anything other
+		# than __getitem__ on the context object.
+		raise NotImplementedError
+	
 	def testRegisteredEngines( self ) :
 	
 		e = Gaffer.ExpressionNode.Engine.registeredEngines()

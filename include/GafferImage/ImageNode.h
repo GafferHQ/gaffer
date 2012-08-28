@@ -63,6 +63,9 @@ class ImageNode : public Gaffer::Node
 				
 	protected :
 				
+		/// Implemented to append the image:channelName and image:tileOrigin context entries to the hash where appropriate.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
 		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		

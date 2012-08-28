@@ -61,8 +61,16 @@ class AttributeCache : public SceneElementProcessor
 				
 	protected :
 		
+		virtual bool processesBound() const;
+		virtual void hashBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+
+		virtual bool processesTransform() const;
+		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+
+		virtual bool processesObject() const;
+		virtual void hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 
 		std::string entryForPath( const ScenePath &path ) const;

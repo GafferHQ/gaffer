@@ -57,12 +57,15 @@ class Shader : public Gaffer::Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Shader, ShaderTypeId, Gaffer::Node );
 		
+		IECore::MurmurHash stateHash() const;
+		void stateHash( IECore::MurmurHash &h ) const;
 		/// Returns a series of IECore::StateRenderables suitable for specifying this
 		/// shader (and it's inputs) to an IECore::Renderer.
 		IECore::ObjectVectorPtr state() const;
 				
 	protected :
 		
+		virtual void shaderHash( IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ShaderPtr shader() const = 0;
 			
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;

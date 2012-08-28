@@ -72,6 +72,7 @@ class OpHolder : public ParameterisedHolderNode
 	
 	protected :
 	
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Plug *output, const Context *context ) const;
 		
 	private :

@@ -9,6 +9,8 @@ PRIORITIES!!!!
 
 	* caching
 
+* enable/disable plug for scene processors
+
 * optimise PathListingWidget and paths
 	- need hasChildren() and possibly fetchMore() and threading.
 
@@ -24,9 +26,11 @@ PRIORITIES!!!!
 * improved ui for arnold shaders
 	- support gaffer.metadata?
 
-* ### support in StringPlugs
-	- automatic expansion of arbitrary keys from the context in a new getExpandedValue() method
-		- or have getValue() automatically do the expansion if it detects that there is a current computation?
+* address removing copy() in TypedObjectPlug::setValue()
+	- it offers a big speedup
+	- do we need a noCopy flag?
+	- or do we know that if we're in a compute() then we don't need a copy?
+		- or some such
 
 * i'm pretty sure we've got circular references in the menu code for CompoundEditor.
 
@@ -41,6 +45,10 @@ PRIORITIES!!!!
 	- makes color pickers crash on close
 
 * setrendercamera node
+
+* alembic camera converter
+
+* opencolorio node
 
 * fix CompoundVectorParameter ui
 
@@ -96,6 +104,10 @@ PRIORITIES!!!!
 	- frame support for reader
 	- ocio node
 
+* install ops with sensible names
+
+* explore image based layout tools
+
 * config
 	- user config in ~/gaffer needs to be versioned by major version
 	
@@ -137,9 +149,7 @@ PRIORITIES!!!!
 		- python DONE 
 		- seexpr LATER
 		- osl LATER
-		
-* optimise setInput() for the case where the input is the same as before
-			
+					
 * documentation of the rules for compute()
 	* and exception throwing for when the rules are broken
 		- but not propagating exceptions out to the getValue() caller

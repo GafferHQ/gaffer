@@ -37,13 +37,14 @@
 
 #include "boost/python.hpp"
 
+#include "IECore/MurmurHash.h"
+#include "IECorePython/Wrapper.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -92,5 +93,7 @@ void GafferBindings::bindValuePlug()
 	IECorePython::RunTimeTypedClass<ValuePlug>()
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( ValuePlug )
 		.def( "setToDefault", &ValuePlug::setToDefault )
+		.def( "hash", (IECore::MurmurHash (ValuePlug::*)() const)&ValuePlug::hash )
+		.def( "hash", (void (ValuePlug::*)( IECore::MurmurHash & ) const)&ValuePlug::hash )
 	;
 }

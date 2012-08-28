@@ -64,31 +64,48 @@ class SceneElementProcessor : public SceneProcessor
 
 		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
+		/// Implemented to call hash*() where appropriate - derived classes should implement those methods
+		/// rather than this one.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
-		/// Implemented to call processBound().
+		/// Implemented to call processBound() where appropriate.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processTransform().
+		/// Implemented to call processTransform() where appropriate.
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processAttributes().
+		/// Implemented to call processAttributes() where appropriate.
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processObject().
+		/// Implemented to call processObject() where appropriate.
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
 		virtual IECore::ConstStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
 		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
-		/// May be reimplemented by derived classes to process the input scene. These methods will only be called for paths matching
-		/// the filter applied to this node. Note that in the case of processBound(), modifications will automatically be propagated to
-		/// parent paths. This comes at some expense, so subclasses that intend to process the bound must implement processesBound() to
-		/// return true to enable this behaviour.
-		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
-		/// Defaults to false - if you override processBound, you /must/ reimplement this to return true.
+		/// @name Scene processing methods
+		/// These methods should be reimplemented by derived classes to process the input scene - they will be called as
+		/// appropriate based on the result of the filter applied to the node. To process a particular
+		/// aspect of the scene you must reimplement processesAspect() to return true, reimplement
+		/// hashAspect() to append to the hash appropriately (the path will already have been appended),
+		/// and finally reimplement the processAspect() function to perform the processing.
+		/////////////////////////////////////////////////////////////////////////////////////////////////	
+		//@{
 		virtual bool processesBound() const;
+		virtual void hashBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+		
+		virtual bool processesTransform() const;
+		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+
+		virtual bool processesAttributes() const;
+		virtual void hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstCompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
-		/// Note that if you change the bound of object, you need to reimplement both processBound() and processesBound().
+		
+		virtual bool processesObject() const;
+		virtual void hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		//@}
 		
 };
 

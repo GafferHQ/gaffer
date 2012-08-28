@@ -103,6 +103,28 @@ class EngineWrapper : public ExpressionNode::Engine, public IECorePython::Wrappe
 			}	
 		}
 		
+		virtual void contextNames( std::vector<std::string> &names )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				override f = this->get_override( "contextNames" );
+				if( f )
+				{
+					list pythonNames = f();
+					container_utils::extend_container( names, pythonNames );
+				}
+				else
+				{
+					msg( IECore::Msg::Error, "EngineWrapper::contextNames", "contextNames method not defined in python." );			
+				}
+			}
+			catch( const error_already_set &e )
+			{
+				translatePythonException();
+			}	
+		}
+		
 		virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput )
 		{
 			IECorePython::ScopedGILLock gilLock;
