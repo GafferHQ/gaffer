@@ -77,49 +77,31 @@ class ValuePlug::Computation
 		}
 
 		IECore::ConstObjectPtr compute()
-		{
-			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
+		{								
+			if( m_resultPlug->getFlags( Plug::Cacheable ) )
 			{
-				// cast is ok, because we know that the resulting setValue() call won't
-				// actually modify the plug, but will just place the value in our m_resultValue.
-				const_cast<ValuePlug *>( m_resultPlug )->setFrom( input );
-			}
-			else
-			{
-				assert( m_resultPlug->direction()==Out );
-				const Node *n = m_resultPlug->node();
-				if( !n )
+				IECore::MurmurHash hash = m_resultPlug->hash();
+				if( g_valueCache.cached( hash ) )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
-				}
-								
-				if( m_resultPlug->getFlags( Plug::Cacheable ) )
-				{
-					IECore::MurmurHash hash = m_resultPlug->hash();
-					if( g_valueCache.cached( hash ) )
-					{
-						return g_valueCache.get( hash );
-					}
-					else
-					{
-						// cast is ok, because we know that the resulting setValue() call won't
-						// actually modify the plug, but will just place the value in our m_resultValue.
-						n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
-						if( m_resultWritten )
-						{
-							g_valueCache.set( hash, m_resultValue, m_resultValue ? m_resultValue->memoryUsage() : 8 );
-						}
-					}
+					return g_valueCache.get( hash );
 				}
 				else
 				{
-					// plug has requested no caching, so we compute from scratch every
-					// time. cast is ok - see comments above.
-					n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
+					computeOrSetFromInput();
+					if( m_resultWritten )
+					{
+						g_valueCache.set( hash, m_resultValue, m_resultValue ? m_resultValue->memoryUsage() : 8 );
+					}
 				}
 			}
+			else
+			{
+				// plug has requested no caching, so we compute from scratch every
+				// time. cast is ok - see comments above.
+				computeOrSetFromInput();
+			}
 			
-			// the call to compute() or setFrom() above should cause setValue() to be called
+			// the call to computeOrSetFromInput() above should cause setValue() to be called
 			// on the result plug, which in turn will call ValuePlug::setObjectValue(), which will
 			// then store the result in the current computation by calling receiveResult().
 			if( !m_resultWritten )
@@ -157,6 +139,26 @@ class ValuePlug::Computation
 		}
 	
 	private :
+	
+		void computeOrSetFromInput()
+		{
+			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
+			{
+				// cast is ok, because we know that the resulting setValue() call won't
+				// actually modify the plug, but will just place the value in our m_resultValue.
+				const_cast<ValuePlug *>( m_resultPlug )->setFrom( input );
+			}
+			else
+			{
+				const Node *n = m_resultPlug->node();
+				if( !n )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
+				}
+				// cast is ok - see comment above.
+				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
+			}
+		}
 	
 		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
@@ -234,11 +236,23 @@ IECore::MurmurHash ValuePlug::hash() const
 	const ValuePlug *input = getInput<ValuePlug>();
 	if( input )
 	{
-		/// \todo There is potential wastage here when connecting a float plug
-		/// to an int plug - the hash from the latter would change less frequently
-		/// if we considered it properly. Maybe there should be a hashFromInput()
-		/// method?
-		h = input->hash();
+		if( input->typeId() == typeId() )
+		{
+			// we can assume that setFrom( input ) would perform no
+			// conversion on the value, so by sharing hashes we also
+			// get to share cache entries.
+			h = input->hash();
+		}
+		else
+		{
+			// it would be unsafe to assume we can share cache entries,
+			// because conversion is probably performed by setFrom( input ).
+			// hash in a little extra something to represent the conversion
+			// and break apart the cache entries.
+			h = input->hash();
+			h.append( input->typeId() );
+			h.append( typeId() );
+		}
 	}
 	else
 	{

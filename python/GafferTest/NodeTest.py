@@ -457,7 +457,6 @@ class NodeTest( GafferTest.TestCase ) :
 		# be distinct objects, even though they are equal.
 		self.failIf( v3.isSame( v1 ) )
 	
-	@unittest.expectedFailure
 	def testConnectedPlugsShareHashesAndCacheEntries( self ) :
 	
 		class Out( Gaffer.Node ) :
@@ -495,7 +494,7 @@ class NodeTest( GafferTest.TestCase ) :
 				Gaffer.Node.__init__( self, name )
 		
 				self.addChild( Gaffer.ObjectPlug( "oIn", Gaffer.Plug.Direction.In ) )	
-				self.addChild( Gaffer.FloatPlug( "iIn", Gaffer.Plug.Direction.In ) )
+				self.addChild( Gaffer.IntPlug( "iIn", Gaffer.Plug.Direction.In ) )
 		
 				self._init( inputs, dynamicPlugs )
 	
@@ -524,7 +523,7 @@ class NodeTest( GafferTest.TestCase ) :
 		
 				# even though iIn and fOut are connected, they should have
 				# different hashes and different values, because type conversion
-				# is performed when connecting them.
+				# (float to int) is performed when connecting them.
 				
 				self.assertEqual( nIn["iIn"].getValue(), i )
 				self.assertEqual( nOut["fOut"].getValue(), float( i ) )
@@ -572,7 +571,7 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n["in"].hash(), n["out"].hash() )
 		self.assertEqual( n["in"].getValue(), n["out"].getValue() )
 	
-	@unittest.expectedFailure	
+	@unittest.expectedFailure
 	def testPassThroughSharesCacheEntries( self ) :
 	
 		n = self.PassThrough()
