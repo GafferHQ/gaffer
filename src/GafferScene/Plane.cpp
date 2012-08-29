@@ -46,7 +46,7 @@ using namespace IECore;
 IE_CORE_DEFINERUNTIMETYPED( Plane );
 
 Plane::Plane( const std::string &name )
-	:	ObjectSourceSceneNode( name, "plane" )
+	:	ObjectSource( name, "plane" )
 {
 	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 1.0f ), V2f( 0.0f ) ) );
 }
@@ -67,7 +67,7 @@ const Gaffer::V2fPlug *Plane::dimensionsPlug() const
 
 void Plane::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
 {
-	ObjectSourceSceneNode::affects( input, outputs );
+	ObjectSource::affects( input, outputs );
 	
 	if( input->parent<V2fPlug>() == dimensionsPlug() )
 	{

@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OBJECTSOURCE_H
-#define GAFFERSCENE_OBJECTSOURCE_H
+#ifndef GAFFERSCENE_OBJECTSOURCEBASE_H
+#define GAFFERSCENE_OBJECTSOURCEBASE_H
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TransformPlug.h"
@@ -47,15 +47,15 @@ namespace GafferScene
 
 /// \todo Support turning IECore::Groups into a proper scene hierarchy.
 template<typename BaseType>
-class ObjectSource : public BaseType
+class ObjectSourceBase : public BaseType
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ObjectSource<BaseType>, BaseType );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ObjectSource<BaseType> );
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ObjectSourceBase<BaseType>, BaseType );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ObjectSourceBase<BaseType> );
 
-		virtual ~ObjectSource();
+		virtual ~ObjectSourceBase();
 		
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -67,7 +67,7 @@ class ObjectSource : public BaseType
 		
 	protected :
 
-		ObjectSource( const std::string &name, const std::string &namePlugDefaultValue );
+		ObjectSourceBase( const std::string &name, const std::string &namePlugDefaultValue );
 
 		Gaffer::ObjectPlug *sourcePlug();
 		const Gaffer::ObjectPlug *sourcePlug() const;
@@ -93,9 +93,9 @@ class ObjectSource : public BaseType
 		
 };
 
-typedef ObjectSource<Source> ObjectSourceSceneNode;
-IE_CORE_DECLAREPTR( ObjectSourceSceneNode );
+typedef ObjectSourceBase<Source> ObjectSource;
+IE_CORE_DECLAREPTR( ObjectSource );
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_OBJECTSOURCE_H
+#endif // GAFFERSCENE_OBJECTSOURCEBASE_H

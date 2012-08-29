@@ -43,7 +43,7 @@ using namespace IECore;
 IE_CORE_DEFINERUNTIMETYPED( ObjectToScene );
 
 ObjectToScene::ObjectToScene( const std::string &name )
-	:	ObjectSourceSceneNode( name, "object" )
+	:	ObjectSource( name, "object" )
 {
 	addChild( new ObjectPlug( "object" ) );
 }
@@ -64,7 +64,7 @@ const Gaffer::ObjectPlug *ObjectToScene::objectPlug() const
 
 void ObjectToScene::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
 {
-	ObjectSourceSceneNode::affects( input, outputs );
+	ObjectSource::affects( input, outputs );
 	
 	if( input == objectPlug() )
 	{

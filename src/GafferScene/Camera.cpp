@@ -46,7 +46,7 @@ using namespace Imath;
 IE_CORE_DEFINERUNTIMETYPED( Camera );
 
 Camera::Camera( const std::string &name )
-	:	ObjectSourceSceneNode( name, "camera" )
+	:	ObjectSource( name, "camera" )
 {
 	addChild( new V2iPlug( "resolution", Plug::In, V2i( 1024, 778 ) ) );
 	addChild( new StringPlug( "projection", Plug::In, "perspective" ) );
@@ -89,7 +89,7 @@ const Gaffer::FloatPlug *Camera::fieldOfViewPlug() const
 
 void Camera::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
 {
-	ObjectSourceSceneNode::affects( input, outputs );
+	ObjectSource::affects( input, outputs );
 	
 	if(
 		input == resolutionPlug() ||

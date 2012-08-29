@@ -39,17 +39,17 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferScene/ObjectSource.h"
+#include "GafferScene/ObjectSourceBase.h"
 
 namespace GafferScene
 {
 
-class Plane : public ObjectSourceSceneNode
+class Plane : public ObjectSource
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Plane, PlaneTypeId, ObjectSourceSceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Plane, PlaneTypeId, ObjectSource );
 
 		Plane( const std::string &name=staticTypeName() );
 		virtual ~Plane();

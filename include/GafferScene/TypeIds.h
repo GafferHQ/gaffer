@@ -55,7 +55,7 @@ enum TypeId
 	SceneContextProcessorBaseTypeId = 110511,
 	SceneContextProcessorTypeId = 110512,
 	SceneTimeWarpTypeId = 110513,
-	ObjectSourceSceneNodeTypeId = 110514,
+	ObjectSourceTypeId = 110514,
 	PlaneTypeId = 110515,
 	SeedsTypeId = 110516,
 	InstancerTypeId = 110517,

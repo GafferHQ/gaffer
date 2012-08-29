@@ -34,14 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/ObjectSource.inl"
+#include "GafferScene/ObjectSourceBase.inl"
 
 namespace GafferScene
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectSourceSceneNode, ObjectSourceSceneNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectSource, ObjectSourceTypeId )
 
 // explicit instantiation
-template class GafferScene::ObjectSource<Source>;
+template class GafferScene::ObjectSourceBase<Source>;
 
 } // namespace GafferScene

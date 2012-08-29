@@ -37,17 +37,17 @@
 #ifndef GAFFERSCENE_CAMERA_H
 #define GAFFERSCENE_CAMERA_H
 
-#include "GafferScene/ObjectSource.h"
+#include "GafferScene/ObjectSourceBase.h"
 
 namespace GafferScene
 {
 
-class Camera : public ObjectSourceSceneNode
+class Camera : public ObjectSource
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Camera, CameraTypeId, ObjectSourceSceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Camera, CameraTypeId, ObjectSource );
 
 		Camera( const std::string &name=staticTypeName() );
 		virtual ~Camera();

@@ -133,7 +133,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<SceneContextProcessorBase>();
 	GafferBindings::NodeClass<SceneContextProcessor>();
 	GafferBindings::NodeClass<SceneTimeWarp>();
-	GafferBindings::NodeClass<ObjectSourceSceneNode>();
+	GafferBindings::NodeClass<ObjectSource>();
 	GafferBindings::NodeClass<Plane>();
 	GafferBindings::NodeClass<BranchCreator>();
 	GafferBindings::NodeClass<Seeds>();

@@ -37,17 +37,17 @@
 #ifndef GAFFERSCENE_OBJECTTOSCENE_H
 #define GAFFERSCENE_OBJECTTOSCENE_H
 
-#include "GafferScene/ObjectSource.h"
+#include "GafferScene/ObjectSourceBase.h"
 
 namespace GafferScene
 {
 
-class ObjectToScene : public ObjectSourceSceneNode
+class ObjectToScene : public ObjectSource
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToScene, ObjectToSceneTypeId, ObjectSourceSceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToScene, ObjectToSceneTypeId, ObjectSource );
 
 		ObjectToScene( const std::string &name=staticTypeName() );
 		virtual ~ObjectToScene();
