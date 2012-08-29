@@ -102,18 +102,13 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	AttributeBlock attributeBlock( renderer );
 	Context::Scope scopedContext( m_context );
 	
-	std::cerr << 1 << std::endl;
-	
 	renderer->setAttribute( "name", new StringData( m_scenePath ) );
 	
-	std::cerr << 2 << std::endl;
 	/// \todo See above.
 	try
 	{
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
 		
-		std::cerr << 3 << std::endl;
-	
 		ConstCompoundObjectPtr attributes = runTimeCast<const CompoundObject>( m_scenePlug->attributesPlug()->getValue() );
 		if( attributes )
 		{
@@ -140,8 +135,6 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				}
 			}
 		}
-
-		std::cerr << 4 << std::endl;
 		
 		ConstPrimitivePtr primitive = runTimeCast<const Primitive>( m_scenePlug->objectPlug()->getValue() );
 		if( primitive )
@@ -154,11 +147,8 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		{
 			expand = m_pathsToExpand->find( m_scenePath ) != m_pathsToExpand->end();
 		}
-
-		std::cerr << 5 << m_scenePath << std::endl;
 				
 		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
-		std::cerr << childNames->typeName() << std::endl;
 		if( childNames && childNames->readable().size() )
 		{		
 			if( expand )
@@ -186,9 +176,6 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				CurvesPrimitive::createBox( b )->render( renderer );	
 			}
 		}
-		
-		std::cerr << 6 << std::endl;
-	
 	}
 	catch( const std::exception &e )
 	{
