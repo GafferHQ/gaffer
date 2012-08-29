@@ -7,8 +7,6 @@ PRIORITIES!!!!
 
 	* shaders with connections!
 
-	* caching
-
 * enable/disable plug for scene processors
 
 * optimise PathListingWidget and paths
@@ -110,6 +108,12 @@ PRIORITIES!!!!
 
 * config
 	- user config in ~/gaffer needs to be versioned by major version
+
+* AttributeCache test case
+	- and apply to only a subset of the scene.
+
+* have PathFilter have a mode where all children of chosen paths are also on.
+	- useful for AttributeCache node
 	
 * scene nodes 
 	- modelcachesource DONE
