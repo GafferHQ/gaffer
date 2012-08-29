@@ -50,7 +50,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 			thisBound = scenePlug.bound( scenePath )
 			
-			o = scenePlug.object( "/" )
+			o = scenePlug.object( scenePath )
 			if isinstance( o, IECore.VisibleRenderable ) :
 				 if not thisBound.contains( o.bound() ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
