@@ -112,6 +112,11 @@ static boost::python::tuple children( GraphComponent &c, IECore::TypeId typeId )
 	return boost::python::tuple( l );
 }
 
+static GraphComponentPtr getChild( GraphComponent &g, const char *n )
+{
+	return g.getChild<GraphComponent>( n );
+}
+
 static GraphComponentPtr getItem( GraphComponent &g, const char *n )
 {
 	GraphComponentPtr c = g.getChild<GraphComponent>( n );
@@ -140,16 +145,7 @@ static GraphComponentPtr getItem( GraphComponent &g, long index )
 		throw_error_already_set();
 	}
 	
-	/// \todo This desperately needs us to change the container type
-	/// for g.children() to one with random access indexing.
-	GraphComponent::ChildIterator it = g.children().begin();
-	while( index )
-	{
-		it++;
-		index--;
-	}
-	
-	return *it;
+	return g.getChild<GraphComponent>( index );
 }
 
 static void delItem( GraphComponent &g, const char *n )
@@ -243,7 +239,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "addChild", &GraphComponent::addChild )
 		.def( "removeChild", &GraphComponent::removeChild )
 		.def( "setChild", &GraphComponent::setChild )
-		.def( "getChild", (GraphComponentPtr (GraphComponent::*)( const std::string & ))&GraphComponent::getChild<GraphComponent> )
+		.def( "getChild", &getChild )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const char * ))&getItem )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, long ))&getItem )
 		.def( "__setitem__", &GraphComponent::setChild )

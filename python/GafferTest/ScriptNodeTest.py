@@ -442,6 +442,23 @@ a = A()"""
 		
 		s.deleteNodes()
 		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 0 )
+	
+	def testDeleteManyNodes( self ) :
+	
+		s = Gaffer.ScriptNode()
+		for i in range( 0, 10000 ) :
+			s["c%d"%i] = Gaffer.Node()
+		
+		s.deleteNodes()
+
+		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 0 )
+	
+	def testDeleteNodesDoesntRemovePlugs( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s.deleteNodes()
+		
+		self.failUnless( "fileName" in s )
 		
 	def testDeleteNodesWithFilter( self ) :
 	

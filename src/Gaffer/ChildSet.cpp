@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,28 +65,12 @@ bool ChildSet::contains( ConstMemberPtr object ) const
 
 Set::MemberPtr ChildSet::member( size_t index )
 {
-	/// \todo This desperately needs the GraphComponent to provide random access to children
-	/// by index - there's a todo in GraphComponent about this already.
-	GraphComponent::ChildIterator it = m_parent->children().begin();
-	while( index )
-	{
-		it++;
-		index--;
-	}
-	return *it;
+	return const_cast<GraphComponent *>( m_parent->getChild<GraphComponent>( index ) );
 }
 
 Set::ConstMemberPtr ChildSet::member( size_t index ) const
 {
-	/// \todo This desperately needs the GraphComponent to provide random access to children
-	/// by index - there's a todo in GraphComponent about this already.
-	GraphComponent::ChildIterator it = m_parent->children().begin();
-	while( index )
-	{
-		it++;
-		index--;
-	}
-	return *it;
+	return m_parent->getChild<GraphComponent>( index );
 }
 		
 size_t ChildSet::size() const

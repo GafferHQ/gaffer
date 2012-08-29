@@ -104,7 +104,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// \todo There might be a good case for making this a vector - we don't do insertions
 		/// or removals very often and constant time access to the nth element might be
 		/// very useful.
-		typedef std::list<GraphComponentPtr> ChildContainer;
+		typedef std::vector<GraphComponentPtr> ChildContainer;
 		typedef ChildContainer::const_iterator ChildIterator;
 		/// Components can accept or reject potential children by implementing this
 		/// call. By default all children are accepted.
@@ -134,11 +134,19 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Get a child by name, performing a runTimeCast to T. The name
 		/// may consist of "." delimited names to get a distant child-of-a-child.
 		template<typename T>
-		typename T::Ptr getChild( const std::string &name );
+		T *getChild( const std::string &name );
 		/// Get a child by name, performing a runTimeCast to T. The name
 		/// may consist of "." delimited names to get a distant child-of-a-child.
 		template<typename T>
-		typename T::ConstPtr getChild( const std::string &name ) const;
+		const T *getChild( const std::string &name ) const;
+		/// Get a child by index, performing a runTimeCast to T.
+		/// Note that this function does not perform any bounds checking.
+		template<typename T>
+		inline T *getChild( size_t index );
+		/// Get a child by index, performing a runTimeCast to T.
+		/// Note that this function does not perform any bounds checking.
+		template<typename T>
+		inline const T *getChild( size_t index ) const;		
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;

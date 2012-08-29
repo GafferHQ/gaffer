@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,5 @@ void GafferUIBindings::bindIndividualContainer()
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( IndividualContainer )
 		.def( "setChild", &IndividualContainer::setChild )
 		.def( "getChild", (GadgetPtr (IndividualContainer::*)())&IndividualContainer::getChild<Gadget> )
-		// we also have to redefine the GraphComponent level getChild binding so that we don't override it completely
-		.def( "getChild", (Gaffer::GraphComponentPtr (Gaffer::GraphComponent::*)( const std::string & ))&Gaffer::GraphComponent::getChild<Gaffer::GraphComponent> )
 	;
 }

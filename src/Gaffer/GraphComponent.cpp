@@ -294,7 +294,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	{
 		child->parentChanging( 0 );
 	}
-	m_children.remove( child );
+	m_children.erase( std::find( m_children.begin(), m_children.end(), child ) );
 	child->m_parent = 0;
 	childRemovedSignal()( this, child.get() );
 	if( emitParentChanged )

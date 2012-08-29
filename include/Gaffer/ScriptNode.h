@@ -125,7 +125,8 @@ class ScriptNode : public Node
 		/// selection. If specified then filter limits what is deleted. Note
 		/// that it is also possible to call removeChild( node ) to remove
 		/// nodes, and that the node will still be properly disconnected
-		/// and unselected - this function is just a convenience method.
+		/// and unselected - this function is just a convenience method
+		/// for efficiently deleting many nodes at once.
 		/// \undoable
 		void deleteNodes( ConstSetPtr filter=0 );
 		//@}

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -559,6 +559,18 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.assertEqual( len( g.children( Gaffer.Node.staticTypeId() ) ), 1 )
 		self.assertEqual( len( g.children( Gaffer.IntPlug.staticTypeId() ) ), 1 )
 	
+	def testRemoveMany( self ) :
+	
+		g = Gaffer.GraphComponent()
+		l = []
+		for i in range( 0, 10000 ) :
+			c = Gaffer.GraphComponent()
+			l.append( c )
+			g["c%d"%i] = c
+		
+		for c in l :
+			g.removeChild( c )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

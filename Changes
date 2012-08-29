@@ -163,6 +163,10 @@ can be constructed easily.
 
 * StringPlug inputs now automatically substitute $name, ${name} and ### tokens using values from the current context when their value is accessed during a computation. This behaviour can be controlled using the new PerformsSubstitutions plug flag.
 
+* Node computations are now cached in memory and reused when possible. Hashes representing computations are available using the ValuePlug::hash() method, and Node implementations must now implement the new Node::hash() method to assist in computing hashes.
+
+* Added GraphComponent::getChild( childIndex ) method, providing constant-time access to children by index. This improved the implementation of SplinePlug, ChildSet and the GraphComponent __getitem__ method in Python.
+
 0.34.0
 ------
 

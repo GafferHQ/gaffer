@@ -44,14 +44,14 @@ namespace Gaffer
 {
 
 template<typename T>
-typename T::Ptr GraphComponent::getChild( const std::string &name )
+T *GraphComponent::getChild( const std::string &name )
 {
 	// preferring the nasty casts over maintaining two nearly identical implementations for getChild.
-	return IECore::constPointerCast<T>( const_cast<const GraphComponent *>( this )->getChild<T>( name ) );
+	return const_cast<T *>( const_cast<const GraphComponent *>( this )->getChild<T>( name ) );
 }
 
 template<typename T>
-typename T::ConstPtr GraphComponent::getChild( const std::string &name ) const
+const T *GraphComponent::getChild( const std::string &name ) const
 {
 	if( !name.size() )
 	{
@@ -82,6 +82,18 @@ typename T::ConstPtr GraphComponent::getChild( const std::string &name ) const
 	}
 	
 	return IECore::runTimeCast<const T>( result );
+}
+
+template<typename T>
+inline T *GraphComponent::getChild( size_t index )
+{
+	return IECore::runTimeCast<T>( m_children[index].get() );
+}
+
+template<typename T>
+inline const T *GraphComponent::getChild( size_t index ) const
+{
+	return IECore::runTimeCast<const T>( m_children[index].get() );
 }
 		
 template<typename T>

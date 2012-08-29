@@ -200,19 +200,19 @@ void ScriptNode::paste()
 
 void ScriptNode::deleteNodes( ConstSetPtr filter )
 {
-	for( ChildNodeIterator nIt( this ); nIt!=nIt.end(); )
+	// because children are stored as a vector, it's
+	// much more efficient to delete those at the end before
+	// those at the beginning.
+	int i = (int)(children().size()) - 1;
+	while( i >= 0 )
 	{
-	
-		ChildNodeIterator next = nIt; next++;
-		if( !filter || filter->contains( *nIt ) )
+		Node *node = getChild<Node>( i );
+		if( node && ( !filter || filter->contains( node ) ) )
 		{
-			(*nIt)->parent<GraphComponent>()->removeChild( (*nIt) );
+			removeChild( node );
 		}
-		
-		nIt = next;
-		
+		i--;
 	}
-
 }
 
 StringPlugPtr ScriptNode::fileNamePlug()

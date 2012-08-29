@@ -65,7 +65,7 @@ void MultiplyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outp
 
 void  MultiplyNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( output == getChild<IntPlug>( "product" ).get() )
+	if( output == getChild<IntPlug>( "product" ) )
 	{
 		getChild<IntPlug>( "op1" )->hash( h );
 		getChild<IntPlug>( "op2" )->hash( h );
@@ -74,7 +74,7 @@ void  MultiplyNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 
 void MultiplyNode::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == getChild<IntPlug>( "product" ).get() )
+	if( output == getChild<IntPlug>( "product" ) )
 	{
 		static_cast<IntPlug *>( output )->setValue(
 			getChild<IntPlug>( "op1" )->getValue() *

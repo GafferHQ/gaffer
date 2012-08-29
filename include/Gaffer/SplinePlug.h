@@ -92,8 +92,7 @@ class SplinePlug : public CompoundPlug
 		void removePoint( unsigned pointIndex );
 		/// \undoable
 		void clearPoints();
-		/// \todo These could be quicker if GraphComponent children were stored in a
-		/// vector rather than a list.
+
 		CompoundPlugPtr pointPlug( unsigned pointIndex );
 		ConstCompoundPlugPtr pointPlug( unsigned pointIndex ) const;
 		typename XPlugType::Ptr pointXPlug( unsigned pointIndex );

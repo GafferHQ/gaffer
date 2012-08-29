@@ -225,12 +225,7 @@ CompoundPlugPtr SplinePlug<T>::pointPlug( unsigned pointIndex )
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	GraphComponent::ChildContainer::const_iterator it = children().begin();
-	for( unsigned i=0; i<=pointIndex; i++)
-	{
-		it++;
-	}
-	return IECore::staticPointerCast<CompoundPlug>( *it );
+	return getChild<CompoundPlug>( pointIndex + 1 ); // plus one is to skip basis plug
 }
 
 template<typename T>
@@ -240,12 +235,7 @@ ConstCompoundPlugPtr SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	GraphComponent::ChildContainer::const_iterator it = children().begin();
-	for( unsigned i=0; i<=pointIndex; i++)
-	{
-		it++;
-	}
-	return IECore::staticPointerCast<CompoundPlug>( *it );
+	return getChild<CompoundPlug>( pointIndex + 1 ); // plus one is to skip basis plug
 }
 
 template<typename T>
