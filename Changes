@@ -84,6 +84,22 @@ swatch.
 
 * Nodes created via the NodeMenu are now automatically connected to the selected nodes, and positioned based on those connections.
 
+0.35.1
+------
+
+* Removed ParameterValueWidget._addPopupMenu and _popupMenuDefinition, replacing them with PlugValueWidget._addPopupMenu and _popupMenuDefinition. This makes the parameter preset menus automatically available on all parameter uis, and provides for easy extension in the future (menus for manipulating plug inputs, expressions, locking etc). Note that if you previously had a custom ParameterValueWidget class with a _popupMenuDefinition() override, then it will no longer work - use ParameterValueWidget.popupMenuSignal() instead.
+
+* Removed ToolParameterValueWidget, replacing it with ToolPlugValueWidget which has identical functionality (but applicable to Plugs too).
+
+* Fixed bug which caused the filename column to become too wide when switching to Op browsing mode in the browser and then back to files.
+
+0.35.0
+------
+
+* Sequence Path displays file sequences with a single frame
+
+* Reverted changes made in Widget class about "apply visiblity"
+
 * OpDialogue now supports op.userData()["UI"]["buttonLabel"], for specifying a custom label for the OK button.
 
 * Removed requirement of the boost build having a patched python library capable of participating in garbage collection.
@@ -167,6 +183,18 @@ can be constructed easily.
 
 * Added GraphComponent::getChild( childIndex ) method, providing constant-time access to children by index. This improved the implementation of SplinePlug, ChildSet and the GraphComponent __getitem__ method in Python.
 
+* The op application now supports the loading of presets at launch, using the new "-preset presetName" command line option.
+
+* Added a simple ConfirmationDialogue class.
+
+* Presets are now stored in subdirectories based on class name, to avoid clashes between presets for different classes.
+
+* Added a small UI for deleting presets.
+
+* Resolved browser errors caused by broken symlinks. FileSystemPath now returns True for isValid() if a path is a broken symlink (it seems unreasonable for children() to return invalid paths) and falls back to os.lstat() to generate path info if os.stat() fails due to a broken link.
+
+* Fixed problem where SequencePath would error in info() when given an invalid base path. Now it returns None as expected.
+
 0.34.0
 ------
 
@@ -188,6 +216,7 @@ can be constructed easily.
 
 0.33.2
 ------
+
 * Fixed the delete order of ListContainer that was causing popup windows
 
 * Fixed circular reference in menu that was causing popup windows

@@ -52,6 +52,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug, **kw )
 
+		self._addPopupMenu( self.__numericWidget )
+
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
 						

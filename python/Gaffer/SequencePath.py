@@ -40,7 +40,7 @@ import Gaffer
 
 class SequencePath( Gaffer.Path ) :
 
-	def __init__( self, path, minSequenceSize=2, filter=None ) :
+	def __init__( self, path, minSequenceSize=1, filter=None ) :
 	
 		if not isinstance( path, Gaffer.Path ) :
 			path = Gaffer.FileSystemPath( path )
@@ -70,6 +70,8 @@ class SequencePath( Gaffer.Path ) :
 	def info( self ) :
 		
 		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
 		
 		def average( values ) :
 		

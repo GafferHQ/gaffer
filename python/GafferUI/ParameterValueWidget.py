@@ -49,9 +49,7 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 		
 		self.__parameterHandler = parameterHandler
-		
-		self.__buttonPressConnections = []
-	
+			
 	def plug( self ) :
 	
 		return self.__parameterHandler.plug()
@@ -63,34 +61,7 @@ class ParameterValueWidget( GafferUI.Widget ) :
 	def parameterHandler( self ) :
 	
 		return self.__parameterHandler
-	
-	def _addPopupMenu( self, widget = None, buttons = GafferUI.ButtonEvent.Buttons.Right ) :
-	
-		if widget is None :
-			widget = self
-	
-		self.__buttonPressConnections.append(
-			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
-		)
-	
-	## Returns a definition for the popup menu - this is called each time the menu is displayed
-	# to allow for dynamic menus. Subclasses may override this method to customise the menu, but
-	# should call the base class implementation first.
-	def _popupMenuDefinition( self ) :
-	
-		menuDefinition = IECore.MenuDefinition()
-		for name in self.parameter().presetNames() :
-			menuDefinition.append( "/" + name, { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), name ) } )
-
-		if len( self.parameter().presetNames() ) :
-			menuDefinition.append( "/PresetDivider", { "divider" : True } ) 
-
-		menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.parameter().defaultValue ) } )
-
-		self.popupMenuSignal()( menuDefinition, self.parameterHandler() )
-
-		return menuDefinition
-
+		
 	__popupMenuSignal = Gaffer.Signal2()
 	## This signal is emitted whenever a popup menu for a parameter is about
 	# to be shown. This provides an opportunity to customise the menu from
@@ -130,21 +101,62 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		cls.__typesToCreators[(parameterTypeId, uiTypeHint)] = creator
 
 	__typesToCreators = {}
-	
-	def __buttonPress( self, widget, event, buttonMask ) :
-	
-		if event.buttons & buttonMask :
-	
-			menuDefinition = self._popupMenuDefinition()
-			self.__popupMenu = GafferUI.Menu( menuDefinition )
-			self.__popupMenu.popup()
-			
-			return True
-			
-		return False
 
-	def __setValue( self, value ) :
+# parameter popup menus
+##########################################################################
+
+# we piggy-back onto the existing PlugValueWidget popup menu signal to
+# emit our own popup menu signal where appropriate.
+
+def __plugPopupMenu( menuDefinition, plug ) :
+
+	node = plug.node()
+	if not hasattr( node, "parameterHandler" ) :
+		return
+
+	# see if we can find a parameter handler associated with the plug
+	parameterHandler = node.parameterHandler()
+	if not parameterHandler.plug().isSame( plug ) :
+		try :
+			relativeName = plug.relativeName( parameterHandler.plug() )
+		except :
+			# plug doesn't represent a parameter
+			return
+			
+		for name in relativeName.split( "." ) :
+			try :
+				parameterHandler = parameterHandler.childParameterHandler( parameterHandler.parameter()[name] )
+			except :
+				# we've hit a child plug of a compound plug the parameterhandler created.
+				assert( name in parameterHandler.plug() )
+				break
 	
-		self.parameter().setValue( value )
-		with Gaffer.UndoContext( self.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			self.parameterHandler().setPlugValue()
+	# if we can, then add on any parameter-specific menu items		
+	ParameterValueWidget.popupMenuSignal()( menuDefinition, parameterHandler )
+
+__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+
+# add menu items for presets
+
+def __parameterPopupMenu( menuDefinition, parameterHandler ) :
+
+	# replace plug default item with parameter default item. they
+	# differ in that the parameter default applies to all children
+	# of things like V3iParameters rather than just a single one.
+	menuDefinition.remove( "/Default", raiseIfMissing=False )	
+	menuDefinition.append( "/Default", { "command" : IECore.curry( __setValue, parameterHandler, parameterHandler.parameter().defaultValue ) } )
+
+	if len( parameterHandler.parameter().presetNames() ) :
+		menuDefinition.append( "/PresetDivider", { "divider" : True } )
+
+	for name in parameterHandler.parameter().presetNames() :
+		menuDefinition.append( "/" + name, { "command" : IECore.curry( __setValue, parameterHandler, name ) } )
+
+__parameterPopupMenuConnection = ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )
+
+def __setValue( parameterHandler, value ) :
+
+	parameterHandler.parameter().setValue( value )
+	with Gaffer.UndoContext( parameterHandler.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		parameterHandler.setPlugValue()
+ 

@@ -133,6 +133,7 @@ from NotificationMessageHandler import NotificationMessageHandler
 from AttributeCachePathPreview import AttributeCachePathPreview
 from MenuButton import MenuButton
 from PopupWindow import PopupWindow
+from ConfirmationDialogue import ConfirmationDialogue
 
 # then stuff specific to graph uis
 
@@ -172,6 +173,7 @@ from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
 import ExpressionNodeUI
+from ToolPlugValueWidget import ToolPlugValueWidget
 
 # then stuff specific to parameterised objects
 
@@ -190,7 +192,6 @@ from ClassParameterValueWidget import ClassParameterValueWidget
 from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
 from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
 from TimeCodeParameterValueWidget import TimeCodeParameterValueWidget
-from ToolParameterValueWidget import ToolParameterValueWidget
 import ParameterPresets
 
 # and specific node uis

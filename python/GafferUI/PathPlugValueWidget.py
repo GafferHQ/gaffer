@@ -58,6 +58,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords
 
 		pathWidget = GafferUI.PathWidget( self.__path )
+		self._addPopupMenu( pathWidget )
 		self.__row.append( pathWidget )
 	
 		button = GafferUI.Button( image = "pathChooser.png" )

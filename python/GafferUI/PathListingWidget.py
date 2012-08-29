@@ -480,14 +480,18 @@ class _TreeView( QtGui.QTreeView ) :
 		self.__recalculatingColumnWidths = True
 	
 		header = self.header()
-		for i in range( 0, header.count() - 1 ) : # leave the last section alone, as it's expandable
+		numColumnsToResize = header.count() - 1 # leave the last section alone, as it's expandable
+		
+		if numColumnsToResize != len( self.__columnWidthAdjustments ) :
+			# either the first time in here, or the number of columns has
+			# changed and we want to start again with the offsets.
+			self.__columnWidthAdjustments = [ 0 ] * numColumnsToResize
+		
+		del self.__idealColumnWidths[:]
+		for i in range( 0, numColumnsToResize ) : 
 
 			idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
-			if i >= len( self.__idealColumnWidths ) :
-				self.__idealColumnWidths.append( idealWidth )
-				self.__columnWidthAdjustments.append( 0 )
-			else :
-				self.__idealColumnWidths[i] = idealWidth
+			self.__idealColumnWidths.append( idealWidth )
 						
 			header.resizeSection( i, idealWidth + self.__columnWidthAdjustments[i] )
 

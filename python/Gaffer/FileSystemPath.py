@@ -54,7 +54,7 @@ class FileSystemPath( Gaffer.Path ) :
 									
 	def isValid( self ) :
 	
-		return os.path.exists( str( self ) )
+		return os.path.lexists( str( self ) )
 	
 	def isLeaf( self ) :
 	
@@ -65,8 +65,16 @@ class FileSystemPath( Gaffer.Path ) :
 		result = Gaffer.Path.info( self )
 		if result is None :
 			return None
-					
-		s = os.stat( str( self ) )
+		
+		pathString = str( self )			
+		try :
+			# if s is a symlink, this gets the information from
+			# the pointed-to file, failing if it doesn't exist.
+			s = os.stat( pathString )
+		except OSError :
+			# if a symlink was broken then we fall back to 
+			# getting information from the link itself.
+			s = os.lstat( pathString )
 		try :
 			p = pwd.getpwuid( s.st_uid )
 		except :
@@ -80,6 +88,7 @@ class FileSystemPath( Gaffer.Path ) :
 		result["fileSystem:group"] = g.gr_name if g is not None else ""
 		result["fileSystem:modificationTime"] = s.st_mtime
 		result["fileSystem:accessTime"] = s.st_atime
+		result["fileSystem:size"] = s.st_size
 		
 		return result
 	

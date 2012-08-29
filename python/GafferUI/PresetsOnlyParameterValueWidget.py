@@ -44,30 +44,36 @@ import GafferUI
 class PresetsOnlyParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
+			
+		GafferUI.ParameterValueWidget.__init__(
+			self,
+			_PlugValueWidget( parameterHandler ),
+			parameterHandler,
+			**kw
+		)
+		
+# The actual ui is more easily implemented as a PlugValueWidget, because
+# we get _addPopupMenu() and the machinery for updating on plug changes for free.
+class _PlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, parameterHandler, **kw ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		
-		GafferUI.ParameterValueWidget.__init__( self, self.__row, parameterHandler, **kw )
-		
+			
+		GafferUI.PlugValueWidget.__init__( self, self.__row, parameterHandler.plug(), **kw )
+
 		self.__row.append( GafferUI.Image( "collapsibleArrowDownHover.png" ) )
 		self.__label = GafferUI.Label( "" )
 		self.__row.append( self.__label )
 
 		self._addPopupMenu( buttons = GafferUI.ButtonEvent.Buttons.All )
-		
-		self.__plugSetConnection = self.plug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-		
-		self.__updateFromPlug()
-		
-	def __plugSet( self, plug ) :
+
+		self.__parameterHandler = parameterHandler
 	
-		if plug.isSame( self.plug() ) :
-			self.__updateFromPlug()
+		self._updateFromPlug()
 		
-	def __updateFromPlug( self ) :
-	
-		self.parameterHandler().setParameterValue()
-		
-		text = self.parameter().getCurrentPresetName()
-		
-		self.__label.setText( self.parameter().getCurrentPresetName() )
+	def _updateFromPlug( self ) :
+			
+		with self.getContext() :
+			self.__parameterHandler.setParameterValue()		
+			self.__label.setText( self.__parameterHandler.parameter().getCurrentPresetName() )

@@ -52,9 +52,7 @@ class DateTimeParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		self.__dateTimePlugValueWidget = _DateTimePlugValueWidget( parameterHandler.plug() )
 		
 		GafferUI.ParameterValueWidget.__init__( self, self.__dateTimePlugValueWidget, parameterHandler, **kw )
-		
-		self._addPopupMenu( self.__dateTimePlugValueWidget, buttons = GafferUI.ButtonEvent.Buttons.Right )
-	
+			
 GafferUI.ParameterValueWidget.registerType( IECore.DateTimeParameter.staticTypeId(), DateTimeParameterValueWidget )
 
 class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -77,6 +75,8 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self.__dateTimeChangedConnection = self._qtWidget().dateTimeChanged.connect( Gaffer.WeakMethod( self.__dateTimeChanged ) )
 		
+		self._addPopupMenu()
+
 		self._updateFromPlug()
 		
 	def _updateFromPlug( self ) :

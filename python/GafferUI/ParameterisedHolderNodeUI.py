@@ -56,7 +56,7 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 		
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 				GafferUI.Spacer( IECore.V2i( 10 ), expand=True )
-				GafferUI.ToolParameterValueWidget( self.node().parameterHandler() )
+				GafferUI.ToolPlugValueWidget( self.node().parameterHandler().plug() )
 				infoIcon = GafferUI.Image( "info.png" )
 				infoIcon.setToolTip( self.node().getParameterised()[0].description )
 				

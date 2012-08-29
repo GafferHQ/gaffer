@@ -39,18 +39,23 @@ import IECore
 import Gaffer
 import GafferUI
 
-## This simple ui just provides a tool icon which opens the action menu for
-# a particular Parameter.
-class ToolParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class ConfirmationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, parameterHandler ) :
+	def __init__( self, title, message, cancelLabel="Cancel", confirmLabel="OK", sizeMode=GafferUI.Window.SizeMode.Automatic, **kw ) :
 	
-		self.__menuButton = GafferUI.MenuButton( image="gear.png", hasFrame=False )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 		
-		GafferUI.ParameterValueWidget.__init__( self, self.__menuButton, parameterHandler )
+		self._setWidget( GafferUI.Label( message ) )
+
+		self._addButton( cancelLabel )
+		self.__confirmButton = self._addButton( confirmLabel )
+		
+	## Causes the dialogue to enter a modal state, returning True if the confirm
+	# button was pressed, and False otherwise.
+	def waitForConfirmation( self, **kw ) :
 	
-		self.__menuButton.setMenu(
-			GafferUI.Menu( 
-				Gaffer.WeakMethod( self._popupMenuDefinition )
-			)
-		)
+		button = self.waitForButton( **kw )
+		if button is self.__confirmButton :
+			return True
+			
+		return False

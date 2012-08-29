@@ -66,7 +66,13 @@ class op( Gaffer.Application ) :
 						"the op is run directly.",
 					defaultValue = False,
 				),
-				
+
+				IECore.StringParameter(
+					name = "preset",
+					description = "The name of a preset to load.",
+					defaultValue = "",
+				),
+								
 				IECore.StringVectorParameter(
 					name = "arguments",
 					description = "The arguments to be passed to the op. This should be the last "
@@ -131,6 +137,27 @@ class op( Gaffer.Application ) :
 			opVersion = None # let loader choose default	
 		
 		op = classLoader.load( opName, opVersion )()
+		
+		if args["preset"].value :
+			
+			presetLoader = IECore.ClassLoader.defaultLoader( "IECORE_OP_PRESET_PATHS" )
+			
+			preset = None
+			if op.typeName() + "/" + args["preset"].value in presetLoader.classNames() :
+				preset = presetLoader.load( op.typeName() + "/" + args["preset"].value )()
+			elif args["preset"].value in presetLoader.classNames() :
+				preset = presetLoader.load( args["preset"].value )()
+				
+			if preset is None :
+				IECore.msg( IECore.Msg.Level.Error, "op", "Preset \"%s\" does not exist" % args["preset"].value )
+				return 1
+				
+			if not preset.applicableTo( op, op.parameters() ) :
+				IECore.msg( IECore.Msg.Level.Error, "op", "Preset \"%s\" is not applicable to op \"%s\"" % ( args["preset"].value, opName ) )
+				return 1
+				
+			preset( op, op.parameters() )
+			
 		IECore.ParameterParser().parse( list( args["arguments"] ), op.parameters() )
 		
 		if args["gui"].value :

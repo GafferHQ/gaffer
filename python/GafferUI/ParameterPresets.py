@@ -36,6 +36,7 @@
 
 import os
 import re
+import shutil
 
 import IECore
 
@@ -49,16 +50,53 @@ class PresetDialogue( GafferUI.Dialogue ) :
 		GafferUI.Dialogue.__init__( self, title )
 		
 		self._parameterHandler = parameterHandler
+		self.__locationMenu = None
+		self.__presetListing = None
 
-	def _locationMenu( self, **kw ) :
+	def _locationMenu( self, owned=False, writable=False, **kw ) :
 	
-		menu = GafferUI.SelectionMenu( **kw )
-		for searchPath in self._searchPaths() :
-			menu.addItem( searchPath )
+		if self.__locationMenu is None :
+			self.__locationMenu = GafferUI.SelectionMenu( **kw )
+			for searchPath in self.__searchPaths( owned, writable ) :
+				self.__locationMenu.addItem( searchPath )
 		
-		return menu
+		return self.__locationMenu
+		
+	def _presetListing( self, allowMultipleSelection=False, **kw ) :
+	
+		if self.__presetListing is None :
+			self.__presetListing = GafferUI.PathListingWidget(
+				Gaffer.DictPath( {}, "/" ),
+				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				allowMultipleSelection = allowMultipleSelection,
+			)
+			self.__locationMenuChangedConnection = self._locationMenu().currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__locationChanged ) )
+			self._updatePresetListing()
+			
+		return self.__presetListing
 
-	def _searchPaths( self ) :
+	def _updatePresetListing( self ) :
+	
+		location = self.__locationMenu.getCurrentItem()
+		presetLoader = IECore.ClassLoader( IECore.SearchPath( location, ":" ) )
+		parameterised = self._parameterHandler.plug().node().getParameterised()[0]
+		
+		d = {}
+		for presetName in presetLoader.classNames() :
+			preset = presetLoader.load( presetName )()
+			if preset.applicableTo( parameterised, self._parameterHandler.parameter() ) :
+				d[preset.metadata()["title"]] = preset
+
+		self.__presetListing.setPath( Gaffer.DictPath( d, "/" ) )
+		self.__presetListing.selectionChangedSignal()( self.__presetListing )
+
+	def _selectedPresets( self ) :
+		
+		selection = self.__presetListing.getSelectedPaths()			
+		return [ p.info()["dict:value"] for p in selection ]	
+	
+	def __searchPaths( self, owned, writable ) :
 	
 		parameterised = self._parameterHandler.plug().node().getParameterised()
 		searchPathEnvVar = parameterised[3]
@@ -80,10 +118,18 @@ class PresetDialogue( GafferUI.Dialogue ) :
 				with IECore.IgnoredExceptions( Exception ) :
 					os.makedirs( path )
 			if os.path.isdir( path ) :
+				if owned and os.stat( path ).st_uid != os.getuid() :
+					continue
+				if writable and not os.access( path, os.W_OK ) :
+					continue
 				existingPaths.append( path )
 				
 		return existingPaths
-
+	
+	def __locationChanged( self, locationMenu ) :
+	
+		self._updatePresetListing()
+		
 class SavePresetDialogue( PresetDialogue ) :
 
 	def __init__( self, parameterHandler ) :
@@ -101,7 +147,7 @@ class SavePresetDialogue( PresetDialogue ) :
 						GafferUI.Label.VerticalAlignment.None,
 					),
 				)
-				self.__locationMenu = self._locationMenu( index = ( 1, 0 ) )
+				self._locationMenu( writable=True, index = ( 1, 0 ) )
 				
 				GafferUI.Label(
 					"<h3>Name</h3>",
@@ -171,8 +217,11 @@ class SavePresetDialogue( PresetDialogue ) :
 			self.__selectedParameters()
 		)
 		
-		presetLocation = self.__locationMenu.getCurrentItem()
-		presetDescription = self.__presetDescriptionWidget.getText()
+		presetLocation = self._locationMenu().getCurrentItem()
+		# append the name of the class to the location, so that presets with
+		# identical names (but for different classes) don't overwrite each
+		# other.
+		presetLocation = presetLocation + "/" + parameterised.typeName()
 		
 		presetName = self.__presetNameWidget.getText()
 		# make a filename by sanitising the preset name.
@@ -181,6 +230,17 @@ class SavePresetDialogue( PresetDialogue ) :
 		# We have to also make sure that the name doesn't begin with a number,
 		# as it wouldn't be a legal class name in the resulting py stub.
 		fileName = re.sub( '^[0-9]+', "", fileName )
+		
+		if os.path.exists( presetLocation + "/" + fileName ) :
+			dialogue = GafferUI.ConfirmationDialogue(
+				"Preset already exists!",
+				"A preset named \"%s\" already exists.\nReplace it?" % presetName,
+				confirmLabel = "Replace"
+			)
+			if not dialogue.waitForConfirmation( parentWindow = self ) :
+				return False
+
+		presetDescription = self.__presetDescriptionWidget.getText()
 		
 		preset.save( presetLocation, fileName, presetName, presetDescription )
 		
@@ -244,16 +304,11 @@ class LoadPresetDialogue( PresetDialogue ) :
 						"<h3>Location</h3>",
 						horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 					)
-					self.__locationMenu = self._locationMenu()
-					self.__locationMenuChangedConnection = self.__locationMenu.currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__locationChanged ) )
+					self._locationMenu()
 				
-				self.__presetListing = GafferUI.PathListingWidget(
-					Gaffer.DictPath( {}, "/" ),
-					columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
-					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
-				)
-				self.__selectionChangedConnection = self.__presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
-			
+				presetListing = self._presetListing()
+				self.__selectionChangedConnection = presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+							
 			with GafferUI.ListContainer( spacing=4 ) :
 				self.__presetDetailsLabel = GafferUI.Label( "<h3>Description</h3>" )
 				self.__presetDetailsWidget = GafferUI.MultiLineTextWidget( editable = False )
@@ -263,9 +318,7 @@ class LoadPresetDialogue( PresetDialogue ) :
 		self._addButton( "Cancel" )
 		self.__loadButton = self._addButton( "Load" )
 		self.__loadButton.setEnabled( False )
-		
-		self.__updatePresetListing()
-		
+				
 		row.setSizes( [ 0.5, 0.5 ] )
 		
 	def waitForLoad( self, **kw ) :
@@ -279,56 +332,72 @@ class LoadPresetDialogue( PresetDialogue ) :
 
 	def __load( self ) :
 	
-		preset = self.__selectedPreset()
-		assert( preset is not None )
+		preset = self._selectedPresets()[0]
 		
 		node = self._parameterHandler.plug().node()
 		parameterised = node.getParameterised()[0]
 		with node.parameterModificationContext() :
 			preset( parameterised, self._parameterHandler.parameter() )
-			
-	def __locationChanged( self, locationMenu ) :
-	
-		self.__updatePresetListing()
-		
-	def __updatePresetListing( self ) :
-	
-		location = self.__locationMenu.getCurrentItem()
-		presetLoader = IECore.ClassLoader( IECore.SearchPath( location, ":" ) )
-		parameterised = self._parameterHandler.plug().node().getParameterised()[0]
-		
-		d = {}
-		for presetName in presetLoader.classNames() :
-			preset = presetLoader.load( presetName )()
-			if preset.applicableTo( parameterised, self._parameterHandler.parameter() ) :
-				d[preset.metadata()["title"]] = preset
-
-		self.__presetListing.setPath( Gaffer.DictPath( d, "/" ) )
-		self.__selectionChanged()
-
-	def __selectedPreset( self ) :
-	
-		selection = self.__presetListing.getSelectedPaths()
-		if not selection :
-			return None
-			
-		return selection[0].info()["dict:value"]	
-
+					
 	def __selectionChanged( self, *unused ) :
 	
-		preset = self.__selectedPreset()
-		if preset is None :
+		presets = self._selectedPresets()
+		if not presets :
 			loadEnabled = False
 			text = "No preset selected"			
 		else :
 			loadEnabled = True
-			text = preset.metadata()["description"]
+			text = presets[0].metadata()["description"]
 			if not text.strip() :
 				text = "No description provided"
 			
 		self.__presetDetailsWidget.setText( text )
 		self.__loadButton.setEnabled( loadEnabled )
+
+class DeletePresetsDialogue( PresetDialogue ) :
+
+	def __init__( self, parameterHandler ) :
+	
+		PresetDialogue.__init__( self, "Delete Preset", parameterHandler )
+
+		with GafferUI.ListContainer( spacing=4 ) as column :
+	
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			
+				GafferUI.Label(
+					"<h3>Location</h3>",
+					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
+				)
+				self._locationMenu( owned=True )
+			
+			presetListing = self._presetListing( allowMultipleSelection=True )
+			self.__selectionChangedConnection = presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+	
+		self._setWidget( column )
 		
+		self._addButton( "Close" )
+		self.__deleteButton = self._addButton( "Delete" )
+		self.__deleteButton.setEnabled( False )
+		self.__deleteButtonPressedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__delete ) )
+
+	def waitForClose( self, **kw ) :
+	
+		self.waitForButton( **kw )
+
+	def __selectionChanged( self, *unused ) :
+	
+		self.__deleteButton.setEnabled( len( self._selectedPresets() ) > 0 )
+	
+	def __delete( self, button ) :
+	
+		assert( button is self.__deleteButton )
+		
+		location = self._locationMenu().getCurrentItem()
+		for preset in self._selectedPresets() :
+			shutil.rmtree( location + "/" + preset.path )
+			
+		self._updatePresetListing()
+	
 ##########################################################################
 # Plumbing to make the dialogues available from parameter menus.
 ##########################################################################
@@ -345,6 +414,11 @@ def __savePreset( parameterHandler ) :
 	# \todo We should be giving the window a parent, but we can't
 	# because GafferUI.Menu won't pass the menu argument to commands
 	# which are curried functions.
+
+def __deletePresets( parameterHandler ) :
+
+	dialogue = DeletePresetsDialogue( parameterHandler )
+	dialogue.waitForClose()
 	
 def __parameterPopupMenu( menuDefinition, parameterHandler ) :
 
@@ -355,5 +429,6 @@ def __parameterPopupMenu( menuDefinition, parameterHandler ) :
 	menuDefinition.append( "/PresetsDivider", { "divider" : True } )
 	menuDefinition.append( "/Save Preset...", { "command" : IECore.curry( __savePreset, parameterHandler ) } )
 	menuDefinition.append( "/Load Preset...", { "command" : IECore.curry( __loadPreset, parameterHandler ) } )
+	menuDefinition.append( "/Delete Presets...", { "command" : IECore.curry( __deletePresets, parameterHandler ) } )
 	
 __popupMenuConnection = GafferUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )

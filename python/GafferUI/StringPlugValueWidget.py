@@ -40,8 +40,6 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
 ## User docs :
 #
 # Return commits any changes onto the plug.
@@ -55,6 +53,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__textWidget = GafferUI.TextWidget()
 			
 		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, **kw )
+
+		self._addPopupMenu( self.__textWidget )
 
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )

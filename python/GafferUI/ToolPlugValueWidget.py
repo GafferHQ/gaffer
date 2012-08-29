@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,42 +34,27 @@
 #  
 ##########################################################################
 
-import re
-
 import IECore
 
 import Gaffer
 import GafferUI
 
-class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
+## This simple ui just provides a tool icon which opens the action menu for
+# a particular plug.
+class ToolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, parameterHandler, **kw ) :
+	def __init__( self, plug ) :
+	
+		self.__menuButton = GafferUI.MenuButton( image="gear.png", hasFrame=False )
 		
-		self.__pathWidget = GafferUI.PathPlugValueWidget(
-			parameterHandler.plug(),
-			self._path(),
-			pathChooserDialogueKeywords = self._pathChooserDialogueKeywords(),
-		)
-					
-		GafferUI.ParameterValueWidget.__init__(
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug )
 			
-			self,
-			self.__pathWidget,
-			parameterHandler,
-			**kw
-			
+		self.__menuButton.setMenu(
+			GafferUI.Menu( 
+				Gaffer.WeakMethod( self._popupMenuDefinition )
+			)
 		)
 		
-	def _path( self ) :
+	def _updateFromPlug( self ) :
 	
-		return Gaffer.FileSystemPath( "/", filter = self._filter() )
-
-	def _filter( self ) :
-		
-		return Gaffer.FileSystemPath.createStandardFilter()
-		
-	def _pathChooserDialogueKeywords( self ) :
-	
-		return {}
-	
-GafferUI.ParameterValueWidget.registerType( IECore.PathParameter.staticTypeId(), PathParameterValueWidget )
+		pass

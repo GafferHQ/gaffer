@@ -53,6 +53,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# classes haven't constructed yet. they can call it themselves
 		# upon completing construction.
 		self.__setPlugInternal( plug, callUpdateFromPlug=False )
+
+		self.__popupMenuConnections = []
 		
 	def setPlug( self, plug ) :
 	
@@ -109,6 +111,47 @@ class PlugValueWidget( GafferUI.Widget ) :
 		
 		return True
 	
+	## Adds a useful popup menu to the specified widget, providing useful functions that
+	# operate on the plug. The menu is populated with the result of _popupMenuDefinition(),
+	# and may also be customised by external code using the popupMenuSignal().
+	def _addPopupMenu( self, widget = None, buttons = GafferUI.ButtonEvent.Buttons.Right ) :
+	
+		if widget is None :
+			widget = self
+			
+		self.__popupMenuConnections.append(
+			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons & ~GafferUI.ButtonEvent.Buttons.Right ) )
+		)
+
+		if buttons & GafferUI.ButtonEvent.Buttons.Right :
+			self.__popupMenuConnections.append(
+				widget.contextMenuSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__contextMenu ) ) )
+			)
+	
+	## Returns a definition for the popup menu - this is called each time the menu is displayed
+	# to allow for dynamic menus. Subclasses may override this method to customise the menu, but
+	# should call the base class implementation first.
+	def _popupMenuDefinition( self ) :
+	
+		menuDefinition = IECore.MenuDefinition()
+		
+		if hasattr( self.getPlug(), "defaultValue" ) :
+			menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ) } )
+		
+		self.popupMenuSignal()( menuDefinition, self.getPlug() )
+		
+		return menuDefinition
+	
+	__popupMenuSignal = Gaffer.Signal2()
+	## This signal is emitted whenever a popup menu for a plug is about
+	# to be shown. This provides an opportunity to customise the menu from
+	# external code. The signature for slots is ( menuDefinition, plug ),
+	# and slots should just modify the menu definition in place.
+	@classmethod
+	def popupMenuSignal( cls ) :
+	
+		return cls.__popupMenuSignal
+
 	## Returns a PlugValueWidget suitable for representing the specified plug. If
 	# useTypeOnly is True, then custom registrations made by registerCreator() will
 	# be ignored and only the plug type will be taken into account in creating a
@@ -238,3 +281,27 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# we use this when the plug being viewed doesn't have a ScriptNode ancestor
 	# to provide a context.
 	__fallbackContext = Gaffer.Context()		
+	
+	def __buttonPress( self, widget, event, buttonMask ) :
+
+		if event.buttons & buttonMask :
+			return self.__contextMenu()
+			
+		return False
+		
+	def __contextMenu( self, *unused ) :
+			
+		menuDefinition = self._popupMenuDefinition()
+		if not len( menuDefinition.items() ) :
+			return False
+		
+		self.__popupMenu = GafferUI.Menu( menuDefinition )
+		self.__popupMenu.popup()
+		
+		return True
+
+	def __setValue( self, value ) :
+			
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().setValue( value )
+	

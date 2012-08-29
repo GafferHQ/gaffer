@@ -62,7 +62,5 @@ class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
 					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
 		
 		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
-		
-		self._addPopupMenu( plugValueWidget.textWidget(), buttons = GafferUI.ButtonEvent.Buttons.Right )
-	
+			
 GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), StringParameterValueWidget )

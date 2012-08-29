@@ -110,6 +110,16 @@ class SequencePathTest( unittest.TestCase ) :
 		
 		self.assertEqual( dictPath.info(), path.info() )
 	
+	def testInfoOfInvalidPath( self ) :
+	
+		fp = Gaffer.FileSystemPath( "/iSurelyDontExist" )
+		self.assertEqual( fp.isValid(), False )
+		self.assertEqual( fp.info(), None )
+		
+		sp = Gaffer.SequencePath( fp )
+		self.assertEqual( sp.isValid(), False )
+		self.assertEqual( sp.info(), None )
+		
 	def testFilter( self ) :
 	
 		dictPath = self.__dictPath()

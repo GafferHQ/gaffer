@@ -46,7 +46,5 @@ class TimeCodeParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		plugValueWidget = GafferUI.CompoundNumericPlugValueWidget( parameterHandler.plug() )
 		
 		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
-		
-		self._addPopupMenu( plugValueWidget, buttons = GafferUI.ButtonEvent.Buttons.Right )
-	
+			
 GafferUI.ParameterValueWidget.registerType( IECore.TimeCodeParameter.staticTypeId(), TimeCodeParameterValueWidget )
