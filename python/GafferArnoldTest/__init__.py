@@ -36,6 +36,7 @@
 
 from ArnoldShaderTest import ArnoldShaderTest
 from ArnoldRenderTest import ArnoldRenderTest
+from ArnoldOptionsTest import ArnoldOptionsTest
 
 if __name__ == "__main__":
 	import unittest
