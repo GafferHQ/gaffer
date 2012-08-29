@@ -67,6 +67,10 @@ class PathFilter : public Filter
 		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual Result computeMatch( const Gaffer::Context *context ) const;
 
+	private :
+	
+		static size_t g_firstPlugIndex;
+
 };
 
 } // namespace GafferScene

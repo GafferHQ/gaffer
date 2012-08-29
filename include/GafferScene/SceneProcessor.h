@@ -58,6 +58,10 @@ class SceneProcessor : public SceneNode
 		/// Scene elements enter the node through inPlug() and are output in processed form on SceneNode::outPlug()
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
+	
+	private :
+	
+		static size_t g_firstPlugIndex;
 		
 };
 

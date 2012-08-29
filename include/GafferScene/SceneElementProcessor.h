@@ -106,7 +106,11 @@ class SceneElementProcessor : public SceneProcessor
 		virtual void hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 		//@}
-		
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+	
 };
 
 } // namespace GafferScene

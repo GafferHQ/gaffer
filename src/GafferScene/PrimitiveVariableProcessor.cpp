@@ -44,9 +44,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( PrimitiveVariableProcessor );
 
+size_t PrimitiveVariableProcessor::g_firstPlugIndex = 0;
+
 PrimitiveVariableProcessor::PrimitiveVariableProcessor( const std::string &name )
 	:	SceneElementProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );
 }
@@ -57,22 +60,22 @@ PrimitiveVariableProcessor::~PrimitiveVariableProcessor()
 
 Gaffer::StringPlug *PrimitiveVariableProcessor::namesPlug()
 {
-	return getChild<StringPlug>( "names" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *PrimitiveVariableProcessor::namesPlug() const
 {
-	return getChild<StringPlug>( "names" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 Gaffer::BoolPlug *PrimitiveVariableProcessor::invertNamesPlug()
 {
-	return getChild<BoolPlug>( "invertNames" );
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::BoolPlug *PrimitiveVariableProcessor::invertNamesPlug() const
 {
-	return getChild<BoolPlug>( "invertNames" );
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 void PrimitiveVariableProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const

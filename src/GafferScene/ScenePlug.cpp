@@ -129,62 +129,62 @@ bool ScenePlug::acceptsInput( const Gaffer::Plug *input ) const
 
 Gaffer::AtomicBox3fPlug *ScenePlug::boundPlug()
 {
-	return getChild<AtomicBox3fPlug>( "bound" );
+	return getChild<AtomicBox3fPlug>( 0 );
 }
 
 const Gaffer::AtomicBox3fPlug *ScenePlug::boundPlug() const
 {
-	return getChild<AtomicBox3fPlug>( "bound" );
+	return getChild<AtomicBox3fPlug>( 0 );
 }
 
 Gaffer::M44fPlug *ScenePlug::transformPlug()
 {
-	return getChild<M44fPlug>( "transform" );
+	return getChild<M44fPlug>( 1 );
 }
 
 const Gaffer::M44fPlug *ScenePlug::transformPlug() const
 {
-	return getChild<M44fPlug>( "transform" );
+	return getChild<M44fPlug>( 1 );
 }
 
 Gaffer::CompoundObjectPlug *ScenePlug::attributesPlug()
 {
-	return getChild<CompoundObjectPlug>( "attributes" );
+	return getChild<CompoundObjectPlug>( 2 );
 }
 
 const Gaffer::CompoundObjectPlug *ScenePlug::attributesPlug() const
 {
-	return getChild<CompoundObjectPlug>( "attributes" );
+	return getChild<CompoundObjectPlug>( 2 );
 }
 
 Gaffer::ObjectPlug *ScenePlug::objectPlug()
 {
-	return getChild<ObjectPlug>( "object" );
+	return getChild<ObjectPlug>( 3 );
 }
 
 const Gaffer::ObjectPlug *ScenePlug::objectPlug() const
 {
-	return getChild<ObjectPlug>( "object" );
+	return getChild<ObjectPlug>( 3 );
 }
 
 Gaffer::StringVectorDataPlug *ScenePlug::childNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( "childNames" );
+	return getChild<StringVectorDataPlug>( 4 );
 }
 
 const Gaffer::StringVectorDataPlug *ScenePlug::childNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( "childNames" );
+	return getChild<StringVectorDataPlug>( 4 );
 }
 
 Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug()
 {
-	return getChild<ObjectVectorPlug>( "globals" );
+	return getChild<ObjectVectorPlug>( 5 );
 }
 
 const Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug() const
 {
-	return getChild<ObjectVectorPlug>( "globals" );
+	return getChild<ObjectVectorPlug>( 5 );
 }
 
 Imath::Box3f ScenePlug::bound( const std::string &scenePath ) const

@@ -44,9 +44,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Options );
 
+size_t Options::g_firstPlugIndex = 0;
+
 Options::Options( const std::string &name )
 	:	GlobalsProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
 		new ParameterListPlug(
 			"options",
@@ -59,6 +62,7 @@ Options::Options( const std::string &name )
 Options::Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags )
 	:	GlobalsProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
 		new ParameterListPlug(
 			"options",
@@ -74,12 +78,12 @@ Options::~Options()
 
 GafferScene::ParameterListPlug *Options::optionsPlug()
 {
-	return getChild<ParameterListPlug>( "options" );
+	return getChild<ParameterListPlug>( g_firstPlugIndex );
 }
 
 const GafferScene::ParameterListPlug *Options::optionsPlug() const
 {
-	return getChild<ParameterListPlug>( "options" );
+	return getChild<ParameterListPlug>( g_firstPlugIndex );
 }
 
 void Options::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const

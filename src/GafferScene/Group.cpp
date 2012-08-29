@@ -55,9 +55,13 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Group );
 
+size_t Group::g_firstPlugIndex = 0;
+
 Group::Group( const std::string &name )
 	:	SceneProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
 	addChild( new TransformPlug( "transform" ) );
 	
@@ -75,22 +79,22 @@ Group::~Group()
 
 Gaffer::StringPlug *Group::namePlug()
 {
-	return getChild<StringPlug>( "name" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *Group::namePlug() const
 {
-	return getChild<StringPlug>( "name" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 Gaffer::TransformPlug *Group::transformPlug()
 {
-	return getChild<TransformPlug>( "transform" );
+	return getChild<TransformPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::TransformPlug *Group::transformPlug() const
 {
-	return getChild<TransformPlug>( "transform" );
+	return getChild<TransformPlug>( g_firstPlugIndex + 1 );
 }
 
 void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -426,22 +430,22 @@ std::string Group::sourcePath( const std::string &outputPath, const std::string 
 
 Gaffer::ObjectPlug *Group::mappingPlug()
 {
-	return getChild<Gaffer::ObjectPlug>( "__mapping" );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::ObjectPlug *Group::mappingPlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( "__mapping" );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::ObjectPlug *Group::inputMappingPlug()
 {
-	return getChild<Gaffer::ObjectPlug>( "__inputMapping" );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::ObjectPlug *Group::inputMappingPlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( "__inputMapping" );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void Group::childAdded( GraphComponent *parent, GraphComponent *child )

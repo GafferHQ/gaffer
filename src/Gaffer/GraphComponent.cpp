@@ -393,3 +393,18 @@ GraphComponent::BinarySignal &GraphComponent::parentChangedSignal()
 void GraphComponent::parentChanging( Gaffer::GraphComponent *newParent )
 {
 }
+
+void GraphComponent::storeIndexOfNextChild( size_t &index ) const
+{
+	if( index )
+	{
+		if( index != m_children.size() )
+		{
+			throw Exception( "Inconsistent child offset" );
+		}
+	}
+	else
+	{
+		index = m_children.size();
+	}
+}

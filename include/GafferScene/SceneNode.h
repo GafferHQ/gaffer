@@ -81,6 +81,10 @@ class SceneNode : public Gaffer::Node
 		Imath::Box3f unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
 		/// A hash for the result of the computation in unionOfTransformedChildBounds().
 		IECore::MurmurHash hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
+	
+	private :
+	
+		static size_t g_firstPlugIndex;
 		
 };
 

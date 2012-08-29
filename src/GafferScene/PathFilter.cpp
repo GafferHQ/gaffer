@@ -45,9 +45,12 @@ using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( PathFilter );
 
+size_t PathFilter::g_firstPlugIndex = 0;
+
 PathFilter::PathFilter( const std::string &name )
 	:	Filter( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringVectorDataPlug( "paths", Plug::In, 0, Plug::Default ) );
 }
 
@@ -57,12 +60,12 @@ PathFilter::~PathFilter()
 
 Gaffer::StringVectorDataPlug *PathFilter::pathsPlug()
 {
-	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
+	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
 {
-	return getChild<Gaffer::StringVectorDataPlug>( "paths" );
+	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
 }
 
 void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const

@@ -42,9 +42,12 @@ using namespace IECore;
 
 IE_CORE_DEFINERUNTIMETYPED( ObjectToScene );
 
+size_t ObjectToScene::g_firstPlugIndex = 0;
+
 ObjectToScene::ObjectToScene( const std::string &name )
 	:	ObjectSource( name, "object" )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ObjectPlug( "object" ) );
 }
 
@@ -54,12 +57,12 @@ ObjectToScene::~ObjectToScene()
 
 Gaffer::ObjectPlug *ObjectToScene::objectPlug()
 {
-	return getChild<ObjectPlug>( "object" );
+	return getChild<ObjectPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::ObjectPlug *ObjectToScene::objectPlug() const
 {
-	return getChild<ObjectPlug>( "object" );
+	return getChild<ObjectPlug>( g_firstPlugIndex );
 }
 
 void ObjectToScene::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const

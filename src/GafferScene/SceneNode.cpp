@@ -46,9 +46,12 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( SceneNode );
 
+size_t SceneNode::g_firstPlugIndex = 0;
+
 SceneNode::SceneNode( const std::string &name )
 	:	Node( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "out", Gaffer::Plug::Out ) );
 }
 
@@ -58,12 +61,12 @@ SceneNode::~SceneNode()
 
 ScenePlug *SceneNode::outPlug()
 {
-	return getChild<ScenePlug>( "out" );
+	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
 const ScenePlug *SceneNode::outPlug() const
 {
-	return getChild<ScenePlug>( "out" );
+	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 			
 void SceneNode::compute( ValuePlug *output, const Context *context ) const

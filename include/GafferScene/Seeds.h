@@ -76,6 +76,10 @@ class Seeds : public BranchCreator
 		
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
 		
 };
 

@@ -212,6 +212,19 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// function. 
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 		
+		/// It is common for derived classes to provide accessors for
+		/// constant-time access to specific children, as this can be
+		/// much quicker than a call to getChild<>( name ). This function
+		/// helps in implementing such accessors by storing the index for
+		/// the next child to be added - it should therefore be called
+		/// from a constructor before children are added, and the offset can
+		/// then be used for constant-time access of subsequent children
+		/// using getChild<>( index + offset ). It is common for the index
+		/// variable to be a static member of the class, as it shouldn't vary
+		/// from instance to instance, and storeIndexOfNextChild() will error
+		/// if it discovers that not to be the case.
+		void storeIndexOfNextChild( size_t &index ) const;
+		
 	private :
 
 		bool nameExists( const IECore::InternedString &name );

@@ -48,9 +48,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Instancer );
 
+size_t Instancer::g_firstPlugIndex = 0;
+
 Instancer::Instancer( const std::string &name )
 	:	BranchCreator( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "instance" ) );
 }
 
@@ -60,12 +63,12 @@ Instancer::~Instancer()
 
 ScenePlug *Instancer::instancePlug()
 {
-	return getChild<ScenePlug>( "instance" );
+	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
 const ScenePlug *Instancer::instancePlug() const
 {
-	return getChild<ScenePlug>( "instance" );
+	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 		
 void Instancer::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const

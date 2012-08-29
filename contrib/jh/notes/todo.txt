@@ -15,6 +15,9 @@ PRIORITIES!!!!
 * allow SceneElementProcessors to not have filters if they don't want
 	- AttributeCache for instance
 		- although if it's not storing bounds then actually its fine
+			- and even if it is we can calculate parent bounds anyway
+				- the problem is just that we want to apply from any point down in
+				  the hierarchy.
 
 * proper scenePath class so we don't have to do loads of string manipulation
 	- can it be combined with a C++ version of Gaffer.Path?

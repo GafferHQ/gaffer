@@ -67,6 +67,10 @@ class Attributes : public SceneElementProcessor
 		virtual bool processesAttributes() const;
 		virtual void hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstCompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
 	
 };
 

@@ -42,9 +42,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Attributes );
 
+size_t Attributes::g_firstPlugIndex = 0;
+
 Attributes::Attributes( const std::string &name )
 	:	SceneElementProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
 		new ParameterListPlug(
 			"attributes",
@@ -57,6 +60,7 @@ Attributes::Attributes( const std::string &name )
 Attributes::Attributes( const std::string &name, Gaffer::Plug::Flags attributesPlugFlags )
 	:	SceneElementProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
 		new ParameterListPlug(
 			"attributes",
@@ -72,12 +76,12 @@ Attributes::~Attributes()
 
 GafferScene::ParameterListPlug *Attributes::attributesPlug()
 {
-	return getChild<ParameterListPlug>( "attributes" );
+	return getChild<ParameterListPlug>( g_firstPlugIndex );
 }
 
 const GafferScene::ParameterListPlug *Attributes::attributesPlug() const
 {
-	return getChild<ParameterListPlug>( "attributes" );
+	return getChild<ParameterListPlug>( g_firstPlugIndex );
 }
 
 void Attributes::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const

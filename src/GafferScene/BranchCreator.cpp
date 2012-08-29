@@ -48,9 +48,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( BranchCreator );
 
+size_t BranchCreator::g_firstPlugIndex = 0;
+
 BranchCreator::BranchCreator( const std::string &name )
 	:	SceneProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "parent" ) );
 	addChild( new StringPlug( "name" ) );
 }
@@ -61,22 +64,22 @@ BranchCreator::~BranchCreator()
 
 Gaffer::StringPlug *BranchCreator::parentPlug()
 {
-	return getChild<StringPlug>( "parent" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *BranchCreator::parentPlug() const
 {
-	return getChild<StringPlug>( "parent" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 Gaffer::StringPlug *BranchCreator::namePlug()
 {
-	return getChild<StringPlug>( "name" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringPlug *BranchCreator::namePlug() const
 {
-	return getChild<StringPlug>( "name" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 void BranchCreator::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const

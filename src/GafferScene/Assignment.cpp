@@ -43,9 +43,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Assignment );
 
+size_t Assignment::g_firstPlugIndex = 0;
+
 Assignment::Assignment( const std::string &name )
 	:	SceneElementProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Plug( "shader" ) );
 }
 
@@ -55,12 +58,12 @@ Assignment::~Assignment()
 
 Gaffer::Plug *Assignment::shaderPlug()
 {
-	return getChild<Plug>( "shader" );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
 const Gaffer::Plug *Assignment::shaderPlug() const
 {
-	return getChild<Plug>( "shader" );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
 bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const

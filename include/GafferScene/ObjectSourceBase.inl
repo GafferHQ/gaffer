@@ -47,9 +47,13 @@ template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<ObjectSourceBase<BaseType> > ObjectSourceBase<BaseType>::g_typeDescription;
 
 template<typename BaseType>
+size_t ObjectSourceBase<BaseType>::g_firstPlugIndex = 0;
+
+template<typename BaseType>
 ObjectSourceBase<BaseType>::ObjectSourceBase( const std::string &name, const std::string &namePlugDefaultValue )
 	:	BaseType( name )
 {
+	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
 	BaseType::addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
 	BaseType::addChild( new Gaffer::TransformPlug( "transform" ) );
 	BaseType::addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out ) );
@@ -65,25 +69,25 @@ ObjectSourceBase<BaseType>::~ObjectSourceBase()
 template<typename BaseType>
 Gaffer::StringPlug *ObjectSourceBase<BaseType>::namePlug()
 {
-	return BaseType::template getChild<Gaffer::StringPlug>( "name" );
+	return BaseType::template getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
 template<typename BaseType>
 const Gaffer::StringPlug *ObjectSourceBase<BaseType>::namePlug() const
 {
-	return BaseType::template getChild<Gaffer::StringPlug>( "name" );
+	return BaseType::template getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
 template<typename BaseType>
 Gaffer::TransformPlug *ObjectSourceBase<BaseType>::transformPlug()
 {
-	return BaseType::template getChild<Gaffer::TransformPlug>( "transform" );
+	return BaseType::template getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
 }
 
 template<typename BaseType>
 const Gaffer::TransformPlug *ObjectSourceBase<BaseType>::transformPlug() const
 {
-	return BaseType::template getChild<Gaffer::TransformPlug>( "transform" );
+	return BaseType::template getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
 }
 
 template<typename BaseType>
@@ -142,25 +146,25 @@ void ObjectSourceBase<BaseType>::hash( const Gaffer::ValuePlug *output, const Ga
 template<typename BaseType>
 Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::sourcePlug()
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__source" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 template<typename BaseType>
 const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::sourcePlug() const
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__source" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 template<typename BaseType>
 Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::inputSourcePlug()
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputSource" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 template<typename BaseType>
 const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::inputSourcePlug() const
 {
-	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputSource" );
+	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 		
 template<typename BaseType>

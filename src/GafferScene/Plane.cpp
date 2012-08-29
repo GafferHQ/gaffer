@@ -45,9 +45,12 @@ using namespace IECore;
 
 IE_CORE_DEFINERUNTIMETYPED( Plane );
 
+size_t Plane::g_firstPlugIndex = 0;
+
 Plane::Plane( const std::string &name )
 	:	ObjectSource( name, "plane" )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 1.0f ), V2f( 0.0f ) ) );
 }
 
@@ -57,12 +60,12 @@ Plane::~Plane()
 
 Gaffer::V2fPlug *Plane::dimensionsPlug()
 {
-	return getChild<V2fPlug>( "dimensions" );
+	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::V2fPlug *Plane::dimensionsPlug() const
 {
-	return getChild<V2fPlug>( "dimensions" );
+	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
 void Plane::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const

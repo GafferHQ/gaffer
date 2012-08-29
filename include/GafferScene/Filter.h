@@ -76,6 +76,10 @@ class Filter : public Gaffer::Node
 		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Result computeMatch( const Gaffer::Context *context ) const = 0;
 
+	private :
+	
+		static size_t g_firstPlugIndex;
+
 };
 
 } // namespace GafferScene

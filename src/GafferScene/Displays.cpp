@@ -76,9 +76,12 @@ static DisplayMap &displayMap()
 
 IE_CORE_DEFINERUNTIMETYPED( Displays );
 
+size_t Displays::g_firstPlugIndex = 0;
+
 Displays::Displays( const std::string &name )
 	:	GlobalsProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
 		new CompoundPlug(
 			"displays",
@@ -94,12 +97,12 @@ Displays::~Displays()
 
 Gaffer::CompoundPlug *Displays::displaysPlug()
 {
-	return getChild<CompoundPlug>( "displays" );
+	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::CompoundPlug *Displays::displaysPlug() const
 {
-	return getChild<CompoundPlug>( "displays" );
+	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
 Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label )

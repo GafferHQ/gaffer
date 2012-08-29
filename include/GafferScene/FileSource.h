@@ -65,7 +65,11 @@ class FileSource : public Source
 	
 		/// Implemented to add fileNamePlug() to the hash for all outPlug() children.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		
+	
+	private :
+	
+		static size_t g_firstPlugIndex;
+			
 };
 
 } // namespace GafferScene

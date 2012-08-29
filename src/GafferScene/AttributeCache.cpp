@@ -64,9 +64,12 @@ static InterpolatedCacheCache g_interpolatedCacheCache( interpolatedCacheGetter,
 // Implementation of AttributeCache.
 //////////////////////////////////////////////////////////////////////////
 
+size_t AttributeCache::g_firstPlugIndex = 0;
+
 AttributeCache::AttributeCache( const std::string &name )
 	:	SceneElementProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
 }
 
@@ -76,12 +79,12 @@ AttributeCache::~AttributeCache()
 
 Gaffer::StringPlug *AttributeCache::fileNamePlug()
 {
-	return getChild<StringPlug>( "fileName" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *AttributeCache::fileNamePlug() const
 {
-	return getChild<StringPlug>( "fileName" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 void AttributeCache::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const

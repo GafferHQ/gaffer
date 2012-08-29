@@ -46,9 +46,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Seeds );
 
+size_t Seeds::g_firstPlugIndex = 0;
+
 Seeds::Seeds( const std::string &name )
 	:	BranchCreator( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FloatPlug( "density", Plug::In, 1.0f, 0.0f ) );
 	addChild( new StringPlug( "pointType", Plug::In, "gl:point" ) );
 }
@@ -59,22 +62,22 @@ Seeds::~Seeds()
 
 Gaffer::FloatPlug *Seeds::densityPlug()
 {
-	return getChild<FloatPlug>( "density" );
+	return getChild<FloatPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::FloatPlug *Seeds::densityPlug() const
 {
-	return getChild<FloatPlug>( "density" );
+	return getChild<FloatPlug>( g_firstPlugIndex );
 }
 
 Gaffer::StringPlug *Seeds::pointTypePlug()
 {
-	return getChild<StringPlug>( "pointType" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringPlug *Seeds::pointTypePlug() const
 {
-	return getChild<StringPlug>( "pointType" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 void Seeds::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const

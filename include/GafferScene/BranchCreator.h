@@ -96,6 +96,8 @@ class BranchCreator : public SceneProcessor
 		// else if path is unrelated to a branch, returns such that :
 		//     parentPath == branchPath == ""
 		void parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+
+		static size_t g_firstPlugIndex;
 		
 };
 

@@ -75,6 +75,9 @@ class AttributeCache : public SceneElementProcessor
 
 		std::string entryForPath( const ScenePath &path ) const;
 		
+	private :
+		
+		static size_t g_firstPlugIndex;		
 };
 
 } // namespace GafferScene

@@ -43,9 +43,12 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( SceneElementProcessor );
 
+size_t SceneElementProcessor::g_firstPlugIndex = 0;
+
 SceneElementProcessor::SceneElementProcessor( const std::string &name )
 	:	SceneProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "filter", Plug::In, Filter::Match, Filter::NoMatch, Filter::Match ) );
 }
 
@@ -55,12 +58,12 @@ SceneElementProcessor::~SceneElementProcessor()
 
 Gaffer::IntPlug *SceneElementProcessor::filterPlug()
 {
-	return getChild<IntPlug>( "filter" );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::IntPlug *SceneElementProcessor::filterPlug() const
 {
-	return getChild<IntPlug>( "filter" );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 		
 void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const

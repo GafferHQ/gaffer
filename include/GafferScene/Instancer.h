@@ -79,6 +79,8 @@ class Instancer : public BranchCreator
 		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
 		int instanceIndex( const ScenePath &branchPath ) const;
 		Gaffer::ContextPtr instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const;
+
+		static size_t g_firstPlugIndex;
 		
 };
 

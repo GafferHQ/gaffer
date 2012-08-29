@@ -41,9 +41,12 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Filter );
 
+size_t Filter::g_firstPlugIndex = 0;
+
 Filter::Filter( const std::string &name )
 	:	Node( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, Match ) );
 }
 
@@ -53,12 +56,12 @@ Filter::~Filter()
 
 Gaffer::IntPlug *Filter::matchPlug()
 {
-	return getChild<Gaffer::IntPlug>( "match" );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::IntPlug *Filter::matchPlug() const
 {
-	return getChild<Gaffer::IntPlug>( "match" );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
 }
 
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

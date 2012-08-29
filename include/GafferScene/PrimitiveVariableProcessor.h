@@ -72,6 +72,10 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 		
 		/// Must be implemented by subclasses to process the primitive variable and return it.
 		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const = 0;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
 	
 };
 

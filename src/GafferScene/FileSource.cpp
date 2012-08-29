@@ -41,9 +41,12 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( FileSource );
 
+size_t FileSource::g_firstPlugIndex = 0;
+
 FileSource::FileSource( const std::string &name )
 	:	Source( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
 }
 
@@ -53,12 +56,12 @@ FileSource::~FileSource()
 		
 Gaffer::StringPlug *FileSource::fileNamePlug()
 {
-	return getChild<StringPlug>( "fileName" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *FileSource::fileNamePlug() const
 {
-	return getChild<StringPlug>( "fileName" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 void FileSource::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const

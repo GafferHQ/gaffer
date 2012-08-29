@@ -45,9 +45,12 @@ using namespace Imath;
 
 IE_CORE_DEFINERUNTIMETYPED( Camera );
 
+size_t Camera::g_firstPlugIndex = 0;
+
 Camera::Camera( const std::string &name )
 	:	ObjectSource( name, "camera" )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new V2iPlug( "resolution", Plug::In, V2i( 1024, 778 ) ) );
 	addChild( new StringPlug( "projection", Plug::In, "perspective" ) );
 	addChild( new FloatPlug( "fieldOfView", Plug::In, 50.0f, 0.0f, 180.0f ) );
@@ -59,32 +62,32 @@ Camera::~Camera()
 
 Gaffer::V2iPlug *Camera::resolutionPlug()
 {
-	return getChild<V2iPlug>( "resolution" );
+	return getChild<V2iPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::V2iPlug *Camera::resolutionPlug() const
 {
-	return getChild<V2iPlug>( "resolution" );
+	return getChild<V2iPlug>( g_firstPlugIndex );
 }
 
 Gaffer::StringPlug *Camera::projectionPlug()
 {
-	return getChild<StringPlug>( "projection" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringPlug *Camera::projectionPlug() const
 {
-	return getChild<StringPlug>( "projection" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::FloatPlug *Camera::fieldOfViewPlug()
 {
-	return getChild<FloatPlug>( "fieldOfView" );
+	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::FloatPlug *Camera::fieldOfViewPlug() const
 {
-	return getChild<FloatPlug>( "fieldOfView" );
+	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
 void Camera::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const

@@ -91,6 +91,8 @@ class Group : public SceneProcessor
 		// we keep this up to date in childAdded(), so no matter how
 		// we get the plugs, we can access them quickly.
 		std::vector<ScenePlug *> m_inPlugs;
+
+		static size_t g_firstPlugIndex;
 			
 };
 

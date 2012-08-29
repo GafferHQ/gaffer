@@ -66,6 +66,10 @@ class Options : public GlobalsProcessor
 
 		virtual void hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
 		
 };
 
