@@ -86,7 +86,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( h, s["out"].objectHash( "/plane/notSeeds" ) )
 		self.assertEqual( m, s["out"].object( "/plane/notSeeds" ) )		
 		
-	def testHashes( self ) :
+	def testSceneValidity( self ) :
 	
 		p = GafferScene.Plane()
 		s = GafferScene.Seeds()
