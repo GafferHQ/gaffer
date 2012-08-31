@@ -12,6 +12,11 @@ PRIORITIES!!!!
 * optimise PathListingWidget and paths
 	- need hasChildren() and possibly fetchMore() and threading.
 
+* optimise Context::substitute
+	- and/or attempt to call it less
+		- maybe StringPlug can store its values in a custom Object?
+			- with a flag specifying whether or not there are $ or # signs?
+
 * allow SceneElementProcessors to not have filters if they don't want
 	- AttributeCache for instance
 		- although if it's not storing bounds then actually its fine
@@ -29,13 +34,14 @@ PRIORITIES!!!!
 
 * address removing copy() in TypedObjectPlug::setValue()
 	- it offers a big speedup
+		- not so big now we have the caching in place
 	- do we need a noCopy flag?
 	- or do we know that if we're in a compute() then we don't need a copy?
 		- or some such
 
 * i'm pretty sure we've got circular references in the menu code for CompoundEditor.
 
-* do we have circular references between SplitContainer and its animation
+* do we have circular references between SplitContainer and its animation?
 	
 * seeds derived from branchcreator
 	- with make sure we don't do expensive bounds propagation !!!!!!!!
@@ -45,6 +51,19 @@ PRIORITIES!!!!
 	- keeps them out of the system tray
 	- makes color pickers crash on close
 
+* tidy up stuff from the caching changes
+
+	* fix default value hashing (0 value)
+
+	* deal with hash() method masking hash( h ) for CompoundPlugs
+		- possibly just make a protected virtual hashValue() method, and
+		  leave the two public functions non-virtual?
+			
+	* have an expectedType argument to getObjectValue? as a small safety net for conflicting hashes?
+	
+	* consider having hashBound() type methods at the SceneNode level
+		- what are the consequences?
+	
 * setrendercamera node
 
 * alembic camera converter
@@ -71,6 +90,16 @@ PRIORITIES!!!!
 * does plugSetSignal() get emitted even when the value is the same as before?
 	
 * Contexts need to have parents from which they inherit stuff
+	- investigate alternative data structures
+		- maybe even just vector of <name, data>?
+	- maybe have a convenience Context( parent, name, value ) constructor
+	  which overrides just a single value
+	  	- and has optimised storage rather than a CompoundDataMap
+	  	- should speed up all the temporary contexts created for scene evaluation.
+	- would constructing temporary contexts on the stack give us a speedup over
+	  the heap? if so, how do we deal with people creating a smart pointer to them
+	  	- tell them not to in C++?
+	  	- and construct a copy on the heap when going into python?
 
 * stop camera moving all the bloody time
 	- and fix the bloody controls
