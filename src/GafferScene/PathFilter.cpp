@@ -36,6 +36,7 @@
 
 #include "Gaffer/Context.h"
 
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathFilter.h"
 
 using namespace GafferScene;
@@ -78,7 +79,7 @@ void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer
 
 void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h.append( context->get<string>( "scene:path" ) );
+	h.append( context->get<string>( ScenePlug::scenePathContextName ) );
 	pathsPlug()->hash( h );
 }
 
@@ -90,7 +91,7 @@ Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
 		return NoMatch;
 	}
 	
-	string path = context->get<string>( "scene:path" );
+	string path = context->get<string>( ScenePlug::scenePathContextName );
 	Result result = NoMatch;
 	for( vector<string>::const_iterator it = paths->readable().begin(), eIt = paths->readable().end(); it != eIt; it++ )
 	{

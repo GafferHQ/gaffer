@@ -106,7 +106,7 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		}
 		else
 		{	
-			ScenePath path = context->get<ScenePath>( "scene:path" );
+			ScenePath path = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			ScenePath parentPath, branchPath;
 			parentAndBranchPaths( path, parentPath, branchPath );
 			

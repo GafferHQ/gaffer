@@ -45,6 +45,8 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( ScenePlug );
 
+const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
+
 ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
@@ -190,15 +192,15 @@ const Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug() const
 Imath::Box3f ScenePlug::bound( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
-	Context::Scope scopedContext( tmpContext );
+	tmpContext->set( scenePathContextName, scenePath );
+	Context::Scope scopedContext( tmpContext );	
 	return boundPlug()->getValue();
 }
 
 Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return transformPlug()->getValue();
 }
@@ -206,7 +208,7 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 IECore::ConstCompoundObjectPtr ScenePlug::attributes( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return attributesPlug()->getValue();
 }
@@ -214,7 +216,7 @@ IECore::ConstCompoundObjectPtr ScenePlug::attributes( const std::string &scenePa
 IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return objectPlug()->getValue();
 }
@@ -222,7 +224,7 @@ IECore::ConstObjectPtr ScenePlug::object( const std::string &scenePath ) const
 IECore::ConstStringVectorDataPtr ScenePlug::childNames( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return childNamesPlug()->getValue();
 }
@@ -230,7 +232,7 @@ IECore::ConstStringVectorDataPtr ScenePlug::childNames( const std::string &scene
 IECore::MurmurHash ScenePlug::boundHash( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return boundPlug()->hash();
 }
@@ -238,7 +240,7 @@ IECore::MurmurHash ScenePlug::boundHash( const std::string &scenePath ) const
 IECore::MurmurHash ScenePlug::transformHash( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return transformPlug()->hash();
 }
@@ -246,7 +248,7 @@ IECore::MurmurHash ScenePlug::transformHash( const std::string &scenePath ) cons
 IECore::MurmurHash ScenePlug::attributesHash( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return attributesPlug()->hash();
 }
@@ -254,7 +256,7 @@ IECore::MurmurHash ScenePlug::attributesHash( const std::string &scenePath ) con
 IECore::MurmurHash ScenePlug::objectHash( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return objectPlug()->hash();
 
@@ -263,7 +265,7 @@ IECore::MurmurHash ScenePlug::objectHash( const std::string &scenePath ) const
 IECore::MurmurHash ScenePlug::childNamesHash( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "scene:path", scenePath );
+	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return childNamesPlug()->hash();
 }

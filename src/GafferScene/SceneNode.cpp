@@ -76,14 +76,14 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( output == scenePlug->boundPlug() )
 		{
-			std::string scenePath = context->get<std::string>( "scene:path" );
+			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
 			static_cast<AtomicBox3fPlug *>( output )->setValue(
 				computeBound( scenePath, context, scenePlug )
 			);
 		}
 		else if( output == scenePlug->transformPlug() )
 		{
-			std::string scenePath = context->get<std::string>( "scene:path" );
+			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
 			M44f transform;
 			if( scenePath != "/" ) // scene root must have identity transform
 			{
@@ -93,7 +93,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->attributesPlug() )
 		{
-			std::string scenePath = context->get<std::string>( "scene:path" );
+			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
 			ConstCompoundObjectPtr attributes = 0;
 			if( scenePath != "/" ) // scene root must have no attributes
 			{
@@ -103,7 +103,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
-			std::string scenePath = context->get<std::string>( "scene:path" );
+			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
 			ConstObjectPtr object = 0;
 			if( scenePath != "/" ) // scene root must have no object
 			{
@@ -113,7 +113,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->childNamesPlug() )
 		{
-			std::string scenePath = context->get<std::string>( "scene:path" );
+			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
 			static_cast<StringVectorDataPlug *>( output )->setValue(
 				computeChildNames( scenePath, context, scenePlug )
 			);

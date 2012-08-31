@@ -55,7 +55,7 @@ using namespace GafferScene;
 SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath, const IECore::StringVectorData *pathsToExpand )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath )
 {
-	m_context->set( "scene:path", m_scenePath );
+	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 	
 	if( pathsToExpand )
 	{
@@ -70,7 +70,7 @@ SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const std::string &scenePath )
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ), m_pathsToExpand( other.m_pathsToExpand )
 {
-	m_context->set( "scene:path", m_scenePath );
+	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 }
 
 SceneProcedural::~SceneProcedural()

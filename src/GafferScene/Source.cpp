@@ -69,6 +69,6 @@ void Source::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		)
 	)
 	{
-		h.append( context->get<std::string>( "scene:path" ) );
+		h.append( context->get<std::string>( ScenePlug::scenePathContextName ) );
 	}
 }

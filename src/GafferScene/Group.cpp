@@ -132,7 +132,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	if( output == mappingPlug() )
 	{
 		ContextPtr tmpContext = new Context( *Context::current() );
-		tmpContext->set( "scene:path", std::string( "/" ) );
+		tmpContext->set( ScenePlug::scenePathContextName, std::string( "/" ) );
 		Context::Scope scopedContext( tmpContext );
 		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 		{
@@ -150,14 +150,14 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		{
 			std::string groupName = namePlug()->getValue();
 			// one of the plugs which varies with scene:path.
-			std::string path = context->get<std::string>( "scene:path" );
+			std::string path = context->get<std::string>( ScenePlug::scenePathContextName );
 			if( path=="/" )
 			{
 				// root. we only compute bound and childNames.
 				if( output == outPlug()->boundPlug() )
 				{
 					ContextPtr tmpContext = new Context( *Context::current() );
-					tmpContext->set( "scene:path", std::string( "/" ) );
+					tmpContext->set( ScenePlug::scenePathContextName, std::string( "/" ) );
 					Context::Scope scopedContext( tmpContext );
 					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 					{
@@ -176,7 +176,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 				if( output == outPlug()->boundPlug() )
 				{
 					ContextPtr tmpContext = new Context( *Context::current() );
-					tmpContext->set( "scene:path", std::string( "/" ) );
+					tmpContext->set( ScenePlug::scenePathContextName, std::string( "/" ) );
 					Context::Scope scopedContext( tmpContext );
 					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 					{

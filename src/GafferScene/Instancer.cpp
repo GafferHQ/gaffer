@@ -283,11 +283,11 @@ Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentCont
 	size_t s = branchPath.find( '/', 1 );
 	if( s == string::npos )
 	{
-		result->set( "scene:path", string( "/" ) );
+		result->set( ScenePlug::scenePathContextName, string( "/" ) );
 	}
 	else
 	{
-		result->set( "scene:path", string( branchPath, s ) );
+		result->set( ScenePlug::scenePathContextName, string( branchPath, s ) );
 	}	
 	
 	result->set( "instancer:id", instanceIndex( branchPath ) );

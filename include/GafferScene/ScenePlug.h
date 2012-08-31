@@ -101,6 +101,13 @@ class ScenePlug : public Gaffer::CompoundPlug
 		const Gaffer::ObjectVectorPlug *globalsPlug() const;
 		//@}
 		
+		/// The name used to specify the current scene path in a
+		/// Context object. You should use this variable instead
+		/// of hardcoding strings - it is both less error prone
+		/// and quicker than constructing a new InternedString
+		/// each time.
+		static const IECore::InternedString scenePathContextName;
+		
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying the scenePath
 		/// and then return the result of calling getValue() or hash() on the
