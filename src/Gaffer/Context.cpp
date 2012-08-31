@@ -54,14 +54,19 @@ using namespace IECore;
 static InternedString g_frame( "frame" );
 
 Context::Context()
-	:	m_data( new CompoundData() )
+	:	m_data( new CompoundData() ), m_changedSignal( 0 )
 {
 	set( g_frame, 1.0f );
 }
 
 Context::Context( const Context &other )
-	:	m_data( other.m_data->copy() )
+	:	m_data( other.m_data->copy() ), m_changedSignal( 0 )
 {
+}
+
+Context::~Context()
+{
+	delete m_changedSignal;
 }
 	
 float Context::getFrame() const
@@ -76,7 +81,17 @@ void Context::setFrame( float frame )
 
 Context::ChangedSignal &Context::changedSignal()
 {
-	return m_changedSignal;
+	if( !m_changedSignal )
+	{
+		// we create this on demand, as otherwise it adds a significant
+		// hit to the cost of constructing a Context. as we need
+		// to frequently construct temporary Contexts during computation,
+		// but only need to connect to the changed signal for the few
+		// persistent contexts used by the gui, this is a very worthwhile
+		// optimisation.
+		m_changedSignal = new ChangedSignal();
+	}
+	return *m_changedSignal;
 }
 
 IECore::MurmurHash Context::hash() const

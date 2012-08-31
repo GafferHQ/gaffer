@@ -59,7 +59,8 @@ class Context : public IECore::RefCounted
 
 		Context();
 		Context( const Context &other );
-	
+		~Context();
+		
 		IE_CORE_DECLAREMEMBERPTR( Context )
 		
 		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
@@ -119,7 +120,7 @@ class Context : public IECore::RefCounted
 	private :
 	
 		IECore::CompoundDataPtr m_data;
-		ChangedSignal m_changedSignal;
+		ChangedSignal *m_changedSignal;
 
 };
 

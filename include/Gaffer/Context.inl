@@ -107,7 +107,10 @@ void Context::set( const IECore::InternedString &name, const T &value )
 {
 	if( Accessor<T>().set( m_data.get(), name, value ) )
 	{
-		m_changedSignal( this, name );
+		if( m_changedSignal )
+		{
+			(*m_changedSignal)( this, name );
+		}
 	}
 }
 
