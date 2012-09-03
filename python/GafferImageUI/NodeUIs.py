@@ -72,7 +72,7 @@ GafferUI.PlugValueWidget.registerCreator(
 
 # OpenColorIO
 
-ocioColorSpaceLabelsAndValues = []
+ocioColorSpaceLabelsAndValues = [ ( "None", "" ) ]
 import PyOpenColorIO as OCIO
 config = OCIO.GetCurrentConfig()
 for cs in config.getColorSpaces() :
