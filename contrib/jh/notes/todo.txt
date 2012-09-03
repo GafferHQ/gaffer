@@ -80,10 +80,6 @@ PRIORITIES!!!!
 	- come up on a keypress
 	- allow them to be specified using the layout menu
 	
-* fix the camera movement
-	
-* fix script open directory location
-
 * script node needs to save it's own plugs when serialising
 	* a header would be nice too
 
@@ -102,7 +98,6 @@ PRIORITIES!!!!
 	  	- and construct a copy on the heap when going into python?
 
 * stop camera moving all the bloody time
-	- and fix the bloody controls
 
 * make read and write and execute nodes accept time
 	- write a scripting tutorial that makes read nodes for all file sequences in a directory
@@ -134,8 +129,6 @@ PRIORITIES!!!!
 	- frame support for reader
 	- ocio node
 
-* install ops with sensible names
-
 * explore image based layout tools
 
 * config
@@ -148,25 +141,18 @@ PRIORITIES!!!!
 	- useful for AttributeCache node
 	
 * scene nodes 
-	- modelcachesource DONE
-	- attributecache DONE
 	- primitive variable delete DONE
 		- do need to recompute bounds for some deletions though
 	- geometry delete
 	- primitive source or geometry source or summink DONE
 	
 	- hierarchy manipulators :
-		- group DONE
-			- with a transform DONE
-				- using a Gaffer::TransformPlug DONE
-			- with multiple inputs
 		- rename
 		- delete NEXT ?
 		- merge
 		- parent
 		
 	- instance NEXT !!!!
-	- filter
 	- transform
 		- needs to update bounds at the levels above
 	- attributes
