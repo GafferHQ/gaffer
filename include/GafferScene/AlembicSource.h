@@ -55,6 +55,8 @@ class AlembicSource : public FileSource
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( AlembicSource, AlembicSourceTypeId, FileSource )
 		
 	private :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 	
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -64,6 +66,8 @@ class AlembicSource : public FileSource
 		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		IECoreAlembic::AlembicInputPtr inputForPath( const ScenePath &path ) const;
+		
+		float fps() const;
 				
 };
 

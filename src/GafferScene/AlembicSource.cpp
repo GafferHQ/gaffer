@@ -40,6 +40,8 @@
 
 #include "IECore/LRUCache.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/AlembicSource.h"
 
 using namespace Imath;
@@ -93,11 +95,31 @@ AlembicSource::~AlembicSource()
 {
 }
 
+void AlembicSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FileSource::hash( output, context, h );
+	if(
+		output == outPlug()->boundPlug() ||
+		output == outPlug()->transformPlug() ||
+		output == outPlug()->objectPlug()
+	 )
+	{
+		h.append( context->getFrame() );
+	}
+}
+
 Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	AlembicInputPtr i = inputForPath( path );
-	Box3d b = i->bound();
-	return Box3f( b.min, b.max );
+	if( i->hasStoredBound() )
+	{
+		Box3d b = i->boundAtTime( context->getFrame() / fps() );
+		return Box3f( b.min, b.max );
+	}
+	else
+	{
+		return unionOfTransformedChildBounds( path, parent );	
+	}
 }
 
 Imath::M44f AlembicSource::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -105,7 +127,7 @@ Imath::M44f AlembicSource::computeTransform( const ScenePath &path, const Gaffer
 	M44f result;
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
-		M44d t = i->transform();
+		M44d t = i->transformAtTime( context->getFrame() /fps() );
 		/// \todo Maybe we should be using doubles for bounds and transforms anyway?
 		result = M44f(
 			t[0][0], t[0][1], t[0][2], t[0][3],
@@ -129,7 +151,7 @@ IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, cons
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
 		/// \todo Maybe template convert and then we don't need the cast.
-		result = runTimeCast<Renderable>( i->convert( IECore::RenderableTypeId ) );
+		result = runTimeCast<Renderable>( i->objectAtTime( context->getFrame() / fps(), IECore::RenderableTypeId ) );
 	}
 	return result;
 }
@@ -161,4 +183,9 @@ IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &pat
 	}
 	
 	return result;
+}
+
+float AlembicSource::fps() const
+{
+	return 24.0f;
 }

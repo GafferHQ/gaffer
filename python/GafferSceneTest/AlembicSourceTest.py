@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreAlembic
 
 import Gaffer
 import GafferScene
@@ -75,6 +76,27 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].bound( "/group1/pCube1/pCubeShape1" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1/pCube1/pCubeShape1" ), None )
 		self.assertEqual( a["out"].childNames( "/group1/pCube1/pCubeShape1" ), IECore.StringVectorData( [] ) )
+
+	def testAnimation( self ) :
+			
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
+		self.assertSceneValid( a["out"] )
+	
+		b = IECoreAlembic.AlembicInput( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+		c = b.child( "pCube1" ).child( "pCubeShape1" )
+		numSamples = b.numSamples()
+		startTime = b.timeAtSample( 0 )
+		endTime = b.timeAtSample( numSamples - 1 )
+				
+		for i in range( 0, numSamples * 2 ) :
+			time = startTime + ( endTime - startTime ) * float( i ) / ( numSamples * 2 - 1 )
+			c = Gaffer.Context()
+			c.setFrame( time * 24 )
+			with c :
+				self.assertBoxesAlmostEqual( a["out"].bound( "/" ), b.boundAtTime( time ), 6 )
+				self.assertBoxesAlmostEqual( a["out"].bound( "/pCube1/pCubeShape1" ), b.boundAtTime( time ), 6 )
 
 if __name__ == "__main__":
 	unittest.main()
