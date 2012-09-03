@@ -34,27 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_CHANNELDATAPROCESSOR_H
+#define GAFFERIMAGE_CHANNELDATAPROCESSOR_H
+
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+/// The ChannelDataProcessor provides a useful base class for nodes which process
+/// images but leave the image dimensions and channel names unchanged.
+class ChannelDataProcessor : public ImageProcessor
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110899
+
+	public :
+
+		ChannelDataProcessor( const std::string &name=staticTypeName() );
+		virtual ~ChannelDataProcessor();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+		/// Implemented to pass through the input values. Derived classes need only implement computeChannelData().
+		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+					
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H

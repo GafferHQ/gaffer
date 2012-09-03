@@ -34,27 +34,33 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "GafferImage/ImageProcessor.h"
 
-namespace GafferImage
+using namespace Gaffer;
+using namespace GafferImage;
+
+IE_CORE_DEFINERUNTIMETYPED( ImageProcessor );
+
+size_t ImageProcessor::g_firstPlugIndex = 0;
+
+ImageProcessor::ImageProcessor( const std::string &name )
+	:	ImageNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );	
+	addChild( new ImagePlug( "in", Gaffer::Plug::In ) );
+}
 
-enum TypeId
+ImageProcessor::~ImageProcessor()
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110899
-};
+}
 
-} // namespace GafferImage
+ImagePlug *ImageProcessor::inPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex );
+}
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+const ImagePlug *ImageProcessor::inPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex );
+}
+

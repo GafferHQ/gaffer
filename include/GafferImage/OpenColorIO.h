@@ -34,27 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_OPENCOLORIO_H
+#define GAFFERIMAGE_OPENCOLORIO_H
+
+#include "GafferImage/ChannelDataProcessor.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class OpenColorIO : public ChannelDataProcessor
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+
+	public :
+
+		OpenColorIO( const std::string &name=staticTypeName() );
+		virtual ~OpenColorIO();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenColorIO, OpenColorIOTypeId, ChannelDataProcessor );
+
+		Gaffer::StringPlug *inputSpacePlug();
+		const Gaffer::StringPlug *inputSpacePlug() const;
+		
+		Gaffer::StringPlug *outputSpacePlug();
+		const Gaffer::StringPlug *outputSpacePlug() const;
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+	private :
 	
-	LastTypeId = 110899
+		static size_t g_firstPlugIndex;
+				
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_OPENCOLORIO_H

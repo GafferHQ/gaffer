@@ -219,6 +219,12 @@ options.Add(
 )
 
 options.Add(
+	"OCIO_CONFIG_DIR",
+	"The location of the OCIO config files to install with Gaffer.",
+	"$DEPENDENCIES_SRC_DIR/imageworks-OpenColorIO-Configs-f931d77/nuke-default",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_OIIO", "Set this to build OIIO.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -559,8 +565,12 @@ if depEnv["BUILD_DEPENDENCY_GLEW"] :
 	runCommand( "cd $GLEW_SRC_DIR && make clean && make install GLEW_DEST=$BUILD_DIR LIBDIR=$BUILD_DIR/lib" )
 
 if depEnv["BUILD_DEPENDENCY_OCIO"] :
-	runCommand( "cd $OCIO_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
-
+	runCommand( "cd $OCIO_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DOCIO_BUILD_TRUELIGHT=OFF -DOCIO_BUILD_APPS=OFF -DOCIO_BUILD_NUKE=OFF && make clean && make -j 4 && make install" )
+	runCommand( "mv $BUILD_DIR/lib/PyOpenColorIO* $BUILD_DIR/python" )
+	runCommand( "mkdir -p $BUILD_DIR/openColorIO" )
+	runCommand( "cp $OCIO_CONFIG_DIR/config.ocio $BUILD_DIR/openColorIO" )
+	runCommand( "cp -r $OCIO_CONFIG_DIR/luts $BUILD_DIR/openColorIO" )
+	
 if depEnv["BUILD_DEPENDENCY_OIIO"] :
 	runCommand( "cd $OIIO_SRC_DIR && make clean && make THIRD_PARTY_TOOLS_HOME=$BUILD_DIR OCIO_PATH=$BUILD_DIR USE_OPENJPEG=0" )
 	if depEnv["PLATFORM"]=="darwin" :
@@ -740,12 +750,12 @@ libraries = {
 	
 	"GafferImage" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "OpenImageIO-1" ],
+			"LIBS" : [ "Gaffer", "OpenImageIO-1", "OpenColorIO" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage" ],
 		},
-		"requiredOptions" : [ "OIIO_SRC_DIR" ],
+		"requiredOptions" : [ "OIIO_SRC_DIR", "OCIO_SRC_DIR" ],
 	},
 	
 	"GafferImageTest" : {},

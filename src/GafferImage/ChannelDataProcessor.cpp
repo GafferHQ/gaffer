@@ -34,27 +34,66 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "GafferImage/ChannelDataProcessor.h"
 
-namespace GafferImage
-{
+using namespace Gaffer;
+using namespace GafferImage;
 
-enum TypeId
+IE_CORE_DEFINERUNTIMETYPED( ChannelDataProcessor );
+
+ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
+	:	ImageProcessor( name )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+}
+
+ChannelDataProcessor::~ChannelDataProcessor()
+{
+}
+
+void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	ImageProcessor::affects( input, outputs );
 	
-	LastTypeId = 110899
-};
+	if( input == inPlug()->displayWindowPlug() ||
+		input == inPlug()->dataWindowPlug() ||
+		input == inPlug()->channelNamesPlug()
+	)
+	{
+		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );	
+	}
+}
 
-} // namespace GafferImage
+void ChannelDataProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{	
+	if( output == outPlug()->displayWindowPlug() )
+	{
+		h = inPlug()->displayWindowPlug()->hash();
+	}
+	else if( output == outPlug()->dataWindowPlug() )
+	{
+		h = inPlug()->dataWindowPlug()->hash();
+	}
+	else if( output == outPlug()->channelNamesPlug() )
+	{
+		h = inPlug()->channelNamesPlug()->hash();
+	}
+	else
+	{
+		ImageProcessor::hash( output, context, h );
+	}
+}
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+Imath::Box2i ChannelDataProcessor::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->displayWindowPlug()->getValue();
+}
+
+Imath::Box2i ChannelDataProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->dataWindowPlug()->getValue();
+}
+
+IECore::ConstStringVectorDataPtr ChannelDataProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->channelNamesPlug()->getValue();
+}

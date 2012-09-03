@@ -85,6 +85,7 @@ try :
 
 	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
 	GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
+	GafferUI.NodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )
 except ImportError :
 	pass
 	

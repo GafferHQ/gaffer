@@ -61,3 +61,33 @@ GafferUI.PlugValueWidget.registerCreator(
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() )
 	)
 )
+
+# ImageProcessor
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.ImageProcessor.staticTypeId(),
+	"in",
+	None
+)
+
+# OpenColorIO
+
+ocioColorSpaceLabelsAndValues = []
+import PyOpenColorIO as OCIO
+config = OCIO.GetCurrentConfig()
+for cs in config.getColorSpaces() :
+	ocioColorSpaceLabelsAndValues.append( ( cs.getName(), cs.getName() ) )
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.OpenColorIO.staticTypeId(),
+	"inputSpace",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = ocioColorSpaceLabelsAndValues
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.OpenColorIO.staticTypeId(),
+	"outputSpace",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = ocioColorSpaceLabelsAndValues
+)

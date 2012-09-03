@@ -34,27 +34,36 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_IMAGEPROCESSOR_H
+#define GAFFERIMAGE_IMAGEPROCESSOR_H
+
+#include "GafferImage/ImageNode.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+/// The ImageProcessor class provides a base class for nodes which will take an image input
+/// and modify it in some way.
+class ImageProcessor : public ImageNode
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+
+	public :
+
+		ImageProcessor( const std::string &name=staticTypeName() );
+		virtual ~ImageProcessor();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageProcessor, ImageProcessorTypeId, ImageNode );
+		
+		/// Images enter the node through inPlug() and are output in processed form on ImageNode::outPlug()
+		ImagePlug *inPlug();
+		const ImagePlug *inPlug() const;
 	
-	LastTypeId = 110899
+	private :
+	
+		static size_t g_firstPlugIndex;
+					
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_IMAGEPROCESSOR_H

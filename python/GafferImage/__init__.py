@@ -34,4 +34,12 @@
 #  
 ##########################################################################
 
+def __setupEnvironment() :
+	
+	import os
+	if "OCIO" not in os.environ :
+		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+	
+__setupEnvironment()
+
 from _GafferImage import *

@@ -24,6 +24,8 @@ PRIORITIES!!!!
 				- the problem is just that we want to apply from any point down in
 				  the hierarchy.
 
+* select the filename in a useful way for script save as...
+
 * proper scenePath class so we don't have to do loads of string manipulation
 	- can it be combined with a C++ version of Gaffer.Path?
 		- would that be confusing given the ScenePath class we already have
@@ -67,8 +69,6 @@ PRIORITIES!!!!
 * setrendercamera node
 
 * alembic camera converter
-
-* opencolorio node
 
 * fix CompoundVectorParameter ui
 
@@ -127,7 +127,6 @@ PRIORITIES!!!!
 
 * image nodes
 	- frame support for reader
-	- ocio node
 
 * explore image based layout tools
 

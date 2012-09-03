@@ -41,6 +41,9 @@
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageReader.h"
 #include "GafferImage/Display.h"
+#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/ChannelDataProcessor.h"
+#include "GafferImage/OpenColorIO.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -78,5 +81,8 @@ BOOST_PYTHON_MODULE( _GafferImage )
 		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 	;
+	GafferBindings::NodeClass<ImageProcessor>();
+	GafferBindings::NodeClass<ChannelDataProcessor>();
+	GafferBindings::NodeClass<OpenColorIO>();
 
 }

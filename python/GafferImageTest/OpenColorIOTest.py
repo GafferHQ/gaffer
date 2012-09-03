@@ -34,10 +34,44 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
+import os
+import unittest
 
+import IECore
+
+import Gaffer
+import GafferImage
+
+class OpenColorIOTest( unittest.TestCase ) :
+
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+
+	def test( self ) :
+	
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.fileName )		
+
+		o = GafferImage.OpenColorIO()
+		o["in"].setInput( n["out"] )
+		
+		self.assertEqual( n["out"].image(), o["out"].image() )
+	
+		o["inputSpace"].setValue( "linear" )
+		o["outputSpace"].setValue( "sRGB" )
+		
+		self.assertNotEqual( n["out"].image(), o["out"].image() )
+	
+	@unittest.expectedFailure
+	def testHashPassThrough( self ) :
+	
+		# we should implement things so that if inputSpace==outputSpace
+		# or one of the spaces is not specified, the node is a no-op
+		# and just passes through the hash and data unmodified. we should
+		# also have an active plug for all ChannelDataProcessors, and
+		# an active() method they can override, to make it easy to do
+		# pass-through.
+		
+		raise notImplementedError
+	
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
