@@ -101,7 +101,7 @@ void OpenColorIO::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 {	
 	if( output == outPlug()->channelDataPlug() )
 	{
-		const std::string &channelName = context->get<std::string>( "image:channelName" );
+		const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 		if( channelName == "R" || channelName == "G" || channelName == "B" )
 		{
 			ChannelDataProcessor::hash( output, context, h );
@@ -111,11 +111,11 @@ void OpenColorIO::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 			ContextPtr tmpContext = new Context( *Context::current() );
 			Context::Scope scopedContext( tmpContext );	
 			
-			tmpContext->set( "image:channelName", std::string( "R" ) );
+			tmpContext->set( ImagePlug::channelNameContextName, std::string( "R" ) );
 			inPlug()->channelDataPlug()->hash( h );
-			tmpContext->set( "image:channelName", std::string( "G" ) );
+			tmpContext->set( ImagePlug::channelNameContextName, std::string( "G" ) );
 			inPlug()->channelDataPlug()->hash( h );
-			tmpContext->set( "image:channelName", std::string( "B" ) );
+			tmpContext->set( ImagePlug::channelNameContextName, std::string( "B" ) );
 			inPlug()->channelDataPlug()->hash( h );
 			
 			inputSpacePlug()->hash( h );

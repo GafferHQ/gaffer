@@ -71,8 +71,8 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	Node::hash( output, context, h );
 	if( output == outPlug()->channelDataPlug() )
 	{
-		h.append( context->get<string>( "image:channelName" ) );
-		h.append( context->get<V2i>( "image:tileOrigin" ) );		
+		h.append( context->get<string>( ImagePlug::channelNameContextName ) );
+		h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );		
 	}
 }
 				
@@ -101,8 +101,8 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == imagePlug->channelDataPlug() )
 		{
-			std::string channelName = context->get<string>( "image:channelName" );
-			V2i tileOrigin = context->get<V2i>( "image:tileOrigin" );
+			std::string channelName = context->get<string>( ImagePlug::channelNameContextName );
+			V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 			if( tileOrigin.x % ImagePlug::tileSize() || tileOrigin.y % ImagePlug::tileSize() )
 			{
 				throw Exception( "The image:tileOrigin must be a multiple of ImagePlug::tileSize()" );

@@ -50,6 +50,9 @@ using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( ImagePlug );
 
+const IECore::InternedString ImagePlug::channelNameContextName = "image:channelName";
+const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigin";
+
 ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
@@ -161,8 +164,8 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 		throw IECore::Exception( "ImagePlug::channelData called on unconnected input plug" );
 	}
 	ContextPtr tmpContext = new Context( *Context::current() );
-	tmpContext->set( "image:channelName", channelName );
-	tmpContext->set( "image:tileOrigin", tile );
+	tmpContext->set( ImagePlug::channelNameContextName, channelName );
+	tmpContext->set( ImagePlug::tileOriginContextName, tile );
 	Context::Scope scopedContext( tmpContext );
 	return channelDataPlug()->getValue();
 }
@@ -204,8 +207,8 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		{
 			for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
 			{
-				context->set( "image:channelName", *it );
-				context->set( "image:tileOrigin", V2i( tileOriginX, tileOriginY ) );
+				context->set( ImagePlug::channelNameContextName, *it );
+				context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
 				Context::Scope scope( context );
 				
 				Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + tileSize(), tileOriginY + tileSize() ) );

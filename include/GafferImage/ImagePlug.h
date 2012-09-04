@@ -79,7 +79,15 @@ class ImagePlug : public Gaffer::CompoundPlug
 		Gaffer::FloatVectorDataPlug *channelDataPlug();
 		const Gaffer::FloatVectorDataPlug *channelDataPlug() const;
 		//@}
-				
+		
+		/// The names used to specify the channel name and tile of
+		/// interest via a Context object. You should use these
+		/// variables rather than hardcoding string values - it is
+		/// both less error prone and quicker than constructing
+		/// InternedStrings on every lookup.
+		static const IECore::InternedString channelNameContextName;
+		static const IECore::InternedString tileOriginContextName;
+		
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying image:channelName
 		/// and image:tileOrigin, and use them to return useful output.
