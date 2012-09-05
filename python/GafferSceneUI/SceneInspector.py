@@ -145,7 +145,12 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		object = node["out"].object( path )
 		if object is not None :
 			result["object:Type"] = object.typeName()
-			result["object:Primitive Variables"] = " ".join( sorted( object.keys() ) )
+			if isinstance( object, IECore.Primitive ) :
+				result["object:Primitive Variables"] = " ".join( sorted( object.keys() ) )
+			elif isinstance( object, IECore.Camera ) :
+				parameters = object.parameters()
+				for key in sorted( parameters.keys() ) :
+					result["object:"+key] = self.__formatValue( parameters[key] )
 		
 		return result
 	
@@ -214,7 +219,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		return result
 		
 	def __formatBox( self, box ) :
-	
+		
+		if box.isEmpty() :
+			return "Empty"
+			
 		result = "<table cellpadding=3>"
 		for v in ( box.min, box.max ) :
 			result += "<tr>"
