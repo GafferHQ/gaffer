@@ -9,6 +9,9 @@ PRIORITIES!!!!
 
 * enable/disable plug for scene processors
 
+* fix problem with instances bound
+	- think we need to take into account the object at the root as well.
+
 * optimise PathListingWidget and paths
 	- need hasChildren() and possibly fetchMore() and threading.
 
@@ -67,8 +70,6 @@ PRIORITIES!!!!
 		- what are the consequences?
 	
 * setrendercamera node
-
-* alembic camera converter
 
 * fix CompoundVectorParameter ui
 
