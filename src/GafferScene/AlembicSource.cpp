@@ -150,7 +150,7 @@ IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, cons
 	RenderablePtr result;
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
-		/// \todo Maybe template convert and then we don't need the cast.
+		/// \todo Maybe template objectAtTime and then we don't need the cast.
 		result = runTimeCast<Renderable>( i->objectAtTime( context->getFrame() / fps(), IECore::RenderableTypeId ) );
 	}
 	return result;
