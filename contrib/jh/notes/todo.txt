@@ -163,6 +163,8 @@ PRIORITIES!!!!
 	- context manipulator
 		- just passes through input, but shoves things into the context for the input evaluation
 			- should combine nicely with the expression node
+		- environment context
+			- sticks in the values of all environment variables, using an optional prefix
 	- time warp / offset / woteva DONE
 		- make the basic class generic somehow? just match "in*" to "out*"? DONE
 			- yep, TimeWarp<SceneProcessor>, then match in to out. DONE
