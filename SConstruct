@@ -991,7 +991,7 @@ env.Alias( "build", graphicsBuild )
 # Licenses
 #########################################################################################################
 
-if buildingDependencies :
+if True or buildingDependencies :
 
 	for l in [
 		( "python", "$PYTHON_SRC_DIR/LICENSE" ),
@@ -1003,6 +1003,14 @@ if buildingDependencies :
 		( "libjpeg", "$JPEG_SRC_DIR/README" ),
 		( "openexr", "$OPENEXR_SRC_DIR/LICENSE" ),
 		( "libtiff", "$TIFF_SRC_DIR/COPYRIGHT" ),
+		( "libpng", "$PNG_SRC_DIR/LICENSE" ),
+		( "tbb", "$TBB_SRC_DIR/COPYING" ),
+		( "openColorIO", "$OCIO_SRC_DIR/LICENSE" ),
+		( "openImageIO", "$OIIO_SRC_DIR/LICENSE" ),
+		( "hdf5", "$HDF5_SRC_DIR/COPYING" ),
+		( "alembic", "$ALEMBIC_SRC_DIR/LICENSE.txt" ),
+		( "qt", "$QT_SRC_DIR/LICENSE.LGPL" ),
+		( "pyQt", "$PYQT_SRC_DIR/GPL_EXCEPTION.TXT" ),
 	] :
 
 		license = env.InstallAs( "$BUILD_DIR/doc/licenses/" + l[0], l[1] )
@@ -1128,7 +1136,8 @@ manifest = [
 	"lib/libjpeg*$SHLIBSUFFIX*",
 	"lib/libpng*$SHLIBSUFFIX*",
 	
-	"lib/libOpenImageIO-1$SHLIBSUFFIX",
+	"lib/libOpenImageIO*$SHLIBSUFFIX",
+	"lib/libOpenColorIO*$SHLIBSUFFIX",
 	
 	"lib/libpython*$SHLIBSUFFIX*",
 	"lib/Python.framework",
@@ -1136,6 +1145,9 @@ manifest = [
 	
 	"lib/libGLEW*$SHLIBSUFFIX*",
 	"lib/libtbb*$SHLIBSUFFIX*",
+	
+	"lib/libhdf5*$SHLIBSUFFIX",
+	
 	"lib/libpyside*$SHLIBSUFFIX*",
 	"lib/libshiboken*$SHLIBSUFFIX*",
 	
@@ -1155,6 +1167,8 @@ manifest = [
 	"ops",
 	"procedurals",
 
+	"openColorIO",
+
 	"graphics/*.png",
 	"glsl/IECoreGL",
 	"doc/licenses",
@@ -1167,8 +1181,10 @@ manifest = [
 	"python/PySide/QtCore.so",
 	"python/PySide/QtGui.so",
 	"python/PySide/QtOpenGL.so",
+	"python/sip.so",
 	"python/PyQt*",
 	"python/OpenGL",
+	"python/PyOpenColorIO*",
 
 	"include/IECore*",
 	"include/Gaffer*",

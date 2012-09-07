@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -64,7 +64,7 @@ class About :
 	@staticmethod
 	def copyright() :
 		
-		return "Copyright (c) 2011 John Haddon"
+		return "Copyright (c) 2011-2012 John Haddon"
 		
 	@staticmethod
 	def url() :
@@ -123,6 +123,12 @@ class About :
 			},
 			
 			{
+				"name" : "libpng",
+				"url" : "http://www.libpng.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/libpng",
+			},
+			
+			{
 				"name" : "openexr",
 				"url" : "http://www.openexr.com/",
 				"license" : "$GAFFER_ROOT/doc/licenses/openexr",
@@ -144,5 +150,47 @@ class About :
 				"url" : "http://www.libtiff.org/",
 				"license" : "$GAFFER_ROOT/doc/licenses/libtiff",
 			},
-							
+			
+			{
+				"name" : "tbb",
+				"url" : "http://threadingbuildingblocks.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/tbb",
+			},
+			
+			{
+				"name" : "OpenColorIO",
+				"url" : "http://opencolorio.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/openColorIO",
+			},
+			
+			{
+				"name" : "OpenImageIO",
+				"url" : "http://www.openimageio.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/openImageIO",
+			},
+			
+			{
+				"name" : "HDF5",
+				"url" : "http://www.hdfgroup.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/hdf5",
+			},
+			
+			{
+				"name" : "Alembic",
+				"url" : "http://www.alembic.io/",
+				"license" : "$GAFFER_ROOT/doc/licenses/alembic",
+			},
+			
+			{
+				"name" : "Qt",
+				"url" : "http://qt.nokia.com/",
+				"license" : "$GAFFER_ROOT/doc/licenses/qt",
+			},
+			
+			{
+				"name" : "PyQt",
+				"url" : "http://www.riverbankcomputing.co.uk/",
+				"license" : "$GAFFER_ROOT/doc/licenses/pyQt",
+			},
+				
 		]	
