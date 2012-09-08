@@ -35,13 +35,12 @@
 ##########################################################################
 
 import GafferUI
-import GafferSceneUI
 
-class _Section( GafferSceneUI.ParameterListPlugValueWidget ) :
+class _Section( GafferUI.CompoundDataPlugValueWidget ) :
 
 	def __init__( self, plug, label, names, labels, **kw ) :
 	
-		GafferSceneUI.ParameterListPlugValueWidget.__init__( self, plug, True, label, **kw )
+		GafferUI.CompoundDataPlugValueWidget.__init__( self, plug, True, label, **kw )
 		
 		self.__names = set( names )
 		self.__namesToLabels = dict( zip( names, labels ) )
@@ -54,7 +53,7 @@ class _Section( GafferSceneUI.ParameterListPlugValueWidget ) :
 	
 		return self.__namesToLabels[name]
 
-class SectionedParameterListPlugValueWidget( GafferUI.PlugValueWidget ) :
+class SectionedCompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, sections, **kw ) :
 	

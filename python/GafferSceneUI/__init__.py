@@ -40,8 +40,6 @@ from FilterPlugValueWidget import FilterPlugValueWidget
 import SceneNodeUI
 import SceneView
 import RenderUI
-from ParameterListPlugValueWidget import ParameterListPlugValueWidget
-from SectionedParameterListPlugValueWidget import SectionedParameterListPlugValueWidget
 import DisplaysUI
 import OptionsUI
 from AlembicPathPreview import AlembicPathPreview

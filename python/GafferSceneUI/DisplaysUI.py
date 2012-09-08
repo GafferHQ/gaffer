@@ -83,7 +83,7 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		row.append( GafferUI.PlugValueWidget.create( childPlug["type"] ) )
 		row.append( GafferUI.PlugValueWidget.create( childPlug["data"] ) )
 		
-		parameterList = GafferSceneUI.ParameterListPlugValueWidget( childPlug["parameters"], collapsible=False )
+		parameterList = GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsible=False )
 		parameterList.setVisible( False )
 		column.append( parameterList )
 			

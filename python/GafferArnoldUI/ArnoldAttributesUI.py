@@ -36,14 +36,13 @@
 
 import Gaffer
 import GafferUI
-import GafferSceneUI
 import GafferArnold
 
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferArnold.ArnoldAttributes.staticTypeId(),
 	"attributes",
-	GafferSceneUI.SectionedParameterListPlugValueWidget,
+	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 		(
 			"Visibility",

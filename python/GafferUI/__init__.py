@@ -174,6 +174,8 @@ from EnumPlugValueWidget import EnumPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
 import ExpressionNodeUI
 from ToolPlugValueWidget import ToolPlugValueWidget
+from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
+from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
 
 # then stuff specific to parameterised objects
 

@@ -36,14 +36,13 @@
 
 import Gaffer
 import GafferUI
-import GafferSceneUI
 import GafferArnold
 
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferArnold.ArnoldOptions.staticTypeId(),
 	"options",
-	GafferSceneUI.SectionedParameterListPlugValueWidget,
+	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 		(
 			"Sampling",

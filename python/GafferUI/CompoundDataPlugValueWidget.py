@@ -38,9 +38,8 @@ import IECore
 
 import Gaffer
 import GafferUI
-import GafferScene
 
-class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
+class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 	def __init__( self, plug, collapsible=True, label=None, **kw ) :
 
@@ -86,7 +85,7 @@ class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		return self.__footerWidget
 	
 	## May be reimplemented by derived classes to return a suitable label
-	# for the parameter of the given name.
+	# for the member of the given name.
 	def _label( self, name ) :
 	
 		if not self.getPlug().getFlags( Gaffer.Plug.Flags.Dynamic ) :
@@ -105,6 +104,6 @@ class ParameterListPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		
 	def __addItem( self, name, value ) :
 	
-		self.getPlug().addParameter( name, value )
+		self.getPlug().addMember( name, value )
 		
-GafferUI.PlugValueWidget.registerType( GafferScene.ParameterListPlug.staticTypeId(), ParameterListPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.staticTypeId(), CompoundDataPlugValueWidget )
