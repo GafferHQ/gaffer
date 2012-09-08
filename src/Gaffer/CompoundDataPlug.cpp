@@ -37,26 +37,24 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
-
-#include "GafferScene/ParameterListPlug.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
-using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( ParameterListPlug )
+IE_CORE_DEFINERUNTIMETYPED( CompoundDataPlug )
 
-ParameterListPlug::ParameterListPlug( const std::string &name, Direction direction, unsigned flags )
+CompoundDataPlug::CompoundDataPlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
 }
 
-ParameterListPlug::~ParameterListPlug()
+CompoundDataPlug::~CompoundDataPlug()
 {
 }
 
-bool ParameterListPlug::acceptsChild( const GraphComponent *potentialChild ) const
+bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	if( !CompoundPlug::acceptsChild( potentialChild ) )
 	{
@@ -66,9 +64,9 @@ bool ParameterListPlug::acceptsChild( const GraphComponent *potentialChild ) con
 	return potentialChild->isInstanceOf( CompoundPlug::staticTypeId() );
 }
 
-Gaffer::CompoundPlug *ParameterListPlug::addParameter( const std::string &name, const IECore::Data *value )
+Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value )
 {
-	CompoundPlugPtr plug = new CompoundPlug( "parameter1", direction(), getFlags() );
+	CompoundPlugPtr plug = new CompoundPlug( "member1", direction(), getFlags() );
 	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", getFlags() );
 	namePlug->setValue( name );
 	plug->addChild( namePlug );
@@ -144,7 +142,7 @@ Gaffer::CompoundPlug *ParameterListPlug::addParameter( const std::string &name, 
 		}
 		default :
 			throw IECore::Exception(
-				boost::str( boost::format( "Parameter \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
+				boost::str( boost::format( "Member \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
 			);
 	}
 	
@@ -152,15 +150,15 @@ Gaffer::CompoundPlug *ParameterListPlug::addParameter( const std::string &name, 
 	return plug;
 }
 
-void ParameterListPlug::addParameters( const IECore::CompoundData *parameters )
+void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters )
 {
 	for( CompoundDataMap::const_iterator it = parameters->readable().begin(); it!=parameters->readable().end(); it++ )
 	{
-		addParameter( it->first, it->second );
+		addMember( it->first, it->second );
 	}
 }
 
-void ParameterListPlug::fillParameterList( IECore::CompoundDataMap &parameterList ) const
+void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const
 {
 	std::string name;
 	for( CompoundPlugIterator it( this ); it != it.end(); it++ )
@@ -168,12 +166,12 @@ void ParameterListPlug::fillParameterList( IECore::CompoundDataMap &parameterLis
 		IECore::DataPtr data = parameterDataAndName( *it, name );
 		if( data )
 		{
-			parameterList[name] = data;
+			compoundDataMap[name] = data;
 		}
 	}
 }
 
-void ParameterListPlug::fillParameterList( IECore::CompoundObject::ObjectMap &parameterList ) const
+void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const
 {
 	std::string name;
 	for( CompoundPlugIterator it( this ); it != it.end(); it++ )
@@ -181,12 +179,12 @@ void ParameterListPlug::fillParameterList( IECore::CompoundObject::ObjectMap &pa
 		IECore::DataPtr data = parameterDataAndName( *it, name );
 		if( data )
 		{
-			parameterList[name] = data;
+			compoundObjectMap[name] = data;
 		}
 	}
 }
 
-IECore::DataPtr ParameterListPlug::parameterDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const
+IECore::DataPtr CompoundDataPlug::parameterDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const
 {	
 	name = parameterPlug->getChild<StringPlug>( "name" )->getValue();
 	if( !name.size() )

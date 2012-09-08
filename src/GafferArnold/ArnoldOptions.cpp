@@ -44,34 +44,34 @@ IE_CORE_DEFINERUNTIMETYPED( ArnoldOptions );
 ArnoldOptions::ArnoldOptions( const std::string &name )
 	:	GafferScene::Options( name, Gaffer::Plug::Default )
 {
-	GafferScene::ParameterListPlug *options = optionsPlug();
+	Gaffer::CompoundDataPlug *options = optionsPlug();
 	
 	// sampling parameters
 	
-	options->addParameter( "ai:AA_samples", new IECore::IntData( 3 ) );
-	options->addParameter( "ai:GI_diffuse_samples", new IECore::IntData( 2 ) );
-	options->addParameter( "ai:GI_glossy_samples", new IECore::IntData( 2 ) );
-	options->addParameter( "ai:GI_refraction_samples", new IECore::IntData( 2 ) );
+	options->addMember( "ai:AA_samples", new IECore::IntData( 3 ) );
+	options->addMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ) );
+	options->addMember( "ai:GI_glossy_samples", new IECore::IntData( 2 ) );
+	options->addMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ) );
 
 	// ignore parameters
 	
-	options->addParameter( "ai:ignore_textures", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_shaders", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_atmosphere", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_lights", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_shadows", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_subdivision", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_displacement", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_bump", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_motion_blur", new IECore::BoolData( false ) );
-	options->addParameter( "ai:ignore_sss", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_textures", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_shaders", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_atmosphere", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_lights", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_shadows", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_subdivision", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_displacement", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_bump", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_motion_blur", new IECore::BoolData( false ) );
+	options->addMember( "ai:ignore_sss", new IECore::BoolData( false ) );
 
 	// error colours
 	
-	options->addParameter( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ) );
-	options->addParameter( "ai:error_color_bad_mesh", new IECore::Color3fData( Color3f( 0, 1, 0 ) ) );
-	options->addParameter( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ) );
-	options->addParameter( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ) );
+	options->addMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ) );
+	options->addMember( "ai:error_color_bad_mesh", new IECore::Color3fData( Color3f( 0, 1, 0 ) ) );
+	options->addMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ) );
+	options->addMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ) );
 	
 }
 

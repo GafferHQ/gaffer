@@ -44,16 +44,16 @@ IE_CORE_DEFINERUNTIMETYPED( ArnoldAttributes );
 ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	:	GafferScene::Attributes( name, Gaffer::Plug::Default )
 {
-	GafferScene::ParameterListPlug *attributes = attributesPlug();
+	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 	
 	// visibility parameters
 	
-	attributes->addParameter( "ai:visibility:camera", new IECore::BoolData( true ) );
-	attributes->addParameter( "ai:visibility:shadow", new IECore::BoolData( true ) );
-	attributes->addParameter( "ai:visibility:reflected", new IECore::BoolData( true ) );
-	attributes->addParameter( "ai:visibility:refracted", new IECore::BoolData( true ) );
-	attributes->addParameter( "ai:visibility:diffuse", new IECore::BoolData( true ) );
-	attributes->addParameter( "ai:visibility:glossy", new IECore::BoolData( true ) );
+	attributes->addMember( "ai:visibility:camera", new IECore::BoolData( true ) );
+	attributes->addMember( "ai:visibility:shadow", new IECore::BoolData( true ) );
+	attributes->addMember( "ai:visibility:reflected", new IECore::BoolData( true ) );
+	attributes->addMember( "ai:visibility:refracted", new IECore::BoolData( true ) );
+	attributes->addMember( "ai:visibility:diffuse", new IECore::BoolData( true ) );
+	attributes->addMember( "ai:visibility:glossy", new IECore::BoolData( true ) );
 	
 }
 

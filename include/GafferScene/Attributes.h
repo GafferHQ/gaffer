@@ -37,8 +37,9 @@
 #ifndef GAFFERSCENE_ATTRIBUTES_H
 #define GAFFERSCENE_ATTRIBUTES_H
 
+#include "Gaffer/CompoundDataPlug.h"
+
 #include "GafferScene/SceneElementProcessor.h"
-#include "GafferScene/ParameterListPlug.h"
 
 namespace GafferScene
 {
@@ -53,8 +54,8 @@ class Attributes : public SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Attributes, AttributesTypeId, SceneElementProcessor );
 		
-		GafferScene::ParameterListPlug *attributesPlug();
-		const GafferScene::ParameterListPlug *attributesPlug() const;
+		Gaffer::CompoundDataPlug *attributesPlug();
+		const Gaffer::CompoundDataPlug *attributesPlug() const;
 		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		

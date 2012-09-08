@@ -54,7 +54,6 @@
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Camera.h"
 #include "GafferScene/GlobalsProcessor.h"
-#include "GafferScene/ParameterListPlug.h"
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/Assignment.h"
@@ -70,41 +69,10 @@ using namespace boost::python;
 using namespace GafferScene;
 using namespace GafferSceneBindings;
 
-static ParameterListPlugPtr parameterListPlugConstructor( const char *name, Gaffer::Plug::Direction direction, unsigned flags, tuple children )
-{
-	ParameterListPlugPtr result = new ParameterListPlug( name, direction, flags );
-	size_t s = extract<size_t>( children.attr( "__len__" )() );
-	for( size_t i=0; i<s; i++ )
-	{
-		Gaffer::PlugPtr c = extract<Gaffer::PlugPtr>( children[i] );
-		result->addChild( c );
-	}
-	return result;
-}
-
-static Gaffer::CompoundPlugPtr addParameterWrapper( ParameterListPlug &p, const std::string &name, IECore::DataPtr value )
-{
-	return p.addParameter( name, value );
-}
-
 BOOST_PYTHON_MODULE( _GafferScene )
 {
 	
 	bindScenePlug();
-	
-	IECorePython::RunTimeTypedClass<ParameterListPlug>()
-		.def( "__init__", make_constructor( parameterListPlugConstructor, default_call_policies(),  
-				(
-					arg( "name" ) = ScenePlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default,
-					arg( "children" ) = tuple()
-				)
-			)	
-		)
-		.def( "addParameter", &addParameterWrapper )
-		.def( "addParameters", &ParameterListPlug::addParameters )
-	;
 	
 	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
 		.def(

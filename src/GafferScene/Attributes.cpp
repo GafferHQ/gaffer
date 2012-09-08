@@ -49,7 +49,7 @@ Attributes::Attributes( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
-		new ParameterListPlug(
+		new CompoundDataPlug(
 			"attributes",
 			Plug::In,
 			Plug::Default | Plug::Dynamic
@@ -62,7 +62,7 @@ Attributes::Attributes( const std::string &name, Gaffer::Plug::Flags attributesP
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
-		new ParameterListPlug(
+		new CompoundDataPlug(
 			"attributes",
 			Plug::In,
 			attributesPlugFlags
@@ -74,14 +74,14 @@ Attributes::~Attributes()
 {
 }
 
-GafferScene::ParameterListPlug *Attributes::attributesPlug()
+Gaffer::CompoundDataPlug *Attributes::attributesPlug()
 {
-	return getChild<ParameterListPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
 }
 
-const GafferScene::ParameterListPlug *Attributes::attributesPlug() const
+const Gaffer::CompoundDataPlug *Attributes::attributesPlug() const
 {
-	return getChild<ParameterListPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
 }
 
 void Attributes::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -106,14 +106,14 @@ void Attributes::hashAttributes( const Gaffer::Context *context, IECore::MurmurH
 
 IECore::ConstCompoundObjectPtr Attributes::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	const ParameterListPlug *ap = attributesPlug();
+	const CompoundDataPlug *ap = attributesPlug();
 	if( !ap->children().size() )
 	{
 		return inputAttributes;
 	}
 	
 	CompoundObjectPtr result = inputAttributes ? inputAttributes->copy() : CompoundObjectPtr( new CompoundObject );
-	ap->fillParameterList( result->members() );
+	ap->fillCompoundObject( result->members() );
 	
 	return result;
 }

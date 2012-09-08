@@ -64,7 +64,7 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		# check that we have some displays
 		
 		display = displays.addDisplay( "beauty", IECore.Display( "beauty.exr", "exr", "rgba" ) )
-		display["parameters"].addParameter( "test", IECore.FloatData( 10 ) )
+		display["parameters"].addMember( "test", IECore.FloatData( 10 ) )
 
 		displays.addDisplay( "diffuse", IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 		
@@ -85,7 +85,7 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["displaysNode"] = GafferScene.Displays()
 		display = s["displaysNode"].addDisplay( "beauty", IECore.Display( "beauty.exr", "exr", "rgba" ) )
-		display["parameters"].addParameter( "test", IECore.FloatData( 10 ) )
+		display["parameters"].addMember( "test", IECore.FloatData( 10 ) )
 		
 		ss = s.serialise()
 		

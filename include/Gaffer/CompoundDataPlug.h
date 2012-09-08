@@ -34,48 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PARAMETERLISTPLUG_H
-#define GAFFERSCENE_PARAMETERLISTPLUG_H
+#ifndef GAFFER_COMPOUNDDATAPLUG_H
+#define GAFFER_COMPOUNDDATAPLUG_H
 
 #include "IECore/CompoundData.h"
 #include "IECore/CompoundObject.h"
 
 #include "Gaffer/CompoundPlug.h"
-#include "GafferScene/TypeIds.h"
 
-namespace GafferScene
+namespace Gaffer
 {
 
-/// This plug provides an easy means of generating arbitrary numbers of parameters
-/// for use in IECore::Display, IECore::Camera and IECore::AttributeState etc. Note
-/// that parameters in this context are not IECore::Parameters, but just simple
-/// named Data values for passing to IECore::Renderer.
-/// \todo Could this belong in the Gaffer namespace as simply CompoundDataPlug?. It
-/// could be used to make a useful ContextProcessor.
-class ParameterListPlug : public Gaffer::CompoundPlug
+/// This plug provides an easy means of building CompoundData containing
+/// arbitrary keys and values, where each key and value is represented
+/// by an individual child plug.
+class CompoundDataPlug : public Gaffer::CompoundPlug
 {
 
 	public :
 		
-		ParameterListPlug(
+		CompoundDataPlug(
 			const std::string &name = staticTypeName(),
 			Direction direction=In,
 			unsigned flags = Default
 		);
-		virtual ~ParameterListPlug();
+		virtual ~CompoundDataPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ParameterListPlug, ParameterListPlugTypeId, Gaffer::CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::CompoundPlug );
 
-		/// Accepts only children that can generate values for a parameter list.
+		/// Accepts only children that can generate values for the CompoundData.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
-		Gaffer::CompoundPlug *addParameter( const std::string &name, const IECore::Data *value );
-		void addParameters( const IECore::CompoundData *parameters );
+		Gaffer::CompoundPlug *addMember( const std::string &name, const IECore::Data *value );
+		void addMembers( const IECore::CompoundData *parameters );
 		
-		/// Fills the parameter list with values based on the child plugs of this node.
-		void fillParameterList( IECore::CompoundDataMap &parameterList ) const;
-		/// As above but fills a CompoundObject map instead.
-		void fillParameterList( IECore::CompoundObject::ObjectMap &parameterList ) const;
+		/// Fills the CompoundDataMap with values based on the child plugs of this node.
+		void fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const;
+		/// As above but fills a CompoundObjectMap instead.
+		void fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const;
 
 	private :
 	
@@ -83,12 +79,12 @@ class ParameterListPlug : public Gaffer::CompoundPlug
 
 };
 
-IE_CORE_DECLAREPTR( ParameterListPlug );
+IE_CORE_DECLAREPTR( CompoundDataPlug );
 
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ParameterListPlug> > ParameterListPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ParameterListPlug> > InputParameterListPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ParameterListPlug> > OutputParameterListPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, CompoundDataPlug> > CompoundDataPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, CompoundDataPlug> > InputCompoundDataPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug> > OutputCompoundDataPlugIterator;
 
-} // namespace GafferScene
+} // namespace Gaffer
 
-#endif // GAFFERSCENE_PARAMETERLISTPLUG_H
+#endif // GAFFER_COMPOUNDDATAPLUG_H

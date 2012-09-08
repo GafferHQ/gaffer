@@ -76,7 +76,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		# when we specify some, they should be applied to everything because
 		# we haven't specified a filter yet. but not to the root because it
 		# isn't allowed attributes.
-		a["attributes"].addParameter( "ri:shadingRate", IECore.FloatData( 0.25 ) )
+		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
 		self.assertEqual( a["out"].attributes( "/" ), None )
 		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
 		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
@@ -109,8 +109,8 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.Attributes()
 		a["in"].setInput( input["out"] )
 		
-		a["attributes"].addParameter( "ri:shadingRate", IECore.FloatData( 0.25 ) )
-		a["attributes"].addParameter( "user:something", IECore.IntData( 1 ) )
+		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
+		a["attributes"].addMember( "user:something", IECore.IntData( 1 ) )
 		self.assertEqual(
 			a["out"].attributes( "/ball1" ),
 			IECore.CompoundObject( {
@@ -130,8 +130,8 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 	
-		a2["attributes"].addParameter( "ri:shadingRate", IECore.FloatData( .5 ) )
-		a2["attributes"].addParameter( "user:somethingElse", IECore.IntData( 10 ) )
+		a2["attributes"].addMember( "ri:shadingRate", IECore.FloatData( .5 ) )
+		a2["attributes"].addMember( "user:somethingElse", IECore.IntData( 10 ) )
 		
 		self.assertEqual(
 			a2["out"].attributes( "/ball1" ),
@@ -161,8 +161,8 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.Attributes()
 		a["in"].setInput( input["out"] )
 		
-		a["attributes"].addParameter( "ri:shadingRate", IECore.FloatData( 0.25 ) )
-		a["attributes"].addParameter( "user:something", IECore.IntData( 1 ) )
+		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
+		a["attributes"].addMember( "user:something", IECore.IntData( 1 ) )
 		
 		r = IECore.CapturingRenderer()
 		with IECore.WorldBlock( r ) :
@@ -207,7 +207,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		
 		# when we have some attributes, everything except the attributes plug should
 		# be a pass-through.
-		a["attributes"].addParameter( "ri:shadingRate", IECore.FloatData( 2.0 ) )
+		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 2.0 ) )
 		self.assertSceneHashesEqual( input["out"], a["out"], childPlugNames = ( "globals", "childNames", "transform", "bound", "object" ) )
 		self.assertSceneHashesNotEqual( input["out"], a["out"], childPlugNames = ( "attributes", ) )
 		

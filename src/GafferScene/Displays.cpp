@@ -40,7 +40,8 @@
 
 #include "IECore/Display.h"
 
-#include "GafferScene/ParameterListPlug.h"
+#include "Gaffer/CompoundDataPlug.h"
+
 #include "GafferScene/Displays.h"
 
 using namespace std;
@@ -145,9 +146,9 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label, const IECo
 	dataPlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( dataPlug );
 	
-	ParameterListPlugPtr parametersPlug = new ParameterListPlug( "parameters" );
+	CompoundDataPlugPtr parametersPlug = new CompoundDataPlug( "parameters" );
 	parametersPlug->setFlags( Plug::Dynamic, true );
-	parametersPlug->addParameters( const_cast<Display *>( display )->parametersData() );
+	parametersPlug->addMembers( const_cast<Display *>( display )->parametersData() );
 	displayPlug->addChild( parametersPlug );
 	
 	displaysPlug()->addChild( displayPlug );
@@ -188,7 +189,7 @@ IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *co
 			if( name.size() && type.size() && data.size() )
 			{
 				DisplayPtr d = new Display( name, type, data );
-				displayPlug->getChild<ParameterListPlug>( "parameters" )->fillParameterList( d->parameters() );
+				displayPlug->getChild<CompoundDataPlug>( "parameters" )->fillCompoundData( d->parameters() );
 				result->members().push_back( d );
 				displaysCreated.insert( name );
 			}

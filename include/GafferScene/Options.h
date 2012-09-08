@@ -37,8 +37,9 @@
 #ifndef GAFFERSCENE_OPTIONS_H
 #define GAFFERSCENE_OPTIONS_H
 
+#include "Gaffer/CompoundDataPlug.h"
+
 #include "GafferScene/GlobalsProcessor.h"
-#include "GafferScene/ParameterListPlug.h"
 
 namespace GafferScene
 {
@@ -53,8 +54,8 @@ class Options : public GlobalsProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Options, OptionsTypeId, GlobalsProcessor );
 		
-		GafferScene::ParameterListPlug *optionsPlug();
-		const GafferScene::ParameterListPlug *optionsPlug() const;
+		Gaffer::CompoundDataPlug *optionsPlug();
+		const Gaffer::CompoundDataPlug *optionsPlug() const;
 		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		

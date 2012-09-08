@@ -46,8 +46,6 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferScene/ParameterListPlug.h"
-
 #include "GafferArnold/ArnoldShader.h"
 
 using namespace std;

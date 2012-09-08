@@ -51,7 +51,7 @@ Options::Options( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
-		new ParameterListPlug(
+		new CompoundDataPlug(
 			"options",
 			Plug::In,
 			Plug::Default | Plug::Dynamic
@@ -64,7 +64,7 @@ Options::Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags 
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
-		new ParameterListPlug(
+		new CompoundDataPlug(
 			"options",
 			Plug::In,
 			optionsPlugFlags
@@ -76,14 +76,14 @@ Options::~Options()
 {
 }
 
-GafferScene::ParameterListPlug *Options::optionsPlug()
+Gaffer::CompoundDataPlug *Options::optionsPlug()
 {
-	return getChild<ParameterListPlug>( g_firstPlugIndex );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
-const GafferScene::ParameterListPlug *Options::optionsPlug() const
+const Gaffer::CompoundDataPlug *Options::optionsPlug() const
 {
-	return getChild<ParameterListPlug>( g_firstPlugIndex );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
 void Options::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -106,7 +106,7 @@ IECore::ConstObjectVectorPtr Options::processGlobals( const Gaffer::Context *con
 	IECore::ObjectVectorPtr result = inputGlobals ? inputGlobals->copy() : IECore::ObjectVectorPtr( new IECore::ObjectVector );
 
 	IECore::OptionsPtr options = new IECore::Options;
-	optionsPlug()->fillParameterList( options->options() );
+	optionsPlug()->fillCompoundData( options->options() );
 	result->members().push_back( options );
 
 	return result;

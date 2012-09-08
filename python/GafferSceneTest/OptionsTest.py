@@ -63,8 +63,8 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		# check that we have some displays
 		
-		options["options"].addParameter( "test", IECore.IntData( 10 ) )
-		options["options"].addParameter( "test2", IECore.StringData( "10" ) )
+		options["options"].addMember( "test", IECore.IntData( 10 ) )
+		options["options"].addMember( "test2", IECore.StringData( "10" ) )
 		
 		g = options["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
@@ -74,8 +74,8 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["optionsNode"] = GafferScene.Options()
-		s["optionsNode"]["options"].addParameter( "test", IECore.IntData( 10 ) )
-		s["optionsNode"]["options"].addParameter( "test2", IECore.StringData( "10" ) )
+		s["optionsNode"]["options"].addMember( "test", IECore.IntData( 10 ) )
+		s["optionsNode"]["options"].addMember( "test2", IECore.StringData( "10" ) )
 		
 		ss = s.serialise()
 		

@@ -64,15 +64,14 @@ enum TypeId
 	CameraTypeId = 110520,
 	GlobalsProcessorTypeId = 110521,
 	DisplaysTypeId = 110522,
-	ParameterListPlugTypeId = 110523,
-	OptionsTypeId = 110524,
-	ShaderTypeId = 110525,
-	AssignmentTypeId = 110526,
-	FilterTypeId = 110527,
-	PathFilterTypeId = 110528,
-	AttributesTypeId = 110529,
-	AlembicSourceTypeId = 110530,
-	SourceTypeId = 110531,
+	OptionsTypeId = 110523,
+	ShaderTypeId = 110524,
+	AssignmentTypeId = 110525,
+	FilterTypeId = 110526,
+	PathFilterTypeId = 110527,
+	AttributesTypeId = 110528,
+	AlembicSourceTypeId = 110529,
+	SourceTypeId = 110530,
 	
 	LastTypeId = 110700
 };
