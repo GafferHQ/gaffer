@@ -38,8 +38,6 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.inl"
 
-using namespace Gaffer;
-
 namespace Gaffer
 {
 

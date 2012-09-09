@@ -45,4 +45,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( TimeWarpNode, TimeWarpNodeType
 }
 
 // explicit instantiation
-template class Gaffer::TimeWarp<Node>;
+template class Gaffer::TimeWarp<Gaffer::Node>;
