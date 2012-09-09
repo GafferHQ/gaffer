@@ -34,57 +34,77 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTPROCESSORNODE_H
-#define GAFFER_CONTEXTPROCESSORNODE_H
+#ifndef GAFFER_CONTEXTVARIABLES_INL
+#define GAFFER_CONTEXTVARIABLES_INL
 
-#include "Gaffer/Node.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "Gaffer/ContextVariables.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.inl"
 
 namespace Gaffer
 {
 
-/// The ContextProcessor provides a base class to simplify the creation of nodes
-/// which evaluate their inputs using a modified context to that provided for the output
-/// evaluation - time warps being one good example. The ContextProcessor adds no plugs
-/// of it's own, but will automatically map all in* plugs to their out* equivalents.
 template<typename BaseType>
-class ContextProcessor : public BaseType
+const IECore::RunTimeTyped::TypeDescription<ContextVariables<BaseType> > ContextVariables<BaseType>::g_typeDescription;
+
+template<typename BaseType>
+size_t ContextVariables<BaseType>::g_firstPlugIndex;
+
+template<typename BaseType>
+ContextVariables<BaseType>::ContextVariables( const std::string &name )
+	:	ContextProcessor<BaseType>( name )
 {
+	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
+	ContextProcessor<BaseType>::addChild(
+		new CompoundDataPlug(
+			"variables",
+			Plug::In,
+			Plug::Default | Plug::Dynamic
+		)
+	);
+}
 
-	public :
+template<typename BaseType>
+ContextVariables<BaseType>::~ContextVariables()
+{
+}
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextProcessor<BaseType>, BaseType );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextProcessor<BaseType> );
-		
-		ContextProcessor( const std::string &name=staticTypeName() );
-		virtual ~ContextProcessor();
+template<typename BaseType>
+CompoundDataPlug *ContextVariables<BaseType>::variablesPlug()
+{
+	return ContextProcessor<BaseType>::template getChild<CompoundDataPlug>( g_firstPlugIndex );
+}
 
-		virtual void affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const;
-		
-	protected :
-		
-		/// Implemented to return the hash of the matching input using a context modified by
-		/// processContext() - derived class should therefore not need to reimplement hash(),
-		/// and should only implement processContext().
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
-		
-		/// Should be called by derived class affects() methods when the input
-		/// affects their implementation of processContext().
-		void appendAffectedPlugs( Node::AffectedPlugsContainer &outputs ) const;
-		
-		/// Must be implemented to modify context in place.
-		virtual void processContext( Context *context ) const = 0;
-		
-	private :
+template<typename BaseType>
+const CompoundDataPlug *ContextVariables<BaseType>::variablesPlug() const
+{
+	return ContextProcessor<BaseType>::template getChild<CompoundDataPlug>( g_firstPlugIndex );
+}
+
+template<typename BaseType>
+void ContextVariables<BaseType>::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+{
+	ContextProcessor<BaseType>::affects( input, outputs );
 	
-		/// Returns the input corresponding to the output and vice versa.
-		const ValuePlug *oppositePlug( const ValuePlug *plug ) const;
-	
-};
+	if( input == variablesPlug() )
+	{
+		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
+	}
+}
 
-typedef ContextProcessor<Node> ContextProcessorNode;
-IE_CORE_DECLAREPTR( ContextProcessorNode );
+template<typename BaseType>
+void ContextVariables<BaseType>::processContext( Context *context ) const
+{
+	std::string name;
+	for( CompoundPlugIterator it( variablesPlug() ); it != it.end(); it++ )
+	{
+		IECore::DataPtr data = variablesPlug()->memberDataAndName( *it, name );
+		context->set( name, data.get() );
+	}
+}
 
 } // namespace Gaffer
 
-#endif // GAFFER_CONTEXTPROCESSORNODE_H
+#endif // GAFFER_CONTEXTVARIABLES_INL

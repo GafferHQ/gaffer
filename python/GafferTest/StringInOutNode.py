@@ -34,13 +34,33 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneView
-import RenderUI
-import DisplaysUI
-import OptionsUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
+import IECore
+import Gaffer
+
+class StringInOutNode( Gaffer.Node ) :
+
+	def __init__( self, name="StringInOutNode" ) :
+	
+		Gaffer.Node.__init__( self, name )
+		
+		self.addChild( Gaffer.StringPlug( "in" ) )
+		self.addChild( Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out ) )
+		
+	def affects( self, input ) :
+	
+		 if input.isSame( self["in"] ) :
+			return [ self["out"] ]
+			
+		 return []
+
+	def hash( self, output, context, h ) :
+	
+		if output.isSame( self["out"] ) :
+			self["in"].hash( h )
+		
+	def compute( self, plug, context ) :
+	
+		if plug.isSame( self["out"] ) :
+			plug.setValue( self["in"].getValue() )
+			
+IECore.registerRunTimeTyped( StringInOutNode )

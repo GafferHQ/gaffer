@@ -34,13 +34,33 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneView
-import RenderUI
-import DisplaysUI
-import OptionsUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
+from __future__ import with_statement
+
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
+
+class ContextVariablesTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+	
+		n = GafferTest.StringInOutNode()
+		self.assertHashesValid( n )
+		
+		c = Gaffer.ContextVariablesNode()
+		c["in"] = Gaffer.StringPlug()
+		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		c["in"].setInput( n["out"] )
+		
+		n["in"].setValue( "$a" )
+		self.assertEqual( c["out"].getValue(), "" )
+		
+		c["variables"].addMember( "a", IECore.StringData( "A" ) )
+		self.assertEqual( c["out"].getValue(), "A" )
+		
+if __name__ == "__main__":
+	unittest.main()
+	

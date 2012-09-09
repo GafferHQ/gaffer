@@ -34,13 +34,7 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneView
-import RenderUI
-import DisplaysUI
-import OptionsUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
+import GafferUI
+import GafferScene
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneContextVariables.staticTypeId(), "variables", GafferUI.CompoundDataPlugValueWidget, collapsible=False )

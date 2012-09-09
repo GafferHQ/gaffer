@@ -46,34 +46,8 @@ import GafferTest
 class StringPlugTest( GafferTest.TestCase ) :
 
 	def testExpansion( self ) :
-	
-		class TestNode( Gaffer.Node ) :
-		
-			def __init__( self, name="TestNode" ) :
-			
-				Gaffer.Node.__init__( self, name )
-				
-				self.addChild( Gaffer.StringPlug( "in" ) )
-				self.addChild( Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out ) )
-				
-			def affects( self, input ) :
-			
-				 if input.isSame( self["in"] ) :
-				 	return [ self["out"] ]
-				 	
-				 return []
-		
-			def hash( self, output, context, h ) :
-			
-				if output.isSame( self["out"] ) :
-					self["in"].hash( h )
-				
-			def compute( self, plug, context ) :
-			
-				if plug.isSame( self["out"] ) :
-					plug.setValue( self["in"].getValue() )
-					
-		n = TestNode()
+						
+		n = GafferTest.StringInOutNode()
 		self.assertHashesValid( n )
 		
 		# nothing should be expanded when we're in a non-computation context

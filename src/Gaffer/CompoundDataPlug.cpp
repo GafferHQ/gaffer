@@ -163,7 +163,7 @@ void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMa
 	std::string name;
 	for( CompoundPlugIterator it( this ); it != it.end(); it++ )
 	{
-		IECore::DataPtr data = parameterDataAndName( *it, name );
+		IECore::DataPtr data = memberDataAndName( *it, name );
 		if( data )
 		{
 			compoundDataMap[name] = data;
@@ -176,7 +176,7 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 	std::string name;
 	for( CompoundPlugIterator it( this ); it != it.end(); it++ )
 	{
-		IECore::DataPtr data = parameterDataAndName( *it, name );
+		IECore::DataPtr data = memberDataAndName( *it, name );
 		if( data )
 		{
 			compoundObjectMap[name] = data;
@@ -184,7 +184,7 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 	}
 }
 
-IECore::DataPtr CompoundDataPlug::parameterDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const
+IECore::DataPtr CompoundDataPlug::memberDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const
 {	
 	name = parameterPlug->getChild<StringPlug>( "name" )->getValue();
 	if( !name.size() )

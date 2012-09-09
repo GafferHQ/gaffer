@@ -57,6 +57,7 @@ from AttributesTest import AttributesTest
 from AlembicSourceTest import AlembicSourceTest
 from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
 from SeedsTest import SeedsTest
+from SceneContextVariablesTest import SceneContextVariablesTest
 
 if __name__ == "__main__":
 	import unittest

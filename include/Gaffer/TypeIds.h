@@ -93,6 +93,7 @@ enum TypeId
 	AtomicBox2iPlugTypeId = 110046,
 	CompoundObjectPlugTypeId = 110047,
 	CompoundDataPlugTypeId = 110048,
+	ContextVariablesNodeTypeId = 110049,
 	
 	LastTypeId = 110200,
 	

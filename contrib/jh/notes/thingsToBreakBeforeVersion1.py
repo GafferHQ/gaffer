@@ -25,3 +25,7 @@ rename CompoundObjectPlug to AtomicCompoundObjectPlug?
 	- and ObjectVectorPlug to AtomicObjectVectorPlug?
 		- or remove this one?
 			- i'm not sure we really need it
+			
+rename all the user facing *Node things to simply *?
+	- Scene, Image, Preferences, TimeWarp, etc...
+	- this would mean renamign TimeWarp to TimeWarpBase

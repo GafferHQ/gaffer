@@ -34,55 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_COMPOUNDDATAPLUG_H
-#define GAFFER_COMPOUNDDATAPLUG_H
+#ifndef GAFFER_CONTEXTVARIABLES_H
+#define GAFFER_CONTEXTVARIABLES_H
 
-#include "IECore/CompoundData.h"
-#include "IECore/CompoundObject.h"
-
-#include "Gaffer/CompoundPlug.h"
+#include "Gaffer/ContextProcessor.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 namespace Gaffer
 {
 
-/// This plug provides an easy means of building CompoundData containing
-/// arbitrary keys and values, where each key and value is represented
-/// by an individual child plug.
-class CompoundDataPlug : public Gaffer::CompoundPlug
+template<typename BaseType>
+class ContextVariables : public ContextProcessor<BaseType>
 {
 
 	public :
+
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextVariables<BaseType>, ContextProcessor<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextVariables<BaseType> );
+
+		ContextVariables( const std::string &name=staticTypeName() );
+		virtual ~ContextVariables();
 		
-		CompoundDataPlug(
-			const std::string &name = staticTypeName(),
-			Direction direction=In,
-			unsigned flags = Default
-		);
-		virtual ~CompoundDataPlug();
+		CompoundDataPlug *variablesPlug();
+		const CompoundDataPlug *variablesPlug() const;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::CompoundPlug );
-
-		/// Accepts only children that can generate values for the CompoundData.
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-
-		Gaffer::CompoundPlug *addMember( const std::string &name, const IECore::Data *value );
-		void addMembers( const IECore::CompoundData *parameters );
+		void affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const;
 		
-		IECore::DataPtr memberDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const;
+	protected :
 
-		/// Fills the CompoundDataMap with values based on the child plugs of this node.
-		void fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const;
-		/// As above but fills a CompoundObjectMap instead.
-		void fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const;
-
+		virtual void processContext( Context *context ) const;		
+	
+	private :
+	
+		static size_t g_firstPlugIndex;
+		
 };
 
-IE_CORE_DECLAREPTR( CompoundDataPlug );
-
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, CompoundDataPlug> > CompoundDataPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, CompoundDataPlug> > InputCompoundDataPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug> > OutputCompoundDataPlugIterator;
+typedef ContextVariables<Node> ContextVariablesNode;
+IE_CORE_DECLAREPTR( ContextVariablesNode );
 
 } // namespace Gaffer
 
-#endif // GAFFER_COMPOUNDDATAPLUG_H
+#endif // GAFFER_CONTEXTVARIABLES_H

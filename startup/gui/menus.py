@@ -77,6 +77,7 @@ GafferUI.NodeMenu.append( "/Scene/Add/Displays", GafferScene.Displays )
 GafferUI.NodeMenu.append( "/Scene/Add/Options", GafferScene.Options )
 GafferUI.NodeMenu.append( "/Scene/Merge/Group", GafferScene.Group )
 GafferUI.NodeMenu.append( "/Scene/Modify/TimeWarp", GafferScene.SceneTimeWarp )
+GafferUI.NodeMenu.append( "/Scene/Modify/SceneContextVariables", GafferScene.SceneContextVariables )
 GafferUI.NodeMenu.append( "/Scene/Delete/Primitive Variables", GafferScene.DeletePrimitiveVariables )
 
 try :	

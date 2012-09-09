@@ -34,13 +34,30 @@
 #  
 ##########################################################################
 
-from SceneEditor import SceneEditor
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneView
-import RenderUI
-import DisplaysUI
-import OptionsUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferScene
+
+class SceneContextVariablesTest( unittest.TestCase ) :
+
+	def test( self ) :
+	
+		p = GafferScene.Plane()
+		
+		a = GafferScene.Attributes()
+		a["in"].setInput( p["out"] )
+		a["attributes"].addMember( "user:something", IECore.StringData( "$a" ) )
+		
+		c = GafferScene.SceneContextVariables()
+		c["in"].setInput( a["out"] )
+		c["variables"].addMember( "a", IECore.StringData( "aardvark" ) )
+		
+		self.assertEqual( a["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
+		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "aardvark" ) )
+		
+if __name__ == "__main__":
+	unittest.main()
