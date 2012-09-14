@@ -461,6 +461,14 @@ class _TreeView( QtGui.QTreeView ) :
 		
 		return result
 	
+	def mousePressEvent( self, event ) :
+	
+		# we store the modifiers so that we can turn single
+		# expands/collapses into recursive ones in __propagateExpanded.
+		self.__currentEventModifiers = event.modifiers()
+		QtGui.QTreeView.mousePressEvent( self, event )
+		self.__currentEventModifiers = QtCore.Qt.NoModifier
+		
 	def mouseReleaseEvent( self, event ) :
 	
 		# we store the modifiers so that we can turn single
