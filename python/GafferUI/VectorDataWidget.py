@@ -52,7 +52,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 	#
 	# header may be False for no header, True for a default header, or a list of
 	# strings to specify a custom header per column.
-	def __init__( self, data=None, editable=True, header=False, showIndices=True, **kw ) :
+	#
+	# minimumVisibleRows specifies a number of rows after which a vertical scroll bar
+	# may become visible - before this all rows should be directly visible with no need
+	# for scrolling.
+	def __init__( self, data=None, editable=True, header=False, showIndices=True, minimumVisibleRows=8, **kw ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 	
@@ -60,7 +64,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		# table view
 		
-		self.__tableView = _TableView()
+		self.__tableView = _TableView( minimumVisibleRows = minimumVisibleRows )
 						
 		self.__tableView.horizontalHeader().setVisible( bool( header ) )
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
@@ -117,7 +121,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# but we can't right now as we're relying on setData() to update everything
 		# when the data has been modified in place by some external process, or
 		# by self.__removeSelection.
-					
+							
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
@@ -143,9 +147,16 @@ class VectorDataWidget( GafferUI.Widget ) :
 					haveResizeableContents = haveResizeableContents or canStretch
 					columnIndex += 1
 
-			self.__tableView.horizontalHeader().setResizeMode( QtGui.QHeaderView.ResizeToContents if haveResizeableContents else QtGui.QHeaderView.Fixed )
+			self.__tableView.horizontalHeader().setResizeMode(
+				QtGui.QHeaderView.ResizeToContents if haveResizeableContents else QtGui.QHeaderView.Fixed
+			)
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
-			self.__tableView.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Maximum ) )
+			self.__tableView.setSizePolicy(
+				QtGui.QSizePolicy(
+					QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed,
+					QtGui.QSizePolicy.Preferred
+				)
+			)
 		
 		# Somehow the QTableView can leave its header in a state where updates are disabled.
 		# If we didn't turn them back on, the header would disappear.
@@ -300,10 +311,12 @@ class VectorDataWidget( GafferUI.Widget ) :
 # Private implementation - a QTableView with custom size behaviour.
 class _TableView( QtGui.QTableView ) :
 
-	def __init__( self ) :
+	def __init__( self, minimumVisibleRows ) :
 	
 		QtGui.QTableView.__init__( self )
-				
+		
+		self.__minimumVisibleRows = minimumVisibleRows
+		
 	def setModel( self, model ) :
 	
 		prevModel = self.model()
@@ -322,22 +335,31 @@ class _TableView( QtGui.QTableView ) :
 	def minimumSizeHint( self ) :
 		
 		# compute the minimum height to be the size of the header plus
-		# a single row of data.
+		# a minimum number of rows specified in self.__minimumVisibleRows
 		
 		margins = self.contentsMargins()
 		minimumHeight = margins.top() + margins.bottom()
 		
 		if not self.horizontalHeader().isHidden() :
 			minimumHeight += self.horizontalHeader().sizeHint().height()
-		if self.verticalHeader().count() :
-			minimumHeight += self.verticalHeader().sectionSize( 0 )
+		
+		numRows = self.verticalHeader().count()
+		if numRows :
+			minimumHeight += self.verticalHeader().sectionSize( 0 ) * min( numRows, self.__minimumVisibleRows )
 		
 		# horizontal direction doesn't matter, as we don't allow shrinking
-		# in that direction anyway.		
+		# in that direction anyway.
+		
 		return QtCore.QSize( 1, minimumHeight )
 		
 	def sizeHint( self ) :
 						
+		# this seems to be necessary to nudge the header into calculating
+		# the correct size - otherwise the length() below comes out wrong
+		# sometimes. in other words it's a hack.
+		for i in range( 0, self.horizontalHeader().count() ) :
+			self.horizontalHeader().sectionSize( i )
+	
 		margins = self.contentsMargins()
 		
 		w = self.horizontalHeader().length() + margins.left() + margins.right()

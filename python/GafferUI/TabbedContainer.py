@@ -68,7 +68,11 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	
 		self.__widgets.append( child )
 		self._qtWidget().addTab( child._qtWidget(), label )
-		child._applyVisibility()
+		
+		# note that we are deliberately not calling child._applyVisibility(),
+		# because the tabbed container operates by managing the visibility
+		# of the children itself - interfering with that would cause all manner
+		# of graphical glitches.
 				
 	def remove( self,  child ) :
 	

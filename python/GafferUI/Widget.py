@@ -405,7 +405,8 @@ class Widget( object ) :
 	# would mean an event filter on /every/ widget which would be
 	# slow.
 	## \todo Perhaps if we can implement a faster event filter we
-	# can do this automatically.
+	# can do this automatically. If doing this, take note of
+	# comments in TabbedContainer.append().
 	def _applyVisibility( self ) :
 	
 		if self.__qtWidget.parent() is None :

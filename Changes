@@ -1,3 +1,10 @@
+* Fixed graphical glitches caused by incorrectly applying visibility to children of TabbedContainer - this affected the preview section of the browser app particularly badly.
+
+* Added a reportErrors parameter to the OpMatcher constructor - this defaults to True (same behaviour as before) but can be set to False to silence error reporting while loading ops. Note that the OpMatcher used by the BrowserEditor may be customised by implementing the Mode._createOpMatcher() method - this would be the place to pass reportErrors=True.
+
+0.35.4
+------
+
 * Added a GafferBindings::NodeClass class, which simplifies the binding of Node derived classes. It is now a one liner to bind a typical extension node.
 
 * The op app now has an arguments parameter which can be used to specify the parameter values for the op.
@@ -83,6 +90,24 @@ swatch.
 * Added a GraphEditor.graphGadgetWidget() method.
 
 * Nodes created via the NodeMenu are now automatically connected to the selected nodes, and positioned based on those connections.
+
+* Parameter help for CompoundParameters (and derived classes) is now available as a tooltip on the label of the Collapsible ui.
+
+* The op application now has an arguments parameter, which can be used to specify the initial values for the parameters of the op (backported from trunk).
+
+* The python application now has an arguments parameter, which can be used to specify an arbitrary list of strings to be provided to the python script in a variable called argv.
+
+* VectorDataWidget now allows a minimum number of visible rows to be passed in the constructor. Previously a similar behaviour was implemented internally with the minimum hardcoded to 1 - the new default is now 8. This improves the layout of CompoundVectorDataParameters.
+
+* Added workaround for Qt problems which caused VectorDataWidget to sometimes be clipped on the right hand edge.
+
+0.35.3
+------
+* Fixed LayoutMenu delete function
+
+0.35.2
+------
+* Added a minimum size of the OpDialogue
 
 0.35.1
 ------

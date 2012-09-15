@@ -99,10 +99,11 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		return None
 	
-	## Returns True if this ui is collapsible
+	## Returns the Collapsible widget used to contain the child widgets,
+	# or None if this ui is not collapsible.
 	def _collapsible( self ) :
 		
-		return self.__collapsible is not None
+		return self.__collapsible
 	
 	## May be overridden by derived classes to specify which child plugs
 	# are represented and in what order.

@@ -56,7 +56,7 @@ import Gaffer
 # considered by the matcher.
 class OpMatcher() :
 
-	def __init__( self, classLoader, classNamesMatchString = "*" ) :
+	def __init__( self, classLoader, classNamesMatchString = "*", reportErrors=True ) :
 		
 		# these are filled with tuples of the form ( opClass, parameter, parameterPath )
 		self.__ops = []
@@ -67,7 +67,8 @@ class OpMatcher() :
 				opClass = classLoader.load( className )
 				opInstance = opClass()
 			except Exception, m :
-				IECore.msg( IECore.Msg.Level.Error, "Gaffer.OpMatcher", "Error loading op \"%s\" : %s" % ( className, traceback.format_exc() ) )
+				if reportErrors :
+					IECore.msg( IECore.Msg.Level.Error, "Gaffer.OpMatcher", "Error loading op \"%s\" : %s" % ( className, traceback.format_exc() ) )
 				continue
 			
 			ignore = False

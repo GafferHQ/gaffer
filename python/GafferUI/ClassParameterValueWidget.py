@@ -65,7 +65,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		# label
 		
 		label = GafferUI.Label(
-			"Class" if self._collapsible() else self._parameterLabelText( self.parameterHandler() ),
+			"Class" if self._collapsible() is not None else self._parameterLabelText( self.parameterHandler() ),
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
 		## \todo Decide how we allow this sort of tweak using the public

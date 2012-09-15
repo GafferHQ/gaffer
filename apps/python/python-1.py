@@ -57,20 +57,27 @@ class python( Gaffer.Application ) :
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
 				
+				IECore.StringVectorParameter(
+					name = "arguments",
+					description = "An arbitrary list of arguments which will be provided to "
+						"the python script in a variable called argv.",
+					defaultValue = IECore.StringVectorData(),
+				),
+				
 			]
 		
 		)
 		
 		self.parameters().userData()["parser"] = IECore.CompoundObject(
 			{
-				"flagless" : IECore.StringVectorData( [ "file" ] )
+				"flagless" : IECore.StringVectorData( [ "file", "arguments" ] )
 			}
 		)
 		
 	def _run( self, args ) :
 
 		try :
-			execfile( args["file"].value, {} )
+			execfile( args["file"].value, { "argv" : args["arguments"] } )
 			return 0
 		except :
 			traceback.print_exc()

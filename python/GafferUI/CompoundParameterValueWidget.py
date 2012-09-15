@@ -80,6 +80,9 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		GafferUI.CompoundPlugValueWidget.__init__( self, parameterHandler.plug(), collapsible )
 
 		self.__parameterHandler = parameterHandler
+		
+		if self._collapsible() is not None :
+			self._collapsible().setToolTip( self._parameterToolTip( self.__parameterHandler ) )
 
 	def _childPlugWidget( self, childPlug ) :
 
