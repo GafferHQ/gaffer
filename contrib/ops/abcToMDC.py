@@ -72,6 +72,8 @@ class abcToMDC( IECore.Op ) :
 		inFile = IECoreAlembic.AlembicInput( args["inputFile"].value )
 		outFile = IECore.FileIndexedIO( args["outputFile"].value, "/", IECore.IndexedIOOpenMode.Write )
 		
+		time = inFile.timeAtSample( 0 )
+		
 		header = IECore.HeaderGenerator.header()
 		header.save( outFile, "header" )
 		
@@ -80,7 +82,7 @@ class abcToMDC( IECore.Op ) :
 		
 		def walk( a ) :
 		
-			b = a.bound()
+			b = a.boundAtTime( time )
 			outFile.write(
 				"bound",
 				IECore.FloatVectorData( [
@@ -89,12 +91,12 @@ class abcToMDC( IECore.Op ) :
 				] )
 			)
 			
-			o = a.convert( IECore.Primitive.staticTypeId() )
+			o = a.objectAtTime( time, IECore.Primitive.staticTypeId() )
 			if o is not None :
 				## \todo Rename "geometry" to "object"
 				o.save( outFile, "geometry" )
 				
-			t = a.transform()
+			t = a.transformAtTime( time )
 			outFile.write(
 				"transform",
 				IECore.FloatVectorData( [
