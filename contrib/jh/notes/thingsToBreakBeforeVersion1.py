@@ -29,3 +29,6 @@ rename CompoundObjectPlug to AtomicCompoundObjectPlug?
 rename all the user facing *Node things to simply *?
 	- Scene, Image, Preferences, TimeWarp, etc...
 	- this would mean renamign TimeWarp to TimeWarpBase
+	
+stop using button press signals for making menus
+	- we've got contextmenusignal now
