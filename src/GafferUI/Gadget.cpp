@@ -164,7 +164,7 @@ void Gadget::render( const Style *currentStyle ) const
 		
 		doRender( currentStyle );
 
-	glPopMatrix();	
+	glPopMatrix();
 }
 
 void Gadget::doRender( const Style *style ) const
@@ -218,6 +218,11 @@ Gadget::ButtonSignal &Gadget::buttonDoubleClickSignal()
 	return m_buttonDoubleClickSignal;
 }
 
+Gadget::ButtonSignal &Gadget::wheelSignal()
+{
+	return m_wheelSignal;
+}
+
 Gadget::EnterLeaveSignal &Gadget::enterSignal()
 {
 	return m_enterSignal;
@@ -228,14 +233,19 @@ Gadget::EnterLeaveSignal &Gadget::leaveSignal()
 	return m_leaveSignal;
 }
 
+Gadget::ButtonSignal &Gadget::mouseMoveSignal()
+{
+	return m_mouseMoveSignal;
+}
+
 Gadget::DragBeginSignal &Gadget::dragBeginSignal()
 {
 	return m_dragBeginSignal;
 }
 
-Gadget::DragDropSignal &Gadget::dragUpdateSignal()
+Gadget::DragDropSignal &Gadget::dragMoveSignal()
 {
-	return m_dragUpdateSignal;
+	return m_dragMoveSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dragEnterSignal()

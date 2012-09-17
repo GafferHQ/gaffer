@@ -61,16 +61,18 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				GafferUI.GLWidget.BufferOptions.Depth,
 				GafferUI.GLWidget.BufferOptions.Double )
 			),
-			
-			cameraMode = GafferUI.GadgetWidget.CameraMode.Mode3D
-		
+					
 		)
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
 		self.__renderableGadget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
+		self.__gadgetWidget.viewportGadget().setCamera(
+			IECore.Camera( parameters = { "projection" : IECore.StringData( "perspective" ) } )
+		)
 		
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		
 		self.__viewedPlug = None		
 		self.__viewCreator = None
@@ -125,20 +127,15 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	
 	def _updateFromContext( self ) :
 	
-		if not hasattr( self, "_Viewer__renderableGadget" ) :
-			# we're being called during construction
-			return
-			
 		self.__update()
 
 	def __update( self ) :
 
-		renderable = None		
+		renderable = None	
 		if self.__viewedPlug is not None :
 			renderable = self.__viewCreator( self.__viewedPlug, self.getContext() )
 			
 		self.__renderableGadget.setRenderable( renderable )
-		self.__gadgetWidget.setGadget( self.__renderableGadget )
 	
 	def __plugDirtied( self, plug ) :
 	
@@ -159,6 +156,14 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			self.__m = GafferUI.Menu( menuDefinition )
 			self.__m.popup( self ) 
 			
+			return True
+		
+		return False
+	
+	def __keyPress( self, widget, event ) :
+	
+		if event.key == "F" :
+			self.__gadgetWidget.viewportGadget().frame( self.__renderableGadget.bound() )
 			return True
 		
 		return False

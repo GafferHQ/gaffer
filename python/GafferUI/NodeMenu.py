@@ -143,7 +143,7 @@ def __positionNode( node, menu ) :
 		return
 	
 	gadgetWidget = graphEditor.graphGadgetWidget()
-	graphGadget = gadgetWidget.getGadget()
+	graphGadget = gadgetWidget.viewportGadget().getChild()
 	nodeGadget = graphGadget.nodeGadget( node )
 	if nodeGadget is None :
 		return
@@ -178,8 +178,14 @@ def __positionNode( node, menu ) :
 			
 	# if that failed, then just put the position where the menu was launched
 	if nodePosition is None :
+		## \todo This positioning doesn't work very well when the menu min
+		# is not where the mouse was clicked to open the window (when the menu
+		# has been moved to keep it on screen).
 		menuPosition = menu.bound( relativeTo=gadgetWidget ).min
-		nodePosition = gadgetWidget.positionToGadgetSpace( menuPosition ).p0
+		nodePosition = gadgetWidget.viewportGadget().positionToGadgetSpace(
+			IECore.V2f( menuPosition.x, menuPosition.y ),
+			gadget = graphGadget
+		).p0
 
 	# apply the position
 	

@@ -64,7 +64,8 @@ ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::Nod
 	leaveSignal().connect( boost::bind( &ConnectionGadget::leave, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &ConnectionGadget::buttonPress, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &ConnectionGadget::dragBegin, this, ::_1, ::_2 ) );
-	dragUpdateSignal().connect( boost::bind( &ConnectionGadget::dragUpdate, this, ::_1, ::_2 ) );
+	dragEnterSignal().connect( boost::bind( &ConnectionGadget::dragEnter, this, ::_1, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &ConnectionGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &ConnectionGadget::dragEnd, this, ::_1, ::_2 ) );
 }
 
@@ -233,7 +234,16 @@ IECore::RunTimeTypedPtr ConnectionGadget::dragBegin( GadgetPtr gadget, const Dra
 	return 0;
 }
 
-bool ConnectionGadget::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
+bool ConnectionGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( event.sourceGadget == this )
+	{
+		return true;
+	}
+	return false;
+}
+
+bool ConnectionGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( m_dragEnd==Gaffer::Plug::Out )
 	{
@@ -249,7 +259,7 @@ bool ConnectionGadget::dragUpdate( GadgetPtr gadget, const DragDropEvent &event 
 
 bool ConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( !event.destination )
+	if( !event.destinationGadget || event.destinationGadget == this )
 	{
 		// noone wanted the drop so we'll disconnect
 		Gaffer::UndoContext undoEnabler( m_dstNodule->plug()->ancestor<Gaffer::ScriptNode>() );

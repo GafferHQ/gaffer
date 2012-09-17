@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,40 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_DRAGDROPEVENT_H
-#define GAFFERUI_DRAGDROPEVENT_H
+#ifndef GAFFERUIBINDINGS_VIEWPORTGADGETBINDING_H
+#define GAFFERUIBINDINGS_VIEWPORTGADGETBINDING_H
 
-#include "GafferUI/ButtonEvent.h"
-
-#include "IECore/RunTimeTyped.h"
-
-namespace GafferUI
+namespace GafferUIBindings
 {
 
-IE_CORE_FORWARDDECLARE( Gadget )
+void bindViewportGadget();
 
-struct DragDropEvent : public ButtonEvent
-{
+} // namespace GafferUIBindings
 
-	DragDropEvent(
-		Buttons b=None,
-		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),
-		Modifiers m = ModifiableEvent::None
-	)
-		:	ButtonEvent( b, Line, 0, m ), sourceGadget( 0 ), data( 0 ), destinationGadget( 0 ), dropResult( false )
-	{
-	};
-	
-	/// The Gadget where the drag originated.
-	GafferUI::GadgetPtr sourceGadget;
-	/// An object representing the data being dragged.
-	IECore::RunTimeTypedPtr data;
-	/// The Gadget where the drag ends.
-	GafferUI::GadgetPtr destinationGadget;
-	/// The result returned from the drop signal handler on the destination.
-	bool dropResult;
-};
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_DRAGDROPEVENT_H
+#endif // GAFFERUIBINDINGS_VIEWPORTGADGETBINDING_H

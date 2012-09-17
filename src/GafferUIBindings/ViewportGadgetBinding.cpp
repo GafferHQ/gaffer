@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,63 +36,48 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "GafferUI/ViewportGadget.h"
+
 #include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUIBindings/EventBinding.h"
-#include "GafferUIBindings/ModifiableEventBinding.h"
-#include "GafferUIBindings/KeyEventBinding.h"
-#include "GafferUIBindings/ButtonEventBinding.h"
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/ContainerGadgetBinding.h"
-#include "GafferUIBindings/GraphGadgetBinding.h"
-#include "GafferUIBindings/RenderableGadgetBinding.h"
-#include "GafferUIBindings/IndividualContainerBinding.h"
-#include "GafferUIBindings/FrameBinding.h"
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/NameGadgetBinding.h"
-#include "GafferUIBindings/LinearContainerBinding.h"
-#include "GafferUIBindings/NoduleBinding.h"
-#include "GafferUIBindings/DragDropEventBinding.h"
-#include "GafferUIBindings/ConnectionGadgetBinding.h"
-#include "GafferUIBindings/WidgetSignalBinding.h"
-#include "GafferUIBindings/StandardNodeGadgetBinding.h"
-#include "GafferUIBindings/SplinePlugGadgetBinding.h"
-#include "GafferUIBindings/StandardNoduleBinding.h"
-#include "GafferUIBindings/CompoundNoduleBinding.h"
-#include "GafferUIBindings/ImageGadgetBinding.h"
-#include "GafferUIBindings/StyleBinding.h"
-#include "GafferUIBindings/StandardStyleBinding.h"
 #include "GafferUIBindings/ViewportGadgetBinding.h"
 
+using namespace boost::python;
+using namespace GafferUI;
 using namespace GafferUIBindings;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+static IECore::CameraPtr getCamera( const ViewportGadget &v )
 {
+	return v.getCamera()->copy();
+}
 
-	bindGadget();
-	bindEvent();
-	bindModifiableEvent();
-	bindKeyEvent();
-	bindButtonEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindIndividualContainer();
-	bindFrame();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindLinearContainer();
-	bindNodule();
-	bindDragDropEvent();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindStandardNodeGadget();
-	bindSplinePlugGadget();
-	bindStandardNodule();
-	bindCompoundNodule();
-	bindImageGadget();
-	bindStyle();
-	bindStandardStyle();
-	bindViewportGadget();
+static list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
+{
+	std::vector<GadgetPtr> gadgets;
+	v.gadgetsAt( position, gadgets );
 	
+	boost::python::list result;
+	for( std::vector<GadgetPtr>::const_iterator it=gadgets.begin(); it!=gadgets.end(); it++ )
+	{
+		result.append( *it );
+	}
+	return result;
+}
+
+void GafferUIBindings::bindViewportGadget()
+{
+	IECorePython::RunTimeTypedClass<ViewportGadget>()
+		.def( init<>() )
+		.def( init<GadgetPtr>() )
+		.def( "getViewport", &ViewportGadget::getViewport, return_value_policy<copy_const_reference>() )
+		.def( "setViewport", &ViewportGadget::setViewport )
+		.def( "getCamera", &getCamera )
+		.def( "setCamera", &ViewportGadget::setCamera )
+		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f & ))&ViewportGadget::frame )
+		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f &, const Imath::V3f &, const Imath::V3f & ))&ViewportGadget::frame )	
+		.def( "gadgetsAt", &gadgetsAt )
+		.def( "positionToGadgetSpace", &ViewportGadget::positionToGadgetSpace, ( arg_( "position" ), arg_( "gadget" ) = GadgetPtr() ) )
+		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ViewportGadget )
+	;
 }

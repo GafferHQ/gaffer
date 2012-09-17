@@ -1,0 +1,126 @@
+//////////////////////////////////////////////////////////////////////////
+//  
+//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//  
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//  
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//  
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//  
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef GAFFERUI_VIEWPORTGADGET_H
+#define GAFFERUI_VIEWPORTGADGET_H
+
+#include "IECore/Camera.h"
+#include "IECore/CameraController.h"
+
+#include "GafferUI/IndividualContainer.h"
+
+namespace GafferUI
+{
+
+/// \todo I'm not sure this should derive from IndividualContainer - the bound and
+/// padding don't apply in any sensible way.
+class ViewportGadget : public IndividualContainer
+{
+
+	public :
+
+		ViewportGadget( GadgetPtr child=0 );
+		virtual ~ViewportGadget();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ViewportGadget, ViewportGadgetTypeId, IndividualContainer );
+
+		/// Accepts no parents - the ViewportGadget must always be the topmost Gadget.
+		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
+
+		const Imath::V2i &getViewport() const;
+		void setViewport( const Imath::V2i &viewport );
+		
+		const IECore::Camera *getCamera() const;
+		/// A copy is taken.
+		void setCamera( const IECore::Camera *camera );
+		
+		void frame( const Imath::Box3f &box );
+		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
+			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );
+		
+		/// Fills the passed vector with all the Gadgets below the specified position.
+		/// The first Gadget in the list will be the frontmost, determined either by the
+		/// depth buffer if it exists or the drawing order if it doesn't.
+		/// \todo Would it be more convenient for this to be passed a line?
+		void gadgetsAt( const Imath::V2f &position, std::vector<GadgetPtr> &gadgets );
+		/// \todo Would it be more convenient for this to be passed a line?		
+		IECore::LineSegment3f positionToGadgetSpace( const Imath::V2f &position, const Gadget *gadget = 0 ) const;
+		
+	protected :
+
+		virtual void doRender( const Style *style ) const;
+
+	private :
+
+		void childRemoved( GraphComponent *parent, GraphComponent *child );
+	
+		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
+		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
+		bool buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &event );
+		bool mouseMove( GadgetPtr gadget, const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
+		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		bool wheel( GadgetPtr gadget, const ButtonEvent &event );
+	
+		void select( const Imath::V2f &position, std::vector<GadgetPtr> &gadgets );
+				
+		void eventToGadgetSpace( Event &event, Gadget *gadget );
+		void eventToGadgetSpace( ButtonEvent &event, Gadget *gadget );
+		
+		GadgetPtr updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event );
+
+		template<typename Event, typename Signal>
+		typename Signal::result_type dispatchEvent( std::vector<GadgetPtr> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr &handler );
+		
+		template<typename Event, typename Signal>
+		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr leafGadget = 0 );
+		
+		IECore::CameraController m_cameraController;
+		bool m_cameraInMotion;
+		
+		GadgetPtr m_lastButtonPressGadget;
+		GadgetPtr m_gadgetUnderMouse;
+						
+};
+
+IE_CORE_DECLAREPTR( ViewportGadget );
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_VIEWPORTGADGET_H

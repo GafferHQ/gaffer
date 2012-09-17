@@ -110,7 +110,8 @@ class GraphGadget : public ContainerGadget
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
 		
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
-		bool dragUpdate( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		
 		void updateGraph();

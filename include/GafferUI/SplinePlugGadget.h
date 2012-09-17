@@ -91,7 +91,7 @@ class SplinePlugGadget : public Gadget
 		
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const ButtonEvent &event );	
-		bool dragUpdate( GadgetPtr gadget, const ButtonEvent &event );
+		bool dragMove( GadgetPtr gadget, const ButtonEvent &event );
 		Imath::V2f m_lastDragPosition;
 		
 		bool keyPress( GadgetPtr gadget, const KeyEvent &event );

@@ -89,7 +89,8 @@ void GraphGadget::constructCommon( Gaffer::SetPtr graphSet )
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
 	buttonReleaseSignal().connect( boost::bind( &GraphGadget::buttonRelease, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &GraphGadget::dragBegin, this, ::_1, ::_2 ) );
-	dragUpdateSignal().connect( boost::bind( &GraphGadget::dragUpdate, this, ::_1, ::_2 ) );
+	dragEnterSignal().connect( boost::bind( &GraphGadget::dragEnter, this, ::_1, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &GraphGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
 
 	setGraphSet( graphSet );
@@ -163,7 +164,7 @@ void GraphGadget::doRender( const Style *style ) const
 			IECore::staticPointerCast<const Gadget>( *it )->render( style );
 		}
 	}
-	
+
 	// render drag select thing if needed
 	if( m_dragSelecting )
 	{
@@ -234,12 +235,6 @@ bool GraphGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 
 bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 {
-	if( gadget->isInstanceOf( Nodule::staticTypeId() ) || gadget->isInstanceOf( ConnectionGadget::staticTypeId() ) )
-	{
-		// they can handle their own stuff.
-		return false;
-	}
-
 	if( event.buttons==ButtonEvent::Left )
 	{
 		// selection/deselection
@@ -293,12 +288,6 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( gadget->isInstanceOf( Nodule::staticTypeId() ) )
-	{
-		// nodules can handle their own drag and drop so we don't handle the event
-		return 0;
-	}
-	
 	if( !m_scriptNode )
 	{
 		return 0;
@@ -322,7 +311,17 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 	return 0;
 }
 
-bool GraphGadget::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
+bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( event.sourceGadget == this )
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( !m_scriptNode )
 	{

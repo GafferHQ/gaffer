@@ -71,7 +71,7 @@ SplinePlugGadget::SplinePlugGadget( const std::string &name )
 
 	buttonPressSignal().connect( boost::bind( &SplinePlugGadget::buttonPress, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &SplinePlugGadget::dragBegin, this, ::_1, ::_2 ) );
-	dragUpdateSignal().connect( boost::bind( &SplinePlugGadget::dragUpdate, this, ::_1, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &SplinePlugGadget::dragMove, this, ::_1, ::_2 ) );
 	keyPressSignal().connect( boost::bind( &SplinePlugGadget::keyPress, this, ::_1,  ::_2 ) );
 
 }
@@ -365,7 +365,7 @@ IECore::RunTimeTypedPtr SplinePlugGadget::dragBegin( GadgetPtr gadget, const But
 	return 0;
 }
 
-bool SplinePlugGadget::dragUpdate( GadgetPtr gadget, const ButtonEvent &event )
+bool SplinePlugGadget::dragMove( GadgetPtr gadget, const ButtonEvent &event )
 {
 	/// \todo Undo support!
 	V3f i;

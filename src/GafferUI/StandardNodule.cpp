@@ -62,7 +62,7 @@ StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
 	leaveSignal().connect( boost::bind( &StandardNodule::leave, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &StandardNodule::buttonPress, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &StandardNodule::dragBegin, this, ::_1, ::_2 ) );
-	dragUpdateSignal().connect( boost::bind( &StandardNodule::dragUpdate, this, ::_1, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &StandardNodule::dragMove, this, ::_1, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &StandardNodule::dragEnter, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &StandardNodule::dragLeave, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &StandardNodule::dragEnd, this, ::_1, ::_2 ) );
@@ -134,28 +134,44 @@ IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const Butto
 	return plug();
 }
 
-bool StandardNodule::dragUpdate( GadgetPtr gadget, const DragDropEvent &event )
+bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( event.sourceGadget == this )
+	{
+		return true;
+	}
+	
+	Gaffer::PlugPtr input, output;
+	connection( event, input, output );
+	if( input )
+	{
+		m_hovering = true;
+		StandardNodulePtr sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget );
+		if( sourceNodule )
+		{
+			// snap the drag endpoint to our centre, as another little visual indication
+			// that we're well up for being connected.
+			V3f centre = V3f( 0 ) * fullTransform();
+			centre = centre * sourceNodule->fullTransform().inverse();
+			sourceNodule->m_dragPosition = centre;
+		}
+		renderRequestSignal()( this );
+		return true;
+	}
+	
+	return false;
+}
+
+bool StandardNodule::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragPosition = event.line.p0;
 	renderRequestSignal()( this );
 	return true;
 }
 
-bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
-{
-	Gaffer::PlugPtr input, output;
-	connection( event, input, output );
-	if( input )
-	{
-		m_hovering = true;
-		renderRequestSignal()( this );
-	}
-	return true;
-}
-
 bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( event.source != this )
+	if( event.sourceGadget != this )
 	{
 		m_hovering = false;
 		renderRequestSignal()( this );
@@ -166,12 +182,15 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragging = false;
+	m_hovering = false;
 	renderRequestSignal()( this );
 	return true;
 }
 
 bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
+	m_hovering = false;
+	
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
 	
@@ -179,7 +198,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 	{	
 		Gaffer::UndoContext undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
 
-			ConnectionGadgetPtr connection = IECore::runTimeCast<ConnectionGadget>( event.source );
+			ConnectionGadgetPtr connection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget );
 			if( connection && plug()->direction()==Gaffer::Plug::In )
 			{
 				connection->dstNodule()->plug()->setInput( 0 );

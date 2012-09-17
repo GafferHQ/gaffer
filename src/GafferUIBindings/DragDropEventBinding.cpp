@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -44,14 +44,14 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
-static GadgetPtr getSource( DragDropEvent &d )
+static GadgetPtr getSourceGadget( DragDropEvent &d )
 {
-	return d.source;
+	return d.sourceGadget;
 }
 
-static void setSource( DragDropEvent &d, GadgetPtr s )
+static void setSourceGadget( DragDropEvent &d, GadgetPtr s )
 {
-	d.source = s;
+	d.sourceGadget = s;
 }
 
 static IECore::RunTimeTypedPtr getData( DragDropEvent &d )
@@ -64,14 +64,14 @@ static void setData( DragDropEvent &d, IECore::RunTimeTypedPtr s )
 	d.data = s;
 }
 
-static GadgetPtr getDestination( DragDropEvent &d )
+static GadgetPtr getDestinationGadget( DragDropEvent &d )
 {
-	return d.destination;
+	return d.destinationGadget;
 }
 
-static void setDestination( DragDropEvent &d, GadgetPtr s )
+static void setDestinationGadget( DragDropEvent &d, GadgetPtr s )
 {
-	d.destination = s;
+	d.destinationGadget = s;
 }
 
 void GafferUIBindings::bindDragDropEvent()
@@ -80,9 +80,9 @@ void GafferUIBindings::bindDragDropEvent()
 		.def( init<ButtonEvent::Buttons>() )
 		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &>() )
 		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &, ModifiableEvent::Modifiers>() )
-		.add_property( "source", &getSource, &setSource )
+		.add_property( "sourceGadget", &getSourceGadget, &setSourceGadget )
 		.add_property( "data", &getData, &setData )
-		.add_property( "destination", &getDestination, &setDestination )
+		.add_property( "destinationGadget", &getDestinationGadget, &setDestinationGadget )
 		.def_readwrite( "dropResult", &DragDropEvent::dropResult )
 	;	
 }

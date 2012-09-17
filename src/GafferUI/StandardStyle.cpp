@@ -82,6 +82,10 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		// style already bound it anyway.
 		return;
 	}
+	
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	
 	shader()->bind();
 }
 

@@ -57,24 +57,8 @@ IE_CORE_FORWARDDECLARE( Gadget );
 IE_CORE_FORWARDDECLARE( Style );
 
 /// Gadgets are zoomable UI elements. They draw themselves using OpenGL, and provide an interface for
-/// handling events.
-/// \todo Should there be some base class for this and the Widget class?
-///
-/// BASIC PLAN :
-///
-///	* The Gadget passed as the argument to signals is the leaf gadget that received the event.
-/// * But events are passed first to the topmost parent of that leaf - and then down the
-///   hierarchy till the child is reached.
-/// * If any handler returns true then the entire traversal is cut short there.
-/// * It is the responsibility of the host (GadgetWidget) to perform this traversal.
-/// * ContainerGadget is a base class for all Gadgets which have children. It has a
-///   virtual method to return the transform for any given child? It is the responsibility
-///   of the host to use this transform to convert the coordinates in the event into the
-///   widgets own object space before calling the event? This is my least favourite bit of this
-///   scheme, but otherwise the container widget is responsible for passing events on itself, and
-///   it gets slightly ugly.
-///
-/// \todo Why not traverse up from the leaf like Qt does?
+/// handling events. To present a Gadget in the user interface, it should be placed in the viewport of
+/// a GadgetWidget.
 /// \todo I'm not sure I like having the transform on the Gadget - perhaps ContainerGadget
 /// should have a virtual childTransform() method instead?
 class Gadget : public Gaffer::GraphComponent
@@ -182,12 +166,16 @@ class Gadget : public Gaffer::GraphComponent
 		ButtonSignal &buttonReleaseSignal();
 		/// The signal triggered by a button double click event.
 		ButtonSignal &buttonDoubleClickSignal();
+		/// The signal triggered by the mouse wheel.
+		ButtonSignal &wheelSignal();
 		
 		typedef boost::signal<void ( GadgetPtr, const ButtonEvent &event )> EnterLeaveSignal; 
 		/// The signal triggered when the mouse enters the Gadget.
 		EnterLeaveSignal &enterSignal();
 		/// The signal triggered when the mouse leaves the Gadget.
-		EnterLeaveSignal &leaveSignal();
+		EnterLeaveSignal &leaveSignal();	
+		/// A signal emitted whenever the mouse moves within a Gadget.
+		ButtonSignal &mouseMoveSignal();
 		
 		typedef boost::signal<IECore::RunTimeTypedPtr ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal; 
 		typedef boost::signal<bool ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal; 
@@ -197,11 +185,11 @@ class Gadget : public Gaffer::GraphComponent
 		/// a Gadget must return an IECore::RunTimeTypedPtr representing the data being
 		/// dragged.
 		DragBeginSignal &dragBeginSignal();
-		/// Upon initiation of a drag with dragBeginSignal(), this signal will be triggered
-		/// to update the drag with the new mouse position.
-		DragDropSignal &dragUpdateSignal();
 		/// Emitted when a drag enters this Gadget.
 		DragDropSignal &dragEnterSignal();
+		/// Upon initiation of a drag with dragBeginSignal(), this signal will be triggered
+		/// to update the drag with the new mouse position.
+		DragDropSignal &dragMoveSignal();
 		/// Emitted when a drag leaves this Gadget.
 		DragDropSignal &dragLeaveSignal();
 		/// This signal is emitted when a drag has been released over this Gadget.
@@ -243,13 +231,15 @@ class Gadget : public Gaffer::GraphComponent
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;
 		ButtonSignal m_buttonDoubleClickSignal;
+		ButtonSignal m_wheelSignal;
 		
 		EnterLeaveSignal m_enterSignal;
 		EnterLeaveSignal m_leaveSignal;
+		ButtonSignal m_mouseMoveSignal;
 
 		DragBeginSignal m_dragBeginSignal;
-		DragDropSignal m_dragUpdateSignal;
 		DragDropSignal m_dragEnterSignal;
+		DragDropSignal m_dragMoveSignal;
 		DragDropSignal m_dragLeaveSignal;
 		DragDropSignal m_dragEndSignal;
 		DragDropSignal m_dropSignal;

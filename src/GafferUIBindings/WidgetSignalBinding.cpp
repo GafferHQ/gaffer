@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECore/RunTimeTyped.h"
+
 #include "GafferUIBindings/WidgetSignalBinding.h"
 
 #include "GafferUI/EventSignalCombiner.h"
@@ -53,4 +55,7 @@ void GafferUIBindings::bindWidgetSignal()
 
 	typedef boost::signal<bool ( object, object ), EventSignalCombiner<bool> > WidgetEventSignal; 
 	SignalBinder<WidgetEventSignal>::bind( "WidgetEventSignal" );
+	
+	typedef boost::signal<IECore::RunTimeTypedPtr ( object, object ), EventSignalCombiner<IECore::RunTimeTypedPtr> > WidgetDragBeginSignal; 
+	SignalBinder<WidgetDragBeginSignal>::bind( "WidgetDragBeginSignal" );
 }

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -69,8 +69,8 @@ class StandardNodule : public Nodule
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const ButtonEvent &event );	
-		bool dragUpdate( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
