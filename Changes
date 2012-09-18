@@ -1,3 +1,10 @@
+* Fixed problem where VectorDataWidget would grow to claim size it couldn't use.
+
+* VectorDataWidget now scrolls to show the new rows when rows have been added.
+
+0.35.5
+------
+
 * Fixed graphical glitches caused by incorrectly applying visibility to children of TabbedContainer - this affected the preview section of the browser app particularly badly.
 
 * Added a reportErrors parameter to the OpMatcher constructor - this defaults to True (same behaviour as before) but can be set to False to silence error reporting while loading ops. Note that the OpMatcher used by the BrowserEditor may be customised by implementing the Mode._createOpMatcher() method - this would be the place to pass reportErrors=True.
@@ -103,10 +110,12 @@ swatch.
 
 0.35.3
 ------
+
 * Fixed LayoutMenu delete function
 
 0.35.2
 ------
+
 * Added a minimum size of the OpDialogue
 
 0.35.1

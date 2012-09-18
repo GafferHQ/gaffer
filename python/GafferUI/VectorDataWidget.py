@@ -154,7 +154,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__tableView.setSizePolicy(
 				QtGui.QSizePolicy(
 					QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed,
-					QtGui.QSizePolicy.Preferred
+					QtGui.QSizePolicy.Maximum
 				)
 			)
 		
@@ -306,6 +306,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 			data[i].extend( newData[i] )
 					
 		self.setData( data )
+		
+		self.__tableView.scrollToBottom()
+		
 		self.__emitDataChangedSignal()
 		
 # Private implementation - a QTableView with custom size behaviour.
