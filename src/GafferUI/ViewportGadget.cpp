@@ -449,7 +449,7 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 				return gadget;
 			}
 			
-			bool result = dispatchEvent( gadget, &Gadget::dragEnterSignal, event, *it );
+			bool result = dispatchEvent( gadget, &Gadget::dragEnterSignal, event );
 			if( result )
 			{
 				return gadget;
@@ -549,7 +549,7 @@ typename Signal::result_type ViewportGadget::dispatchEvent( std::vector<GadgetPt
 		GadgetPtr gadget = *it;
 		while( gadget && gadget != this )
 		{
-			typename Signal::result_type result = dispatchEvent( gadget, signalGetter, event, *it );
+			typename Signal::result_type result = dispatchEvent( gadget, signalGetter, event );
 			if( result )
 			{
 				handler = gadget;
@@ -562,17 +562,12 @@ typename Signal::result_type ViewportGadget::dispatchEvent( std::vector<GadgetPt
 }
 		
 template<typename Event, typename Signal>
-typename Signal::result_type ViewportGadget::dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr leafGadget )
+typename Signal::result_type ViewportGadget::dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event )
 {
 	Event transformedEvent( event );
 	eventToGadgetSpace( transformedEvent, gadget.get() );
-	/// \todo I'm not really sure I like this whole leaf gadget behaviour. Perhaps
-	/// we can ditch it and the classes that need to know what the leaf gadget is
-	/// can use the viewport to find the gadget under the event? The GraphGadget node
-	/// selection behaviour is a good example of where we're currently relying on the
-	/// leaf gadget.
 	Signal &s = (gadget->*signalGetter)();
-	return s( leafGadget ? leafGadget : gadget, transformedEvent );
+	return s( gadget, transformedEvent );
 }
 
 //////////////////////////////////////////////////////////////////////////

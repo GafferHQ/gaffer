@@ -55,6 +55,7 @@
 #include "GafferUI/Nodule.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -243,44 +244,51 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		{
 			return false;
 		}
+		
+		ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 				
-		if( gadget==this )
+		std::vector<GadgetPtr> gadgetsUnderMouse;
+		viewportGadget->gadgetsAt(
+			viewportGadget->gadgetToRasterSpace( event.line.p0, this ),
+			gadgetsUnderMouse
+		);
+				
+		if( !gadgetsUnderMouse.size() || gadgetsUnderMouse[0] == this )
 		{
 			// background click - clear the current selection
 			m_scriptNode->selection()->clear();
 			return true;
 		}
-		else
+				
+		NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0] );
+		if( !nodeGadget )
 		{
-			NodeGadgetPtr nodeGadget = runTimeCast<NodeGadget>( gadget );
-			if( !nodeGadget )
+			nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
+		}
+				
+		if( nodeGadget )
+		{				
+			Gaffer::NodePtr node = nodeGadget->node();
+			bool shiftHeld = event.modifiers && ButtonEvent::Shift;
+			bool nodeSelected = m_scriptNode->selection()->contains( node );
+
+			if( nodeSelected )
 			{
-				nodeGadget = gadget->ancestor<NodeGadget>();
-			}
-			if( nodeGadget )
-			{				
-				Gaffer::NodePtr node = nodeGadget->node();
-				bool shiftHeld = event.modifiers && ButtonEvent::Shift;
-				bool nodeSelected = m_scriptNode->selection()->contains( node );
-
-				if( nodeSelected )
+				if( shiftHeld )
 				{
-					if( shiftHeld )
-					{
-						m_scriptNode->selection()->remove( node );
-					}
+					m_scriptNode->selection()->remove( node );
 				}
-				else
-				{
-					if( !shiftHeld )
-					{
-						m_scriptNode->selection()->clear();
-					}
-					m_scriptNode->selection()->add( node );			
-				}
-
-				return true;
 			}
+			else
+			{
+				if( !shiftHeld )
+				{
+					m_scriptNode->selection()->clear();
+				}
+				m_scriptNode->selection()->add( node );			
+			}
+
+			return true;
 		}
 	}
 	return false;

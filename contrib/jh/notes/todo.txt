@@ -7,9 +7,6 @@ PRIORITIES!!!!
 
 	* shaders with connections!
 
-* get GraphGadget using the same selection and drag drawing techniques as RenderableGadget
-	- then we can ditch the leafGadget nonsense.
-
 * enable/disable plug for scene processors
 
 * fix problem with instances bound

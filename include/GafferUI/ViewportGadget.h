@@ -152,7 +152,7 @@ class ViewportGadget : public IndividualContainer
 		typename Signal::result_type dispatchEvent( std::vector<GadgetPtr> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr &handler );
 		
 		template<typename Event, typename Signal>
-		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr leafGadget = 0 );
+		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
 		
 		IECore::CameraController m_cameraController;
 		bool m_cameraInMotion;
