@@ -195,9 +195,7 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 
 void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 {
-	/// \todo It'd be nice to make this a constant size on screen
-	/// rather than in Gadget space.
-	V2f cornerSizes = V2f( 0.5f ) / box.size();
+	V2f cornerSizes = V2f( 5.0f ) / box.size();
 	glUniform1i( m_bezierParameter, 0 );
 	glUniform1i( m_borderParameter, 1 );
 	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );

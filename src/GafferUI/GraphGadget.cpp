@@ -169,9 +169,12 @@ void GraphGadget::doRender( const Style *style ) const
 	// render drag select thing if needed
 	if( m_dragSelecting )
 	{
+		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+		ViewportGadget::RasterScope rasterScope( viewportGadget );
+
 		Box2f b;
-		b.extendBy( m_dragStartPosition );
-		b.extendBy( m_lastDragPosition );
+		b.extendBy( viewportGadget->gadgetToRasterSpace( V3f( m_dragStartPosition.x, m_dragStartPosition.y, 0 ), this ) );
+		b.extendBy( viewportGadget->gadgetToRasterSpace( V3f( m_lastDragPosition.x, m_lastDragPosition.y, 0 ), this ) );
 		style->renderSelectionBox( b );		
 	}
 	
