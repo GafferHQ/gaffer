@@ -36,17 +36,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECoreGL/State.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "GafferUIBindings/RenderableGadgetBinding.h"
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/RenderableGadget.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
@@ -73,6 +77,26 @@ static void setRenderable( RenderableGadget &g, IECore::VisibleRenderablePtr ren
 	g.setRenderable( renderable );
 }
 
+static void setSelection( RenderableGadget &g, object pythonSelection )
+{
+	std::vector<std::string> vectorSelection;
+	boost::python::container_utils::extend_container( vectorSelection, pythonSelection );
+	RenderableGadget::Selection selection( vectorSelection.begin(), vectorSelection.end() );
+	g.setSelection( selection );
+}
+
+static object getSelection( RenderableGadget &g )
+{
+	const RenderableGadget::Selection &selection = g.getSelection();
+	boost::python::list selectionList;
+	for( RenderableGadget::Selection::const_iterator it = selection.begin(); it != selection.end(); it++ )
+	{
+		selectionList.append( *it );
+	}
+	PyObject *selectionSet = PySet_New( selectionList.ptr() );
+	return object( handle<>( selectionSet ) );	
+}
+
 void GafferUIBindings::bindRenderableGadget()
 {
 	IECorePython::RunTimeTypedClass<RenderableGadget>()
@@ -81,6 +105,11 @@ void GafferUIBindings::bindRenderableGadget()
 		.def( "setRenderable", &setRenderable )
 		.def( "getRenderable", (IECore::VisibleRenderablePtr (RenderableGadget::*)())&RenderableGadget::getRenderable )
 		.def( "baseState", &baseState )
+		.def( "setSelection", &setSelection )
+		.def( "getSelection", &getSelection )
+		.def( "selectionChangedSignal", &RenderableGadget::selectionChangedSignal, return_internal_reference<1>() )
 	;
+
+	SignalBinder<RenderableGadget::SelectionChangedSignal>::bind( "SelectionChangedSignal" );	
 
 }

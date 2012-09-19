@@ -182,7 +182,7 @@ def __positionNode( node, menu ) :
 		# is not where the mouse was clicked to open the window (when the menu
 		# has been moved to keep it on screen).
 		menuPosition = menu.bound( relativeTo=gadgetWidget ).min
-		nodePosition = gadgetWidget.viewportGadget().positionToGadgetSpace(
+		nodePosition = gadgetWidget.viewportGadget().rasterToGadgetSpace(
 			IECore.V2f( menuPosition.x, menuPosition.y ),
 			gadget = graphGadget
 		).p0

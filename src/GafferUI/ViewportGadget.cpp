@@ -117,49 +117,22 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	renderRequestSignal()( this );
 }
 
-void ViewportGadget::gadgetsAt( const Imath::V2f &position, std::vector<GadgetPtr> &gadgets )
+void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets )
 {
 	if( !getChild<Gadget>() )
 	{
 		return;
 	}
 
-	V2f viewport = getViewport();
-	V2f regionCentre = position / V2f( viewport.x, viewport.y );
-	V2f regionSize = V2f( 2.0 ) / viewport;
-	
-	Box2f region( regionCentre - regionSize / 2.0f, regionCentre + regionSize / 2.0f );
-	
-	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
- 		const_cast<CameraController &>( m_cameraController ).getCamera()
- 	);
- 	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
- 	camera->render( 0 );
-	
-	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
-	glClearDepth( 1.0f );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-	IECoreGL::Selector selector;
-	selector.begin( region );
-
-	const Style *s = style();
-	s->bind();
-	IndividualContainer::doRender( s );
-	
 	std::vector<HitRecord> selection;
-	selector.end( selection );
-	
-	/// \todo Figure out how to know when we've been doing depth-tested rendering
-	if( false )
 	{
-		std::sort( selection.begin(), selection.end() );
+		SelectionScope selectionScope( this, rasterPosition, selection );
+		
+		const Style *s = style();
+		s->bind();
+		IndividualContainer::doRender( s );
 	}
-	else
-	{
-		std::reverse( selection.begin(), selection.end() );
-	}
-	
+		
 	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
 	{
 		GadgetPtr gadget = Gadget::select( it->name.value() );
@@ -175,7 +148,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &position, std::vector<GadgetPt
 	}
 }
 
-IECore::LineSegment3f ViewportGadget::positionToGadgetSpace( const Imath::V2f &position, const Gadget *gadget ) const
+IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &position, const Gadget *gadget ) const
 {
 	if( !gadget )
 	{
@@ -192,6 +165,18 @@ IECore::LineSegment3f ViewportGadget::positionToGadgetSpace( const Imath::V2f &p
 		result = result * m;
 	}
 	return result;
+}
+
+Imath::V2f ViewportGadget::gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget ) const
+{
+	if( !gadget )
+	{
+		gadget = getChild<Gadget>();
+	}
+	
+	M44f gadgetTransform = gadget->fullTransform();
+	V3f worldSpacePosition = gadgetPosition * gadgetTransform;
+	return m_cameraController.project( worldSpacePosition );
 }
 
 void ViewportGadget::doRender( const Style *style ) const
@@ -222,7 +207,7 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		// accept press so we get a dragBegin opportunity for camera movement
 		return true;
 	}
-	
+		
 	std::vector<GadgetPtr> gadgets;
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 			
@@ -553,7 +538,7 @@ void ViewportGadget::eventToGadgetSpace( Event &event, Gadget *gadget )
 
 void ViewportGadget::eventToGadgetSpace( ButtonEvent &event, Gadget *gadget )
 {
-	event.line = positionToGadgetSpace( V2f( event.line.p0.x, event.line.p0.y ), gadget );
+	event.line = rasterToGadgetSpace( V2f( event.line.p0.x, event.line.p0.y ), gadget );
 }
 
 template<typename Event, typename Signal>
@@ -588,4 +573,111 @@ typename Signal::result_type ViewportGadget::dispatchEvent( GadgetPtr gadget, Si
 	/// leaf gadget.
 	Signal &s = (gadget->*signalGetter)();
 	return s( leafGadget ? leafGadget : gadget, transformedEvent );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// SelectionScope implementation
+//////////////////////////////////////////////////////////////////////////
+
+ViewportGadget::SelectionScope::SelectionScope( const IECore::LineSegment3f &lineInGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection )
+	:	m_selection( selection )
+{
+	const ViewportGadget *viewportGadget = gadget->ancestor<ViewportGadget>();
+	V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, gadget );
+	begin( viewportGadget, rasterPosition, gadget->fullTransform() );
+}
+
+ViewportGadget::SelectionScope::SelectionScope( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection )
+	:	m_selection( selection )
+{
+	const ViewportGadget *viewportGadget = gadget->ancestor<ViewportGadget>();
+	
+	Box2f rasterRegion;
+	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( corner0InGadgetSpace, gadget ) );
+	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( corner1InGadgetSpace, gadget ) );
+	
+	begin( viewportGadget, rasterRegion, gadget->fullTransform() );
+}
+
+ViewportGadget::SelectionScope::SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection )
+	:	m_selection( selection )
+{
+	begin( viewportGadget, rasterPosition, M44f() );
+}
+
+ViewportGadget::SelectionScope::~SelectionScope()
+{
+	end();
+}
+
+void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform )
+{
+	begin(
+		viewportGadget,
+		Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ),
+		transform
+	);
+}
+
+void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform )
+{
+	V2f viewport = viewportGadget->getViewport();
+	Box2f ndcRegion( rasterRegion.min / viewport, rasterRegion.max / viewport );
+		
+	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
+ 		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
+ 	);
+ 	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
+ 	camera->render( 0 );
+	
+	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
+	glClearDepth( 1.0f );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	m_selector.begin( ndcRegion );
+	
+	glPushMatrix();
+	glMultMatrixf( transform.getValue() );
+}
+
+void ViewportGadget::SelectionScope::end()
+{
+	glPopMatrix();
+	m_selector.end( m_selection );
+	
+	/// \todo Figure out how to know when we've been doing depth-tested rendering
+	if( false )
+	{
+		std::sort( m_selection.begin(), m_selection.end() );
+	}
+	else
+	{
+		std::reverse( m_selection.begin(), m_selection.end() );
+	}
+
+}
+
+ViewportGadget::RasterScope::RasterScope( const ViewportGadget *viewportGadget )
+{
+	V2f viewport = viewportGadget->getViewport();
+
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho( 0, viewport.x, viewport.y, 0, -1, 1 );
+	
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef( 0, 0, 1 );
+}
+
+ViewportGadget::RasterScope::~RasterScope()
+{
+	glPopMatrix();
+	
+	glMatrixMode( GL_PROJECTION );
+	glPopMatrix();
+	
+	glMatrixMode( GL_MODELVIEW );
 }

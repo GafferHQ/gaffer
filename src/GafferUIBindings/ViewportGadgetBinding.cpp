@@ -77,7 +77,8 @@ void GafferUIBindings::bindViewportGadget()
 		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f & ))&ViewportGadget::frame )
 		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f &, const Imath::V3f &, const Imath::V3f & ))&ViewportGadget::frame )	
 		.def( "gadgetsAt", &gadgetsAt )
-		.def( "positionToGadgetSpace", &ViewportGadget::positionToGadgetSpace, ( arg_( "position" ), arg_( "gadget" ) = GadgetPtr() ) )
+		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
+		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ViewportGadget )
 	;
 }

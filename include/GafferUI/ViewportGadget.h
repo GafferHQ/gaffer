@@ -40,6 +40,8 @@
 #include "IECore/Camera.h"
 #include "IECore/CameraController.h"
 
+#include "IECoreGL/Selector.h"
+
 #include "GafferUI/IndividualContainer.h"
 
 namespace GafferUI
@@ -74,10 +76,53 @@ class ViewportGadget : public IndividualContainer
 		/// Fills the passed vector with all the Gadgets below the specified position.
 		/// The first Gadget in the list will be the frontmost, determined either by the
 		/// depth buffer if it exists or the drawing order if it doesn't.
-		/// \todo Would it be more convenient for this to be passed a line?
-		void gadgetsAt( const Imath::V2f &position, std::vector<GadgetPtr> &gadgets );
-		/// \todo Would it be more convenient for this to be passed a line?		
-		IECore::LineSegment3f positionToGadgetSpace( const Imath::V2f &position, const Gadget *gadget = 0 ) const;
+		/// \todo Would it be more convenient for this and the space conversion functions below
+		/// to use V3fs?
+		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets );
+		
+		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget = 0 ) const;
+		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget = 0 ) const;
+		
+		/// The SelectionScope class can be used by child Gadgets to perform
+		/// OpenGL selection from event signal callbacks.
+		class SelectionScope
+		{
+			
+			public :
+		
+				/// Start an OpenGL selection operation for the specified position in the specified gadget. After construction,
+				/// perform drawing as usual in the object space of the Gadget, and upon destruction the selection
+				/// vector will have been filled with the specified hits.
+				SelectionScope( const IECore::LineSegment3f &lineInGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection );
+				/// As above, but selecting within a rectangle in screen space, defined by two corners in gadget space. 
+				SelectionScope( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection );
+				~SelectionScope();
+				
+			private :
+
+				/// Private constructor for use by ViewportGadget.
+				SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection );
+				friend class ViewportGadget;
+
+				void begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform );
+				void begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform );
+				void end();
+				
+				IECoreGL::Selector m_selector;
+				std::vector<IECoreGL::HitRecord> &m_selection;
+								
+		};
+		
+		/// The RasterScope class can be used to perform drawing in raster space.
+		class RasterScope
+		{
+			
+			public :
+			
+				RasterScope( const ViewportGadget *viewportGadget );
+				~RasterScope();
+				
+		};
 		
 	protected :
 
@@ -97,9 +142,7 @@ class ViewportGadget : public IndividualContainer
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		bool wheel( GadgetPtr gadget, const ButtonEvent &event );
-	
-		void select( const Imath::V2f &position, std::vector<GadgetPtr> &gadgets );
-				
+					
 		void eventToGadgetSpace( Event &event, Gadget *gadget );
 		void eventToGadgetSpace( ButtonEvent &event, Gadget *gadget );
 		

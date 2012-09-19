@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
 #include "IECore/SimpleTypedData.h"
 #include "IECore/WorldBlock.h"
 
@@ -42,8 +45,13 @@
 #include "IECoreGL/Scene.h"
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/State.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/NameStateComponent.h"
+#include "IECoreGL/TypedStateComponent.h"
 
 #include "GafferUI/RenderableGadget.h"
+#include "GafferUI/ViewportGadget.h"
+#include "GafferUI/Style.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -52,8 +60,22 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( RenderableGadget );
 
 RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
-	:	Gadget( staticTypeName() ), m_renderable( 0 ), m_scene( 0 ), m_baseState( new IECoreGL::State( true ) )
+	: Gadget( staticTypeName() ),
+	  m_renderable( 0 ),
+	  m_scene( 0 ),
+	  m_baseState( new IECoreGL::State( true ) ),
+	  m_selectionColor( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ) ),
+	  m_dragSelecting( false )
 {
+	// IECoreGL default wireframe colour is far too similar to the blue we use for selection.
+	m_baseState->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.65f, 0.65f, 0.65f, 1.0f ) ) );
+
+	buttonPressSignal().connect( boost::bind( &RenderableGadget::buttonPress, this, ::_1,  ::_2 ) );
+	dragBeginSignal().connect( boost::bind( &RenderableGadget::dragBegin, this, ::_1, ::_2 ) );
+	dragEnterSignal().connect( boost::bind( &RenderableGadget::dragEnter, this, ::_1, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &RenderableGadget::dragMove, this, ::_1, ::_2 ) );
+	dragEndSignal().connect( boost::bind( &RenderableGadget::dragEnd, this, ::_1, ::_2 ) );
+
 	setRenderable( renderable );
 }
 
@@ -79,6 +101,18 @@ void RenderableGadget::doRender( const Style *style ) const
 	{
 		m_scene->render( m_baseState );
 	}
+	
+	if( m_dragSelecting )
+	{
+		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+		ViewportGadget::RasterScope rasterScope( viewportGadget );
+		
+		Box2f b;
+		b.extendBy( viewportGadget->gadgetToRasterSpace( m_dragStartPosition, this ) );
+		b.extendBy( viewportGadget->gadgetToRasterSpace( m_lastDragPosition, this ) );
+		
+		style->renderSelectionBox( b );
+	}
 }
 
 void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
@@ -97,6 +131,7 @@ void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
 			}	
 			m_scene = renderer->scene();
 			m_scene->setCamera( 0 );	
+			applySelection();
 		}
 		renderRequestSignal()( this );
 	}
@@ -115,4 +150,181 @@ IECore::ConstVisibleRenderablePtr RenderableGadget::getRenderable() const
 IECoreGL::State *RenderableGadget::baseState()
 {
 	return m_baseState.get();
+}
+
+RenderableGadget::Selection &RenderableGadget::getSelection()
+{
+	return m_selection;
+}
+
+const RenderableGadget::Selection &RenderableGadget::getSelection() const
+{
+	return m_selection;
+}
+
+void RenderableGadget::setSelection( const std::set<std::string> &selection )
+{
+	if( selection == m_selection )
+	{
+		return;
+	}
+	
+	m_selection = selection;
+	applySelection();
+	m_selectionChangedSignal( this );
+	renderRequestSignal()( this );
+}
+
+RenderableGadget::SelectionChangedSignal &RenderableGadget::selectionChangedSignal()
+{
+	return m_selectionChangedSignal;
+}
+
+bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
+{
+	if( event.buttons != ButtonEvent::Left || !m_scene )
+	{
+		return false;
+	}
+	
+	std::vector<IECoreGL::HitRecord> selection;
+	{
+		ViewportGadget::SelectionScope selectionScope( event.line, this, selection );
+		m_scene->render( m_baseState );
+	}
+
+	bool shiftHeld = event.modifiers && ButtonEvent::Shift;
+	bool selectionChanged = false;
+	if( !selection.size() )
+	{
+		// background click - clear the selection unless
+		// shift is held in which case we might be starting
+		// a drag to add more.
+		if( !shiftHeld )
+		{
+			m_selection.clear();
+			selectionChanged = true;
+		}
+	}
+	else
+	{
+		const std::string &name = selection[0].name.value();
+		bool nameSelectedAlready = m_selection.find( name ) != m_selection.end();
+		
+		if( nameSelectedAlready )
+		{
+			if( shiftHeld )
+			{
+				m_selection.erase( name );
+				selectionChanged = true;
+			}
+		}
+		else
+		{
+			if( !shiftHeld )
+			{
+				m_selection.clear();
+			}
+			m_selection.insert( name );
+			selectionChanged = true;
+		}
+	}
+	
+	if( selectionChanged )
+	{
+		applySelection();
+		m_selectionChangedSignal( this );
+		renderRequestSignal()( this );
+	}
+	return true;
+}
+
+IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( !m_scene )
+	{
+		return false;
+	}
+	
+	m_dragStartPosition = m_lastDragPosition = event.line.p0;
+	m_dragSelecting = true;
+	renderRequestSignal()( this );
+	
+	return this;
+}
+
+bool RenderableGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+{
+	return event.sourceGadget == this;
+}
+
+bool RenderableGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
+{
+	m_lastDragPosition = event.line.p1;
+	renderRequestSignal()( this );
+	return true;
+}
+
+bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
+{
+	m_dragSelecting = false;
+
+	std::vector<IECoreGL::HitRecord> selection;
+	{
+		ViewportGadget::SelectionScope selectionScope( m_dragStartPosition, m_lastDragPosition, this, selection );
+		m_scene->render( m_baseState );
+	}
+	
+	bool selectionChanged = false;
+	for( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
+	{
+		const std::string &name = it->name.value();
+		if( m_selection.find( name ) == m_selection.end() )
+		{
+			m_selection.insert( name );
+			selectionChanged = true;
+		}
+	}
+	
+	if( selectionChanged )
+	{
+		applySelection();
+		m_selectionChangedSignal( this );
+	}
+	
+	renderRequestSignal()( this );
+	return true;
+}
+		
+void RenderableGadget::applySelection( IECoreGL::Group *group )
+{
+	if( !group )
+	{
+		if( !m_scene )
+		{
+			return;
+		}
+		group = m_scene->root();
+	}
+	
+	IECoreGL::State *state = group->getState();
+	IECoreGL::NameStateComponent *nameState = state->get<IECoreGL::NameStateComponent>();
+	if( nameState && m_selection.find( nameState->name() ) != m_selection.end() )
+	{
+		state->add( m_selectionColor );
+	}
+	else
+	{
+		state->remove<IECoreGL::WireframeColorStateComponent>();
+	}
+	
+	const IECoreGL::Group::ChildContainer &children = group->children();
+	for( IECoreGL::Group::ChildContainer::const_iterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
+	{
+		IECoreGL::Group *childGroup = IECore::runTimeCast<IECoreGL::Group>( (*it).get() );
+		if( childGroup )
+		{
+			applySelection( childGroup );
+		}
+	}
 }

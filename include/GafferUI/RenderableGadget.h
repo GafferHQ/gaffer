@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -38,15 +38,17 @@
 #ifndef GAFFERUI_RENDERABLEGADGET_H
 #define GAFFERUI_RENDERABLEGADGET_H
 
-#include "GafferUI/Gadget.h"
-
 #include "IECore/VisibleRenderable.h"
+
+#include "GafferUI/Gadget.h"
 
 namespace IECoreGL
 {
 
 IE_CORE_FORWARDDECLARE( Scene )
 IE_CORE_FORWARDDECLARE( State )
+IE_CORE_FORWARDDECLARE( Group )
+IE_CORE_FORWARDDECLARE( StateComponent )
 
 } // namespace IECoreGL
 
@@ -55,6 +57,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( RenderableGadget );
 
+/// \todo Should this be defined in GafferSceneUI instead?
 class RenderableGadget : public Gadget
 {
 
@@ -76,15 +79,54 @@ class RenderableGadget : public Gadget
 		/// change the display style.
 		IECoreGL::State *baseState();
 		
+		/// @name Selection
+		/// The RenderableGadget maintains a set of selected object, based
+		/// on object name. The user can manipulate the selection with the
+		/// mouse, and the selected objects are drawn in a highlighted fashion.
+		/// The selection may be queried and set programatically, and the
+		/// SelectionChangedSignal can be used to provide notifications of
+		/// such changes.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// The selection is simply stored as a set of object names.
+		typedef std::set<std::string> Selection;
+		/// Returns the selection.
+		Selection &getSelection();
+		const Selection &getSelection() const;
+		/// Sets the selection, triggering selectionChangedSignal() if
+		/// necessary.
+		void setSelection( const std::set<std::string> &selection );
+		/// A signal emitted when the selection has changed, either through
+		/// a call to setSelection() or through user action.
+		typedef boost::signal<void ( RenderableGadgetPtr )> SelectionChangedSignal; 
+		SelectionChangedSignal &selectionChangedSignal();
+		//@}
+		
 	protected :
 	
 		virtual void doRender( const Style *style ) const;
 		
 	private :
 	
+		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		
+		void applySelection( IECoreGL::Group *group = 0 );
+		
 		IECore::VisibleRenderablePtr m_renderable;
 		IECoreGL::ScenePtr m_scene;
 		IECoreGL::StatePtr m_baseState;
+		IECoreGL::StateComponentPtr m_selectionColor;
+		
+		Selection m_selection;
+		SelectionChangedSignal m_selectionChangedSignal;
+		
+		Imath::V3f m_dragStartPosition;
+		Imath::V3f m_lastDragPosition;
+		bool m_dragSelecting;
 		
 };
 

@@ -35,9 +35,11 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import IECore
 
+import GafferTest
 import GafferUI
 
 class RenderableGadgetTest( unittest.TestCase ) :
@@ -85,6 +87,34 @@ class RenderableGadgetTest( unittest.TestCase ) :
 		
 		c = g.renderRequestSignal().connect( f )
 		g.setRenderable( IECore.SpherePrimitive() )
+		
+	def testSelection( self ) :
+	
+		g = GafferUI.RenderableGadget()
+		
+		selection = g.getSelection()
+		self.assertEqual( selection, set() )
+		w = weakref.ref( selection )
+		del selection
+		self.failUnless( w() is None )
+		
+		cs = GafferTest.CapturingSlot( g.selectionChangedSignal() )
+		
+		g.setSelection( set( [ "/one", "/two" ] ) )
+		self.assertEqual( g.getSelection(), set( [ "/one", "/two" ] ) )
+		
+		self.assertEqual( len( cs ), 1 )
+		
+		g.setSelection( set( [ "/one", "/two" ] ) )
+		self.assertEqual( g.getSelection(), set( [ "/one", "/two" ] ) )
+		
+		# should be no new signal triggered as they were the same
+		self.assertEqual( len( cs ), 1 )
+		
+		g.setSelection( set( [ "/one" ] ) )
+		self.assertEqual( g.getSelection(), set( [ "/one" ] ) )
+		
+		self.assertEqual( len( cs ), 2 )
 		
 if __name__ == "__main__":
 	unittest.main()

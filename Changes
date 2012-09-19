@@ -2,6 +2,8 @@
 
 * VectorDataWidget now scrolls to show the new rows when rows have been added.
 
+* RenderableGadget now implements click and drag signal handlers to manage a set of selected objects.
+
 0.35.5
 ------
 
