@@ -4,6 +4,10 @@
 
 * RenderableGadget now implements click and drag signal handlers to manage a set of selected objects.
 
+* Fixed bug where MultiLineTextWidget would emit textChangedSignal whenever setText was called, regardless of whether or not it made any changes.
+
+* Added insertText, setCursorPosition, getCursorPosition, cursorPositionAt, setFocussed and getFocussed methods to MultiLineTextWidget.
+
 0.35.5
 ------
 

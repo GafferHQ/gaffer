@@ -64,7 +64,7 @@ class MultiLineTextWidgetTest( unittest.TestCase ) :
 	
 	def testTextChangedSignal( self ) :
 
-		w = GafferUI.TextWidget()
+		w = GafferUI.MultiLineTextWidget()
 		c = GafferTest.CapturingSlot( w.textChangedSignal() )
 
 		w.setText( "hi" )
@@ -84,6 +84,27 @@ class MultiLineTextWidgetTest( unittest.TestCase ) :
 		for wm in w.WrapMode.values() :
 			w.setWrapMode( wm )
 			self.assertEqual( w.getWrapMode(), wm )
-					
+			
+	def testCursorPosition( self ) :
+	
+		w = GafferUI.MultiLineTextWidget()
+		self.assertEqual( w.getCursorPosition(), 0 )					
+		
+		w.setText( "hello" )
+		self.assertEqual( w.getCursorPosition(), 0 )					
+		
+		w.setCursorPosition( 1 )
+		self.assertEqual( w.getCursorPosition(), 1 )
+	
+	def testInsertText( self ) :
+	
+		w = GafferUI.MultiLineTextWidget()
+		
+		w.setText( "12" )
+		w.setCursorPosition( 1 )
+		
+		w.insertText( "abc" )
+		self.assertEqual( w.getText(), "1abc2" )
+			
 if __name__ == "__main__":
 	unittest.main()

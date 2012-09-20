@@ -63,7 +63,15 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	
 	def setText( self, text ) :
 	
+		if text == self.getText() :
+			return
+			
 		return self._qtWidget().setPlainText( text )
+	
+	## Inserts at the current cursor position.
+	def insertText( self, text ) :
+	
+		self._qtWidget().insertPlainText( text )
 	
 	def appendText( self, text ) :
 	
@@ -103,6 +111,22 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			QtGui.QTextOption.WrapAnywhere : self.WrapMode.Character,
 			QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,
 		}[self._qtWidget().wordWrapMode()]
+	
+	def setCursorPosition( self, position ) :
+	
+		cursor = self._qtWidget().textCursor()
+		cursor.setPosition( position )
+		self._qtWidget().setTextCursor( cursor )
+		
+	def getCursorPosition( self ) :
+	
+		return self._qtWidget().textCursor().position()
+	
+	def cursorPositionAt( self, position ) :
+	
+		return self._qtWidget().cursorForPosition(
+			QtCore.QPoint( position[0], position[1] )
+		).position()
 		
 	def selectedText( self ) :
 	
@@ -125,6 +149,30 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			self._qtWidget().textChanged.connect( Gaffer.WeakMethod( self.__textChanged ) )
 
 		return self.__textChangedSignal
+		
+	## \todo Should this be at the Widget level?
+	# QWidgets aren't focussable by default so it's
+	# up for debate. setFocussed( True ) could make
+	# them focussable, but then the question is should
+	# setFocussed( False ) make them unfocussable again?
+	# Or maybe the first connection to keyPressSignal() should
+	# make them focussable?
+	## \todo If we don't move this to Widget, then
+	# at least make TextWidget match this interface (it
+	# currently has grabFocus()) 
+	def setFocussed( self, focussed ) :
+	
+		if focussed == self.getFocussed() :
+			return
+			
+		if focussed :
+			self._qtWidget().setFocus()
+		else :
+			self._qtWidget().clearFocus()
+	
+	def getFocussed( self ) :
+	
+		return self._qtWidget().hasFocus()
 	
 	## A signal emitted when the widget loses focus.
 	def editingFinishedSignal( self ) :
