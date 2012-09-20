@@ -40,6 +40,7 @@
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/WorldBlock.h"
+#include "IECore/VectorTypedData.h"
 
 #include "IECoreGL/Renderer.h"
 #include "IECoreGL/Scene.h"
@@ -152,6 +153,20 @@ IECoreGL::State *RenderableGadget::baseState()
 	return m_baseState.get();
 }
 
+std::string RenderableGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	std::vector<IECoreGL::HitRecord> selection;
+	{
+		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection );
+		m_scene->render( m_baseState );
+	}
+	if( !selection.size() )
+	{
+		return "";
+	}
+	return selection[0].name.value();
+}
+
 RenderableGadget::Selection &RenderableGadget::getSelection()
 {
 	return m_selection;
@@ -187,15 +202,11 @@ bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		return false;
 	}
 	
-	std::vector<IECoreGL::HitRecord> selection;
-	{
-		ViewportGadget::SelectionScope selectionScope( event.line, this, selection );
-		m_scene->render( m_baseState );
-	}
+	std::string objectUnderMouse = objectAt( event.line );
 
 	bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 	bool selectionChanged = false;
-	if( !selection.size() )
+	if( objectUnderMouse == "" )
 	{
 		// background click - clear the selection unless
 		// shift is held in which case we might be starting
@@ -208,14 +219,13 @@ bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	}
 	else
 	{
-		const std::string &name = selection[0].name.value();
-		bool nameSelectedAlready = m_selection.find( name ) != m_selection.end();
+		bool objectSelectedAlready = m_selection.find( objectUnderMouse ) != m_selection.end();
 		
-		if( nameSelectedAlready )
+		if( objectSelectedAlready )
 		{
 			if( shiftHeld )
 			{
-				m_selection.erase( name );
+				m_selection.erase( objectUnderMouse );
 				selectionChanged = true;
 			}
 		}
@@ -225,7 +235,7 @@ bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			{
 				m_selection.clear();
 			}
-			m_selection.insert( name );
+			m_selection.insert( objectUnderMouse );
 			selectionChanged = true;
 		}
 	}
@@ -246,16 +256,31 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 		return false;
 	}
 	
-	m_dragStartPosition = m_lastDragPosition = event.line.p0;
-	m_dragSelecting = true;
-	renderRequestSignal()( this );
-	
-	return this;
+	std::string objectUnderMouse = objectAt( event.line );
+	if( objectUnderMouse == "" )
+	{
+		// drag to select
+		m_dragStartPosition = m_lastDragPosition = event.line.p0;
+		m_dragSelecting = true;
+		renderRequestSignal()( this );
+		return this;
+	}
+	else
+	{
+		if( m_selection.find( objectUnderMouse ) != m_selection.end() )
+		{
+			// drag the selection somewhere
+			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
+			dragData->writable().insert( dragData->writable().end(), m_selection.begin(), m_selection.end() );
+			return dragData;
+		}
+	}
+	return 0;
 }
 
 bool RenderableGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
-	return event.sourceGadget == this;
+	return event.sourceGadget == this && event.data == this;
 }
 
 bool RenderableGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
@@ -267,6 +292,11 @@ bool RenderableGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
+	if( !m_dragSelecting )
+	{
+		return false;
+	}
+	
 	m_dragSelecting = false;
 
 	std::vector<IECoreGL::HitRecord> selection;
@@ -295,7 +325,7 @@ bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	renderRequestSignal()( this );
 	return true;
 }
-		
+
 void RenderableGadget::applySelection( IECoreGL::Group *group )
 {
 	if( !group )

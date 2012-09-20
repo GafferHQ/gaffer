@@ -79,6 +79,10 @@ class RenderableGadget : public Gadget
 		/// change the display style.
 		IECoreGL::State *baseState();
 		
+		/// Returns the name of the frontmost object intersecting the specified line
+		/// through gadget space, or "" if there is no such object.
+		std::string objectAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
+		
 		/// @name Selection
 		/// The RenderableGadget maintains a set of selected object, based
 		/// on object name. The user can manipulate the selection with the

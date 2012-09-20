@@ -69,6 +69,10 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__splittable.append( self.__inputWidget )
 	
 		self.__inputWidgetActivatedConnection = self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+		self.__inputWidgetDragEnterConnection = self.__inputWidget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__inputWidgetDragMoveConnection = self.__inputWidget.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.__inputWidgetDragLeaveConnection = self.__inputWidget.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__inputWidgetDropConnection = self.__inputWidget.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		self.__execConnection = self.scriptNode().scriptExecutedSignal().connect( Gaffer.WeakMethod( self.__execSlot ) )
 		self.__evalConnection = self.scriptNode().scriptEvaluatedSignal().connect( Gaffer.WeakMethod( self.__evalSlot ) )
@@ -108,4 +112,33 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		
 		return True
 		
+	def __dragEnter( self, widget, event ) :
+	
+		if isinstance( event.data, ( IECore.StringData, IECore.StringVectorData ) ) :
+			self.__inputWidget.setFocussed( True )
+			return True
+			
+		return False
+		
+	def __dragMove( self, widget, event ) :
+	
+		cursorPosition = self.__inputWidget.cursorPositionAt( event.line.p0 )
+		self.__inputWidget.setCursorPosition( cursorPosition )
+	
+		return True
+
+	def __dragLeave( self, widget, event ) :
+	
+		self.__inputWidget.setFocussed( False )
+		
+	def __drop( self, widget, event ) :
+	
+		textToInsert = ""
+		if isinstance( event.data, IECore.StringVectorData ) :
+			textToInsert = repr( list( event.data ) )
+		else :
+			textToInsert = str( event.data )
+		
+		self.__inputWidget.insertText( textToInsert )
+				
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
