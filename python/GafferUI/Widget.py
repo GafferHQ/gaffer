@@ -1626,24 +1626,30 @@ class _EventFilter( QtCore.QObject ) :
 		
 		if candidateWidget is self.__dragDropEvent.destinationWidget :
 			return
-		
-		previousDestinationWidget = self.__dragDropEvent.destinationWidget
+				
+		newDestinationWidget = None
 		if candidateWidget is not None :
 			while candidateWidget is not None :
 				if candidateWidget._dragEnterSignal is not None :
 					p = candidateWidget._qtWidget().mapFromGlobal( QtGui.QCursor.pos() )
 					self.__dragDropEvent.line = self.__positionToLine( p )
 					if candidateWidget._dragEnterSignal( candidateWidget, self.__dragDropEvent ) :
-						self.__dragDropEvent.destinationWidget = candidateWidget
+						newDestinationWidget = candidateWidget
 						break
 				candidateWidget = candidateWidget.parent()
-		else :
-			if self.__dragDropEvent.destinationWidget is not self.__dragDropEvent.sourceWidget :
-				self.__dragDropEvent.destinationWidget = None
 		
-		if previousDestinationWidget is not self.__dragDropEvent.destinationWidget :
+		if newDestinationWidget is None :
+			if self.__dragDropEvent.destinationWidget is self.__dragDropEvent.sourceWidget :
+				# we allow the source widget to keep a hold of the drag even when outside
+				# its borders, so that we can do intuitive drag-to-zoom and sliders that
+				# go outside their displayed range.
+				newDestinationWidget = self.__dragDropEvent.destinationWidget
+								
+		if newDestinationWidget is not self.__dragDropEvent.destinationWidget :
+			previousDestinationWidget = self.__dragDropEvent.destinationWidget
+			self.__dragDropEvent.destinationWidget = newDestinationWidget
 			if previousDestinationWidget is not None and previousDestinationWidget._dragLeaveSignal is not None :
-				p = candidateQWidget.mapFromGlobal( QtGui.QCursor.pos() )
+				p = previousDestinationWidget._qtWidget().mapFromGlobal( QtGui.QCursor.pos() )
 				self.__dragDropEvent.line = self.__positionToLine( p )
 				previousDestinationWidget._dragLeaveSignal( previousDestinationWidget, self.__dragDropEvent )	
 
