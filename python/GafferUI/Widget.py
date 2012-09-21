@@ -1365,23 +1365,7 @@ class _EventFilter( QtCore.QObject ) :
 		elif qEventType==qEvent.MouseMove :
 		
 			return self.__mouseMove( qObject, qEvent )
-		
-		elif qEventType==qEvent.DragEnter :
-		
-			return self.__dragEnter( qObject, qEvent )	
-		
-		elif qEventType==qEvent.DragMove :
-		
-			return self.__dragMove( qObject, qEvent )
-		
-		elif qEventType==qEvent.DragLeave :
-		
-			return self.__dragLeave( qObject, qEvent )
-			
-		elif qEventType==qEvent.Drop :
-		
-			return self.__drop( qObject, qEvent )
-		
+				
 		elif qEventType==qEvent.Enter :
 				
 			return self.__enter( qObject, qEvent )
