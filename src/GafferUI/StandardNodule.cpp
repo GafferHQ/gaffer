@@ -56,7 +56,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
-	:	Nodule( plug ), m_hovering( false ), m_dragging( false )
+	:	Nodule( plug ), m_hovering( false ), m_draggingConnection( false )
 {
 	enterSignal().connect( boost::bind( &StandardNodule::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &StandardNodule::leave, this, ::_1, ::_2 ) );
@@ -81,7 +81,7 @@ Imath::Box3f StandardNodule::bound() const
 
 void StandardNodule::doRender( const Style *style ) const
 {
-	if( m_dragging )
+	if( m_draggingConnection )
 	{
 		int renderMode = GL_RENDER;
 		glGetIntegerv( GL_RENDER_MODE, &renderMode );
@@ -128,7 +128,6 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
-	m_dragging = true;
 	m_dragPosition = event.line.p0;
 	renderRequestSignal()( this );
 	return plug();
@@ -138,6 +137,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( event.sourceGadget == this )
 	{
+		m_draggingConnection = true;
 		return true;
 	}
 	
@@ -154,6 +154,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 			V3f centre = V3f( 0 ) * fullTransform();
 			centre = centre * sourceNodule->fullTransform().inverse();
 			sourceNodule->m_dragPosition = centre;
+			sourceNodule->m_draggingConnection = true;
 		}
 		renderRequestSignal()( this );
 		return true;
@@ -171,17 +172,22 @@ bool StandardNodule::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( event.sourceGadget != this )
+	if( this != event.sourceGadget )
 	{
 		m_hovering = false;
-		renderRequestSignal()( this );
 	}
+	else if( !event.destinationGadget || !event.destinationGadget->isInstanceOf( Nodule::staticTypeId() ) )
+	{
+		m_draggingConnection = false;
+	}
+	
+	renderRequestSignal()( this );
 	return true;
 }
 
 bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
-	m_dragging = false;
+	m_draggingConnection = false;
 	m_hovering = false;
 	renderRequestSignal()( this );
 	return true;

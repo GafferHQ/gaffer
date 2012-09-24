@@ -92,6 +92,7 @@ void GraphGadget::constructCommon( Gaffer::SetPtr graphSet )
 	dragBeginSignal().connect( boost::bind( &GraphGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &GraphGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &GraphGadget::dragMove, this, ::_1, ::_2 ) );
+	dragLeaveSignal().connect( boost::bind( &GraphGadget::dragLeave, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
 
 	setGraphSet( graphSet );
@@ -324,8 +325,21 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 
 bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
+	V3f i;
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return false;
+	}
+
 	if( event.sourceGadget == this )
 	{
+		V2f pos = V2f( i.x, i.y );
+		if( event.data->isInstanceOf( Gaffer::Set::staticTypeId() ) )
+		{
+			offsetNodes( static_cast<Gaffer::Set *>( event.data.get() ), pos - m_lastDragPosition );
+		}
+		m_lastDragPosition = pos;
+		renderRequestSignal()( this );		
 		return true;
 	}
 	
@@ -349,23 +363,9 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		// we're dragging some nodes around
 		V2f pos = V2f( i.x, i.y );
-		V2f delta = pos - m_lastDragPosition;
-		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-		{
-			NodeGadgetPtr nodeGadget = runTimeCast<NodeGadget>( *it );
-			if( nodeGadget )
-			{
-				Gaffer::NodePtr node = nodeGadget->node();
-				if( m_scriptNode->selection()->contains( node ) )
-				{
-					Gaffer::FloatPlugPtr xp = node->getChild<Gaffer::FloatPlug>( "__uiX" );
-					Gaffer::FloatPlugPtr yp = node->getChild<Gaffer::FloatPlug>( "__uiY" );
-					xp->setValue( xp->getValue() + delta.x );
-					yp->setValue( yp->getValue() + delta.y );
-				}
-			}
-		}
+		offsetNodes( static_cast<Gaffer::Set *>( event.data.get() ), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
+		renderRequestSignal()( this );
 		return true;
 	}
 	else
@@ -379,6 +379,25 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		
 	assert( 0 ); // shouldn't get here
 	return false;
+}
+
+bool GraphGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
+{
+	V3f i;
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return false;
+	}
+
+	if( event.data->isInstanceOf( Gaffer::Set::staticTypeId() ) )
+	{
+		// we've been dragging some nodes around, but now they've been accepted
+		// by some other destination. put the nodes back where they came from.
+		offsetNodes( static_cast<Gaffer::Set *>( event.data.get() ), m_dragStartPosition - m_lastDragPosition );
+		m_lastDragPosition = m_dragStartPosition;		
+	}
+	
+	return true;
 }
 
 bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
@@ -420,6 +439,27 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	}
 
 	return true;
+}
+
+void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
+{
+	for( size_t i = 0, e = nodes->size(); i < e; i++ )
+	{
+		Gaffer::Node *node = runTimeCast<Gaffer::Node>( nodes->member( i ).get() );
+		if( !node )
+		{
+			continue;
+		}
+		
+		NodeGadget *gadget = nodeGadget( node );
+		if( gadget )
+		{			
+			Gaffer::FloatPlug *xp = node->getChild<Gaffer::FloatPlug>( "__uiX" );
+			Gaffer::FloatPlug *yp = node->getChild<Gaffer::FloatPlug>( "__uiY" );
+			xp->setValue( xp->getValue() + offset.x );
+			yp->setValue( yp->getValue() + offset.y );
+		}
+	}
 }
 
 void GraphGadget::updateGraph()

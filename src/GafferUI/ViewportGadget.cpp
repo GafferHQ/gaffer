@@ -69,6 +69,7 @@ ViewportGadget::ViewportGadget( GadgetPtr child )
 	dragBeginSignal().connect( boost::bind( &ViewportGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &ViewportGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &ViewportGadget::dragMove, this, ::_1, ::_2 ) );
+	dragLeaveSignal().connect( boost::bind( &ViewportGadget::dragLeave, this, ::_1, ::_2 ) );
 	dropSignal().connect( boost::bind( &ViewportGadget::drop, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &ViewportGadget::dragEnd, this, ::_1, ::_2 ) );
 	wheelSignal().connect( boost::bind( &ViewportGadget::wheel, this, ::_1, ::_2 ) );
@@ -390,15 +391,15 @@ bool ViewportGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		std::vector<GadgetPtr> gadgets;
 		gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
-	
-		GadgetPtr handler = 0;
-		bool result = dispatchEvent( gadgets, &Gadget::dragEnterSignal, event, handler );
-		if( result )
+		
+		GadgetPtr dragDestination = updatedDragDestination( gadgets, event );
+		if( dragDestination )
 		{
-			const_cast<DragDropEvent &>( event ).destinationGadget = handler;
+			const_cast<DragDropEvent &>( event ).destinationGadget = dragDestination;
+			return true;
 		}
-		return result;
 	}
+	return false;
 }
 
 bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
@@ -418,11 +419,12 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		GadgetPtr updatedDestination = updatedDragDestination( gadgets, event );
 		if( updatedDestination != event.destinationGadget )
 		{
-			if( event.destinationGadget )
-			{
-				dispatchEvent( event.destinationGadget, &Gadget::dragLeaveSignal, event );
-			}
+			GadgetPtr previousDestination = event.destinationGadget;
 			const_cast<DragDropEvent &>( event ).destinationGadget = updatedDestination;
+			if( previousDestination )
+			{
+				dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
+			}
 		}
 		
 		// dispatch drag move to current destination
@@ -458,8 +460,15 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 		}
 	}
 	
-	// if there's nothing under the mouse that wants the drag, keep
-	// the existing destination if it's also the source.
+	// there's nothing under the mouse that wants the drag. if the event source
+	// is a gadget, and we're the owner of that gadget, then there's some more
+	// things to try, but otherwise we should get out now.
+	if( !event.sourceGadget || !this->isAncestorOf( event.sourceGadget ) )
+	{
+		return 0;
+	}
+	
+	// keep the existing destination if it's also the source.
 	if( event.destinationGadget && event.destinationGadget == event.sourceGadget )
 	{
 		return event.destinationGadget;
@@ -477,6 +486,17 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	
 	// and if that failed, we have no current destination
 	return 0;
+}
+
+bool ViewportGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( event.destinationGadget )
+	{
+		GadgetPtr previousDestination = event.destinationGadget;
+		const_cast<DragDropEvent &>( event ).destinationGadget = 0;
+		dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
+	}
+	return true;
 }
 
 bool ViewportGadget::drop( GadgetPtr gadget, const DragDropEvent &event )

@@ -112,7 +112,9 @@ class GraphGadget : public ContainerGadget
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		void offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset );
 		
 		void updateGraph();
 		void addNodeGadget( Gaffer::Node *node );

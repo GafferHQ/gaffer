@@ -80,7 +80,7 @@ class StandardNodule : public Nodule
 	private :
 
 		bool m_hovering;
-		bool m_dragging;
+		bool m_draggingConnection;
 		Imath::V3f m_dragPosition;
 
 		static NoduleTypeDescription<StandardNodule> g_noduleTypeDescription;

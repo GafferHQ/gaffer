@@ -114,7 +114,16 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		
 	def __dragEnter( self, widget, event ) :
 	
+		accept = False
 		if isinstance( event.data, ( IECore.StringData, IECore.StringVectorData ) ) :
+			accept = True
+		elif isinstance( event.data, Gaffer.GraphComponent ) :
+			if self.scriptNode().isAncestorOf( event.data ) :
+				accept = True
+		elif isinstance( event.data, Gaffer.Set ) :
+			accept = True
+		
+		if accept :
 			self.__inputWidget.setFocussed( True )
 			return True
 			
@@ -132,13 +141,22 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__inputWidget.setFocussed( False )
 		
 	def __drop( self, widget, event ) :
+			
+		self.__inputWidget.insertText( self.__dropText( event.data ) )
 	
-		textToInsert = ""
-		if isinstance( event.data, IECore.StringVectorData ) :
-			textToInsert = repr( list( event.data ) )
+	def __dropText( self, data ) :
+	
+		if isinstance( data, IECore.StringVectorData ) :
+			return repr( list( data ) )
+		elif isinstance( data, Gaffer.GraphComponent ) :
+			return "getChild( '" + data.relativeName( self.scriptNode() ) + "' )"
+		elif isinstance( data, Gaffer.Set ) :
+			if len( data ) == 1 :
+				return self.__dropText( data[0] )
+			else :
+				return "[ " + ", ".join( [ self.__dropText( d ) for d in data ] ) + " ]"
 		else :
-			textToInsert = str( event.data )
-		
-		self.__inputWidget.insertText( textToInsert )
+			return str( event.data )
+
 				
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )

@@ -8,6 +8,8 @@
 
 * Added insertText, setCursorPosition, getCursorPosition, cursorPositionAt, setFocussed and getFocussed methods to MultiLineTextWidget.
 
+* ScriptEditor now accepts drops for scene objects, plugs, and nodes, which can be dragged from the Viewer and the GraphEditor.
+
 0.35.5
 ------
 

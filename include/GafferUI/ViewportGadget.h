@@ -139,6 +139,7 @@ class ViewportGadget : public IndividualContainer
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		bool wheel( GadgetPtr gadget, const ButtonEvent &event );
