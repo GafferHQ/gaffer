@@ -43,15 +43,20 @@ import GafferUI
 
 class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, collapsible=True, label=None, **kw ) :
+	## Possible values for collapsed are :
+	#
+	#	True  : use CollapsibleContainer which starts off collapsed
+	#	False : use CollapsibleContainer which starts off opened
+	#	None  : don't use CollapsibleContainer
+	def __init__( self, plug, collapsed=True, label=None, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		
 		self.__collapsible = None
-		if collapsible :
+		if collapsed is not None :
 			self.__collapsible = GafferUI.Collapsible(
 				label if label else IECore.CamelCase.toSpaced( plug.getName() ),
-				collapsed = True,
+				collapsed = collapsed,
 			)
 			self.__collapsible.setChild( self.__column )
 				
@@ -66,7 +71,20 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__plugRemovedConnection = plug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 		self.__childrenChangedPending = False
 
+		# arrange to build the rest of the ui in a deferred fashion. this means that we will be
+		# fully constructed when we call _childPlugWidget etc, rather than expecting derived
+		# class' implementations to work even before their constructor has completed.
+		# it also means we don't pay the cost of building huge uis upfront, and rather do it incrementally
+		# as the user opens up sections. for non-collapsed uis, we build when a parent is received, which
+		# allows the top level window to get the sizing right, and for collapsed uis we build when the
+		# the ui first becomes visible due to being opened.
+		if collapsed == True :
+			self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		else :
+			self.__parentChangedConnection = self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+				
 		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		
 		self.__childPlugUIs = {} # mapping from child plug name to PlugWidget
 
 	def hasLabel( self ) :
@@ -149,6 +167,14 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__updateChildPlugUIs()
 			self.__visibilityChangedConnection = None # only need to build once
 	
+	def __parentChanged( self, widget ) :
+	
+		assert( widget is self )
+		
+		if not len( self.__column ) :
+			self.__updateChildPlugUIs()
+			self.__parentChangedConnection = None # only need to build once			
+
 	def __childAddedOrRemoved( self, *unusedArgs ) :
 	
 		# typically many children are added and removed at once. we don't

@@ -128,6 +128,7 @@ class Widget( object ) :
  		self._wheelSignal = None
  		self._visibilityChangedSignal = None
  		self._contextMenuSignal = None
+ 		self._parentChangedSignal = None
  		
  		self.__visible = not isinstance( self, GafferUI.Window )
  		
@@ -419,6 +420,13 @@ class Widget( object ) :
 		if self._contextMenuSignal is None :
 			self._contextMenuSignal = GafferUI.WidgetSignal()
 		return self._contextMenuSignal
+
+	def parentChangedSignal( self ) :
+	
+		self.__ensureEventFilter()
+		if self._parentChangedSignal is None :
+			self._parentChangedSignal = GafferUI.WidgetSignal()
+		return self._parentChangedSignal
 		
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
@@ -1318,7 +1326,8 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.Wheel,			
 			QtCore.QEvent.Show,			
 			QtCore.QEvent.Hide,
-			QtCore.QEvent.ContextMenu,		
+			QtCore.QEvent.ContextMenu,	
+			QtCore.QEvent.ParentChange,	
 		) )
 	
 	def eventFilter( self, qObject, qEvent ) :
@@ -1381,6 +1390,10 @@ class _EventFilter( QtCore.QObject ) :
 		elif qEventType==qEvent.ContextMenu :
 		
 			return self.__contextMenu( qObject, qEvent )
+			
+		elif qEventType==qEvent.ParentChange :
+		
+			return self.__parentChange( qObject, qEvent )	
 			
 		return False
 
@@ -1548,6 +1561,21 @@ class _EventFilter( QtCore.QObject ) :
 			return widget._contextMenuSignal( widget )
 
 		return False
+
+	def __parentChange( self, qObject, qEvent ) :
+			
+		## \todo It might be nice to investigate having the
+		# the signature for this signal match that of
+		# GraphComponent::parentChangedSignal(), which takes
+		# an additional argument for the previous parent. We
+		# may be able to get the value for that from a
+		# ParentAboutToChange event.
+		widget = Widget._owner( qObject )
+		if widget._parentChangedSignal is not None :
+			widget._parentChangedSignal( widget )
+			return True
+			
+		return False	
 
 	# Although Qt has a drag and drop system, we ignore it and implement our
 	# own. This isn't ideal. The primary reasons for implementing our own are :

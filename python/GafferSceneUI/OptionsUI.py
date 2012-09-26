@@ -37,4 +37,4 @@
 import GafferUI
 import GafferScene
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Options.staticTypeId(), "options", GafferUI.CompoundDataPlugValueWidget, collapsible=False )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Options.staticTypeId(), "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

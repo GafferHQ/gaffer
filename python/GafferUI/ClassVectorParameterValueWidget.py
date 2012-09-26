@@ -54,9 +54,9 @@ class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
 
-	def __init__( self, parameterHandler, collapsible ) :
+	def __init__( self, parameterHandler, collapsed ) :
 
-		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsible )
+		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
 
 		self.__buttonRow = None
 
@@ -222,7 +222,7 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 		GafferUI.CompoundPlugValueWidget.__init__(
 			self,
 			parameterHandler.plug(),
-			collapsible = False,
+			collapsed = None,
 			**kw
 		)
 		

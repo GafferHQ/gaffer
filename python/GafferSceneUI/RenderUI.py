@@ -40,10 +40,6 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-def __createParameterWidget( plug ) :
-
-	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
-
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Render.staticTypeId(), "in", None )
 
 GafferUI.Nodule.registerNodule( GafferScene.Render.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )

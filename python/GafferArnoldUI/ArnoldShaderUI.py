@@ -108,4 +108,4 @@ def __plugValueWidgetCreator( plug ) :
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 	
 GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
-GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsible=False )
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )

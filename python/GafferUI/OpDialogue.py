@@ -53,9 +53,6 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 		
-		# Setting a minimum size
-		self._qtWidget().setMinimumSize(600, 450)
-		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( opInstance )
 

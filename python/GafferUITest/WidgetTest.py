@@ -42,6 +42,8 @@ import sys
 import IECore
 
 import Gaffer
+import GafferTest
+
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -303,6 +305,9 @@ class WidgetTest( unittest.TestCase ) :
 			( "enterSignal", GafferUI.WidgetSignal ),
 			( "leaveSignal", GafferUI.WidgetSignal ),
 			( "wheelSignal", GafferUI.WidgetEventSignal ),				
+			( "visibilityChangedSignal", GafferUI.WidgetSignal ),				
+			( "contextMenuSignal", GafferUI.WidgetSignal ),				
+			( "parentChangedSignal", GafferUI.WidgetSignal ),				
 		] :
 		
 			self.failUnless( isinstance( getattr( w, s[0] )(), s[1] ) )
@@ -326,6 +331,22 @@ class WidgetTest( unittest.TestCase ) :
 		self.assertEqual( bb.size(), bbw.size() )
 		self.assertEqual( bbw.min, bb.min - wb.min )
 		self.assertEqual( b.size(), bb.size() )
+			
+	def testParentChangedSignal( self ) :
+	
+		w = TestWidget()
+		window = GafferUI.Window()
+		
+		cs = GafferTest.CapturingSlot( w.parentChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		window.setChild( w )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( w, ) )
+		
+		window.setChild( None )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[1], ( w, ) )
 		
 if __name__ == "__main__":
 	unittest.main()

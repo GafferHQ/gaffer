@@ -60,12 +60,18 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			with IECore.IgnoredExceptions( KeyError ) :
 				collapsible = parameterHandler.parameter().userData()["UI"]["collapsible"].value
 		
+		collapsed = None
+		if collapsible :
+			collapsed = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				collapsed = parameterHandler.parameter().userData()["UI"]["collapsed"].value
+
 		if _plugValueWidgetClass is None :
 			_plugValueWidgetClass = _PlugValueWidget
 			
 		GafferUI.ParameterValueWidget.__init__(
 			self,
-			_plugValueWidgetClass( parameterHandler, collapsible ),
+			_plugValueWidgetClass( parameterHandler, collapsed ),
 			parameterHandler,
 			**kw
 		)
@@ -75,9 +81,9 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 # deals with dynamically adding and removing children etc.
 class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-	def __init__( self, parameterHandler, collapsible ) :
+	def __init__( self, parameterHandler, collapsed ) :
 	
-		GafferUI.CompoundPlugValueWidget.__init__( self, parameterHandler.plug(), collapsible )
+		GafferUI.CompoundPlugValueWidget.__init__( self, parameterHandler.plug(), collapsed )
 
 		self.__parameterHandler = parameterHandler
 		

@@ -54,9 +54,9 @@ class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
 
-	def __init__( self, parameterHandler, collapsible ) :
+	def __init__( self, parameterHandler, collapsed ) :
 
-		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsible )
+		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
 
 	def _headerWidget( self ) :
 	

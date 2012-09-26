@@ -49,7 +49,7 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 	def __init__( self, plug ) :
 	
-		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsible = False )
+		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed = None )
 
 		self.__footerWidget = None
 
@@ -83,7 +83,7 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		row.append( GafferUI.PlugValueWidget.create( childPlug["type"] ) )
 		row.append( GafferUI.PlugValueWidget.create( childPlug["data"] ) )
 		
-		parameterList = GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsible=False )
+		parameterList = GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
 		parameterList.setVisible( False )
 		column.append( parameterList )
 			

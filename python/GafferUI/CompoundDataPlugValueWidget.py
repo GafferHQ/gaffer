@@ -41,9 +41,9 @@ import GafferUI
 
 class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-	def __init__( self, plug, collapsible=True, label=None, **kw ) :
+	def __init__( self, plug, collapsed=True, label=None, **kw ) :
 
-		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsible, label, **kw )
+		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, **kw )
 
 		self.__footerWidget = None
 

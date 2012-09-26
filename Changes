@@ -10,6 +10,14 @@
 
 * ScriptEditor now accepts drops for scene objects, plugs, and nodes, which can be dragged from the Viewer and the GraphEditor.
 
+* Added Widget.parentChangedSignal(), which does what you'd expect from the name.
+
+* Improved default sizing for OpDialogue.
+
+* Fixed CompoundParameter UIs to respect the ["UI"]["collapsed"] user data entry.
+
+* CompoundPlugValueWidget now has a collapsed constructor argument to replace the previous collapsible argument. This takes None, True or False as values, allowing the ui to be created as non-collapsible, collapsed or expanded.
+
 0.35.5
 ------
 
