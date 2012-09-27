@@ -45,47 +45,61 @@ import GafferUI
 class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
-		
+					
+		GafferUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, _plugValueWidgetClass=_PlugValueWidget, **kw )
+
+class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
+
+	def __init__( self, parameterHandler, collapsed ) :
+
+		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
+
 		self.__vectorDataWidget = None
-			
-		GafferUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, **kw )
-				
-		self.__plugSetConnection = parameterHandler.plug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugChanged ) )
-			
-	def _buildChildParameterUIs( self, column ) :
+
+	def _headerWidget( self ) :
 	
-		del column[:]
-	
-		header = [ IECore.CamelCase.toSpaced( x ) for x in self.parameterHandler().parameter().keys() ]
+		if self.__vectorDataWidget is not None :
+			return self.__vectorDataWidget
+			
+		header = [ IECore.CamelCase.toSpaced( x ) for x in self._parameter().keys() ]
 	
 		self.__vectorDataWidget = GafferUI.VectorDataWidget( header = header )
 		self.__dataChangedConnection = self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
-		column.append( self.__vectorDataWidget )
+		self._updateFromPlug()
+		
+		return self.__vectorDataWidget
+				
+	def _childPlugs( self ) :
 
-		self.__updateFromPlug()
-	
-	def __updateFromPlug( self ) :
-	
-		if self.__vectorDataWidget is None :
-			return
+		# because we represent everything in the header we don't
+		# need any plug widgets made by the base class.
+		return []	
+							
+	def _updateFromPlug( self ) :
+				
+		GafferUI.CompoundParameterValueWidget._PlugValueWidget._updateFromPlug( self )
 	
 		data = []
-		for plug in self.parameterHandler().plug().children() :
-			data.append( plug.getValue() )
+		for plug in self._parameterHandler().plug().children() :
+			plugData = plug.getValue()
+			if len( data ) and len( plugData ) != len( data[0] ) :
+				# in __dataChanged we have to update the child plug values
+				# one at a time. when adding or removing rows, this means that the
+				# columns will have differing lengths until the last plug
+				# has been set. in this case we shortcut ourselves, and wait
+				# for the final plug to be set before updating the VectorDataWidget.
+				return
+			data.append( plugData )
 			
 		self.__vectorDataWidget.setData( data )
-		
-	def __plugChanged( self, plug ) :
-	
-		if plug.parent().isSame( self.parameterHandler().plug() ) :
-			self.__updateFromPlug()
-			
+					
 	def __dataChanged( self, vectorDataWidget ) :
 	
 		data = vectorDataWidget.getData()
-		with Gaffer.BlockedConnection( self.__plugSetConnection ) :
-			for d, p in zip( data, self.parameterHandler().plug().children() ) :
+		
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			for d, p in zip( data, self._parameterHandler().plug().children() ) :
 				p.setValue( d )
 				
 GafferUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter.staticTypeId(), CompoundVectorParameterValueWidget )
