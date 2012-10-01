@@ -73,7 +73,7 @@ class ApplicationRootWrapper : public ApplicationRoot, public IECorePython::Wrap
 			
 			// serialise everything
 			Serialiser s( preferences() );
-			serialisePlugs( s, preferences(), "application[\"preferences\"]" );
+			serialisePlugs( s, preferences(), "application.root()[\"preferences\"]" );
 			
 			// make the directory for the preferences file if it doesn't exist yet
 			boost::filesystem::path path( fileName );

@@ -26,6 +26,8 @@
 
 * Added ValuePlug::setCacheMemoryLimit() and ValuePlug::getCacheMemoryLimit(), to allow management of cache memory usage. Added startup/gui/cache.py to expose this to the user via the preferences.
 
+* Fixed bug which prevented user preferences from loading.
+
 0.35.5
 ------
 

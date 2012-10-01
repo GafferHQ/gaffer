@@ -47,9 +47,16 @@ class ApplicationRootTest( unittest.TestCase ) :
 
 	def testPreferences( self ) :
 	
-		a = Gaffer.ApplicationRoot( "testApp" )
+		class testApp( Gaffer.Application ) :
 		
-		p = a["preferences"]
+			def __init__( self ) :
+			
+				Gaffer.Application.__init__( self )
+	
+		application = testApp()
+		applicationRoot = application.root()
+		
+		p = applicationRoot["preferences"]
 		self.failUnless( isinstance( p, Gaffer.PreferencesNode ) )
 		
 		p["category1"] = Gaffer.CompoundPlug()
@@ -64,18 +71,18 @@ class ApplicationRootTest( unittest.TestCase ) :
 		p["category2"]["v"].setValue( IECore.V3f( 2, 3, 4 ) )
 				
 		self.failIf( os.path.exists( self.__defaultPreferencesFile ) )
-		a.savePreferences()
+		applicationRoot.savePreferences()
 		self.failUnless( os.path.exists( self.__defaultPreferencesFile ) )
 		
 		self.failIf( os.path.exists( self.__preferencesFile ) )
-		a.savePreferences( self.__preferencesFile )
+		applicationRoot.savePreferences( self.__preferencesFile )
 		self.failUnless( os.path.exists( self.__preferencesFile ) )
 
 		p["category1"]["i"].setValue( 1 )
 		p["category2"]["s"].setValue( "beef" )
 		p["category2"]["v"].setValue( IECore.V3f( -10 ) )
 	
-		executionContext = { "application" : a }
+		executionContext = { "application" : application }
 		execfile( self.__preferencesFile, executionContext, executionContext )
 	
 		self.assertEqual( p["category1"]["i"].getValue(), 10 )
