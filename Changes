@@ -28,6 +28,8 @@
 
 * Fixed bug which prevented user preferences from loading.
 
+* Improved drawing of very thin/small selection boxes - they had a tendency to disappear before.
+
 0.35.5
 ------
 

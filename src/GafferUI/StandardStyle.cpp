@@ -195,7 +195,10 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 
 void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 {
-	V2f cornerSizes = V2f( 5.0f ) / box.size();
+	V2f boxSize = box.size();
+	float cornerRadius = min( 5.0f, min( boxSize.x, boxSize.y ) / 2.0f );
+
+	V2f cornerSizes = V2f( cornerRadius ) / boxSize;
 	glUniform1i( m_bezierParameter, 0 );
 	glUniform1i( m_borderParameter, 1 );
 	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
