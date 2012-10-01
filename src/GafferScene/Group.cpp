@@ -65,8 +65,8 @@ Group::Group( const std::string &name )
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
 	addChild( new TransformPlug( "transform" ) );
 	
-	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out ) );
-	addChild( new Gaffer::ObjectPlug( "__inputMapping", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
+	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundObject() ) );
+	addChild( new Gaffer::ObjectPlug( "__inputMapping", Gaffer::Plug::In, new CompoundObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputMappingPlug()->setInput( mappingPlug() );
 	
 	plugInputChangedSignal().connect( boost::bind( &Group::plugInputChanged, this, ::_1 ) );

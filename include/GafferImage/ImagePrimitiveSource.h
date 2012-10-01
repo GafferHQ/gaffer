@@ -65,6 +65,7 @@ class ImagePrimitiveSource : public BaseType
 		const Gaffer::ObjectPlug *imagePrimitivePlug() const;
 
 		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		/// It is ok to return 0 if no ImagePrimitive is available.
 		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const = 0;		
 		
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

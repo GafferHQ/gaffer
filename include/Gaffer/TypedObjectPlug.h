@@ -63,11 +63,11 @@ class TypedObjectPlug : public ValuePlug
 
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TypedObjectPlug<T>, ValuePlug );
 
-		/// A copy of defaultValue is taken.
+		/// A copy of defaultValue is taken - it must not be null.
 		TypedObjectPlug(
-			const std::string &name = staticTypeName(),
-			Direction direction=In,
-			ConstValuePtr defaultValue = ValuePtr(),
+			const std::string &name,
+			Direction direction,
+			ConstValuePtr defaultValue,
 			unsigned flags = Default
 		);
 		virtual ~TypedObjectPlug();
@@ -75,14 +75,17 @@ class TypedObjectPlug : public ValuePlug
 		/// Accepts only instances of TypedObjectPlug<T>, or derived classes.
 		virtual bool acceptsInput( const Plug *input ) const;
 
-		ConstValuePtr defaultValue() const;
+		const ValueType *defaultValue() const;
 
+		/// A copy of value is taken - it must /not/ be null.
 		/// \undoable
 		/// \todo This is taking a copy - does that cause terrible performance?
 		/// I think the alternative would be to document that the caller must
 		/// under no circumstances modify value after calling setValue( value ).
 		void setValue( ConstValuePtr value );
-		/// Returns the value.
+		/// Returns the current value. Note that the returned value is not a copy
+		/// and may be shared with other Plugs and the cache - it is therefore
+		/// imperative that it not be modified in any way.
 		ConstValuePtr getValue() const;
 
 		virtual void setToDefault();
@@ -103,7 +106,6 @@ typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
 typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
 typedef TypedObjectPlug<IECore::V3fVectorData> V3fVectorDataPlug;
 typedef TypedObjectPlug<IECore::ObjectVector> ObjectVectorPlug;
-typedef TypedObjectPlug<IECore::Primitive> PrimitivePlug;
 typedef TypedObjectPlug<IECore::CompoundObject> CompoundObjectPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
@@ -113,7 +115,6 @@ IE_CORE_DECLAREPTR( FloatVectorDataPlug );
 IE_CORE_DECLAREPTR( StringVectorDataPlug );
 IE_CORE_DECLAREPTR( V3fVectorDataPlug );
 IE_CORE_DECLAREPTR( ObjectVectorPlug );
-IE_CORE_DECLAREPTR( PrimitivePlug );
 IE_CORE_DECLAREPTR( CompoundObjectPlug );
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
@@ -143,10 +144,6 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fVectorDataPlug> > Outp
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectVectorPlug> > ObjectVectorPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectVectorPlug> > InputObjectVectorPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectVectorPlug> > OutputObjectVectorPlugIterator;
-
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, PrimitivePlug> > PrimitivePlugIterator;
-typedef FilteredChildIterator<PlugPredicate<Plug::In, PrimitivePlug> > InputPrimitivePlugIterator;
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, PrimitivePlug> > OutputPrimitivePlugIterator;
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, CompoundObjectPlug> > CompoundObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, CompoundObjectPlug> > InputCompoundObjectPlugIterator;

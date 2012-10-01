@@ -50,7 +50,7 @@ class ReadNode( Gaffer.Node ) :
 		self.addChild( fileNamePlug )
 		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 		
-		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out )
+		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
 		self.addChild( resultPlug )
 		
 		self._init( inputs, dynamicPlugs )		

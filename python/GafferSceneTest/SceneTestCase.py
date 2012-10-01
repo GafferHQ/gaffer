@@ -56,7 +56,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
 	
 			unionOfTransformedChildBounds = IECore.Box3f()
-			childNames = scenePlug.childNames( scenePath ) or []
+			childNames = scenePlug.childNames( scenePath )
 			for childName in childNames :
 				
 				if scenePath == "/" :
@@ -76,9 +76,9 @@ class SceneTestCase( GafferTest.TestCase ) :
 				self.fail( "Bound ( %s ) does not contain children ( %s ) at %s" % ( thisBound, unionOfTransformedChildBounds, scenePath ) )
 
 		# check that the root doesn't have any properties it shouldn't
-		self.assertEqual( scenePlug.attributes( "/" ), None )
+		self.assertEqual( scenePlug.attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( scenePlug.transform( "/" ), IECore.M44f() )
-		self.assertEqual( scenePlug.object( "/" ), None )
+		self.assertEqual( scenePlug.object( "/" ), IECore.NullObject() )
 		
 		# then walk the scene to check the bounds
 		walkScene( "/" )

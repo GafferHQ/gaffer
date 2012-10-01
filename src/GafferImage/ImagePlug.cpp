@@ -79,7 +79,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		new StringVectorDataPlug(
 			"channelNames",
 			direction,
-			0,
+			new IECore::StringVectorData(),
 			flags
 		)
 	);
@@ -88,7 +88,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		new FloatVectorDataPlug(
 			"channelData",
 			direction,
-			0,
+			new IECore::FloatVectorData(),
 			flags
 		)
 	);

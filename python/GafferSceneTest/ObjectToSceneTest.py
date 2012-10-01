@@ -56,13 +56,13 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
 		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/" ), None )
+		self.assertEqual( objectToScene["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( objectToScene["out"].childNames( "/" ), IECore.StringVectorData( [ "object" ] ) )
 		
 		self.assertEqual( objectToScene["out"].bound( "/object" ), object.bound() )
 		self.assertEqual( objectToScene["out"].transform( "/object" ), IECore.M44f() )
 		self.assertEqual( objectToScene["out"].object( "/object" ), object )
-		self.assertEqual( objectToScene["out"].childNames( "/object" ), None )
+		self.assertEqual( objectToScene["out"].childNames( "/object" ), IECore.StringVectorData() )
 
 		self.assertSceneValid( objectToScene["out"] )		
 	

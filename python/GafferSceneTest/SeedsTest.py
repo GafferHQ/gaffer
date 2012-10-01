@@ -55,13 +55,13 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 				
 		self.assertEqual( s["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
 		self.assertEqual( s["out"].childNames( "/plane" ), IECore.StringVectorData( [ "seeds" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane/seeds" ), None )
+		self.assertEqual( s["out"].childNames( "/plane/seeds" ), IECore.StringVectorData() )
 
 		s["name"].setValue( "points" )
 		
 		self.assertEqual( s["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
 		self.assertEqual( s["out"].childNames( "/plane" ), IECore.StringVectorData( [ "points" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane/points" ), None )
+		self.assertEqual( s["out"].childNames( "/plane/points" ), IECore.StringVectorData() )
 	
 	def testObject( self ) :
 	

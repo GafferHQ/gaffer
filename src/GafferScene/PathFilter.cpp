@@ -52,7 +52,7 @@ PathFilter::PathFilter( const std::string &name )
 	:	Filter( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringVectorDataPlug( "paths", Plug::In, 0, Plug::Default ) );
+	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData(), Plug::Default ) );
 }
 
 PathFilter::~PathFilter()

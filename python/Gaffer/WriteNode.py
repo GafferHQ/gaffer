@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,7 +46,7 @@ class WriteNode( Gaffer.Node ) :
 	
 		Gaffer.Node.__init__( self, name )
 		
-		inPlug = Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In )
+		inPlug = Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject.defaultNullObject() )
 		self.addChild( inPlug )
 		
 		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
@@ -96,7 +96,7 @@ class WriteNode( Gaffer.Node ) :
 		if fileName :
 		
 			object = self["in"].getValue()
-			if object is not None :
+			if object != IECore.NullObject.defaultNullObject() :
 				
 				extension = os.path.splitext( fileName )[-1]
 				if self.__writer is not None and extension==self.__writerExtension and self.__writer.canWrite( object, fileName ) :

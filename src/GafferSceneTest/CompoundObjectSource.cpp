@@ -47,7 +47,7 @@ IE_CORE_DEFINERUNTIMETYPED( CompoundObjectSource )
 CompoundObjectSource::CompoundObjectSource( const std::string &name )
 	:	Source( name )
 {
-	addChild( new ObjectPlug( "in" ) );
+	addChild( new ObjectPlug( "in", Plug::In, new CompoundObject() ) );
 }
 
 CompoundObjectSource::~CompoundObjectSource()
@@ -99,12 +99,28 @@ Imath::M44f CompoundObjectSource::computeTransform( const ScenePath &path, const
 
 IECore::ConstCompoundObjectPtr CompoundObjectSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	return entryForPath( path )->member<CompoundObject>( "attributes" );
+	ConstCompoundObjectPtr a = entryForPath( path )->member<CompoundObject>( "attributes" );
+	if( a )
+	{
+		return a;
+	}
+	else
+	{
+		return outPlug()->attributesPlug()->defaultValue();
+	}
 }
 
 IECore::ConstObjectPtr CompoundObjectSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	return entryForPath( path )->member<Object>( "object" );
+	ConstObjectPtr o = entryForPath( path )->member<Object>( "object" );
+	if( o )
+	{
+		return o;
+	}
+	else
+	{
+		return outPlug()->objectPlug()->defaultValue();
+	}
 }
 
 IECore::ConstStringVectorDataPtr CompoundObjectSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
@@ -113,7 +129,7 @@ IECore::ConstStringVectorDataPtr CompoundObjectSource::computeChildNames( const 
 	ConstCompoundObjectPtr children = entry->member<CompoundObject>( "children" );
 	if( !children )
 	{
-		return 0;
+		return outPlug()->childNamesPlug()->defaultValue();
 	}
 	StringVectorDataPtr result = new StringVectorData;
 	for( CompoundObject::ObjectMap::const_iterator it = children->members().begin(); it!=children->members().end(); it++ )
@@ -125,7 +141,7 @@ IECore::ConstStringVectorDataPtr CompoundObjectSource::computeChildNames( const 
 
 IECore::ConstObjectVectorPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	return 0;
+	return outPlug()->globalsPlug()->defaultValue();
 }
 
 const IECore::CompoundObject *CompoundObjectSource::entryForPath( const ScenePath &path ) const

@@ -83,6 +83,9 @@ class ValuePlug::Computation
 				IECore::MurmurHash hash = m_resultPlug->hash();
 				if( g_valueCache.cached( hash ) )
 				{
+					/// \todo This is not threadsafe!
+					/// Can we resolve this by doing the compute in the getter
+					/// or having the getter return 0 for failure?
 					return g_valueCache.get( hash );
 				}
 				else
@@ -90,14 +93,14 @@ class ValuePlug::Computation
 					computeOrSetFromInput();
 					if( m_resultWritten )
 					{
-						g_valueCache.set( hash, m_resultValue, m_resultValue ? m_resultValue->memoryUsage() : 8 );
+						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
 					}
 				}
 			}
 			else
 			{
 				// plug has requested no caching, so we compute from scratch every
-				// time. cast is ok - see comments above.
+				// time.
 				computeOrSetFromInput();
 			}
 			
@@ -187,8 +190,19 @@ ValuePlug::Computation::ValueCache ValuePlug::Computation::g_valueCache( nullGet
 
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
 
+/// \todo We may want to avoid repeatedly storing copies of the same default value
+/// passed to this function. Perhaps by having a central map of unique values here,
+/// or by doing it more intelligently in the derived classes (where we could avoid
+/// even creating the values before figuring out if we've already got them somewhere).
+ValuePlug::ValuePlug( const std::string &name, Direction direction,
+	IECore::ConstObjectPtr initialValue, unsigned flags )
+	:	Plug( name, direction, flags ), m_staticValue( initialValue )
+{
+	assert( m_staticValue );
+}
+
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags )
+	:	Plug( name, direction, flags ), m_staticValue( 0 )
 {
 }
 
@@ -258,16 +272,7 @@ IECore::MurmurHash ValuePlug::hash() const
 	{
 		if( direction() == Plug::In )
 		{
-			if( m_staticValue )
-			{
-				h = m_staticValue->hash();
-			}
-			else
-			{
-				/// \todo Is this a problem? Do we need hashFromDefault() or to force
-				/// m_staticValue to always have something?
-				h.append( 0 );
-			}
+			h = m_staticValue->hash();
 		}
 		else
 		{
@@ -319,9 +324,7 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 		// which we store directly on the plug. when setting this we need to take care
 		// of undo, and also of triggering the plugValueSet signal and propagating the
 		// plugDirtiedSignal.
-		if( ( (bool)value != (bool)m_staticValue ) ||
-			( value && value->isNotEqualTo( m_staticValue ) )
-		)
+		if( value->isNotEqualTo( m_staticValue ) )
 		{
 			Action::enact( 
 				this,

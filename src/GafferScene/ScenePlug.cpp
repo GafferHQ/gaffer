@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/Exception.h"
+#include "IECore/NullObject.h"
 
 #include "Gaffer/Context.h"
 
@@ -73,7 +74,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		new CompoundObjectPlug(
 			"attributes",
 			direction,
-			0,
+			new IECore::CompoundObject(),
 			flags
 		)
 	);
@@ -82,7 +83,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		new ObjectPlug(
 			"object",
 			direction,
-			0,
+			new IECore::NullObject(),
 			flags
 		)
 	);
@@ -91,7 +92,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		new StringVectorDataPlug(
 			"childNames",
 			direction,
-			0,
+			new IECore::StringVectorData(),
 			flags
 		)
 	);
@@ -100,7 +101,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		new ObjectVectorPlug(
 			"globals",	
 			direction,
-			0,
+			new IECore::ObjectVector(),
 			flags
 		)
 	);

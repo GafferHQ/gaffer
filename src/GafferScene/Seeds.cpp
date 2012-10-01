@@ -122,7 +122,7 @@ void Seeds::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &
 
 IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return 0;
+	return outPlug()->attributesPlug()->defaultValue();
 }
 
 void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -164,5 +164,5 @@ void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &
 
 IECore::ConstStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return 0;
+	return outPlug()->childNamesPlug()->defaultValue();
 }

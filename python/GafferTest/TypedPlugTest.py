@@ -91,7 +91,53 @@ class TypedPlugTest( unittest.TestCase ) :
 		
 		s.setToDefault()
 		self.assertEqual( s.getValue(), "apple" )
-						
+	
+	def testStringDefaultValueHash( self ) :
+	
+		p1 = Gaffer.StringPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			"a"
+		)
+
+		p2 = Gaffer.StringPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			"b"
+		)
+		
+		p3 = Gaffer.StringPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			"b"
+		)
+		
+		self.assertNotEqual( p1.hash(), p2.hash() )		
+		self.assertEqual( p2.hash(), p3.hash() )
+		
+	def testBoolDefaultValueHash( self ) :
+	
+		p1 = Gaffer.BoolPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			True
+		)
+
+		p2 = Gaffer.BoolPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			False
+		)
+		
+		p3 = Gaffer.BoolPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			False
+		)
+		
+		self.assertNotEqual( p1.hash(), p2.hash() )		
+		self.assertEqual( p2.hash(), p3.hash() )	
+					
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/NullObject.h"
+
 #include "GafferScene/ObjectToScene.h"
 
 using namespace Gaffer;
@@ -48,7 +50,7 @@ ObjectToScene::ObjectToScene( const std::string &name )
 	:	ObjectSource( name, "object" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ObjectPlug( "object" ) );
+	addChild( new ObjectPlug( "object", Plug::In, IECore::NullObject::defaultNullObject() ) );
 }
 
 ObjectToScene::~ObjectToScene()

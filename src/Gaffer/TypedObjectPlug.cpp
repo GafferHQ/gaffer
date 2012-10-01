@@ -37,8 +37,6 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "OpenEXR/ImathFun.h"
-
 using namespace Gaffer;
 
 template<class T>
@@ -51,8 +49,8 @@ TypedObjectPlug<T>::TypedObjectPlug(
 	ConstValuePtr defaultValue,
 	unsigned flags
 )
-	:	ValuePlug( name, direction, flags ),
-		m_defaultValue( defaultValue ? defaultValue->copy() : 0 )
+	:	ValuePlug( name, direction, defaultValue->copy(), flags ),
+		m_defaultValue( defaultValue->copy() )
 {
 }
 
@@ -76,7 +74,7 @@ bool TypedObjectPlug<T>::acceptsInput( const Plug *input ) const
 }
 
 template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::defaultValue() const
+const typename TypedObjectPlug<T>::ValueType *TypedObjectPlug<T>::defaultValue() const
 {
 	return m_defaultValue;
 }
@@ -84,18 +82,13 @@ typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::defaultValue() co
 template<class T>
 void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 {
-	setObjectValue( value ? value->copy() : 0 );
+	setObjectValue( value->copy() );
 }
 
 template<class T>
 typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue() const
 {
-	IECore::ConstObjectPtr o = getObjectValue();
-	if( o )
-	{
-		return IECore::staticPointerCast<const ValueType>( o );
-	}
-	return m_defaultValue;
+	return IECore::staticPointerCast<const ValueType>( getObjectValue() );
 }
 
 template<class T>
@@ -128,7 +121,6 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FloatVectorDataPlug, FloatVect
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fVectorDataPlug, V3fVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectVectorPlug, ObjectVectorPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( PrimitivePlug, PrimitivePlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( CompoundObjectPlug, CompoundObjectPlugTypeId )
 
 }
@@ -141,5 +133,4 @@ template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
-template class TypedObjectPlug<IECore::Primitive>;
 template class TypedObjectPlug<IECore::CompoundObject>;

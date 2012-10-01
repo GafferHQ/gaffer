@@ -109,30 +109,27 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
 		
-		ConstCompoundObjectPtr attributes = runTimeCast<const CompoundObject>( m_scenePlug->attributesPlug()->getValue() );
-		if( attributes )
+		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
+		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 		{
-			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 			{
-				if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
+				s->render( renderer );
+			}
+			else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+			{
+				for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
 				{
-					s->render( renderer );
-				}
-				else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-				{
-					for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+					const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+					if( s )
 					{
-						const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-						if( s )
-						{
-							s->render( renderer );
-						}
+						s->render( renderer );
 					}
 				}
-				else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-				{
-					renderer->setAttribute( it->first, d );
-				}
+			}
+			else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+			{
+				renderer->setAttribute( it->first, d );
 			}
 		}
 		
@@ -149,23 +146,20 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		}
 				
 		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
-		if( childNames && childNames->readable().size() )
+		if( childNames->readable().size() )
 		{		
 			if( expand )
 			{
-				if( childNames )
+				for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 				{
-					for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+					string childScenePath = m_scenePath;
+					if( m_scenePath.size() > 1 )
 					{
-						string childScenePath = m_scenePath;
-						if( m_scenePath.size() > 1 )
-						{
-							childScenePath += "/";
-						}
-						childScenePath += *it;
-						renderer->procedural( new SceneProcedural( *this, childScenePath ) );
-					}	
-				}
+						childScenePath += "/";
+					}
+					childScenePath += *it;
+					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
+				}	
 			}
 			else
 			{

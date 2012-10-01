@@ -142,33 +142,39 @@ Imath::M44f AlembicSource::computeTransform( const ScenePath &path, const Gaffer
 IECore::ConstCompoundObjectPtr AlembicSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	/// \todo Implement support for attributes
-	return 0;
+	return parent->attributesPlug()->defaultValue();
 }
 
 IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	RenderablePtr result;
+	ConstObjectPtr result = parent->objectPlug()->defaultValue();
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
 		/// \todo Maybe template objectAtTime and then we don't need the cast.
-		result = runTimeCast<Renderable>( i->objectAtTime( context->getFrame() / fps(), IECore::RenderableTypeId ) );
+		ConstRenderablePtr renderable = runTimeCast<Renderable>( i->objectAtTime( context->getFrame() / fps(), IECore::RenderableTypeId ) );
+		if( renderable )
+		{
+			result = renderable;
+		}
 	}
 	return result;
 }
 
 IECore::ConstStringVectorDataPtr AlembicSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	StringVectorDataPtr result;
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
-		result = i->childNames();
+		return i->childNames();
 	}
-	return result;
+	else
+	{
+		return parent->childNamesPlug()->defaultValue();
+	}
 }
 
 IECore::ConstObjectVectorPtr AlembicSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return 0;
+	return parent->globalsPlug()->defaultValue();
 }
 
 IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &path ) const

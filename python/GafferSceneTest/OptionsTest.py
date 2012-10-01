@@ -51,7 +51,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 	
 		# check that the scene hierarchy is passed through
 	
-		self.assertEqual( options["out"].object( "/" ), None )
+		self.assertEqual( options["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( options["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( options["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
@@ -59,7 +59,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( options["out"].object( "/plane" ), IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
 		self.assertEqual( options["out"].transform( "/plane" ), IECore.M44f() )
 		self.assertEqual( options["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-		self.assertEqual( options["out"].childNames( "/plane" ), None )
+		self.assertEqual( options["out"].childNames( "/plane" ), IECore.StringVectorData() )
 		
 		# check that we have some displays
 		

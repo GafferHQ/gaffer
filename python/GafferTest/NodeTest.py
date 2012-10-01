@@ -410,7 +410,7 @@ class NodeTest( GafferTest.TestCase ) :
 				Gaffer.Node.__init__( self, name )
 		
 				self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In ) )
-				self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out ) )
+				self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )
 		
 				self._init( inputs, dynamicPlugs )
 		
@@ -465,7 +465,7 @@ class NodeTest( GafferTest.TestCase ) :
 		
 				Gaffer.Node.__init__( self, name )
 		
-				self.addChild( Gaffer.ObjectPlug( "oOut", Gaffer.Plug.Direction.Out ) )	
+				self.addChild( Gaffer.ObjectPlug( "oOut", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
 				self.addChild( Gaffer.FloatPlug( "fOut", Gaffer.Plug.Direction.Out ) )
 		
 				self._init( inputs, dynamicPlugs )
@@ -493,7 +493,7 @@ class NodeTest( GafferTest.TestCase ) :
 		
 				Gaffer.Node.__init__( self, name )
 		
-				self.addChild( Gaffer.ObjectPlug( "oIn", Gaffer.Plug.Direction.In ) )	
+				self.addChild( Gaffer.ObjectPlug( "oIn", Gaffer.Plug.Direction.In, IECore.NullObject() ) )	
 				self.addChild( Gaffer.IntPlug( "iIn", Gaffer.Plug.Direction.In ) )
 		
 				self._init( inputs, dynamicPlugs )
@@ -536,8 +536,8 @@ class NodeTest( GafferTest.TestCase ) :
 	
 			Gaffer.Node.__init__( self, name )
 	
-			self.addChild( Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In ) )	
-			self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out ) )	
+			self.addChild( Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject() ) )	
+			self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
 	
 			self._init( inputs, dynamicPlugs )
 	

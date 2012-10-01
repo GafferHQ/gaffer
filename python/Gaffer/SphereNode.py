@@ -56,7 +56,7 @@ class SphereNode( Gaffer.Node ) :
 		thetaPlug = Gaffer.FloatPlug( name="theta", defaultValue=360, minValue=0, maxValue=360 )
 		self.addChild( thetaPlug )
 		
-		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out )
+		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
 		self.addChild( resultPlug )
 		
 		self._init( inputs, dynamicPlugs )

@@ -195,6 +195,54 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( len( set ), 1 )
 		self.failUnless( set[0][0].isSame( n2["op1"] ) )
 		
+	def testDefaultValue( self ) :
+	
+		p = Gaffer.IntPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			10,
+			0,
+			20
+		)
+		
+		self.assertEqual( p.defaultValue(), 10 )
+		self.assertEqual( p.getValue(), 10 )
+		
+		p.setValue( 5 )
+		self.assertEqual( p.getValue(), 5 )
+		self.assertEqual( p.defaultValue(), 10 )
+		
+		p.setToDefault()
+		self.assertEqual( p.defaultValue(), 10 )
+		self.assertEqual( p.getValue(), 10 )
+		
+		p.setValue( 5 )
+		self.assertEqual( p.getValue(), 5 )
+		self.assertEqual( p.defaultValue(), 10 )
+	
+	def testDefaultValueHash( self ) :
+	
+		p1 = Gaffer.IntPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			10
+		)
+
+		p2 = Gaffer.IntPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			20
+		)
+		
+		p3 = Gaffer.IntPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			20
+		)
+		
+		self.assertNotEqual( p1.hash(), p2.hash() )
+		self.assertEqual( p2.hash(), p3.hash() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

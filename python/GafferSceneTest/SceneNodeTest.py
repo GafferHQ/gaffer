@@ -62,7 +62,7 @@ class SceneNodeTest( unittest.TestCase ) :
 			} )
 		)
 		
-		self.assertEqual( node["out"].object( "/" ), None )
+		self.assertEqual( node["out"].object( "/" ), IECore.NullObject() )
 		
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
@@ -80,7 +80,7 @@ class SceneNodeTest( unittest.TestCase ) :
 			} )
 		)
 		
-		self.assertEqual( node["out"].attributes( "/" ), None )
+		self.assertEqual( node["out"].attributes( "/" ), IECore.CompoundObject() )
 	
 if __name__ == "__main__":
 	unittest.main()

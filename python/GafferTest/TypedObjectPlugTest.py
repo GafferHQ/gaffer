@@ -47,7 +47,7 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["t"] = Gaffer.ObjectPlug( "hello", defaultValue = IECore.IntData( 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		se = s.serialise()
 		
@@ -60,10 +60,10 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["t"] = Gaffer.ObjectPlug( "hello", defaultValue = IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		s["n2"] = Gaffer.Node()
-		s["n2"]["t2"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
+		s["n2"]["t2"] = Gaffer.ObjectPlug( "hello", defaultValue = IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
 		
 		s["n"]["t"].setInput( s["n2"]["t2"] )
 		
@@ -85,7 +85,7 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 	def testAcceptsNoneInput( self ) :
 	
-		p = Gaffer.ObjectPlug( "hello" )
+		p = Gaffer.ObjectPlug( "hello", Gaffer.Plug.Direction.In, IECore.IntData( 10 ) )
 		self.failUnless( p.acceptsInput( None ) )
 		
 	def testBoolVectorDataPlug( self ) :
@@ -102,8 +102,12 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 
 	def testNullDefaultValue( self ) :
 	
-		p = Gaffer.ObjectPlug( "hello", defaultValue = None )
-		self.failUnless( p.defaultValue() is None )
+		self.assertRaises( ValueError, Gaffer.ObjectPlug, "hello", defaultValue = None )
+		
+	def testNullValue( self ) :
+	
+		p = Gaffer.ObjectPlug( "hello", Gaffer.Plug.Direction.In, IECore.IntData( 10 ) )
+		self.assertRaises( ValueError, p.setValue, None )
 		
 	def testSerialisationWithValueAndDefaultValue( self ) :
 	
@@ -121,31 +125,30 @@ class TypedObjectPlugTest( unittest.TestCase ) :
  		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
 		self.failUnless( s2["n"]["t"].getValue() == IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
  	
-	def testSerialisationWithUnserialisableValue( self ) :
+ 	@unittest.expectedFailure
+	def testSerialisationOfMeshPrimitives( self ) :
 	
-		# right now we can only serialise types which define __repr__.
-		# this test just asserts that if one does happen to be used then it
-		# at least doesn't totally break the parsing. ideally we need to make
-		# sure that all types can be serialised (although storing large types
-		# in the file itself is frankly a terrible idea).
+		# right now we can only serialise types which define __repr__, but that
+		# isn't defined for all cortex types. this test should pass when we get round
+		# to defining it for MeshPrimitives - we should do the other primitives at the
+		# same time, obviously.
 	
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 10 ) ) ) )
 		s["n"]["t"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ) ) )
 		
-		mh = IECore.CapturingMessageHandler()
-		with mh :
- 			se = s.serialise()
-		
-		self.assertEqual( len( mh.messages ), 2 )
+ 		se = s.serialise()
 		
 		s2 = Gaffer.ScriptNode()
  		s2.execute( se )
 	
+		self.assertEqual( s["n"]["t"].defaultValue(), s2["n"]["t"].defaultValue() )
+		self.assertEqual( s["n"]["t"].getValue(), s2["n"]["t"].getValue() )
+	
 	def testConstructCantSpecifyBothInputAndValue( self ) :
 	
-		out = Gaffer.ObjectPlug( "out", direction=Gaffer.Plug.Direction.Out )
+		out = Gaffer.ObjectPlug( "out", direction=Gaffer.Plug.Direction.Out, defaultValue=IECore.StringData( "hi" ) )
 		
 		self.assertRaises( Exception, Gaffer.ObjectPlug, "in", input=out, value=IECore.IntData( 10 ) )
 	
@@ -156,7 +159,7 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 			Gaffer.Node.__init__( self, name )
 			
 			self.addChild(
-				Gaffer.ObjectPlug( "p" ),
+				Gaffer.ObjectPlug( "p", defaultValue = IECore.IntData( 1 ) ),
 			)
 			
 			self._init( inputs, dynamicPlugs )
@@ -197,7 +200,6 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 		self.failUnless( Gaffer.StringVectorDataPlug.ValueType is IECore.StringVectorData )
 		self.failUnless( Gaffer.V3fVectorDataPlug.ValueType is IECore.V3fVectorData )
 		self.failUnless( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
-		self.failUnless( Gaffer.PrimitivePlug.ValueType is IECore.Primitive )
 	
 if __name__ == "__main__":
 	unittest.main()

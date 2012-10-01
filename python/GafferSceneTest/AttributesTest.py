@@ -69,15 +69,15 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		a["in"].setInput( input["out"] )
 		
 		# should be no attributes until we've specified any
-		self.assertEqual( a["out"].attributes( "/" ), None )
-		self.assertEqual( a["out"].attributes( "/ball1" ), None )
-		self.assertEqual( a["out"].attributes( "/ball2" ), None )	
+		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
+		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject() )
+		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject() )	
 
 		# when we specify some, they should be applied to everything because
 		# we haven't specified a filter yet. but not to the root because it
 		# isn't allowed attributes.
 		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
-		self.assertEqual( a["out"].attributes( "/" ), None )
+		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
 		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
 
@@ -86,9 +86,9 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
 		a["filter"].setInput( f["match"] )
 
-		self.assertEqual( a["out"].attributes( "/" ), None )
+		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
-		self.assertEqual( a["out"].attributes( "/ball2" ), None )
+		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject() )
 	
 	def testOverrideAttributes( self ) :
 	

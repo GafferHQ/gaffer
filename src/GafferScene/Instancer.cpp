@@ -183,7 +183,7 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 		Context::Scope scopedContext( ic );
 		return instancePlug()->attributesPlug()->getValue();
 	}
-	return 0;
+	return outPlug()->attributesPlug()->defaultValue();
 }
 
 void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -204,7 +204,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 		Context::Scope scopedContext( ic );
 		return instancePlug()->objectPlug()->getValue();
 	}
-	return 0;
+	return outPlug()->objectPlug()->defaultValue();
 }
 
 void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -229,12 +229,12 @@ IECore::ConstStringVectorDataPtr Instancer::computeBranchChildNames( const Scene
 		std::string name = namePlug()->getValue();
 		if( !name.size() )
 		{
-			return 0;
+			return outPlug()->childNamesPlug()->defaultValue();
 		}
 		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
 		if( !p || !p->readable().size() )
 		{
-			return 0;
+			return outPlug()->childNamesPlug()->defaultValue();
 		}
 		
 		StringVectorDataPtr result = new StringVectorData();

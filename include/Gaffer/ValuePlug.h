@@ -53,8 +53,6 @@ class ValuePlug : public Plug
 
 	public :
 	
-		ValuePlug( const std::string &name=staticTypeName(), Direction direction=In,
-			unsigned flags=Default );
 		virtual ~ValuePlug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ValuePlug, ValuePlugTypeId, Plug );
@@ -83,6 +81,17 @@ class ValuePlug : public Plug
 		void hash( IECore::MurmurHash &h ) const;
 		
 	protected :
+
+		/// The initialValue will be referenced directly (not copied) and
+		/// therefore must not be changed after passing to the constructor.
+		/// The initialValue must be non-null.
+		ValuePlug( const std::string &name, Direction direction,
+			IECore::ConstObjectPtr initialValue, unsigned flags );
+		/// For use /only/ by CompoundPlug. This results in a null m_staticValue,
+		/// which is acceptable only because CompoundPlug values are composed from
+		/// the values of child plugs, and aren't computed or stored directly
+		/// (CompoundPlug may not call getObjectValue() or setObjectValue() as a result).
+		ValuePlug( const std::string &name, Direction direction, unsigned flags );
 	
 		/// Internally all values are stored as instances of classes derived
 		/// from IECore::Object, although this isn't necessarily visible to the user.
@@ -92,13 +101,16 @@ class ValuePlug : public Plug
 		/// extract a value from the object and return it to the user in a more
 		/// convenient form. Note that this function will often return different
 		/// objects with each query - this allows it to support the calculation
-		/// of values in different contexts and on different threads. It is also
-		/// possible for 0 to be returned, either if a computation fails or if
-		/// the value for the plug has not been set - in this case the subclass
-		/// should return the default value from it's getValue() method.
+		/// of values in different contexts and on different threads.
+		///
+		/// The value is returned via a reference counted pointer, as
+		/// following return from getObjectValue(), it is possible that nothing
+		/// else references the value - the value could have come from the cache
+		/// and then have been immediately removed by another thread.
 		IECore::ConstObjectPtr getObjectValue() const;
 		/// Should be called by derived classes when they wish to set the plug
-		/// value.
+		/// value - the value is referenced directly (not copied) and so must
+		/// not be changed following the call.
 		void setObjectValue( IECore::ConstObjectPtr value );
 		
 		/// Returns true if a computation is currently being performed on this thread -

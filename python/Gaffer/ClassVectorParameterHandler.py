@@ -66,8 +66,8 @@ class ClassVectorParameterHandler( Gaffer.CompoundParameterHandler ) :
 		# add the class specification plugs now if they're not there.
 		compoundPlug = self.plug()
 		if "__classNames" not in compoundPlug :
-			compoundPlug["__classNames"] = Gaffer.StringVectorDataPlug( "__classNames", Gaffer.Plug.Direction.In )
-			compoundPlug["__classVersions"] = Gaffer.IntVectorDataPlug( "__classVersions", Gaffer.Plug.Direction.In )
+			compoundPlug["__classNames"] = Gaffer.StringVectorDataPlug( "__classNames", Gaffer.Plug.Direction.In, IECore.StringVectorData() )
+			compoundPlug["__classVersions"] = Gaffer.IntVectorDataPlug( "__classVersions", Gaffer.Plug.Direction.In, IECore.IntVectorData() )
 		
 		# store the current classes
 		self.__storeClasses()

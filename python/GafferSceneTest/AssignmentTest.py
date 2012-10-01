@@ -71,9 +71,9 @@ class AssignmentTest( unittest.TestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
 		a["filter"].setInput( f["match"] )
 		
-		self.assertEqual( a["out"].attributes( "/" ), None )
-		self.assertNotEqual( len( a["out"].attributes( "/ball1" ) ), None )
-		self.assertEqual( a["out"].attributes( "/ball2" ), None )		
+		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
+		self.assertNotEqual( len( a["out"].attributes( "/ball1" ) ), IECore.CompoundObject() )
+		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject() )		
 	
 	@unittest.expectedFailure
 	def testFilterSerialisation( self ) :

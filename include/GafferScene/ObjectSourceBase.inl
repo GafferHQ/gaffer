@@ -36,6 +36,8 @@
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
+#include "IECore/NullObject.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/ObjectSourceBase.h"
@@ -56,8 +58,8 @@ ObjectSourceBase<BaseType>::ObjectSourceBase( const std::string &name, const std
 	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
 	BaseType::addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
 	BaseType::addChild( new Gaffer::TransformPlug( "transform" ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__inputSource", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__inputSource", Gaffer::Plug::In, IECore::NullObject::defaultNullObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputSourcePlug()->setInput( sourcePlug() );
 }
 
@@ -208,7 +210,7 @@ Imath::M44f ObjectSourceBase<BaseType>::computeTransform( const SceneNode::Scene
 template<typename BaseType>
 IECore::ConstCompoundObjectPtr ObjectSourceBase<BaseType>::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return 0;
+	return parent->attributesPlug()->defaultValue();
 }
 
 template<typename BaseType>
@@ -218,7 +220,7 @@ IECore::ConstObjectPtr ObjectSourceBase<BaseType>::computeObject( const SceneNod
 	{
 		return inputSourcePlug()->getValue();
 	}
-	return 0;
+	return parent->objectPlug()->defaultValue();
 }
 
 template<typename BaseType>
@@ -238,13 +240,13 @@ IECore::ConstStringVectorDataPtr ObjectSourceBase<BaseType>::computeChildNames( 
 		}
 		return result;
 	}
-	return 0;
+	return parent->childNamesPlug()->defaultValue();
 }
 
 template<typename BaseType>
 IECore::ConstObjectVectorPtr ObjectSourceBase<BaseType>::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return 0;
+	return parent->globalsPlug()->defaultValue();
 }
 
 } // namespace GafferScene

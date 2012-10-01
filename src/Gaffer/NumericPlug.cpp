@@ -63,7 +63,7 @@ NumericPlug<T>::NumericPlug(
 	T maxValue,
 	unsigned flags
 )
-	:	ValuePlug( name, direction, flags ),
+	:	ValuePlug( name, direction, new DataType( defaultValue ), flags ),
 		m_defaultValue( defaultValue ),
 		m_minValue( minValue ),
 		m_maxValue( maxValue )
@@ -130,16 +130,12 @@ template<class T>
 T NumericPlug<T>::getValue() const
 {
 	ConstObjectPtr o = getObjectValue();
-	if( o )
+	const DataType *d = IECore::runTimeCast<const DataType>( o.get() );
+	if( !d )
 	{
-		const DataType *d = IECore::runTimeCast<const DataType>( o.get() );
-		if( !d )
-		{
-			throw IECore::Exception( "NumericPlug::getObjectValue() didn't return expected type - is the hash being computed correctly?" );
-		}
-		return d->readable();
+		throw IECore::Exception( "NumericPlug::getObjectValue() didn't return expected type - is the hash being computed correctly?" );
 	}
-	return m_defaultValue;
+	return d->readable();
 }
 
 template<class T>

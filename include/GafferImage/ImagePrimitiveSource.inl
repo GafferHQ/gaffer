@@ -36,6 +36,7 @@
 
 #include "IECore/BoxOps.h"
 #include "IECore/BoxAlgo.h"
+#include "IECore/NullObject.h"
 
 #include "GafferImage/ImagePrimitiveSource.h"
 
@@ -49,8 +50,8 @@ template<typename BaseType>
 ImagePrimitiveSource<BaseType>::ImagePrimitiveSource( const std::string &name )
 	:	BaseType( name )
 {
-	BaseType::addChild( new Gaffer::ObjectPlug( "__imagePrimitive", Gaffer::Plug::Out ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__inputImagePrimitive", Gaffer::Plug::In, 0, Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__imagePrimitive", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
+	BaseType::addChild( new Gaffer::ObjectPlug( "__inputImagePrimitive", Gaffer::Plug::In, IECore::NullObject::defaultNullObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputImagePrimitivePlug()->setInput( imagePrimitivePlug() );
 
 	// disable caching on our outputs, as we're basically caching the entire
@@ -121,7 +122,9 @@ void ImagePrimitiveSource<BaseType>::compute( Gaffer::ValuePlug *output, const G
 {
 	if( output == imagePrimitivePlug() )
 	{
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeImagePrimitive( context ) );
+		IECore::ConstImagePrimitivePtr image = computeImagePrimitive( context );
+		Gaffer::ObjectPlug *plug = static_cast<Gaffer::ObjectPlug *>( output );
+		plug->setValue( image ? image : plug->defaultValue() );
 		return;
 	}
 	
@@ -132,7 +135,7 @@ template<typename BaseType>
 Imath::Box2i ImagePrimitiveSource<BaseType>::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i result;
-	IECore::ConstImagePrimitivePtr image = IECore::staticPointerCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
 		result = image->getDisplayWindow();
@@ -144,7 +147,7 @@ template<typename BaseType>
 Imath::Box2i ImagePrimitiveSource<BaseType>::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i result;
-	IECore::ConstImagePrimitivePtr image = IECore::staticPointerCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
 		result = image->getDataWindow();
@@ -155,11 +158,10 @@ Imath::Box2i ImagePrimitiveSource<BaseType>::computeDataWindow( const Gaffer::Co
 template<typename BaseType>
 IECore::ConstStringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::StringVectorDataPtr result;
-	IECore::ConstImagePrimitivePtr image = IECore::staticPointerCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECore::StringVectorDataPtr result = new IECore::StringVectorData();
+	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
-		result = new IECore::StringVectorData;
 		image->channelNames( result->writable() );
 	}
 	return result;
@@ -168,9 +170,13 @@ IECore::ConstStringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelN
 template<typename BaseType>
 IECore::ConstFloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::ConstImagePrimitivePtr image = IECore::staticPointerCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( !image )
 	{
+		/// \todo Returning 0 is questionable here - plug values are never allowed to be null.
+		/// We're relying on no-one calling computeChannelData() when we've returned
+		/// an empty data window and empty channel names above. Perhaps we should return
+		/// a black tile or throw an exception instead?
 		return 0;
 	}
 	

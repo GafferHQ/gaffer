@@ -58,14 +58,14 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 			"fieldOfView" : 45,
 		} )
 	
-		self.assertEqual( p["out"].object( "/" ), None )
+		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f() )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "camera" ] ) )
 		
 		self.assertEqual( p["out"].transform( "/camera" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/camera" ), IECore.Box3f() )
-		self.assertEqual( p["out"].childNames( "/camera" ), None )
+		self.assertEqual( p["out"].childNames( "/camera" ), IECore.StringVectorData() )
 		
 		o = p["out"].object( "/camera" )
 		self.failUnless( isinstance( o, IECore.Camera ) )

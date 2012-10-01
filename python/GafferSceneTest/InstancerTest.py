@@ -86,7 +86,7 @@ class InstancerTest( unittest.TestCase ) :
 		instancer["parent"].setValue( "/seeds" )
 		instancer["name"].setValue( "instances" )
 		
-		self.assertEqual( instancer["out"].object( "/" ), None )
+		self.assertEqual( instancer["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( instancer["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( instancer["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -1, -2, -2 ), IECore.V3f( 4, 3, 2 ) ) )
 		self.assertEqual( instancer["out"].childNames( "/" ), IECore.StringVectorData( [ "seeds" ] ) )
@@ -96,7 +96,7 @@ class InstancerTest( unittest.TestCase ) :
 		self.assertEqual( instancer["out"].bound( "/seeds" ), IECore.Box3f( IECore.V3f( -2, -2, -2 ), IECore.V3f( 3, 3, 2 ) ) )
 		self.assertEqual( instancer["out"].childNames( "/seeds" ), IECore.StringVectorData( [ "instances" ] ) )
 
-		self.assertEqual( instancer["out"].object( "/seeds/instances" ), None )
+		self.assertEqual( instancer["out"].object( "/seeds/instances" ), IECore.NullObject() )
 		self.assertEqual( instancer["out"].transform( "/seeds/instances" ), IECore.M44f() )
 		self.assertEqual( instancer["out"].bound( "/seeds/instances" ), IECore.Box3f( IECore.V3f( -2, -2, -2 ), IECore.V3f( 3, 3, 2 ) ) )
 		self.assertEqual( instancer["out"].childNames( "/seeds/instances" ), IECore.StringVectorData( [ "0", "1", "2", "3" ] ) )
@@ -105,7 +105,7 @@ class InstancerTest( unittest.TestCase ) :
 		
 			instancePath = "/seeds/instances/%d" % i
 			
-			self.assertEqual( instancer["out"].object( instancePath ), None )
+			self.assertEqual( instancer["out"].object( instancePath ), IECore.NullObject() )
 			self.assertEqual( instancer["out"].transform( instancePath ), IECore.M44f.createTranslated( seeds["P"].data[i] ) )
 			self.assertEqual( instancer["out"].bound( instancePath ), IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) )
 			self.assertEqual( instancer["out"].childNames( instancePath ), IECore.StringVectorData( [ "sphere" ] ) )
@@ -113,7 +113,7 @@ class InstancerTest( unittest.TestCase ) :
 			self.assertEqual( instancer["out"].object( instancePath + "/sphere" ), sphere )
 			self.assertEqual( instancer["out"].transform( instancePath + "/sphere" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) )
 			self.assertEqual( instancer["out"].bound( instancePath + "/sphere" ), sphere.bound() )
-			self.assertEqual( instancer["out"].childNames( instancePath + "/sphere" ), None )
+			self.assertEqual( instancer["out"].childNames( instancePath + "/sphere" ), IECore.StringVectorData() )
 
 if __name__ == "__main__":
 	unittest.main()

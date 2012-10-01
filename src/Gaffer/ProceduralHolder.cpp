@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/ParameterisedProcedural.h"
+#include "IECore/NullObject.h"
 
 #include "Gaffer/ProceduralHolder.h"
 #include "Gaffer/CompoundParameterHandler.h"
@@ -53,7 +54,8 @@ ProceduralHolder::ProceduralHolder( const std::string &name )
 	
 		new ObjectPlug(
 			"output",
-			Plug::Out
+			Plug::Out,
+			NullObject::defaultNullObject()
 		)
 		
 	);

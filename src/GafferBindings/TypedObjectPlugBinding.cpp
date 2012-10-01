@@ -71,7 +71,6 @@ static std::string serialiseValue( Serialiser &s, IECore::ConstObjectPtr value )
 	return result;
 }
 
-/// \todo Should we be able to serialise values and default values?
 template<typename T>
 static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 {	
@@ -90,10 +89,10 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	}
 	else
 	{
-		IECore::msg(
-			IECore::Msg::Error,
-			"TypedObjectPlug serialiser",
-			boost::format( "Default value for plug \"%s\" cannot be serialised" ) % g->fullName()	
+		throw IECore::Exception(
+			boost::str(
+				boost::format( "Default value for plug \"%s\" cannot be serialised" ) % g->fullName()	
+			)
 		);
 	}
 	
@@ -116,20 +115,17 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	
 	if( !connected && plug->direction()==Plug::In )
 	{
-		/// \todo Remove this cast when we merge the branch where getValue() is
-		/// correctly const.
-		typename T::Ptr p = IECore::constPointerCast<T>( plug );
-		std::string value = serialiseValue( s, p->getValue() );
+		std::string value = serialiseValue( s, plug->getValue() );
 		if( value.size() )
 		{
 			result += "value = " + value + ", ";
 		}
 		else
 		{
-			IECore::msg(
-				IECore::Msg::Error,
-				"TypedObjectPlug serialiser",
-				boost::format( "Value for plug \"%s\" cannot be serialised" ) % g->fullName()	
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Value for plug \"%s\" cannot be serialised" ) % g->fullName()	
+				)
 			);
 		}
 	}
@@ -138,6 +134,17 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 
 	return result;
 }
+
+template<typename T>
+static void setValue( typename T::Ptr p, typename T::ValuePtr v )
+{
+	if( !v )
+	{
+		throw std::invalid_argument( "Value must not be None." );		
+	}
+	p->setValue( v );
+}
+
 
 // generally we copy the value when returning to python, because in C++
 // it's const, and we can only send non-const objects to python. letting
@@ -177,8 +184,13 @@ static typename T::Ptr construct(
 	IECore::ObjectPtr value	
 )
 {
+	if( !defaultValue )
+	{
+		throw std::invalid_argument( "Default value must not be None." );	
+	}
+	
 	typename T::Ptr result = new T( name, direction, defaultValue, flags );
-	if( input && value!=IECore::NullObject::defaultNullObject() )
+	if( input && value )
 	{
 		throw std::invalid_argument( "Must specify only one of input or value." );
 	}
@@ -186,7 +198,7 @@ static typename T::Ptr construct(
 	{
 		result->setInput( input );
 	}
-	else if( value!=IECore::NullObject::defaultNullObject() )
+	else if( value )
 	{
 		result->setValue( IECore::runTimeCast<typename T::ValueType>( value ) );
 	}
@@ -214,18 +226,16 @@ static void bind()
 				(
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "defaultValue" )=typename T::ValuePtr(),
+					boost::python::arg_( "defaultValue" ),
 					boost::python::arg_( "flags" )=Plug::Default,
 					boost::python::arg_( "input" )=PlugPtr( 0 ),
-					// we're using NullObject as the "value not specified" default
-					// argument because None is a valid value.
-					boost::python::arg_( "value" )=IECore::NullObject::defaultNullObject()
+					boost::python::arg_( "value" )=object()
 				)
 			)
 		)
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &defaultValue<T> )
-		.def( "setValue", &T::setValue )
+		.def( "setValue", setValue<T> )
 		.def( "getValue", getValue<T>, ( boost::python::arg_( "_copy" ) = true ) )
 	;
 
@@ -248,6 +258,5 @@ void GafferBindings::bindTypedObjectPlug()
 	bind<StringVectorDataPlug>();
 	bind<V3fVectorDataPlug>();
 	bind<ObjectVectorPlug>();
-	bind<PrimitivePlug>();
 	bind<CompoundObjectPlug>();
 }

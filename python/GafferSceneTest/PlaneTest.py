@@ -54,7 +54,7 @@ class PlaneTest( unittest.TestCase ) :
 	
 		p = GafferScene.Plane()
 	
-		self.assertEqual( p["out"].object( "/" ), None )
+		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
@@ -62,7 +62,7 @@ class PlaneTest( unittest.TestCase ) :
 		self.assertEqual( p["out"].object( "/plane" ), IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
 		self.assertEqual( p["out"].transform( "/plane" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-		self.assertEqual( p["out"].childNames( "/plane" ), None )
+		self.assertEqual( p["out"].childNames( "/plane" ), IECore.StringVectorData() )
 	
 	def testAffects( self ) :
 	

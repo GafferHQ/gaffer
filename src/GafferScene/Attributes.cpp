@@ -112,7 +112,7 @@ IECore::ConstCompoundObjectPtr Attributes::processAttributes( const ScenePath &p
 		return inputAttributes;
 	}
 	
-	CompoundObjectPtr result = inputAttributes ? inputAttributes->copy() : CompoundObjectPtr( new CompoundObject );
+	CompoundObjectPtr result = inputAttributes->copy();
 	ap->fillCompoundObject( result->members() );
 	
 	return result;

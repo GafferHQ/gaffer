@@ -94,22 +94,28 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		else if( output == scenePlug->attributesPlug() )
 		{
 			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
-			ConstCompoundObjectPtr attributes = 0;
+			CompoundObjectPlug *attributesPlug = static_cast<CompoundObjectPlug *>( output );
 			if( scenePath != "/" ) // scene root must have no attributes
 			{
-				attributes = computeAttributes( scenePath, context, scenePlug );
+				attributesPlug->setValue( computeAttributes( scenePath, context, scenePlug ) );
 			}
-			static_cast<CompoundObjectPlug *>( output )->setValue( attributes );
+			else
+			{
+				attributesPlug->setValue( attributesPlug->defaultValue() );
+			}
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
 			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
-			ConstObjectPtr object = 0;
+			ObjectPlug *objectPlug = static_cast<ObjectPlug *>( output );
 			if( scenePath != "/" ) // scene root must have no object
 			{
-				object = computeObject( scenePath, context, scenePlug );
+				objectPlug->setValue( computeObject( scenePath, context, scenePlug ) );
 			}
-			static_cast<ObjectPlug *>( output )->setValue( object );
+			else
+			{
+				objectPlug->setValue( objectPlug->defaultValue() );
+			}
 		}
 		else if( output == scenePlug->childNamesPlug() )
 		{

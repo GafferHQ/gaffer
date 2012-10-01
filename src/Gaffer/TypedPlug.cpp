@@ -52,7 +52,7 @@ TypedPlug<T>::TypedPlug(
 	const T &defaultValue,
 	unsigned flags
 )
-	:	ValuePlug( name, direction, flags ),
+	:	ValuePlug( name, direction, new DataType( defaultValue ), flags ),
 		m_defaultValue( defaultValue )
 {
 }
@@ -92,11 +92,7 @@ template<class T>
 T TypedPlug<T>::getValue() const
 {
 	IECore::ConstObjectPtr o = getObjectValue();
-	if( o )
-	{
-		return static_cast<const DataType *>( o.get() )->readable();
-	}
-	return m_defaultValue;
+	return static_cast<const DataType *>( o.get() )->readable();
 }
 
 template<class T>
@@ -149,16 +145,12 @@ std::string StringPlug::getValue() const
 	bool performSubstitution = direction()==Plug::In && inCompute() && Plug::getFlags( Plug::PerformsSubstitutions );
 		
 	IECore::ConstObjectPtr o = getObjectValue();
-	if( o )
+	const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
+	if( !s )
 	{
-		const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
-		if( !s )
-		{
-			throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
-		}
-		return performSubstitution ? Context::current()->substitute( s->readable() ) : s->readable();
+		throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
 	}
-	return performSubstitution ? Context::current()->substitute( m_defaultValue ) : m_defaultValue;
+	return performSubstitution ? Context::current()->substitute( s->readable() ) : s->readable();
 }
 
 template<>
