@@ -73,6 +73,7 @@ class SplinePlug : public CompoundPlug
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 
 		const T &defaultValue() const;
+		virtual void setToDefault();
 		
 		/// \undoable
 		void setValue( const T &value );

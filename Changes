@@ -18,6 +18,12 @@
 
 * CompoundPlugValueWidget now has a collapsed constructor argument to replace the previous collapsible argument. This takes None, True or False as values, allowing the ui to be created as non-collapsible, collapsed or expanded.
 
+* Disallowing null values in plugs. This fixes bugs in the computation of hashes (all null values hashed the same, regardless of type, or what the actual default value was), and also simplifies coding (no more need for tests against null before using an Object).
+
+* Fixed bug where setting SplinePlug to a value with less points than before raised an Exception.
+
+* Fixed bug where SplinePlug::setToDefault did not work as expected.
+
 0.35.5
 ------
 

@@ -98,6 +98,12 @@ const T &SplinePlug<T>::defaultValue() const
 }
 
 template<typename T>
+void SplinePlug<T>::setToDefault()
+{
+	setValue( m_defaultValue );
+}
+
+template<typename T>
 void SplinePlug<T>::setValue( const T &value )
 {
 	basisMatrixPlug()->setValue( value.basis.matrix );
@@ -116,9 +122,10 @@ void SplinePlug<T>::setValue( const T &value )
 		i++;
 	}
 	
-	while( i < existingPoints )
+	// remove unneeded preexisting points
+	while( numPoints() > i )
 	{
-		removeChild( pointPlug( i++ ) );
+		removeChild( pointPlug( i ) );
 	}
 }
 

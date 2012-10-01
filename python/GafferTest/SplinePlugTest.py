@@ -225,6 +225,43 @@ class SplinePlugTest( unittest.TestCase ) :
 		p.removePoint( pointIndex )
 		
 		self.assertEqual( self.__plugSetCount, 3 )		
+
+	def testDefaultValue( self ) :
+	
+		s1 = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+		
+		s2 = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 1, 1 ),
+				( 1, 1 ),
+				( 0, 0 ),
+				( 0, 0 ),
+			)
+		)
+				
+		p = Gaffer.SplineffPlug( "a", defaultValue=s1, flags=Gaffer.Plug.Flags.Dynamic )
+		
+		self.assertEqual( p.defaultValue(), s1 )
+		self.assertEqual( p.getValue(), s1 )
+						
+		p.setValue( s2 )
+		self.assertEqual( p.defaultValue(), s1 )
+		self.assertEqual( p.getValue(), s2 )
+		
+		p.setToDefault()
+		self.assertEqual( p.defaultValue(), s1 )
+		self.assertEqual( p.getValue(), s1 )
 		
 if __name__ == "__main__":
 	unittest.main()
