@@ -350,7 +350,7 @@ IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, 
 	
 	if( path.size() <= groupName.size() + 1 )
 	{
-		return 0;
+		return parent->attributesPlug()->defaultValue();
 	}
 	else
 	{
@@ -358,8 +358,6 @@ IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, 
 		std::string source = sourcePath( path, groupName, &sourcePlug );
 		return sourcePlug->attributes( source );
 	}
-	
-	return 0;
 }
 
 IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -368,7 +366,7 @@ IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer
 	
 	if( path.size() <= groupName.size() + 1 )
 	{
-		return 0;
+		return parent->objectPlug()->defaultValue();
 	}
 	else
 	{

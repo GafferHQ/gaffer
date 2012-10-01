@@ -484,6 +484,25 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( g1["out"].childNamesHash( path1 ), g2["out"].childNamesHash( path2 ) )
 			else :
 				self.assertNotEqual( g1["out"].childNamesHash( path1 ), g2["out"].childNamesHash( path2 ) )
+	
+	def testWithCacheDisabled( self ) :
+	
+		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
+	
+		p = GafferScene.Plane()
+		
+		g1 = GafferScene.Group()
+		g1["in"].setInput( p["out"] )
+		
+		self.assertSceneValid( g1["out"] )
+		
+	def setUp( self ) :
+	
+		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
+
+	def tearDown( self ) :
+	
+		Gaffer.ValuePlug.setCacheMemoryLimit( self.__originalCacheMemoryLimit )
 		 		
 if __name__ == "__main__":
 	unittest.main()
