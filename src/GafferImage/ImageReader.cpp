@@ -153,7 +153,7 @@ IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer:
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
 	if( !spec )
 	{
-		return 0;
+		return parent->channelNamesPlug()->defaultValue();
 	}
 	
 	StringVectorDataPtr result = new StringVectorData();
@@ -169,13 +169,13 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	const ImageSpec *spec = imageCache()->imagespec( uFileName );
 	if( !spec )
 	{
-		return 0;
+		return parent->channelDataPlug()->defaultValue();
 	}
 	
 	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
 	if( channelIt == spec->channelnames.end() )
 	{
-		return 0;
+		return parent->channelDataPlug()->defaultValue();
 	}
 	
 	std::vector<float> interleaved;

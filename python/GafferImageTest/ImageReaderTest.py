@@ -96,5 +96,11 @@ class ImageReaderTest( unittest.TestCase ) :
 		# OIIO, so doing any caching on top of that would be wasteful.
 		self.failIf( t1.isSame( t2 ) )
 	
+	def testNonexistentFile( self ) :
+	
+		n = GafferImage.ImageReader()
+		n["out"]["channelNames"].getValue()
+		n["out"].channelData( "R", IECore.V2i( 0 ) )
+		
 if __name__ == "__main__":
 	unittest.main()
