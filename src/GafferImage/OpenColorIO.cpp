@@ -175,7 +175,6 @@ IECore::ConstFloatVectorDataPtr OpenColorIO::computeChannelData( const std::stri
 			{
 				// shouldn't get here.
 				assert( 0 );
-				return 0;
 			}
 		}
 		else

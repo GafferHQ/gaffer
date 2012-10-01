@@ -174,7 +174,7 @@ IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, con
 	IECore::ConstPrimitivePtr inputGeometry = IECore::runTimeCast<const IECore::Primitive>( inputObject );
 	if( !inputGeometry )
 	{
-		return 0;
+		return inputObject;
 	}
 
 	const std::string fileName = fileNamePlug()->getValue();

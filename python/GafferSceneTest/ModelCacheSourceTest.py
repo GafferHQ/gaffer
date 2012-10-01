@@ -42,36 +42,24 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
+class ModelCacheSourceTest( GafferSceneTest.SceneTestCase ) :
 
-	def test( self ) :
+	def testGlobals( self ) :
 	
-		p = GafferScene.Plane()
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( p["out"] )
-		
-		self.assertEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"] )
-		self.failUnless( "s" in d["out"].object( "/plane" ) )
-		self.failUnless( "t" in d["out"].object( "/plane" ) )
+		m = GafferScene.ModelCacheSource()
+		self.assertEqual( m["out"]["globals"].getValue(), IECore.ObjectVector() )
 	
-		d["names"].setValue( "s t e" )
-		
-		self.assertNotEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"], childPlugNames = ( "attributes", "bound", "transform", "globals", "childNames" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"], pathsToIgnore = ( "/plane" ) )		
-		self.failUnless( "s" not in d["out"].object( "/plane" ) )
-		self.failUnless( "t" not in d["out"].object( "/plane" ) )
-		
-	def testNonPrimitiveObject( self ) :
+	def testAttributes( self ) :
 	
-		c = GafferScene.Camera()
-		
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( c["out"] )
+		m = GafferScene.ModelCacheSource()
+		self.assertEqual( m["out"].attributes( "/somewhere" ), IECore.CompoundObject() )
 	
-		self.assertSceneValid( d["out"] )
-		self.failUnless( isinstance( d["out"].object( "/camera" ), IECore.Camera ) )
-		
+	@unittest.expectedFailure
+	def testReadFile( self ) :
+	
+		# when we've got the ModelCache implemented properly in cortex,
+		# make some test files and check we can read them here.
+		raise NotImplementedError
+	
 if __name__ == "__main__":
 	unittest.main()

@@ -58,6 +58,7 @@ from AlembicSourceTest import AlembicSourceTest
 from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
 from SeedsTest import SeedsTest
 from SceneContextVariablesTest import SceneContextVariablesTest
+from ModelCacheSourceTest import ModelCacheSourceTest
 
 if __name__ == "__main__":
 	import unittest

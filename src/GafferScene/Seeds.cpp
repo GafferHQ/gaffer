@@ -143,7 +143,7 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->object( parentPath ) );
 		if( !mesh )
 		{
-			return 0;
+			return outPlug()->objectPlug()->defaultValue();
 		}
 		
 		PointDistributionOpPtr op = new PointDistributionOp();
@@ -155,7 +155,7 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 		
 		return result;
 	}
-	return 0;
+	return outPlug()->objectPlug()->defaultValue();
 }
 
 void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const

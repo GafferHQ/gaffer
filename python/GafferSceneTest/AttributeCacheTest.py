@@ -34,12 +34,13 @@
 #  
 ##########################################################################
 
-import unittest
+import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
-class AttributeCacheTest( unittest.TestCase ) :
+class AttributeCacheTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstructWithInputs( self ) :
 	
@@ -86,5 +87,15 @@ class AttributeCacheTest( unittest.TestCase ) :
 
 		self.assertEqual( s["a"]["in"].getInput(), None )
 
+	def testProcessNonPrimitiveObject( self ) :
+	
+		c = GafferScene.Camera()
+		
+		a = GafferScene.AttributeCache()
+		a["in"].setInput( c["out"] )
+	
+		self.assertSceneValid( a["out"] )
+		self.failUnless( isinstance( a["out"].object( "/camera" ), IECore.Camera ) )
+		
 if __name__ == "__main__":
 	unittest.main()

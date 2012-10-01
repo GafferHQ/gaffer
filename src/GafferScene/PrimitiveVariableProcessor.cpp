@@ -114,7 +114,7 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::processObject( const ScenePat
 	ConstPrimitivePtr inputGeometry = runTimeCast<const Primitive>( inputObject );
 	if( !inputGeometry )
 	{
-		return 0;
+		return inputObject;
 	}
 	/// \todo Support glob expressions. We could accelerate the regex conversion and compilation process
 	/// by storing them as member variables which we update on a plugSetSignal(). We'd have to either prevent

@@ -140,7 +140,7 @@ Imath::M44f ModelCacheSource::computeTransform( const ScenePath &path, const Gaf
 IECore::ConstCompoundObjectPtr ModelCacheSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	/// \todo Implement support for attributes in the file format and then support it here.
-	return 0;
+	return parent->attributesPlug()->defaultValue();
 }
 
 IECore::ConstObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -194,7 +194,7 @@ IECore::ConstStringVectorDataPtr ModelCacheSource::computeChildNames( const Scen
 
 IECore::ConstObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return 0;
+	return parent->globalsPlug()->defaultValue();
 }
 
 std::string ModelCacheSource::entryForPath( const ScenePath &path ) const
