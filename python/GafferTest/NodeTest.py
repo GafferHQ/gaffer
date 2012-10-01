@@ -402,38 +402,8 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertHashesValid( n )
 		
 	def testDisableCaching( self ) :
-	
-		class CachingTestNode( Gaffer.Node ) :
 		
-			def __init__( self, name="CachingTestNode", inputs={}, dynamicPlugs=() ) :
-		
-				Gaffer.Node.__init__( self, name )
-		
-				self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In ) )
-				self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )
-		
-				self._init( inputs, dynamicPlugs )
-		
-			def affects( self, input ) :
-				
-				if input.isSame( self["in"] ) :
-					return [ self["out"] ]
-					
-				return []
-		
-			def hash( self, output, context, h ) :
-			
-				assert( output.isSame( self["out"] ) )
-		
-				self["in"].hash( h )
-		
-			def compute( self, plug, context ) :
-		
-				assert( plug.isSame( self["out"] ) )
-		
-				self["out"].setValue( IECore.StringData( self["in"].getValue() ) )
-		
-		n = CachingTestNode()
+		n = GafferTest.CachingTestNode()
 		
 		n["in"].setValue( "d" )
 		

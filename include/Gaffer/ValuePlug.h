@@ -80,6 +80,18 @@ class ValuePlug : public Plug
 		/// Convenience function to append the hash to h.
 		void hash( IECore::MurmurHash &h ) const;
 		
+		/// @name Cache management
+		/// ValuePlug optimises repeated computation by storing a cache of
+		/// recently computed values. These functions allow for management
+		/// of the cache.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the maximum amount of memory in bytes to use for the cache.
+		static size_t getCacheMemoryLimit();
+		/// Sets the maximum amount of memory the cache may use in bytes.
+		static void setCacheMemoryLimit( size_t bytes );
+		//@}
+
 	protected :
 
 		/// The initialValue will be referenced directly (not copied) and

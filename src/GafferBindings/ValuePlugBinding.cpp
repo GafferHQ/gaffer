@@ -95,5 +95,9 @@ void GafferBindings::bindValuePlug()
 		.def( "setToDefault", &ValuePlug::setToDefault )
 		.def( "hash", (IECore::MurmurHash (ValuePlug::*)() const)&ValuePlug::hash )
 		.def( "hash", (void (ValuePlug::*)( IECore::MurmurHash & ) const)&ValuePlug::hash )
+		.def( "getCacheMemoryLimit", &ValuePlug::getCacheMemoryLimit )
+		.staticmethod( "getCacheMemoryLimit" )
+		.def( "setCacheMemoryLimit", &ValuePlug::setCacheMemoryLimit )
+		.staticmethod( "setCacheMemoryLimit" )
 	;
 }

@@ -42,6 +42,7 @@ from AddNode import AddNode
 from SignalsTest import SignalsTest
 from GraphComponentTest import GraphComponentTest
 from FrameNode import FrameNode
+from CachingTestNode import CachingTestNode
 from NodeTest import NodeTest
 from PlugTest import PlugTest
 from NumericPlugTest import NumericPlugTest
@@ -90,6 +91,7 @@ from WeakMethodTest import WeakMethodTest
 from StringInOutNode import StringInOutNode
 from StringPlugTest import StringPlugTest
 from ContextVariablesTest import ContextVariablesTest
+from ValuePlugTest import ValuePlugTest
 
 if __name__ == "__main__":
 	import unittest

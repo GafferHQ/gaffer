@@ -24,6 +24,8 @@
 
 * Fixed bug where SplinePlug::setToDefault did not work as expected.
 
+* Added ValuePlug::setCacheMemoryLimit() and ValuePlug::getCacheMemoryLimit(), to allow management of cache memory usage. Added startup/gui/cache.py to expose this to the user via the preferences.
+
 0.35.5
 ------
 

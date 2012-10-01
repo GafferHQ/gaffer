@@ -141,6 +141,16 @@ class ValuePlug::Computation
 			return s.top();
 		}
 	
+		static size_t getCacheMemoryLimit()
+		{
+			return g_valueCache.getMaxCost();
+		}
+		
+		static void setCacheMemoryLimit( size_t bytes )
+		{
+			return g_valueCache.setMaxCost( bytes );
+		}
+	
 	private :
 	
 		void computeOrSetFromInput()
@@ -409,4 +419,14 @@ void ValuePlug::propagateDirtiness()
 			o->propagateDirtiness();
 		}
 	}
+}
+
+size_t ValuePlug::getCacheMemoryLimit()
+{
+	return Computation::getCacheMemoryLimit();
+}
+
+void ValuePlug::setCacheMemoryLimit( size_t bytes )
+{
+	Computation::setCacheMemoryLimit( bytes );
 }
