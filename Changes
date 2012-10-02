@@ -30,6 +30,10 @@
 
 * Improved drawing of very thin/small selection boxes - they had a tendency to disappear before.
 
+* Added Widget setHighlighted() and getHighlighted() methods, implementing highlight-on-hover for buttons and sliders.
+
+* Implemented drop of items into VectorDataWidget. This allows objects from the viewer to be dragged and dropped into a filter to perform assignments.
+
 0.35.5
 ------
 

@@ -348,6 +348,17 @@ class WidgetTest( unittest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( cs[1], ( w, ) )
 		
+	def testHighlighting( self ) :
+	
+		w = TestWidget()
+		self.assertEqual( w.getHighlighted(), False )
+		
+		w.setHighlighted( True )
+		self.assertEqual( w.getHighlighted(), True )
+
+		w.setHighlighted( False )
+		self.assertEqual( w.getHighlighted(), False )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

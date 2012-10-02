@@ -41,6 +41,7 @@ import IECore
 
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The Image widget displays an image. This can be specified
@@ -67,6 +68,45 @@ class Image( GafferUI.Widget ) :
 	def _qtPixmap( self ) :
 	
 		return self._qtWidget().pixmap()
+	
+	## \todo Does this need a caching mechanism? Does it even belong here?
+	# Should it be implemented on Button where it's used?
+	def _qtPixmapHighlighted( self ) :
+	
+		pixmap = self._qtWidget().pixmap()
+	
+		graphicsScene = QtGui.QGraphicsScene()
+		pixmapItem = graphicsScene.addPixmap( pixmap )
+		pixmapItem.setVisible( True )
+		
+		effect = QtGui.QGraphicsColorizeEffect()
+		effect.setColor( QtGui.QColor( 119, 156, 189, 255 ) )
+		effect.setStrength( 0.85 )
+		pixmapItem.setGraphicsEffect( effect )
+		pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
+				
+		graphicsView = QtGui.QGraphicsView()
+		graphicsView.setScene( graphicsScene )
+		
+		image = QtGui.QImage( 
+			pixmap.width(),
+			pixmap.height(),
+			QtGui.QImage.Format_ARGB32_Premultiplied if pixmap.hasAlpha() else QtGui.QImage.Format_RGB888
+		)
+		image.fill( 0 )
+			
+		painter = QtGui.QPainter( image )
+		graphicsView.render(
+			painter,
+			QtCore.QRectF(),
+			QtCore.QRect(
+				graphicsView.mapFromScene( pixmapItem.boundingRect().topLeft() ),
+				graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() )
+			)
+		)
+		del painter # must delete painter before image
+		
+		return QtGui.QPixmap( image )
 
 	@staticmethod
 	def _qtPixmapFromImagePrimitive( image ) :

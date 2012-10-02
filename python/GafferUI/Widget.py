@@ -238,6 +238,27 @@ class Widget( object ) :
 			
 		return self.__qtWidget.isEnabledTo( relativeTo )
 
+	## Sets whether or not this Widget should be rendered in a highlighted
+	# state. This status is not inherited by child widgets. Note that highlighted
+	# drawing has not yet been implemented for all Widget types. Derived classes
+	# may reimplement this method as necessary, but must call the base class
+	# implementation from their reimplementation.
+	## \todo Implement highlighting for more subclasses.
+	def setHighlighted( self, highlighted ) :
+	
+		if highlighted == self.getHighlighted() :
+			return
+			
+		self._qtWidget().setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
+		self.__repolish( self._qtWidget() )
+		
+	def getHighlighted( self ) :
+	
+		if "gafferHighlighted" not in self._qtWidget().dynamicPropertyNames() :
+			return False
+	
+		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferHighlighted" ) )
+		
 	## Returns the GafferUI.Widget which is the parent for this
 	# Widget, or None if it has no parent.
 	def parent( self ) :
@@ -598,6 +619,15 @@ class Widget( object ) :
 		else :
 			self._qtWidget().setMouseTracking( True )
 
+	def __repolish( self, qWidget ) :
+	
+		style = qWidget.style()
+		style.unpolish( qWidget )
+		for child in qWidget.children() :
+			if isinstance( child, QtGui.QWidget ) :
+				self.__repolish( child )
+		style.polish( qWidget )
+
 	def _setStyleSheet( self ):
 
 		self.__qtWidget.setStyleSheet( self.__styleSheet )
@@ -785,13 +815,14 @@ class Widget( object ) :
 			border: 1px solid $backgroundDark;
 			border-radius: 3px;
 			padding: 4px;
+			margin: 1px;
 
 		}
 
 		QPushButton#gafferWithFrame:hover, QComboBox:hover {
 
 			border: 2px solid $brightColor;
-			
+			margin: 0px;
 		}
 		
 		QPushButton#gafferWithoutFrame {
@@ -802,7 +833,7 @@ class Widget( object ) :
 			background-color: none;
 			
 		}
-		
+			
 		QPushButton:disabled, QComboBox:disabled {
 
 			color: $foregroundFaded;
@@ -1236,7 +1267,10 @@ class Widget( object ) :
 			
 		QHeaderView::section#vectorDataWidgetVerticalHeader {
 			background-color: transparent;
+			padding: 2px;
 		}
+		
+		/* checkboxes within table views */
 		
 		QTableView::indicator {
 			background-color: transparent;
@@ -1260,6 +1294,21 @@ class Widget( object ) :
 		
 		QTableView::indicator:selected {
 			background-color: $brightColor;
+		}
+		
+		/* highlighted state for VectorDataWidget */
+		
+		QWidget[gafferHighlighted=\"true\"] QTableView#vectorDataWidget,
+		QWidget[gafferHighlighted=\"true\"] QTableView#vectorDataWidgetEditable {
+
+			gridline-color: $brightColor;
+			
+		}
+		
+		QWidget[gafferHighlighted=\"true\"] QHeaderView::section#vectorDataWidgetVerticalHeader {
+		
+			border-color: $brightColor;
+			
 		}
 		
 		QProgressBar {

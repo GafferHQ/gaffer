@@ -82,6 +82,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
+		self.__tableView.verticalHeader().setDefaultSectionSize( 20 )
+
 		self.__column.append( GafferUI.Widget( self.__tableView ) )
 		
 		# buttons
@@ -96,10 +98,28 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__removeButtonConnection = removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeSelection ) )
 		self.__buttonRow.append( removeButton )
 		
-		self.__buttonRow.append( GafferUI.Spacer( size = IECore.V2i( 0 ) ), expand=1 )
-		## \todo Update spacer so it has the flexibility we need without hacking it like this
-		self.__buttonRow[-1]._qtWidget().setMaximumHeight( 1 )
+		self.__buttonRow.append( GafferUI.Spacer( size = IECore.V2i( 0 ), maximumSize = IECore.V2i( 100000, 1 ) ), expand=1 )
 		self.__column.append( self.__buttonRow )
+		
+		# drag and drop signals
+		
+		self.__dragEnterConnections = [
+			self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) ),
+			addButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) ),
+			removeButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) ),
+		]
+		
+		self.__dragLeaveConnections = [
+			self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) ),
+			addButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) ),
+			removeButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) ),
+		]
+		
+		self.__dropConnections = [
+			self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) ),
+			addButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) ),
+			removeButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) ),
+		]
 		
 		# final setup
 		
@@ -164,7 +184,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.updateGeometry()
 	
 	## Returns the data being displayed. This is always returned as a list of
-	# VectorData instances, even if only one instance was passd to setData().	
+	# VectorData instances, even if only one instance was passed to setData().	
 	def getData( self ) :
 	
 		return self.__model.vectorData()
@@ -310,6 +330,48 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.scrollToBottom()
 		
 		self.__emitDataChangedSignal()
+				
+	def __dragEnter( self, widget, event ) :
+	
+		data = self.getData()
+		if len( data ) == 1 and event.data.isInstanceOf( data[0].typeId() ) :
+			widget.setHighlighted( True )
+			return True 
+
+		return False
+
+	def __dragLeave( self, widget, event ) :
+	
+		widget.setHighlighted( False )
+		return True
+
+	def __drop( self, widget, event ) :
+	
+		# dragEnter checked that we only had one data array
+		data = self.getData()[0]
+				
+		if widget is self.__buttonRow[1] :
+			# remove
+			s = set( event.data )
+			newData = data.__class__()
+			for d in data :
+				if d not in s :
+					newData.append( d )
+			data = newData	
+		else :
+			# add, but avoid creating duplicates
+			s = set( data )
+			for d in event.data :
+				if d not in s :
+					data.append( d )
+					s.add( d )
+		
+		self.setData( [ data ] )
+		self.dataChangedSignal()( self )
+	
+		widget.setHighlighted( False )
+
+		return True
 		
 # Private implementation - a QTableView with custom size behaviour.
 class _TableView( QtGui.QTableView ) :

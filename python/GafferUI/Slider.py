@@ -53,6 +53,8 @@ class Slider( GafferUI.Widget ) :
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 		
 	def setPosition( self, p ) :
 				
@@ -100,7 +102,13 @@ class Slider( GafferUI.Widget ) :
 		pen.setWidth( 1 )
 		painter.setPen( pen )
 		
-		brush = QtGui.QBrush( QtGui.QColor( 128, 128, 128 ) )
+		## \todo These colours need to come from the style, once we've
+		# unified the Gadget and Widget styling.
+		if self.getHighlighted() :
+			brush = QtGui.QBrush( QtGui.QColor( 119, 156, 255 ) )
+		else :
+			brush = QtGui.QBrush( QtGui.QColor( 128, 128, 128 ) )
+			
 		painter.setBrush( brush )
 		
 		painter.drawEllipse( QtCore.QPoint( self.__position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
@@ -118,6 +126,14 @@ class Slider( GafferUI.Widget ) :
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Left :
 			self.setPosition( float( event.line.p0.x ) / self.size().x )
 
+	def __enter( self, widget ) :
+	
+		self.setHighlighted( True )
+		
+	def __leave( self, widget ) :
+	
+		self.setHighlighted( False )
+		
 class _Widget( QtGui.QWidget ) :
 
 	def __init__( self, parent=None ) :

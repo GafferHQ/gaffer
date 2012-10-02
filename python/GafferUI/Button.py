@@ -69,7 +69,16 @@ class Button( GafferUI.Widget ) :
 			Button.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
 
 		self._qtWidget().setPalette( Button.__palette )
+
+		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
+		
+	def setHighlighted( self, highlighted ) :
 	
+		GafferUI.Widget.setHighlighted( self, highlighted )
+		
+		self.__updateIcon()
+		
 	def setText( self, text ) :
 	
 		assert( isinstance( text, basestring ) )
@@ -89,15 +98,8 @@ class Button( GafferUI.Widget ) :
 		else :
 			self.__image = imageOrImageFileName
 		
-		if self.__image is not None :
+		self.__updateIcon()
 		
-			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmap() ) )
-			self._qtWidget().setIconSize( self.__image._qtPixmap().size() )
-		
-		else : 
-		
-			self._qtWidget().setIcon( QtGui.QIcon() )
-	
 	def getImage( self ) :
 	
 		return self.__image
@@ -126,3 +128,22 @@ class Button( GafferUI.Widget ) :
 			focusWidget.editingFinishedSignal()( focusWidget )
 		
 		self.clickedSignal()( self )	
+
+	def __updateIcon( self ) :
+	
+		if self.__image is None :
+			self._qtWidget().setIcon( QtGui.QIcon() )
+			return
+			
+		if not self.getHighlighted() :
+			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmap() ) )
+		else :
+			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmapHighlighted() ) )
+	
+	def __enter( self, widget ) :
+	
+		self.setHighlighted( True )
+	
+	def __leave( self, widget ) :
+	
+		self.setHighlighted( False )
