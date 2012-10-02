@@ -978,7 +978,7 @@ def buildGraphics( target, source, env ) :
 					dir,
 					tokens[0].split( ":" )[-1],
 					tokens[0],
-					int( float( tokens[3] ) ), int( float( tokens[4] ) ),
+					int( round( float( tokens[3] ) ) ), int( round( float( tokens[4] ) ) ),
 					str( source[0] ),
 				)
 			)
