@@ -50,7 +50,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 		self.__script = script
 		
-		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 		
 		m = GafferUI.MenuBar( self.menuDefinition() )
 		
