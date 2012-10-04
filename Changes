@@ -34,6 +34,8 @@
 
 * Implemented drop of items into VectorDataWidget. This allows objects from the viewer to be dragged and dropped into a filter to perform assignments.
 
+* PlugValueWidget.popupMenuSignal now passes the PlugValueWidget to slots instead of the Plug.
+
 0.35.5
 ------
 
