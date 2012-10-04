@@ -52,6 +52,8 @@ def __noduleCreator( plug ) :
 
 GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
 
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "out", None )
+
 # ImageReader
 
 GafferUI.PlugValueWidget.registerCreator(

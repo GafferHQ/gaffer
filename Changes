@@ -38,6 +38,8 @@
 
 * Fixed bug where ColorPlugValueWidget would attempt to show colour pickers for non-editable plugs, resulting in errors.
 
+* NodeUI now also shows output plugs. They can be removed as necessary by registering None with PlugValueWidget.registerCreator().
+
 0.35.5
 ------
 

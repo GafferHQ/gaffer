@@ -120,3 +120,8 @@ GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader",
 # Group
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Group.staticTypeId(), "in[0-9]*", None )
+
+# Filter
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter.staticTypeId(), "match", None )
+
