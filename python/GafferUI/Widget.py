@@ -1574,7 +1574,7 @@ class _EventFilter( QtCore.QObject ) :
 	def __enter( self, qObject, qEvent ) :
 			
 		widget = Widget._owner( qObject )
-		if widget._enterSignal is not None :
+		if widget is not None and widget._enterSignal is not None :
 			return widget._enterSignal( widget )
 				
 		return False
