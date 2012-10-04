@@ -138,14 +138,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if hasattr( self.getPlug(), "defaultValue" ) :
 			menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ) } )
 		
-		self.popupMenuSignal()( menuDefinition, self.getPlug() )
+		self.popupMenuSignal()( menuDefinition, self )
 		
 		return menuDefinition
 	
 	__popupMenuSignal = Gaffer.Signal2()
 	## This signal is emitted whenever a popup menu for a plug is about
 	# to be shown. This provides an opportunity to customise the menu from
-	# external code. The signature for slots is ( menuDefinition, plug ),
+	# external code. The signature for slots is ( menuDefinition, plugValueWidget ),
 	# and slots should just modify the menu definition in place.
 	@classmethod
 	def popupMenuSignal( cls ) :

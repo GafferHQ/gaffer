@@ -108,8 +108,9 @@ class ParameterValueWidget( GafferUI.Widget ) :
 # we piggy-back onto the existing PlugValueWidget popup menu signal to
 # emit our own popup menu signal where appropriate.
 
-def __plugPopupMenu( menuDefinition, plug ) :
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
+	plug = plugValueWidget.getPlug()
 	node = plug.node()
 	if not hasattr( node, "parameterHandler" ) :
 		return
