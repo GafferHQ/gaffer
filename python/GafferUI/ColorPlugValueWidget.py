@@ -65,6 +65,9 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 				self.__swatch.setColor( plug.getValue() )
 		
 	def __buttonPress( self, widget, event ) :
+		
+		if not self._editable() :
+			return False
 				
 		if not self.__colorChooserDialogue :	
 			self.__colorChooserDialogue = GafferUI.ColorChooserDialogue()

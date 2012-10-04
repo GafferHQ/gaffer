@@ -36,6 +36,8 @@
 
 * PlugValueWidget.popupMenuSignal now passes the PlugValueWidget to slots instead of the Plug.
 
+* Fixed bug where ColorPlugValueWidget would attempt to show colour pickers for non-editable plugs, resulting in errors.
+
 0.35.5
 ------
 
