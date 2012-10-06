@@ -32,3 +32,6 @@ rename all the user facing *Node things to simply *?
 	
 stop using button press signals for making menus
 	- we've got contextmenusignal now
+	
+rename UndoContext to UndoScope and ParameterModificationContext to ParameterModificationScope ?
+	- to avoid confusion with Context
