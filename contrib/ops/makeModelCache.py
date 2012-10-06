@@ -76,17 +76,7 @@ class makeModelCache( IECore.Op ) :
 		if not files :
 			raise Exception( "No valid files found" )
 			
-		outFile = IECore.FileIndexedIO( args["outputFile"].value, "/", IECore.IndexedIOOpenMode.Write )
-		
-		header = IECore.HeaderGenerator.header()
-		header.save( outFile, "header" )
-		
-		combinedBound = IECore.Box3f()
-		
-		outFile.mkdir( "root" )
-		outFile.chdir( "root" )
-		outFile.mkdir( "children" )
-		outFile.chdir( "children" )
+		outFile = IECore.ModelCache( args["outputFile"].value, IECore.IndexedIOOpenMode.Write )
 		
 		for f in files :
 		
@@ -105,52 +95,9 @@ class makeModelCache( IECore.Op ) :
 				continue
 			
 			name = os.path.splitext( os.path.basename( f ) )[0]
-			outFile.mkdir( name )
-			outFile.chdir( name )
 			
-			o.save( outFile, "geometry" )
-			
-			b = o.bound()
-			combinedBound.extendBy( b )
-			
-			outFile.write(
-				"bound",
-				IECore.FloatVectorData( [
-					b.min.x, b.min.y, b.min.z,
-					b.max.x, b.max.y, b.max.z,
-				] )
-			)
-			
-			outFile.write(
-				"transform",
-				IECore.FloatVectorData( [
-					1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1,
-				] )
-			)
-			
-			outFile.chdir( ".." )
-		
-		outFile.chdir( ".." )
-		outFile.write(
-			"bound",
-			IECore.FloatVectorData( [
-				combinedBound.min.x, combinedBound.min.y, combinedBound.min.z,
-				combinedBound.max.x, combinedBound.max.y, combinedBound.max.z,
-			] )
-		)
-
-		outFile.write(
-				"transform",
-				IECore.FloatVectorData( [
-					1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1,
-				] )
-			)
+			child = outFile.writableChild( name )
+			child.writeObject( o )
 	
 		return args["outputFile"].value
 			

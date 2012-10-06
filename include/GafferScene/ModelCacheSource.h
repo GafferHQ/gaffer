@@ -61,7 +61,8 @@ class ModelCacheSource : public FileSource
 		virtual IECore::ConstStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
-		std::string entryForPath( const ScenePath &path ) const;
+		class Cache;
+		static Cache &cache();
 		
 };
 

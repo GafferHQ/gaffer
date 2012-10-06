@@ -40,6 +40,7 @@
 
 #include "IECore/FileIndexedIO.h"
 #include "IECore/LRUCache.h"
+#include "IECore/ModelCache.h"
 
 #include "GafferScene/ModelCacheSource.h"
 
@@ -51,49 +52,97 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( ModelCacheSource );
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of an LRUCache of FileIndexedIOs.
+// ModelCacheSource::Cache Implementation
 //////////////////////////////////////////////////////////////////////////
 
-namespace GafferScene
+class ModelCacheSource::Cache
 {
+	
+	private :
+	
+		IE_CORE_FORWARDDECLARE( FileAndMutex )
 
-namespace Detail
-{
-
-class FileAndMutex : public IECore::RefCounted
-{
 	public :
+				
+		Cache()
+			:	m_fileCache( fileCacheGetter, 200 )
+		{
+		};
 		
-		typedef tbb::mutex Mutex;
-		Mutex mutex;
-		/// \todo Add an actual ModelCache class to IECore rather than improvising with direct FileIndexedIO access.
-		FileIndexedIOPtr file;
+		/// This class provides access to a particular location within
+		/// the ModelCache, and ensures that access is threadsafe by holding
+		/// a mutex on the file.
+		class Entry : public IECore::RefCounted
+		{
 		
+			public :
+			
+				const ModelCache *modelCache()
+				{
+					return m_entry;
+				}
+		
+			private :
+			
+				Entry( FileAndMutexPtr fileAndMutex )
+					:	m_fileAndMutex( fileAndMutex ), m_lock( m_fileAndMutex->mutex )
+				{
+				}
+			
+				FileAndMutexPtr m_fileAndMutex;
+				tbb::mutex::scoped_lock m_lock;
+				ConstModelCachePtr m_entry;
+				
+				friend class Cache;
+				
+		};
+
+		IE_CORE_DECLAREPTR( Entry )
+		
+		EntryPtr entry( const std::string &fileName, const std::string &scenePath )
+		{
+			FileAndMutexPtr f = m_fileCache.get( fileName );
+			EntryPtr result = new Entry( f ); // this locks the mutex for us
+			result->m_entry = result->m_fileAndMutex->file;
+			
+			typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+			Tokenizer tokens( scenePath, boost::char_separator<char>( "/" ) );			
+			for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
+			{
+				result->m_entry = result->m_entry->readableChild( *tIt );		
+			}
+			
+			return result;
+		}
+		
+	private :
+	
+		class FileAndMutex : public IECore::RefCounted
+		{
+			public :
+				
+				typedef tbb::mutex Mutex;
+				Mutex mutex;
+				ModelCachePtr file;
+				
+		};
+				
+		static FileAndMutexPtr fileCacheGetter( const std::string &fileName, size_t &cost )
+		{
+			FileAndMutexPtr result = new FileAndMutex;
+			result->file = new ModelCache( fileName, IndexedIO::Read );
+			cost = 1;
+			return result;
+		}
+		
+		typedef LRUCache<std::string, FileAndMutexPtr> FileCache;
+		FileCache m_fileCache;
+
 };
-
-IE_CORE_DECLAREPTR( FileAndMutex )
-
-FileAndMutexPtr fileCacheGetter( const std::string &fileName, size_t &cost )
-{
-	FileAndMutexPtr result = new FileAndMutex;
-	result->file = new FileIndexedIO( fileName, "/", IndexedIO::Read );
-	cost = 1;
-	return result;
-}
-
-typedef LRUCache<std::string, FileAndMutexPtr> FileCache;
-
-static FileCache g_fileCache( fileCacheGetter, 200 );
-
-} // namespace Detail
-
-} // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
 // ModelCacheSource implementation
 //////////////////////////////////////////////////////////////////////////
-
-using namespace GafferScene::Detail;
 
 ModelCacheSource::ModelCacheSource( const std::string &name )
 	:	FileSource( name )
@@ -106,35 +155,21 @@ ModelCacheSource::~ModelCacheSource()
 
 Imath::Box3f ModelCacheSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string entry = entryForPath( path ) + "/bound";
-	Box3f result;
-	float *resultAddress = result.min.getValue();
-	
-	FileAndMutexPtr f = g_fileCache.get( fileNamePlug()->getValue() );
-	FileAndMutex::Mutex::scoped_lock lock( f->mutex );
-	f->file->read( entry, resultAddress, 6 );
-
-	return result;
+	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	Box3d b = entry->modelCache()->readBound();
+	return Box3f( b.min, b.max );
 }
 
 Imath::M44f ModelCacheSource::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string entry = entryForPath( path ) + "/transform";
-	M44f result;
-	float *resultAddress = result.getValue();
-	
-	FileAndMutexPtr f = g_fileCache.get( fileNamePlug()->getValue() );
-	FileAndMutex::Mutex::scoped_lock lock( f->mutex );
-	try
-	{
-		f->file->read( entry, resultAddress, 16 );
-	}
-	catch( ... )
-	{
-		// it's ok for an entry to not specify a transform
-	}
-	
-	return result;
+	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	M44d t = entry->modelCache()->readTransform();
+	return M44f(
+		t[0][0], t[0][1], t[0][2], t[0][3],
+		t[1][0], t[1][1], t[1][2], t[1][3],
+		t[2][0], t[2][1], t[2][2], t[2][3],
+		t[3][0], t[3][1], t[3][2], t[3][3]
+	);
 }
 
 IECore::ConstCompoundObjectPtr ModelCacheSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -145,51 +180,19 @@ IECore::ConstCompoundObjectPtr ModelCacheSource::computeAttributes( const SceneP
 
 IECore::ConstObjectPtr ModelCacheSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	/// \todo The entry in the file should be called "object"
-	std::string entry = entryForPath( path ) + "/geometry";
-	
-	FileAndMutexPtr f = g_fileCache.get( fileNamePlug()->getValue() );
-	FileAndMutex::Mutex::scoped_lock lock( f->mutex );
-	ObjectPtr result = 0;
-	try
-	{
-		result = Object::load( f->file, entry );
-	}
-	catch( ... )
-	{
-		// it's ok for an entry to not specify geometry	
-	}
-	return runTimeCast<Primitive>( result );
+	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	ObjectPtr o = entry->modelCache()->readObject();
+	return o ? o : parent->objectPlug()->defaultValue();
 }
 
 IECore::ConstStringVectorDataPtr ModelCacheSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string entry = entryForPath( path ) + "/children";
+	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 
-	FileAndMutexPtr f = g_fileCache.get( fileNamePlug()->getValue() );
-	FileAndMutex::Mutex::scoped_lock lock( f->mutex );
-
-	IndexedIO::EntryList entries;
-
-	try
-	{
-		f->file->chdir( entry );
-	 	entries = f->file->ls();
-		f->file->chdir( "/" );
-	}
-	catch( ... )
-	{
-		// it's ok for an entry to not specify children
-	}
+	StringVectorDataPtr result = new StringVectorData;
+	entry->modelCache()->childNames( result->writable() );
 	
-	StringVectorDataPtr resultData = new StringVectorData;
-	std::vector<std::string> &result = resultData->writable();
-	for( IndexedIO::EntryList::const_iterator it = entries.begin(); it!=entries.end(); it++ )
-	{
-		result.push_back( it->id() );
-	}
-
-	return resultData;
+	return result;
 }
 
 IECore::ConstObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -197,17 +200,8 @@ IECore::ConstObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Con
 	return parent->globalsPlug()->defaultValue();
 }
 
-std::string ModelCacheSource::entryForPath( const ScenePath &path ) const
+ModelCacheSource::Cache &ModelCacheSource::cache()
 {
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer tokens( path, boost::char_separator<char>( "/" ) );
-	
-	std::string result = "/root";
-	for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
-	{	
-		result += "/children/";
-		result += *tIt;
-	}
-	
-	return result;
+	static Cache c;
+	return c;
 }

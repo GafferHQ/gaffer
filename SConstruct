@@ -841,7 +841,17 @@ libraries = {
 
 		],
 		
-	}
+	},
+	
+	"IECoreAlembic" : {
+	
+		"classStubs" : [
+
+			( "ABCToMDC", "ops/files/abcToMDC" ),
+			
+		],
+		
+	},
 
 }
 
