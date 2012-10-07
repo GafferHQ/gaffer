@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,71 +34,67 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#ifndef GAFFER_RANDOM_H
+#define GAFFER_RANDOM_H
+
+#include "Gaffer/Node.h"
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace Gaffer
 {
 
-enum TypeId
+/// Base class for nodes which generate random values based on Context values.
+class Random : public Node
 {
 
-	GraphComponentTypeId = 110000,
-	NodeTypeId = 110001,
-	PlugTypeId = 110002,
-	ValuePlugTypeId = 110003,
-	FloatPlugTypeId = 110004,
-	IntPlugTypeId = 110005,
-	StringPlugTypeId = 110006,
-	ScriptNodeTypeId = 110007,
-	ApplicationRootTypeId = 110008,
-	ScriptContainerTypeId = 110009,
-	SetTypeId = 110010,
-	ObjectPlugTypeId = 110011,
-	CompoundPlugTypeId = 110012,
-	V2fPlugTypeId = 110013,
-	V3fPlugTypeId = 110014,
-	V2iPlugTypeId = 110015,
-	V3iPlugTypeId = 110016,
-	Color3fPlugTypeId = 110017,
-	Color4fPlugTypeId = 110018,
-	SplineffPlugTypeId = 110019,
-	SplinefColor3fPlugTypeId = 110020,
-	M33fPlugTypeId = 110021,
-	M44fPlugTypeId = 110022,
-	BoolPlugTypeId = 110023,
-	ParameterisedHolderNodeTypeId = 110024,
-	IntVectorDataPlugTypeId = 110025,
-	FloatVectorDataPlugTypeId = 110026,
-	StringVectorDataPlugTypeId = 110027,
-	V3fVectorDataPlugTypeId = 110028,
-	StandardSetTypeId = 110029,
-	ChildSetTypeId = 110030,
-	BoolVectorDataPlugTypeId = 110031,
-	OpHolderTypeId = 110032,
-	ProceduralHolderTypeId = 110033,
-	PreferencesNodeTypeId = 110034,
-	ObjectVectorPlugTypeId = 110035,
-	Box2iPlugTypeId = 110036,
-	Box3iPlugTypeId = 110037,
-	Box2fPlugTypeId = 110038,
-	Box3fPlugTypeId = 110039,
-	PrimitivePlugTypeId = 110040,
-	ExpressionNodeTypeId = 110041,
-	ContextProcessorNodeTypeId = 110042,
-	TimeWarpNodeTypeId = 110043,
-	TransformPlugTypeId = 110044,
-	AtomicBox3fPlugTypeId = 110045,
-	AtomicBox2iPlugTypeId = 110046,
-	CompoundObjectPlugTypeId = 110047,
-	CompoundDataPlugTypeId = 110048,
-	ContextVariablesNodeTypeId = 110049,
-	RandomTypeId = 110050,
-	
-	LastTypeId = 110200,
-	
+	public :
+
+		Random( const std::string &name=staticTypeName() );
+		virtual ~Random();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Random, RandomTypeId, Node );
+		
+		IntPlug *seedPlug();
+		const IntPlug *seedPlug() const;
+		StringPlug *contextEntryPlug();
+		const StringPlug *contextEntryPlug() const;
+		
+		V2fPlug *floatRangePlug();
+		const V2fPlug *floatRangePlug() const;
+		FloatPlug *outFloatPlug();
+		const FloatPlug *outFloatPlug() const;
+		
+		Color3fPlug *baseColorPlug();
+		const Color3fPlug *baseColorPlug() const;
+		FloatPlug *huePlug();
+		const FloatPlug *huePlug() const;
+		FloatPlug *saturationPlug();
+		const FloatPlug *saturationPlug() const;
+		FloatPlug *valuePlug();
+		const FloatPlug *valuePlug() const;		
+		Color3fPlug *outColorPlug();
+		const Color3fPlug *outColorPlug() const;
+		
+		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+		Imath::Color3f randomColor( unsigned long int seed ) const;
+		
+	protected :
+		
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( ValuePlug *output, const Context *context ) const;
+
+	private :
+		
+		void hashSeed( const Context *context, IECore::MurmurHash &h ) const;	
+		unsigned long int computeSeed( const Context *context ) const;
+		
+		static size_t g_firstPlugIndex;
+		
 };
 
 } // namespace Gaffer
 
-#endif // GAFFER_TYPEIDS_H
+#endif // GAFFER_RANDOM_H

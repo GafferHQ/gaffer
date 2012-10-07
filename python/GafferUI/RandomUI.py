@@ -34,64 +34,35 @@
 #  
 ##########################################################################
 
-import unittest
-
 import IECore
-
 import Gaffer
+import GafferUI
 
-## A useful base class for creating test cases for nodes.
-class TestCase( unittest.TestCase ) :
+class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	## Attempts to ensure that the hashes for a node
-	# are reasonable by jiggling around input values
-	# and checking that the hash changes when it should.
-	def assertHashesValid( self, node, inputsToIgnore=[] ) :
+	def __init__( self, plug, **kw ) :
 	
-		# find all input ValuePlugs
-		inputPlugs = []
-		def __walkInputs( parent ) :
-			for child in parent.children() :
-				if isinstance( child, Gaffer.CompoundPlug ) :
-					__walkInputs( child )
-				elif isinstance( child, Gaffer.ValuePlug ) :
-					ignore = False
-					for toIgnore in inputsToIgnore :
-						if child.isSame( toIgnore ) :
-							ignore = True
-							break
-					if not ignore :
-						inputPlugs.append( child )
-		__walkInputs( node )
+		self.__grid = GafferUI.GridContainer( spacing = 4 )
 		
-		self.failUnless( len( inputPlugs ) > 0 )
+		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug, **kw )
 		
-		numTests = 0
-		for inputPlug in inputPlugs :
-			for outputPlug in node.affects( inputPlug ) :
-				
-				hash = outputPlug.hash()
-				
-				value = inputPlug.getValue()
-				if isinstance( value, float ) :
-					increment = 0.1
-				elif isinstance( value, int ) :
-					increment = 1
-				elif isinstance( value, basestring ) :
-					increment = "a"
-				else :
-					# don't know how to deal with this
-					# value type.
-					continue
-					
-				inputPlug.setValue( value + increment )
-				if inputPlug.getValue() == value :
-					inputPlug.setValue( value - increment )
-				if inputPlug.getValue() == value :
-					continue
+		with self.__grid :
+			for x in range( 0, 10 ) :
+				for y in range( 0, 3 ) :
+					GafferUI.ColorSwatch( index = ( x, y ) )	
+		
+		self._updateFromPlug()
+		
+	def _updateFromPlug( self ) :
 			
-				self.assertNotEqual( outputPlug.hash(), hash )
+		node = self.getPlug().node()
+		seed = node["seed"].getValue()
+		
+		gridSize = self.__grid.gridSize()
+		for x in range( 0, gridSize.x ) :
+			for y in range( 0, gridSize.y ) :
+				self.__grid[x,y].setColor( node.randomColor( seed ) )
+				seed += 1
 				
-				numTests += 1
-				
-		self.failUnless( numTests > 0 )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outColor", _RandomColorPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outFloat", None )

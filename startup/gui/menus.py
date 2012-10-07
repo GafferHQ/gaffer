@@ -101,3 +101,4 @@ GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.Proc
 
 GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
 GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
+GafferUI.NodeMenu.append( "/Utility/Random", Gaffer.Random )

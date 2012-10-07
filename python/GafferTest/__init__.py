@@ -92,6 +92,7 @@ from StringInOutNode import StringInOutNode
 from StringPlugTest import StringPlugTest
 from ContextVariablesTest import ContextVariablesTest
 from ValuePlugTest import ValuePlugTest
+from RandomTest import RandomTest
 
 if __name__ == "__main__":
 	import unittest

@@ -39,59 +39,70 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-## A useful base class for creating test cases for nodes.
-class TestCase( unittest.TestCase ) :
+class RandomTest( GafferTest.TestCase ) :
 
-	## Attempts to ensure that the hashes for a node
-	# are reasonable by jiggling around input values
-	# and checking that the hash changes when it should.
-	def assertHashesValid( self, node, inputsToIgnore=[] ) :
+	def testHashes( self ) :
 	
-		# find all input ValuePlugs
-		inputPlugs = []
-		def __walkInputs( parent ) :
-			for child in parent.children() :
-				if isinstance( child, Gaffer.CompoundPlug ) :
-					__walkInputs( child )
-				elif isinstance( child, Gaffer.ValuePlug ) :
-					ignore = False
-					for toIgnore in inputsToIgnore :
-						if child.isSame( toIgnore ) :
-							ignore = True
-							break
-					if not ignore :
-						inputPlugs.append( child )
-		__walkInputs( node )
+		r = Gaffer.Random()
+		self.assertHashesValid( r, inputsToIgnore = [ r["contextEntry"], ] )
 		
-		self.failUnless( len( inputPlugs ) > 0 )
+	def testOutFloat( self ) :
+	
+		r = Gaffer.Random()
+		v1 = r["outFloat"].getValue()
 		
-		numTests = 0
-		for inputPlug in inputPlugs :
-			for outputPlug in node.affects( inputPlug ) :
+		r["seed"].setValue( 1 )
+		v2 = r["outFloat"].getValue()
+		
+		self.assertNotEqual( v1, v2 )
+		
+		r["floatRange"].setValue( IECore.V2f( 2, 3 ) )
+		v3 = r["outFloat"].getValue()
+		
+		self.assertNotEqual( v2, v3 )
+	
+	def testOutFloatRange( self ) :
+	
+		r = Gaffer.Random()
+		r["floatRange"].setValue( IECore.V2f( 10, 11 ) )
+		
+		for s in range( 0, 1000 ) :
+		
+			r["seed"].setValue( s )
+			v = r["outFloat"].getValue()
+			self.failUnless( v >= r["floatRange"].getValue()[0] )
+			self.failUnless( v <= r["floatRange"].getValue()[1] )
+	
+	def testContext( self ) :
+	
+		r = Gaffer.Random()
+		r["contextEntry"].setValue( "frame" )
 				
-				hash = outputPlug.hash()
-				
-				value = inputPlug.getValue()
-				if isinstance( value, float ) :
-					increment = 0.1
-				elif isinstance( value, int ) :
-					increment = 1
-				elif isinstance( value, basestring ) :
-					increment = "a"
-				else :
-					# don't know how to deal with this
-					# value type.
-					continue
-					
-				inputPlug.setValue( value + increment )
-				if inputPlug.getValue() == value :
-					inputPlug.setValue( value - increment )
-				if inputPlug.getValue() == value :
-					continue
-			
-				self.assertNotEqual( outputPlug.hash(), hash )
-				
-				numTests += 1
-				
-		self.failUnless( numTests > 0 )
+		c = Gaffer.Context()
+		
+		c.setFrame( 1 )
+		with c :
+			v1 = r["outFloat"].getValue()
+		
+		c.setFrame( 2 )
+		with c :
+			v2 = r["outFloat"].getValue()
+
+		self.assertNotEqual( v1, v2 )
+	
+	def testColor( self ) :
+	
+		r = Gaffer.Random()
+		r["seed"].setValue( 1 )
+		
+		r["baseColor"].setValue( IECore.Color3f( 0.25, 0.5, 0 ) )
+		
+		c1 = r["outColor"].getValue()
+		c2 = r.randomColor( 1 )
+		
+		self.assertEqual( c1, c2 )
+		
+if __name__ == "__main__":
+	unittest.main()

@@ -42,6 +42,8 @@
 
 * ModelCacheSource now uses the new ModelCache class provided by Cortex.
 
+* Added a Random node, for producing random floats and colours based on a seed and a context item.
+
 0.35.5
 ------
 
