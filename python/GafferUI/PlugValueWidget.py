@@ -135,9 +135,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		menuDefinition = IECore.MenuDefinition()
 		
-		if hasattr( self.getPlug(), "defaultValue" ) :
+		if self._editable() and hasattr( self.getPlug(), "defaultValue" ) :
 			menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ) } )
-		
+			
 		self.popupMenuSignal()( menuDefinition, self )
 		
 		return menuDefinition

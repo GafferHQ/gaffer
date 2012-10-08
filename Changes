@@ -44,6 +44,8 @@
 
 * Added a Random node, for producing random floats and colours based on a seed and a context item.
 
+* Fixed bug where plug popup menus tried to edit plugs which were not editable.
+
 0.35.5
 ------
 
