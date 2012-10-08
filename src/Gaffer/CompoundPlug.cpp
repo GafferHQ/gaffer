@@ -232,6 +232,14 @@ void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
 	}
 	
 	CompoundPlugPtr commonParent = input->ancestor<CompoundPlug>();
+	if( !acceptsInput( commonParent ) )
+	{
+		// if we're never going to accept the candidate input anyway, then
+		// don't even bother checking to see if all the candidate's children
+		// are connected to our children.
+		ValuePlug::setInput( 0 );
+		return;
+	}
 
 	ChildContainer::const_iterator it;
 	for( it = children().begin(); it!=children().end(); it++ )

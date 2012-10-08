@@ -315,6 +315,22 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 		c2.setInput( c1 )
 		self.assertEqual( c2.getInput(), c1 )
+	
+	def testCanMakeSomeConnectionsWhenSizesDontMatch( self ) :
+	
+		n = Gaffer.Node()
+		
+		n["c1"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.In )
+		n["c1"]["i"] = Gaffer.IntPlug()
+		
+		n["c2"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+		n["c2"]["i1"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		n["c2"]["i2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		n["c1"]["i"].setInput( n["c2"]["i1"] )
+		
+		self.failUnless( n["c1"]["i"].getInput().isSame( n["c2"]["i1"] ) )
+		self.assertEqual( n["c1"].getInput(), None )
 		
 if __name__ == "__main__":
 	unittest.main()

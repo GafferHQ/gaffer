@@ -50,6 +50,8 @@
 
 * Fixed bug which caused ExpressionNode to crash when the expression was changed while the output plug was being viewed by the UI.
 
+* Fixed bug which caused errors when connecting compatible children of CompoundPlugs together, if the CompoundPlugs were not themselves compatible enough for a complete connection between all child plugs to be made.
+
 0.35.5
 ------
 
