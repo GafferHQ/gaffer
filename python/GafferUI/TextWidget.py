@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -66,8 +66,12 @@ class TextWidget( GafferUI.Widget ) :
 
 	def setEditable( self, editable ) :
 	
+		if editable == self.getEditable() :
+			return
+			
 		self._qtWidget().setReadOnly( not editable )
-
+		self._repolish()
+		
 	def getEditable( self ) :
 		
 		return not self._qtWidget().isReadOnly()

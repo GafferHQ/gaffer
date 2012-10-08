@@ -46,6 +46,8 @@
 
 * Fixed bug where plug popup menus tried to edit plugs which were not editable.
 
+* Fixed bug where the effects of TextWidget.setEditable() did not update the appearance of the widget.
+
 0.35.5
 ------
 

@@ -250,7 +250,7 @@ class Widget( object ) :
 			return
 			
 		self._qtWidget().setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
-		self.__repolish( self._qtWidget() )
+		self._repolish()
 		
 	def getHighlighted( self ) :
 	
@@ -619,14 +619,17 @@ class Widget( object ) :
 		else :
 			self._qtWidget().setMouseTracking( True )
 
-	def __repolish( self, qWidget ) :
+	def _repolish( self, qtWidget=None ) :
 	
-		style = qWidget.style()
-		style.unpolish( qWidget )
-		for child in qWidget.children() :
+		if qtWidget is None :
+			qtWidget = self._qtWidget()
+	
+		style = qtWidget.style()
+		style.unpolish( qtWidget )
+		for child in qtWidget.children() :
 			if isinstance( child, QtGui.QWidget ) :
-				self.__repolish( child )
-		style.polish( qWidget )
+				self._repolish( child )
+		style.polish( qtWidget )
 
 	def _setStyleSheet( self ):
 
