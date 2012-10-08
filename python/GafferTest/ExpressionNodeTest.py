@@ -145,5 +145,20 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		e = Gaffer.ExpressionNode()
 		self.assertEqual( e["engine"].getValue(), "python" )
 	
+	def testCreateExpressionWithWatchers( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		def f( plug ) :
+			
+			plug.getValue()
+		
+		s["m1"] = GafferTest.MultiplyNode()
+		
+		c = s["m1"].plugDirtiedSignal().connect( f )
+			
+		s["e"] = Gaffer.ExpressionNode()	
+		s["e"]["expression"].setValue( "parent[\"m1\"][\"op1\"] = 2" )
+
 if __name__ == "__main__":
 	unittest.main()

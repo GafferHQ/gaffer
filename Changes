@@ -48,6 +48,8 @@
 
 * Fixed bug where the effects of TextWidget.setEditable() did not update the appearance of the widget.
 
+* Fixed bug which caused ExpressionNode to crash when the expression was changed while the output plug was being viewed by the UI.
+
 0.35.5
 ------
 

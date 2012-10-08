@@ -243,11 +243,7 @@ void ExpressionNode::updatePlugs( const std::string &dstPlugPath, std::vector<st
 	{
 		throw IECore::Exception( boost::str( boost::format( "Destination plug \"%s\" does not exist" ) % dstPlugPath ) );
 	}
-	
-	PlugPtr outPlug = createPlug( dstPlug );
-	setChild( "out", outPlug );
-	dstPlug->setInput( outPlug );
-	
+		
 	CompoundPlugPtr inPlugs = new CompoundPlug( "in", Plug::In, Plug::Default | Plug::Dynamic );
 	setChild( "in", inPlugs );
 	for( std::vector<std::string>::const_iterator it = srcPlugPaths.begin(); it!=srcPlugPaths.end(); it++ )
@@ -261,6 +257,10 @@ void ExpressionNode::updatePlugs( const std::string &dstPlugPath, std::vector<st
 		inPlugs->addChild( inPlug );
 		inPlug->setInput( srcPlug );
 	}
+	
+	PlugPtr outPlug = createPlug( dstPlug );
+	setChild( "out", outPlug );
+	dstPlug->setInput( outPlug );
 }
 
 ValuePlugPtr ExpressionNode::createPlug( const ValuePlug *partner ) const
