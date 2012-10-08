@@ -253,19 +253,18 @@ void ExpressionNode::updatePlugs( const std::string &dstPlugPath, std::vector<st
 		{
 			throw IECore::Exception( boost::str( boost::format( "Source plug \"%s\" does not exist" ) % *it ) );
 		}
-		PlugPtr inPlug = createPlug( srcPlug );
+		PlugPtr inPlug = createPlug( srcPlug, Plug::In );
 		inPlugs->addChild( inPlug );
 		inPlug->setInput( srcPlug );
 	}
 	
-	PlugPtr outPlug = createPlug( dstPlug );
+	PlugPtr outPlug = createPlug( dstPlug, Plug::Out );
 	setChild( "out", outPlug );
 	dstPlug->setInput( outPlug );
 }
 
-ValuePlugPtr ExpressionNode::createPlug( const ValuePlug *partner ) const
+ValuePlugPtr ExpressionNode::createPlug( const ValuePlug *partner, Plug::Direction direction ) const
 {
-	Plug::Direction direction = partner->direction() == Plug::In ? Plug::Out : Plug::In;
 	if( partner->isInstanceOf( FloatPlug::staticTypeId() ) )
 	{
 		return new FloatPlug(

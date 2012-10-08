@@ -160,5 +160,34 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["e"] = Gaffer.ExpressionNode()	
 		s["e"]["expression"].setValue( "parent[\"m1\"][\"op1\"] = 2" )
 
+	def testCompoundNumericPlugs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["v"] = Gaffer.V2fPlug()
+		
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["expression"].setValue( 'parent["n"]["v"]["x"] = parent["n"]["v"]["y"]' )
+		
+		s["n"]["v"]["y"].setValue( 21 )
+		
+		self.assertEqual( s["n"]["v"]["x"].getValue(), 21 )
+
+	def testInputsAsInputs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["i1"] = Gaffer.IntPlug()
+		s["n"]["i2"] = Gaffer.IntPlug()
+		
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["expression"].setValue( 'parent["n"]["i1"] = parent["n"]["i2"]' )
+		
+		s["n"]["i2"].setValue( 11 )
+		
+		self.assertEqual( s["n"]["i1"].getValue(), 11 )
+		
 if __name__ == "__main__":
 	unittest.main()

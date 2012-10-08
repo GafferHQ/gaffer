@@ -52,6 +52,8 @@
 
 * Fixed bug which caused errors when connecting compatible children of CompoundPlugs together, if the CompoundPlugs were not themselves compatible enough for a complete connection between all child plugs to be made.
 
+* Fixed bug which prevents ExpressionNode from accepting a Plug with direction()==In as an input to the expression.
+
 0.35.5
 ------
 

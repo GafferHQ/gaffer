@@ -109,7 +109,7 @@ class ExpressionNode : public Node
 		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
 		
 		void updatePlugs( const std::string &outPlugPath, std::vector<std::string> &inPlugPaths );
-		ValuePlugPtr createPlug( const ValuePlug *partner ) const;
+		ValuePlugPtr createPlug( const ValuePlug *partner, Plug::Direction direction ) const;
 		
 		EnginePtr m_engine;
 		
