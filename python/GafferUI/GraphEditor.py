@@ -59,7 +59,8 @@ class GraphEditor( GafferUI.EditorWidget ) :
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-					
+		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		
 	## Returns the internal GadgetWidget holding the GraphGadget.	
 	def graphGadgetWidget( self ) :
 	
@@ -83,6 +84,14 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	def nodeContextMenuSignal( cls ) :
 	
 		return cls.__nodeContextMenuSignal
+	
+	__nodeDoubleClickSignal = Gaffer.Signal2()
+	## Returns a signal which is emitted whenever a node is double clicked.
+	# Slots should have the signature ( graphEditor, node ).
+	@classmethod
+	def nodeDoubleClickSignal( cls ) :
+	
+		return cls.__nodeDoubleClickSignal
 		
 	def __repr__( self ) :
 
@@ -97,23 +106,31 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			
 			menuDefinition = GafferUI.NodeMenu.definition()
 			
-			gadgets = self.__gadgetWidget.viewportGadget().gadgetsAt( IECore.V2f( event.line.p1.x, event.line.p1.y ) )
-			if len( gadgets ) :
-				nodeGadget = gadgets[0]
-				if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
-					nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget.staticTypeId() )		
-				if nodeGadget :
-					nodeMenuDefinition = IECore.MenuDefinition()
-					self.nodeContextMenuSignal()( nodeGadget.node(), nodeMenuDefinition )
-					if len( nodeMenuDefinition.items() ) :
-						menuDefinition = nodeMenuDefinition
-			
+			nodeGadget = self.__nodeGadgetAt( event.line.p1 )				
+			if nodeGadget :
+				nodeMenuDefinition = IECore.MenuDefinition()
+				self.nodeContextMenuSignal()( nodeGadget.node(), nodeMenuDefinition )
+				if len( nodeMenuDefinition.items() ) :
+					menuDefinition = nodeMenuDefinition
+		
 			self.__m = GafferUI.Menu( menuDefinition )
 			self.__m.popup( self )
 						
 			return True
 	
 		return False
+	
+	def __nodeGadgetAt( self, position ) :
+	
+		gadgets = self.__gadgetWidget.viewportGadget().gadgetsAt( IECore.V2f( position.x, position.y ) )
+		
+		result = None
+		if len( gadgets ) :
+			result = gadgets[0]
+			if not isinstance( result, GafferUI.NodeGadget ) :
+				result = result.ancestor( GafferUI.NodeGadget.staticTypeId() )	
+	
+		return result
 	
 	def __keyPress( self, widget, event ) :
 	
@@ -161,5 +178,11 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		bound.max = boundCenter + newBoundSize / 2.0
 			
 		self.__gadgetWidget.viewportGadget().frame( bound )
+	
+	def __buttonDoubleClick( self, widget, event ) :
+	
+		nodeGadget = self.__nodeGadgetAt( event.line.p1 )				
+		if nodeGadget is not None :
+			return self.nodeDoubleClickSignal()( self, nodeGadget.node() )
 		
 GafferUI.EditorWidget.registerType( "GraphEditor", GraphEditor )
