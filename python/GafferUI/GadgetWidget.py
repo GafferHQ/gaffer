@@ -121,9 +121,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		return self.__viewportGadget.buttonReleaseSignal()( self.__viewportGadget, event )
 		
 	def __buttonDoubleClick( self, widget, event ) :
-				
-		return self.__viewportGadget.buttonPressSignal()( self.__viewportGadget, event )
-
+						
 		return self.__viewportGadget.buttonDoubleClickSignal()( self.__viewportGadget, event )
 		
 	def __mouseMove( self, widget, event ) :

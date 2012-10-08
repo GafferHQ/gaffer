@@ -54,6 +54,8 @@
 
 * Fixed bug which prevents ExpressionNode from accepting a Plug with direction()==In as an input to the expression.
 
+* Fixed bug whereby GadgetWidget was passing buttonDoubleClick signals to buttonPress signals on the held gadget.
+
 0.35.5
 ------
 
