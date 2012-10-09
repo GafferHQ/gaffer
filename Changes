@@ -65,6 +65,8 @@
 
 * Added Window.childWindows() method.
 
+* Fixed bug which caused Windows to be hidden when being added as the child of another Window.
+
 0.35.5
 ------
 

@@ -142,6 +142,7 @@ class Window( GafferUI.ContainerWidget ) :
 		
 		self.__childWindows.add( childWindow )
 		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() )
+		childWindow._applyVisibility()
 	
 	## Returns a list of all the windows parented to this one.
 	def childWindows( self ) :
