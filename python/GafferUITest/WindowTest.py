@@ -261,6 +261,31 @@ class WindowTest( unittest.TestCase ) :
 		w.setPosition( IECore.V2i( 10, 20 ) )
 		self.assertEqual( w.getPosition(), IECore.V2i( 10, 20 ) )
 
+	def testChildWindowsMethod( self ) :
+	
+		w = GafferUI.Window()
+		self.assertEqual( w.childWindows(), [] )
+		
+		wc1 = GafferUI.Window()
+		w.addChildWindow( wc1 )
+		self.assertEqual( w.childWindows(), [ wc1 ] )
+		
+		wc2 = GafferUI.Window()
+		w.addChildWindow( wc2 )
+		self.assertEqual( len( w.childWindows() ), 2 )
+		self.failUnless( wc1 in w.childWindows() )
+		self.failUnless( wc2 in w.childWindows() )
+
+		c = w.childWindows()
+		c.remove( wc1 )
+		# editing the list itself should have no effect
+		self.assertEqual( len( w.childWindows() ), 2 )
+		self.failUnless( wc1 in w.childWindows() )
+		self.failUnless( wc2 in w.childWindows() )
+
+		w.removeChild( wc1 )
+		self.assertEqual( w.childWindows(), [ wc2 ] )
+
 if __name__ == "__main__":
 	unittest.main()
 	

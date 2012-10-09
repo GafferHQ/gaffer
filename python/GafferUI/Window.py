@@ -142,6 +142,11 @@ class Window( GafferUI.ContainerWidget ) :
 		
 		self.__childWindows.add( childWindow )
 		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() )
+	
+	## Returns a list of all the windows parented to this one.
+	def childWindows( self ) :
+	
+		return list( self.__childWindows )
 		
 	## \deprecated
 	def setResizeable( self, resizeable ) :

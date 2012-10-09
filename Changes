@@ -63,6 +63,8 @@
 
 * Added GraphEditor.nodeDoubleClickSignal().
 
+* Added Window.childWindows() method.
+
 0.35.5
 ------
 
