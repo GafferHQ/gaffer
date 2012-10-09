@@ -68,15 +68,7 @@ class StandardNodeGadget : public NodeGadget
 		Imath::Box3f bound() const;
 
 	protected :
-	
-		/// This form of the constructor can be called by derived classes,
-		/// passing deferNoduleCreation==true. The derived class may then
-		/// call addNodules() at the end of it's constructor, so that nodules
-		/// are added at a time when addNodules() may be called successfully
-		/// (addNodules() will not behave like a virtual function until the
-		/// derived class is fully constructed).
-		StandardNodeGadget( Gaffer::NodePtr node, bool deferNoduleCreation );
-		
+			
 		virtual void doRender( const Style *style ) const;
 		
 	private :
