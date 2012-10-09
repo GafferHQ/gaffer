@@ -87,7 +87,19 @@ class Window( GafferUI.ContainerWidget ) :
 	def getTitle( self ) :
 	
 		return self._qtWidget().windowTitle()
-	
+
+	## Overridden from the base class to ensure that
+	# window.setVisible( True ) also raises and unminimizes
+	# the window.
+	def setVisible( self, visible ) :
+
+		GafferUI.Widget.setVisible( self, visible )
+		
+		if self.visible() :
+			if self._qtWidget().isMinimized() :
+				self._qtWidget().showNormal()
+			self._qtWidget().raise_()
+			
 	def removeChild( self, child ) :
 	
 		assert( child is self.__child or child in self.__childWindows )

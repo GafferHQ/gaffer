@@ -4,6 +4,8 @@
 
 * Fixed bug which caused Windows to be hidden when being added as the child of another Window.
 
+* Window.setVisible( True ) now ensures that the Window is unminimized and raised where necessary.
+
 0.35.6
 ------
 
