@@ -46,42 +46,57 @@
 namespace GafferUIBindings
 {
 
-#define GAFFERUIBINDINGS_GADGETWRAPPERFNS( CLASSNAME )\
-	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME)\
-\
-	virtual Imath::Box3f bound() const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		override f = this->get_override( "bound" );\
-		if( f )\
-		{\
-			return f();\
-		}\
-		return CLASSNAME::bound();\
-	}\
-\
-	virtual std::string getToolTip() const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		override f = this->get_override( "getToolTip" );\
-		if( f )\
-		{\
-			return f();\
-		}\
-		return CLASSNAME::getToolTip();\
-	}\
-	\
-	virtual void doRender( const Style *style ) const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		override f = this->get_override( "doRender" );\
-		if( f )\
-		{\
-			f( style );\
-			return;\
-		}\
-		CLASSNAME::doRender( style );\
-	}\
+template<typename WrappedType>
+class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
+{
+	public :
+	
+		GadgetWrapper( PyObject *self, const std::string &name=WrappedType::staticTypeName() )
+			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, name )
+		{
+		}
+
+		template<typename Arg1, typename Arg2>
+		GadgetWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
+			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, arg1, arg2 )
+		{
+		}
+		
+		virtual Imath::Box3f bound() const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::override f = this->get_override( "bound" );
+			if( f )
+			{
+				return f();
+			}
+			return WrappedType::bound();
+		}
+	
+		virtual std::string getToolTip() const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::override f = this->get_override( "getToolTip" );
+			if( f )
+			{
+				return f();
+			}
+			return WrappedType::getToolTip();
+		}
+		
+		virtual void doRender( const GafferUI::Style *style ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::override f = this->get_override( "doRender" );
+			if( f )
+			{
+				f( style );
+				return;
+			}
+			WrappedType::doRender( style );
+		}
+
+};
 
 /// This must be used in /every/ Gadget binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.

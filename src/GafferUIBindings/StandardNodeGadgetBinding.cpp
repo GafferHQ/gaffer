@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,6 +40,7 @@
 #include "GafferUIBindings/StandardNodeGadgetBinding.h"
 #include "GafferUIBindings/NodeGadgetBinding.h"
 #include "GafferUI/StandardNodeGadget.h"
+#include "GafferUI/Nodule.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/Wrapper.h"
@@ -48,17 +49,15 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
-class StandardNodeGadgetWrapper : public StandardNodeGadget, public IECorePython::Wrapper<StandardNodeGadget>
+class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 {
 	
 	public :
 
 		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-			:	StandardNodeGadget( node, orientation ), IECorePython::Wrapper<StandardNodeGadget>( self, this )
+			:	NodeGadgetWrapper<StandardNodeGadget>( self, node, orientation )
 		{
 		}
-				
-		GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( StandardNodeGadget )
 						
 };
 

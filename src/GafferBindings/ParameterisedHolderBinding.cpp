@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -49,21 +49,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class ParameterisedHolderNodeWrapper : public ParameterisedHolderNode, public IECorePython::Wrapper<ParameterisedHolderNode>
-{
-
-	public :
-		
-		ParameterisedHolderNodeWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	ParameterisedHolderNode( name ), IECorePython::Wrapper<ParameterisedHolderNode>( self, this )
-		{
-			initNode( this, inputs, dynamicPlugs );
-			loadParameterised();
-		}		
-		
-		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( ParameterisedHolderNode )
-
-};
+typedef ParameterisedHolderWrapper<ParameterisedHolderNode> ParameterisedHolderNodeWrapper;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNodeWrapper )
 

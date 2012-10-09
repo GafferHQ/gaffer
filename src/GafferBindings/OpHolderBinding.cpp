@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,22 +52,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class OpHolderWrapper : public OpHolder, public IECorePython::Wrapper<OpHolder>
-{
-
-	public :
-		
-		OpHolderWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	OpHolder( name ), IECorePython::Wrapper<OpHolder>( self, this )
-		{
-			initNode( this, inputs, dynamicPlugs );
-			loadParameterised();
-		}		
-		
-		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( OpHolder )
-
-};
-
+typedef ParameterisedHolderWrapper<OpHolder> OpHolderWrapper;
 IE_CORE_DECLAREPTR( OpHolderWrapper );
 
 static IECore::OpPtr getOp( OpHolder &n )

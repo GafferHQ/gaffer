@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 #define GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 
+#include "IECorePython/Wrapper.h"
+
 #include "boost/format.hpp"
 
 #include "GafferBindings/NodeBinding.h"
@@ -45,22 +47,33 @@
 namespace GafferBindings
 {
 
-#define GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( CLASSNAME )\
-	GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
-\
-	virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const\
-	{\
-		dict scopeDict;\
-		scopeDict["IECore"] = import( "IECore" );\
-		std::string toExecute = boost::str(\
-			boost::format(\
-				"IECore.ClassLoader.defaultLoader( \"%s\" ).load( \"%s\", %d )()\n"\
-			) % searchPathEnvVar % className % classVersion\
-		);\
-		IECorePython::ScopedGILLock gilLock;\
-		boost::python::object result = boost::python::eval( toExecute.c_str(), scopeDict, scopeDict );\
-		return boost::python::extract<IECore::RunTimeTypedPtr>( result );\
-	}\
+template<typename WrappedType>
+class ParameterisedHolderWrapper : public NodeWrapper<WrappedType>
+{
+
+	public :
+	
+		ParameterisedHolderWrapper( PyObject *self, const std::string &name, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs )
+			:	NodeWrapper<WrappedType>( self, name, inputs, dynamicPlugs )
+		{
+			WrappedType::loadParameterised();
+		}
+		
+		virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::dict scopeDict;
+			scopeDict["IECore"] = boost::python::import( "IECore" );
+			std::string toExecute = boost::str(
+				boost::format(
+					"IECore.ClassLoader.defaultLoader( \"%s\" ).load( \"%s\", %d )()\n"
+				) % searchPathEnvVar % className % classVersion
+			);
+			boost::python::object result = boost::python::eval( toExecute.c_str(), scopeDict, scopeDict );
+			return boost::python::extract<IECore::RunTimeTypedPtr>( result );
+		}
+	
+};
 	
 void bindParameterisedHolder();
 

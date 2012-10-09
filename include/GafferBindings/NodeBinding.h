@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -63,71 +63,88 @@ class NodeClass : public IECorePython::RunTimeTypedClass<T, Ptr>
 		
 };
 
-#define GAFFERBINDINGS_NODEWRAPPERFNS( CLASSNAME )\
-	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
-\
-	virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "acceptsInput" ) )\
-		{\
-			boost::python::override f = this->get_override( "acceptsInput" );\
-			if( f )\
-			{\
-				return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );\
-			}\
-		}\
-		return CLASSNAME::acceptsInput( plug, inputPlug );\
-	}\
-	virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "affects" ) )\
-		{\
-			boost::python::override f = this->get_override( "affects" );\
-			if( f )\
-			{\
-				boost::python::list pythonOutputs = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( input ) ) );\
-				boost::python::container_utils::extend_container( outputs, pythonOutputs );\
-				return;\
-			}\
-		}\
-		CLASSNAME::affects( input, outputs );\
-	}\
-\
-	virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const\
-	{\
-		CLASSNAME::hash( output, context, h );\
-		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "hash" ) )\
-		{\
-			boost::python::override f = this->get_override( "hash" );\
-			if( f )\
-			{\
-				boost::python::object pythonHash( h );\
-				f(\
-					Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),\
-					Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),\
-					pythonHash\
-				);\
-				h = boost::python::extract<IECore::MurmurHash>( pythonHash );\
-			}\
-		}\
-	}\
-	virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "compute" ) )\
-		{\
-			boost::python::override f = this->get_override( "compute" );\
-			if( f )\
-			{\
-				f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );\
-				return;\
-			}\
-		}\
-		CLASSNAME::compute( output, context );\
-	}
+template<typename WrappedType>
+class NodeWrapper : public GraphComponentWrapper<WrappedType>
+{
+	public :
+	
+		NodeWrapper( PyObject *self, const std::string &name, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs )
+			:	GraphComponentWrapper<WrappedType>( self, name )
+		{
+			initNode( this, inputs, dynamicPlugs );
+		}		
+		
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "acceptsInput" ) )
+			{
+				boost::python::override f = this->get_override( "acceptsInput" );
+				if( f )
+				{
+					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );
+				}
+			}
+			return WrappedType::acceptsInput( plug, inputPlug );
+		}
+		
+		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "affects" ) )
+			{
+				boost::python::override f = this->get_override( "affects" );
+				if( f )
+				{
+					boost::python::list pythonOutputs = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( input ) ) );
+					boost::python::container_utils::extend_container( outputs, pythonOutputs );
+					return;
+				}
+			}
+			WrappedType::affects( input, outputs );
+		}
+	
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		{
+			WrappedType::hash( output, context, h );
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "hash" ) )
+			{
+				boost::python::override f = this->get_override( "hash" );
+				if( f )
+				{
+					boost::python::object pythonHash( h );
+					f(
+						Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
+						Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
+						pythonHash
+					);
+					h = boost::python::extract<IECore::MurmurHash>( pythonHash );
+				}
+			}
+		}
+
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "compute" ) )
+			{
+				boost::python::override f = this->get_override( "compute" );
+				if( f )
+				{
+					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
+					return;
+				}
+			}
+			WrappedType::compute( output, context );
+		}
+	
+};
+
+#define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
+	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )
+		
+void bindNode();
 
 void initNode( Gaffer::Node *node, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs );
 

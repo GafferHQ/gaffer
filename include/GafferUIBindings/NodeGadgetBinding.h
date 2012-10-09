@@ -38,36 +38,53 @@
 #ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_H
 #define GAFFERUIBINDINGS_NODEGADGETBINDING_H
 
-#include "GafferUI/Nodule.h"
+#include "GafferUI/NodeGadget.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 
 namespace GafferUIBindings
 {
 
-#define GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( CLASSNAME )\
-	GAFFERUIBINDINGS_GADGETWRAPPERFNS( CLASSNAME)\
-\
-	virtual GafferUI::NodulePtr nodule( Gaffer::ConstPlugPtr plug )\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		override f = this->get_override( "nodule" );\
-		if( f )\
-		{\
-			return f( IECore::constPointerCast<Gaffer::Plug>( plug ) );\
-		}\
-		return CLASSNAME::nodule( plug );\
-	}\
-	virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule )\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		override f = this->get_override( "noduleTangent" );\
-		if( f )\
-		{\
-			return f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) );\
-		}\
-		return CLASSNAME::noduleTangent( nodule );\
-	}
+template<typename WrappedType>
+class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
+{
+	
+	public :
+
+		NodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
+			:	GadgetWrapper<WrappedType>( self, node )
+		{
+		}
+		
+		template<typename Arg1, typename Arg2>
+		NodeGadgetWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
+			:	GadgetWrapper<WrappedType>( self, arg1, arg2 )
+		{
+		}
+				
+		virtual GafferUI::NodulePtr nodule( Gaffer::ConstPlugPtr plug )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::override f = this->get_override( "nodule" );
+			if( f )
+			{
+				return f( IECore::constPointerCast<Gaffer::Plug>( plug ) );
+			}
+			return WrappedType::nodule( plug );
+		}
+		
+		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::override f = this->get_override( "noduleTangent" );
+			if( f )
+			{
+				return f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) );
+			}
+			return WrappedType::noduleTangent( nodule );
+		}
+
+};
 
 /// This must be used in /every/ NodeGadget binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.

@@ -48,22 +48,6 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class PlugWrapper : public Plug, public IECorePython::Wrapper<Plug>
-{
-
-	public :
-	
-		PlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags )
-			:	Plug( name, direction, flags ), IECorePython::Wrapper<Plug>( self, this )
-		{
-		}
-
-		GAFFERBINDINGS_PLUGWRAPPERFNS( Plug )
-
-};
-
-IE_CORE_DECLAREPTR( PlugWrapper );
-
 std::string GafferBindings::serialisePlugDirection( Plug::Direction direction )
 {
 	switch( direction )
@@ -167,8 +151,10 @@ static NodePtr node( Plug &p )
 
 void GafferBindings::bindPlug()
 {
-
-	IECorePython::RunTimeTypedClass<Plug, PlugWrapperPtr> c;
+	typedef PlugWrapper<Plug> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
+	
+	IECorePython::RunTimeTypedClass<Plug, WrapperPtr> c;
 	{
 		scope s( c );
 		enum_<Plug::Direction>( "Direction" )

@@ -1,3 +1,8 @@
+* Improved bindings by removing macros and replacing them with proper wrapper classes.
+
+0.35.6
+------
+
 * Fixed problem where VectorDataWidget would grow to claim size it couldn't use.
 
 * VectorDataWidget now scrolls to show the new rows when rows have been added.

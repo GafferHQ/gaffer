@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,38 +45,46 @@
 namespace GafferBindings
 {
 
-#define GAFFERBINDINGS_PLUGWRAPPERFNS( BASECLASS )\
-\
-	GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( BASECLASS )\
-\
-	virtual bool acceptsInput( const Plug *input ) const\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "acceptsInput" ) )\
-		{\
-			override f = this->get_override( "acceptsInput" );\
-			if( f )\
-			{\
-				return f( PlugPtr( const_cast<Plug *>( input ) ) );\
-			}\
-		}\
-		return BASECLASS::acceptsInput( input );\
-	}\
-\
-	virtual void setInput( PlugPtr input )\
-	{\
-		IECorePython::ScopedGILLock gilLock;\
-		if( PyObject_HasAttrString( m_pyObject, "setInput" ) )\
-		{\
-			override f = this->get_override( "setInput" );\
-			if( f ) \
-			{\
-				f( IECore::constPointerCast<Plug>( input ) );\
-				return;\
-			}\
-		}\
-		BASECLASS::setInput( input );\
-	}\
+template<typename WrappedType>
+class PlugWrapper : public GraphComponentWrapper<WrappedType>
+{
+	public :
+	
+		PlugWrapper( PyObject *self, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags )
+			:	GraphComponentWrapper<WrappedType>( self, name, direction, flags )
+		{
+		}		
+
+		virtual bool acceptsInput( const Gaffer::Plug *input ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "acceptsInput" ) )
+			{
+				boost::python::override f = this->get_override( "acceptsInput" );
+				if( f )
+				{
+					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
+				}
+			}
+			return WrappedType::acceptsInput( input );
+		}
+	
+		virtual void setInput( Gaffer::PlugPtr input )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "setInput" ) )
+			{
+				boost::python::override f = this->get_override( "setInput" );
+				if( f )
+				{
+					f( IECore::constPointerCast<Gaffer::Plug>( input ) );
+					return;
+				}
+			}
+			WrappedType::setInput( input );
+		}
+	
+};
 
 /// This must be used in /every/ plug binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.

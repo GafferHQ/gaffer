@@ -63,13 +63,13 @@ namespace GafferBindings
 /// components of the ScriptNode base class. In this way
 /// scripting is available provided that the ScriptNode was
 /// created from python.
-class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<ScriptNode>
+class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 {
 
 	public :
 
 		ScriptNodeWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	ScriptNode( name ), IECorePython::Wrapper<ScriptNode>( self, this )
+			:	NodeWrapper<ScriptNode>( self, name, dict(), tuple() )
 		{
 			initNode( this, inputs, dynamicPlugs );
 		}
@@ -147,9 +147,7 @@ class ScriptNodeWrapper : public ScriptNode, public IECorePython::Wrapper<Script
 				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
 			}
 		}
-		
-		GAFFERBINDINGS_NODEWRAPPERFNS( ScriptNode )
-		
+				
 	private :
 
 		virtual void parentChanging( Gaffer::GraphComponent *newParent )

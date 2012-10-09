@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -49,22 +49,6 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
-class NodeGadgetWrapper : public NodeGadget, public IECorePython::Wrapper<NodeGadget>
-{
-	
-	public :
-
-		NodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
-			:	NodeGadget( node ), IECorePython::Wrapper<NodeGadget>( self, this )
-		{
-		}
-				
-		GAFFERUIBINDINGS_NODEGADGETWRAPPERFNS( NodeGadget )
-		
-};
-
-IE_CORE_DECLAREPTR( NodeGadgetWrapper );
-
 struct NodeGadgetCreator
 {
 	NodeGadgetCreator( object fn )
@@ -92,7 +76,10 @@ static void registerNodeGadget( IECore::TypeId nodeType, object creator )
 
 void GafferUIBindings::bindNodeGadget()
 {
-	IECorePython::RunTimeTypedClass<NodeGadget, NodeGadgetWrapperPtr>()
+	typedef NodeGadgetWrapper<NodeGadget> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
+
+	IECorePython::RunTimeTypedClass<NodeGadget, WrapperPtr>()
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( NodeGadget )
 		.def( "node", (Gaffer::NodePtr (NodeGadget::*)())&NodeGadget::node )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )

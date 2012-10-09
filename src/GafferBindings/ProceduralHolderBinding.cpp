@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,22 +52,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class ProceduralHolderWrapper : public ProceduralHolder, public IECorePython::Wrapper<ProceduralHolder>
-{
-
-	public :
-		
-		ProceduralHolderWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	ProceduralHolder( name ), IECorePython::Wrapper<ProceduralHolder>( self, this )
-		{
-			initNode( this, inputs, dynamicPlugs );
-			loadParameterised();
-		}		
-		
-		GAFFERBINDINGS_PARAMETERISEDHOLDERWRAPPERFNS( ProceduralHolder )
-
-};
-
+typedef ParameterisedHolderWrapper<ProceduralHolder> ProceduralHolderWrapper;
 IE_CORE_DECLAREPTR( ProceduralHolderWrapper );
 
 static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )

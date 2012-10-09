@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -48,22 +48,6 @@
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
-
-class GraphComponentWrapper : public GraphComponent, public IECorePython::Wrapper<GraphComponent>
-{
-
-	public :
-	
-		GraphComponentWrapper( PyObject *self, const std::string &name=staticTypeName() )
-			:	GraphComponent( name ), IECorePython::Wrapper<GraphComponent>( self, this )
-		{
-		}
-
-		GAFFERBINDINGS_GRAPHCOMPONENTWRAPPERFNS( GraphComponent )
-
-};
-
-IE_CORE_DECLAREPTR( GraphComponentWrapper );
 
 static boost::python::list items( GraphComponent &c )
 {
@@ -226,8 +210,10 @@ struct BinarySlotCaller
 
 void GafferBindings::bindGraphComponent()
 {
+	typedef GraphComponentWrapper<GraphComponent> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = IECorePython::RunTimeTypedClass<GraphComponent, GraphComponentWrapperPtr>()
+	scope s = IECorePython::RunTimeTypedClass<GraphComponent, WrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "setName", &GraphComponent::setName, return_value_policy<copy_const_reference>() )

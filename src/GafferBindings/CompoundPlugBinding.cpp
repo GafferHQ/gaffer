@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -49,13 +49,13 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class CompoundPlugWrapper : public CompoundPlug, public IECorePython::Wrapper<CompoundPlug>
+class CompoundPlugWrapper : public PlugWrapper<CompoundPlug>
 {
 
 	public :
 	
 		CompoundPlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags, tuple children )
-			:	CompoundPlug( name, direction, flags ), IECorePython::Wrapper<CompoundPlug>( self, this )
+			:	PlugWrapper<CompoundPlug>( self, name, direction, flags )
 		{
 			size_t s = extract<size_t>( children.attr( "__len__" )() );
 			for( size_t i=0; i<s; i++ )
@@ -64,8 +64,6 @@ class CompoundPlugWrapper : public CompoundPlug, public IECorePython::Wrapper<Co
 				addChild( c );
 			}
 		}
-
-		GAFFERBINDINGS_PLUGWRAPPERFNS( CompoundPlug )
 
 };
 

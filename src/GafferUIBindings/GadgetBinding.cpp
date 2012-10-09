@@ -52,22 +52,6 @@ using namespace GafferUIBindings;
 using namespace GafferBindings;
 using namespace GafferUI;
 
-class GadgetWrapper : public Gadget, public IECorePython::Wrapper<Gadget>
-{
-	
-	public :
-
-		GadgetWrapper( PyObject *self, const std::string &name=staticTypeName() )
-			:	Gadget( name ), IECorePython::Wrapper<Gadget>( self, this )
-		{
-		}
-		
-		GAFFERUIBINDINGS_GADGETWRAPPERFNS( Gadget )
-		
-};
-
-IE_CORE_DECLAREPTR( GadgetWrapper );
-
 struct RenderRequestSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GadgetPtr g )
@@ -92,7 +76,10 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( renderOverloads, render, 0, 1 );
 
 void GafferUIBindings::bindGadget()
 {
-	scope s = IECorePython::RunTimeTypedClass<Gadget, GadgetWrapperPtr>()
+	typedef GadgetWrapper<Gadget> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
+
+	scope s = IECorePython::RunTimeTypedClass<Gadget, WrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Gadget )

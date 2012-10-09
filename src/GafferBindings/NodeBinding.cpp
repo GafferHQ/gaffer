@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -130,23 +130,6 @@ static std::string serialiseNode( Serialiser &s, ConstGraphComponentPtr g )
 	return result;
 }
 
-class NodeWrapper : public Node, public IECorePython::Wrapper<Node>
-{
-
-	public :
-		
-		NodeWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	Node( name ), IECorePython::Wrapper<Node>( self, this )
-		{
-			initNode( this, inputs, dynamicPlugs );
-		}		
-		
-		GAFFERBINDINGS_NODEWRAPPERFNS( Node )
-
-};
-
-IE_CORE_DECLAREPTR( NodeWrapper );
-
 static void setPlugs( Node *node, const boost::python::dict &inputs )
 {
 	list items = inputs.items();
@@ -219,8 +202,10 @@ struct BinaryPlugSlotCaller
 
 void GafferBindings::bindNode()
 {
-	
-	scope s = NodeClass<Node, NodeWrapperPtr>()
+	typedef NodeWrapper<Node> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
+
+	scope s = NodeClass<Node, WrapperPtr>()
 		.def( "scriptNode", (ScriptNodePtr (Node::*)())&Node::scriptNode )
 		.def( "_init", &initNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
