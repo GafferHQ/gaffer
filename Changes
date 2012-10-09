@@ -6,6 +6,10 @@
 
 * Window.setVisible( True ) now ensures that the Window is unminimized and raised where necessary.
 
+* Added NodeEditor.acquire() method, to allow other UI elements to request that a Node editor be shown in some way for a specific node.
+
+* Double clicking a node in the graph now shows a floating Node Editor for that node.
+
 0.35.6
 ------
 
