@@ -1,5 +1,9 @@
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
 
+* Added Window.childWindows() method.
+
+* Fixed bug which caused Windows to be hidden when being added as the child of another Window.
+
 0.35.6
 ------
 
@@ -62,10 +66,6 @@
 * Fixed bug whereby GadgetWidget was passing buttonDoubleClick signals to buttonPress signals on the held gadget.
 
 * Added GraphEditor.nodeDoubleClickSignal().
-
-* Added Window.childWindows() method.
-
-* Fixed bug which caused Windows to be hidden when being added as the child of another Window.
 
 0.35.5
 ------
