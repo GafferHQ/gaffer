@@ -34,9 +34,108 @@
 #  
 ##########################################################################
 
+import fnmatch
+
 import IECore
 import Gaffer
 import GafferUI
+
+# NodeUI implementation
+##########################################################################
+
+class ExpressionNodeUI( GafferUI.NodeUI ) :
+
+	def __init__( self, node ) :
+	
+		self.__column = GafferUI.ListContainer( spacing = 4 )
+		
+		GafferUI.NodeUI.__init__( self, node, self.__column )
+		
+		with self.__column :
+			
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) :
+			
+				GafferUI.Label( "Engine" )
+				GafferUI.PlugValueWidget.create( node["engine"] )
+			
+			expressionWidget = GafferUI.PlugValueWidget.create( node["expression"] )
+			self.__dropTextConnection = expressionWidget.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+	
+	def __dropText( self, widget, dragData ) :
+	
+		if isinstance( dragData, IECore.StringVectorData ) :
+			return repr( list( dragData ) )
+		elif isinstance( dragData, Gaffer.GraphComponent ) :
+			name = dragData.relativeName( self.node().parent() )	
+			if not name :
+				return None
+			return "parent" + "".join( [ "['" + n + "']" for n in name.split( "." ) ] )
+		elif isinstance( dragData, Gaffer.Set ) :
+			if len( dragData ) == 1 :
+				return self.__dropText( widget, dragData[0] )
+			else :
+				return None
+		
+		return None
+		
+GafferUI.NodeUI.registerNodeUI( Gaffer.ExpressionNode.staticTypeId(), ExpressionNodeUI )
+
+# PlugValueWidget popup menu for creating expressions
+##########################################################################
+
+def __createExpression( plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
+	
+	expressionNode = Gaffer.ExpressionNode()
+	parentNode.addChild( expressionNode )
+	
+	expression = "parent['"
+	expression += plug.relativeName( parentNode ).replace( ".", "']['" )
+	expression += "'] = "
+	
+	if isinstance( plug, Gaffer.StringPlug ) :
+		expression += "''"
+	elif isinstance( plug, Gaffer.IntPlug ) :
+		expression += "1"
+	elif isinstance( plug, Gaffer.FloatPlug ) :
+		expression += "1.0"
+	
+	expressionNode["expression"].setValue( expression )
+	
+	__editExpression( plugValueWidget )
+
+def __editExpression( plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	expressionNode = plug.getInput().node()	
+
+	GafferUI.NodeEditor.acquire( expressionNode )
+
+def __popupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if not isinstance( plug, ( Gaffer.FloatPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
+		return
+		
+	node = plug.node()
+	if node is None or node.parent() is None :
+		return
+
+	input = plug.getInput()
+	if input is None :		
+		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
+		menuDefinition.prepend( "/Create Expression...", { "command" : IECore.curry( __createExpression, plugValueWidget ) } )
+	elif isinstance( input.node(), Gaffer.ExpressionNode ) :
+		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
+		menuDefinition.prepend( "/Edit Expression...", { "command" : IECore.curry( __editExpression, plugValueWidget ) } )
+		
+__popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
+
+# PlugValueWidget registrations
+##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.ExpressionNode.staticTypeId(),
@@ -58,3 +157,14 @@ GafferUI.PlugValueWidget.registerCreator(
 	"in",
 	None
 )
+
+GafferUI.PlugValueWidget.registerCreator(
+	Gaffer.ExpressionNode.staticTypeId(),
+	"out",
+	None
+)
+
+# Nodule deregistrations
+##########################################################################
+
+GafferUI.Nodule.registerNodule( Gaffer.ExpressionNode.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )

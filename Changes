@@ -12,6 +12,8 @@
 
 * Added MultiLineTextWidget.dropTextSignal(), making it easy to implement drag and drop for different datatypes. This simplifies the ScriptEditor implementation somewhat.
 
+* Added an improved ui for editing expressions. Context menu on plugs allows for creation and editing of expressions, and the expression editor accepts drag and drop of plugs.
+
 0.35.6
 ------
 
