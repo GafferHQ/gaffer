@@ -149,16 +149,23 @@ void ExpressionNode::hash( const ValuePlug *output, const Context *context, IECo
 
 void ExpressionNode::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == getChild<ValuePlug>( "out" ) && m_engine )
+	if( output == getChild<ValuePlug>( "out" ) )
 	{
-		const CompoundPlug *in = getChild<CompoundPlug>( "in" );	
-		std::vector<const ValuePlug *> inputs;
-		for( ChildContainer::const_iterator it = in->children().begin(); it!=in->children().end(); it++ )
+		if( m_engine )
 		{
-			inputs.push_back( static_cast<const ValuePlug *>( (*it).get() ) );
+			const CompoundPlug *in = getChild<CompoundPlug>( "in" );	
+			std::vector<const ValuePlug *> inputs;
+			for( ChildContainer::const_iterator it = in->children().begin(); it!=in->children().end(); it++ )
+			{
+				inputs.push_back( static_cast<const ValuePlug *>( (*it).get() ) );
+			}
+			
+			m_engine->execute( context, inputs, output );
 		}
-		
-		m_engine->execute( context, inputs, output );
+		else
+		{
+			output->setToDefault();
+		}
 		return;
 	}
 	
@@ -179,17 +186,24 @@ void ExpressionNode::plugSet( Plug *plug )
 	if( plug == e )
 	{
 		m_engine = 0;
-		std::vector<std::string> inPlugPaths;
-		std::string outPlugPath;
 		
 		try {
-			m_engine = Engine::create( enginePlug()->getValue(), e->getValue() );
-			if( m_engine )
+			std::string newExpression = e->getValue();
+			if( newExpression.size() )
 			{
-				m_engine->inPlugs( inPlugPaths );
-				outPlugPath = m_engine->outPlug();
+				m_engine = Engine::create( enginePlug()->getValue(), newExpression );
+				
+				std::vector<std::string> inPlugPaths;
+				std::string outPlugPath;
+		
+				if( m_engine )
+				{
+					m_engine->inPlugs( inPlugPaths );
+					outPlugPath = m_engine->outPlug();
+				}
+				
+				updatePlugs( outPlugPath, inPlugPaths );
 			}
-			updatePlugs( outPlugPath, inPlugPaths );
 		}
 		catch( const std::exception &e )
 		{

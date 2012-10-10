@@ -188,6 +188,33 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["n"]["i2"].setValue( 11 )
 		
 		self.assertEqual( s["n"]["i1"].getValue(), 11 )
+	
+	def testDeleteExpressionText( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["m1"] = GafferTest.MultiplyNode()
+		s["m1"]["op1"].setValue( 10 )
+		s["m1"]["op2"].setValue( 20 )
+		
+		s["m2"] = GafferTest.MultiplyNode()
+		s["m2"]["op2"].setValue( 1 )
+		
+		s["e"] = Gaffer.ExpressionNode()
+		s["e"]["engine"].setValue( "python" )
+		
+		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
+	
+		self.failUnless( s["m2"]["op1"].getInput().isSame( s["e"]["out"] ) )
+		self.assertEqual( s["m2"]["product"].getValue(), 400 )
+		
+		# deleting the expression text should just keep the connections and compute
+		# a default value (no exceptions thrown). otherwise the ui will have a hard time
+		# and undo will fail.
+		
+		s["e"]["expression"].setValue( "" )
+		self.failUnless( s["m2"]["op1"].getInput().isSame( s["e"]["out"] ) )
+		self.assertEqual( s["m2"]["product"].getValue(), 0 )
 		
 if __name__ == "__main__":
 	unittest.main()

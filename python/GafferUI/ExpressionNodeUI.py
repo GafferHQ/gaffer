@@ -88,23 +88,25 @@ def __createExpression( plugValueWidget ) :
 	plug = plugValueWidget.getPlug()
 	node = plug.node()
 	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
+
+	with Gaffer.UndoContext( node.scriptNode() ) :
 	
-	expressionNode = Gaffer.ExpressionNode()
-	parentNode.addChild( expressionNode )
-	
-	expression = "parent['"
-	expression += plug.relativeName( parentNode ).replace( ".", "']['" )
-	expression += "'] = "
-	
-	if isinstance( plug, Gaffer.StringPlug ) :
-		expression += "''"
-	elif isinstance( plug, Gaffer.IntPlug ) :
-		expression += "1"
-	elif isinstance( plug, Gaffer.FloatPlug ) :
-		expression += "1.0"
-	
-	expressionNode["expression"].setValue( expression )
-	
+		expressionNode = Gaffer.ExpressionNode()
+		parentNode.addChild( expressionNode )
+		
+		expression = "parent['"
+		expression += plug.relativeName( parentNode ).replace( ".", "']['" )
+		expression += "'] = "
+		
+		if isinstance( plug, Gaffer.StringPlug ) :
+			expression += "''"
+		elif isinstance( plug, Gaffer.IntPlug ) :
+			expression += "1"
+		elif isinstance( plug, Gaffer.FloatPlug ) :
+			expression += "1.0"
+		
+		expressionNode["expression"].setValue( expression )
+		
 	__editExpression( plugValueWidget )
 
 def __editExpression( plugValueWidget ) :
@@ -128,9 +130,6 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if input is None :		
 		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
 		menuDefinition.prepend( "/Create Expression...", { "command" : IECore.curry( __createExpression, plugValueWidget ) } )
-	elif isinstance( input.node(), Gaffer.ExpressionNode ) :
-		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
-		menuDefinition.prepend( "/Edit Expression...", { "command" : IECore.curry( __editExpression, plugValueWidget ) } )
 		
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
