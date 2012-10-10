@@ -35,3 +35,5 @@ stop using button press signals for making menus
 	
 rename UndoContext to UndoScope and ParameterModificationContext to ParameterModificationScope ?
 	- to avoid confusion with Context
+	
+remove **kw from Widget constructors? and have parentArgs instead?
