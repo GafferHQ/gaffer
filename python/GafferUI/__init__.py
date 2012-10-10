@@ -103,8 +103,6 @@ from TextInputDialogue import TextInputDialogue
 from Collapsible import Collapsible
 from ColorSwatch import ColorSwatch
 from Slider import Slider
-from ColorChooser import ColorChooser
-from ColorChooserDialogue import ColorChooserDialogue
 from ShowURL import showURL
 from Spacer import Spacer
 from CheckBox import CheckBox
@@ -129,6 +127,8 @@ from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from DataPathPreview import DataPathPreview
 from OpPathPreview import OpPathPreview
 from NumericSlider import NumericSlider
+from ColorChooser import ColorChooser
+from ColorChooserDialogue import ColorChooserDialogue
 from NotificationMessageHandler import NotificationMessageHandler
 from AttributeCachePathPreview import AttributeCachePathPreview
 from MenuButton import MenuButton

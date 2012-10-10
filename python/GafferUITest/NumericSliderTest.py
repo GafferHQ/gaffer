@@ -36,21 +36,22 @@
 
 import unittest
 
+import GafferTest
 import GafferUI
 
 class NumericSliderTest( unittest.TestCase ) :
 
 	def testConstruction( self ) :
 	
-		s = GafferUI.NumericSlider( value = 0, minValue = 0, maxValue = 1 )
+		s = GafferUI.NumericSlider( value = 0, min = 0, max = 1 )
 		
 		self.assertEqual( s.getPosition(), 0 )
 		self.assertEqual( s.getValue(), 0 )
-		self.assertEqual( s.getRange(), ( 0, 1 ) )
+		self.assertEqual( s.getRange(), ( 0, 1, 0, 1 ) )
 		
 	def testSetValue( self ) :
 	
-		s = GafferUI.NumericSlider( value = 0, minValue = 0, maxValue = 2 )
+		s = GafferUI.NumericSlider( value = 0, min = 0, max = 2 )
 		
 		self.assertEqual( s.getPosition(), 0 )
 		self.assertEqual( s.getValue(), 0 )
@@ -61,7 +62,7 @@ class NumericSliderTest( unittest.TestCase ) :
 		
 	def testSetRange( self ) :
 	
-		s = GafferUI.NumericSlider( value = 1, minValue = 0, maxValue = 2 )
+		s = GafferUI.NumericSlider( value = 1, min = 0, max = 2 )
 		
 		self.assertEqual( s.getPosition(), 0.5 )
 		self.assertEqual( s.getValue(), 1 )
@@ -72,7 +73,7 @@ class NumericSliderTest( unittest.TestCase ) :
 		
 	def testSetZeroRange( self ) :
 	
-		s = GafferUI.NumericSlider( value = 1, minValue = 1, maxValue = 2 )
+		s = GafferUI.NumericSlider( value = 1, min = 1, max = 2 )
 		
 		self.assertEqual( s.getPosition(), 0 )
 		self.assertEqual( s.getValue(), 1 )
@@ -82,7 +83,7 @@ class NumericSliderTest( unittest.TestCase ) :
 		
 	def testSetPosition( self ) :
 	
-		s = GafferUI.NumericSlider( value = 0, minValue = 0, maxValue = 2 )
+		s = GafferUI.NumericSlider( value = 0, min = 0, max = 2 )
 		
 		self.assertEqual( s.getPosition(), 0 )
 		self.assertEqual( s.getValue(), 0 )
@@ -91,6 +92,83 @@ class NumericSliderTest( unittest.TestCase ) :
 		self.assertEqual( s.getPosition(), 0.5 )
 		self.assertEqual( s.getValue(), 1 )
 		
+	def testValuesOutsideRangeAreClamped( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0.1, min = 0, max = 2 )
+		
+		cs = GafferTest.CapturingSlot( s.valueChangedSignal(), s.positionChangedSignal() )
+		
+		s.setValue( 3 )
+		self.assertEqual( s.getValue(), 2 )
+		self.assertEqual( s.getPosition(), 1 )
+		
+		self.assertEqual( len( cs ), 2 )
+		
+		s.setValue( 3 )
+		self.assertEqual( s.getValue(), 2 )
+		self.assertEqual( s.getPosition(), 1 )
+		
+		# second attempt was clamped to same position as before, so shouldn't
+		# signal any changes.
+		self.assertEqual( len( cs ), 2 )
+		
+	def testPositionsOutsideRangeAreClamped( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0.1, min = 0, max = 2 )
+		
+		cs = GafferTest.CapturingSlot( s.valueChangedSignal(), s.positionChangedSignal() )
+		
+		s.setPosition( 2 )
+		self.assertEqual( s.getValue(), 2 )
+		self.assertEqual( s.getPosition(), 1 )
+		
+		self.assertEqual( len( cs ), 2 )
+		
+		s.setPosition( 2 )
+		self.assertEqual( s.getValue(), 2 )
+		self.assertEqual( s.getPosition(), 1 )
+		
+		# second attempt was clamped to same position as before, so shouldn't
+		# signal any changes.
+		self.assertEqual( len( cs ), 2 )	
+	
+	def testHardRange( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0.1, min = 0, max = 2, hardMin=-1, hardMax=3 )
+		self.assertEqual( s.getRange(), ( 0, 2, -1, 3 ) )
+		
+		cs = GafferTest.CapturingSlot( s.valueChangedSignal(), s.positionChangedSignal() )
+		
+		s.setValue( 3 )
+		self.assertEqual( s.getValue(), 3 )
+		self.assertEqual( s.getPosition(), 1.5 )
+		self.assertEqual( len( cs ), 2 )
+		
+		s.setValue( 3.5 )
+		self.assertEqual( s.getValue(), 3 )
+		self.assertEqual( s.getPosition(), 1.5 )
+		self.assertEqual( len( cs ), 2 )
+		
+		s.setValue( -1 )
+		self.assertEqual( s.getValue(), -1 )
+		self.assertEqual( s.getPosition(), -0.5)
+		self.assertEqual( len( cs ), 4 )
+		
+		s.setValue( -2 )
+		self.assertEqual( s.getValue(), -1 )
+		self.assertEqual( s.getPosition(), -0.5)
+		self.assertEqual( len( cs ), 4 )
+	
+	def testSetRangeClampsValue( self ) :
+	
+		s = GafferUI.NumericSlider( value = 0.5, min = 0, max = 2 )
+		
+		self.assertEqual( s.getPosition(), 0.25 )
+		self.assertEqual( s.getValue(), 0.5 )
+		
+		s.setRange( 1, 2 )
+		self.assertEqual( s.getPosition(), 0 )
+		self.assertEqual( s.getValue(), 1 )
 		
 if __name__ == "__main__":
 	unittest.main()

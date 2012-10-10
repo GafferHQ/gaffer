@@ -16,6 +16,12 @@
 
 * Random node no longer errors when context items are missing - this prevents the UI from erroring when scene:path etc is not available.
 
+* NumericSlider now allows specification of hardMin and hardMax values to control what happens when the slider is dragged outside of the widget area.
+
+* Slider now draws the position differently to indicate when the position is outside of the widget area.
+
+* Fixed ColorChooser bugs caused by dragging sliders outside of sensible ranges - the ranges are now enforced.
+
 0.35.6
 ------
 

@@ -68,8 +68,8 @@ class TimeEditor( GafferUI.EditorWidget ) :
 			
 			self.__slider = GafferUI.NumericSlider(
 				value = self.getContext().getFrame(),
-				minValue = float( scriptNode["frameRange"]["start"].getValue() ),
-				maxValue = float( scriptNode["frameRange"]["end"].getValue() ),
+				min = float( scriptNode["frameRange"]["start"].getValue() ),
+				max = float( scriptNode["frameRange"]["end"].getValue() ),
 				expand = 1
 			)
 			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) )

@@ -43,6 +43,12 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
+## The Slider class allows a user to specify a position on a scale of 0.0 at one end
+# of the Widget and 1.0 at the other. Positions off the ends of the widget are mapped
+# to negative numbers and numbers greater than 1.0 respectively. Derived classes may
+# provide alternative interpretations for the scale and clamp values as appropriate. In
+# particular see the NumericSlider which allows the specification of the values at either
+# end of the scale along with hard minimum and maximum values.
 class Slider( GafferUI.Widget ) :
 
 	def __init__( self, position = 0.5, **kw ) :
@@ -111,7 +117,20 @@ class Slider( GafferUI.Widget ) :
 			
 		painter.setBrush( brush )
 		
-		painter.drawEllipse( QtCore.QPoint( self.__position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
+		if self.__position < 0 :
+			painter.drawPolygon(
+				QtCore.QPoint( 8, 4 ),
+				QtCore.QPoint( 8, size.y - 4 ),
+				QtCore.QPoint( 2, size.y / 2 ),
+			)
+		elif self.__position > 1 :
+			painter.drawPolygon(
+				QtCore.QPoint( size.x - 8, 4 ),
+				QtCore.QPoint( size.x - 8, size.y - 4 ),
+				QtCore.QPoint( size.x - 2, size.y / 2 ),
+			)
+		else :
+			painter.drawEllipse( QtCore.QPoint( self.__position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
 					
 	def __buttonPress( self, widget, event ) :
 	

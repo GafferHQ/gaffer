@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import sys
+
 import IECore
 
 import Gaffer
@@ -43,11 +45,17 @@ import GafferUI
 QtGui = GafferUI._qtImport( "QtGui" )
 
 # A custom slider for drawing the backgrounds.
-class ColorSlider( GafferUI.Slider ) :
+class ColorSlider( GafferUI.NumericSlider ) :
 
 	def __init__( self, color, component, **kw ) :
 	
-		GafferUI.Slider.__init__( self, **kw )
+		min = hardMin = 0
+		max = hardMax = 1
+		
+		if component in ( "r", "g", "b", "v" ) :
+			hardMax = sys.float_info.max
+	
+		GafferUI.NumericSlider.__init__( self, 0.0, min, max, hardMin, hardMax, **kw )
 		
 		self.color = color
 		self.component = component
@@ -122,7 +130,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__sliderConnections = []
 		for s in self.__sliders.values() :
-			self.__sliderConnections.append( s.positionChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) ) )
+			self.__sliderConnections.append( s.valueChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) ) )
 
 		swatchRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		self.__initialColorSwatch = GafferUI.ColorSwatch( color )		
@@ -171,9 +179,9 @@ class ColorChooser( GafferUI.Widget ) :
 	def __sliderChanged( self, slider ) :
 			
 		if slider.component in ( "r", "g", "b" ) :
-			color = IECore.Color3f( self.__sliders["r"].getPosition(), self.__sliders["g"].getPosition(), self.__sliders["b"].getPosition() )
+			color = IECore.Color3f( self.__sliders["r"].getValue(), self.__sliders["g"].getValue(), self.__sliders["b"].getValue() )
 		else :
-			color = IECore.Color3f( self.__sliders["h"].getPosition(), self.__sliders["s"].getPosition(), self.__sliders["v"].getPosition() )
+			color = IECore.Color3f( self.__sliders["h"].getValue(), self.__sliders["s"].getValue(), self.__sliders["v"].getValue() )
 			color = color.hsvToRGB()
 			
 		for slider in self.__sliders.values() :
@@ -193,14 +201,14 @@ class ColorChooser( GafferUI.Widget ) :
 			for slider in self.__sliders.values() :
 				slider.setColor( c )		
 
-			self.__sliders["r"].setPosition( c[0] )
-			self.__sliders["g"].setPosition( c[1] )
-			self.__sliders["b"].setPosition( c[2] )
+			self.__sliders["r"].setValue( c[0] )
+			self.__sliders["g"].setValue( c[1] )
+			self.__sliders["b"].setValue( c[2] )
 
 			c = c.rgbToHSV()
-			self.__sliders["h"].setPosition( c[0] )
-			self.__sliders["s"].setPosition( c[1] )
-			self.__sliders["v"].setPosition( c[2] )
+			self.__sliders["h"].setValue( c[0] )
+			self.__sliders["s"].setValue( c[1] )
+			self.__sliders["v"].setValue( c[2] )
 			
 		finally :
 		
