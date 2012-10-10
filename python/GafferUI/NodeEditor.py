@@ -84,11 +84,11 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		
 		window.__closedConnection = window.closedSignal().connect( IECore.curry( cls.__deleteWindow, weakref.ref( window ) ) )
 		window.__nodeParentChangedConnection = node.parentChangedSignal().connect( IECore.curry( cls.__deleteWindow, weakref.ref( window ) ) )
-		
-		window.setVisible( True )
-		
+				
 		scriptWindow.addChildWindow( window )
 		
+		window.setVisible( True )
+
 		return window.nodeEditor
 						
 	def __repr__( self ) :
