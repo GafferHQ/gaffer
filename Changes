@@ -14,6 +14,8 @@
 
 * Added an improved ui for editing expressions. Context menu on plugs allows for creation and editing of expressions, and the expression editor accepts drag and drop of plugs.
 
+* Random node no longer errors when context items are missing - this prevents the UI from erroring when scene:path etc is not available.
+
 0.35.6
 ------
 

@@ -263,7 +263,18 @@ void Random::hashSeed( const Context *context, IECore::MurmurHash &h ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		context->get<IECore::Data>( contextEntry )->hash( h );
+		const IECore::Data *contextData = 0;
+		try
+		{	
+			contextData = context->get<IECore::Data>( contextEntry );
+		}
+		catch( ... )
+		{
+		}
+		if( contextData )
+		{
+			contextData->hash( h );
+		}
 	}
 }
 
@@ -273,12 +284,22 @@ unsigned long int Random::computeSeed( const Context *context ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = context->get<IECore::Data>( contextEntry );
-		IECore::MurmurHash hash = contextData->Object::hash();
-		/// \todo It'd be nice if there was a way of getting the hash folded into an
-		/// int so we could avoid this jiggery pokery.
-		std::string s = hash.toString();
-		seed += boost::hash<std::string>()( s );
+		const IECore::Data *contextData = 0;
+		try
+		{	
+			contextData = context->get<IECore::Data>( contextEntry );
+		}
+		catch( ... )
+		{
+		}
+		if( contextData )
+		{
+			IECore::MurmurHash hash = contextData->Object::hash();
+			/// \todo It'd be nice if there was a way of getting the hash folded into an
+			/// int so we could avoid this jiggery pokery.
+			std::string s = hash.toString();
+			seed += boost::hash<std::string>()( s );
+		}
 	}
 	return seed;
 }

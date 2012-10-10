@@ -103,6 +103,25 @@ class RandomTest( GafferTest.TestCase ) :
 		c2 = r.randomColor( 1 )
 		
 		self.assertEqual( c1, c2 )
+	
+	def testMissingContextDoesntError( self ) :
+	
+		# when randomising things based on scene:path etc,
+		# the required context entry may well not exist when
+		# the ui is evaluating the value to be displayed in
+		# a PlugValueWidget. we therefore need the Random
+		# node to not be too fussy and just ignore missing context
+		# items.
+	
+		r = Gaffer.Random()
+		
+		f1 = r["outFloat"].getValue()
+		
+		r["contextEntry"].setValue( "frame" )
+		self.assertNotEqual( f1, r["outFloat"].getValue() )
+		
+		r["contextEntry"].setValue( "oops!" )
+		self.assertEqual( f1, r["outFloat"].getValue() )	
 		
 if __name__ == "__main__":
 	unittest.main()
