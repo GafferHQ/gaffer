@@ -38,6 +38,9 @@ import IECore
 import Gaffer
 import GafferUI
 
+# PlugValueWidget registrations
+##########################################################################
+
 class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -66,3 +69,40 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outColor", _RandomColorPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outFloat", None )
+
+# PlugValueWidget popup menu
+##########################################################################
+
+def __createRandom( plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
+
+	with Gaffer.UndoContext( node.scriptNode() ) :
+	
+		randomNode = Gaffer.Random()
+		parentNode.addChild( randomNode )
+		
+		if isinstance( plug, Gaffer.FloatPlug ) :
+			plug.setInput( randomNode["outFloat"] )
+		elif isinstance( plug, Gaffer.Color3fPlug ) :
+			plug.setInput( randomNode["outColor"] )
+			
+	GafferUI.NodeEditor.acquire( randomNode )
+
+def __popupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if not isinstance( plug, ( Gaffer.FloatPlug, Gaffer.Color3fPlug ) ) :
+		return
+		
+	node = plug.node()
+	if node is None or node.parent() is None :
+		return
+
+	input = plug.getInput()
+	if input is None :		
+		menuDefinition.prepend( "/Randomise...", { "command" : IECore.curry( __createRandom, plugValueWidget ) } )
+		
+__popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )

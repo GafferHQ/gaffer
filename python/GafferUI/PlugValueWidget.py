@@ -135,6 +135,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		menuDefinition = IECore.MenuDefinition()
 		
+		if self.getPlug().getInput() is not None :
+			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
+			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
+			menuDefinition.append( "/Remove input", { "command" : Gaffer.WeakMethod( self.__removeInput ) } )
 		if self._editable() and hasattr( self.getPlug(), "defaultValue" ) :
 			menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ) } )
 			
@@ -305,3 +309,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( value )
 	
+	def __editInput( self ) :
+	
+		GafferUI.NodeEditor.acquire( self.getPlug().getInput().node() )
+
+	def __removeInput( self ) :
+	
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().setInput( None )
+			
