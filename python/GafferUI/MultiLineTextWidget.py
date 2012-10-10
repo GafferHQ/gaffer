@@ -55,6 +55,11 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.setEditable( editable )
 		self.setWrapMode( wrapMode )
 		
+ 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+ 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+ 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+ 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
 
 	def getText( self ) :
@@ -206,6 +211,21 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 			
 		return self.__linkActivatedSignal
+	
+	## A signal emitted when the widget wants to generate some text
+	# to be inserted from a drag/drop operation. Signature is
+	# ( widget, dragData ). By default, only StringData is accepted,
+	# but by connecting to this signal and returning an appropriate
+	# string value based on dragData, any other type can be
+	# accommodated.
+	def dropTextSignal( self ) :
+	
+		try :
+			return self.__dropTextSignal
+		except :
+			self.__dropTextSignal = Gaffer.Signal2()
+				
+		return self.__dropTextSignal
 		
 	def __textChanged( self ) :
 	
@@ -240,6 +260,44 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		
 		return False
 		
+	def __dropText( self, dragData ) :
+
+		signal = None
+		with IECore.IgnoredExceptions( AttributeError ) :
+			signal = self.__dropTextSignal
+		
+		text = None
+		if signal is not None :	
+			text = signal( self, dragData )
+		
+		if text is None and isinstance( dragData, IECore.StringData ) :
+			text = dragData.value
+	
+		return text
+				
+	def __dragEnter( self, widget, event ) :
+	
+		if self.__dropText( event.data ) is not None :
+			self.setFocussed( True )
+			return True
+	
+		return False
+		
+	def __dragMove( self, widget, event ) :
+	
+		cursorPosition = self.cursorPositionAt( event.line.p0 )
+		self.setCursorPosition( cursorPosition )
+	
+		return True
+
+	def __dragLeave( self, widget, event ) :
+	
+		self.setFocussed( False )
+		
+	def __drop( self, widget, event ) :
+			
+		self.insertText( self.__dropText( event.data ) )
+			
 class _FocusOutEventFilter( QtCore.QObject ) :
 
 	def __init__( self ) :

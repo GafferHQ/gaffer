@@ -10,6 +10,8 @@
 
 * Double clicking a node in the graph now shows a floating Node Editor for that node.
 
+* Added MultiLineTextWidget.dropTextSignal(), making it easy to implement drag and drop for different datatypes. This simplifies the ScriptEditor implementation somewhat.
+
 0.35.6
 ------
 

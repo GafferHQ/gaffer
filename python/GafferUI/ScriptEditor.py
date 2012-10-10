@@ -69,10 +69,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__splittable.append( self.__inputWidget )
 	
 		self.__inputWidgetActivatedConnection = self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
-		self.__inputWidgetDragEnterConnection = self.__inputWidget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__inputWidgetDragMoveConnection = self.__inputWidget.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
-		self.__inputWidgetDragLeaveConnection = self.__inputWidget.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__inputWidgetDropConnection = self.__inputWidget.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.__inputWidgetDropTextConnection = self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
 
 		self.__execConnection = self.scriptNode().scriptExecutedSignal().connect( Gaffer.WeakMethod( self.__execSlot ) )
 		self.__evalConnection = self.scriptNode().scriptEvaluatedSignal().connect( Gaffer.WeakMethod( self.__evalSlot ) )
@@ -111,52 +108,19 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			self.__outputWidget.appendText( str( e ) )
 		
 		return True
-		
-	def __dragEnter( self, widget, event ) :
-	
-		accept = False
-		if isinstance( event.data, ( IECore.StringData, IECore.StringVectorData ) ) :
-			accept = True
-		elif isinstance( event.data, Gaffer.GraphComponent ) :
-			if self.scriptNode().isAncestorOf( event.data ) :
-				accept = True
-		elif isinstance( event.data, Gaffer.Set ) :
-			accept = True
-		
-		if accept :
-			self.__inputWidget.setFocussed( True )
-			return True
-			
-		return False
-		
-	def __dragMove( self, widget, event ) :
-	
-		cursorPosition = self.__inputWidget.cursorPositionAt( event.line.p0 )
-		self.__inputWidget.setCursorPosition( cursorPosition )
-	
-		return True
 
-	def __dragLeave( self, widget, event ) :
-	
-		self.__inputWidget.setFocussed( False )
-		
-	def __drop( self, widget, event ) :
-			
-		self.__inputWidget.insertText( self.__dropText( event.data ) )
-	
-	def __dropText( self, data ) :
-	
-		if isinstance( data, IECore.StringVectorData ) :
-			return repr( list( data ) )
-		elif isinstance( data, Gaffer.GraphComponent ) :
-			return "getChild( '" + data.relativeName( self.scriptNode() ) + "' )"
-		elif isinstance( data, Gaffer.Set ) :
-			if len( data ) == 1 :
-				return self.__dropText( data[0] )
+	def __dropText( self, widget, dragData ) :
+						
+		if isinstance( dragData, IECore.StringVectorData ) :
+			return repr( list( dragData ) )
+		elif isinstance( dragData, Gaffer.GraphComponent ) :
+			return "getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
+		elif isinstance( dragData, Gaffer.Set ) :
+			if len( dragData ) == 1 :
+				return self.__dropText( widget, dragData[0] )
 			else :
-				return "[ " + ", ".join( [ self.__dropText( d ) for d in data ] ) + " ]"
-		else :
-			return str( event.data )
-
+				return "[ " + ", ".join( [ self.__dropText( widget, d ) for d in dragData ] ) + " ]"
+				
+		return None		
 				
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
