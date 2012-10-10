@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import weakref
+
 import IECore
 
 import Gaffer
@@ -160,7 +162,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__editingFinishedSignal
 		except :
 			self.__editingFinishedSignal = GafferUI.WidgetSignal()
-			self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished ) )
+			self._qtWidget().editingFinished.connect( IECore.curry( TextWidget.__editingFinished, weakref.ref( self._qtWidget() ) ) )
 			
 		return self.__editingFinishedSignal
 
@@ -222,9 +224,23 @@ class TextWidget( GafferUI.Widget ) :
 			
 		self.__activatedSignal( self )
 	
-	def __editingFinished( self ) :
-			
-		self.__editingFinishedSignal( self )		
+	@staticmethod
+	def __editingFinished( qtWidgetWeakRef ) :
+		
+		# We're handling editingFinished slightly differently than the other
+		# qt signals we use to emit our own signals. Instead of connecting the qt
+		# editingFinished signal to a method of the TextWidget via WeakMethod,
+		# we're connecting to a staticmethod instead, and passing a weak reference to
+		# the QWidget, and using that to recover the owning Widget. When closing Gaffer,
+		# it seems that sometimes Qt will send editingFinished for a QWidget that no
+		# longer has a Widget owner, in which case the WeakMethod approach would raise.
+		# Possibly this approach may be needed in other cases, but we're just using it
+		# in this one case for now, as that's the only one to rear its ugly head so far.
+		
+		qtWidget = qtWidgetWeakRef()
+		widget = GafferUI.Widget._owner( qtWidget )
+		if widget is not None :	
+			widget.__editingFinishedSignal( widget )		
 
 	def __selectionChanged( self ) :
 	
