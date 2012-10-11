@@ -22,6 +22,8 @@
 
 * Fixed ColorChooser bugs caused by dragging sliders outside of sensible ranges - the ranges are now enforced.
 
+* Added GafferUI.DisplayTransform class for managing colour transformations from linear to display space. Updated ColorSwatch and ColorChooser classes to use this, and added ocio.py config file to set up the transform using PyOpenColorIO.
+
 0.35.6
 ------
 

@@ -134,6 +134,7 @@ from AttributeCachePathPreview import AttributeCachePathPreview
 from MenuButton import MenuButton
 from PopupWindow import PopupWindow
 from ConfirmationDialogue import ConfirmationDialogue
+from DisplayTransform import DisplayTransform
 
 # then stuff specific to graph uis
 
@@ -172,7 +173,6 @@ from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
-import ExpressionNodeUI
 from ToolPlugValueWidget import ToolPlugValueWidget
 from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
@@ -201,3 +201,4 @@ import ParameterPresets
 import ReadNodeUI
 import WriteNodeUI
 import RandomUI
+import ExpressionNodeUI

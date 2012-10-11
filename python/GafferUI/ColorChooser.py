@@ -60,6 +60,8 @@ class ColorSlider( GafferUI.NumericSlider ) :
 		self.color = color
 		self.component = component
 		
+		self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
+		
 	def setColor( self, color ) :
 	
 		self.color = color
@@ -74,33 +76,36 @@ class ColorSlider( GafferUI.NumericSlider ) :
 		size = self.size()		
 		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 		
-		if self.component=="r" :
-			grad.setColorAt( 0, self._qtColor( IECore.Color3f( 0, self.color[1], self.color[2] ) ) )
-			grad.setColorAt( 1, self._qtColor( IECore.Color3f( 1, self.color[1], self.color[2] ) ) )
-		elif self.component=="g" :
-			grad.setColorAt( 0, self._qtColor( IECore.Color3f( self.color[0], 0, self.color[2] ) ) )
-			grad.setColorAt( 1, self._qtColor( IECore.Color3f( self.color[0], 1, self.color[2] ) ) )
-		elif self.component=="b" :
-			grad.setColorAt( 0, self._qtColor( IECore.Color3f( self.color[0], self.color[1], 0 ) ) )
-			grad.setColorAt( 1, self._qtColor( IECore.Color3f( self.color[0], self.color[1], 1 ) ) )
-		elif self.component in ( "h", "s", "v" ) :
-			c1 = IECore.Color3f( self.color[0], self.color[1], self.color[2] ).rgbToHSV()
-			c2 = IECore.Color3f( self.color[0], self.color[1], self.color[2] ).rgbToHSV()
+		displayTransform = GafferUI.DisplayTransform.get()
+
+		c1 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
+		c2 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
+		
+		if self.component in "hsv" :
+			c1 = c1.rgbToHSV()
+			c2 = c2.rgbToHSV()
+		
+		a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2 }[self.component]
+		c1[a] = 0
+		c2[a] = 1
+					
+		numStops = max( 2, size.x / 2 )
+		for i in range( 0, numStops ) :
 			
-			a = { "h" : 0, "s" : 1, "v": 2 }[self.component]
-			c1[a] = 0
-			c2[a] = 1
-			
-			numStops = 50
-			for i in range( 0, numStops ) :
-				t = float( i ) / (numStops-1)	
-				c = c1 + (c2-c1) * t
+			t = float( i ) / (numStops-1)	
+			c = c1 + (c2-c1) * t
+			if self.component in "hsv" :
 				c = c.hsvToRGB()
-				grad.setColorAt( t, self._qtColor( c ) )
+			
+			grad.setColorAt( t, self._qtColor( displayTransform( c ) ) )
 					
 		brush = QtGui.QBrush( grad )
 		painter.fillRect( 0, 0, size.x, size.y, brush )
+	
+	def __displayTransformChanged( self ) :
 		
+		self._qtWidget().update()
+				
 class ColorChooser( GafferUI.Widget ) :
 
 	def __init__( self, color=IECore.Color3f( 1 ) ) :
