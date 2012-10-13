@@ -54,6 +54,7 @@ Camera::Camera( const std::string &name )
 	addChild( new V2iPlug( "resolution", Plug::In, V2i( 1024, 778 ) ) );
 	addChild( new StringPlug( "projection", Plug::In, "perspective" ) );
 	addChild( new FloatPlug( "fieldOfView", Plug::In, 50.0f, 0.0f, 180.0f ) );
+	addChild( new V2fPlug( "clippingPlanes", Plug::In, V2f( 0.01, 100000 ), V2f( 0 ) ) );
 }
 
 Camera::~Camera()
@@ -90,14 +91,25 @@ const Gaffer::FloatPlug *Camera::fieldOfViewPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::V2fPlug *Camera::clippingPlanesPlug()
+{
+	return getChild<V2fPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::V2fPlug *Camera::clippingPlanesPlug() const
+{
+	return getChild<V2fPlug>( g_firstPlugIndex + 3 );
+}
+
 void Camera::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	
 	if(
-		input == resolutionPlug() ||
 		input == projectionPlug() ||
-		input == fieldOfViewPlug()
+		input == fieldOfViewPlug() ||
+		input->parent<Plug>() == clippingPlanesPlug() ||
+		input->parent<Plug>() == resolutionPlug()
 	)
 	{
 		outputs.push_back( sourcePlug() );
@@ -109,6 +121,7 @@ void Camera::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h )
 	resolutionPlug()->hash( h );
 	projectionPlug()->hash( h );
 	fieldOfViewPlug()->hash( h );
+	clippingPlanesPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
@@ -117,6 +130,7 @@ IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
 	result->parameters()["resolution"] = new IECore::V2iData( resolutionPlug()->getValue() );
 	result->parameters()["projection"] = new IECore::StringData( projectionPlug()->getValue() );
 	result->parameters()["projection:fov"] = new IECore::FloatData( fieldOfViewPlug()->getValue() );
+	result->parameters()["clippingPlanes"] = new IECore::V2fData( clippingPlanesPlug()->getValue() );
 	result->addStandardParameters();
 	return result;
 }

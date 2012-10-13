@@ -37,6 +37,7 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 
 #include "IECore/NullObject.h"
+#include "IECore/Camera.h"
 
 #include "Gaffer/Context.h"
 
@@ -185,14 +186,24 @@ template<typename BaseType>
 Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Imath::Box3f result;
-	IECore::ConstVisibleRenderablePtr renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( inputSourcePlug()->getValue() );
-	if( renderable )
+	IECore::ConstObjectPtr object = inputSourcePlug()->getValue();
+	
+	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object.get() ) )
 	{
 		result = renderable->bound();
-		if( path == "/" )
-		{
-			result = Imath::transform( result, transformPlug()->matrix() );
-		}
+	}
+	else if( object->isInstanceOf( IECore::Camera::staticTypeId() ) )
+	{
+		result = Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
+	}
+	else
+	{
+		result = Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
+	}
+	
+	if( path == "/" )
+	{
+		result = Imath::transform( result, transformPlug()->matrix() );
 	}
 	return result;
 }

@@ -60,11 +60,9 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	
 		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f() )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "camera" ] ) )
 		
 		self.assertEqual( p["out"].transform( "/camera" ), IECore.M44f() )
-		self.assertEqual( p["out"].bound( "/camera" ), IECore.Box3f() )
 		self.assertEqual( p["out"].childNames( "/camera" ), IECore.StringVectorData() )
 		
 		o = p["out"].object( "/camera" )
@@ -89,5 +87,26 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 			with c :
 				self.assertHashesValid( p )	
 	
+	def testBound( self ) :
+	
+		p = GafferScene.Camera( inputs = {
+			"resolution" : IECore.V2i( 200, 100 ),
+			"projection" : "perspective",
+			"fieldOfView" : 45,
+		} )
+		
+		self.failIf( p["out"].bound( "/" ).isEmpty() )
+		self.failIf( p["out"].bound( "/camera" ).isEmpty() )
+		
+	def testClippingPlanes( self ) :
+	
+		p = GafferScene.Camera()
+		o = p["out"].object( "/camera" )
+		self.assertEqual( o.parameters()["clippingPlanes"].value, IECore.V2f( 0.01, 100000 ) )
+		
+		p["clippingPlanes"].setValue( IECore.V2f( 1, 10 ) )
+		o = p["out"].object( "/camera" )
+		self.assertEqual( o.parameters()["clippingPlanes"].value, IECore.V2f( 1, 10 ) )
+		
 if __name__ == "__main__":
 	unittest.main()

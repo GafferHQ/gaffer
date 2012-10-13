@@ -60,6 +60,9 @@ class Camera : public ObjectSource
 		
 		Gaffer::FloatPlug *fieldOfViewPlug();
 		const Gaffer::FloatPlug *fieldOfViewPlug() const;
+		
+		Gaffer::V2fPlug *clippingPlanesPlug();
+		const Gaffer::V2fPlug *clippingPlanesPlug() const;
 				
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
