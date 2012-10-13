@@ -198,22 +198,19 @@ IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *co
 	
 	// copy over the input globals, unless they're a display with a name clashing with one
 	// we made ourselves.
-	if( inputGlobals )
+	for( vector<ObjectPtr>::const_iterator it = inputGlobals->members().begin(), eIt = inputGlobals->members().end(); it!=eIt; it++ )
 	{
-		for( vector<ObjectPtr>::const_iterator it = inputGlobals->members().begin(), eIt = inputGlobals->members().end(); it!=eIt; it++ )
+		bool transfer = true;
+		if( const Display *d = runTimeCast<Display>( it->get() ) )
 		{
-			bool transfer = true;
-			if( const Display *d = runTimeCast<Display>( it->get() ) )
+			if( displaysCreated.find( d->getName() ) != displaysCreated.end() )
 			{
-				if( displaysCreated.find( d->getName() ) != displaysCreated.end() )
-				{
-					transfer = false;
-				}
+				transfer = false;
 			}
-			if( transfer )
-			{
-				result->members().push_back( *it );
-			}
+		}
+		if( transfer )
+		{
+			result->members().push_back( *it );
 		}
 	}
 	
