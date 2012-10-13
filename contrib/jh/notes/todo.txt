@@ -7,6 +7,13 @@ PRIORITIES!!!!
 
 	* shaders with connections!
 
+* lights, coordinatesystems
+	- think we need to add a scopePromotionPlug() to ScenePlug for this
+		- it will hold a bitmask of Object &/| Children which can be used
+		  to communicate up the hierarchy that there are objects in there (lights
+		  and coordinate systems) that need to be promoted in scope. they would
+		  be promoted up to the point where the scopePromotionPlug() was first non-zero.
+
 * enable/disable plug for scene processors
 
 * fix problem with instances bound
