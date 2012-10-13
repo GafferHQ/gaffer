@@ -38,6 +38,7 @@
 #define GAFFERSCENE_SCENEPROCEDURAL_H
 
 #include "IECore/Renderer.h"
+#include "IECore/Camera.h"
 
 namespace Gaffer
 {
@@ -79,6 +80,10 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		typedef std::set<std::string> ExpandedPathsSet;
 		boost::shared_ptr<ExpandedPathsSet> m_pathsToExpand;
+		
+	private :
+	
+		void drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const;
 		
 };
 

@@ -40,6 +40,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/CurvesPrimitive.h"
 #include "IECore/StateRenderable.h"
+#include "IECore/AngleConversion.h"
 
 #include "Gaffer/Context.h"
 
@@ -133,10 +134,20 @@ void SceneProcedural::render( RendererPtr renderer ) const
 			}
 		}
 		
-		ConstPrimitivePtr primitive = runTimeCast<const Primitive>( m_scenePlug->objectPlug()->getValue() );
-		if( primitive )
+		ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
+		if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
 		{
 			primitive->render( renderer );
+		}
+		else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
+		{
+			/// \todo This absolutely does not belong here, but until we have
+			/// a mechanism for drawing manipulators, we don't have any other
+			/// means of visualising the cameras.
+			if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+			{
+				drawCamera( camera, renderer.get() );
+			}
 		}
 		
 		bool expand = true;
@@ -175,4 +186,74 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		IECore::msg( IECore::Msg::Error, "SceneProcedural::render()", e.what() );
 	}	
+}
+
+void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const
+{
+	CameraPtr fullCamera = camera->copy();
+	fullCamera->addStandardParameters();
+	
+	AttributeBlock attributeBlock( renderer );
+
+	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
+	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
+	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
+
+	CurvesPrimitive::createBox( Box3f(
+		V3f( -0.5, -0.5, 0 ),
+		V3f( 0.5, 0.5, 2.0 )		
+	) )->render( renderer );
+
+	const std::string &projection = fullCamera->parametersData()->member<StringData>( "projection" )->readable();
+	const Box2f &screenWindow = fullCamera->parametersData()->member<Box2fData>( "screenWindow" )->readable();
+	const V2f &clippingPlanes = fullCamera->parametersData()->member<V2fData>( "clippingPlanes" )->readable();
+	
+	Box2f near( screenWindow );
+	Box2f far( screenWindow );
+	
+	if( projection == "perspective" )
+	{
+		float fov = fullCamera->parametersData()->member<FloatData>( "projection:fov" )->readable();
+		float d = tan( degreesToRadians( fov / 2.0f ) );
+		near.min *= d * clippingPlanes[0];
+		near.max *= d * clippingPlanes[0];
+		far.min *= d * clippingPlanes[1];
+		far.max *= d * clippingPlanes[1];
+	}
+			
+	V3fVectorDataPtr p = new V3fVectorData;
+	IntVectorDataPtr n = new IntVectorData;
+	
+	n->writable().push_back( 5 );
+	p->writable().push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
+
+	n->writable().push_back( 5 );
+	p->writable().push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+	p->writable().push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
+	p->writable().push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
+	p->writable().push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
+	p->writable().push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+
+	n->writable().push_back( 2 );
+	p->writable().push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
+
+	n->writable().push_back( 2 );
+	p->writable().push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
+
+	n->writable().push_back( 2 );
+	p->writable().push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
+	
+	n->writable().push_back( 2 );
+	p->writable().push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
+	p->writable().push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
+	
+	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( n, CubicBasisf::linear(), false, p );
+	c->render( renderer );
 }
