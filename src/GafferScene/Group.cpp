@@ -101,7 +101,7 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 {
 	SceneProcessor::affects( input, outputs );
 	
-	if( input == namePlug() || input == inPlug()->childNamesPlug() )
+	if( input == namePlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
@@ -114,10 +114,16 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	{
 		outputs.push_back( outPlug() );	
 	}
-	else
+	else if( const ScenePlug *s = input->parent<ScenePlug>() )
 	{
-		const ScenePlug *s = input->ancestor<ScenePlug>();
-		if( s && input == s->childNamesPlug() )
+		// all input scene plugs affect the output, except the globals, where only
+		// the first affects the output.
+		if( s == inPlug() || input->getName() != inPlug()->globalsPlug()->getName() )
+		{
+			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+		}
+		
+		if( input == s->childNamesPlug() )
 		{
 			outputs.push_back( mappingPlug() );
 		}

@@ -40,6 +40,7 @@ import threading
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -495,6 +496,17 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g1["in"].setInput( p["out"] )
 		
 		self.assertSceneValid( g1["out"] )
+	
+	def testAffects( self ) :
+	
+		p = GafferScene.Plane()
+		g = GafferScene.Group()
+		g["in"].setInput( p["out"] )
+		
+		for c in g["in"].children() :
+			a = g.affects( c )
+			self.assertEqual( len( a ), 1 if c.getName() != "childNames" else 2 )
+			self.assertEqual( a[0].fullName(), "Group.out." + c.getName() )			
 		
 	def setUp( self ) :
 	
