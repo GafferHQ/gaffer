@@ -98,5 +98,15 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 				self.assertBoxesAlmostEqual( a["out"].bound( "/" ), b.boundAtTime( time ), 6 )
 				self.assertBoxesAlmostEqual( a["out"].bound( "/pCube1/pCubeShape1" ), b.boundAtTime( time ), 6 )
 
+	def testFullTransform( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+
+		self.assertEqual( a["out"].fullTransform( "/" ), IECore.M44f() )
+		self.assertEqual( a["out"].fullTransform( "/group1" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) * IECore.M44f.createTranslated( IECore.V3f( 2, 0, 0 ) ) )
+		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), a["out"].fullTransform( "/group1" ) * IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) ) )
+		self.assertEqual( a["out"].fullTransform( "/group1/pCube1/pCubeShape1" ), a["out"].fullTransform( "/group1/pCube1" ) )
+
 if __name__ == "__main__":
 	unittest.main()

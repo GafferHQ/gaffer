@@ -116,6 +116,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		//@{
 		Imath::Box3f bound( const std::string &scenePath ) const;
 		Imath::M44f transform( const std::string &scenePath ) const;
+		Imath::M44f fullTransform( const std::string &scenePath ) const;
 		IECore::ConstCompoundObjectPtr attributes( const std::string &scenePath ) const;
 		IECore::ConstObjectPtr object( const std::string &scenePath ) const;
 		IECore::ConstStringVectorDataPtr childNames( const std::string &scenePath ) const;

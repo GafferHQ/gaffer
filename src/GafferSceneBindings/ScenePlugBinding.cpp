@@ -126,6 +126,7 @@ void GafferSceneBindings::bindScenePlug()
 		// value accessors
 		.def( "bound", &ScenePlug::bound )
 		.def( "transform", &ScenePlug::transform )
+		.def( "fullTransform", &ScenePlug::fullTransform )
 		.def( "object", &objectWrapper )
 		.def( "childNames", &childNamesWrapper )
 		.def( "attributes", &attributesWrapper )

@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
 class ScenePlugTest( unittest.TestCase ) :
 
@@ -60,6 +61,39 @@ class ScenePlugTest( unittest.TestCase ) :
 				
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
+	
+	def testFullTransform( self ) :
+	
+		translation = IECore.M44f.createTranslated( IECore.V3f( 1 ) )
+		scaling = IECore.M44f.createScaled( IECore.V3f( 10 ) )
+	
+		n = GafferSceneTest.CompoundObjectSource()
+		n["in"].setValue(
+			IECore.CompoundObject( {
+				"children" : {
+					"group" : {
+						"transform" : IECore.M44fData( translation ),
+						"children" : {
+							"ball" : {
+								"transform" : IECore.M44fData( scaling ),			
+							}
+						}
+					},
+				},
+			} )
+		)
+		
+		self.assertEqual( n["out"].transform( "/" ), IECore.M44f() ) 
+		self.assertEqual( n["out"].transform( "/group" ), translation )
+		self.assertEqual( n["out"].transform( "/group/ball" ), scaling )
+		
+		self.assertEqual( n["out"].fullTransform( "/" ), IECore.M44f() )
+		self.assertEqual( n["out"].fullTransform( "/group" ), translation )
+		
+		m = n["out"].fullTransform( "/group/ball" )
+		self.assertEqual( m.translation(), IECore.V3f( 1 ) )
+		self.assertEqual( m.extractScaling(), IECore.V3f( 10 ) )
+		self.assertEqual( m, scaling * translation )
 		
 if __name__ == "__main__":
 	unittest.main()

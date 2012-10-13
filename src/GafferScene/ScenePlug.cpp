@@ -206,6 +206,22 @@ Imath::M44f ScenePlug::transform( const std::string &scenePath ) const
 	return transformPlug()->getValue();
 }
 
+Imath::M44f ScenePlug::fullTransform( const std::string &scenePath ) const
+{
+	ContextPtr tmpContext = new Context( *Context::current() );
+	Context::Scope scopedContext( tmpContext );
+	
+	Imath::M44f result;
+	size_t i = 0;
+	do {
+		i = scenePath.find( '/', i + 1 );
+		tmpContext->set( scenePathContextName, scenePath.substr( 0, i ) );
+		result = transformPlug()->getValue() * result;
+	} while( i != std::string::npos );
+	
+	return result;
+}
+
 IECore::ConstCompoundObjectPtr ScenePlug::attributes( const std::string &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
