@@ -74,16 +74,17 @@ class Render( Gaffer.Node ) :
 				
 		scenePlug = self["in"].getInput()
 		globals = scenePlug["globals"].getValue()
+		cameraPath = ""
 		if globals :
 			for g in globals :
 				if isinstance( g, IECore.PreWorldRenderable ) :
 					g.render( renderer )
-		
-		## \todo Need to get camera from the scene too
-		camera = IECore.Camera()
-		camera.addStandardParameters()		
-		camera.render( renderer )
-		
+				if isinstance( g, IECore.Options ) :
+					if "gaffer:renderCamera" in g.options :
+						cameraPath = g.options["gaffer:renderCamera"].value
+
+		self.__outputCamera( scenePlug, cameraPath, renderer )
+										
 		with IECore.WorldBlock( renderer ) :
 		
 			scriptNode = self.ancestor( Gaffer.ScriptNode.staticTypeId() )
@@ -138,5 +139,25 @@ class Render( Gaffer.Node ) :
 		applicationRoot = self.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 		if applicationRoot is None or applicationRoot.getName() != "gui" :
 			p.wait()
+	
+	def __outputCamera( self, scenePlug, cameraPath, renderer ) :
+				
+		camera = None
+		if cameraPath :
+			o = scenePlug.object( cameraPath )
+			if isinstance( o, IECore.Camera ) :
+				camera = o
+				
+		if not camera :
+			## \todo We shouldn't need to do this but I don't think IECoreArnold is
+			# setting a default camera as expected.
+			camera = IECore.Camera()
+			camera.addStandardParameters()		
+			camera.render( renderer )
+			return
 		
+		with IECore.TransformBlock( renderer ) :
+			renderer.concatTransform( scenePlug.fullTransform( cameraPath ) )
+			camera.render( renderer )
+			
 IECore.registerRunTimeTyped( Render )

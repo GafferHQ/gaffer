@@ -125,3 +125,25 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Group.staticTypeId(), "in[
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter.staticTypeId(), "match", None )
 
+# Camera
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Camera.staticTypeId(),
+	"projection",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Perspective", "perspective" ),
+		( "Orthographic", "orthographic" ),
+	),
+)
+
+# RenderCamera
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.RenderCamera.staticTypeId(),
+	"options.member1.value",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
+	),
+)

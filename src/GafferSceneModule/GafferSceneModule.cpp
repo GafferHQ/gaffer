@@ -62,6 +62,7 @@
 #include "GafferScene/Attributes.h"
 #include "GafferScene/AlembicSource.h"
 #include "GafferScene/SceneContextVariables.h"
+#include "GafferScene/RenderCamera.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -137,5 +138,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<Attributes>();
 	GafferBindings::NodeClass<AlembicSource>();
 	GafferBindings::NodeClass<SceneContextVariables>();
+	GafferBindings::NodeClass<RenderCamera>();
 
 }
