@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import GafferUI
 
 ## \todo Make this behaviour a part of the preferences.
@@ -42,3 +44,11 @@ def __nodeDoubleClick( graphEditor, node ) :
 	GafferUI.NodeEditor.acquire( node )
 
 __nodeDoubleClickConnection = GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
+
+def __nodeContextMenu( node, menuDefinition ) :
+
+	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
+
+	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( node, menuDefinition )
+
+__nodeContextMenuConnection = GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )

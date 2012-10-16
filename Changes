@@ -24,6 +24,8 @@
 
 * Added GafferUI.DisplayTransform class for managing colour transformations from linear to display space. Updated ColorSwatch and ColorChooser classes to use this, and added ocio.py config file to set up the transform using PyOpenColorIO.
 
+* Added GafferUI.ExecuteUI module with functionality for executing nodes, repeating previous executions etc. This provides a new execute menu in the main menu, and a right click menu item in the graph editor.
+
 0.35.6
 ------
 

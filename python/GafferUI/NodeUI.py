@@ -66,10 +66,9 @@ class NodeUI( GafferUI.Widget ) :
 		if buildUI :
 			topLevelWidget.append( self._plugsWidget() )
 			if hasattr( node, "execute" ) :
-				executeButton = GafferUI.Button( "Execute" )
-				topLevelWidget.append( executeButton )
-				self.__executeButtonConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
-				topLevelWidget.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
+				topLevelWidget.append( GafferUI.ExecuteUI.ExecuteButton( self.__node ) )
+		
+			topLevelWidget.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
 			
 	## Returns the node the ui represents.
 	def node( self ) :
@@ -98,10 +97,6 @@ class NodeUI( GafferUI.Widget ) :
 					column.append( plugValueWidget )
 
 		return self.__plugsWidget
-
-	def __executeClicked( self, button ) :
-	
-		self.node().execute()
 
 	## Creates a NodeUI instance for the specified node.
 	@classmethod

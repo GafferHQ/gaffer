@@ -176,6 +176,7 @@ from GraphComponentBrowserMode import GraphComponentBrowserMode
 from ToolPlugValueWidget import ToolPlugValueWidget
 from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
+import ExecuteUI
 
 # then stuff specific to parameterised objects
 
