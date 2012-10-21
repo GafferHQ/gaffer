@@ -30,6 +30,8 @@
 
 * Arnold shaders may now be connected together to form networks, and they may have non-shader inputs (such as the Random node) which can be evaluated on a per-object basis to provide additional variation.
 
+* Fixed error caused by browser preview tab.
+
 0.35.6
 ------
 

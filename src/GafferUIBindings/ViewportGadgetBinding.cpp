@@ -65,6 +65,8 @@ static list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
 	return result;
 }
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( frameOverloads, frame, 2, 3 );
+
 void GafferUIBindings::bindViewportGadget()
 {
 	IECorePython::RunTimeTypedClass<ViewportGadget>()
@@ -75,7 +77,7 @@ void GafferUIBindings::bindViewportGadget()
 		.def( "getCamera", &getCamera )
 		.def( "setCamera", &ViewportGadget::setCamera )
 		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f & ))&ViewportGadget::frame )
-		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f &, const Imath::V3f &, const Imath::V3f & ))&ViewportGadget::frame )	
+		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f &, const Imath::V3f &, const Imath::V3f & ))&ViewportGadget::frame, frameOverloads() )	
 		.def( "gadgetsAt", &gadgetsAt )
 		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
 		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
