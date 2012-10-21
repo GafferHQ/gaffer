@@ -26,6 +26,8 @@
 
 * Added GafferUI.ExecuteUI module with functionality for executing nodes, repeating previous executions etc. This provides a new execute menu in the main menu, and a right click menu item in the graph editor.
 
+* Fixed bug which meant that dynamic CompoundNumericPlugs would fail to restore their connections upon script load.
+
 0.35.6
 ------
 

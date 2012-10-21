@@ -91,14 +91,22 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	
 	if( plug->direction() == Plug::In )
 	{
-		std::string value = "( ";
-		PlugIterator pIt( plug->children().begin(), plug->children().end() );
-		while( pIt!=plug->children().end() )
+		std::string input = serialisePlugInput( s, plug );
+		if( input != "" )
 		{
-			value += serialisePlugValue( s, IECore::staticPointerCast<ValuePlug>( *pIt++ ) ) + ", ";
+			result += "input = " + input + ", ";
 		}
-		value += " )";
-		result += "value = " + value + ", ";
+		else
+		{
+			std::string value = "( ";
+			PlugIterator pIt( plug->children().begin(), plug->children().end() );
+			while( pIt!=plug->children().end() )
+			{
+				value += serialisePlugValue( s, IECore::staticPointerCast<ValuePlug>( *pIt++ ) ) + ", ";
+			}
+			value += " )";
+			result += "value = " + value + ", ";
+		}
 	}
 	
 	result += ")";
@@ -114,11 +122,22 @@ static typename T::Ptr construct(
 	typename T::ValueType minValue,
 	typename T::ValueType maxValue,
 	unsigned flags,
+	PlugPtr input,
 	object value
 )
 {
+	if( input && value!=object() )
+	{
+		throw std::invalid_argument( "Must specify only one of input or value." );
+	}
+	
 	typename T::Ptr result = new T( name, direction, defaultValue, minValue, maxValue, flags );
-	if( value!=object() )
+	
+	if( input )
+	{
+		result->setInput( input );
+	}
+	else if( value!=object() )
 	{
 		extract<typename T::ValueType> valueExtractor( value );
 		if( valueExtractor.check() )
@@ -160,6 +179,7 @@ static void bind()
 					boost::python::arg_( "minValue" )=V(Imath::limits<typename V::BaseType>::min()),
 					boost::python::arg_( "maxValue" )=V(Imath::limits<typename V::BaseType>::max()),
 					boost::python::arg_( "flags" )=Plug::Default,
+					boost::python::arg_( "input" )=PlugPtr( 0 ),
 					boost::python::arg_( "value" )=object()
 				)
 			)

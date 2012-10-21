@@ -173,6 +173,27 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
 
+	def testDynamicSerialisationWithConnection( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		
+		s["n1"]["p"] = Gaffer.V3fPlug( flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n2"]["p"] = Gaffer.V3fPlug( direction=Gaffer.Plug.Direction.In, flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		s["n1"]["p"].setInput( s["n2"]["p"] )
+
+		ss = s.serialise()
+						
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.failUnless( s["n1"]["p"]["x"].getInput().isSame( s["n2"]["p"]["x"] ) )
+		self.failUnless( s["n1"]["p"]["y"].getInput().isSame( s["n2"]["p"]["y"] ) )
+		self.failUnless( s["n1"]["p"]["z"].getInput().isSame( s["n2"]["p"]["z"] ) )
+		
 	def testRunTimeTyped( self ) :
 	
 		p = Gaffer.Color3fPlug()
