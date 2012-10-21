@@ -41,8 +41,9 @@ import IECoreGL
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class StandardStyleTest( unittest.TestCase ) :
+class StandardStyleTest( GafferUITest.TestCase ) :
 
 	def testColorAccessors( self ) :
 	

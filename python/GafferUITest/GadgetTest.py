@@ -41,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class GadgetTest( unittest.TestCase ) :
+class GadgetTest( GafferUITest.TestCase ) :
 
 	def testTransform( self ) :
 	

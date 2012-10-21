@@ -35,7 +35,7 @@
 #  
 ##########################################################################
 
-import re
+import weakref
 
 import IECore
 
@@ -63,10 +63,6 @@ class ScriptWindow( GafferUI.Window ) :
 		
 		self.setChild( self.__listContainer )
 		
-		scriptParent = script.parent()
-		if scriptParent :
-			self.__scriptRemovedConnection = scriptParent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__scriptRemoved ) )
-
 		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 
 		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
@@ -74,7 +70,7 @@ class ScriptWindow( GafferUI.Window ) :
 	
 		self.__updateTitle()
 
-		ScriptWindow.__instances.append( self )
+		ScriptWindow.__instances.append( weakref.ref( self ) )
 		
 	def scriptNode( self ) :
 	
@@ -95,13 +91,8 @@ class ScriptWindow( GafferUI.Window ) :
 	def __closed( self, widget ) :
 		
 		scriptParent = self.__script.parent()
-		if scriptParent :
+		if scriptParent is not None :
 			scriptParent.removeChild( self.__script )
-			
-	def __scriptRemoved( self, scriptContainer, script ) :
-	
-		if script.isSame( self.__script ) :
-			ScriptWindow.__instances.remove( self )
 
 	def __scriptPlugChanged( self, plug ) :
 	
@@ -120,15 +111,17 @@ class ScriptWindow( GafferUI.Window ) :
 			
 		self.setTitle( "Gaffer : %s %s" % ( f, d ) )
 
+	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one
 	# if necessary.
 	@staticmethod
 	def acquire( script ) :
 	
-		for i in ScriptWindow.__instances :
-			if i.scriptNode().isSame( script ) :
-				return i
-				
+		for w in ScriptWindow.__instances :
+			scriptWindow = w()
+			if scriptWindow is not None and scriptWindow.scriptNode().isSame( script ) :
+				return scriptWindow
+		
 		return ScriptWindow( script )
 
 	## Returns an IECore.MenuDefinition which is used to define the menu bars for all ScriptWindows.
@@ -153,15 +146,20 @@ class ScriptWindow( GafferUI.Window ) :
 		cls.__scriptAddedConnections.append( applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded ) )
 		cls.__scriptRemovedConnections.append( applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved ) )
 
-	__instances = []
+	__automaticallyCreatedInstances = [] # strong references to instances made by __scriptAdded()
 	@staticmethod
 	def __scriptAdded( scriptContainer, script ) :
 	
-		ScriptWindow( script ).setVisible( True )
+		w = ScriptWindow( script )
+		w.setVisible( True )
+		ScriptWindow.__automaticallyCreatedInstances.append( w )
 		
 	@staticmethod
 	def __staticScriptRemoved( scriptContainer, script ) :
 	
+		for w in ScriptWindow.__automaticallyCreatedInstances :
+			if w.scriptNode().isSame( script ) :
+				ScriptWindow.__automaticallyCreatedInstances.remove( w )
+	
 		if not len( scriptContainer.children() ) :
-			
 			GafferUI.EventLoop.mainEventLoop().stop()

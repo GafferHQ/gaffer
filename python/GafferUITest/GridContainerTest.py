@@ -40,10 +40,11 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
-class GridContainerTest( unittest.TestCase ) :
+class GridContainerTest( GafferUITest.TestCase ) :
 
 	def testSimpleSetItem( self ) :
 	

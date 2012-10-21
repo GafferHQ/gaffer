@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,8 +37,9 @@
 import unittest
 
 import GafferUI
+import GafferUITest
 
-class VariantTest( unittest.TestCase ) :
+class VariantTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 		

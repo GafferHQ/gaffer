@@ -211,6 +211,7 @@ void GafferBindings::bindNode()
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
 		.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
+		.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
 	;
 	
 	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >::bind( "UnaryPlugSignal" );

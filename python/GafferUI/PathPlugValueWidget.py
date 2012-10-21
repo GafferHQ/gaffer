@@ -79,6 +79,9 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			with IECore.IgnoredExceptions( ValueError ) :
 				self.__path.setFromString( self.getPlug().getValue() )
+
+		self.pathWidget().setEditable( self._editable() )
+		self.__row[1].setEnabled( self._editable() ) # button
 		
 	def __setPlugValue( self, *args ) :
 								

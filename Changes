@@ -2,6 +2,29 @@
 
 * Added Window.childWindows() method.
 
+* Added initial (and limited) support for Parameterised::parameterChanged() methods. Currently only modifying parameter values is supported in parameterChanged() - support for modifying user data and presets will be added in later revisions.
+
+* The input and output connections for selected nodes are now drawn highlighted.
+
+* Added BlockedConnection class in C++. This handles the blocking and unblocking of connections in an exception-safe manner.
+
+* Added Node::plugFlagsChangedSignal().
+
+* Added Plug::ReadOnly flag, to allow plugs to be locked against modification of the input or value.
+
+* Added support for ["gaffer"]["readOnly"] bool parameter user data, mapping it to the Plug::ReadOnly flag. This user data may be modified in a ParameterModificationContext or in a Parameterised::parameterChanged() callback.
+
+* StringPlugValueWidget and PathPlugValueWidget now correctly set their text entry field to read only when the plug is read only.
+
+* PresetsOnlyParameterValueWidget now displays in a disabled state when a plug is not writable.
+
+* Fixed C/C++ Object already deleted test messages caused by DeferredPathPreview.
+
+* Fixed lifetime issues with ScriptWindows - they may now be constructed directly or acquire()d directly and their lifetime will be as expected (managed by the caller). ScriptWindow.connect() continues to operate as before - managing the lifetime of windows to correspond with the lifetime of scripts in the application.
+
+0.35.7
+------
+
 * Fixed bug which caused Windows to be hidden when being added as the child of another Window.
 
 * Window.setVisible( True ) now ensures that the Window is unminimized and raised where necessary.

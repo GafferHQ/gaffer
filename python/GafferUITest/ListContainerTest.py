@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -52,7 +53,7 @@ class TestWidget( GafferUI.Widget ) :
 		
 		self.s = s
 
-class ListContainerTest( unittest.TestCase ) :
+class ListContainerTest( GafferUITest.TestCase ) :
 
 	def testConstruction( self ) :
 	

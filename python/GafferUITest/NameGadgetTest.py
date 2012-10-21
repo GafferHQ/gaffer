@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class NameGadgetTest( unittest.TestCase ) :
+class NameGadgetTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 	
@@ -54,9 +56,6 @@ class NameGadgetTest( unittest.TestCase ) :
 		n.setName( "somethingElse" )
 		self.assertEqual( g.getText(), n.getName() )
 		
-	
-		
-	
 if __name__ == "__main__":
 	unittest.main()
 	

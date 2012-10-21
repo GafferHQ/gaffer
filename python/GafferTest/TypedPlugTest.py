@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -138,6 +138,11 @@ class TypedPlugTest( unittest.TestCase ) :
 		self.assertNotEqual( p1.hash(), p2.hash() )		
 		self.assertEqual( p2.hash(), p3.hash() )	
 					
+	def testReadOnlySetValueRaises( self ) :
+	
+		p = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		self.assertRaises( RuntimeError, p.setValue, True )
+						
 if __name__ == "__main__":
 	unittest.main()
 	

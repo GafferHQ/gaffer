@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -51,7 +52,7 @@ class TestWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QLabel( "hello" ) )
 		
-class WindowTest( unittest.TestCase ) :
+class WindowTest( GafferUITest.TestCase ) :
 
 	def testTitle( self ) :
 	

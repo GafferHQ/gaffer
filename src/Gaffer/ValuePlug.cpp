@@ -327,6 +327,11 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 {
+	if( getFlags( ReadOnly ) )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot set value for read only plug \"%s\"" ) % fullName() ) );
+	}
+	
 	bool haveInput = getInput<Plug>();
 	if( direction()==In && !haveInput )
 	{

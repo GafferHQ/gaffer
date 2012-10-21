@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import weakref
 import threading
 
 import IECore
@@ -61,17 +62,22 @@ class DeferredPathPreview( GafferUI.PathPreviewWidget ) :
 		# a timer we use to display the busy status if loading takes too long
 		self.__busyTimer = QtCore.QTimer()
 		self.__busyTimer.setSingleShot( True )
-		self.__busyTimer.timeout.connect( IECore.curry( self.__tabbedContainer.setCurrent, self.__tabbedContainer[0] ) )
+		self.__busyTimer.timeout.connect( IECore.curry( DeferredPathPreview.__displayBusy, weakref.ref( self ) ) )
 
 	def _updateFromPath( self ) :
 	
 		if self.isValid() :
-			# start loading in the background
-			threading.Thread( target = self.__load ).start()
+			# start loading in the background. whenever we spawn activity on another
+			# thread (or schedule a timer as above), we do so using only a weak reference
+			# to ourselves. this means that we can die appropriately even while loading
+			# something.
+			thread = threading.Thread( target = IECore.curry( DeferredPathPreview.__load, weakref.ref( self ) ) )
+			thread.daemon = True
+			thread.start()
 			# start the timer to show the busy widget if loading takes too long
 			self.__busyTimer.start( 500 )
 		else :
-			self.__display( None )
+			DeferredPathPreview.__display( weakref.ref( self ), None )
 		
 	## Must be implemented in subclasses to load something
 	# from the path and return it. The assumption is that this
@@ -87,13 +93,23 @@ class DeferredPathPreview( GafferUI.PathPreviewWidget ) :
 	
 		raise NotImplementedError
 
-	def __load( self ) :
+	@staticmethod
+	def __load( selfWeakRef ) :
+		
+		self = selfWeakRef()
+		if self is None :
+			return
 		
 		o = self._load()
-		GafferUI.EventLoop.executeOnUIThread( IECore.curry( self.__display, o ) )
+		GafferUI.EventLoop.executeOnUIThread( IECore.curry( DeferredPathPreview.__display, selfWeakRef, o ) )
 	
-	def __display( self, o ) :
+	@staticmethod
+	def __display( selfWeakRef, o ) :
 	
+		self = selfWeakRef()
+		if self is None :
+			return
+			
 		self.__busyTimer.stop()
 		
 		if o is not None :
@@ -101,3 +117,12 @@ class DeferredPathPreview( GafferUI.PathPreviewWidget ) :
 			self.__tabbedContainer.setCurrent( self.__tabbedContainer[1] )
 		else :
 			self.__tabbedContainer.setCurrent( self.__tabbedContainer[2] )
+
+	@staticmethod
+	def __displayBusy( selfWeakRef ) :
+	
+		self = selfWeakRef()
+		if self is None :
+			return
+		
+		self.__tabbedContainer.setCurrent( self.__tabbedContainer[0] )

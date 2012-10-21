@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@ namespace IECore
 {
 
 class ParameterisedInterface;
+class Parameter;
 
 } // namespace IECore
 
@@ -100,14 +101,25 @@ class ParameterisedHolder : public BaseType
 		/// by using the IECore.ClassLoader in python. This allows us to keep libGaffer from
 		/// having a python dependency.
 		virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const;	
+		/// Called whenever a plug representing a parameter has changed. This is implemented to do
+		/// nothing in libGaffer, but the libGafferBindings library implements it to call
+		/// the parameterChanged() python method on the held class, if it exists. This allows
+		/// us to keep libGaffer from having a python dependency. In future,
+		/// Parameterised::parameterChanged() might become a part of the Cortex C++ API,
+		/// in which case we can do all the work in libGaffer.
+		virtual void parameterChanged( IECore::Parameter *parameter );
 		
 	private :
 	
+		void plugSet( PlugPtr plug );
+		
 		friend class ParameterModificationContext;
 	
 		IECore::RunTimeTypedPtr m_parameterised;
 		CompoundParameterHandlerPtr m_parameterHandler;
 	
+		boost::signals::connection m_plugSetConnection;
+
 };
 
 typedef ParameterisedHolder<Node> ParameterisedHolderNode;

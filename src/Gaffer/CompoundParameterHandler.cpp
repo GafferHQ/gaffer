@@ -185,7 +185,7 @@ void CompoundParameterHandler::setPlugValue()
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
 		ParameterHandlerPtr h = handler( *it );
-		if( h )
+		if( h && !h->plug()->getFlags( Plug::ReadOnly ) )
 		{
 			h->setPlugValue();
 		}

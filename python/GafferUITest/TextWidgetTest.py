@@ -40,8 +40,9 @@ import gc
 
 import GafferUI
 import GafferTest
+import GafferUITest
 
-class TextWidgetTest( unittest.TestCase ) :
+class TextWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifespan( self ) :
 	

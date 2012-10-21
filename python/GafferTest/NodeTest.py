@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -551,5 +551,25 @@ class NodeTest( GafferTest.TestCase ) :
 		# optimise things by allowing a copy-free setValue() function for use during computations.
 		self.failUnless( n["in"].getValue( _copy=False ).isSame( n["out"].getValue( _copy=False ) ) )
 		
+	def testPlugFlagsChangedSignal( self ) :
+	
+		n = Gaffer.Node()
+		n["p"] = Gaffer.Plug()
+
+		cs = GafferTest.CapturingSlot( n.plugFlagsChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		n["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		self.assertEqual( len( cs ), 1 )
+		self.failUnless( cs[0][0].isSame( n["p"] ) )
+		
+		# second time should have no effect because they're the same
+		n["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		self.assertEqual( len( cs ), 1 )
+		
+		n["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, False )
+		self.assertEqual( len( cs ), 2 )
+		self.failUnless( cs[1][0].isSame( n["p"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

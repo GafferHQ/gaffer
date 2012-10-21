@@ -91,6 +91,8 @@ class ConnectionGadget : public Gadget
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		
+		bool nodeSelected( const Nodule *nodule ) const;
+		
 		Imath::V3f m_srcPos;
 		Imath::V3f m_srcTangent;
 		Imath::V3f m_dstPos;

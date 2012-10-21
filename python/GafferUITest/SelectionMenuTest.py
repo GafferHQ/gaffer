@@ -37,8 +37,9 @@
 import unittest
 
 import GafferUI
+import GafferUITest
 
-class SelectionMenuTest( unittest.TestCase ) :
+class SelectionMenuTest( GafferUITest.TestCase ) :
 
 	def testAccessors( self ) :
 				

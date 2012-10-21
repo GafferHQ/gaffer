@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -169,7 +169,24 @@ class ParameterHandlerTest( unittest.TestCase ) :
 		
 		self.failUnless( h.childParameterHandler( c["i"] ).parameter().isSame( c["i"] ) )
 		self.failUnless( h.childParameterHandler( c["f"] ).parameter().isSame( c["f"] ) )
-			
+	
+	def testReadOnly( self ) :
+	
+		p = IECore.IntParameter( "i", "d", 10 )
+		
+		n = Gaffer.Node()
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
+		
+		self.failIf( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		
+		p.userData()["gaffer"] = IECore.CompoundObject( {
+			"readOnly" : IECore.BoolData( True ),
+		} )
+		
+		h.setupPlug( n )
+		self.failUnless( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

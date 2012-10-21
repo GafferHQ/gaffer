@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,99 +37,46 @@
 import unittest
 import weakref
 
-import IECore
-
 import Gaffer
 import GafferUI
 import GafferUITest
 
-class WidgetSignalTest( GafferUITest.TestCase ) :
+class ScriptWindowTest( GafferUITest.TestCase ) :
 
-	def test( self ) :
-
-		w = GafferUI.TabbedContainer()
-
-		s = GafferUI.WidgetSignal()
-		self.assertEqual( s( w ), False )
-		
-		self.__widget = None
-		def f( ww ) :
-		
-			self.__widget = ww
-			return True
-			
-		c = s.connect( f )
-		self.assertEqual( s( w ), True )		
-		self.assert_( self.__widget is w )		
-		
-	def testDeletionOfConnectionDisconnects( self ) :
+	def testLifetimeOfManuallyAcquiredWindows( self ) :
 	
-		w = GafferUI.TabbedContainer()
+		s = Gaffer.ScriptNode()		
+		sw = GafferUI.ScriptWindow.acquire( s )
 
-		s = GafferUI.WidgetSignal()
-		self.assertEqual( s( w ), False )
-			
-		def f( ww ) :
+		wsw = weakref.ref( sw )
+		del sw
 		
-			return True
-			
-		c = s.connect( f )
+		self.assertEqual( wsw(), None )
 
-		self.assertEqual( s( w ), True )
-		
-		del c 
-
-		self.assertEqual( s( w ), False )
-
-	def testCircularRef( self ) :
+	def testLifetimeOfDirectlyConstructedWindows( self ) :
 	
-		class A( GafferUI.TabbedContainer ) :
-		
-			def __init__( self ) :
-			
-				GafferUI.TabbedContainer.__init__( self )
-				
-				self.signal = GafferUI.WidgetSignal()
-			
-			@staticmethod	
-			def f( widget ) :
-			
-				return True
-				
-			def ff( self, other ) :
-			
-				return True
-				
-		a = A()
-		self.assertEqual( a.signal( a ), False )	
-		
-		a.c = a.signal.connect( A.f )
-		self.assertEqual( a.signal( a ), True )
-			
-		w = weakref.ref( a )
-		self.assert_( w() is a )
-		del a
-		self.assertEqual( w(), None )
-		
-		a2 = A()
-		self.assertEqual( a2.signal( a2 ), False )	
+		s = Gaffer.ScriptNode()		
+		sw = GafferUI.ScriptWindow( s )
 
-		# it is imperative to connect to a WeakMethod to prevent
-		# unbreakable circular references from forming.
-		a2.c = a2.signal.connect( Gaffer.WeakMethod( a2.ff ) )
-		self.assertEqual( a2.signal( a2 ), True )
+		wsw = weakref.ref( sw )
+		del sw
 		
-		w = weakref.ref( a2 )
-		self.assert_( w() is a2 )
-		del a2
-		self.assertEqual( w(), None )
-		
-	def tearDown( self ) :
+		self.assertEqual( wsw(), None )
+
+	def testAcquire( self ) :
 	
-		self.__widget = None
+		s1 = Gaffer.ScriptNode()		
+		s2 = Gaffer.ScriptNode()		
 		
-		GafferUITest.TestCase.tearDown( self )
+		w1 = GafferUI.ScriptWindow.acquire( s1 )
+		self.failUnless( w1.scriptNode().isSame( s1 ) )
 		
+		w2 = GafferUI.ScriptWindow.acquire( s2 )
+		self.failUnless( w2.scriptNode().isSame( s2 ) )
+		
+		w3 = GafferUI.ScriptWindow.acquire( s1 )
+		self.failUnless( w3 is w1 )
+
 if __name__ == "__main__":
 	unittest.main()
 	

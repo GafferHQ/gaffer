@@ -43,11 +43,12 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-class EventLoopTest( unittest.TestCase ) :
+class EventLoopTest( GafferUITest.TestCase ) :
 
 	def testIdleCallbacks( self ) :
 

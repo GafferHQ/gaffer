@@ -42,8 +42,9 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class MenuTest( unittest.TestCase ) :
+class MenuTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 	

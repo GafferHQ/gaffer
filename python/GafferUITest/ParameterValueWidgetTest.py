@@ -40,8 +40,9 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class ParameterValueWidgetTest( unittest.TestCase ) :
+class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testCreate( self ) :
 	

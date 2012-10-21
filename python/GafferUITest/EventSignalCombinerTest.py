@@ -42,8 +42,9 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class EventSignalCombinerTest( unittest.TestCase ) :
+class EventSignalCombinerTest( GafferUITest.TestCase ) :
 
 	def trueSlot( self, gadget, event ) :
 

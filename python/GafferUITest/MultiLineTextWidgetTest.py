@@ -40,8 +40,9 @@ import weakref
 
 import GafferUI
 import GafferTest
+import GafferUITest
 
-class MultiLineTextWidgetTest( unittest.TestCase ) :
+class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifespan( self ) :
 	

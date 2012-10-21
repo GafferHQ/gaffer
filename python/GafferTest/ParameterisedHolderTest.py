@@ -676,7 +676,154 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.assertEqual( ph["parameters"]["t"]["minutes"].getValue(), 2 )
 		self.assertEqual( ph["parameters"]["t"]["seconds"].getValue(), 3 )
 		self.assertEqual( ph["parameters"]["t"]["frame"].getValue(), 4 )
+	
+	def testParameterChangedCanChangeValues( self ) :
+	
+		class ParameterChanger( IECore.Parameterised ) :
+		
+			def __init__( self ) :
 			
+				IECore.Parameterised.__init__( self, "" )
+				
+				self.parameters().addParameters(
+				
+					[
+					
+						IECore.IntParameter(
+							name = "driver",
+							description = "",
+						),
+					
+						IECore.IntParameter(
+							name = "driven",
+							description = "",
+						),
+						
+					],
+				
+				)
+				
+				self.changes = []
+				
+			def parameterChanged( self, parameter ) :
+			
+				self.changes.append( ( parameter, parameter.getNumericValue() ) )
+			
+				if parameter.isSame( self.parameters()["driver"] ) :
+				
+					self.parameters()["driven"].setNumericValue( parameter.getNumericValue() * 2 )
+		
+		c = ParameterChanger()
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( c )
+		
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 0 )
+		self.assertEqual( ph["parameters"]["driven"].getValue(), 0 )
+		self.assertEqual( len( c.changes ), 0 )
+		
+		ph["parameters"]["driver"].setValue( 10 )
+		
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
+		self.assertEqual( ph["parameters"]["driven"].getValue(), 20 )
+		self.assertEqual( len( c.changes ), 1 )
+		self.failUnless( c.changes[0][0].isSame( c["driver"] ) )
+		self.assertEqual( c.changes[0][1], 10 )
+		
+		ph["parameters"]["driven"].setValue( 30 )
+		
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
+		self.assertEqual( ph["parameters"]["driven"].getValue(), 30 )
+		self.assertEqual( len( c.changes ), 2 )
+		self.failUnless( c.changes[1][0].isSame( c["driven"] ) )
+		self.assertEqual( c.changes[1][1], 30 )
+	
+	def testParameterChangedWithCompoundParameters( self ) :
+	
+		class ParameterChanger( IECore.Parameterised ) :
+		
+			def __init__( self ) :
+			
+				IECore.Parameterised.__init__( self, "" )
+				
+				self.parameters().addParameters(
+				
+					[
+					
+						IECore.IntParameter(
+							name = "driver",
+							description = "",
+						),
+					
+						IECore.CompoundParameter(
+							name = "c",
+							members = [
+								IECore.IntParameter(
+									"i", ""
+								),
+								IECore.StringParameter(
+									"s", "", ""
+								),
+							]
+						),
+						
+					],
+				
+				)
+				
+				self.changes = []
+			
+			# the mere existence of this function caused the problem this
+			# test is checking is fixed.
+			def parameterChanged( self, parameter ) :
+			
+				pass
+
+		c = ParameterChanger()
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( c )
+
+		self.failUnless( "parameters" in ph )
+		self.failUnless( "c" in ph["parameters"] )
+		self.failUnless( "i" in ph["parameters"]["c"] )
+		self.failUnless( "s" in ph["parameters"]["c"] )
+	
+	def testReadOnly( self ) :
+		
+		p = IECore.Parameterised( "" )
+		
+		p.parameters().addParameters(
+		
+			[
+				IECore.IntParameter(
+					"i",
+					"",
+					1,
+				)
+			]
+		
+		)
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( p )
+
+		self.failUnless( "parameters" in ph )
+		self.failUnless( "i" in ph["parameters"] )
+		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
+		self.assertEqual( ph["parameters"]["i"].getFlags( Gaffer.Plug.Flags.ReadOnly ), False )
+		
+		with ph.parameterModificationContext() :
+		
+			p.parameters()["i"].userData()["gaffer"] = IECore.CompoundObject( {
+				"readOnly" : IECore.BoolData( True ),
+			} )
+			p.parameters()["i"].setNumericValue( 2 )
+		
+		self.assertEqual( ph["parameters"]["i"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
+		# the plug was made read only, so should not have accepted the new parameter value
+		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
+		
 	def setUp( self ) :
 	
 		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"

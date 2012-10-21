@@ -91,8 +91,9 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		assert( textWidget is self.__textWidget )
 	
-		text = self.__textWidget.getText()
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			self.getPlug().setValue( text )
+		if self._editable() :
+			text = self.__textWidget.getText()
+			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+				self.getPlug().setValue( text )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.StringPlug.staticTypeId(), StringPlugValueWidget )

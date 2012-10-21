@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -80,6 +81,8 @@ class Node : public GraphComponent
 		UnaryPlugSignal &plugDirtiedSignal();
 		/// Called when the input changes on a plug of this node.
 		UnaryPlugSignal &plugInputChangedSignal();
+		/// Called when the flags are changed for a plug of this node.
+		UnaryPlugSignal &plugFlagsChangedSignal();
 		//@}
 		
 		/// Convenience function which simply returns ancestor<ScriptNode>()
@@ -132,6 +135,7 @@ class Node : public GraphComponent
 		UnaryPlugSignal m_plugSetSignal;
 		UnaryPlugSignal m_plugDirtiedSignal;
 		UnaryPlugSignal m_plugInputChangedSignal;
+		UnaryPlugSignal m_plugFlagsChangedSignal;
 		
 };
 

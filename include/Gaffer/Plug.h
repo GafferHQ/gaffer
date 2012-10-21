@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -84,10 +84,15 @@ class Plug : public GraphComponent
 			/// calls will be stored in a cache and reused if equivalent computations
 			/// are requested in the future.
 			Cacheable = 0x00000010,
+			/// Read only plugs do not accept any changes to their inputs, and will throw
+			/// an exception if an attempt is made to call their setValue() method. It is
+			/// not valid to make an output plug read only - in the case of an attempt to
+			/// do so an exception will be thrown from setFlags().
+			ReadOnly = 0x00000020,
 			/// When adding values, don't forget to update the Default and All values below,
 			/// and to update PlugBinding.cpp too!
 			Default = Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable,
-			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable
+			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | ReadOnly
 		};
 	
 		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
@@ -115,6 +120,7 @@ class Plug : public GraphComponent
 		/// Returns true if all the flags passed are currently set.
 		bool getFlags( unsigned flags ) const;
 		/// Sets the current state of the flags.
+		/// \todo I suspect we need to make this undoable.
 		void setFlags( unsigned flags );
 		/// Sets or unsets the specified flags depending on the enable
 		/// parameter. All other flags remain at their current values.
@@ -131,7 +137,8 @@ class Plug : public GraphComponent
 		/// input if their base class does too. The default
 		/// implementation accepts any input, provided that 
 		/// direction()==In and the AcceptsInputs flag is set,
-		/// and that node()->acceptsInput() also accepts the input.
+		/// the ReadOnly flag is not set, and that node()->acceptsInput()
+		/// also accepts the input.
 		virtual bool acceptsInput( const Plug *input ) const;
 		/// Sets the input to this plug if acceptsInput( input )
 		/// returns true, otherwise throws an IECore::Exception.

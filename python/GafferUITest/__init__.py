@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+from TestCase import TestCase
 from WidgetTest import WidgetTest
 from MenuTest import MenuTest
 from SplitContainerTest import SplitContainerTest
@@ -77,6 +78,7 @@ from LabelTest import LabelTest
 from ScrolledContainerTest import ScrolledContainerTest
 from ParameterValueWidgetTest import ParameterValueWidgetTest
 from NodeEditorTest import NodeEditorTest
+from ScriptWindowTest import ScriptWindowTest
 
 if __name__ == "__main__":
 	unittest.main()

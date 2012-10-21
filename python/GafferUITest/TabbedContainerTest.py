@@ -41,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class TabbedContainerTest( unittest.TestCase ) :
+class TabbedContainerTest( GafferUITest.TestCase ) :
 	
 	def test( self ) :
 	
@@ -192,6 +193,11 @@ class TabbedContainerTest( unittest.TestCase ) :
 		t.setCornerWidget( b )
 		self.assertEqual( len( l ), 0 )
 		self.assertEqual( b.parent(), t )
+	
+	def tearDown( self ) :
+	
+		self.__current = None
+		GafferUITest.TestCase.tearDown( self )
 		
 if __name__ == "__main__":
 	unittest.main()

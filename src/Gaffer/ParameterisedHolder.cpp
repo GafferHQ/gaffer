@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
 #include "IECore/ParameterisedInterface.h"
 
 #include "Gaffer/ParameterisedHolder.h"
 #include "Gaffer/CompoundParameterHandler.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/BlockedConnection.h"
 
 using namespace Gaffer;
 
@@ -54,6 +58,8 @@ ParameterisedHolder<BaseType>::ParameterisedHolder( const std::string &name )
 	BaseType::addChild( new StringPlug( "__className" ) );
 	BaseType::addChild( new IntPlug( "__classVersion", Plug::In, -1 ) );
 	BaseType::addChild( new StringPlug( "__searchPathEnvVar" ) );
+
+	m_plugSetConnection = BaseType::plugSetSignal().connect( boost::bind( &ParameterisedHolder::plugSet, this, ::_1 ) );
 }
 
 template<typename BaseType>
@@ -64,6 +70,8 @@ ParameterisedHolder<BaseType>::~ParameterisedHolder()
 template<typename BaseType>
 void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues )
 {
+	BlockedConnection connectionBlocker( m_plugSetConnection );
+
 	IECore::ParameterisedInterface *interface = dynamic_cast<IECore::ParameterisedInterface *>( parameterised.get() );
 	if( !interface )
 	{
@@ -158,6 +166,44 @@ template<typename BaseType>
 IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const
 {
 	throw IECore::Exception( "Cannot load classes on a ParameterisedHolder not created in Python." );
+}
+
+template<typename BaseType>
+void ParameterisedHolder<BaseType>::parameterChanged( IECore::Parameter *parameter )
+{
+}
+
+template<typename BaseType>
+void ParameterisedHolder<BaseType>::plugSet( PlugPtr plug )
+{
+	if( !m_parameterHandler || !m_parameterHandler->plug()->isAncestorOf( plug ) )
+	{
+		return;
+	}
+		
+	std::vector<Plug *> plugHierarchy;
+	while( plug != m_parameterHandler->plug() )
+	{
+		plugHierarchy.push_back( plug );
+		plug = plug->parent<Plug>();
+	}
+	
+	IECore::Parameter *parameter = m_parameterHandler->parameter().get();
+	for( std::vector<Plug *>::const_reverse_iterator it = plugHierarchy.rbegin(), eIt = plugHierarchy.rend(); it != eIt; it++ )
+	{
+		IECore::CompoundParameter *compoundParameter = IECore::runTimeCast<IECore::CompoundParameter>( parameter );
+		if( !compoundParameter )
+		{
+			return;
+		}
+		parameter = compoundParameter->parameter<IECore::Parameter>( (*it)->getName() );
+	}
+	
+	if( parameter )
+	{
+		BlockedConnection connectionBlocker( m_plugSetConnection );
+		parameterChanged( parameter );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -77,3 +77,5 @@ class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			self.__parameterHandler.setParameterValue()		
 			self.__label.setText( self.__parameterHandler.parameter().getCurrentPresetName() )
+
+		self.setEnabled( self._editable() )

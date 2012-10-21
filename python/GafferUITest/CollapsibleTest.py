@@ -38,8 +38,9 @@ import os
 import unittest
 
 import GafferUI
+import GafferUITest
 
-class CollapsibleTest( unittest.TestCase ) :
+class CollapsibleTest( GafferUITest.TestCase ) :
 
 	def testConstructor( self ) :
 		

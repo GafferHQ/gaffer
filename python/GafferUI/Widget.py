@@ -838,7 +838,7 @@ class Widget( object ) :
 			
 		}
 			
-		QPushButton:disabled, QComboBox:disabled {
+		QPushButton:disabled, QComboBox:disabled, QLabel::disabled {
 
 			color: $foregroundFaded;
 

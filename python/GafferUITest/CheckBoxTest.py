@@ -38,8 +38,9 @@ import unittest
 import weakref
 
 import GafferUI
+import GafferUITest
 
-class CheckBoxTest( unittest.TestCase ) :
+class CheckBoxTest( GafferUITest.TestCase ) :
 
 	def testLifespan( self ) :
 	

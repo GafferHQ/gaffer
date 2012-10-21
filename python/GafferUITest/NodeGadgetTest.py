@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferTest
+import GafferUITest
 
-class NodeGadgetTest( unittest.TestCase ) :
+class NodeGadgetTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 	

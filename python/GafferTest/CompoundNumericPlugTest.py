@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -214,6 +215,11 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		p.setToDefault()
 		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
 			
+	def testReadOnlySetValueRaises( self ) :
+	
+		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		self.assertRaises( RuntimeError, p.setValue, IECore.V3f( 1 ) )
+
 if __name__ == "__main__":
 	unittest.main()
 	

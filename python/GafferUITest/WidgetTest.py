@@ -45,6 +45,7 @@ import Gaffer
 import GafferTest
 
 import GafferUI
+import GafferUITest
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -63,7 +64,7 @@ class TestWidget2( GafferUI.Widget ) :
 		
 		GafferUI.Widget.__init__( self, self.topLevelGafferWidget )
 		
-class WidgetTest( unittest.TestCase ) :
+class WidgetTest( GafferUITest.TestCase ) :
 
 	def testOwner( self ) :
 	

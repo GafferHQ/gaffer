@@ -44,6 +44,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferTest
+import GafferUITest
 
 class NestedPlugTestNode( Gaffer.Node ) :
 		
@@ -54,7 +55,7 @@ class NestedPlugTestNode( Gaffer.Node ) :
 IECore.registerRunTimeTyped( NestedPlugTestNode )
 GafferUI.Nodule.registerNodule( NestedPlugTestNode.staticTypeId(), "c", GafferUI.CompoundNodule )
 
-class GraphEditorTest( unittest.TestCase ) :
+class GraphEditorTest( GafferUITest.TestCase ) :
 
 	def testCreateWithExistingGraph( self ) :
 	

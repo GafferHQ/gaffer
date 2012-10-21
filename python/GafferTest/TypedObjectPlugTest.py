@@ -201,6 +201,11 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 		self.failUnless( Gaffer.V3fVectorDataPlug.ValueType is IECore.V3fVectorData )
 		self.failUnless( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
 	
+	def testReadOnlySetValueRaises( self ) :
+	
+		p = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		self.assertRaises( RuntimeError, p.setValue, IECore.IntData( 10 ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

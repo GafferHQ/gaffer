@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,61 +34,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CompoundObject.h"
-#include "IECore/SimpleTypedData.h"
-
-#include "Gaffer/ParameterHandler.h"
-#include "Gaffer/GraphComponent.h"
+#include "Gaffer/BlockedConnection.h"
 
 using namespace Gaffer;
-using namespace IECore;
 
-ParameterHandler::ParameterHandler()
+BlockedConnection::BlockedConnection( boost::signals::connection &connection )
+	:	m_connection( connection )
 {
+	m_connection.block();
 }
 
-ParameterHandler::~ParameterHandler()
+BlockedConnection::~BlockedConnection()
 {
-}
-
-void ParameterHandler::setupPlugFlags( Plug *plug )
-{
-	plug->setFlags( Plug::Dynamic, true );
-	
-	const CompoundObject *ud = parameter()->userData()->member<CompoundObject>( "gaffer" );
-	if( ud )
-	{
-		const BoolData *readOnly = ud->member<BoolData>( "readOnly" );	
-		if( readOnly )
-		{
-			plug->setFlags( Plug::ReadOnly, readOnly->readable() );
-		}
-	}
-}
-
-ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter )
-{
-	const CreatorMap &c = creators();
-	IECore::TypeId typeId = parameter->typeId();
-	while( typeId!=InvalidTypeId )
-	{
-		CreatorMap::const_iterator it = c.find( typeId );
-		if( it!=c.end() )
-		{
-			return it->second( parameter );
-		}	
-		typeId = RunTimeTyped::baseTypeId( typeId );
-	}
-	return 0;
-}
-
-void ParameterHandler::registerParameterHandler( IECore::TypeId parameterType, Creator creator )
-{
-	creators()[parameterType] = creator;
-}
-
-ParameterHandler::CreatorMap &ParameterHandler::creators()
-{
-	static CreatorMap m;
-	return m;
+	m_connection.unblock();
 }

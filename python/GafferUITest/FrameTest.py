@@ -41,14 +41,16 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class FrameTest( unittest.TestCase ) :
+class FrameTest( GafferUITest.TestCase ) :
 
 	@unittest.expectedFailure
-	def testConstructor( self ) :
+	def testGadget( self ) :
 	
-		g = GafferUI.RenderableGadget( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		f = GafferUI.Frame( g )
+		# because we're not putting gadgets and widgets in different namespaces,
+		# we have clashes where we want to name them the same. we need to resolve this.
+		self.failUnless( issubclass( GafferUI.Frame, GafferUI.Gadge ) )
 	
 	def testBorderStyle( self ) :
 	

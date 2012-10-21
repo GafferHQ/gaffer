@@ -40,8 +40,9 @@ import weakref
 import Gaffer
 import GafferTest
 import GafferUI
+import GafferUITest
 
-class CompoundParameterValueWidgetTest( unittest.TestCase ) :
+class CompoundParameterValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifetime( self ) :
 

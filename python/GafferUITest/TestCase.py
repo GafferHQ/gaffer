@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,102 +34,38 @@
 #  
 ##########################################################################
 
+import sys
 import unittest
-import weakref
 
-import IECore
-
-import Gaffer
 import GafferUI
-import GafferUITest
 
-class WidgetSignalTest( GafferUITest.TestCase ) :
-
-	def test( self ) :
-
-		w = GafferUI.TabbedContainer()
-
-		s = GafferUI.WidgetSignal()
-		self.assertEqual( s( w ), False )
-		
-		self.__widget = None
-		def f( ww ) :
-		
-			self.__widget = ww
-			return True
-			
-		c = s.connect( f )
-		self.assertEqual( s( w ), True )		
-		self.assert_( self.__widget is w )		
-		
-	def testDeletionOfConnectionDisconnects( self ) :
-	
-		w = GafferUI.TabbedContainer()
-
-		s = GafferUI.WidgetSignal()
-		self.assertEqual( s( w ), False )
-			
-		def f( ww ) :
-		
-			return True
-			
-		c = s.connect( f )
-
-		self.assertEqual( s( w ), True )
-		
-		del c 
-
-		self.assertEqual( s( w ), False )
-
-	def testCircularRef( self ) :
-	
-		class A( GafferUI.TabbedContainer ) :
-		
-			def __init__( self ) :
-			
-				GafferUI.TabbedContainer.__init__( self )
-				
-				self.signal = GafferUI.WidgetSignal()
-			
-			@staticmethod	
-			def f( widget ) :
-			
-				return True
-				
-			def ff( self, other ) :
-			
-				return True
-				
-		a = A()
-		self.assertEqual( a.signal( a ), False )	
-		
-		a.c = a.signal.connect( A.f )
-		self.assertEqual( a.signal( a ), True )
-			
-		w = weakref.ref( a )
-		self.assert_( w() is a )
-		del a
-		self.assertEqual( w(), None )
-		
-		a2 = A()
-		self.assertEqual( a2.signal( a2 ), False )	
-
-		# it is imperative to connect to a WeakMethod to prevent
-		# unbreakable circular references from forming.
-		a2.c = a2.signal.connect( Gaffer.WeakMethod( a2.ff ) )
-		self.assertEqual( a2.signal( a2 ), True )
-		
-		w = weakref.ref( a2 )
-		self.assert_( w() is a2 )
-		del a2
-		self.assertEqual( w(), None )
+## A useful base class for creating test cases for the ui.
+class TestCase( unittest.TestCase ) :
 		
 	def tearDown( self ) :
 	
-		self.__widget = None
-		
-		GafferUITest.TestCase.tearDown( self )
-		
-if __name__ == "__main__":
-	unittest.main()
+		# Here we check that there are no Widget instances knocking
+		# around after each test has run. this provides good coverage
+		# for the Widget lifetime problems that are all too easy to
+		# create. First we clear any previous exception, as it can be
+		# holding references to widgets that were active when the exception
+		# was thrown (and unittest.TestCase will be reporting an error
+		# anyway).
 	
+		sys.exc_clear()
+				
+		widgetInstances = self.__widgetInstances()
+		self.assertEqual( widgetInstances, [] )
+		
+	@staticmethod
+	def __widgetInstances() :
+	
+		result = []
+		# yes, this is accessing Widget internals. we could add a public method
+		# to the widget to expose this information, but i'd rather not add yet
+		# more methods if we can avoid it.
+		for w in GafferUI.Widget._Widget__qtWidgetOwners.values() :
+			if w() is not None :
+				result.append( w() )
+	
+		return result

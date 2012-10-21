@@ -39,8 +39,9 @@ import unittest
 import weakref
 
 import GafferUI
+import GafferUITest
 
-class SplitContainerTest( unittest.TestCase ) :
+class SplitContainerTest( GafferUITest.TestCase ) :
 
 	def testConstructor( self ) :
 	

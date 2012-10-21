@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,8 +50,9 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( Plug );
 
 Plug::Plug( const std::string &name, Direction direction, unsigned flags )
-	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( flags )
+	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( None )
 {
+	setFlags( flags );
 }
 
 Plug::~Plug()
@@ -108,12 +109,27 @@ bool Plug::getFlags( unsigned flags ) const
 
 void Plug::setFlags( unsigned flags )
 {
+	if( flags == m_flags )
+	{
+		return;
+	}
+	
+	if( (flags & ReadOnly) && direction() == Out )
+	{
+		throw IECore::Exception( "Output plug cannot be read only" );
+	}
+	
 	m_flags = flags;
+	
+	if( Node *n = node() )
+	{
+		n->plugFlagsChangedSignal()( this );
+	}
 }
 
 void Plug::setFlags( unsigned flags, bool enable )
 {
-	m_flags = (m_flags & ~flags) | ( enable ? flags : 0 );
+	setFlags( (m_flags & ~flags) | ( enable ? flags : 0 ) );
 }
 
 bool Plug::acceptsInput( const Plug *input ) const
@@ -132,7 +148,7 @@ bool Plug::acceptsInput( const Plug *input ) const
 	}
 	/// \todo Possibly allow in->out connections as long
 	/// as the Plugs share the same parent (for internal shortcuts).
-	return m_direction!=Out;
+	return m_direction!=Out && !getFlags( ReadOnly );
 }
 
 void Plug::setInput( PlugPtr input )

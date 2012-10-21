@@ -41,15 +41,16 @@ import weakref
 import Gaffer
 import GafferTest
 import GafferUI
+import GafferUITest
 
-class EditorWidgetTest( unittest.TestCase ) :
+class EditorWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifetime( self ) :
 
 		scriptNode = Gaffer.ScriptNode()
 		scriptNode["write"] = Gaffer.WriteNode()
 		scriptNode.selection().add( scriptNode["write"] )
-		
+				
 		for type in GafferUI.EditorWidget.types() :
 			editor = GafferUI.EditorWidget.create( type, scriptNode )
 			w = weakref.ref( editor )

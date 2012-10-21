@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,61 +34,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CompoundObject.h"
-#include "IECore/SimpleTypedData.h"
+#ifndef GAFFER_BLOCKEDCONNECTION_H
+#define GAFFER_BLOCKEDCONNECTION_H
 
-#include "Gaffer/ParameterHandler.h"
-#include "Gaffer/GraphComponent.h"
+#include "boost/signals.hpp"
 
-using namespace Gaffer;
-using namespace IECore;
-
-ParameterHandler::ParameterHandler()
+namespace Gaffer
 {
-}
 
-ParameterHandler::~ParameterHandler()
+/// The BlockedConnection class allows connections to be blocked and unblocked
+/// in an exception-safe manner.
+class BlockedConnection
 {
-}
 
-void ParameterHandler::setupPlugFlags( Plug *plug )
-{
-	plug->setFlags( Plug::Dynamic, true );
+	public :
+
+		/// Calls connection.block()
+		BlockedConnection( boost::signals::connection &connection );
+		/// Unblocks the connection.
+		~BlockedConnection();
+
+	private :
 	
-	const CompoundObject *ud = parameter()->userData()->member<CompoundObject>( "gaffer" );
-	if( ud )
-	{
-		const BoolData *readOnly = ud->member<BoolData>( "readOnly" );	
-		if( readOnly )
-		{
-			plug->setFlags( Plug::ReadOnly, readOnly->readable() );
-		}
-	}
-}
+		boost::signals::connection &m_connection;
 
-ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter )
-{
-	const CreatorMap &c = creators();
-	IECore::TypeId typeId = parameter->typeId();
-	while( typeId!=InvalidTypeId )
-	{
-		CreatorMap::const_iterator it = c.find( typeId );
-		if( it!=c.end() )
-		{
-			return it->second( parameter );
-		}	
-		typeId = RunTimeTyped::baseTypeId( typeId );
-	}
-	return 0;
-}
+};
 
-void ParameterHandler::registerParameterHandler( IECore::TypeId parameterType, Creator creator )
-{
-	creators()[parameterType] = creator;
-}
+} // namespace Gaffer
 
-ParameterHandler::CreatorMap &ParameterHandler::creators()
-{
-	static CreatorMap m;
-	return m;
-}
+#endif // GAFFER_BLOCKEDCONNECTION_H

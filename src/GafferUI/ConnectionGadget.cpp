@@ -193,6 +193,13 @@ void ConnectionGadget::doRender( const Style *style ) const
 	const_cast<ConnectionGadget *>( this )->setPositionsFromNodules();
 	
 	Style::State state = m_hovering ? Style::HighlightedState : Style::NormalState;
+	if( state != Style::HighlightedState )
+	{
+		if( nodeSelected( m_srcNodule ) || nodeSelected( m_dstNodule ) )
+		{
+			state = Style::HighlightedState;
+		}
+	}
 	
 	style->renderConnection( m_srcPos, m_srcTangent, m_dstPos, m_dstTangent, state );
 }
@@ -318,4 +325,21 @@ void ConnectionGadget::leave( GadgetPtr gadget, const ButtonEvent &event )
 {
 	m_hovering = false;
 	renderRequestSignal()( this );
+}
+
+bool ConnectionGadget::nodeSelected( const Nodule *nodule ) const
+{
+	if( !nodule )
+	{
+		return false;
+	}
+	
+	const Gaffer::Node *node = nodule->plug()->node();
+	if( !node )
+	{
+		return false;
+	}
+
+	const Gaffer::ScriptNode *script = node->scriptNode();
+	return script && script->selection()->contains( node );
 }

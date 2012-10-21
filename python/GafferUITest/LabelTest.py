@@ -39,8 +39,9 @@ import unittest
 import weakref
 
 import GafferUI
+import GafferUITest
 
-class LabelTest( unittest.TestCase ) :
+class LabelTest( GafferUITest.TestCase ) :
 
 	def testAlignment( self ) :
 				

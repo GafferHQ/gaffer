@@ -317,6 +317,37 @@ class PlugTest( unittest.TestCase ) :
 		self.assertEqual( pIn2.getFlags( Gaffer.Plug.Flags.AcceptsInputs ), True )
 		self.assertEqual( pIn2.acceptsInput( pOut ), True )
 		
+	def testReadOnlyDefaultsToOff( self ) :
+	
+		p = Gaffer.Plug()
+		self.failIf( p.getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+	
+	def testReadOnlyDisallowsInputs( self ) :
+	
+		self.failUnless( Gaffer.Plug.Flags.All & Gaffer.Plug.Flags.ReadOnly )
+	
+		p1 = Gaffer.Plug()
+		p2 = Gaffer.Plug()
+		self.failUnless( p1.acceptsInput( p2 ) )
+		# read-only plugs can still be used as connection sources
+		p2.setFlags( Gaffer.Plug.Flags.ReadOnly, True )	
+		self.failUnless( p1.acceptsInput( p2 ) )
+		# but cannot be used as destinations
+		self.failIf( p2.acceptsInput( p1 ) )
+		self.assertRaises( RuntimeError, p2.setInput, p1 )
+		
+	def testOutputPlugsDisallowReadOnly( self ) :
+	
+		p = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		self.assertRaises( RuntimeError, p.setFlags, Gaffer.Plug.Flags.ReadOnly, True )
+		
+		self.assertRaises(
+			RuntimeError,
+			Gaffer.Plug,
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly
+		)
+		
 if __name__ == "__main__":
 	unittest.main()
 	

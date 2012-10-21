@@ -38,6 +38,7 @@
 #ifndef GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 #define GAFFERBINDINGS_PARAMETERISEDHOLDERBINDING_H
 
+#include "IECore/Parameter.h"
 #include "IECorePython/Wrapper.h"
 
 #include "boost/format.hpp"
@@ -73,6 +74,20 @@ class ParameterisedHolderWrapper : public NodeWrapper<WrappedType>
 			return boost::python::extract<IECore::RunTimeTypedPtr>( result );
 		}
 	
+		virtual void parameterChanged( IECore::Parameter *parameter )
+		{			
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::object pythonParameterised( WrappedType::getParameterised() );
+			if( PyObject_HasAttrString( pythonParameterised.ptr(), "parameterChanged" ) )
+			{
+				WrappedType::parameterHandler()->setParameterValue();
+				
+				typename WrappedType::ParameterModificationContext parameterModificationContext( this );
+				
+				pythonParameterised.attr( "parameterChanged" )( IECore::ParameterPtr( parameter ) );
+			}
+		}
+
 };
 	
 void bindParameterisedHolder();
