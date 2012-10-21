@@ -22,6 +22,8 @@
 
 * Fixed lifetime issues with ScriptWindows - they may now be constructed directly or acquire()d directly and their lifetime will be as expected (managed by the caller). ScriptWindow.connect() continues to operate as before - managing the lifetime of windows to correspond with the lifetime of scripts in the application.
 
+* Fixed problems caused by serialising plug flags as All - they would then acquire new values when loaded in a future where there are new flags available.
+
 0.35.7
 ------
 

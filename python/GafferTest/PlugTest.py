@@ -305,6 +305,26 @@ class PlugTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["p"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 	
+	def testFlagsNeverSerialisedAsAll( self ) :
+	
+		# it's a terrible idea to serialise a set of flags that happen to be All
+		# as All, rather than as the or-ing of the specific flags, because when new
+		# flags are introduced in the future (and default to off) they will suddenly
+		# pop on when loading old files.
+		
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.All )
+		
+		ss = s.serialise()
+		
+		self.failIf( "All" in ss )
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertEqual( s["n"]["p"].getFlags(), Gaffer.Plug.Flags.All )
+	
 	def testAcceptsInputsFlag( self ) :
 	
 		pOut = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )

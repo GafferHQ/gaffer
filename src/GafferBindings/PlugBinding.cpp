@@ -67,10 +67,6 @@ std::string GafferBindings::serialisePlugFlags( unsigned flags )
 	{
 		return "Gaffer.Plug.Flags.Default";
 	}
-	else if( flags == Plug::All )
-	{
-		return "Gaffer.Plug.Flags.All";
-	}
 	
 	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::None };
 	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", 0 };
