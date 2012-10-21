@@ -59,12 +59,15 @@ class ArnoldShader : public GafferScene::Shader
 	protected :
 	
 		virtual void shaderHash( IECore::MurmurHash &h ) const;
-		virtual IECore::ShaderPtr shader() const;
+		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
 		
 	private :
 		
+		void parameterHash( const Gaffer::ValuePlug *plug, IECore::MurmurHash &h ) const;
+		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
+		
 		template<typename T>
-		IECore::DataPtr shaderParameter( const Gaffer::Plug *plug ) const;
+		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
 					
 };
 

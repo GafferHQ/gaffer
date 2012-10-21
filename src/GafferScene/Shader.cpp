@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/lexical_cast.hpp"
+
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -68,14 +70,14 @@ void Shader::stateHash( IECore::MurmurHash &h ) const
 
 IECore::ObjectVectorPtr Shader::state() const
 {
-	IECore::ObjectVectorPtr s = new IECore::ObjectVector;
-	s->members().push_back( shader() );
-	return s;
+	NetworkBuilder networkBuilder;
+	networkBuilder.shader( this );
+	return networkBuilder.m_state;
 }
 
 void Shader::shaderHash( IECore::MurmurHash &h ) const
 {
-	h.append( typeName() );
+	h.append( typeId() );
 }
 
 /// \todo We should perhaps move the compute() method onto a new DependencyNode class,
@@ -84,4 +86,36 @@ void Shader::shaderHash( IECore::MurmurHash &h ) const
 void Shader::compute( ValuePlug *output, const Context *context ) const
 {
 	output->setToDefault();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// NetworkBuilder implementation
+//////////////////////////////////////////////////////////////////////////
+
+Shader::NetworkBuilder::NetworkBuilder()
+	:	m_state( new IECore::ObjectVector )
+{
+}
+
+IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
+{
+	ShaderMap::const_iterator it = m_shaders.find( shaderNode );
+	if( it != m_shaders.end() )
+	{
+		return it->second;
+	}
+	
+	IECore::ShaderPtr s = shaderNode->shader( *this );
+	m_state->members().push_back( s );
+	m_shaders[shaderNode] = s;
+	return s;
+}
+
+const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
+{
+	IECore::Shader *s = shader( shaderNode );
+	s->setType( "shader" );
+	IECore::StringDataPtr handleData = new IECore::StringData( boost::lexical_cast<std::string>( shaderNode ) );
+	s->parameters()["__handle"] = handleData;
+	return handleData->readable();
 }

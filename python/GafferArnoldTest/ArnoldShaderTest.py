@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreArnold
 
 import Gaffer
 import GafferArnold
@@ -121,6 +122,112 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		h3 = n.stateHash()
 		
 		self.assertNotEqual( h2, h3 )
+	
+	def testShaderNetwork( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.setShader( "standard" )
 		
+		n = GafferArnold.ArnoldShader()
+		n.setShader( "noise" )
+		
+		s["parameters"]["Kd"].setInput( n["out"] )
+		s["parameters"]["Ks"].setInput( n["out"] )
+		
+		st = s.state()
+		self.assertEqual( len( st ), 2 )
+		
+		self.assertEqual( st[0].type, "shader" )
+		self.assertEqual( st[0].name, "noise" )
+		self.failUnless( "__handle" in st[0].parameters )
+		 
+		self.assertEqual( st[1].type, "surface" )
+		self.assertEqual( st[1].name, "standard" )
+		self.failIf( "__handle" in st[1].parameters )
+		
+		self.assertEqual(
+			st[1].parameters["Kd"].value, 
+			"link:" + st[0].parameters["__handle"].value
+		)
+		
+		self.assertEqual(
+			st[1].parameters["Ks"].value, 
+			"link:" + st[0].parameters["__handle"].value
+		)
+		
+	def testShaderNetworkRender( self ) :
+			
+		f = GafferArnold.ArnoldShader()
+		f.setShader( "flat" )
+		f["parameters"]["color"].setValue( IECore.Color3f( 1, 1, 0 ) )
+		
+		s = GafferArnold.ArnoldShader()
+		s.setShader( "utility" )
+		s["parameters"]["color"].setInput( f["parameters"]["color"] )
+		
+		r = IECoreArnold.Renderer()
+
+		r.display( "test", "ieDisplay", "rgba", { "driverType" : "ImageDisplayDriver", "handle" : "test" } )
+		
+		with IECore.WorldBlock( r ) :
+		
+			for ss in s.state() :
+				ss.render( r )
+		
+			r.concatTransform( IECore.M44f.createTranslated( IECore.V3f( 0, 0, -5 ) ) )
+			mesh = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+			mesh.render( r )
+
+		image = IECore.ImageDisplayDriver.removeStoredImage( "test" )
+		e = IECore.PrimitiveEvaluator.create( image )
+ 		result = e.createResult()
+		
+		e.pointAtUV( IECore.V2f( 0.5 ), result )
+		self.assertAlmostEqual( result.floatPrimVar( e.R() ), 1, 5 )
+		self.assertAlmostEqual( result.floatPrimVar( e.G() ), 1, 5 )
+		self.assertEqual( result.floatPrimVar( e.B() ), 0 )
+	
+	def testShaderNetworkHash( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.setShader( "standard" )
+		
+		h1 = s.stateHash()
+
+		n = GafferArnold.ArnoldShader()
+		n.setShader( "noise" )
+		s["parameters"]["Kd"].setInput( n["out"] )
+		
+		h2 = s.stateHash()
+		self.assertNotEqual( h1, h2 )
+		
+		n["parameters"]["octaves"].setValue( 3 )
+		
+		h3 = s.stateHash()
+		self.assertNotEqual( h3, h2 )
+		self.assertNotEqual( h3, h1 )
+	
+	def testShaderNetworkHashWithNonShaderInputs( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.setShader( "standard" )
+		
+		n = GafferArnold.ArnoldShader()
+		n.setShader( "noise" )
+		s["parameters"]["Kd"].setInput( n["out"] )
+		
+		r = Gaffer.Random()
+		r["contextEntry"].setValue( "a" )
+		
+		n["parameters"]["amplitude"].setInput( r["outFloat"] )
+		
+		c = Gaffer.Context()
+		with c :
+			c["a"] = "/one/two/1"
+			h1 = s.stateHash()
+			c["a"] = "/one/two/2"
+			h2 = s.stateHash()
+			self.assertNotEqual( h1, h2 )
+
 if __name__ == "__main__":
 	unittest.main()

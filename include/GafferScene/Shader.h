@@ -62,11 +62,31 @@ class Shader : public Gaffer::Node
 		/// Returns a series of IECore::StateRenderables suitable for specifying this
 		/// shader (and it's inputs) to an IECore::Renderer.
 		IECore::ObjectVectorPtr state() const;
-				
+			
 	protected :
 		
+		class NetworkBuilder
+		{
+		
+			public :
+			
+				IECore::Shader *shader( const Shader *shaderNode );
+				const std::string &shaderHandle( const Shader *shaderNode ); 
+			
+			private :
+				
+				NetworkBuilder();
+				
+				IECore::ObjectVectorPtr m_state;
+				typedef std::map<const Shader *, IECore::Shader *> ShaderMap;
+				ShaderMap m_shaders;
+		
+				friend class Shader;
+				
+		};
+		
 		virtual void shaderHash( IECore::MurmurHash &h ) const = 0;
-		virtual IECore::ShaderPtr shader() const = 0;
+		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const = 0;
 			
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		

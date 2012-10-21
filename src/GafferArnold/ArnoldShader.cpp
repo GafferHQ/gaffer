@@ -315,56 +315,83 @@ void ArnoldShader::shaderHash( IECore::MurmurHash &h ) const
 	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
 	if( parametersPlug )
 	{
-		parametersPlug->hash( h );
+		for( InputValuePlugIterator it( parametersPlug ); it!=it.end(); it++ )
+		{
+			parameterHash( *it, h );
+		}
 	}
 }
 
-IECore::ShaderPtr ArnoldShader::shader() const
+IECore::ShaderPtr ArnoldShader::shader( NetworkBuilder &network ) const
 {
 	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue() );
 	
 	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
 	if( parametersPlug )
 	{
-		for( InputPlugIterator it( parametersPlug ); it!=it.end(); it++ )
+		for( InputValuePlugIterator it( parametersPlug ); it!=it.end(); it++ )
 		{
-			switch( (*it)->typeId() )
-			{
-				case IntPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<IntPlug>( *it );
-					break;
-				case FloatPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<FloatPlug>( *it );
-					break;	
-				case Color3fPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<Color3fPlug>( *it );
-					break;
-				case Color4fPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<Color4fPlug>( *it );
-					break;
-				case BoolPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<BoolPlug>( *it );
-					break;
-				case StringPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<StringPlug>( *it );
-					break;
-				case V2fPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<V2fPlug>( *it );
-					break;	
-				case V3fPlugTypeId :
-					result->parameters()[(*it)->getName()] = shaderParameter<V3fPlug>( *it );
-					break;
-				default :
-					throw Exception( "Unexpected parameter plug type." );
-			}
+			result->parameters()[(*it)->getName()] = parameterValue( *it, network );
 		}
 	}
 	
 	return result;
 }
 
+void ArnoldShader::parameterHash( const Gaffer::ValuePlug *plug, IECore::MurmurHash &h ) const
+{
+	const Plug *inputPlug = plug->getInput<Plug>();
+	if( inputPlug )
+	{
+		const ArnoldShader *n = IECore::runTimeCast<const ArnoldShader>( inputPlug->node() );
+		if( n )
+		{
+			n->shaderHash( h );
+			return;
+		}
+		// fall through to hash plug value
+	}
+	
+	plug->hash( h );
+}
+
+IECore::DataPtr ArnoldShader::parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const
+{
+	const Plug *inputPlug = plug->getInput<Plug>();
+	if( inputPlug )
+	{
+		const ArnoldShader *n = IECore::runTimeCast<const ArnoldShader>( inputPlug->node() );
+		if( n )
+		{
+			return new IECore::StringData( "link:" + network.shaderHandle( n ) );
+		}
+	}
+	
+	switch( plug->typeId() )
+	{
+		case IntPlugTypeId :
+			return parameterValue<IntPlug>( plug );
+		case FloatPlugTypeId :
+			return parameterValue<FloatPlug>( plug );
+		case Color3fPlugTypeId :
+			return parameterValue<Color3fPlug>( plug );
+		case Color4fPlugTypeId :
+			return parameterValue<Color4fPlug>( plug );
+		case BoolPlugTypeId :
+			return parameterValue<BoolPlug>( plug );
+		case StringPlugTypeId :
+			return parameterValue<StringPlug>( plug );
+		case V2fPlugTypeId :
+			return parameterValue<V2fPlug>( plug );
+		case V3fPlugTypeId :
+			return parameterValue<V3fPlug>( plug );
+		default :
+			throw Exception( "Unexpected parameter plug type." );
+	}	
+}
+
 template<typename T>
-IECore::DataPtr ArnoldShader::shaderParameter( const Gaffer::Plug *plug ) const
+IECore::DataPtr ArnoldShader::parameterValue( const Gaffer::ValuePlug *plug ) const
 {
 	const T *typedPlug = static_cast<const T *>( plug );
 	return new TypedData<typename T::ValueType>( typedPlug->getValue() );
