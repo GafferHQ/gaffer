@@ -243,7 +243,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def __plugFlagsChanged( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
-			self.updateFromPlug()			
+			self._updateFromPlug()			
 		
 	def __contextChanged( self, context, key ) :
 	
