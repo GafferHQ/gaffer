@@ -182,6 +182,7 @@ void ConnectionGadget::setPositionsFromNodules()
 		
 Imath::Box3f ConnectionGadget::bound() const
 {
+	const_cast<ConnectionGadget *>( this )->setPositionsFromNodules();
 	Box3f r;
 	r.extendBy( m_srcPos );
 	r.extendBy( m_dstPos );

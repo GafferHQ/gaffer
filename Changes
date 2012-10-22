@@ -26,6 +26,8 @@
 
 * Added a SubTree node, for taking a branch of the tree and rerooting it back to /.
 
+* Fixed bug in ConnectionGadget::bound() which meant that sometimes the graph would not be framed correctly when first displaying a GraphEditor.
+
 0.35.7
 ------
 

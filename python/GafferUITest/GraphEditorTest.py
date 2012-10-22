@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -503,6 +503,34 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script.undo()
 		
 		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )		
+	
+	def testConnectionBound( self ) :
+	
+		for i in range( 0, 100 ) :
+		
+			script = Gaffer.ScriptNode()
+	
+			script["n1"] = Gaffer.Node()
+			script["n2"] = Gaffer.Node()
+			
+			script["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+			script["n2"]["i"] = Gaffer.IntPlug()
+			
+			script["n2"]["i"].setInput( script["n1"]["o"] )
+			
+			g = GafferUI.GraphGadget( script )
+			c = g.connectionGadget( script["n2"]["i"] )
+	
+			gb = IECore.Box3f()
+			gb.extendBy( g.nodeGadget( script["n1"] ).bound() )
+			gb.extendBy( g.nodeGadget( script["n2"] ).bound() )
+			gb.min -= IECore.V3f( 10 )
+			gb.max += IECore.V3f( 10 )
+	
+			b = c.bound()
+			self.failIf( b.isEmpty() )
+			
+			self.failUnless( gb.contains( b ) )
 				
 if __name__ == "__main__":
 	unittest.main()
