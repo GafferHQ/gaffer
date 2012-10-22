@@ -74,6 +74,7 @@ enum TypeId
 	SourceTypeId = 110530,
 	SceneContextVariablesTypeId = 110531,
 	RenderCameraTypeId = 110532,
+	SubTreeTypeId = 110533,
 	
 	LastTypeId = 110700
 };

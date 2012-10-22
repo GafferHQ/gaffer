@@ -147,3 +147,14 @@ GafferUI.PlugValueWidget.registerCreator(
 		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
 	),
 )
+
+# SubTree
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.SubTree.staticTypeId(),
+	"root",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
+	),
+)

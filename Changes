@@ -24,6 +24,8 @@
 
 * Fixed problems caused by serialising plug flags as All - they would then acquire new values when loaded in a future where there are new flags available.
 
+* Added a SubTree node, for taking a branch of the tree and rerooting it back to /.
+
 0.35.7
 ------
 

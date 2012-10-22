@@ -92,6 +92,31 @@ class SceneTestCase( GafferTest.TestCase ) :
 		
 		return childPlugNames
 
+	def assertPathsEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
+	
+		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )
+		for childPlugName in childPlugNames :
+			getFn1 = getattr( scenePlug1, childPlugName )
+			getFn2 = getattr( scenePlug2, childPlugName )
+			self.assertEqual( getFn1( scenePath1 ), getFn2( scenePath2 ) )
+
+	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
+			
+		def walkScene( scenePath ) :
+
+			if scenePath not in pathsToIgnore :
+				self.assertPathsEqual( scenePlug1, scenePath, scenePlug2, scenePlug2PathPrefix + scenePath, childPlugNames, childPlugNamesToIgnore )
+			childNames = scenePlug1.childNames( scenePath )
+			for childName in childNames :
+				if scenePath == "/" :
+					childPath = scenePath + childName
+				else :
+					childPath = scenePath + "/" + childName
+		
+				walkScene( childPath )
+	
+		walkScene( "/" )
+
 	def assertPathHashesEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
 	
 		childPlugNames = self.__childPlugNames( childPlugNames, childPlugNamesToIgnore )

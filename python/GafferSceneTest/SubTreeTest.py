@@ -34,33 +34,57 @@
 #  
 ##########################################################################
 
+import os
+import unittest
+
+import IECore
+
+import Gaffer
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
+class SubTreeTest( GafferSceneTest.SceneTestCase ) :
+		
+	def testPassThrough( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( a["out"] )
+		
+		self.assertSceneValid( s["out"] )
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
+		self.assertScenesEqual( a["out"], s["out"] )
+		## \todo We should be able to remove the pathsToIgnore
+		self.assertSceneHashesEqual( a["out"], s["out"], pathsToIgnore = [ "/" ] )	
+		
+	def testSubTree( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( a["out"] )
+		s["root"].setValue( "pCube1" )
+		
+		self.assertSceneValid( s["out"] )
+		self.assertScenesEqual( s["out"], a["out"], scenePlug2PathPrefix = "/pCube1" )
 
+	@unittest.expectedFailure
+	def testRootHashesEqual( self ) :
+	
+		# this can be fixed by introducing hash*() methods in SceneNode, and making sure
+		# they're not called for / when compute*() won't be called.
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( a["out"] )
+		
+		self.assertSceneValid( s["out"] )
+		self.assertPathHashesEqual( a["out"], "/", s["out"], "/" )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
