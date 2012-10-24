@@ -28,6 +28,8 @@
 
 * Fixed bug in ConnectionGadget::bound() which meant that sometimes the graph would not be framed correctly when first displaying a GraphEditor.
 
+* Fixed ColorChooserDialogue to actually use the colour passed to the constructor.
+
 0.35.7
 ------
 

@@ -46,7 +46,7 @@ class ColorChooserDialogue( GafferUI.Dialogue ) :
 	
 		GafferUI.Dialogue.__init__( self, title, **kw )
 		
-		self.__colorChooserWidget = GafferUI.ColorChooser()
+		self.__colorChooserWidget = GafferUI.ColorChooser( color )
 		self._setWidget( self.__colorChooserWidget )
 
 		self.cancelButton = self._addButton( cancelLabel )
