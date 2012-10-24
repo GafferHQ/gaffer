@@ -32,6 +32,8 @@
 
 * Window.addChildWindow() now always causes the child window to remain on top of the parent. Previously, this was documented as the behaviour, but it only worked for child dialogues which subsequently went into a modal state. This is achieved by setting the QtCore.Qt.Tool window flag - this is much better than WindowStaysOnTopHint because it hides the child window when the application becomes inactive on the mac - otherwise the window would remain on top of the windows for the newly activated application.
 
+* Fixed bug where colour chooser would remain after the parent swatch died, but be inoperative. It now remains but is still functional.
+
 0.35.7
 ------
 
