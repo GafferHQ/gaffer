@@ -34,50 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PATHFILTER_H
-#define GAFFERSCENE_PATHFILTER_H
+#ifndef GAFFERSCENEBINDINGS_PATHMATCHERBINDING_H
+#define GAFFERSCENEBINDINGS_PATHMATCHERBINDING_H
 
-#include "boost/regex.hpp"
-
-#include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcher.h"
-
-namespace GafferScene
+namespace GafferSceneBindings
 {
 
-/// \todo Support glob style expressions and regular expressions.
-class PathFilter : public Filter
-{
+void bindPathMatcher();
 
-	public :
+} // namespace GafferSceneBindings
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PathFilter, PathFilterTypeId, Filter );
-
-		PathFilter( const std::string &name=staticTypeName() );
-		virtual ~PathFilter();
-		
-		Gaffer::StringVectorDataPlug *pathsPlug();
-		const Gaffer::StringVectorDataPlug *pathsPlug() const;
-				
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Result computeMatch( const Gaffer::Context *context ) const;
-
-	private :
-	
-		void plugSet( Gaffer::Plug *plug );
-	
-		PathMatcher m_matcher;
-	
-		static size_t g_firstPlugIndex;
-
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_PATHFILTER_H
+#endif // GAFFERSCENEBINDINGS_PATHMATCHERBINDING_H

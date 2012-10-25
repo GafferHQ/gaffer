@@ -51,6 +51,7 @@ from CameraTest import CameraTest
 from DisplaysTest import DisplaysTest
 from OptionsTest import OptionsTest
 from SceneNodeTest import SceneNodeTest
+from PathMatcherTest import PathMatcherTest
 from PathFilterTest import PathFilterTest
 from AssignmentTest import AssignmentTest
 from AttributesTest import AttributesTest

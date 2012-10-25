@@ -34,6 +34,8 @@
 
 * Fixed bug where colour chooser would remain after the parent swatch died, but be inoperative. It now remains but is still functional.
 
+* Added GafferScene::PathMatcher class, which provides accelerated path matching for use in the PathFilter.
+
 0.35.7
 ------
 

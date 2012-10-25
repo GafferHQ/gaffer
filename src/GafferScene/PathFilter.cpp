@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/ScenePlug.h"
@@ -52,7 +54,12 @@ PathFilter::PathFilter( const std::string &name )
 	:	Filter( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData(), Plug::Default ) );
+	// we don't allow inputs to the paths plug, because then the paths could vary
+	// from computation to computation - resulting in nonsense as far as descendant
+	// matches go.
+	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData(), Plug::Default & ~Plug::AcceptsInputs ) );
+
+	plugSetSignal().connect( boost::bind( &PathFilter::plugSet, this, ::_1 ) );
 }
 
 PathFilter::~PathFilter()
@@ -85,28 +92,16 @@ void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &
 
 Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
 {
-	ConstStringVectorDataPtr paths = pathsPlug()->getValue();
-	if( !paths )
-	{
-		return NoMatch;
-	}
-	
-	string path = context->get<string>( ScenePlug::scenePathContextName );
-	Result result = NoMatch;
-	for( vector<string>::const_iterator it = paths->readable().begin(), eIt = paths->readable().end(); it != eIt; it++ )
-	{
-		if( it->compare( 0, path.size(), path ) == 0 )
-		{
-			if( it->size() == path.size() )
-			{
-				return Match;
-			}
-			else if( it->size() > path.size() && (*it)[path.size()] == '/' )
-			{
-				// don't return yet, because we're holding out for a full match
-				result = DescendantMatch;
-			}
-		}
-	}
-	return result;
+	const std::string &path = context->get<string>( ScenePlug::scenePathContextName );
+	return m_matcher.match( path );
 }
+
+void PathFilter::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == pathsPlug() )
+	{
+		ConstStringVectorDataPtr paths = pathsPlug()->getValue();
+		m_matcher.init( paths->readable().begin(), paths->readable().end() );
+	}
+}
+

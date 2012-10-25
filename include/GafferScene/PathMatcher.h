@@ -34,50 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PATHFILTER_H
-#define GAFFERSCENE_PATHFILTER_H
+#ifndef GAFFER_PATHMATCHER_H
+#define GAFFER_PATHMATCHER_H
 
-#include "boost/regex.hpp"
+#include "boost/shared_ptr.hpp"
 
-#include "Gaffer/TypedObjectPlug.h"
+#include "IECore/TypedData.h"
 
 #include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcher.h"
 
 namespace GafferScene
 {
 
-/// \todo Support glob style expressions and regular expressions.
-class PathFilter : public Filter
+/// The PathMatcher class provides an acceleration structure for matching
+/// paths against a sequence of reference paths. It provides the internal
+/// implementation for the PathFilter.
+class PathMatcher
 {
 
 	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PathFilter, PathFilterTypeId, Filter );
-
-		PathFilter( const std::string &name=staticTypeName() );
-		virtual ~PathFilter();
+	
+		PathMatcher();
 		
-		Gaffer::StringVectorDataPlug *pathsPlug();
-		const Gaffer::StringVectorDataPlug *pathsPlug() const;
-				
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Result computeMatch( const Gaffer::Context *context ) const;
-
+		template<typename Iterator>
+		PathMatcher( Iterator pathsBegin, Iterator pathsEnd );
+		
+		template<typename Iterator>
+		void init( Iterator pathsBegin, Iterator pathsEnd );
+	
+		void clear();
+		
+		Filter::Result match( const std::string &path ) const;
+		
 	private :
 	
-		void plugSet( Gaffer::Plug *plug );
-	
-		PathMatcher m_matcher;
-	
-		static size_t g_firstPlugIndex;
-
+		void addPath( const std::string &path );
+		
+		struct Node;
+		boost::shared_ptr<Node> m_root;
+		
 };
-
+	
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_PATHFILTER_H
+#include "GafferScene/PathMatcher.inl"
+
+#endif // GAFFER_PATHMATCHER_H

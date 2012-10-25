@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
 class PathFilterTest( unittest.TestCase ) :
 
@@ -94,6 +95,29 @@ class PathFilterTest( unittest.TestCase ) :
 		with Gaffer.Context() as c :
 			c["scene:path"] = "/a"
 			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
-			
+	
+	def testScaling( self ) :
+	
+		paths = GafferSceneTest.PathMatcherTest.generatePaths(
+			seed = 1,
+			depthRange = ( 4, 8 ),
+			numChildrenRange = ( 5, 6 )
+		)
+					
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( paths ) )
+		with Gaffer.Context() as c :
+			for path in paths :
+				c["scene:path"] = path
+				self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
+	
+	def testInputsDenied( self ) :
+	
+		f = GafferScene.PathFilter()
+		p = Gaffer.StringVectorDataPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.StringVectorData() )
+		self.failIf( f["paths"].acceptsInput( p ) )
+		
+		self.failUnless( f["paths"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
+		
 if __name__ == "__main__":
 	unittest.main()
