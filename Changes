@@ -36,6 +36,8 @@
 
 * Added GafferScene::PathMatcher class, which provides accelerated path matching for use in the PathFilter.
 
+* PathFilter now supports * as a wildcard to match any portion of a name.
+
 0.35.7
 ------
 

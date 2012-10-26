@@ -67,10 +67,14 @@ class PathMatcher
 		Filter::Result match( const std::string &path ) const;
 		
 	private :
-	
-		void addPath( const std::string &path );
-		
+
+		typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+		typedef Tokenizer::iterator TokenIterator;
 		struct Node;
+		
+		void addPath( const std::string &path );
+		void matchWalk( Node *node, const TokenIterator &start, const TokenIterator &end, Filter::Result &result ) const;
+		
 		boost::shared_ptr<Node> m_root;
 		
 };

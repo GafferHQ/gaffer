@@ -90,58 +90,119 @@ class PathMatcherTest( unittest.TestCase ) :
 			( "/b/c", GafferScene.Filter.Result.DescendantMatch ),
 		] :
 			self.assertEqual( m.match( path ), result )
-
-	def testBuildScaling( self ) :
+	
+	def testLookupScaling( self ) :
 	
 		# this test provides a useful means of measuring performance when
-		# working on the PatchMatcher construction algorithm. it just
-		# constructs a matcher for each of two different hierarchies :
+		# working on the PatchMatcher algorithm. it tests matchers
+		# for each of two different hierarchies :
 		#
 		#    * a deep hierarchy with relatively few children at each branch point
 		#	 * a shallow hierarchy with large numbers of children at each branch point
 		#
-		# uncomment the timers to get useful information printed out.
-	
-		# deep hierarchy
-		paths = IECore.StringVectorData( self.generatePaths( seed = 10, depthRange = ( 3, 14 ), numChildrenRange = ( 2, 6 ) ) )
- 		t = IECore.Timer()
- 		GafferScene.PathMatcher( paths )
- 		#print t.stop()
- 		
-		# shallow hierarchy
-		paths = IECore.StringVectorData( self.generatePaths( seed = 10, depthRange = ( 2, 2 ), numChildrenRange = ( 500, 1000 ) ) )
-		t = IECore.Timer()
-		GafferScene.PathMatcher( paths )
-		#print t.stop()
-	
-	def testLookupScaling( self ) :
-	
-		# as above, except this time measuring lookup performance.
-		
+		# the tests build a matcher, and then assert that every path in the hierarchy is
+		# matched appropriately. uncomment the timers to get useful information printed out.
+			
  		match = GafferScene.Filter.Result.Match
 
 		# deep hierarchy
 		paths = self.generatePaths( seed = 10, depthRange = ( 3, 14 ), numChildrenRange = ( 2, 6 ) )
- 		matcher = GafferScene.PathMatcher( paths )
- 		 		
+ 		t = IECore.Timer()
+		matcher = GafferScene.PathMatcher( paths )
+ 		#print "BUILD DEEP", t.stop()
+		 		
  		t = IECore.Timer()
 		for path in paths :
 			self.assertEqual( matcher.match( path ), match )
-		#print t.stop()
+		#print "LOOKUP DEEP", t.stop()
 		
 		# shallow hierarchy
 		paths = self.generatePaths( seed = 10, depthRange = ( 2, 2 ), numChildrenRange = ( 500, 1000 ) )
- 		matcher = GafferScene.PathMatcher( paths )
- 		 		
+ 		t = IECore.Timer()
+		matcher = GafferScene.PathMatcher( paths )
+ 		#print "BUILD SHALLOW", t.stop()
+		 		
  		t = IECore.Timer()
 		for path in paths :
 			self.assertEqual( matcher.match( path ), match )
-		#print t.stop()
+		#print "LOOKUP SHALLOW", t.stop()
 			
 	def testDefaultConstructor( self ) :
 	
 		m = GafferScene.PathMatcher()
 		self.assertEqual( m.match( "/" ), GafferScene.Filter.Result.NoMatch )
+	
+	def testWildcards( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a",
+				"/red*",
+				"/green*Bloke*",
+				"/somewhere/over/the/*",
+				"/somewhere/over/the/*/skies/are/blue",
+			] )
+		)
+	
+		for path, result in [
+			( "/a", f.Result.Match ),
+			( "/redBoots", f.Result.Match ),
+			( "/red", f.Result.Match ),
+			( "/redWellies", f.Result.Match ),
+			( "/redWellies/in/puddles", f.Result.NoMatch ),
+			( "/greenFatBloke", f.Result.Match ),
+			( "/greenBloke", f.Result.Match ),
+			( "/greenBlokes", f.Result.Match ),
+			( "/somewhere/over/the/rainbow", f.Result.Match ),
+			( "/somewhere/over/the", f.Result.DescendantMatch ),
+			( "/somewhere/over", f.Result.DescendantMatch ),
+			( "/somewhere", f.Result.DescendantMatch ),
+			( "/somewhere/over/the/rainbow/skies/are/blue", f.Result.Match ),
+			( "/somewhere/over/the/rainbow/skies/are", f.Result.DescendantMatch ),
+			( "/somewhere/over/the/astonExpressway/skies/are", f.Result.DescendantMatch ),
+			( "/somewhere/over/the/astonExpressway/skies/are/blue", f.Result.Match ),		
+			( "/somewhere/over/the/astonExpressway/skies/are/grey", f.Result.NoMatch ),		
+		] :
 		
+			c = Gaffer.Context()
+			c["scene:path"] = path
+			with c :
+				self.assertEqual( f["match"].getValue(), int( result ) )
+	
+	def testWildcardsWithSiblings( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a/*/b",
+				"/a/a*/c",
+			] )
+		)
+	
+		for path, result in [
+			( "/a/aThing/c", f.Result.Match ),
+			( "/a/aThing/b", f.Result.Match ),
+		] :
+		
+			c = Gaffer.Context()
+			c["scene:path"] = path
+			with c :
+				self.assertEqual( f["match"].getValue(), int( result ) )
+
+	def testRepeatedWildcards( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a/**s",
+			] )
+		)
+		
+		c = Gaffer.Context()
+		c["scene:path"] = "/a/s"
+		with c :
+			self.assertEqual( f["match"].getValue(), int( GafferScene.Filter.Result.Match ) )
+
 if __name__ == "__main__":
 	unittest.main()

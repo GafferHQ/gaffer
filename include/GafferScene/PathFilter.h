@@ -47,7 +47,6 @@
 namespace GafferScene
 {
 
-/// \todo Support glob style expressions and regular expressions.
 class PathFilter : public Filter
 {
 
