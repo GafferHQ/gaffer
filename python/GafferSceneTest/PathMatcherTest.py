@@ -204,5 +204,87 @@ class PathMatcherTest( unittest.TestCase ) :
 		with c :
 			self.assertEqual( f["match"].getValue(), int( GafferScene.Filter.Result.Match ) )
 
+	def testEllipsis( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a/.../b*",
+				"/a/c",
+			] )
+		)
+	
+		for path, result in [
+			( "/a/ball", f.Result.Match ),
+			( "/a/red/ball", f.Result.Match ),
+			( "/a/red/car", f.Result.DescendantMatch ),
+			( "/a/big/red/ball", f.Result.Match ),
+			( "/a/lovely/shiny/bicyle", f.Result.Match ),
+			( "/a/lovely/shiny/bicyle", f.Result.Match ),
+			( "/a/c", f.Result.Match ),
+			( "/a/d", f.Result.DescendantMatch ),
+			( "/a/anything", f.Result.DescendantMatch ),
+			( "/a/anything/really", f.Result.DescendantMatch ),
+			( "/a/anything/at/all", f.Result.DescendantMatch ),
+			( "/b/anything/at/all", f.Result.NoMatch ),
+		] :
+		
+			c = Gaffer.Context()
+			c["scene:path"] = path
+			with c :
+				self.assertEqual( f["match"].getValue(), int( result ) )
+
+	def testEllipsisWithMultipleBranches( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a/.../b*",
+				"/a/.../c*",
+			] )
+		)
+	
+		for path, result in [
+			( "/a/ball", f.Result.Match ),
+			( "/a/red/ball", f.Result.Match ),
+			( "/a/red/car", f.Result.Match ),
+			( "/a/big/red/ball", f.Result.Match ),
+			( "/a/lovely/shiny/bicyle", f.Result.Match ),
+			( "/a/lovely/shiny/bicyle", f.Result.Match ),
+			( "/a/c", f.Result.Match ),
+			( "/a/d", f.Result.DescendantMatch ),
+			( "/a/anything", f.Result.DescendantMatch ),
+			( "/a/anything/really", f.Result.DescendantMatch ),
+			( "/a/anything/at/all", f.Result.DescendantMatch ),
+			( "/b/anything/at/all", f.Result.NoMatch ),
+		] :
+		
+			c = Gaffer.Context()
+			c["scene:path"] = path
+			with c :
+				self.assertEqual( f["match"].getValue(), int( result ) )
+	
+	def testEllipsisAsTerminator( self ) :
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a/...",
+			] )
+		)
+	
+		for path, result in [
+			( "/a", f.Result.DescendantMatch ),
+			( "/a/ball", f.Result.Match ),
+			( "/a/red/car", f.Result.Match ),
+			( "/a/red/car/rolls", f.Result.Match ),
+			( "/a/terminating/ellipsis/matches/everything/below/it", f.Result.Match ),
+		 ] :
+		
+			c = Gaffer.Context()
+			c["scene:path"] = path
+			with c :
+				self.assertEqual( f["match"].getValue(), int( result ) )		
+
 if __name__ == "__main__":
 	unittest.main()

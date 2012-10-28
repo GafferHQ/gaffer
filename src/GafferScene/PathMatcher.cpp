@@ -135,7 +135,7 @@ struct PathMatcher::Node
 	typedef std::pair<ChildMapIterator, ChildMapIterator> ChildMapRange;
 	
 	Node()
-		:	terminator( false )
+		:	terminator( false ), ellipsis( 0 )
 	{
 	}
 	
@@ -167,11 +167,16 @@ struct PathMatcher::Node
 		for( it = m_children.begin(), eIt = m_children.end(); it != eIt; it++ )
 		{
 			delete it->second;
-		}				
+		}
+		delete ellipsis;
 	}
 		
 	bool terminator;
+	// map of child nodes
 	ChildMap m_children;
+	// child node for "...". this is stored separately as it uses
+	// a slightly different matching algorithm.
+	Node *ellipsis;
 	
 };
 
@@ -210,7 +215,7 @@ void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const Token
 		result = node->terminator ? Filter::Match : Filter::DescendantMatch;
 		return;
 	}
-	
+		
 	// or we need to match the remainder of the path against child branches.
 	Node::ChildMapRange range = node->childRange( *start );
 	if( range.first != range.second )
@@ -231,6 +236,21 @@ void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const Token
 			}
 		}
 	}
+	
+	if( node->ellipsis )
+	{
+		TokenIterator newStart = start;
+		while( newStart != end )
+		{
+			matchWalk( node->ellipsis, newStart, end, result );
+			if( result == Filter::Match )
+			{
+				return;
+			}
+			newStart++;
+		}
+		result = node->ellipsis->terminator ? Filter::Match : Filter::DescendantMatch;
+	}
 }
 
 void PathMatcher::addPath( const std::string &path )
@@ -240,11 +260,24 @@ void PathMatcher::addPath( const std::string &path )
 	Tokenizer::iterator it, eIt;
 	for( it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
 	{
-		Node *nextNode = node->child( *it );
-		if( !nextNode )
+		Node *nextNode = 0;
+		if( *it == "..." )
 		{
-			nextNode = new Node;
-			node->m_children.insert( pair<string, Node *>( *it, nextNode ) );
+			nextNode = node->ellipsis;
+			if( !nextNode )
+			{
+				nextNode = new Node;
+				node->ellipsis = nextNode;
+			}
+		}
+		else
+		{
+			nextNode = node->child( *it );
+			if( !nextNode )
+			{
+				nextNode = new Node;
+				node->m_children.insert( pair<string, Node *>( *it, nextNode ) );
+			}
 		}
 		node = nextNode;
 	}

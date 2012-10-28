@@ -38,6 +38,8 @@
 
 * PathFilter now supports * as a wildcard to match any portion of a name.
 
+* PathFilter now supports ... as a path entry, to match any number of entries.
+
 0.35.7
 ------
 
