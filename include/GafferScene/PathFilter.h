@@ -47,6 +47,7 @@
 namespace GafferScene
 {
 
+/// \todo Investigate whether or not caching is actually beneficial for this node
 class PathFilter : public Filter
 {
 
