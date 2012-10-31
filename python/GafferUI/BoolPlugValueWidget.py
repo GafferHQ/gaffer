@@ -60,6 +60,8 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self.getContext() :
 				self.__checkBox.setState( self.getPlug().getValue() )
 		
+		self.__checkBox.setEnabled( self._editable() )
+		
 	def __stateChanged( self, widget ) :
 		
 		self.__setPlugValue()
