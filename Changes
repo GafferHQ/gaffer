@@ -40,6 +40,10 @@
 
 * PathFilter now supports ... as a path entry, to match any number of entries.
 
+* ParameterValueWidget now requires that the widget passed to the constructor be derived from PlugValueWidget, and provides subsequent access to this with the new plugValueWidget() method.
+
+* CompoundPlugValueWidget now requires that the result of _childPlugWidget either derives from PlugValueWidget or must have a plugValueWidget() method which returns a PlugValueWidget. This allows it to implement a new childPlugValueWidget() method which can be used to get access to the widget for a child plug. This is building towards a time when the NodeUI class provides a single method for retrieving the PlugValueWidget for a given plug.
+
 0.35.7
 ------
 

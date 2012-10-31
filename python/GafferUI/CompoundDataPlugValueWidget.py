@@ -49,25 +49,7 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 	def _childPlugWidget( self, childPlug ) :
 	
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		
-		label = self._label( childPlug["name"].getValue() )
-		if label is not None :
-			nameWidget = GafferUI.Label(
-				label,
-				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
-			)
-		else :
-			nameWidget = GafferUI.PlugValueWidget.create( childPlug["name"] )
-			
-		## \todo This isn't working - maybe we need a FixedSizeContainer?
-		nameWidget._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
-		row.append( nameWidget )
-		
-		row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ) )
-		
-		return row
+		return _ChildPlugWidget( childPlug, self._label( childPlug["name"].getValue() ) )
 		
 	def _footerWidget( self ) :
 	
@@ -105,5 +87,32 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 	def __addItem( self, name, value ) :
 	
 		self.getPlug().addMember( name, value )
+
+class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, childPlug, label ) :
+	
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+	
+		GafferUI.PlugValueWidget.__init__( self, row, childPlug )
+				
+		if label is not None :
+			nameWidget = GafferUI.Label(
+				label,
+				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
+			)
+		else :
+			nameWidget = GafferUI.PlugValueWidget.create( childPlug["name"] )
+			
+		## \todo This isn't working - maybe we need a FixedSizeContainer?
+		nameWidget._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
+		row.append( nameWidget )
 		
+		row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ) )
+		
+	def _updateFromPlug( self ) :
+	
+		pass
+						
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.staticTypeId(), CompoundDataPlugValueWidget )

@@ -79,6 +79,7 @@ from ScrolledContainerTest import ScrolledContainerTest
 from ParameterValueWidgetTest import ParameterValueWidgetTest
 from NodeEditorTest import NodeEditorTest
 from ScriptWindowTest import ScriptWindowTest
+from CompoundPlugValueWidgetTest import CompoundPlugValueWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

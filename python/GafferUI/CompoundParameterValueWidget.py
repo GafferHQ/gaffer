@@ -106,23 +106,12 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		if isinstance( valueWidget, CompoundParameterValueWidget ) :
 			return valueWidget
 					
-		result = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 )
-		
-		label = GafferUI.Label(
+		return GafferUI.PlugWidget(
+			valueWidget, 
 			self._parameterLabelText( childParameterHandler ),
-			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
+			self._parameterToolTip( childParameterHandler ),
 		)
-		label.setToolTip( self._parameterToolTip( childParameterHandler ) )
 		
-		## \todo Decide how we allow this sort of tweak using the public
-		# interface. Perhaps we should have a SizeableContainer or something?
-		label._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
-
-		result.append( label )
-		result.append( valueWidget )
-		
-		return result
-
 	def _parameter( self ) :
 	
 		return self.__parameterHandler.parameter()

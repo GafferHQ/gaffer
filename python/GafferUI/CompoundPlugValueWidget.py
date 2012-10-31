@@ -87,6 +87,23 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self.__childPlugUIs = {} # mapping from child plug name to PlugWidget
 
+	## Returns a PlugValueWidget representing the specified child plug.
+	# Because the ui is built lazily on demand, this might return None due
+	# to the user not having opened up the ui - in this case lazy=False may
+	# be passed to force the creation of the ui.
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	
+		if not lazy and len( self.__childPlugUIs ) == 0 :
+			self.__updateChildPlugUIs()
+			
+		w = self.__childPlugUIs.get( childPlug.getName(), None )
+		if w is None :
+			return w
+		elif isinstance( w, GafferUI.PlugValueWidget ) :
+			return w
+		else :
+			return w.plugValueWidget()
+			
 	def hasLabel( self ) :
 	
 		return True
@@ -102,7 +119,9 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return None
 
 	## May be overridden by derived classes to customise the creation of widgets
-	# to represent the child plugs.	
+	# to represent the child plugs.	The returned widget must either derive from
+	# PlugValueWidget or must have a plugValueWidget() method which returns
+	# a PlugValueWidget.
 	def _childPlugWidget( self, childPlug ) :
 	
 		result = GafferUI.PlugValueWidget.create( childPlug )
@@ -143,8 +162,11 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if childPlug.getName().startswith( "__" ) :
 				continue
 			if childPlug.getName() not in self.__childPlugUIs :
-				self.__childPlugUIs[childPlug.getName()] = self._childPlugWidget( childPlug )
-			widget = self.__childPlugUIs[childPlug.getName()]
+				widget = self._childPlugWidget( childPlug )
+				assert( isinstance( widget, ( GafferUI.PlugValueWidget, type( None ) ) ) or hasattr( widget, "plugValueWidget" ) )
+				self.__childPlugUIs[childPlug.getName()] = widget
+			else :
+				widget = self.__childPlugUIs[childPlug.getName()]
 			if widget is not None :	
 				orderedChildUIs.append( widget )
 		

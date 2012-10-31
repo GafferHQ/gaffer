@@ -44,10 +44,13 @@ import GafferUI
 
 class ParameterValueWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, parameterHandler, **kw ) :
+	def __init__( self, plugValueWidget, parameterHandler, **kw ) :
 	
-		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+		assert( isinstance( plugValueWidget, GafferUI.PlugValueWidget ) )
 		
+		GafferUI.Widget.__init__( self, plugValueWidget, **kw )
+		
+		self.__plugValueWidget = plugValueWidget
 		self.__parameterHandler = parameterHandler
 			
 	def plug( self ) :
@@ -61,7 +64,11 @@ class ParameterValueWidget( GafferUI.Widget ) :
 	def parameterHandler( self ) :
 	
 		return self.__parameterHandler
-		
+	
+	def plugValueWidget( self ) :
+	
+		return self.__plugValueWidget
+	
 	__popupMenuSignal = Gaffer.Signal2()
 	## This signal is emitted whenever a popup menu for a parameter is about
 	# to be shown. This provides an opportunity to customise the menu from

@@ -43,6 +43,14 @@ import IECore
 import Gaffer
 import GafferUI
 
+## \todo Potential optimisation.
+# Currently every PlugValueWidget instance connects to the various plug signals
+# on the node, and tests to see if the plug is of interest when signalled. When many
+# PlugValueWidgets are instantiated for a node this might prove a little slow. In this
+# eventuality perhaps we can optimise things by having CompoundPlugValueWidget be
+# responsible for updating only the correct child, so the children don't need to be
+# connected themselves. PlugValueWidget would need to maintain the ability to do things
+# itself when used alone, but this might give a good speedup for the most common case.
 class PlugValueWidget( GafferUI.Widget ) :
 
 	def __init__( self, topLevelWidget, plug, **kw ) :
