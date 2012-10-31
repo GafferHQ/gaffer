@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -74,6 +74,11 @@ class ValuePlug::Computation
 		~Computation()
 		{
 			g_threadComputations.local().pop();
+		}
+
+		const ValuePlug *resultPlug() const
+		{
+			return m_resultPlug;
 		}
 
 		IECore::ConstObjectPtr compute()
@@ -251,6 +256,28 @@ void ValuePlug::setInput( PlugPtr input )
 		// set value back to what it was before
 		// we received a connection.
 		setValueInternal( m_staticValue );
+	}
+}
+
+bool ValuePlug::settable() const
+{
+	if( getFlags( ReadOnly ) )
+	{
+		return false;
+	}
+	
+	if( getInput<Plug>() )
+	{
+		return false;
+	}
+	
+	if( Computation *c = Computation::current() )
+	{
+		return c->resultPlug() == this;
+	}
+	else
+	{
+		return direction() == Plug::In;
 	}
 }
 

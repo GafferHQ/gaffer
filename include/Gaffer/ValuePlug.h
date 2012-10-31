@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,6 +65,11 @@ class ValuePlug : public Plug
 		virtual bool acceptsInput( const Plug *input ) const;
 		/// Reimplemented so that values can be propagated from inputs.
 		virtual void setInput( PlugPtr input );
+
+		/// Returns true if it is valid to call setFrom(), setToDefault(),
+		/// or setValue() on this plug. False will be returned if the plug
+		/// has an input connection or the ReadOnly flag is set.
+		bool settable() const;
 
 		/// Must be implemented to set the value of this Plug from the other Plug,
 		/// performing any necessary conversions on the input value. Should throw

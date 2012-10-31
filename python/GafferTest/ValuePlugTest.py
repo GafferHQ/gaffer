@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -75,6 +76,23 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		
 		# the objects should be one and the same, as we reenabled the cache.
 		self.failUnless( v1.isSame( v2 ) )
+	
+	def testSettable( self ) :
+	
+		p1 = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.In )
+		self.failUnless( p1.settable() )
+		
+		p1.setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		self.failIf( p1.settable() )
+		
+		p1.setFlags( Gaffer.Plug.Flags.ReadOnly, False )
+		self.failUnless( p1.settable() )
+		
+		p2 = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		self.failIf( p2.settable() )
+		
+		p1.setInput( p2 )
+		self.failIf( p1.settable() )
 		
 	def setUp( self ) :
 	

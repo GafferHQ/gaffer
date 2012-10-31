@@ -1,3 +1,7 @@
+* Added ValuePlug::settable() method.
+
+0.36.0
+------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
 
 * Added Window.childWindows() method.

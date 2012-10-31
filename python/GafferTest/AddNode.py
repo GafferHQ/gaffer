@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -76,6 +77,9 @@ class AddNode( Gaffer.Node ) :
 		# in order to support GafferTest.ScriptNodeTest.testDynamicPlugSerialisation().
 		assert( plug.isSame( self.getChild( "sum" ) ) or plug.getFlags() & plug.Flags.Dynamic )
 		assert( isinstance( context, Gaffer.Context ) )
+		assert( plug.settable() )
+		assert( not self["op1"].settable() )
+		assert( not self["op2"].settable() )
 
 		plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
 
