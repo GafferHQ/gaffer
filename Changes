@@ -16,6 +16,10 @@
 
 * Added ValuePlug::settable() method.
 
+* The VectorDataWidget now allows tooltips to be specified on a per-column basis using the columnToolTips argument to the constructor.
+
+* The CompoundVectorParameterValueWidget now constructs tooltips for the columns using the descriptions for the child parameters.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

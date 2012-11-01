@@ -62,8 +62,10 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 			return self.__vectorDataWidget
 			
 		header = [ IECore.CamelCase.toSpaced( x ) for x in self._parameter().keys() ]
-	
-		self.__vectorDataWidget = GafferUI.VectorDataWidget( header = header )
+		columnToolTips = [ self._parameterToolTip( self._parameterHandler().childParameterHandler( x ) ) for x in self._parameter().values() ]
+			
+		self.__vectorDataWidget = GafferUI.VectorDataWidget( header = header, columnToolTips = columnToolTips )
+
 		self.__dataChangedConnection = self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
 		self._updateFromPlug()

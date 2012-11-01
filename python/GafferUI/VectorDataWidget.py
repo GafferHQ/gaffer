@@ -56,7 +56,19 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# minimumVisibleRows specifies a number of rows after which a vertical scroll bar
 	# may become visible - before this all rows should be directly visible with no need
 	# for scrolling.
-	def __init__( self, data=None, editable=True, header=False, showIndices=True, minimumVisibleRows=8, **kw ) :
+	#
+	# columnToolTips may be specified as a list of strings to provide a tooltip for
+	# each column.
+	def __init__(
+		self,
+		data=None,
+		editable=True,
+		header=False,
+		showIndices=True,
+		minimumVisibleRows=8,
+		columnToolTips=None,
+		**kw
+	) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 	
@@ -130,6 +142,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		else :
 			self.__headerOverride = None
 		
+		self.__columnToolTips = columnToolTips
+		
 		self.__propagatingDataChangesToSelection = False
 		
 		self.setData( data )
@@ -145,7 +159,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
@@ -451,13 +465,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	__addValueText = "Add..."
 
-	def __init__( self, data, parent=None, editable=True, header=None ) :
+	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None ) :
 	
 		QtCore.QAbstractTableModel.__init__( self, parent )
 				
 		self.__data = data
 		self.__editable = editable
 		self.__header = header
+		self.__columnToolTips = columnToolTips
 
 		self.__columns = []
 		self.__accessors = []
@@ -523,6 +538,9 @@ class _Model( QtCore.QAbstractTableModel ) :
 					return GafferUI._Variant.toVariant( column.accessor.headerLabel( column.relativeColumnIndex ) )
 			else :
 				return GafferUI._Variant.toVariant( section )
+		elif role == QtCore.Qt.ToolTipRole :
+			if orientation == QtCore.Qt.Horizontal and self.__columnToolTips is not None :
+				return GafferUI._Variant.toVariant( self.__columnToolTips[section] )
 		
 		return GafferUI._Variant.toVariant( None )	
 
@@ -547,6 +565,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 		) :
 			column = self.__columns[index.column()]
 			return column.accessor.getElement( index.row(), column.relativeColumnIndex )
+		elif role == QtCore.Qt.ToolTipRole and self.__columnToolTips is not None :
+			return GafferUI._Variant.toVariant( self.__columnToolTips[index.column()] )
 			
 		return GafferUI._Variant.toVariant( None )
 
