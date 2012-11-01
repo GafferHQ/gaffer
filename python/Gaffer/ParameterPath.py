@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,45 +34,72 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferUI
 
-class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
+class ParameterPath( Gaffer.Path ) :
 
-	def __init__( self, plug, **kw ) :
-	
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
+	def __init__( self, rootParameter, path, filter=None, forcedLeafTypes = () ) :
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
-
-		componentPlugs = plug.children()
-		for p in componentPlugs :
-			w = GafferUI.NumericPlugValueWidget( p )
-			self.__row.append( w )
+		Gaffer.Path.__init__( self, path, filter )
 	
-	def setReadOnly( self, readOnly ) :
-	
-		if readOnly == self.getReadOnly() :
-			return
+		assert( isinstance( rootParameter, IECore.Parameter ) )
 		
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		
-		for w in self.__row :
-			if isinstance( w, GafferUI.PlugValueWidget ) :
-				w.setReadOnly( readOnly )
-				
-	def _updateFromPlug( self ) :
-
-		pass
+		self.__forcedLeafTypes = forcedLeafTypes
+		self.__rootParameter = rootParameter
 	
-	## Returns the ListContainer used as the main layout for this Widget.
-	# Derived classes may use it to add to the layout.	
-	def _row( self ) :
+	def isValid( self ) :
 	
-		return self.__row	
+		try :
+			self.__parameter()
+			return True
+		except :
+			return False
+	
+	def isLeaf( self ) :
+	
+		try :
+			p = self.__parameter()
+		except :
+			return False
+			
+		return isinstance( p, self.__forcedLeafTypes ) or not isinstance( p, IECore.CompoundParameter )
+			
+	def info( self ) :
+	
+		result = Gaffer.Path.info( self )
+		if result is None :
+			return None
+					
+		try :
+			p = self.__parameter()
+			result["parameter:parameter"] = p
+		except :
+			pass
 		
-GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V2iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
+		return result
+		
+	def copy( self ) :
+	
+		return ParameterPath( self.__rootParameter, self[:], self.getFilter(), self.__forcedLeafTypes )
+	
+	def _children( self ) :
+	
+		try :
+			p = self.__parameter()
+		except :
+			return []
+		
+		if isinstance( p, IECore.CompoundParameter ) and not isinstance( p, self.__forcedLeafTypes ) :
+			return [ ParameterPath( self.__rootParameter, self[:] + [ x ], self.getFilter(), forcedLeafTypes=self.__forcedLeafTypes ) for x in p.keys() ]
+			
+		return []
 
+	def __parameter( self ) :
+		
+		result = self.__rootParameter
+		for p in self :
+			result = result[p]
+			
+		return result

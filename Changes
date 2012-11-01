@@ -1,3 +1,19 @@
+* Fixed ParameterValueWidget.create() so that it always returns either None or an instance of ParameterValueWidget. Previously it was returning PlugValueWidget instances where no specific ParameterValueWidget registration had been made.
+
+* Added PlugValueWidget setReadOnly/getReadOnly methods. These can be used to force a ui to be read only when the plug itself allows editing. Note that they can not be used to force editing when the plug itself is not editable.
+
+* Fixed BoolPlugValueWidget so that it correctly disables the checkbox if the plug is not writable for any reason, or is setReadOnly( True ) has been called.
+
+* PlugValueWidget.popupMenuSignal() now passes the PlugValueWidget itself to slots rather than the Plug as it did before. The plug can retrieved by calling plugValueWidget.getPlug().
+
+* ParameterValueWidget.popupMenuSignal() now passes the ParameterValueWidget itself to slots rather than the ParameterHandler as it did before. The parameter handler can be retrieved using parameterValueWidget.parameterHandler().
+
+* Added readOnly parameter to ParameterisedHolderNodeUI constructor.
+
+* ParameterValueWidget now requires that the topLevelWidget passed to the constructor is always an instance of PlugValueWidget. This is made available via a new plugValueWidget() method.
+
+* CompoundPlugValueWidget now requires that the result of _childPlugWidget either derives from PlugValueWidget or must have a plugValueWidget() method which returns a PlugValueWidget. This allows it to implement a new childPlugValueWidget() method which can be used to get access to the widget for a child plug. This is building towards a time when the NodeUI class provides a single method for retrieving the PlugValueWidget for a given plug.
+
 * Added ValuePlug::settable() method.
 
 0.36.0
@@ -44,9 +60,9 @@
 
 * PathFilter now supports ... as a path entry, to match any number of entries.
 
-* ParameterValueWidget now requires that the widget passed to the constructor be derived from PlugValueWidget, and provides subsequent access to this with the new plugValueWidget() method.
+* Added a ParameterPath class for navigating Parameter hierarchies.
 
-* CompoundPlugValueWidget now requires that the result of _childPlugWidget either derives from PlugValueWidget or must have a plugValueWidget() method which returns a PlugValueWidget. This allows it to implement a new childPlugValueWidget() method which can be used to get access to the widget for a child plug. This is building towards a time when the NodeUI class provides a single method for retrieving the PlugValueWidget for a given plug.
+* Fixed bug which prevented CompoundVectorParameters from being saved in presets.
 
 0.35.7
 ------

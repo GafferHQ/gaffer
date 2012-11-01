@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,45 +34,18 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
-class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
+class ToolParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, parameterHandler, **kw ) :
 	
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
-		
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
-
-		componentPlugs = plug.children()
-		for p in componentPlugs :
-			w = GafferUI.NumericPlugValueWidget( p )
-			self.__row.append( w )
-	
-	def setReadOnly( self, readOnly ) :
-	
-		if readOnly == self.getReadOnly() :
-			return
-		
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		
-		for w in self.__row :
-			if isinstance( w, GafferUI.PlugValueWidget ) :
-				w.setReadOnly( readOnly )
-				
-	def _updateFromPlug( self ) :
-
-		pass
-	
-	## Returns the ListContainer used as the main layout for this Widget.
-	# Derived classes may use it to add to the layout.	
-	def _row( self ) :
-	
-		return self.__row	
-		
-GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V2iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-
+		GafferUI.ParameterValueWidget.__init__(
+			self,
+			GafferUI.ToolPlugValueWidget( parameterHandler.plug() ),
+			parameterHandler,
+			**kw
+		)

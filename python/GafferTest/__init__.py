@@ -93,6 +93,7 @@ from StringPlugTest import StringPlugTest
 from ContextVariablesTest import ContextVariablesTest
 from ValuePlugTest import ValuePlugTest
 from RandomTest import RandomTest
+from ParameterPathTest import ParameterPathTest
 
 if __name__ == "__main__":
 	import unittest

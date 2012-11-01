@@ -1250,7 +1250,6 @@ class Widget( object ) :
 		}
 	
 		QTableView#vectorDataWidget {
-			border: 1px solid $backgroundDark;
 			gridline-color: $backgroundDark;
 			padding: 0px;
 			background-color: transparent;

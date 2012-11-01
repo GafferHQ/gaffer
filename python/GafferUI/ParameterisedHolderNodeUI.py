@@ -46,7 +46,7 @@ import GafferUI
 
 class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
-	def __init__( self, node, **kw ) :
+	def __init__( self, node, readOnly=False, **kw ) :
 	
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		
@@ -56,13 +56,15 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 		
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 				GafferUI.Spacer( IECore.V2i( 10 ), expand=True )
-				GafferUI.ToolPlugValueWidget( self.node().parameterHandler().plug() )
+				toolButton = GafferUI.ToolParameterValueWidget( self.node().parameterHandler() )
+				toolButton.plugValueWidget().setReadOnly( readOnly )
 				infoIcon = GafferUI.Image( "info.png" )
 				infoIcon.setToolTip( self.node().getParameterised()[0].description )
 				
 			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
-				GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
-	
+				parameters = GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
+				parameters.plugValueWidget().setReadOnly( readOnly )
+				
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
 
 def __parameterNoduleCreator( plug ) :

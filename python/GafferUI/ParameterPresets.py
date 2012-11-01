@@ -175,7 +175,9 @@ class SavePresetDialogue( PresetDialogue ) :
 		
 			with GafferUI.Collapsible( "Parameters To Save", collapsed=True ) as cl :
 			
-				parameterPath = Gaffer.DictPath( parameterHandler.parameter(), "/", dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject, IECore.CompoundParameter ) )
+				# forcing CompoundVectorParameter to act as a leaf, because allowing the selection of some children but not others
+				# makes no sense (because they must all have the same length).
+				parameterPath = Gaffer.ParameterPath( parameterHandler.parameter(), "/", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
 				self.__parameterListing = GafferUI.PathListingWidget(
 					parameterPath,
 					columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
@@ -276,10 +278,8 @@ class SavePresetDialogue( PresetDialogue ) :
 		result = []
 		selectedPaths = self.__parameterListing.getSelectedPaths()
 		for path in selectedPaths :
-			info = path.info()
-			parameter = info.get( "dict:value", None )
-			if parameter is not None :
-				result.append( parameter )
+			if path.isLeaf() :
+				result.append( path.info()["parameter:parameter"] )
 						
 		return result
 				
@@ -420,15 +420,18 @@ def __deletePresets( parameterHandler ) :
 	dialogue = DeletePresetsDialogue( parameterHandler )
 	dialogue.waitForClose()
 	
-def __parameterPopupMenu( menuDefinition, parameterHandler ) :
+def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 
+	parameterHandler = parameterValueWidget.parameterHandler()
 	if not parameterHandler.isSame( parameterHandler.plug().node().parameterHandler() ) :
 		# only apply ourselves to the top level parameter for now
 		return
-		
+	
+	editable = parameterValueWidget.plugValueWidget()._editable()
+				
 	menuDefinition.append( "/PresetsDivider", { "divider" : True } )
 	menuDefinition.append( "/Save Preset...", { "command" : IECore.curry( __savePreset, parameterHandler ) } )
-	menuDefinition.append( "/Load Preset...", { "command" : IECore.curry( __loadPreset, parameterHandler ) } )
+	menuDefinition.append( "/Load Preset...", { "command" : IECore.curry( __loadPreset, parameterHandler ), "active" : editable } )
 	menuDefinition.append( "/Delete Presets...", { "command" : IECore.curry( __deletePresets, parameterHandler ) } )
 	
 __popupMenuConnection = GafferUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )

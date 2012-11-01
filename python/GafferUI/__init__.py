@@ -195,6 +195,7 @@ from ClassParameterValueWidget import ClassParameterValueWidget
 from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
 from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
 from TimeCodeParameterValueWidget import TimeCodeParameterValueWidget
+from ToolParameterValueWidget import ToolParameterValueWidget
 import ParameterPresets
 
 # and specific node uis

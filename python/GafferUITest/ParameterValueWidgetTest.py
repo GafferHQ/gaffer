@@ -77,6 +77,17 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		p.userData()["UI"] = IECore.CompoundObject( { "typeHint" : IECore.StringData( "CustomUI" ) } )
 		w = GafferUI.ParameterValueWidget.create( h )
 		self.failUnless( isinstance( w, CustomParameterValueWidget ) )
+	
+	def testCreateAlwaysReturnsParameterValueWidgetInstance( self ) :
+	
+		n = Gaffer.Node()
+		p = IECore.V2fParameter( "v", "", IECore.V2f( 1 ) )
+		
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
+		
+		w = GafferUI.ParameterValueWidget.create( h )
+		self.failUnless( isinstance( w, GafferUI.ParameterValueWidget ) )
 		
 if __name__ == "__main__":
 	unittest.main()

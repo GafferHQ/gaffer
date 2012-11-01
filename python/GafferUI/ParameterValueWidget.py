@@ -72,7 +72,7 @@ class ParameterValueWidget( GafferUI.Widget ) :
 	__popupMenuSignal = Gaffer.Signal2()
 	## This signal is emitted whenever a popup menu for a parameter is about
 	# to be shown. This provides an opportunity to customise the menu from
-	# external code. The signature for slots is ( menuDefinition, parameterHandler ),
+	# external code. The signature for slots is ( menuDefinition, parameterValueWidget ),
 	# and slots should just modify the menu definition in place.
 	@classmethod
 	def popupMenuSignal( cls ) :
@@ -100,7 +100,11 @@ class ParameterValueWidget( GafferUI.Widget ) :
 			if creator is not None :
 				return creator( parameterHandler )	
 		
-		return GafferUI.PlugValueWidget.create( parameterHandler.plug() )
+		w = GafferUI.PlugValueWidget.create( parameterHandler.plug() )
+		if w is not None :
+			return ParameterValueWidget( w, parameterHandler )
+			
+		return None
 		
 	@classmethod
 	def registerType( cls, parameterTypeId, creator, uiTypeHint = None ) :
@@ -122,38 +126,35 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	if not hasattr( node, "parameterHandler" ) :
 		return
 
-	# see if we can find a parameter handler associated with the plug
-	parameterHandler = node.parameterHandler()
-	if not parameterHandler.plug().isSame( plug ) :
-		try :
-			relativeName = plug.relativeName( parameterHandler.plug() )
-		except :
-			# plug doesn't represent a parameter
-			return
+	# see if we can find a ParameterValueWidget associated with the PlugValueWidget,
+	# and if we can then emit the popupMenuSignal() on it.
+	parameterValueWidget = plugValueWidget.ancestor( GafferUI.ParameterValueWidget )
+	if parameterValueWidget is None :
+		return
 			
-		for name in relativeName.split( "." ) :
-			try :
-				parameterHandler = parameterHandler.childParameterHandler( parameterHandler.parameter()[name] )
-			except :
-				# we've hit a child plug of a compound plug the parameterhandler created.
-				assert( name in parameterHandler.plug() )
-				break
-	
-	# if we can, then add on any parameter-specific menu items		
-	ParameterValueWidget.popupMenuSignal()( menuDefinition, parameterHandler )
+	ParameterValueWidget.popupMenuSignal()( menuDefinition, parameterValueWidget )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 # add menu items for presets
 
-def __parameterPopupMenu( menuDefinition, parameterHandler ) :
+def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
+
+	parameterHandler = parameterValueWidget.parameterHandler()
 
 	# replace plug default item with parameter default item. they
 	# differ in that the parameter default applies to all children
 	# of things like V3iParameters rather than just a single one.
 	menuDefinition.remove( "/Default", raiseIfMissing=False )	
-	menuDefinition.append( "/Default", { "command" : IECore.curry( __setValue, parameterHandler, parameterHandler.parameter().defaultValue ) } )
+	menuDefinition.append(
+		"/Default",
+		{
+			"command" : IECore.curry( __setValue, parameterHandler, parameterHandler.parameter().defaultValue ),
+			"active" : parameterValueWidget.plugValueWidget()._editable(),
+		}
+	)
 
+	# add menu items for presets
 	if len( parameterHandler.parameter().presetNames() ) :
 		menuDefinition.append( "/PresetDivider", { "divider" : True } )
 

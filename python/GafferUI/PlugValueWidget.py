@@ -63,6 +63,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__setPlugInternal( plug, callUpdateFromPlug=False )
 
 		self.__popupMenuConnections = []
+		self.__readOnly = False
 		
 	def setPlug( self, plug ) :
 	
@@ -90,6 +91,23 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		return self.__context
 	
+	## This method allows editing of the plug value
+	# to be disabled for this ui. Note that even when getReadOnly()
+	# is False, the ui may not allow editing due to the plug
+	# itself being read only for other reasons.
+	def setReadOnly( self, readOnly ) :
+	
+		assert( isinstance( readOnly, bool ) )
+		if readOnly == self.__readOnly :
+			return
+			
+		self.__readOnly = readOnly
+		self._updateFromPlug()
+		
+	def getReadOnly( self ) :
+	
+		return self.__readOnly
+
 	## Should be reimplemented to return True if this widget includes
 	# some sort of labelling for the plug. This is used to prevent
 	# extra labels being created in the NodeUI when they're not necessary.
@@ -102,9 +120,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def _updateFromPlug( self ) :
 	
 		raise NotImplementedError
-	
-	## Returns True if the plug value is editable - that is the plug
-	# is an input plug and it has no incoming connection.
+
+	## Returns True if the plug value is editable as far as this ui is concerned
+	# - that plug.settable() is True and self.getReadOnly() is False.
 	def _editable( self ) :
 	
 		plug = self.getPlug()
@@ -112,15 +130,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if plug is None :
 			return False
 		
-		if plug.direction()==Gaffer.Plug.Direction.Out :
+		if not plug.settable() :
 			return False
-		if plug.getInput() :
-			return False
-		if plug.getFlags( plug.Flags.ReadOnly ) :
+		if self.__readOnly :
 			return False
 		
 		return True
-	
+		
 	## Adds a useful popup menu to the specified widget, providing useful functions that
 	# operate on the plug. The menu is populated with the result of _popupMenuDefinition(),
 	# and may also be customised by external code using the popupMenuSignal().
@@ -149,8 +165,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
 			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
 			menuDefinition.append( "/Remove input", { "command" : Gaffer.WeakMethod( self.__removeInput ) } )
-		if self._editable() and hasattr( self.getPlug(), "defaultValue" ) :
-			menuDefinition.append( "/Default", { "command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ) } )
+		if hasattr( self.getPlug(), "defaultValue" ) :
+			menuDefinition.append(
+				"/Default", {
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
+					"active" : self._editable()
+				}
+			)
 			
 		self.popupMenuSignal()( menuDefinition, self )
 		

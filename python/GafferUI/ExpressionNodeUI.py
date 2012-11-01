@@ -127,7 +127,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	input = plug.getInput()
-	if input is None :		
+	if input is None and plugValueWidget._editable() :		
 		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
 		menuDefinition.prepend( "/Create Expression...", { "command" : IECore.curry( __createExpression, plugValueWidget ) } )
 		

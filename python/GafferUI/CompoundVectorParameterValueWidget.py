@@ -93,6 +93,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 			data.append( plugData )
 			
 		self.__vectorDataWidget.setData( data )
+		self.__vectorDataWidget.setEditable( self._editable() )
 					
 	def __dataChanged( self, vectorDataWidget ) :
 	

@@ -49,9 +49,7 @@ class DateTimeParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 		
-		self.__dateTimePlugValueWidget = _DateTimePlugValueWidget( parameterHandler.plug() )
-		
-		GafferUI.ParameterValueWidget.__init__( self, self.__dateTimePlugValueWidget, parameterHandler, **kw )
+		GafferUI.ParameterValueWidget.__init__( self, _DateTimePlugValueWidget( parameterHandler.plug() ), parameterHandler, **kw )
 			
 GafferUI.ParameterValueWidget.registerType( IECore.DateTimeParameter.staticTypeId(), DateTimeParameterValueWidget )
 
@@ -95,6 +93,7 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		qDateTime = QtCore.QDateTime.fromString( delimited, QtCore.Qt.ISODate )
 		self._qtWidget().setDateTime( qDateTime )
+		self._qtWidget().setReadOnly( not self._editable() )
 		
 	def __dateTimeChanged( self, qDateTime ) :
 	
