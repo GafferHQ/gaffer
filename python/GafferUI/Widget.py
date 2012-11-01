@@ -1219,8 +1219,7 @@ class Widget( object ) :
 		QToolTip {
 			background-clip: border;
 			color: $backgroundDarkest;
-			background-color: $brightColor2;
-			border: 1px solid $backgroundDark;
+			background-color: $foreground;
 			padding: 2px;
 
 		}
@@ -1340,7 +1339,6 @@ class Widget( object ) :
 		"backgroundLighter" : "#6c6c6c",
 		"backgroundLight" : "#7d7d7d",
 		"brightColor" : "#779cbd",
-		"brightColor2" : "#e5c618",
 		"foreground" : "#f0f0f0",
 		"foregroundFaded" : "#999999",
 		"alternateColor" : "#454545",
