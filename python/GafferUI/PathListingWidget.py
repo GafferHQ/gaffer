@@ -139,7 +139,13 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
 		self.__expansionChangedSignal = GafferUI.WidgetSignal()
-	
+		
+		# members for implementing drag and drop
+		self.__emittingButtonPress = False
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		
 	def setPath( self, path ) :
 	
 		if path is self.__path :
@@ -374,6 +380,84 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __expansionChanged( self ) :
 	
 		self.__expansionChangedSignal( self )
+	
+	def __buttonPress( self, widget, event ) :
+			
+		if self.__emittingButtonPress :
+			return False
+	
+		self.__borrowedButtonPress = None
+		if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.None :
+			
+			# We want to implement drag and drop of the selected items, which means borrowing
+			# mouse press events that the QTreeView needs to perform selection and expansion.
+			# This makes things a little tricky. There are are two cases :
+			#
+			#  1) There is an existing selection, and it's been clicked on. We borrow the event
+			#     so we can get a dragBeginSignal(), and to prevent the QTreeView reducing a current
+			#     multi-selection down to the single clicked item. If a drag doesn't materialise we'll
+			#     re-emit the event straight to the QTreeView in __buttonRelease so the QTreeView can
+			#     do its thing.
+			#
+			#  2) There is no existing selection. We pass the event to the QTreeView
+			#     to see if it will select something which we can subsequently drag.
+			#
+			# This is further complicated by the fact that the button presses we simulate for Qt
+			# will end up back in this function, so we have to be careful to ignore those.
+			
+			index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+			if self._qtWidget().selectionModel().isSelected( index ) :
+				# case 1 : existing selection. 
+				self.__borrowedButtonPress = event
+				return True
+			else :
+				# case 2 : no existing selection.
+				# allow qt to update the selection first.
+				self.__emitButtonPress( event ) 
+				# we must always return True to prevent the event getting passed
+				# to the QTreeView again, and so we get a chance to start a drag.
+				return True
+				
+		return False
+
+	def __buttonRelease( self, widget, event ) :
+				
+		if self.__borrowedButtonPress is not None :
+			self.__emitButtonPress( self.__borrowedButtonPress )
+			self.__borrowedButtonPress = None
+			
+		return False
+		
+	def __dragBegin( self, widget, event ) :
+
+		self.__borrowedButtonPress = None
+		selectedPaths = self.selectedPaths()
+		if len( selectedPaths ) :		
+			return IECore.StringVectorData(
+				[ str( p ) for p in selectedPaths ],
+			)
+		
+		return None
+		
+	def __emitButtonPress( self, event ) :
+	
+		qEvent = QtGui.QMouseEvent(
+			QtCore.QEvent.MouseButtonPress,
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y ),
+			QtCore.Qt.LeftButton,
+			QtCore.Qt.LeftButton,
+			QtCore.Qt.NoModifier
+		)
+	
+		try :
+			self.__emittingButtonPress = True
+			# really i think we should be using QApplication::sendEvent()
+			# here, but it doesn't seem to be working. it works with the qObject
+			# in the Widget event filter, but for some reason that differs from
+			# Widget._owner( qObject )._qtWidget() which is what we have here.
+			self._qtWidget().mousePressEvent( qEvent )
+		finally :
+			self.__emittingButtonPress = False
 				
 # Private implementation - a QTreeView with some specific size behaviour, and shift
 # clicking for recursive expand/collapse.

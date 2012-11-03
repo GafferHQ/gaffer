@@ -20,6 +20,8 @@
 
 * The CompoundVectorParameterValueWidget now constructs tooltips for the columns using the descriptions for the child parameters.
 
+* Added drag support to PathListingWidget.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
