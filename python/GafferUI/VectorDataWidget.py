@@ -95,8 +95,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 		self.__tableView.verticalHeader().setDefaultSectionSize( 20 )
-
-		self.__column.append( GafferUI.Widget( self.__tableView ) )
+	
+		self.__tableViewHolder = GafferUI.Widget( self.__tableView )
+		self.__column.append( self.__tableViewHolder )
 		
 		# buttons
 		
@@ -113,7 +114,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__buttonRow.append( GafferUI.Spacer( size = IECore.V2i( 0 ), maximumSize = IECore.V2i( 100000, 1 ) ), expand=1 )
 		self.__column.append( self.__buttonRow )
 		
-		# drag and drop signals
+		# stuff for drag enter/leave and drop
 		
 		self.__dragEnterConnections = [
 			self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) ),
@@ -133,6 +134,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 			removeButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) ),
 		]
 		
+		# stuff for drag begin
+		
+		self.__emittingButtonPress = False
+		self.__buttonPressConnection = self.__tableViewHolder.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__buttonReleaseConnection = self.__tableViewHolder.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__dragBeginConnection = self.__tableViewHolder.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+
 		# final setup
 		
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
@@ -347,6 +355,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 				
 	def __dragEnter( self, widget, event ) :
 	
+		if event.sourceWidget is self.__tableViewHolder and widget is not self.__buttonRow[1]:
+			# we don't accept drags from ourself unless the target is the remove button
+			return False
+	
 		data = self.getData()
 		if len( data ) == 1 and event.data.isInstanceOf( data[0].typeId() ) :
 			widget.setHighlighted( True )
@@ -386,6 +398,92 @@ class VectorDataWidget( GafferUI.Widget ) :
 		widget.setHighlighted( False )
 
 		return True
+
+	def __buttonPress( self, widget, event ) :
+		
+		assert( widget is self.__tableViewHolder )
+		
+		if len( self.getData() ) != 1 :
+			# we only act as a drag source when we have a single vector of data
+			return False
+						
+		if self.__emittingButtonPress :
+			return False
+		
+		self.__borrowedButtonPress = None
+		if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.None :
+			
+			# We want to implement drag and drop of the selected items, which means borrowing
+			# mouse press events that the QTableView needs to perform selection.
+			# This makes things a little tricky. There are are two cases :
+			#
+			#  1) There is an existing selection, and it's been clicked on. We borrow the event
+			#     so we can get a dragBeginSignal(), and to prevent the QTableView reducing a current
+			#     multi-selection down to the single clicked item. If a drag doesn't materialise we'll
+			#     re-emit the event straight to the QTableView in __buttonRelease so the QTableView can
+			#     do its thing.
+			#
+			#  2) There is no existing selection. We pass the event to the QTableView
+			#     to see if it will select something which we can subsequently drag.
+			#
+			# This is further complicated by the fact that the button presses we simulate for Qt
+			# will end up back in this function, so we have to be careful to ignore those.
+			
+			index = self.__tableView.indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+			if self.__tableView.selectionModel().isSelected( index ) :
+				# case 1 : existing selection. 
+				self.__borrowedButtonPress = event
+				return True
+			else :
+				# case 2 : no existing selection.
+				# allow qt to update the selection first.
+				self.__emitButtonPress( event ) 
+				# we must always return True to prevent the event getting passed
+				# to the QTreeView again, and so we get a chance to start a drag.
+				return True
+				
+		return False
+
+	def __buttonRelease( self, widget, event ) :
+						
+		if self.__borrowedButtonPress is not None :
+			self.__emitButtonPress( self.__borrowedButtonPress )
+			self.__borrowedButtonPress = None
+			
+		return False
+		
+	def __dragBegin( self, widget, event ) :
+
+		self.__borrowedButtonPress = None
+		selectedIndices = self.__selectedIndices()
+		if len( selectedIndices ) :		
+			data = self.getData()[0]
+			result = IECore.Object.create( data.typeId() )
+			for i in selectedIndices :
+				result.append( data[i] )
+			return result
+			
+		return None
+		
+	def __emitButtonPress( self, event ) :
+	
+		qEvent = QtGui.QMouseEvent(
+			QtCore.QEvent.MouseButtonPress,
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y ),
+			QtCore.Qt.LeftButton,
+			QtCore.Qt.LeftButton,
+			QtCore.Qt.NoModifier
+		)
+	
+		try :
+			self.__emittingButtonPress = True
+			# really i think we should be using QApplication::sendEvent()
+			# here, but it doesn't seem to be working. it works with the qObject
+			# in the Widget event filter, but for some reason that differs from
+			# Widget._owner( qObject )._qtWidget() which is what we have here.
+			self.__tableView.mousePressEvent( qEvent )
+		finally :
+			self.__emittingButtonPress = False
 		
 # Private implementation - a QTableView with custom size behaviour.
 class _TableView( QtGui.QTableView ) :
