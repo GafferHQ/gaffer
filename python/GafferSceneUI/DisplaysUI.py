@@ -70,33 +70,8 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 	
 	def _childPlugWidget( self, childPlug ) :
 		
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
-		column.append( row )
-
-		collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
-		collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
-		row.append( collapseButton )
-		
-		row.append( GafferUI.PlugValueWidget.create( childPlug["active"] ) )
-		row.append( GafferUI.PlugValueWidget.create( childPlug["name"] ) )
-		row.append( GafferUI.PlugValueWidget.create( childPlug["type"] ) )
-		row.append( GafferUI.PlugValueWidget.create( childPlug["data"] ) )
-		
-		parameterList = GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
-		parameterList.setVisible( False )
-		column.append( parameterList )
+		return _ChildPlugWidget( childPlug )
 			
-		return column
-	
-	def __collapseButtonClicked( self, button ) :
-	
-		column = button.parent().parent()
-		parameterList = column[1]
-		visible = not parameterList.getVisible()
-		parameterList.setVisible( visible )
-		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
-		
 	def __addMenuDefinition( self ) :
 	
 		node = self.getPlug().node()
@@ -123,5 +98,40 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		m.append( "/Blank", { "command" : IECore.curry( node.addDisplay, "", IECore.Display( "", "", "" ) ) } )
 	
 		return m
+
+class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, childPlug ) :
 	
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
+		GafferUI.PlugValueWidget.__init__( self, column, childPlug )
+		
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
+		column.append( row )
+
+		collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
+		collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
+		row.append( collapseButton )
+		
+		row.append( GafferUI.PlugValueWidget.create( childPlug["active"] ) )
+		row.append( GafferUI.PlugValueWidget.create( childPlug["name"] ) )
+		row.append( GafferUI.PlugValueWidget.create( childPlug["type"] ) )
+		row.append( GafferUI.PlugValueWidget.create( childPlug["data"] ) )
+		
+		parameterList = GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
+		parameterList.setVisible( False )
+		column.append( parameterList )
+
+	def __collapseButtonClicked( self, button ) :
+	
+		column = button.parent().parent()
+		parameterList = column[1]
+		visible = not parameterList.getVisible()
+		parameterList.setVisible( visible )
+		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
+
+	def _updateFromPlug( self ) :
+	
+		pass
+		
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), "displays", DisplaysPlugValueWidget )
