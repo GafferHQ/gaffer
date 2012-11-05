@@ -61,7 +61,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( pathWidget )
 		self.__row.append( pathWidget )
 	
-		button = GafferUI.Button( image = "pathChooser.png" )
+		button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
 		self.__buttonClickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__row.append( button )
 	
