@@ -22,6 +22,8 @@
 
 * Added drag support to PathListingWidget and VectorDataWidget.
 
+* ViewportGadget now forwards the keyPress and keyRelease signals to its child.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

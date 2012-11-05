@@ -73,6 +73,8 @@ ViewportGadget::ViewportGadget( GadgetPtr child )
 	dropSignal().connect( boost::bind( &ViewportGadget::drop, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &ViewportGadget::dragEnd, this, ::_1, ::_2 ) );
 	wheelSignal().connect( boost::bind( &ViewportGadget::wheel, this, ::_1, ::_2 ) );
+	keyPressSignal().connect( boost::bind( &ViewportGadget::keyPress, this, ::_1, ::_2 ) );
+	keyReleaseSignal().connect( boost::bind( &ViewportGadget::keyRelease, this, ::_1, ::_2 ) );
 
 }
 
@@ -549,6 +551,27 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
  	renderRequestSignal()( this );
 	
 	return true;
+}
+
+bool ViewportGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
+{
+	/// \todo We might want some sort of focus model to say who gets the keypress.
+	if( Gadget *child = getChild<Gadget>() )
+	{
+		return child->keyPressSignal()( child, event );
+	}
+
+	return false;
+}
+
+bool ViewportGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
+{
+	if( Gadget *child = getChild<Gadget>() )
+	{
+		return child->keyPressSignal()( child, event );
+	}
+	
+	return false;
 }
 
 void ViewportGadget::eventToGadgetSpace( Event &event, Gadget *gadget )

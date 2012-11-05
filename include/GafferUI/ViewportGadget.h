@@ -143,7 +143,9 @@ class ViewportGadget : public IndividualContainer
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		bool wheel( GadgetPtr gadget, const ButtonEvent &event );
-					
+		bool keyPress( GadgetPtr gadget, const KeyEvent &event );
+		bool keyRelease( GadgetPtr gadget, const KeyEvent &event );
+		
 		void eventToGadgetSpace( Event &event, Gadget *gadget );
 		void eventToGadgetSpace( ButtonEvent &event, Gadget *gadget );
 		
