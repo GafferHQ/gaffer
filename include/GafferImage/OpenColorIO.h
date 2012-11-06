@@ -42,6 +42,7 @@
 namespace GafferImage
 {
 
+/// \todo Optimise for the case where the processor doesn't have channel crosstalk.
 class OpenColorIO : public ChannelDataProcessor
 {
 
