@@ -75,9 +75,12 @@ static ImageCache *imageCache()
 
 IE_CORE_DEFINERUNTIMETYPED( ImageReader );
 
+size_t ImageReader::g_firstPlugIndex = 0;
+
 ImageReader::ImageReader( const std::string &name )
 	:	ImageNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
 	
 	// disable caching on our outputs, as OIIO is already doing caching for us.
@@ -93,12 +96,12 @@ ImageReader::~ImageReader()
 
 Gaffer::StringPlug *ImageReader::fileNamePlug()
 {
-	return getChild<StringPlug>( "fileName" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *ImageReader::fileNamePlug() const
 {
-	return getChild<StringPlug>( "fileName" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const

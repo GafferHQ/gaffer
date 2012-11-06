@@ -42,7 +42,11 @@
 namespace GafferImage
 {
 
-/// \todo Linearise images. Investigate OIIO auto-tiling.
+/// \todo Linearise images. Perhaps this should be done by a super-node which just
+/// packages up an internal ImageReader and OpenColorIO node? If so then perhaps
+/// we should rename this class to SimpleImageReader or something? Perhaps we could
+/// also have a metaData() plug in the ImagePlug, fill it with the file metadata,
+/// and use that to pass the input colorspace into the internal OpenColorIO node.
 class ImageReader : public ImageNode
 {
 
@@ -66,6 +70,10 @@ class ImageReader : public ImageNode
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
 		
 };
 
