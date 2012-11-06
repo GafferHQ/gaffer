@@ -143,7 +143,7 @@ def __positionNode( node, menu ) :
 		return
 	
 	gadgetWidget = graphEditor.graphGadgetWidget()
-	graphGadget = gadgetWidget.viewportGadget().getChild()
+	graphGadget = gadgetWidget.getViewportGadget().getChild()
 	nodeGadget = graphGadget.nodeGadget( node )
 	if nodeGadget is None :
 		return
@@ -182,7 +182,7 @@ def __positionNode( node, menu ) :
 		# is not where the mouse was clicked to open the window (when the menu
 		# has been moved to keep it on screen).
 		menuPosition = menu.bound( relativeTo=gadgetWidget ).min
-		nodePosition = gadgetWidget.viewportGadget().rasterToGadgetSpace(
+		nodePosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
 			IECore.V2f( menuPosition.x, menuPosition.y ),
 			gadget = graphGadget
 		).p0

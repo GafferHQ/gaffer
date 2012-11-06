@@ -54,7 +54,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		
 		GafferUI.EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 		
-		self.__gadgetWidget.viewportGadget().setChild( GafferUI.GraphGadget( self.scriptNode() ) )
+		self.__gadgetWidget.getViewportGadget().setChild( GafferUI.GraphGadget( self.scriptNode() ) )
 		self.__frame()		
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
@@ -68,10 +68,10 @@ class GraphEditor( GafferUI.EditorWidget ) :
 
 	## Returns the internal Gadget used to draw the graph. This may be
 	# modified directly to set up appropriate filters etc. This is just
-	# a convenience method returning graphGadgetWidget().viewportGadget().getChild().
+	# a convenience method returning graphGadgetWidget().getViewportGadget().getChild().
 	def graphGadget( self ) :
 	
-		return self.graphGadgetWidget().viewportGadget().getChild()
+		return self.graphGadgetWidget().getViewportGadget().getChild()
 	
 	__nodeContextMenuSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted to create a context menu for a
@@ -122,7 +122,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	
 	def __nodeGadgetAt( self, position ) :
 	
-		gadgets = self.__gadgetWidget.viewportGadget().gadgetsAt( IECore.V2f( position.x, position.y ) )
+		gadgets = self.__gadgetWidget.getViewportGadget().gadgetsAt( IECore.V2f( position.x, position.y ) )
 		
 		result = None
 		if len( gadgets ) :
@@ -177,7 +177,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		bound.min = boundCenter - newBoundSize / 2.0
 		bound.max = boundCenter + newBoundSize / 2.0
 			
-		self.__gadgetWidget.viewportGadget().frame( bound )
+		self.__gadgetWidget.getViewportGadget().frame( bound )
 	
 	def __buttonDoubleClick( self, widget, event ) :
 	

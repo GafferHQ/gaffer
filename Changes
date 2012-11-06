@@ -24,6 +24,8 @@
 
 * ViewportGadget now forwards the keyPress and keyRelease signals to its child.
 
+* GadgetWidget now allows the viewport to be changed using setViewportGadget(), and the previous viewportGadget() accessor has been renamed to getViewportGadget().
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

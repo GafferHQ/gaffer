@@ -67,7 +67,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
 		self.__renderableGadget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
-		self.__gadgetWidget.viewportGadget().setCamera(
+		self.__gadgetWidget.getViewportGadget().setCamera(
 			IECore.Camera( parameters = { "projection" : IECore.StringData( "perspective" ) } )
 		)
 		
@@ -163,7 +163,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def __keyPress( self, widget, event ) :
 	
 		if event.key == "F" :
-			self.__gadgetWidget.viewportGadget().frame( self.__renderableGadget.bound() )
+			self.__gadgetWidget.getViewportGadget().frame( self.__renderableGadget.bound() )
 			return True
 		
 		return False

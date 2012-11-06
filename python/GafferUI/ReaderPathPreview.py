@@ -95,7 +95,7 @@ class ReaderPathPreview( GafferUI.DeferredPathPreview ) :
 		else :
 			camera = IECore.Camera( parameters = { "projection" : "perspective" } )
 		
-		self.__gadgetWidget.viewportGadget().setCamera( camera )
-		self.__gadgetWidget.viewportGadget().frame( o.bound(), IECore.V3f( 0, 0, -1 ) )
+		self.__gadgetWidget.getViewportGadget().setCamera( camera )
+		self.__gadgetWidget.getViewportGadget().frame( o.bound(), IECore.V3f( 0, 0, -1 ) )
 
 GafferUI.PathPreviewWidget.registerType( "Preview", ReaderPathPreview )

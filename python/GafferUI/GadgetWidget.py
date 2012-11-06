@@ -53,12 +53,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.
-#
-# Camera motion is achieved by holding down Alt and clicking
-# and dragging. Use the left button for tumbling, the middle mouse button
-# for tracking and the right mouse button for dollying.
 class GadgetWidget( GafferUI.GLWidget ) :
 
+	## The gadget may either be a ViewportGadget in which case it will be used in a call
+	# to setViewportGadget, otherwise a suitable viewport will be created and the gadget will
+	# be placed within it.
 	def __init__( self, gadget=None, bufferOptions=set(), **kw ) :
 		
 		GLWidget.__init__( self, bufferOptions, **kw )
@@ -84,18 +83,36 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 		
 		self.__wheelConnection = self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ) )
-						
-		self.__viewportGadget = GafferUI.ViewportGadget( gadget )
-		self.__renderRequestConnection = self.__viewportGadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ) )
-
+		
+		self.__viewportGadget = None
+		if isinstance( gadget, GafferUI.ViewportGadget ) :
+			self.setViewportGadget( gadget )
+		else :
+			self.setViewportGadget( GafferUI.ViewportGadget( gadget ) )
+		
 		self._qtWidget().installEventFilter( _eventFilter )
 	
 	## Returns the ViewportGadget used to render this Widget. You can
 	# modify this freely to change the Gadgets being rendered.
-	def viewportGadget( self ) :
+	def getViewportGadget( self ) :
 	
 		return self.__viewportGadget
-					
+	
+	## Sets the ViewportGadget used to render this Widget.
+	def setViewportGadget( self, viewportGadget ) :
+	
+		assert( isinstance( viewportGadget, GafferUI.ViewportGadget ) )
+	
+		if viewportGadget.isSame( self.__viewportGadget ) :
+			return
+	
+		self.__viewportGadget = viewportGadget
+		self.__renderRequestConnection = self.__viewportGadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ) )
+		size = self.size()
+		if size.x and size.y :
+			self.__viewportGadget.setViewport( size )			
+		self._redraw()
+		
 	def _resize( self, size ) :
 		
 		GafferUI.GLWidget._resize( self, size )
@@ -179,7 +196,7 @@ class _EventFilter( QtCore.QObject ) :
 			
 			assert( isinstance( widget, GadgetWidget ) )
 		
-			gadgets = widget.viewportGadget().gadgetsAt( IECore.V2f( qEvent.x(), qEvent.y() ) )
+			gadgets = widget.getViewportGadget().gadgetsAt( IECore.V2f( qEvent.x(), qEvent.y() ) )
 			
 			toolTip = None
 			for g in gadgets :
