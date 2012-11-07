@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -61,7 +62,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		
 			def __init__( self, parameterHandler, **kw ) :
 			
-				GafferUI.ParameterValueWidget.__init__( self, GafferUI.Label( "I don't do nuffin'" ), parameterHandler )
+				GafferUI.ParameterValueWidget.__init__( self, GafferUI.StringPlugValueWidget( parameterHandler.plug() ), parameterHandler )
 	
 		GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), CustomParameterValueWidget, "CustomUI" )
 		
