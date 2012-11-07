@@ -63,7 +63,7 @@ class RenderableGadget : public Gadget
 
 	public :
 
-		RenderableGadget( IECore::VisibleRenderablePtr renderable );
+		RenderableGadget( IECore::VisibleRenderablePtr renderable = 0 );
 		virtual ~RenderableGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderableGadget, RenderableGadgetTypeId, Gadget );
