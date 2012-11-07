@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,42 +34,65 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERUI_PLUGGADGET_H
+#define GAFFERUI_PLUGGADGET_H
+
+#include "Gaffer/Plug.h"
+#include "Gaffer/Context.h"
+
+#include "GafferUI/ContainerGadget.h"
 
 namespace GafferUI
 {
 
-enum TypeId
+/// \todo Maybe rename GafferUI.PlugValueWidget to PlugWidget and 
+/// GafferUI.PlugWidget to GafferUI.LabelledPlugWidget, to better match
+/// this class (and shorten some rather long names).
+/// Add read-only support in the same way as PlugValueWidget does it.
+class PlugGadget : public ContainerGadget
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
+
+	public :
+
+		PlugGadget( Gaffer::PlugPtr plug );
+		virtual ~PlugGadget();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PlugGadget, PlugGadgetTypeId, Gadget );
+		
+		void setPlug( Gaffer::PlugPtr plug );
+		template<typename T>
+		T *getPlug();
+		
+		void setContext( Gaffer::ContextPtr context );
+		Gaffer::Context *getContext();
+		
+	protected :
 	
-	LastTypeId = 110500
+		/// Must be implemented by derived classes - will be called whenever
+		/// the ui needs to be updated to reflect a change in the plug.
+		virtual void updateFromPlug();
+		
+	private :
+		
+		void plugSet( Gaffer::Plug *plug );
+		void plugDirtied( Gaffer::Plug *plug );
+		void plugInputChanged( Gaffer::Plug *plug );
+		void contextChanged( const Gaffer::Context *context, const IECore::InternedString &name );
+		void updateContextConnection();
+		
+		boost::signals::scoped_connection m_plugSetConnection;
+		boost::signals::scoped_connection m_plugDirtiedConnection;
+		boost::signals::scoped_connection m_plugInputChangedConnection;
+		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::PlugPtr m_plug;
+		Gaffer::ContextPtr m_context;
+		
 };
+
+IE_CORE_DECLAREPTR( PlugGadget )
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#include "GafferUI/PlugGadget.inl"
+
+#endif // GAFFERUI_PLUGGADGET_H
