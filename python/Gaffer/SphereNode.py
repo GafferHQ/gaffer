@@ -56,20 +56,28 @@ class SphereNode( Gaffer.Node ) :
 		thetaPlug = Gaffer.FloatPlug( name="theta", defaultValue=360, minValue=0, maxValue=360 )
 		self.addChild( thetaPlug )
 		
-		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
+		resultPlug = Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
 		self.addChild( resultPlug )
 		
 		self._init( inputs, dynamicPlugs )
 
-	def dirty( self, plug ) :
+	def affects( self, input ) :
+
+		outputs = []
+		if input.getName() in ( "radius", "zMin", "zMax", "theta" ) :
+			outputs.append( self["out"] )
+			
+		return outputs
+
+	def hash( self, output, context, h ) :
 	
-		if plug.getName() in ( "radius", "zMin", "zMax", "theta" ) :
-		
-			self["output"].setDirty()
+		if output.isSame( self["out"] ) :
+			for n in ( "radius", "zMin", "zMax", "theta" ) :
+				self[n].hash( h )
 			
 	def compute( self, plug, context ) :
 	
-		assert( plug.isSame( self["output"] ) )
+		assert( plug.isSame( self["out"] ) )
 		
 		result = IECore.SpherePrimitive( self["radius"].getValue(), self["zMin"].getValue(), self["zMax"].getValue(), self["theta"].getValue() )
 		plug.setValue( result )
