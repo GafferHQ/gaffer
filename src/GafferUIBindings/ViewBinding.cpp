@@ -34,27 +34,47 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferImage
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "GafferBindings/NodeBinding.h"
+
+#include "GafferUI/View.h"
+#include "GafferUIBindings/ViewBinding.h"
+
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferUI;
+using namespace GafferUIBindings;
+
+static ContextPtr getContext( View &v )
 {
+	return v.getContext();
+}
 
-enum TypeId
+static ViewportGadgetPtr viewportGadget( View &v )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
+	return v.viewportGadget();
+}
 
-} // namespace GafferImage
+void GafferUIBindings::updateViewFromPlug( View &v )
+{
+	// the release is essential, as the update will most
+	// likely involve evaluation of the graph from multiple
+	// threads, and those threads might need access to python.
+	IECorePython::ScopedGILRelease gilRelease;
+	v.updateFromPlug();
+}
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+void GafferUIBindings::bindView()
+{
+	GafferBindings::NodeClass<View>()
+		.def( "getContext", &getContext )
+		.def( "setContext", &View::setContext )
+		.def( "viewportGadget", &viewportGadget )
+		.def( "_updateFromPlug", &updateViewFromPlug )
+		.def( "create", &View::create )
+		.staticmethod( "create" )
+	;
+}

@@ -34,27 +34,40 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERUI_OBJECTVIEW_H
+#define GAFFERUI_OBJECTVIEW_H
 
-namespace GafferImage
+#include "Gaffer/TypedObjectPlug.h"
+
+#include "GafferUI/View3D.h"
+#include "GafferUI/RenderableGadget.h"
+
+namespace GafferUI
 {
 
-enum TypeId
+class ObjectView : public View3D
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
+
+	public :
+
+		typedef Gaffer::ObjectPlug InPlugType;
+
+		ObjectView( Gaffer::ObjectPlugPtr input );
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectView, ObjectViewTypeId, View3D );
+
+		virtual void updateFromPlug();
+								
+	private :
+
+		GafferUI::RenderableGadgetPtr m_renderableGadget;	
+
+		static ViewDescription<ObjectView> g_viewDescription;
+
 };
 
-} // namespace GafferImage
+IE_CORE_DECLAREPTR( ObjectView );
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+} // namespace GafferUI
+
+#endif // GAFFERUI_OBJECTVIEW_H

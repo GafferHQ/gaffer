@@ -34,27 +34,40 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "IECore/NullObject.h"
 
-namespace GafferImage
+#include "Gaffer/Context.h"
+
+#include "GafferUI/ObjectView.h"
+
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferUI;
+
+IE_CORE_DEFINERUNTIMETYPED( ObjectView );
+
+ObjectView::ViewDescription<ObjectView> ObjectView::g_viewDescription( ObjectPlug::staticTypeId() );
+
+ObjectView::ObjectView( Gaffer::ObjectPlugPtr inPlug )
+	:	View3D( staticTypeName(), new ObjectPlug( "in", Plug::In, NullObject::defaultNullObject() ) ),
+		m_renderableGadget( new RenderableGadget )
 {
+	View3D::inPlug<ObjectPlug>()->setInput( inPlug );
+	viewportGadget()->setChild( m_renderableGadget );
+}
 
-enum TypeId
+void ObjectView::updateFromPlug()
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
+	ConstVisibleRenderablePtr renderable = 0;
+	{
+		Context::Scope context( getContext() );
+		renderable = runTimeCast<const VisibleRenderable>( View3D::inPlug<ObjectPlug>()->getValue() );
+	}
 
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+	bool hadRenderable = m_renderableGadget->getRenderable();
+	m_renderableGadget->setRenderable( renderable );
+	if( !hadRenderable && renderable )
+	{
+		viewportGadget()->frame( m_renderableGadget->bound() );
+	}
+}

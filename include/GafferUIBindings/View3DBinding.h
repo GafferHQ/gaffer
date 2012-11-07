@@ -34,27 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERUIBINDINGS_VIEW3DBINDING_H
+#define GAFFERUIBINDINGS_VIEW3DBINDING_H
 
-namespace GafferImage
+namespace GafferUIBindings
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
+void bindView3D();
 
-} // namespace GafferImage
+} // namespace GafferUIBindings
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERUIBINDINGS_VIEW3DBINDING_H

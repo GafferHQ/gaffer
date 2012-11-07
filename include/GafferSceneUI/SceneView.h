@@ -34,27 +34,42 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERSCENEUI_SCENEVIEW_H
+#define GAFFERSCENEUI_SCENEVIEW_H
 
-namespace GafferImage
+#include "GafferUI/View3D.h"
+#include "GafferUI/RenderableGadget.h"
+
+#include "GafferScene/ScenePlug.h"
+#include "GafferSceneUI/TypeIds.h"
+
+namespace GafferSceneUI
 {
 
-enum TypeId
+class SceneView : public GafferUI::View3D
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+
+	public :
+
+		typedef GafferScene::ScenePlug InPlugType;
+
+		SceneView( GafferScene::ScenePlugPtr inputPlug );
+		virtual ~SceneView();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneView, SceneViewTypeId, GafferUI::View );
+		
+		virtual void updateFromPlug();
 	
-	LastTypeId = 110849
+	private :
+	
+		GafferUI::RenderableGadgetPtr m_renderableGadget;
+	
+		static ViewDescription<SceneView> g_viewDescription;
+	
 };
 
-} // namespace GafferImage
+IE_CORE_DECLAREPTR( SceneView );
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+} // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_SCENEVIEW_H

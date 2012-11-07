@@ -34,27 +34,18 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferImage
+#include "GafferBindings/NodeBinding.h"
+
+#include "GafferUI/View3D.h"
+#include "GafferUIBindings/View3DBinding.h"
+
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
+
+void GafferUIBindings::bindView3D()
 {
-
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+	GafferBindings::NodeClass<View3D>();
+}

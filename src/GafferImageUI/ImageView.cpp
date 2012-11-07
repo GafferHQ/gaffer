@@ -34,27 +34,50 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "Gaffer/Context.h"
 
-namespace GafferImage
-{
+#include "GafferUI/ImageGadget.h"
+#include "GafferImageUI/ImageView.h"
 
-enum TypeId
+using namespace Gaffer;
+using namespace GafferUI;
+using namespace GafferImage;
+using namespace GafferImageUI;
+
+IE_CORE_DEFINERUNTIMETYPED( ImageView );
+
+ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
+
+ImageView::ImageView( GafferImage::ImagePlugPtr inPlug )
+	:	View( staticTypeName(), new GafferImage::ImagePlug() )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+	View::inPlug<ImagePlug>()->setInput( inPlug );
+}
+
+ImageView::~ImageView()
+{
+}
+
+void ImageView::updateFromPlug()
+{
+	IECore::ConstImagePrimitivePtr image = 0;
+	{
+		Context::Scope context( getContext() );
+		image = inPlug<ImagePlug>()->image();
+	}
 	
-	LastTypeId = 110849
-};
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+	if( image )
+	{
+		ImageGadgetPtr imageGadget = new ImageGadget( image );
+		bool hadChild = viewportGadget()->getChild<Gadget>();
+		viewportGadget()->setChild( imageGadget );
+		if( !hadChild )
+		{
+			viewportGadget()->frame( imageGadget->bound() );
+		}
+	}
+	else
+	{
+		viewportGadget()->setChild( 0 );	
+	}
+}

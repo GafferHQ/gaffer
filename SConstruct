@@ -746,6 +746,12 @@ libraries = {
 	},
 	
 	"GafferSceneUI" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferUI", "GafferScene" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferUI", "GafferSceneUI" ],
+		},
 	},
 	
 	"GafferImage" : {
@@ -760,7 +766,14 @@ libraries = {
 	
 	"GafferImageTest" : {},
 	
-	"GafferImageUI" : {},
+	"GafferImageUI" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferImage", "GafferUI" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferUI", "GafferImageUI" ],
+		},
+	},
 	
 	"GafferArnold" : {
 		"envAppends" : {

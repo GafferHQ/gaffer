@@ -34,27 +34,20 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERUIBINDINGS_VIEWBINDING_H
+#define GAFFERUIBINDINGS_VIEWBINDING_H
 
-namespace GafferImage
+namespace GafferUI
+{
+class View;	
+} // namespace GafferUI
+
+namespace GafferUIBindings
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
+void bindView();
+void updateViewFromPlug( GafferUI::View &v );
 
-} // namespace GafferImage
+} // namespace GafferUIBindings
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERUIBINDINGS_VIEWBINDING_H

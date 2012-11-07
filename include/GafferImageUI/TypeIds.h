@@ -34,27 +34,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGEUI_TYPEIDS_H
+#define GAFFERIMAGEUI_TYPEIDS_H
 
-namespace GafferImage
+namespace GafferImageUI
 {
 
 enum TypeId
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+	ImageViewTypeId = 110850,
 	
-	LastTypeId = 110849
+	LastTypeId = 110899
 };
 
-} // namespace GafferImage
+} // namespace GafferImageUI
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGEUI_TYPEIDS_H

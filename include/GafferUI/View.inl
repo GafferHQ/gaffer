@@ -34,27 +34,38 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERUI_VIEW_INL
+#define GAFFERUI_VIEW_INL
 
-namespace GafferImage
+#include "GafferUI/IndividualContainer.h"
+
+namespace GafferUI
 {
 
-enum TypeId
+template<typename T>
+T *View::inPlug()
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
+	return getChild<T>( g_firstPlugIndex );
+}
+
+template<typename T>
+const T *View::inPlug() const
+{
+	return getChild<T>( g_firstPlugIndex );
+}
+
+template<typename T>
+View::ViewDescription<T>::ViewDescription( IECore::TypeId plugType )
+{
+	View::registerView( plugType, &creator );
+}
+
+template<typename T>
+ViewPtr View::ViewDescription<T>::creator( Gaffer::PlugPtr input )
+{
+	return new T( IECore::runTimeCast<typename T::InPlugType>( input ) );
 };
 
-} // namespace GafferImage
+} // namespace GafferUI
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERUI_VIEW_INL

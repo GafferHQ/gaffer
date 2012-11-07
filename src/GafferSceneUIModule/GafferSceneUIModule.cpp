@@ -34,27 +34,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferImage
-{
-
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+// this placeholder currently only exists so that libGafferSceneUI is
+// loaded with the python module so that the SceneView can be
+// registered.
+BOOST_PYTHON_MODULE( _GafferSceneUI )
+{	
+}

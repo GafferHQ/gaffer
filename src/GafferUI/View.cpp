@@ -34,27 +34,93 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "boost/bind.hpp"
+#include "boost/lexical_cast.hpp"
 
-namespace GafferImage
-{
+#include "Gaffer/Context.h"
 
-enum TypeId
+#include "GafferUI/View.h"
+
+using namespace Gaffer;
+using namespace GafferUI;
+
+IE_CORE_DEFINERUNTIMETYPED( View );
+
+size_t View::g_firstPlugIndex = 0;
+
+View::View( const std::string &name, Gaffer::PlugPtr inPlug )
+	:	Node( name ),
+		m_viewportGadget( new ViewportGadget ),
+		m_context( new Context() )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+	storeIndexOfNextChild( g_firstPlugIndex );
+	setChild( "in", inPlug );
 	
-	LastTypeId = 110849
-};
+	viewportGadget()->keyPressSignal().connect( boost::bind( &View::keyPress, this, ::_1, ::_2 ) );	
+}
 
-} // namespace GafferImage
+View::~View()
+{
+}
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+Gaffer::Context *View::getContext()
+{
+	return m_context.get();
+}
+
+const Gaffer::Context *View::getContext() const
+{
+	return m_context.get();
+}
+
+void View::setContext( Gaffer::ContextPtr context )
+{	
+	m_context = context;
+}
+		
+ViewportGadget *View::viewportGadget()
+{
+	return m_viewportGadget;
+}
+
+bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
+{
+	if( keyEvent.key == "F" )
+	{
+		if( Gadget *c = viewportGadget()->getChild<Gadget>() )
+		{
+			viewportGadget()->frame( c->bound() );
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+View::CreatorMap &View::creators()
+{
+	static CreatorMap m;
+	return m;
+}
+
+ViewPtr View::create( Gaffer::PlugPtr plug )
+{	
+	CreatorMap &m = creators();
+	IECore::TypeId t = plug->typeId();
+	while( t!=IECore::InvalidTypeId )
+	{
+		CreatorMap::const_iterator it = m.find( t );
+		if( it!=m.end() )
+		{
+			return it->second( plug );
+		}
+		t = IECore::RunTimeTyped::baseTypeId( t );
+	}
+	
+	return 0;
+}
+		
+void View::registerView( IECore::TypeId plugType, ViewCreator creator )
+{
+	creators()[plugType] = creator;
+}

@@ -34,27 +34,20 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "IECore/Camera.h"
+#include "IECore/Transform.h"
 
-namespace GafferImage
+#include "GafferUI/View3D.h"
+
+using namespace Gaffer;
+using namespace GafferUI;
+
+IE_CORE_DEFINERUNTIMETYPED( View3D );
+
+View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
+	:	View( name, inPlug )
 {
-
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
-};
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+	IECore::CameraPtr camera = new IECore::Camera();
+	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
+	viewportGadget()->setCamera( camera );
+}

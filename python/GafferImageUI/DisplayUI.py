@@ -34,39 +34,33 @@
 #  
 ##########################################################################
 
-import IECore
-
 import GafferUI
 
-import GafferScene
+import GafferImage
 
 __all__ = []
 
-## The Viewer currently wants to be given a Renderable, which the SceneProcedural is not.
-# So we wrap it in this class so we can give it to the Viewer. This should all change when
-# the Viewer becomes more elaborate and we actually implement a SceneView class.
-class __WrappingProcedural( IECore.ParameterisedProcedural ) :
+## Here we're taking signals the Display node emits when it has new data, and using them
+# to trigger a plugDirtiedSignal on the main ui thread. This is necessary because the Display
+# receives data on a background thread, where we can't do ui stuff.
 
-	def __init__( self, procedural ) :
-	
-		IECore.ParameterisedProcedural.__init__( self, "" )
-		
-		self.__procedural = procedural
-		
-	def doBound( self, args ) :
-	
-		return self.__procedural.bound()
-		
-	def doRender( self, renderer, args ) :
-	
-		renderer.procedural( self.__procedural )
-		
-def __sceneViewCreator( plug, context ) :
+__dataReceivedCount = 0
+def __displayDataReceived( plug ) :
 
-	pathsToExpand = IECore.StringVectorData( [ "/" ] )
-	with IECore.IgnoredExceptions( Exception ) :
-		pathsToExpand = context.get( "ui:scene:expandedPaths" )
-
-	return __WrappingProcedural( GafferScene.SceneProcedural( plug, context, "/", pathsToExpand ) )
+	global __dataReceivedCount
 	
-GafferUI.Viewer.registerView( GafferScene.ScenePlug.staticTypeId(), __sceneViewCreator )
+	## \todo We're not emitting on every update because it's quite slow doing that. When we have a proper
+	# fleshed out view class, we'll be able to ignore updates unless we've processed the previous update.
+	# We should also have an extra signal on ImageNode classes, which tells you which specific area of the
+	# image has changed so that the updates can be much quicker.
+	if __dataReceivedCount % 50 == 0:
+		GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
+	
+	__dataReceivedCount += 1
+
+def __displayImageReceived( plug ) :
+	
+	GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
+
+__displayDataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( __displayDataReceived )
+__displayImageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( __displayImageReceived )

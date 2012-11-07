@@ -76,7 +76,7 @@ enum TypeId
 	RenderCameraTypeId = 110532,
 	SubTreeTypeId = 110533,
 	
-	LastTypeId = 110700
+	LastTypeId = 110650
 };
 
 } // namespace GafferScene

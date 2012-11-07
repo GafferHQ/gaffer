@@ -63,6 +63,9 @@ enum TypeId
 	CompoundNoduleTypeId = 110268,
 	ImageGadgetTypeId = 110269,
 	ViewportGadgetTypeId = 110270,
+	ViewTypeId = 110271,
+	View3DTypeId = 110272,
+	ObjectViewTypeId = 110273,
 	
 	LastTypeId = 110500
 };

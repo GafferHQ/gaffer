@@ -70,8 +70,7 @@ class RenderableGadget : public Gadget
 
 		virtual Imath::Box3f bound() const;
 		
-		void setRenderable( IECore::VisibleRenderablePtr renderable );
-		IECore::VisibleRenderablePtr getRenderable();
+		void setRenderable( IECore::ConstVisibleRenderablePtr renderable );
 		IECore::ConstVisibleRenderablePtr getRenderable() const;
 		
 		/// Returns the IECoreGL::State object used as the base display
@@ -120,7 +119,7 @@ class RenderableGadget : public Gadget
 		
 		void applySelection( IECoreGL::Group *group = 0 );
 		
-		IECore::VisibleRenderablePtr m_renderable;
+		IECore::ConstVisibleRenderablePtr m_renderable;
 		IECoreGL::ScenePtr m_scene;
 		IECoreGL::StatePtr m_baseState;
 		IECoreGL::StateComponentPtr m_selectionColor;

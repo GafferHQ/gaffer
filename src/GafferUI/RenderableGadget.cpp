@@ -116,7 +116,7 @@ void RenderableGadget::doRender( const Style *style ) const
 	}
 }
 
-void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
+void RenderableGadget::setRenderable( IECore::ConstVisibleRenderablePtr renderable )
 {
 	if( renderable!=m_renderable )
 	{
@@ -136,11 +136,6 @@ void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
 		}
 		renderRequestSignal()( this );
 	}
-}
-
-IECore::VisibleRenderablePtr RenderableGadget::getRenderable()
-{
-	return m_renderable;
 }
 
 IECore::ConstVisibleRenderablePtr RenderableGadget::getRenderable() const

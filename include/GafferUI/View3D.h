@@ -34,27 +34,27 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERUI_VIEW3D_H
+#define GAFFERUI_VIEW3D_H
 
-namespace GafferImage
+#include "GafferUI/View.h"
+
+namespace GafferUI
 {
 
-enum TypeId
+class View3D : public View
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	
-	LastTypeId = 110849
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( View3D, View3DTypeId, View );
+			
+	protected :
+
+		View3D( const std::string &name, Gaffer::PlugPtr input );
+					
 };
 
-} // namespace GafferImage
+} // namespace GafferUI
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERUI_VIEW3D_H

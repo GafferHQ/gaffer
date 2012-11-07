@@ -34,5 +34,7 @@
 #  
 ##########################################################################
 
-import ImageView
+from _GafferImageUI import *
+
+import DisplayUI
 import NodeUIs

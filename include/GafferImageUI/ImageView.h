@@ -34,27 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGEUI_IMAGEVIEW_H
+#define GAFFERIMAGEUI_IMAGEVIEW_H
 
-namespace GafferImage
+#include "GafferUI/View.h"
+
+#include "GafferImage/ImagePlug.h"
+#include "GafferImageUI/TypeIds.h"
+
+namespace GafferImageUI
 {
 
-enum TypeId
+class ImageView : public GafferUI::View
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+
+	public :
+
+		typedef GafferImage::ImagePlug InPlugType;
+
+		ImageView( GafferImage::ImagePlugPtr inputPlug );
+		virtual ~ImageView();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageView, ImageViewTypeId, GafferUI::View );
 	
-	LastTypeId = 110849
+	protected :
+
+		virtual void updateFromPlug();
+	
+		static ViewDescription<ImageView> g_viewDescription;
+	
 };
 
-} // namespace GafferImage
+IE_CORE_DECLAREPTR( ImageView );
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+} // namespace GafferImageUI
+
+#endif // GAFFERIMAGEUI_IMAGEVIEW_H
