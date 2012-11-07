@@ -114,7 +114,8 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		if isinstance( dragData, IECore.StringVectorData ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
-			return "getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
+			if self.scriptNode().isAncestorOf( dragData ) :
+				return "getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
 		elif isinstance( dragData, Gaffer.Set ) :
 			if len( dragData ) == 1 :
 				return self.__dropText( widget, dragData[0] )
