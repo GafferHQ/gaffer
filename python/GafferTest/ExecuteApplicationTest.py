@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -64,7 +64,7 @@ class ExecuteApplicationTest( unittest.TestCase ) :
 		s["sphere"] = Gaffer.SphereNode()
 		s["write"] = Gaffer.WriteNode(
 			inputs = {
-				"in" : s["sphere"]["output"],
+				"in" : s["sphere"]["out"],
 				"fileName" : self.__outputFileName,
 			}
 		)
