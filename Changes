@@ -26,6 +26,8 @@
 
 * GadgetWidget now allows the viewport to be changed using setViewportGadget(), and the previous viewportGadget() accessor has been renamed to getViewportGadget().
 
+* Plug::getInput() now returns a raw rather than reference counted pointer.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
