@@ -77,7 +77,9 @@ class Display : public ImagePrimitiveNode
 	
 		IECore::DisplayDriverServerPtr m_server;
 		GafferDisplayDriverPtr m_driver;
-		uint64_t m_dataCount;
+
+		Gaffer::IntPlug *updateCountPlug();
+		const Gaffer::IntPlug *updateCountPlug() const;
 				
 		void plugSet( Gaffer::Plug *plug );
 		void setupServer();
@@ -86,6 +88,8 @@ class Display : public ImagePrimitiveNode
 		void dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound );
 		void imageReceived( GafferDisplayDriver *driver );
 		
+		static size_t g_firstPlugIndex;
+
 };
 
 IE_CORE_DECLAREPTR( Display );

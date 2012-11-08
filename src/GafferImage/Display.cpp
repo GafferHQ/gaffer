@@ -148,11 +148,43 @@ const DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> GafferDisplay
 
 IE_CORE_DEFINERUNTIMETYPED( Display );
 
+size_t Display::g_firstPlugIndex = 0;
+
 Display::Display( const std::string &name )
-	:	ImagePrimitiveNode( name ), m_dataCount( 0 )
+	:	ImagePrimitiveNode( name )
 {
-	/// \todo This plug should be made unconnectable when we have that functionality.
-	addChild( new IntPlug( "port", Plug::In, 1559 ) );
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild(
+		new IntPlug(
+			"port",
+			Plug::In,
+			1559,
+			1,
+			65535,
+			// disabling input connections because they could be used
+			// to create a port number which changes with context. we 
+			// can't allow that because we can only have a single server
+			// associated with a given node.
+			Plug::Default & ~Plug::AcceptsInputs
+		)
+	);
+	
+	// this plug is incremented when new data is received, triggering dirty signals
+	// and prompting reevaluation in the viewer. see GafferImageUI.DisplayUI for
+	// details of how it is set (we can't set it from dataReceived() because we're
+	// not on the ui thread at that point.
+	addChild(
+		new IntPlug(
+			"__updateCount",
+			Plug::In,
+			0,
+			0,
+			Imath::limits<int>::max(),
+			Plug::Default & ~Plug::Serialisable
+		)
+	);
+		
 	plugSetSignal().connect( boost::bind( &Display::plugSet, this, ::_1 ) );
 	GafferDisplayDriver::instanceCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
 	setupServer();
@@ -164,19 +196,29 @@ Display::~Display()
 		
 Gaffer::IntPlug *Display::portPlug()
 {
-	return getChild<IntPlug>( "port" );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::IntPlug *Display::portPlug() const
 {
-	return getChild<IntPlug>( "port" );
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+Gaffer::IntPlug *Display::updateCountPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *Display::updateCountPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 				
 void Display::affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const
 {
 	ImagePrimitiveNode::affects( input, outputs );
 	
-	if( input == portPlug() )
+	if( input == portPlug() || input == updateCountPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
@@ -196,7 +238,7 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 
 void Display::hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h.append( m_dataCount );
+	updateCountPlug()->hash( h );
 }
 
 IECore::ConstImagePrimitivePtr Display::computeImagePrimitive( const Gaffer::Context *context ) const
@@ -252,7 +294,6 @@ void Display::setupDriver( GafferDisplayDriverPtr driver )
 
 void Display::dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound )
 {
-	m_dataCount++;
 	dataReceivedSignal()( outPlug() );
 }
 

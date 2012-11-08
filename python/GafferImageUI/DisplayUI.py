@@ -34,6 +34,10 @@
 #  
 ##########################################################################
 
+import threading
+
+import IECore
+
 import GafferUI
 
 import GafferImage
@@ -44,23 +48,32 @@ __all__ = []
 # to trigger a plugDirtiedSignal on the main ui thread. This is necessary because the Display
 # receives data on a background thread, where we can't do ui stuff.
 
-__dataReceivedCount = 0
-def __displayDataReceived( plug ) :
+__plugsPendingUpdate = []
+__plugsPendingUpdateLock = threading.Lock()
 
-	global __dataReceivedCount
-	
-	## \todo We're not emitting on every update because it's quite slow doing that. When we have a proper
-	# fleshed out view class, we'll be able to ignore updates unless we've processed the previous update.
-	# We should also have an extra signal on ImageNode classes, which tells you which specific area of the
-	# image has changed so that the updates can be much quicker.
-	if __dataReceivedCount % 50 == 0:
-		GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
-	
-	__dataReceivedCount += 1
+def __scheduleUpdate( plug, force = False ) :
 
-def __displayImageReceived( plug ) :
+	if not force :
+		global __plugsPendingUpdate
+		global __plugsPendingUpdateLock
+		with __plugsPendingUpdateLock :
+			for p in __plugsPendingUpdate :
+				if plug.isSame( p ) :
+					return
+				
+			__plugsPendingUpdate.append( plug )
 	
-	GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
+	GafferUI.EventLoop.executeOnUIThread( lambda : __update( plug ) )
+		
+def __update( plug ) :
 
-__displayDataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( __displayDataReceived )
-__displayImageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( __displayImageReceived )
+	updateCountPlug = plug.node()["__updateCount"]
+	updateCountPlug.setValue( updateCountPlug.getValue() + 1 )
+
+	global __plugsPendingUpdate
+	global __plugsPendingUpdateLock
+	with __plugsPendingUpdateLock :
+		__plugsPendingUpdate = [ p for p in __plugsPendingUpdate if not p.isSame( plug ) ]
+	
+__displayDataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( __scheduleUpdate )
+__displayImageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( IECore.curry( __scheduleUpdate, force = True ) )
