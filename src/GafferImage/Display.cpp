@@ -184,6 +184,10 @@ Display::Display( const std::string &name )
 			Plug::Default & ~Plug::Serialisable
 		)
 	);
+	
+	// we don't want caching for the output image, because we're basically
+	// caching the whole thing internally ourselves anyway.
+	imagePrimitivePlug()->setFlags( Plug::Cacheable, false );
 		
 	plugSetSignal().connect( boost::bind( &Display::plugSet, this, ::_1 ) );
 	GafferDisplayDriver::instanceCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
