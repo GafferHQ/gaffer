@@ -82,8 +82,25 @@ class ValuePlug::Computation
 		}
 
 		IECore::ConstObjectPtr compute()
-		{								
-			if( m_resultPlug->getFlags( Plug::Cacheable ) )
+		{
+			// decide whether or not to use the cache. even if
+			// the result plug has the Cacheable flag set, we disable
+			// caching if it gets its value from a direct input which
+			// does not have the Cacheable flag set.
+			bool cacheable = true;
+			const ValuePlug *p = m_resultPlug;
+			while( p )
+			{
+				if( !p->getFlags( Plug::Cacheable ) )
+				{
+					cacheable = false;
+					break;
+				}
+				p = p->getInput<ValuePlug>();
+			}
+						
+			// do the cache lookup/computation.						
+			if( cacheable )
 			{
 				IECore::MurmurHash hash = m_resultPlug->hash();
 				if( g_valueCache.cached( hash ) )

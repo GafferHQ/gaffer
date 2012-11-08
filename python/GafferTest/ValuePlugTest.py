@@ -93,6 +93,31 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		
 		p1.setInput( p2 )
 		self.failIf( p1.settable() )
+	
+	def testUncacheabilityPropagates( self ) :
+	
+		p1 = Gaffer.ObjectPlug( "p1", Gaffer.Plug.Direction.In, IECore.IntData( 10 ) )
+		p2 = Gaffer.ObjectPlug( "p2", Gaffer.Plug.Direction.In, IECore.IntData( 20 ) )
+		p3 = Gaffer.ObjectPlug( "p3", Gaffer.Plug.Direction.In, IECore.IntData( 30 ) )
+		
+		p2.setInput( p1 )
+		p3.setInput( p2 )
+		
+		o2 = p2.getValue( _copy = False )
+		o3 = p3.getValue( _copy = False )
+		
+		self.assertEqual( o2, IECore.IntData( 10 ) )
+		self.assertEqual( o3, IECore.IntData( 10 ) )
+		self.failUnless( o2.isSame( o3 ) ) # they share cache entries
+		
+		p1.setFlags( Gaffer.Plug.Flags.Cacheable, False )
+
+		o2 = p2.getValue( _copy = False )
+		o3 = p3.getValue( _copy = False )
+
+		self.assertEqual( o2, IECore.IntData( 10 ) )
+		self.assertEqual( o3, IECore.IntData( 10 ) )
+		self.failIf( o2.isSame( o3 ) ) # they shouldn't share cache entries
 		
 	def setUp( self ) :
 	
