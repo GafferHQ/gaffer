@@ -47,6 +47,7 @@
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/Group.h"
+#include "IECoreGL/Primitive.h"
 #include "IECoreGL/NameStateComponent.h"
 #include "IECoreGL/TypedStateComponent.h"
 
@@ -54,11 +55,16 @@
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/Style.h"
 
-using namespace GafferUI;
-using namespace Imath;
 using namespace std;
+using namespace Imath;
+using namespace IECoreGL;
+using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( RenderableGadget );
+
+// handles we use for stuffing some data into the userAttributes() map of the state.
+static IECore::InternedString g_wireframeColorName( "renderableGadget:wireframeColor" );
+static IECore::InternedString g_drawWireframeName( "renderableGadget:drawWireframe" );
 
 RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
 	: Gadget( staticTypeName() ),
@@ -66,6 +72,7 @@ RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
 	  m_scene( 0 ),
 	  m_baseState( new IECoreGL::State( true ) ),
 	  m_selectionColor( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ) ),
+	  m_wireframeOn( new IECoreGL::Primitive::DrawWireframe( true ) ),
 	  m_dragSelecting( false )
 {
 	// IECoreGL default wireframe colour is far too similar to the blue we use for selection.
@@ -334,13 +341,60 @@ void RenderableGadget::applySelection( IECoreGL::Group *group )
 	
 	IECoreGL::State *state = group->getState();
 	IECoreGL::NameStateComponent *nameState = state->get<IECoreGL::NameStateComponent>();
+	WireframeColorStateComponent *currentWireframeColor = state->get<WireframeColorStateComponent>();
+	State::UserAttributesMap &userAttributes = state->userAttributes();
 	if( nameState && m_selection.find( nameState->name() ) != m_selection.end() )
 	{
-		state->add( m_selectionColor );
+		// object is selected
+		if( currentWireframeColor != m_selectionColor )
+		{
+			// store existing state. this would be easier if UserAttributesMap stored
+			// RunTimeTyped rather than just Data, as then we could just store the
+			// StateComponents in there directly.
+			if( currentWireframeColor )
+			{
+				if( userAttributes.find( g_wireframeColorName ) == userAttributes.end() )
+				{
+					userAttributes[g_wireframeColorName] = new IECore::Color4fData( currentWireframeColor->value() );
+				}
+			}
+			if( Primitive::DrawWireframe *drawWireframe = state->get<Primitive::DrawWireframe>() )
+			{
+				if( userAttributes.find( g_drawWireframeName ) == userAttributes.end() )
+				{
+					userAttributes[g_drawWireframeName] = new IECore::BoolData( drawWireframe->value() );
+				}
+			}
+			// overwrite it with our selection state
+			state->add( m_selectionColor );
+			state->add( m_wireframeOn );
+		}
 	}
 	else
 	{
-		state->remove<IECoreGL::WireframeColorStateComponent>();
+		// object is not selected
+		if( currentWireframeColor == m_selectionColor )
+		{
+			// restore original state
+			State::UserAttributesMap::const_iterator it = userAttributes.find( g_wireframeColorName );
+			if( it != userAttributes.end() )
+			{
+				state->add( new WireframeColorStateComponent( static_cast<const IECore::Color4fData *>( it->second.get() )->readable() ) );
+			}
+			else
+			{
+				state->remove<WireframeColorStateComponent>();
+			}
+			it = userAttributes.find( g_drawWireframeName );
+			if( it != userAttributes.end() )
+			{
+				state->add( new Primitive::DrawWireframe( static_cast<const IECore::BoolData *>( it->second.get() )->readable() ) );			
+			}
+			else
+			{
+				state->remove<Primitive::DrawWireframe>();			
+			}
+		}
 	}
 	
 	const IECoreGL::Group::ChildContainer &children = group->children();

@@ -123,6 +123,7 @@ class RenderableGadget : public Gadget
 		IECoreGL::ScenePtr m_scene;
 		IECoreGL::StatePtr m_baseState;
 		IECoreGL::StateComponentPtr m_selectionColor;
+		IECoreGL::StateComponentPtr m_wireframeOn;
 		
 		Selection m_selection;
 		SelectionChangedSignal m_selectionChangedSignal;
