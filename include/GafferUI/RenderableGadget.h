@@ -103,6 +103,8 @@ class RenderableGadget : public Gadget
 		/// a call to setSelection() or through user action.
 		typedef boost::signal<void ( RenderableGadgetPtr )> SelectionChangedSignal; 
 		SelectionChangedSignal &selectionChangedSignal();
+		/// Returns the bounding box of all the selected objects.
+		Imath::Box3f selectionBound() const;
 		//@}
 		
 	protected :
@@ -118,6 +120,7 @@ class RenderableGadget : public Gadget
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		
 		void applySelection( IECoreGL::Group *group = 0 );
+		Imath::Box3f selectionBound( IECoreGL::Group *group ) const;
 		
 		IECore::ConstVisibleRenderablePtr m_renderable;
 		IECoreGL::ScenePtr m_scene;

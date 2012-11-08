@@ -28,6 +28,12 @@
 
 * Plug::getInput() now returns a raw rather than reference counted pointer.
 
+* Added RenderableGadget::selectionBound() method which returns the bounding box of all selected objects.
+
+* Added View::framingBound() method which can be overridden by derived classes to control the framing behaviour when "F" is pressed.
+
+* SceneView now frames the current selection when "F" is pressed.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

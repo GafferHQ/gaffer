@@ -115,3 +115,13 @@ void SceneView::updateFromPlug()
 		viewportGadget()->frame( m_renderableGadget->bound() );
 	}
 }
+
+Imath::Box3f SceneView::framingBound() const
+{
+	Imath::Box3f b = m_renderableGadget->selectionBound();
+	if( !b.isEmpty() )
+	{
+		return b;
+	}
+	return View3D::framingBound();
+}

@@ -58,8 +58,11 @@ class SceneView : public GafferUI::View3D
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneView, SceneViewTypeId, GafferUI::View );
 		
+	protected :
+
 		virtual void updateFromPlug();
-	
+		virtual Imath::Box3f framingBound() const;
+
 	private :
 	
 		GafferUI::RenderableGadgetPtr m_renderableGadget;

@@ -83,13 +83,19 @@ ViewportGadget *View::viewportGadget()
 	return m_viewportGadget;
 }
 
+const ViewportGadget *View::viewportGadget() const
+{
+	return m_viewportGadget;
+}
+
 bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 {
 	if( keyEvent.key == "F" )
 	{
-		if( Gadget *c = viewportGadget()->getChild<Gadget>() )
+		Imath::Box3f b = framingBound();
+		if( !b.isEmpty() )
 		{
-			viewportGadget()->frame( c->bound() );
+			viewportGadget()->frame( b );
 			return true;
 		}
 	}
@@ -97,6 +103,15 @@ bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 	return false;
 }
 
+Imath::Box3f View::framingBound() const
+{
+	if( const Gadget *c = viewportGadget()->getChild<Gadget>() )
+	{
+		return c->bound();
+	}
+	return Imath::Box3f();
+}
+		
 View::CreatorMap &View::creators()
 {
 	static CreatorMap m;

@@ -76,7 +76,8 @@ class View : public Gaffer::Node
 
 		/// Subclasses are responsible for presenting their content in this viewport.
 		ViewportGadget *viewportGadget();
-		
+		const ViewportGadget *viewportGadget() const;
+
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
 		//@{
@@ -98,6 +99,10 @@ class View : public Gaffer::Node
 		/// explaining why it's better for the Viewer to be responsible for calling
 		/// this than the View to do it itself.
 		virtual void updateFromPlug() = 0;
+		
+		/// May be overridden by derived classes to control the region that is framed
+		/// when "F" is pressed.
+		virtual Imath::Box3f framingBound() const;
 				
 		template<class T>
 		struct ViewDescription

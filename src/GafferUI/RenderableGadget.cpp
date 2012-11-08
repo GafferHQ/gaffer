@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "OpenEXR/ImathBoxAlgo.h"
+
 #include "IECore/SimpleTypedData.h"
 #include "IECore/WorldBlock.h"
 #include "IECore/VectorTypedData.h"
@@ -195,6 +197,39 @@ void RenderableGadget::setSelection( const std::set<std::string> &selection )
 RenderableGadget::SelectionChangedSignal &RenderableGadget::selectionChangedSignal()
 {
 	return m_selectionChangedSignal;
+}
+
+Imath::Box3f RenderableGadget::selectionBound() const
+{
+	if( m_scene )
+	{
+		return selectionBound( m_scene->root() );
+	}
+	return Box3f();
+}
+
+Imath::Box3f RenderableGadget::selectionBound( IECoreGL::Group *group ) const
+{
+	IECoreGL::State *state = group->getState();
+	IECoreGL::NameStateComponent *nameState = state->get<IECoreGL::NameStateComponent>();
+	if( nameState && m_selection.find( nameState->name() ) != m_selection.end() )
+	{
+		return group->bound();
+	}
+	else
+	{
+		Box3f childSelectionBound;
+		const IECoreGL::Group::ChildContainer &children = group->children();
+		for( IECoreGL::Group::ChildContainer::const_iterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
+		{
+			IECoreGL::Group *childGroup = IECore::runTimeCast<IECoreGL::Group>( (*it).get() );
+			if( childGroup )
+			{
+				childSelectionBound.extendBy( selectionBound( childGroup ) );
+			}
+		}
+		return transform( childSelectionBound, group->getTransform() );
+	}
 }
 
 bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
