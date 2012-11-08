@@ -206,7 +206,10 @@ void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer
 
 	const std::string &projection = fullCamera->parametersData()->member<StringData>( "projection" )->readable();
 	const Box2f &screenWindow = fullCamera->parametersData()->member<Box2fData>( "screenWindow" )->readable();
-	const V2f &clippingPlanes = fullCamera->parametersData()->member<V2fData>( "clippingPlanes" )->readable();
+	/// \todo When we're drawing the camera by some means other than creating a primitive for it,
+	/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
+	/// framing bounds when the viewer frames a selected camera.
+	V2f clippingPlanes( 0, 5 );
 	
 	Box2f near( screenWindow );
 	Box2f far( screenWindow );
