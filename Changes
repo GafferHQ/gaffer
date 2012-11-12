@@ -34,6 +34,8 @@
 
 * SceneView now frames the current selection when "F" is pressed.
 
+* IndividualContainer::getChild() now returns raw pointers rather than smart pointers and uses a direct method of indexing.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

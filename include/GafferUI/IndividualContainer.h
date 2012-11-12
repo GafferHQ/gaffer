@@ -62,11 +62,10 @@ class IndividualContainer : public ContainerGadget
 		void setChild( GadgetPtr child );
 		/// Returns the child, performing a runTimeCast to T.
 		template<typename T>
-		typename T::Ptr getChild();
+		T *getChild();
 		/// Returns the child, performing a runTimeCast to T.
 		template<typename T>
-		typename T::ConstPtr getChild() const;
-		
+		const T *getChild() const;
 						
 };
 
