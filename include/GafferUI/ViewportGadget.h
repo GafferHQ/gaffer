@@ -62,6 +62,8 @@ class ViewportGadget : public IndividualContainer
 		/// Accepts no parents - the ViewportGadget must always be the topmost Gadget.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
 
+		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const;
+
 		const Imath::V2i &getViewport() const;
 		void setViewport( const Imath::V2i &viewport );
 		
@@ -78,7 +80,7 @@ class ViewportGadget : public IndividualContainer
 		/// depth buffer if it exists or the drawing order if it doesn't.
 		/// \todo Would it be more convenient for this and the space conversion functions below
 		/// to use V3fs?
-		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets );
+		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
 		
 		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget = 0 ) const;
 		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget = 0 ) const;

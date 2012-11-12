@@ -36,6 +36,10 @@
 
 * IndividualContainer::getChild() now returns raw pointers rather than smart pointers and uses a direct method of indexing.
 
+* Gadget::getToolTip() now takes a line in gadget space, allowing the tooltip to be varied with the position of the mouse.
+
+* RenderableGadget implements getToolTip() to display the name of the object under the mouse.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

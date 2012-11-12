@@ -106,6 +106,10 @@ class RenderableGadget : public Gadget
 		/// Returns the bounding box of all the selected objects.
 		Imath::Box3f selectionBound() const;
 		//@}
+
+		/// Implemented to return the name of the object under the mouse as
+		/// a tooltip.
+		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 		
 	protected :
 	

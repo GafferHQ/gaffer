@@ -87,6 +87,34 @@ bool ViewportGadget::acceptsParent( const Gaffer::GraphComponent *potentialParen
 	return false;
 }	
 
+std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) const
+{
+	std::string result = IndividualContainer::getToolTip( line );
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	std::vector<GadgetPtr> gadgets;
+	gadgetsAt( V2f( line.p0.x, line.p0.y ), gadgets );
+	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
+	{
+		GadgetPtr gadget = *it;
+		while( gadget && gadget != this )
+		{
+			IECore::LineSegment3f lineInGadgetSpace = rasterToGadgetSpace( V2f( line.p0.x, line.p0.y) );
+			result = gadget->getToolTip( lineInGadgetSpace );
+			if( result.size() )
+			{
+				return result;
+			}
+			gadget = gadget->parent<Gadget>();
+		}
+	}
+
+	return result;
+}
+
 const Imath::V2i &ViewportGadget::getViewport() const
 {
 	return m_cameraController.getResolution();
@@ -120,7 +148,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	renderRequestSignal()( this );
 }
 
-void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets )
+void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
 {
 	if( !getChild<Gadget>() )
 	{
@@ -147,7 +175,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 	
 	if( !gadgets.size() )
 	{
-		gadgets.push_back( getChild<Gadget>() );
+		gadgets.push_back( const_cast<Gadget *>( getChild<Gadget>() ) );
 	}
 }
 

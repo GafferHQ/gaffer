@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -69,9 +69,9 @@ class GadgetTest( GafferUITest.TestCase ) :
 	
 		g = GafferUI.TextGadget( "hello" )
 		
-		self.assertEqual( g.getToolTip(), "" )
+		self.assertEqual( g.getToolTip( IECore.LineSegment3f() ), "" )
 		g.setToolTip( "hi" )
-		self.assertEqual( g.getToolTip(), "hi" )
+		self.assertEqual( g.getToolTip( IECore.LineSegment3f() ), "hi" )
 	
 	def testDerivationInPython( self ) :
 

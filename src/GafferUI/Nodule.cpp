@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -127,9 +127,9 @@ void Nodule::registerNodule( const IECore::TypeId nodeType, const std::string &p
 	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
 }
 
-std::string Nodule::getToolTip() const
+std::string Nodule::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	std::string result = Gadget::getToolTip();
+	std::string result = Gadget::getToolTip( line );
 	if( result.size() )
 	{
 		return result;

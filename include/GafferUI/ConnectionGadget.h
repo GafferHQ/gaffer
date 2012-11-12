@@ -73,7 +73,7 @@ class ConnectionGadget : public Gadget
 		/// May be called to change the connection represented by this gadget.
 		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 
-		virtual std::string getToolTip() const;
+		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 		
 	protected :
 

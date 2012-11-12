@@ -119,9 +119,9 @@ NodeGadget::CreatorMap &NodeGadget::creators()
 	return c;
 }
 
-std::string NodeGadget::getToolTip() const
+std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	std::string result = IndividualContainer::getToolTip();
+	std::string result = IndividualContainer::getToolTip( line );
 	if( result.size() )
 	{
 		return result;

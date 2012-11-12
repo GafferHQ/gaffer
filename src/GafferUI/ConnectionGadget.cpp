@@ -283,9 +283,9 @@ bool ConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	return true;
 }
 
-std::string ConnectionGadget::getToolTip() const
+std::string ConnectionGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	std::string result = Gadget::getToolTip();
+	std::string result = Gadget::getToolTip( line );
 	if( result.size() )
 	{
 		return result;

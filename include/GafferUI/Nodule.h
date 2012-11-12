@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ class Nodule : public Gadget
 		/// Note that a creator may return 0 to suppress the creation of a Nodule.
 		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPathRegex, NoduleCreator creator );
 		
-		virtual std::string getToolTip() const;
+		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 
 	protected :
 

@@ -193,7 +193,7 @@ Gadget::RenderRequestSignal &Gadget::renderRequestSignal()
 	return m_renderRequestSignal;
 }
 
-std::string Gadget::getToolTip() const
+std::string Gadget::getToolTip( const IECore::LineSegment3f &position ) const
 {
 	return m_toolTip;
 }

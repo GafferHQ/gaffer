@@ -232,6 +232,17 @@ Imath::Box3f RenderableGadget::selectionBound( IECoreGL::Group *group ) const
 	}
 }
 
+std::string RenderableGadget::getToolTip( const IECore::LineSegment3f &line ) const
+{
+	std::string result = Gadget::getToolTip( line );
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	return objectAt( line );
+}
+
 bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 {
 	if( event.buttons != ButtonEvent::Left || !m_scene )

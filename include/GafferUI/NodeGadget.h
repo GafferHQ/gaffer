@@ -78,7 +78,7 @@ class NodeGadget : public IndividualContainer
 		/// type. This can be used to customise the NodeGadget for specific node types.
 		static void registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator );
 
-		virtual std::string getToolTip() const;
+		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 		
 	protected :
 
