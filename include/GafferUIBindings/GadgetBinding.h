@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -73,15 +73,15 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			return WrappedType::bound();
 		}
 	
-		virtual std::string getToolTip() const
+		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			boost::python::override f = this->get_override( "getToolTip" );
 			if( f )
 			{
-				return f();
+				return f( line );
 			}
-			return WrappedType::getToolTip();
+			return WrappedType::getToolTip( line );
 		}
 		
 		virtual void doRender( const GafferUI::Style *style ) const
@@ -112,9 +112,9 @@ static Imath::Box3f bound( const T &p )
 }
 
 template<typename T>
-static std::string getToolTip( const T &p )
+static std::string getToolTip( const T &p, const IECore::LineSegment3f &line )
 {
-	return p.T::getToolTip();
+	return p.T::getToolTip( line );
 }
 
 void bindGadget();
