@@ -169,7 +169,7 @@ IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::loadClass( const std::str
 }
 
 template<typename BaseType>
-void ParameterisedHolder<BaseType>::parameterChanged( IECore::Parameter *parameter )
+void ParameterisedHolder<BaseType>::parameterChanged( IECore::RunTimeTyped *parameterised, IECore::Parameter *parameter )
 {
 }
 
@@ -188,21 +188,31 @@ void ParameterisedHolder<BaseType>::plugSet( PlugPtr plug )
 		plug = plug->parent<Plug>();
 	}
 	
-	IECore::Parameter *parameter = m_parameterHandler->parameter().get();
+	IECore::RunTimeTyped *parameterProvider = getParameterised();
+	ParameterHandler *parameterHandler = m_parameterHandler;
 	for( std::vector<Plug *>::const_reverse_iterator it = plugHierarchy.rbegin(), eIt = plugHierarchy.rend(); it != eIt; it++ )
 	{
-		IECore::CompoundParameter *compoundParameter = IECore::runTimeCast<IECore::CompoundParameter>( parameter );
+		IECore::CompoundParameter *compoundParameter = IECore::runTimeCast<IECore::CompoundParameter>( parameterHandler->parameter() );
 		if( !compoundParameter )
 		{
 			return;
 		}
-		parameter = compoundParameter->parameter<IECore::Parameter>( (*it)->getName() );
+		
+		CompoundParameterHandler *compoundParameterHandler = static_cast<CompoundParameterHandler *>( parameterHandler );
+		
+		IECore::Parameter *childParameter = compoundParameter->parameter<IECore::Parameter>( (*it)->getName() );
+		parameterHandler = compoundParameterHandler->childParameterHandler( childParameter );
+		IECore::RunTimeTyped *childParameterProvider = compoundParameterHandler->childParameterProvider( childParameter );
+		if( childParameterProvider )
+		{
+			parameterProvider = childParameterProvider;
+		}
 	}
 	
-	if( parameter )
+	if( parameterHandler )
 	{
 		BlockedConnection connectionBlocker( m_plugSetConnection );
-		parameterChanged( parameter );
+		parameterChanged( parameterProvider, parameterHandler->parameter() );
 	}
 }
 
@@ -221,6 +231,7 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificat
 {
 	if( m_parameterisedHolder->m_parameterHandler )
 	{
+		BlockedConnection connectionBlocker( m_parameterisedHolder->m_plugSetConnection );
 		m_parameterisedHolder->m_parameterHandler->setupPlug( m_parameterisedHolder );
 		m_parameterisedHolder->m_parameterHandler->setPlugValue();
 	}

@@ -216,6 +216,11 @@ ConstParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore
 	return const_cast<CompoundParameterHandler *>( this )->handler( childParameter );
 }
 
+IECore::RunTimeTyped *CompoundParameterHandler::childParameterProvider( IECore::Parameter *childParameter )
+{
+	return 0;
+}
+
 ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child, bool createIfMissing )
 {
 	HandlerMap::const_iterator it = m_handlers.find( child );

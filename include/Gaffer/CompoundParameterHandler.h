@@ -68,7 +68,13 @@ class CompoundParameterHandler : public ParameterHandler
 		
 		ParameterHandlerPtr childParameterHandler( IECore::ParameterPtr childParameter );
 		ConstParameterHandlerPtr childParameterHandler( IECore::ParameterPtr childParameter ) const;
-					
+		
+		/// Some CompoundParameter types (ClassParameter and ClassVectorParameter) hold
+		/// instances of Parameterised classes that provide the child parameters
+		/// for that parameter. This function returns the class which provides the specified
+		/// child parameter, or 0 if the parameter is simply owned solely by the CompoundParameter.
+		virtual IECore::RunTimeTyped *childParameterProvider( IECore::Parameter *childParameter );
+		
 	private :
 	
 		std::string plugName() const;

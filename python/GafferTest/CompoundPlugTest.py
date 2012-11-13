@@ -195,6 +195,29 @@ class CompoundPlugTest( unittest.TestCase ) :
 				
 		self.failUnless( len( self.setPlugs )==3 )
 		self.assertEqual( self.setPlugs, [ "f1", "c1", "c" ] )
+
+	def testMultipleLevelsOfPlugSetPropagationWithDifferentParentingOrder( self ) :
+	
+		n = Gaffer.Node()
+		n["c"] = Gaffer.CompoundPlug()
+		
+		n["c"]["c1"] = Gaffer.CompoundPlug()
+		n["c"]["c1"]["f1"] = Gaffer.FloatPlug()
+		
+		def setCallback( plug ) :
+		
+			self.setPlugs.append( plug.getName() )
+		
+		cn = n.plugSetSignal().connect( setCallback )
+		
+		self.setPlugs = []
+		
+		n["c"]["c1"]["f1"].setValue( 10 )
+				
+		self.failUnless( len( self.setPlugs )==3 )
+		self.failUnless( "c" in self.setPlugs )
+		self.failUnless( "c1" in self.setPlugs )
+		self.failUnless( "f1" in self.setPlugs )
 		
 	def testAcceptsInput( self ) :
 	

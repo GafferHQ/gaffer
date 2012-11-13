@@ -120,6 +120,20 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 			}
 		}
 
+		virtual IECore::RunTimeTyped *childParameterProvider( IECore::Parameter *childParameter )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			override o = this->get_override( "childParameterProvider" );
+			if( o )
+			{
+				return o( IECore::ParameterPtr( childParameter ) );
+			}
+			else
+			{
+				return CompoundParameterHandler::childParameterProvider( childParameter );
+			}
+		}
+
 };
 
 IE_CORE_DECLAREPTR( CompoundParameterHandlerWrapper )

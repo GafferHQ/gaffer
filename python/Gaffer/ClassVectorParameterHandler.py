@@ -81,7 +81,17 @@ class ClassVectorParameterHandler( Gaffer.CompoundParameterHandler ) :
 		Gaffer.CompoundParameterHandler.setPlugValue( self )
 				
 		self.__storeClasses()
-		
+	
+	def childParameterProvider( self, childParameter ) :
+	
+		if childParameter.name not in self.parameter() :
+			return None
+			
+		if not self.parameter()[childParameter.name].isSame( childParameter ) :
+			return None
+			
+		return self.parameter().getClass( childParameter )
+			
 	def __storeClasses( self ) :
 	
 		compoundPlug = self.plug()	

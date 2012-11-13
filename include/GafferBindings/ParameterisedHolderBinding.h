@@ -74,10 +74,11 @@ class ParameterisedHolderWrapper : public NodeWrapper<WrappedType>
 			return boost::python::extract<IECore::RunTimeTypedPtr>( result );
 		}
 	
-		virtual void parameterChanged( IECore::Parameter *parameter )
+		virtual void parameterChanged( IECore::RunTimeTyped *parameterised, IECore::Parameter *parameter )
 		{			
 			IECorePython::ScopedGILLock gilLock;
-			boost::python::object pythonParameterised( WrappedType::getParameterised() );
+			IECore::RunTimeTypedPtr parameterisedPtr( parameterised );
+			boost::python::object pythonParameterised( parameterisedPtr );
 			if( PyObject_HasAttrString( pythonParameterised.ptr(), "parameterChanged" ) )
 			{
 				WrappedType::parameterHandler()->setParameterValue();

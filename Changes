@@ -26,6 +26,8 @@
 
 * GadgetWidget now allows the viewport to be changed using setViewportGadget(), and the previous viewportGadget() accessor has been renamed to getViewportGadget().
 
+* ParameterisedHolder now calls the parameterChanged() methods of the classes held by ClassParameters and ClassVectorParameters when their parameters change, rather than calling the method on the top-level parameterised class.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

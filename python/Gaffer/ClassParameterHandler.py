@@ -89,6 +89,16 @@ class ClassParameterHandler( Gaffer.CompoundParameterHandler ) :
 		self.plug()["__className"].setValue( c[1] )
 		self.plug()["__classVersion"].setValue( c[2] )
 		self.plug()["__searchPathEnvVar"].setValue( c[3] )
+	
+	def childParameterProvider( self, childParameter ) :
+	
+		if childParameter.name not in self.parameter() :
+			return None
+			
+		if not self.parameter()[childParameter.name].isSame( childParameter ) :
+			return None
+			
+		return self.parameter().getClass( False )
 						
 Gaffer.ParameterHandler.registerParameterHandler( IECore.ClassParameter.staticTypeId(), ClassParameterHandler )
 		

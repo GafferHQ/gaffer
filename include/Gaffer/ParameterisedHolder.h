@@ -107,7 +107,7 @@ class ParameterisedHolder : public BaseType
 		/// us to keep libGaffer from having a python dependency. In future,
 		/// Parameterised::parameterChanged() might become a part of the Cortex C++ API,
 		/// in which case we can do all the work in libGaffer.
-		virtual void parameterChanged( IECore::Parameter *parameter );
+		virtual void parameterChanged( IECore::RunTimeTyped *parameterised, IECore::Parameter *parameter );
 		
 	private :
 	

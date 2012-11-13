@@ -789,6 +789,182 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		self.failUnless( "i" in ph["parameters"]["c"] )
 		self.failUnless( "s" in ph["parameters"]["c"] )
 	
+	def testParameterChangedWithIntermediateClasses( self ) :
+	
+		class ClassParameterChanger( IECore.Parameterised ) :
+		
+			def __init__( self ) :
+			
+				IECore.Parameterised.__init__( self, "" )
+				
+				self.parameters().addParameters(
+				
+					[
+					
+						IECore.IntParameter(
+							name = "driver",
+							description = "",
+						),
+					
+						IECore.IntParameter(
+							name = "driven",
+							description = "",
+						),
+						
+						IECore.CompoundParameter(
+							name = "c",
+							description = "",
+							members = [
+								
+								IECore.IntParameter(
+									name = "driver2",
+									description = "",
+								),
+								
+								IECore.IntParameter(
+									name = "driven2",
+									description = "",
+								),
+								
+								IECore.ClassParameter(
+									name = "class",
+									description = "",
+									searchPathEnvVar = "GAFFERTEST_CLASS_PATHS",
+								),
+								
+								IECore.ClassVectorParameter(
+									name = "classes",
+									description = "",
+									searchPathEnvVar = "GAFFERTEST_CLASS_PATHS",
+								),
+								
+							],
+						),
+						
+					],
+				
+				)
+				
+				self.changes = []
+				
+			def parameterChanged( self, parameter ) :
+			
+				self.changes.append( ( parameter, str( parameter.getValue() ) ) )
+							
+				if parameter.isSame( self.parameters()["driver"] ) :
+				
+					self.parameters()["driven"].setNumericValue( parameter.getNumericValue() * 2 )
+				
+				elif parameter.isSame( self.parameters()["c"]["driver2"] ) :
+				
+					self.parameters()["c"]["driven2"].setNumericValue( parameter.getNumericValue() * 4 )
+
+		c = ClassParameterChanger()
+		
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( c )
+		
+		with ph.parameterModificationContext() :
+			c["c"]["class"].setClass( "parameterChangedCallback", 1 )
+			c["c"]["classes"].setClasses(
+				[
+					( "p0", "parameterChangedCallback", 1 ),
+					( "p1", "parameterChangedCallback", 1 ),
+				]
+			)
+			
+		# check that the main class gets callbacks for the parameters it
+		# owns directly.
+		
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 0 )
+		self.assertEqual( ph["parameters"]["driven"].getValue(), 0 )
+ 		self.assertEqual( len( c.changes ), 0 )
+ 		
+ 		ph["parameters"]["driver"].setValue( 10 )
+ 				
+ 		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["driven"].getValue(), 20 )
+ 		self.assertEqual( len( c.changes ), 1 )
+ 		self.failUnless( c.changes[0][0].isSame( c["driver"] ) )
+ 		self.assertEqual( c.changes[0][1], "10" )
+ 		
+ 		ph["parameters"]["driven"].setValue( 30 )
+ 		
+ 		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["driven"].getValue(), 30 )
+ 		self.assertEqual( len( c.changes ), 2 )
+ 		self.failUnless( c.changes[1][0].isSame( c["driven"] ) )
+ 		self.assertEqual( c.changes[1][1], "30" )
+		
+		# check that the main class gets callbacks for the parameters it
+		# owns directly via a CompoundParameter.
+		
+ 		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 0 )
+ 		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 0 )
+ 		self.assertEqual( len( c.changes ), 2 )
+		
+ 		ph["parameters"]["c"]["driver2"].setValue( 10 )
+ 		
+ 		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 40 )
+ 		self.assertEqual( len( c.changes ), 4 )
+ 		self.failUnless( c.changes[2][0].isSame( c["c"]["driver2"] ) )
+ 		self.assertEqual( c.changes[2][1], "10" )
+ 		self.failUnless( c.changes[3][0].isSame( c["c"] ) )
+ 		
+ 		ph["parameters"]["c"]["driven2"].setValue( 30 )
+ 		
+ 		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 30 )
+ 		self.assertEqual( len( c.changes ), 6 )
+ 		self.failUnless( c.changes[4][0].isSame( c["c"]["driven2"] ) )
+ 		self.assertEqual( c.changes[4][1], "30" )
+ 		self.failUnless( c.changes[5][0].isSame( c["c"] ) )
+
+		# check that parameters changed on the classparameter are passed to
+		# the class itself and not the top level parameterised.
+		
+		c2 = c["c"]["class"].getClass()
+		self.assertEqual( len( c2.changes ), 0 )
+		
+		ph["parameters"]["c"]["class"]["driver"].setValue( 10 )
+				
+		self.assertEqual( ph["parameters"]["c"]["class"]["driver"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["c"]["class"]["driven"].getValue(), 50 )
+ 		
+ 		self.assertEqual( len( c2.changes ), 1 )
+ 		self.failUnless( c2.changes[0][0].isSame( c2["driver"] ) )
+ 		self.assertEqual( c2.changes[0][1], "10" )
+
+		# check that parameters changed on the classvectorparameter are passed to
+		# the class itself and not the top level parameterised.
+		
+		c3 = c["c"]["classes"].getClass( "p0" )
+		self.assertEqual( len( c3.changes ), 0 )
+		
+		ph["parameters"]["c"]["classes"]["p0"]["driver"].setValue( 10 )
+				
+		self.assertEqual( ph["parameters"]["c"]["classes"]["p0"]["driver"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["c"]["classes"]["p0"]["driven"].getValue(), 50 )
+ 		 		
+ 		self.assertEqual( len( c3.changes ), 2 )
+ 		self.failUnless( c3.changes[0][0].isSame( c3["driver"] ) )
+ 		self.assertEqual( c3.changes[0][1], "10" )
+ 		self.failUnless( c3.changes[1][0].isSame( c["c"]["classes"]["p0"] ) )
+ 		
+ 		c4 = c["c"]["classes"].getClass( "p1" )
+		self.assertEqual( len( c4.changes ), 0 )
+		
+		ph["parameters"]["c"]["classes"]["p1"]["driver"].setValue( 10 )
+				
+		self.assertEqual( ph["parameters"]["c"]["classes"]["p1"]["driver"].getValue(), 10 )
+ 		self.assertEqual( ph["parameters"]["c"]["classes"]["p1"]["driven"].getValue(), 50 )
+ 		 		
+ 		self.assertEqual( len( c4.changes ), 2 )
+ 		self.failUnless( c4.changes[0][0].isSame( c4["driver"] ) )
+ 		self.assertEqual( c4.changes[0][1], "10" )
+ 		self.failUnless( c4.changes[1][0].isSame( c["c"]["classes"]["p1"] ) )
+ 	
 	def testReadOnly( self ) :
 		
 		p = IECore.Parameterised( "" )
