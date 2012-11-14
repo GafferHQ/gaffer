@@ -219,7 +219,31 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
 		self.assertRaises( RuntimeError, p.setValue, IECore.V3f( 1 ) )
-
+		
+	def testColor3fAcceptsColor4fInput( self ) :
+	
+		p4 = Gaffer.Color4fPlug( direction = Gaffer.Plug.Direction.Out )
+		p3 = Gaffer.Color3fPlug()
+		
+		self.failUnless( p3.acceptsInput( p4 ) )
+		
+		p3.setInput( p4 )
+		
+		self.failUnless( p3.getInput().isSame( p4 ) )
+		self.failUnless( p3[0].getInput().isSame( p4[0] ) )
+		self.failUnless( p3[1].getInput().isSame( p4[1] ) )
+		self.failUnless( p3[2].getInput().isSame( p4[2] ) )
+		self.assertEqual( p4[3].outputs(), () )
+		
+	def testColor4fDoesntAcceptColor3fInput( self ) :
+	
+		p4 = Gaffer.Color4fPlug()
+		p3 = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		self.failIf( p4.acceptsInput( p3 ) )
+		
+		self.assertRaises( RuntimeError, p3.setInput, p4 )
+				
 if __name__ == "__main__":
 	unittest.main()
 	

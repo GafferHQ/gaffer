@@ -229,5 +229,20 @@ class ArnoldShaderTest( unittest.TestCase ) :
 			h2 = s.stateHash()
 			self.assertNotEqual( h1, h2 )
 
+	def testStandardShaderAcceptsImageInputs( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.setShader( "standard" )
+		
+		t = GafferArnold.ArnoldShader()
+		s.setShader( "image" )
+		
+		s["emission_color"].setInput( t["out"] )
+		
+		self.failUnless( s["emission_color"].getInput().isSame( t["out"] ) )
+		self.failUnless( s["emission_color"][0].getInput().isSame( t["out"][0] ) )
+		self.failUnless( s["emission_color"][1].getInput().isSame( t["out"][1] ) )
+		self.failUnless( s["emission_color"][2].getInput().isSame( t["out"][2] ) )
+
 if __name__ == "__main__":
 	unittest.main()

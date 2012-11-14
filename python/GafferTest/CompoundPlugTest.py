@@ -353,7 +353,7 @@ class CompoundPlugTest( unittest.TestCase ) :
 		n["c1"]["i"].setInput( n["c2"]["i1"] )
 		
 		self.failUnless( n["c1"]["i"].getInput().isSame( n["c2"]["i1"] ) )
-		self.assertEqual( n["c1"].getInput(), None )
+		self.failUnless( n["c1"].getInput().isSame( n["c2"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

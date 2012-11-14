@@ -83,7 +83,7 @@ bool CompoundPlug::acceptsInput( const Plug *input ) const
 		{
 			return false;
 		}
-		if( children().size()!=p->children().size() )
+		if( children().size() > p->children().size() )
 		{
 			return false;
 		}
