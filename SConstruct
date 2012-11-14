@@ -235,7 +235,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_HDF5", "Set this to build HDF5.", "0" )
+	BoolVariable( "BUILD_DEPENDENCY_HDF5", "Set this to build HDF5.", False )
 )
 
 options.Add(
@@ -245,7 +245,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_ALEMBIC", "Set this to build Alembic.", "0" )
+	BoolVariable( "BUILD_DEPENDENCY_ALEMBIC", "Set this to build Alembic.", False )
 )
 
 options.Add(
@@ -413,6 +413,30 @@ options.Add(
 options.Add(
 	"CORTEX_PYTHON_LIB_SUFFIX",
 	"The suffix used when locating the IECorePython library.",
+	"",
+)
+
+options.Add(
+	"IECORE_PYTHON_LOCATION",
+	"The directory in which the IECore python module's __init__.py resides",
+	"$BUILD_DIR/python/IECore",
+)
+
+options.Add(
+	"IECOREALEMBIC_PYTHON_LOCATION",
+	"The directory in which the IECoreAlembic python module's __init__.py resides",
+	"$BUILD_DIR/python/IECoreAlembic",
+)
+
+options.Add(
+	"OIIO_LIB_SUFFIX",
+	"The suffix used when locating the OpenImageIO libraries.",
+	"-1",
+)
+
+options.Add(
+	"OCIO_LIB_SUFFIX",
+	"The suffix used when locating the OpenColorIO libraries.",
 	"",
 )
 
@@ -725,7 +749,7 @@ libraries = {
 	
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "IECoreAlembic" ],
+			"LIBS" : [ "Gaffer", "IECoreAlembic$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene" ],
@@ -750,7 +774,7 @@ libraries = {
 	
 	"GafferImage" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "OpenImageIO-1", "OpenColorIO" ],
+			"LIBS" : [ "Gaffer", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage" ],
@@ -766,7 +790,7 @@ libraries = {
 		"envAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "ai", "IECoreArnold" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "ai", "IECoreArnold$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
@@ -801,7 +825,9 @@ libraries = {
 	},
 	
 	"IECore" : {
-	
+		
+		"pythonModulePath" : "$IECORE_PYTHON_LOCATION",
+		
 		"classStubs" : [
 
 			# images
@@ -845,6 +871,8 @@ libraries = {
 	
 	"IECoreAlembic" : {
 	
+		"pythonModulePath" : "$IECOREALEMBIC_PYTHON_LOCATION",
+		
 		"classStubs" : [
 
 			( "ABCToMDC", "ops/files/abcToMDC" ),
@@ -960,14 +988,16 @@ for libraryName, libraryDef in libraries.items() :
 		f = open( str( target[0] ), "w" )
 		f.write( "import IECore\n\n" )
 		f.write( env.subst( "from $GAFFER_STUB_MODULE import $GAFFER_STUB_CLASS as %s" % classLoadableName ) )
-		
+	
+	pythonModulePath = libraryDef.get( "pythonModulePath", "$BUILD_DIR/python/" + libraryName )
+	
 	for classStub in libraryDef.get( "classStubs", [] ) :
 		stubFileName = "$BUILD_DIR/" + classStub[1] + "/" + classStub[1].rpartition( "/" )[2] + "-1.py"
 		stubEnv = env.Clone(
 			GAFFER_STUB_MODULE = libraryName,
 			GAFFER_STUB_CLASS = classStub[0],
 		)
-		stub = stubEnv.Command( stubFileName, "$BUILD_DIR/python/" + libraryName + "/__init__.py", buildClassStub )
+		stub = stubEnv.Command( stubFileName, pythonModulePath + "/__init__.py", buildClassStub )
 		stubEnv.Alias( "build", stub )
 	
 #########################################################################################################
@@ -1001,7 +1031,7 @@ env.Alias( "build", graphicsBuild )
 # Licenses
 #########################################################################################################
 
-if True or buildingDependencies :
+if buildingDependencies :
 
 	for l in [
 		( "python", "$PYTHON_SRC_DIR/LICENSE" ),

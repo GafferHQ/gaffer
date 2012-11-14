@@ -57,6 +57,8 @@ compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
 targetApp = getOption( "APP", None )
 targetAppVersion = None
+oiioVersion = "1.1.0"
+ocioVersion = "1.0.7"
 
 if targetApp :
 	
@@ -86,6 +88,19 @@ else :
 
 pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
+arnoldVersion = getOption( "ARNOLD_VERSION", os.environ["ARNOLD_VERSION"] )
+
+try :
+	arnoldReg = IEEnv.registry["apps"]["arnold"][arnoldVersion][IEEnv.platform()]
+	if arnoldReg["compiler"]==compiler and arnoldReg["compilerVersion"]==compilerVersion :
+		ARNOLD_ROOT = arnoldReg["location"]
+except :
+	pass
+
+
+IECORE_PYTHON_LOCATION = os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "cortexBase", cortexMajorVersion, "IECore" )
+IECOREALEMBIC_PYTHON_LOCATION = os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "cortexBase", cortexMajorVersion, "IECoreAlembic" )
+
 ##########################################################################
 # set where we'll put things
 ##########################################################################
@@ -113,6 +128,8 @@ if targetAppVersion :
 
 LOCATE_DEPENDENCY_CPPPATH = [
 
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), "gcc", "4.1.2", "include" ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenImageIO", oiioVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
@@ -171,6 +188,9 @@ boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
 boostVersionSuffix = "-mt-" + boostVersion.replace( ".", "_" )
 while boostVersionSuffix.endswith( "_0" ) :
 	boostVersionSuffix = boostVersionSuffix[:-2]
+
+OIIO_LIB_SUFFIX = "-%s" % oiioVersion
+OCIO_LIB_SUFFIX = "-%s" % ocioVersion
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
