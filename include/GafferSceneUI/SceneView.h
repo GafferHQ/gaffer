@@ -41,6 +41,8 @@
 #include "GafferUI/RenderableGadget.h"
 
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/PathMatcherData.h"
+
 #include "GafferSceneUI/TypeIds.h"
 
 namespace GafferSceneUI
@@ -65,7 +67,12 @@ class SceneView : public GafferUI::View3D
 
 	private :
 	
+		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
+		void expandSelection();
+		void collapseSelection();
+
 		GafferUI::RenderableGadgetPtr m_renderableGadget;
+		IECore::PathMatcherDataPtr m_expandedPaths;
 	
 		static ViewDescription<SceneView> g_viewDescription;
 	

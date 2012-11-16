@@ -78,6 +78,10 @@ class View : public Gaffer::Node
 		ViewportGadget *viewportGadget();
 		const ViewportGadget *viewportGadget() const;
 
+		/// A signal the view may use when it needs to be updated due
+		/// to user action.
+		UnarySignal &updateRequestSignal();
+		
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
 		//@{
@@ -98,6 +102,7 @@ class View : public Gaffer::Node
 		/// by the Viewer whenever appropriate. See notes in Viewer.__plugDirtied
 		/// explaining why it's better for the Viewer to be responsible for calling
 		/// this than the View to do it itself.
+		/// \see View::updateRequestSignal().
 		virtual void updateFromPlug() = 0;
 		
 		/// May be overridden by derived classes to control the region that is framed
@@ -115,6 +120,7 @@ class View : public Gaffer::Node
 	
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
+		UnarySignal m_updateRequestSignal;
 
 		bool keyPress( GadgetPtr gadget, const KeyEvent &keyEvent );
 		

@@ -88,6 +88,11 @@ const ViewportGadget *View::viewportGadget() const
 	return m_viewportGadget;
 }
 
+View::UnarySignal &View::updateRequestSignal()
+{
+	return m_updateRequestSignal;
+}
+
 bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 {
 	if( keyEvent.key == "F" )

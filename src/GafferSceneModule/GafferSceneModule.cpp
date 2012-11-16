@@ -81,7 +81,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	
 	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
 		.def(
-			init<ScenePlugPtr, const Gaffer::Context *, const std::string &, optional<const IECore::StringVectorData *> >
+			init<ScenePlugPtr, const Gaffer::Context *, const std::string &, optional<const IECore::PathMatcherData *> >
 			(
 				(	
 					arg( "scenePlug" ),

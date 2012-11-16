@@ -99,9 +99,11 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.__currentView is not None :	
 			self.__plugDirtiedConnection = self.__currentView.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
+			self.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
 			self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			self.__updateRequestConnection = None
 				
 	def _updateFromContext( self ) :
 	
@@ -114,6 +116,12 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			
 		self.__currentView.setContext( self.getContext() )	
 		self.__currentView._updateFromPlug()
+	
+	def __updateRequest( self, view ) :
+	
+		assert( view.isSame( self.__currentView ) )
+		
+		self.__update()
 		
 	def __plugDirtied( self, plug ) :
 	

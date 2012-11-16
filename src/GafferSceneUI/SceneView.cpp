@@ -34,12 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
 #include "IECore/ParameterisedProcedural.h"
 
 #include "Gaffer/Context.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferSceneUI/SceneView.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
@@ -93,10 +97,13 @@ SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene:
 
 SceneView::SceneView( GafferScene::ScenePlugPtr inPlug )
 	:	View3D( staticTypeName(), new GafferScene::ScenePlug() ),
-		m_renderableGadget( new RenderableGadget )
+		m_renderableGadget( new RenderableGadget ),
+		m_expandedPaths( new PathMatcherData() )
 {
 	View3D::inPlug<ScenePlug>()->setInput( inPlug );
 	viewportGadget()->setChild( m_renderableGadget );
+
+	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 }
 
 SceneView::~SceneView()
@@ -105,7 +112,7 @@ SceneView::~SceneView()
 
 void SceneView::updateFromPlug()
 {
-	SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext() );
+	SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext(), "/", m_expandedPaths );
 	WrappingProceduralPtr wp = new WrappingProcedural( p );
 
 	bool hadRenderable = m_renderableGadget->getRenderable();
@@ -124,4 +131,112 @@ Imath::Box3f SceneView::framingBound() const
 		return b;
 	}
 	return View3D::framingBound();
+}
+
+bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event )
+{
+	if( event.key == "Down" )
+	{
+		expandSelection();
+		return true;
+	}
+	else if( event.key == "Up" )
+	{
+		collapseSelection();	
+		return true;
+	}
+	
+	return false;
+}
+
+void SceneView::expandSelection()
+{
+	RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
+	
+	vector<string> pathsToSelect;
+	vector<const string *> pathsToDeselect;
+	PathMatcher &expandedPaths = m_expandedPaths->writable();
+	
+	bool needUpdate = false;
+	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
+	{
+		if( expandedPaths.addPath( *it ) )
+		{
+			needUpdate = true;
+			ConstStringVectorDataPtr childNamesData = inPlug<ScenePlug>()->childNames( *it );
+			const vector<string> &childNames = childNamesData->readable();
+			if( childNames.size() )
+			{
+				pathsToDeselect.push_back( &(*it) );
+				for( vector<string>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
+				{
+					if( *(*it).rbegin() != '/' )
+					{
+						pathsToSelect.push_back( *it + "/" + *cIt );
+					}
+					else
+					{
+						pathsToSelect.push_back( *it + *cIt );
+					}
+				}
+			}
+		}
+	}
+	
+	for( vector<string>::const_iterator it = pathsToSelect.begin(), eIt = pathsToSelect.end(); it != eIt; it++ )
+	{
+		selection.insert( *it );
+	}
+	for( vector<const string *>::const_iterator it = pathsToDeselect.begin(), eIt = pathsToDeselect.end(); it != eIt; it++ )
+	{
+		selection.erase( **it );
+	}
+	
+	if( needUpdate )
+	{
+		updateRequestSignal()( this );
+	}
+}
+
+void SceneView::collapseSelection()
+{
+	RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
+	if( !selection.size() )
+	{
+		return;
+	}
+	
+	set<string> pathsToSelect;
+	vector<const string *> pathsToDeselect;
+	PathMatcher &expandedPaths = m_expandedPaths->writable();
+	
+	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
+	{
+		if( !expandedPaths.removePath( *it ) )
+		{
+			if( *it == "/" )
+			{
+				continue;
+			}
+			pathsToDeselect.push_back( &(*it) );
+			std::string parentPath( *it, 0, it->rfind( '/' ) );
+			if( parentPath == "" )
+			{
+				parentPath = "/";
+			}
+			expandedPaths.removePath( parentPath );
+			pathsToSelect.insert( parentPath );
+		}
+	}
+	
+	for( set<string>::const_iterator it = pathsToSelect.begin(), eIt = pathsToSelect.end(); it != eIt; it++ )
+	{
+		selection.insert( *it );
+	}
+	for( vector<const string *>::const_iterator it = pathsToDeselect.begin(), eIt = pathsToDeselect.end(); it != eIt; it++ )
+	{
+		selection.erase( **it );
+	}
+
+	updateRequestSignal()( this );
 }
