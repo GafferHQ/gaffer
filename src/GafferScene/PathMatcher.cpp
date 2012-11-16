@@ -99,7 +99,7 @@ inline bool wildcardMatch( const char *s, const char *pattern )
 struct Less
 {
 	
-	bool operator() ( const std::string &s1, const std::string &s2 )
+	bool operator() ( const std::string &s1, const std::string &s2 ) const
 	{
 		register const char *c1 = s1.c_str();
 		register const char *c2 = s2.c_str();
@@ -131,25 +131,71 @@ struct PathMatcher::Node
 {
 	
 	typedef std::multimap<std::string, Node *, Detail::Less> ChildMap;
-	typedef ChildMap::const_iterator ChildMapIterator;
+	typedef ChildMap::iterator ChildMapIterator;
+	typedef ChildMap::const_iterator ConstChildMapIterator;
 	typedef std::pair<ChildMapIterator, ChildMapIterator> ChildMapRange;
+	typedef std::pair<ConstChildMapIterator, ConstChildMapIterator> ConstChildMapRange;
 	
 	Node()
 		:	terminator( false ), ellipsis( 0 )
 	{
 	}
 	
-	// returns the child exactly matching name.
-	Node *child( const std::string &name )
+	Node( const Node &other )
+		:	terminator( other.terminator ), ellipsis( other.ellipsis ? new Node( *(other.ellipsis) ) : 0 )
 	{
-		ChildMapRange range = m_children.equal_range( name );
+		ChildMapIterator hint = children.begin();
+		for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
+		{
+			hint = children.insert( hint, pair<string, Node *>( it->first, new Node( *(it->second) ) ) );
+		}
+	}
+
+	~Node()
+	{
+		ChildMap::iterator it, eIt;
+		for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
+		{
+			delete it->second;
+		}
+		delete ellipsis;
+	}
+	
+	ChildMapIterator childIterator( const std::string &name )
+	{
+		ChildMapRange range = children.equal_range( name );
 		while( range.first != range.second )
 		{
 			if( range.first->first == name )
 			{
-				return range.first->second;
+				return range.first;
 			}
 			range.first++;
+		}
+		return children.end();
+	}
+	
+	ConstChildMapIterator childIterator( const std::string &name ) const
+	{
+		ConstChildMapRange range = children.equal_range( name );
+		while( range.first != range.second )
+		{
+			if( range.first->first == name )
+			{
+				return range.first;
+			}
+			range.first++;
+		}
+		return children.end();
+	}
+	
+	// returns the child exactly matching name.
+	Node *child( const std::string &name )
+	{
+		ChildMapIterator it = childIterator( name );
+		if( it != children.end() )
+		{
+			return it->second;
 		}
 		return 0;
 	}
@@ -158,22 +204,62 @@ struct PathMatcher::Node
 	// when wildcards are taken into account.
 	ChildMapRange childRange( const std::string &name )
 	{
-		return m_children.equal_range( name );
+		return children.equal_range( name );
 	}
 	
-	~Node()
+	ConstChildMapRange childRange( const std::string &name ) const
 	{
-		ChildMap::iterator it, eIt;
-		for( it = m_children.begin(), eIt = m_children.end(); it != eIt; it++ )
-		{
-			delete it->second;
-		}
-		delete ellipsis;
+		return children.equal_range( name );
 	}
+	
+	bool operator == ( const Node &other ) const
+	{
+		if( terminator != other.terminator )
+		{
+			return false;
+		}
 		
+		if( children.size() != other.children.size() )
+		{
+			return false;
+		}
+		
+		for( ConstChildMapIterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
+		{
+			ConstChildMapIterator oIt = other.childIterator( it->first );
+			if( oIt == other.children.end() )
+			{
+				return false;
+			}
+			if( !(*(it->second) == *(oIt->second) ) )
+			{
+				return false;
+			}
+		}
+		
+		if( (bool)ellipsis != (bool)other.ellipsis )
+		{
+			return false;
+		}
+		else if( ellipsis )
+		{
+			if( (*ellipsis) != (*other.ellipsis) )
+			{
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	bool operator != ( const Node &other )
+	{
+		return !( *this == other );
+	}
+			
 	bool terminator;
 	// map of child nodes
-	ChildMap m_children;
+	ChildMap children;
 	// child node for "...". this is stored separately as it uses
 	// a slightly different matching algorithm.
 	Node *ellipsis;
@@ -186,6 +272,12 @@ struct PathMatcher::Node
 
 PathMatcher::PathMatcher()
 {
+	m_root = boost::shared_ptr<Node>( new Node );
+}
+
+PathMatcher::PathMatcher( const PathMatcher &other )
+{
+	m_root = boost::shared_ptr<Node>( new Node( *(other.m_root) ) );
 }
 
 void PathMatcher::clear()
@@ -195,16 +287,20 @@ void PathMatcher::clear()
 
 Filter::Result PathMatcher::match( const std::string &path ) const
 {
-	Node *node = m_root.get();
-	if( !node )
-	{
-		return Filter::NoMatch;
-	}
-	
 	Filter::Result result = Filter::NoMatch;
 	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );	
-	matchWalk( node, tokenizer.begin(), tokenizer.end(), result );
+	matchWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), result );
 	return result;
+}
+
+bool PathMatcher::operator == ( const PathMatcher &other ) const
+{
+	return *m_root == *other.m_root;
+}
+
+bool PathMatcher::operator != ( const PathMatcher &other ) const
+{
+	return !(*this == other );
 }
 
 void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const TokenIterator &end, Filter::Result &result ) const
@@ -212,7 +308,17 @@ void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const Token
 	// either we've matched to the end of the path
 	if( start == end )
 	{
-		result = node->terminator ? Filter::Match : Filter::DescendantMatch;
+		if( node->terminator )
+		{
+			result = Filter::Match;
+		}
+		else
+		{
+			if( node->children.size() || node->ellipsis )
+			{
+				result = Filter::DescendantMatch;
+			}
+		}
 		return;
 	}
 		
@@ -253,7 +359,7 @@ void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const Token
 	}
 }
 
-void PathMatcher::addPath( const std::string &path )
+bool PathMatcher::addPath( const std::string &path )
 {
 	Node *node = m_root.get();
 	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );	
@@ -276,10 +382,70 @@ void PathMatcher::addPath( const std::string &path )
 			if( !nextNode )
 			{
 				nextNode = new Node;
-				node->m_children.insert( pair<string, Node *>( *it, nextNode ) );
+				node->children.insert( pair<string, Node *>( *it, nextNode ) );
 			}
 		}
 		node = nextNode;
 	}
+	
+	bool result = !node->terminator;
 	node->terminator = true;
+	return result;
+}
+
+bool PathMatcher::removePath( const std::string &path )
+{
+	bool result = false;
+	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );	
+	removeWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), result );
+	return result;
+}
+
+void PathMatcher::removeWalk( Node *node, const TokenIterator &start, const TokenIterator &end, bool &removed )
+{
+	if( start == end )
+	{
+		// we've found the end of the path we wish to remove.
+		if( node->terminator )
+		{
+			node->terminator = false;
+			removed = true;
+		}
+		return;
+	}
+
+	Node::ChildMapIterator childIt = node->children.end();
+	Node *childNode = 0;
+	if( *start == "..." )
+	{
+		childNode = node->ellipsis;
+	}
+	else
+	{
+		childIt = node->childIterator( *start );
+		if( childIt != node->children.end() )
+		{
+			childNode = childIt->second;
+		}
+	}
+	
+	if( !childNode )
+	{
+		return;
+	}	
+	
+	TokenIterator childStart = start; childStart++;
+	removeWalk( childNode, childStart, end, removed );
+	if( !childNode->terminator && !childNode->ellipsis && !childNode->children.size() )
+	{
+		delete childNode;
+		if( childIt != node->children.end() )
+		{
+			node->children.erase( childIt );
+		}
+		else
+		{
+			node->ellipsis = 0;
+		}
+	}
 }

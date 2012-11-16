@@ -67,7 +67,13 @@ void bindPathMatcher()
 	class_<PathMatcher>( "PathMatcher" )
 		.def( "__init__", make_constructor( constructFromObject ) )
 		.def( "__init__", make_constructor( constructFromVectorData ) )
+		.def( init<const PathMatcher &>() )
+		.def( "addPath", &PathMatcher::addPath )
+		.def( "removePath", &PathMatcher::removePath )
+		.def( "clear", &PathMatcher::clear )
 		.def( "match", &PathMatcher::match )
+		.def( self == self )
+		.def( self != self )
 	;
 }
 

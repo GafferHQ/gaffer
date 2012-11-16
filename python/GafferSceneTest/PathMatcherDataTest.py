@@ -34,35 +34,30 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
+import Gaffer
 import GafferScene
 
-from _GafferSceneTest import *
+class PathMatcherDataTest( unittest.TestCase ) :
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from PathMatcherDataTest import PathMatcherDataTest
+	def test( self ) :
+	
+		d = GafferScene.PathMatcherData()
+		self.assertEqual( d.value, GafferScene.PathMatcher() )
+		
+		d.value.addPath( "/a" )
+		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
 
+		dd = d.copy()
+		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
+		self.assertEqual( dd.value, GafferScene.PathMatcher( [ "/a" ] ) )
+
+		dd.value.addPath( "/b" )
+		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
+		self.assertEqual( dd.value, GafferScene.PathMatcher( [ "/a", "/b" ] ) )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

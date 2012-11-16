@@ -55,16 +55,28 @@ class PathMatcher
 	public :
 	
 		PathMatcher();
+		/// Constructs a deep copy of other.
+		PathMatcher( const PathMatcher &other );
 		
 		template<typename Iterator>
 		PathMatcher( Iterator pathsBegin, Iterator pathsEnd );
 		
 		template<typename Iterator>
 		void init( Iterator pathsBegin, Iterator pathsEnd );
+
+		/// Returns true if the path was added, false if
+		/// it was already there.
+		bool addPath( const std::string &path );
+		/// Returns true if the path was removed, false if
+		/// it was not there.
+		bool removePath( const std::string &path );
 	
 		void clear();
 		
 		Filter::Result match( const std::string &path ) const;
+		
+		bool operator == ( const PathMatcher &other ) const;
+		bool operator != ( const PathMatcher &other ) const;
 		
 	private :
 
@@ -72,8 +84,8 @@ class PathMatcher
 		typedef Tokenizer::iterator TokenIterator;
 		struct Node;
 		
-		void addPath( const std::string &path );
 		void matchWalk( Node *node, const TokenIterator &start, const TokenIterator &end, Filter::Result &result ) const;
+		void removeWalk( Node *node, const TokenIterator &start, const TokenIterator &end, bool &removed );
 		
 		boost::shared_ptr<Node> m_root;
 		

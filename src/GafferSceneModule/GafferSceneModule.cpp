@@ -68,6 +68,7 @@
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
 #include "GafferSceneBindings/PathMatcherBinding.h"
+#include "GafferSceneBindings/PathMatcherDataBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -116,6 +117,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 
 	bindDisplays();
 	bindPathMatcher();
+	bindPathMatcherData();
 	
 	GafferBindings::NodeClass<Options>();
 	
