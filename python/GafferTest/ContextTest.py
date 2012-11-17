@@ -243,6 +243,23 @@ class ContextTest( unittest.TestCase ) :
 		self.assertEqual( c.substitute( "$a/$b/something.###.tif" ), "apple/bear/something.020.tif" )
 		self.assertEqual( c.substitute( "$a/$dontExist/something.###.tif" ), "apple//something.020.tif" )
 		self.assertEqual( c.substitute( "${badlyFormed" ), "" )
+	
+	def testNames( self ) :
+	
+		c = Gaffer.Context()
+		self.assertEqual( set( c.names() ), set( [ "frame" ] ) )
+		
+		c["a"] = 10
+		self.assertEqual( set( c.names() ), set( [ "frame", "a" ] ) )
+		
+		cc = Gaffer.Context( c )
+		self.assertEqual( set( cc.names() ), set( [ "frame", "a" ] ) )
+		
+		cc["b"] = 20
+		self.assertEqual( set( cc.names() ), set( [ "frame", "a", "b" ] ) )
+		self.assertEqual( set( c.names() ), set( [ "frame", "a" ] ) )
+		
+		self.assertEqual( cc.names(), cc.keys() )
 		
 if __name__ == "__main__":
 	unittest.main()

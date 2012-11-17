@@ -79,6 +79,9 @@ class Context : public IECore::RefCounted
 		template<typename T>
 		typename Accessor<T>::ResultType get( const IECore::InternedString &name ) const;
 		
+		/// Fills the specified vector with the names of all items in the Context.
+		void names( std::vector<IECore::InternedString> &names ) const;
+		
 		/// Convenience method returning get<float>( "frame" ).
 		float getFrame() const;
 		/// Convenience method calling set<float>( "frame", frame ).

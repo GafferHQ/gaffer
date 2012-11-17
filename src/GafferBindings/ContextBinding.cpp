@@ -100,6 +100,19 @@ static object getWithDefault( Context &c, const IECore::InternedString &name, ob
 	}
 }
 
+static list names( const Context &context )
+{
+	std::vector<IECore::InternedString> names;
+	context.names( names );
+	
+	list result;
+	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; it++ )
+	{
+		result.append( it->value() );
+	}
+	return result;
+}
+
 struct ChangedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, ConstContextPtr context, const IECore::InternedString &name )
@@ -140,6 +153,8 @@ void bindContext()
 		.def( "get", &get )
 		.def( "get", &getWithDefault )
 		.def( "__getitem__", &get )
+		.def( "names", &names )
+		.def( "keys", &names )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
 		.def( self == self )
 		.def( self != self )

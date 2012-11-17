@@ -68,7 +68,16 @@ Context::~Context()
 {
 	delete m_changedSignal;
 }
-	
+
+void Context::names( std::vector<IECore::InternedString> &names ) const
+{
+	const CompoundDataMap &m = m_data->readable();
+	for( CompoundDataMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; it++ )
+	{
+		names.push_back( it->first );
+	}
+}
+
 float Context::getFrame() const
 {
 	return get<float>( g_frame );

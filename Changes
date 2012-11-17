@@ -44,6 +44,8 @@
 
 * Added PathMatcherData to make sharing PathMatchers easy, and to introduce the possibility of storing them in Plugs and Contexts. Copying is lazy-copy-on-write which can be used to avoid the expensive PathMatcher copy constructor where possible.
 
+* Added Context::names() method.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
