@@ -105,7 +105,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
 			self.__updateRequestConnection = None
 				
-	def _updateFromContext( self ) :
+	def _updateFromContext( self, modifiedItems ) :
 	
 		self.__update()
 	

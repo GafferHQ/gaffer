@@ -79,7 +79,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		else :
 			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
 		
-	def _updateFromContext( self ) :
+	def _updateFromContext( self, modifiedItems ) :
 	
 		# the ScenePath will trigger an update anyway
 		pass
