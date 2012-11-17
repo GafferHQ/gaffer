@@ -48,6 +48,8 @@
 
 * EditorWidget._updateFromContext() is now passed a set containing the names of items changed since the last call to _updateFromContext().
 
+* Fixed bug which caused PathListingWidget.selectionChangedSignal() to fire far too frequently.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
