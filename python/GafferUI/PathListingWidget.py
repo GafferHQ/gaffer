@@ -110,6 +110,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, _TreeView(), **kw )
 				
 		self._qtWidget().setAlternatingRowColors( True )
+		self._qtWidget().setUniformRowHeights( True )
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().header().setMovable( False )
