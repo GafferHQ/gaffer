@@ -110,6 +110,7 @@ class ViewportGadget : public IndividualContainer
 				void begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform );
 				void end();
 				
+				bool m_depthSort;
 				IECoreGL::Selector m_selector;
 				std::vector<IECoreGL::HitRecord> &m_selection;
 								

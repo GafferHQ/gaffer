@@ -40,7 +40,7 @@
 #include "IECore/MatrixTransform.h"
 
 #include "IECoreGL/ToGLCameraConverter.h"
-#include "IECoreGL/Camera.h"
+#include "IECoreGL/PerspectiveCamera.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/Selector.h"
 
@@ -694,6 +694,9 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
  		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
  	);
  	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
+ 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
+ 	/// we don't have access to that information right now.
+ 	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
  	camera->render( 0 );
 	
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
@@ -710,9 +713,8 @@ void ViewportGadget::SelectionScope::end()
 {
 	glPopMatrix();
 	m_selector.end( m_selection );
-	
-	/// \todo Figure out how to know when we've been doing depth-tested rendering
-	if( false )
+		
+	if( m_depthSort )
 	{
 		std::sort( m_selection.begin(), m_selection.end() );
 	}
