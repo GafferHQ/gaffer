@@ -107,15 +107,15 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				
 	def _updateFromContext( self, modifiedItems ) :
 	
-		self.__update()
+		self.__update( modifiedItems )
 	
-	def __update( self ) :
+	def __update( self, modifiedContextItems = () ) :
 	
 		if self.__currentView is None :
 			return
 			
 		self.__currentView.setContext( self.getContext() )	
-		self.__currentView._updateFromPlug()
+		self.__currentView._update( modifiedContextItems )
 	
 	def __updateRequest( self, view ) :
 	

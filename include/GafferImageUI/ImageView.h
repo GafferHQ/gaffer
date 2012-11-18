@@ -59,7 +59,7 @@ class ImageView : public GafferUI::View
 	
 	protected :
 
-		virtual void updateFromPlug();
+		virtual void update( const std::vector<IECore::InternedString> &modifiedContextItems );
 	
 		static ViewDescription<ImageView> g_viewDescription;
 	

@@ -56,7 +56,9 @@ class ObjectView : public View3D
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectView, ObjectViewTypeId, View3D );
 
-		virtual void updateFromPlug();
+	protected :
+
+		virtual void update( const std::vector<IECore::InternedString> &modifiedContextItems );
 								
 	private :
 

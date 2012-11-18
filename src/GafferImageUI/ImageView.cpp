@@ -58,7 +58,7 @@ ImageView::~ImageView()
 {
 }
 
-void ImageView::updateFromPlug()
+void ImageView::update( const std::vector<IECore::InternedString> &modifiedContextItems )
 {
 	IECore::ConstImagePrimitivePtr image = 0;
 	{

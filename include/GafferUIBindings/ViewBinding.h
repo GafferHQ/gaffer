@@ -46,7 +46,7 @@ namespace GafferUIBindings
 {
 
 void bindView();
-void updateViewFromPlug( GafferUI::View &v );
+void updateView( GafferUI::View &v, const std::vector<IECore::InternedString> &modifiedContextItems );
 
 } // namespace GafferUIBindings
 

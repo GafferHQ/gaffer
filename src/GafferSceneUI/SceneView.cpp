@@ -38,8 +38,10 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "IECore/ParameterisedProcedural.h"
+#include "IECore/VectorTypedData.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/BlockedConnection.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferSceneUI/SceneView.h"
 
@@ -103,6 +105,7 @@ SceneView::SceneView( GafferScene::ScenePlugPtr inPlug )
 	View3D::inPlug<ScenePlug>()->setInput( inPlug );
 	viewportGadget()->setChild( m_renderableGadget );
 
+	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 }
 
@@ -110,16 +113,30 @@ SceneView::~SceneView()
 {
 }
 
-void SceneView::updateFromPlug()
+void SceneView::update( const std::vector<IECore::InternedString> &modifiedContextItems )
 {
-	SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext(), "/", m_expandedPaths );
-	WrappingProceduralPtr wp = new WrappingProcedural( p );
+	bool selectionChanged = find( modifiedContextItems.begin(), modifiedContextItems.end(), "ui:scene:selectedPaths" ) != modifiedContextItems.end();
 
-	bool hadRenderable = m_renderableGadget->getRenderable();
-	m_renderableGadget->setRenderable( wp );
-	if( !hadRenderable )
+	if( modifiedContextItems.size() != 1 || !selectionChanged )
 	{
-		viewportGadget()->frame( m_renderableGadget->bound() );
+		SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext(), "/", m_expandedPaths );
+		WrappingProceduralPtr wp = new WrappingProcedural( p );
+	
+		bool hadRenderable = m_renderableGadget->getRenderable();
+		m_renderableGadget->setRenderable( wp );
+		if( !hadRenderable )
+		{
+			viewportGadget()->frame( m_renderableGadget->bound() );
+		}
+	}
+	
+	if( selectionChanged )
+	{
+		BlockedConnection blockedConnection( m_selectionChangedConnection );
+		const StringVectorData *sc = getContext()->get<StringVectorData>( "ui:scene:selectedPaths" );
+		RenderableGadget::Selection sr;
+		sr.insert( sc->readable().begin(), sc->readable().end() );
+		m_renderableGadget->setSelection( sr );
 	}
 }
 
@@ -131,6 +148,16 @@ Imath::Box3f SceneView::framingBound() const
 		return b;
 	}
 	return View3D::framingBound();
+}
+
+void SceneView::selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget )
+{
+	/// \todo If RenderableGadget used PathMatcherData, then we might not need
+	/// to copy data here.
+	const RenderableGadget::Selection &selection = renderableGadget->getSelection();
+	StringVectorDataPtr s = new StringVectorData();
+	s->writable().insert( s->writable().end(), selection.begin(), selection.end() );
+	getContext()->set( "ui:scene:selectedPaths", s.get() );
 }
 
 bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event )

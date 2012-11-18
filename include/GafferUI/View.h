@@ -103,7 +103,7 @@ class View : public Gaffer::Node
 		/// explaining why it's better for the Viewer to be responsible for calling
 		/// this than the View to do it itself.
 		/// \see View::updateRequestSignal().
-		virtual void updateFromPlug() = 0;
+		virtual void update( const std::vector<IECore::InternedString> &modifiedContextItems ) = 0;
 		
 		/// May be overridden by derived classes to control the region that is framed
 		/// when "F" is pressed.
@@ -129,7 +129,7 @@ class View : public Gaffer::Node
 	
 		static size_t g_firstPlugIndex;
 		
-		friend void GafferUIBindings::updateViewFromPlug( View & );
+		friend void GafferUIBindings::updateView( View &, const std::vector<IECore::InternedString> & );
 					
 };
 

@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -58,13 +59,21 @@ static ViewportGadgetPtr viewportGadget( View &v )
 	return v.viewportGadget();
 }
 
-void GafferUIBindings::updateViewFromPlug( View &v )
+void GafferUIBindings::updateView( View &v, const std::vector<IECore::InternedString> &modifiedContextItems )
 {
 	// the release is essential, as the update will most
 	// likely involve evaluation of the graph from multiple
 	// threads, and those threads might need access to python.
 	IECorePython::ScopedGILRelease gilRelease;
-	v.updateFromPlug();
+	v.update( modifiedContextItems );
+}
+
+
+static void updateView2( View &v, object modifiedContextItems )
+{
+	std::vector<IECore::InternedString> m;
+	boost::python::container_utils::extend_container( m, modifiedContextItems );
+	updateView( v, m );
 }
 
 void GafferUIBindings::bindView()
@@ -74,7 +83,7 @@ void GafferUIBindings::bindView()
 		.def( "setContext", &View::setContext )
 		.def( "viewportGadget", &viewportGadget )
 		.def( "updateRequestSignal", &View::updateRequestSignal, return_internal_reference<1>() )
-		.def( "_updateFromPlug", &updateViewFromPlug )
+		.def( "_update", &updateView2 )
 		.def( "create", &View::create )
 		.staticmethod( "create" )
 	;
