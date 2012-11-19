@@ -748,7 +748,7 @@ class _PathModel( QtCore.QAbstractItemModel ) :
 		parentItem = parentIndex.internalPointer() if parentIndex.isValid() else self.__rootItem
 		
 		childItems = parentItem.childItems()
-		if row < len( childItems ) :
+		if row >=0 and row < len( childItems ) and column >= 0 and column < len( self.__columns ) :
 			return self.createIndex( row, column, childItems[row] )
 		else :
 			return QtCore.QModelIndex()
