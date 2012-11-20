@@ -97,10 +97,6 @@ try :
 except :
 	pass
 
-
-IECORE_PYTHON_LOCATION = os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "cortexBase", cortexMajorVersion, "IECore" )
-IECOREALEMBIC_PYTHON_LOCATION = os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "cortexBase", cortexMajorVersion, "IECoreAlembic" )
-
 ##########################################################################
 # set where we'll put things
 ##########################################################################

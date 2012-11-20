@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -417,18 +417,6 @@ options.Add(
 )
 
 options.Add(
-	"IECORE_PYTHON_LOCATION",
-	"The directory in which the IECore python module's __init__.py resides",
-	"$BUILD_DIR/python/IECore",
-)
-
-options.Add(
-	"IECOREALEMBIC_PYTHON_LOCATION",
-	"The directory in which the IECoreAlembic python module's __init__.py resides",
-	"$BUILD_DIR/python/IECoreAlembic",
-)
-
-options.Add(
 	"OIIO_LIB_SUFFIX",
 	"The suffix used when locating the OpenImageIO libraries.",
 	"-1",
@@ -825,9 +813,7 @@ libraries = {
 	},
 	
 	"IECore" : {
-		
-		"pythonModulePath" : "$IECORE_PYTHON_LOCATION",
-		
+				
 		"classStubs" : [
 
 			# images
@@ -870,9 +856,7 @@ libraries = {
 	},
 	
 	"IECoreAlembic" : {
-	
-		"pythonModulePath" : "$IECOREALEMBIC_PYTHON_LOCATION",
-		
+			
 		"classStubs" : [
 
 			( "ABCToMDC", "ops/files/abcToMDC" ),
@@ -988,16 +972,14 @@ for libraryName, libraryDef in libraries.items() :
 		f = open( str( target[0] ), "w" )
 		f.write( "import IECore\n\n" )
 		f.write( env.subst( "from $GAFFER_STUB_MODULE import $GAFFER_STUB_CLASS as %s" % classLoadableName ) )
-	
-	pythonModulePath = libraryDef.get( "pythonModulePath", "$BUILD_DIR/python/" + libraryName )
-	
+		
 	for classStub in libraryDef.get( "classStubs", [] ) :
 		stubFileName = "$BUILD_DIR/" + classStub[1] + "/" + classStub[1].rpartition( "/" )[2] + "-1.py"
 		stubEnv = env.Clone(
 			GAFFER_STUB_MODULE = libraryName,
 			GAFFER_STUB_CLASS = classStub[0],
 		)
-		stub = stubEnv.Command( stubFileName, pythonModulePath + "/__init__.py", buildClassStub )
+		stub = stubEnv.Command( stubFileName, "", buildClassStub )
 		stubEnv.Alias( "build", stub )
 	
 #########################################################################################################
