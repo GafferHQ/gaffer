@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +36,7 @@
 ##########################################################################
 
 import os
+import traceback
 
 import IECore
 
@@ -49,8 +51,10 @@ import GafferUI
 import GafferSceneUI
 try :
 	import GafferArnoldUI
-except ImportError :
-	pass
+except Exception, m :
+	stacktrace = traceback.format_exc()
+	IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading GafferArnoldUI - \"%s\".\n %s" % ( m, stacktrace ) )
+
 	
 # ScriptWindow menu
 
