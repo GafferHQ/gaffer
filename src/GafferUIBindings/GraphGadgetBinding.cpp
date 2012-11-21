@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -61,5 +61,7 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "setGraphSet", &GraphGadget::setGraphSet )
 		.def( "nodeGadget", (NodeGadgetPtr (GraphGadget::*)( Gaffer::ConstNodePtr ))&GraphGadget::nodeGadget )
 		.def( "connectionGadget", (ConnectionGadgetPtr (GraphGadget::*)( Gaffer::ConstPlugPtr ))&GraphGadget::connectionGadget )
+		.def( "setNodePosition", &GraphGadget::setNodePosition )
+		.def( "getNodePosition", &GraphGadget::getNodePosition )
 	;
 }

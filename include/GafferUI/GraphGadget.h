@@ -91,6 +91,15 @@ class GraphGadget : public ContainerGadget
 		ConnectionGadgetPtr connectionGadget( Gaffer::ConstPlugPtr dstPlug );
 		ConstConnectionGadgetPtr connectionGadget( Gaffer::ConstPlugPtr dstPlug ) const;
 		
+		/// Sets the position of the specified node within the graph. This
+		/// method may be used even when the node currently has no NodeGadget
+		/// associated with it, and the position will be used if and when a NodeGadget
+		/// is created. Note that currently all GraphGadgets share the same node
+		/// positioning, so having the node appear in different places in different
+		/// Gadgets is not possible.
+		void setNodePosition( Gaffer::Node *node, const Imath::V2f &position );
+		Imath::V2f getNodePosition( Gaffer::Node *node ) const;
+		
 	protected :
 
 		void doRender( const Style *style ) const;

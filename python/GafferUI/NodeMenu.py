@@ -189,17 +189,7 @@ def __positionNode( node, menu ) :
 
 	# apply the position
 	
-	xPlug = node.getChild( "__uiX" )
-	yPlug = node.getChild( "__uiY" )
-	if xPlug is None :
-		xPlug = Gaffer.FloatPlug( "__uiX" )
-		node.addChild( xPlug )
-	if yPlug is None :
-		yPlug = Gaffer.FloatPlug( "__uiY" )
-		node.addChild( yPlug )
-	
-	xPlug.setValue( nodePosition.x )
-	yPlug.setValue( nodePosition.y )
+	graphGadget.setNodePosition( node, IECore.V2f( nodePosition.x, nodePosition.y ) )
 		
 ## Utility function to append menu items to definition. One item will
 # be created for each class found on the specified search path.
