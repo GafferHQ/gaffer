@@ -190,6 +190,8 @@ OCIO_LIB_SUFFIX = "-%s" % ocioVersion
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
+OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", "1.6.1" )
+
 CORTEX_LIB_SUFFIX = "-" + cortexMajorVersion
 CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
 

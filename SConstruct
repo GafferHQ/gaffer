@@ -393,6 +393,12 @@ options.Add(
 )
 
 options.Add(
+	"OPENEXR_LIB_SUFFIX",
+	"The suffix used when locating the OpenEXR libraries.",
+	"",
+)
+
+options.Add(
 	"BOOST_LIB_SUFFIX",
 	"The suffix used when locating the boost libraries.",
 	"",
@@ -668,8 +674,8 @@ baseLibEnv.Append(
 		"boost_regex" + boostLibSuffix,		
 		"boost_system" + boostLibSuffix,
 		"tbb",
-		"Imath",
-		"IlmImf",
+		"Imath$OPENEXR_LIB_SUFFIX",
+		"IlmImf$OPENEXR_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
 	],
 	
@@ -726,7 +732,7 @@ libraries = {
 	
 	"GafferUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
