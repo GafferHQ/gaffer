@@ -134,6 +134,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		renderable = None	
 		if self.__viewedPlug is not None :
 			renderable = self.__viewCreator( self.__viewedPlug, self.getContext() )
+			renderable = renderable if isinstance( renderable, IECore.Renderable ) else None
 			
 		self.__renderableGadget.setRenderable( renderable )
 	
