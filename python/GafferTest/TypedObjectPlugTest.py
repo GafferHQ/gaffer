@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class TypedObjectPlugTest( unittest.TestCase ) :
 
@@ -125,7 +126,7 @@ class TypedObjectPlugTest( unittest.TestCase ) :
  		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
 		self.failUnless( s2["n"]["t"].getValue() == IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
  	
- 	@unittest.expectedFailure
+ 	@GafferTest.expectedFailure
 	def testSerialisationOfMeshPrimitives( self ) :
 	
 		# right now we can only serialise types which define __repr__, but that

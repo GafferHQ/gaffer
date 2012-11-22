@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -75,7 +77,7 @@ class AssignmentTest( unittest.TestCase ) :
 		self.assertNotEqual( len( a["out"].attributes( "/ball1" ) ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject() )		
 	
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testFilterSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()

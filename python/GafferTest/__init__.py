@@ -37,6 +37,21 @@
 
 from _GafferTest import *
 
+import unittest
+
+# workaround lack of expectedFailure decorator for
+# python < 2.7.
+try :
+	expectedFailure = unittest.expectedFailure
+except AttributeError :
+	def expectedFailure( f ) :
+		def wrapper( self ) :
+			try :
+				f( self )
+			except :
+				print "Expected failure"
+		return wrapper
+
 from TestCase import TestCase
 from AddNode import AddNode
 from SignalsTest import SignalsTest

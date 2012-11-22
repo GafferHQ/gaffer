@@ -40,12 +40,13 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
 class FrameTest( GafferUITest.TestCase ) :
 
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testGadget( self ) :
 	
 		# because we're not putting gadgets and widgets in different namespaces,

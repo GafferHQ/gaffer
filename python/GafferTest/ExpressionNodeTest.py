@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -127,7 +128,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 			with context :
 				self.assertEqual( s["n"]["p"].getValue(), "#%d" % i )
 	
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testContextMethodCallsDisallowed( self ) :
 	
 		# we need to prevent expressions calling anything other

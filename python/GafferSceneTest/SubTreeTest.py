@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,6 +41,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -71,7 +73,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( s["out"] )
 		self.assertScenesEqual( s["out"], a["out"], scenePlug2PathPrefix = "/pCube1" )
 
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testRootHashesEqual( self ) :
 	
 		# this can be fixed by introducing hash*() methods in SceneNode, and making sure

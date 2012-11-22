@@ -334,7 +334,7 @@ class NodeTest( GafferTest.TestCase ) :
 		n = GafferTest.BadNode()
 		self.assertRaises( RuntimeError, n["out1"].getValue )
 	
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testWrongPlugPulled( self ) :
 	
 		n = GafferTest.BadNode()
@@ -541,7 +541,7 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n["in"].hash(), n["out"].hash() )
 		self.assertEqual( n["in"].getValue(), n["out"].getValue() )
 	
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testPassThroughSharesCacheEntries( self ) :
 	
 		n = self.PassThrough()

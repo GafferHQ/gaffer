@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
 class OpMatcherTest( unittest.TestCase ) :
 
@@ -50,7 +51,7 @@ class OpMatcherTest( unittest.TestCase ) :
 		for f in self.__sequence.fileNames() :
 			os.system( "touch %s" % f )
 
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testFile( self ) :
 	
 		# we need a suitable op as part of the gaffer install before we

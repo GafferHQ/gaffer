@@ -378,7 +378,7 @@ a = A()"""
 		self.assertEqual( s["frameRange"]["start"].getValue(), 100 )
 		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
 	
-	@unittest.expectedFailure
+	@GafferTest.expectedFailure
 	def testFrameRangeLoadAndSave( self ) :
 	
 		s = Gaffer.ScriptNode()
