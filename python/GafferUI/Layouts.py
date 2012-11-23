@@ -68,7 +68,7 @@ def create( name, scriptNode ) :
 	# first try to import the modules the layout needs
 	contextDict = { "scriptNode" : scriptNode }
 	imported = set()
-	classNameRegex = re.compile( "Gaffer[^(,]*\(" )
+	classNameRegex = re.compile( "[a-zA-Z]*Gaffer[^(,]*\(" )
 	for className in classNameRegex.findall( layout ) :
 		moduleName = className.partition( "." )[0]
 		if moduleName not in imported :
