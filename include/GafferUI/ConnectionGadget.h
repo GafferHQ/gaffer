@@ -67,9 +67,11 @@ class ConnectionGadget : public Gadget
 		/// Returns the Nodule representing the source plug in the connection.
 		/// Note that this may be 0 if the source plug belongs to a node which
 		/// has been hidden.
-		NodulePtr srcNodule();
+		Nodule *srcNodule();
+		const Nodule *srcNodule() const;
 		/// Returns the Nodule representing the destination plug in the connection.
-		NodulePtr dstNodule();
+		Nodule *dstNodule();
+		const Nodule *dstNodule() const;
 		/// May be called to change the connection represented by this gadget.
 		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 
