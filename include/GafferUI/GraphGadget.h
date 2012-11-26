@@ -53,6 +53,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( NodeGadget );
 IE_CORE_FORWARDDECLARE( ConnectionGadget );
+IE_CORE_FORWARDDECLARE( GraphLayout );
 
 /// The GraphGadget class provides a ui for connecting nodes together.
 class GraphGadget : public ContainerGadget
@@ -99,6 +100,13 @@ class GraphGadget : public ContainerGadget
 		/// Gadgets is not possible.
 		void setNodePosition( Gaffer::Node *node, const Imath::V2f &position );
 		Imath::V2f getNodePosition( Gaffer::Node *node ) const;
+		
+		/// Sets the layout algorithm used by the graph editor. This defaults to
+		/// an instance of StandardGraphLayout.
+		void setLayout( GraphLayoutPtr layout );
+		/// Returns the layout algorithm used by the graph editor.
+		GraphLayout *getLayout();
+		const GraphLayout *getLayout() const;
 		
 	protected :
 
@@ -158,6 +166,8 @@ class GraphGadget : public ContainerGadget
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
 		bool m_dragSelecting;
+		
+		GraphLayoutPtr m_layout;
 		
 };
 

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,44 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERUI_STANDARDGRAPHLAYOUT_H
+#define GAFFERUI_STANDARDGRAPHLAYOUT_H
+
+#include "GafferUI/GraphLayout.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( Plug )
+
+} // namespace Gaffer
 
 namespace GafferUI
 {
 
-enum TypeId
+IE_CORE_FORWARDDECLARE( NodeGadget )
+
+class StandardGraphLayout : public GraphLayout
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
+
+	public :
+
+		StandardGraphLayout();		
+		virtual ~StandardGraphLayout();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardGraphLayout, StandardGraphLayoutTypeId, GraphLayout );
+
+		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const;
+		virtual bool positionNode( GraphGadget *graph, Gaffer::Node *node ) const;
+
+	private :
 	
-	LastTypeId = 110500
+		void unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
+
 };
+
+IE_CORE_DECLAREPTR( GraphLayout );
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#endif // GAFFERUI_STANDARDGRAPHLAYOUT_H

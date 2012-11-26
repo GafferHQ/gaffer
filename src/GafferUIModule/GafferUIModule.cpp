@@ -66,6 +66,7 @@
 #include "GafferUIBindings/ViewBinding.h"
 #include "GafferUIBindings/View3DBinding.h"
 #include "GafferUIBindings/PlugGadgetBinding.h"
+#include "GafferUIBindings/GraphLayoutBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -101,5 +102,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindView();
 	bindView3D();
 	bindPlugGadget();
+	bindGraphLayout();
 	
 }

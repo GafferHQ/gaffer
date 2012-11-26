@@ -57,6 +57,7 @@
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
+#include "GafferUI/StandardGraphLayout.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -95,6 +96,8 @@ void GraphGadget::constructCommon( Gaffer::SetPtr graphSet )
 	dragMoveSignal().connect( boost::bind( &GraphGadget::dragMove, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &GraphGadget::dragLeave, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
+
+	m_layout = new StandardGraphLayout;
 
 	setGraphSet( graphSet );
 }
@@ -157,9 +160,6 @@ void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &positio
 	}
 	
 	plug->setValue( position );
-	
-	/// \todo Is this needed???
-	///updateNodeGadgetTransform( nodeGadget.get() );
 }
 
 Imath::V2f GraphGadget::getNodePosition( Gaffer::Node *node ) const
@@ -168,6 +168,21 @@ Imath::V2f GraphGadget::getNodePosition( Gaffer::Node *node ) const
 	return plug ? plug->getValue() : V2f( 0 );
 }
 
+void GraphGadget::setLayout( GraphLayoutPtr layout )
+{
+	m_layout = layout;
+}
+
+GraphLayout *GraphGadget::getLayout()
+{
+	return m_layout;
+}
+
+const GraphLayout *GraphGadget::getLayout() const
+{
+	return m_layout;
+}
+		
 void GraphGadget::doRender( const Style *style ) const
 {
 	glDisable( GL_DEPTH_TEST );
@@ -552,16 +567,13 @@ void GraphGadget::addNodeGadget( Gaffer::Node *node )
 	
 	m_nodeGadgets[node] = nodeGadgetEntry;
 	
-	// place it if it's not placed already.
-	/// \todo we need to do this intelligently rather than randomly!!
-	/// this probably means knowing what part of the graph is being viewed at the time. i think we
-	/// can do this by having the panning and zooming handled by a parent ViewportGadget rather than
-	/// letting the GadgetWidget do it. or do we need to query mouse position??
-	
+	// place it if it's not placed already.	
 	if( !node->getChild<Gaffer::V2fPlug>( "__uiPosition" ) )
 	{
-		static Imath::Rand32 rand;
-		setNodePosition( node, V2f( rand.nextf( -10, 10 ), rand.nextf( -10, 10 ) ) );
+		if( !m_layout->positionNode( this, node ) )
+		{
+			setNodePosition( node, V2f( 0 ) );
+		}
 	}
 	else
 	{

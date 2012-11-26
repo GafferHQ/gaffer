@@ -42,6 +42,7 @@
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/GraphLayout.h"
 
 #include "Gaffer/Node.h"
 
@@ -50,6 +51,16 @@
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
+
+static void setLayout( GraphGadget &g, GraphLayoutPtr l )
+{
+	return g.setLayout( l );
+}
+
+static GraphLayoutPtr getLayout( GraphGadget &g )
+{
+	return g.getLayout();
+}
 
 void GafferUIBindings::bindGraphGadget()
 {
@@ -63,5 +74,7 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "connectionGadget", (ConnectionGadgetPtr (GraphGadget::*)( Gaffer::ConstPlugPtr ))&GraphGadget::connectionGadget )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
+		.def( "setLayout", &setLayout )
+		.def( "getLayout", &getLayout )
 	;
 }
