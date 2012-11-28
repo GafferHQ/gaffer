@@ -66,6 +66,12 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addMember( "ai:ignore_motion_blur", new IECore::BoolData( false ) );
 	options->addMember( "ai:ignore_sss", new IECore::BoolData( false ) );
 
+	// searchpath parameters
+	
+	options->addMember( "ai:texture_searchpath", new IECore::StringData( "" ) );
+	options->addMember( "ai:procedural_searchpath", new IECore::StringData( "" ) );
+	options->addMember( "ai:shader_searchpath", new IECore::StringData( "" ) );	
+
 	// error colours
 	
 	options->addMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ) );

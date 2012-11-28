@@ -69,6 +69,14 @@ GafferUI.PlugValueWidget.registerCreator(
 			),
 		),
 		(
+			"Search Paths",
+			(
+				( "ai:texture_searchpath", "Textures" ),
+				( "ai:procedural_searchpath", "Procedurals" ),
+				( "ai:shader_searchpath", "Shaders" ),				
+			),
+		),
+		(
 			"Error Colours",
 			(
 				( "ai:error_color_bad_texture", "Bad Texture" ),

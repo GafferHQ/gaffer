@@ -75,14 +75,17 @@ class ArnoldRender( GafferScene.Render ) :
 			
 	def _createRenderer( self ) :
 	
-		return IECoreArnold.Renderer( self.__fileName() )
+		renderer = IECoreArnold.Renderer( self.__fileName() )
+		renderer.setOption( "ai:procedural_searchpath", os.path.expandvars( "$GAFFER_ROOT/arnold/procedurals" ) )
+		
+		return renderer
 		
 	def _outputProcedural( self, procedural, bound, renderer ) :
 	
 		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )
 	
 		node = arnold.AiNode( "procedural" )
-		arnold.AiNodeSetStr( node, "dso", os.path.expandvars( "$GAFFER_ROOT/arnold/procedurals/ieProcedural.so" ) )
+		arnold.AiNodeSetStr( node, "dso", os.path.expandvars( "ieProcedural.so" ) )
 		
 		arnold.AiNodeSetPnt( node, "min", bound.min.x, bound.min.y, bound.min.z );
 		arnold.AiNodeSetPnt( node, "max", bound.max.x, bound.max.y, bound.max.z );
