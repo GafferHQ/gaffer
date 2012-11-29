@@ -101,7 +101,10 @@ void ContextVariables<BaseType>::processContext( Context *context ) const
 	for( CompoundPlugIterator it( variablesPlug() ); it != it.end(); it++ )
 	{
 		IECore::DataPtr data = variablesPlug()->memberDataAndName( *it, name );
-		context->set( name, data.get() );
+		if( data )
+		{
+			context->set( name, data.get() );
+		}
 	}
 }
 

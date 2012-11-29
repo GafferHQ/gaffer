@@ -41,8 +41,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferSceneTest
 
-class SceneContextVariablesTest( unittest.TestCase ) :
+class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
@@ -58,6 +59,16 @@ class SceneContextVariablesTest( unittest.TestCase ) :
 		
 		self.assertEqual( a["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
 		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "aardvark" ) )
+	
+	def testNullMember( self ) :
+	
+		p = GafferScene.Plane()
+
+		c = GafferScene.SceneContextVariables()
+		c["in"].setInput( p["out"] )
+		c["variables"].addMember( "", IECore.StringData( "aardvark" ) )
+		
+		self.assertSceneValid( c["out"] )
 		
 if __name__ == "__main__":
 	unittest.main()

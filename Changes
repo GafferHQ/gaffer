@@ -30,6 +30,8 @@
 
 * CompoundPlugs now accept input CompoundPlugs with more plugs than necessary, provided that the first N input child plugs match the N child plugs of the output. This allows Color3fPlugs to receive input directly from Color4fPlugs and arnold COLOR3 parameters to receive input from arnold COLOR4 outputs.
 
+* Fixed crash when evaluating a ContextProcessor containing an entry with an empty name.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
