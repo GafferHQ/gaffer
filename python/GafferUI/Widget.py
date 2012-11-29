@@ -766,6 +766,12 @@ class Widget( object ) :
 
 		}
 
+		QLineEdit:disabled {
+		
+			color: $foregroundFaded;
+		
+		}
+
 		QDateTimeEdit {
 
 			background-color: $backgroundLighter;

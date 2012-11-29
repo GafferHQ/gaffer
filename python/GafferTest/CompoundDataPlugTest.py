@@ -34,11 +34,63 @@
 #  
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
+import unittest
 
+import IECore
+
+import Gaffer
+import GafferTest
+
+class CompoundDataPlugTest( unittest.TestCase ) :
+
+	def test( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+	
+		m1 = p.addMember( "a", IECore.IntData( 10 ) )
+		self.failUnless( isinstance( m1, Gaffer.CompoundPlug ) )
+		self.assertEqual( m1.getName(), "member1" )
+		self.assertEqual( m1["name"].getValue(), "a" )
+		self.assertEqual( m1["value"].getValue(), 10 )
+		self.failIf( "enabled" in m1 )
+		
+		d, n = p.memberDataAndName( m1 )
+		self.assertEqual( d, IECore.IntData( 10 ) )
+		self.assertEqual( n, "a" )
+		
+		m1["name"].setValue( "b" )
+		d, n = p.memberDataAndName( m1 )
+		self.assertEqual( d, IECore.IntData( 10 ) )
+		self.assertEqual( n, "b" )
+		
+		m2 = p.addMember( "c", IECore.FloatData( .5 ) )
+		self.failUnless( isinstance( m2, Gaffer.CompoundPlug ) )
+		self.assertEqual( m2.getName(), "member2" )
+		self.assertEqual( m2["name"].getValue(), "c" )
+		self.assertEqual( m2["value"].getValue(), .5 )
+		self.failIf( "enabled" in m2 )
+	
+		d, n = p.memberDataAndName( m2 )
+		self.assertEqual( d, IECore.FloatData( .5 ) )
+		self.assertEqual( n, "c" )
+		
+		m3 = p.addOptionalMember( "o", IECore.StringData( "--" ), plugName = "m", enabled = True )
+		self.failUnless( isinstance( m3, Gaffer.CompoundPlug ) )
+		self.assertEqual( m3.getName(), "m" )
+		self.assertEqual( m3["name"].getValue(), "o" )
+		self.assertEqual( m3["value"].getValue(), "--" )
+		self.failUnless( "enabled" in m3 )
+		self.assertEqual( m3["enabled"].getValue(), True )
+		
+		d, n = p.memberDataAndName( m3 )
+		self.assertEqual( d, IECore.StringData( "--" ) )
+		self.assertEqual( n, "o" )
+		
+		m3["enabled"].setValue( False )
+		d, n = p.memberDataAndName( m3 )
+		self.assertEqual( d, None )
+		self.assertEqual( n, "" )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
+	

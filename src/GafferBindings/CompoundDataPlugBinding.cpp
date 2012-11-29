@@ -58,9 +58,21 @@ static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::
 	return result;
 }
 
-static Gaffer::CompoundPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value )
+static Gaffer::CompoundPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName )
 {
 	return p.addMember( name, value );
+}
+
+static Gaffer::CompoundPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName, bool enabled )
+{
+	return p.addOptionalMember( name, value, plugName, enabled );
+}
+
+static tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundPlug *member )
+{
+	std::string name;
+	IECore::DataPtr d = p.memberDataAndName( member, name );
+	return make_tuple( d, name );
 }
 
 void GafferBindings::bindCompoundDataPlug()
@@ -76,8 +88,10 @@ void GafferBindings::bindCompoundDataPlug()
 				)
 			)	
 		)
-		.def( "addMember", &addMemberWrapper )
+		.def( "addMember", &addMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1" ) )
+		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1", arg_( "enabled" ) = false ) )
 		.def( "addMembers", &CompoundDataPlug::addMembers )
+		.def( "memberDataAndName", &memberDataAndNameWrapper )
 	;
 	
 }

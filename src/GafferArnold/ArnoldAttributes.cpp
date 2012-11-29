@@ -48,12 +48,12 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	
 	// visibility parameters
 	
-	attributes->addMember( "ai:visibility:camera", new IECore::BoolData( true ) );
-	attributes->addMember( "ai:visibility:shadow", new IECore::BoolData( true ) );
-	attributes->addMember( "ai:visibility:reflected", new IECore::BoolData( true ) );
-	attributes->addMember( "ai:visibility:refracted", new IECore::BoolData( true ) );
-	attributes->addMember( "ai:visibility:diffuse", new IECore::BoolData( true ) );
-	attributes->addMember( "ai:visibility:glossy", new IECore::BoolData( true ) );
+	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", false );
+	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", false );
+	attributes->addOptionalMember( "ai:visibility:reflected", new IECore::BoolData( true ), "reflectedVisibility", false );
+	attributes->addOptionalMember( "ai:visibility:refracted", new IECore::BoolData( true ), "refractedVisibility", false );
+	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", false );
+	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", false );
 	
 }
 

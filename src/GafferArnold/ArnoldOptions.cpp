@@ -48,36 +48,36 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	
 	// sampling parameters
 	
-	options->addMember( "ai:AA_samples", new IECore::IntData( 3 ) );
-	options->addMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ) );
-	options->addMember( "ai:GI_glossy_samples", new IECore::IntData( 2 ) );
-	options->addMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ) );
+	options->addOptionalMember( "ai:AA_samples", new IECore::IntData( 3 ), "aaSamples", false );
+	options->addOptionalMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), "giDiffuseSamples", false );
+	options->addOptionalMember( "ai:GI_glossy_samples", new IECore::IntData( 2 ), "giGlossySamples", false );
+	options->addOptionalMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ), "giRefractionSamples", false );
 
 	// ignore parameters
 	
-	options->addMember( "ai:ignore_textures", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_shaders", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_atmosphere", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_lights", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_shadows", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_subdivision", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_displacement", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_bump", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_motion_blur", new IECore::BoolData( false ) );
-	options->addMember( "ai:ignore_sss", new IECore::BoolData( false ) );
+	options->addOptionalMember( "ai:ignore_textures", new IECore::BoolData( false ), "ignoreTextures", false );
+	options->addOptionalMember( "ai:ignore_shaders", new IECore::BoolData( false ), "ignoreShaders", false );
+	options->addOptionalMember( "ai:ignore_atmosphere", new IECore::BoolData( false ), "ignoreAtmosphere", false );
+	options->addOptionalMember( "ai:ignore_lights", new IECore::BoolData( false ), "ignoreLights", false );
+	options->addOptionalMember( "ai:ignore_shadows", new IECore::BoolData( false ), "ignoreShadows", false );
+	options->addOptionalMember( "ai:ignore_subdivision", new IECore::BoolData( false ), "ignoreSubdivision", false );
+	options->addOptionalMember( "ai:ignore_displacement", new IECore::BoolData( false ), "ignoreDisplacement", false );
+	options->addOptionalMember( "ai:ignore_bump", new IECore::BoolData( false ), "ignoreBump", false );
+	options->addOptionalMember( "ai:ignore_motion_blur", new IECore::BoolData( false ), "ignoreMotionBlur", false );
+	options->addOptionalMember( "ai:ignore_sss", new IECore::BoolData( false ), "ignoreSSS", false );
 
 	// searchpath parameters
 	
-	options->addMember( "ai:texture_searchpath", new IECore::StringData( "" ) );
-	options->addMember( "ai:procedural_searchpath", new IECore::StringData( "" ) );
-	options->addMember( "ai:shader_searchpath", new IECore::StringData( "" ) );	
+	options->addOptionalMember( "ai:texture_searchpath", new IECore::StringData( "" ), "textureSearchPath", false );
+	options->addOptionalMember( "ai:procedural_searchpath", new IECore::StringData( "" ), "proceduralSearchPath", false );
+	options->addOptionalMember( "ai:shader_searchpath", new IECore::StringData( "" ), "shaderSearchPath", false );	
 
 	// error colours
 	
-	options->addMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ) );
-	options->addMember( "ai:error_color_bad_mesh", new IECore::Color3fData( Color3f( 0, 1, 0 ) ) );
-	options->addMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ) );
-	options->addMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ) );
+	options->addOptionalMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ), "errorColorBadTexture", false );
+	options->addOptionalMember( "ai:error_color_bad_mesh", new IECore::Color3fData( Color3f( 0, 1, 0 ) ), "errorColorBadMesh", false );
+	options->addOptionalMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ), "errorColorBadPixel", false );
+	options->addOptionalMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ), "errorColorBadShader", false );
 	
 }
 

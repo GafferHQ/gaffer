@@ -109,6 +109,7 @@ from ContextVariablesTest import ContextVariablesTest
 from ValuePlugTest import ValuePlugTest
 from RandomTest import RandomTest
 from ParameterPathTest import ParameterPathTest
+from CompoundDataPlugTest import CompoundDataPlugTest
 
 if __name__ == "__main__":
 	import unittest

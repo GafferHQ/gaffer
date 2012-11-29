@@ -64,9 +64,10 @@ bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) cons
 	return potentialChild->isInstanceOf( CompoundPlug::staticTypeId() );
 }
 
-Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value )
+Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value, const std::string &plugName )
 {
-	CompoundPlugPtr plug = new CompoundPlug( "member1", direction(), getFlags() );
+	CompoundPlugPtr plug = new CompoundPlug( plugName, direction(), getFlags() );
+	
 	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", getFlags() );
 	namePlug->setValue( name );
 	plug->addChild( namePlug );
@@ -150,6 +151,14 @@ Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, cons
 	return plug;
 }
 
+Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, bool enabled )
+{
+	CompoundPlug *plug = addMember( name, value, plugName );
+	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, getFlags() );
+	plug->addChild( e );
+	return plug;
+}
+
 void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters )
 {
 	for( CompoundDataMap::const_iterator it = parameters->readable().begin(); it!=parameters->readable().end(); it++ )
@@ -186,13 +195,21 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 
 IECore::DataPtr CompoundDataPlug::memberDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const
 {	
-	name = parameterPlug->getChild<StringPlug>( "name" )->getValue();
+	if( parameterPlug->children().size() == 3 )
+	{
+		if( !parameterPlug->getChild<BoolPlug>( 2 )->getValue() )
+		{
+			return 0;
+		}
+	}
+
+	name = parameterPlug->getChild<StringPlug>( 0 )->getValue();
 	if( !name.size() )
 	{
 		return 0;
 	}
 		
-	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( "value" );
+	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( 1 );
 	switch( valuePlug->typeId() )
 	{
 		case FloatPlugTypeId :

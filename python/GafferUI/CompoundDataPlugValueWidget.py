@@ -86,15 +86,15 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		
 	def __addItem( self, name, value ) :
 	
-		self.getPlug().addMember( name, value )
+		self.getPlug().addOptionalMember( name, value, enabled=True )
 
 class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, childPlug, label ) :
 	
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 	
-		GafferUI.PlugValueWidget.__init__( self, row, childPlug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
 				
 		if label is not None :
 			nameWidget = GafferUI.Label(
@@ -107,12 +107,22 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 			
 		## \todo This isn't working - maybe we need a FixedSizeContainer?
 		nameWidget._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
-		row.append( nameWidget )
+		self.__row.append( nameWidget )
 		
-		row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ) )
+		if "enabled" in childPlug :
+			self.__row.append( GafferUI.PlugValueWidget.create( childPlug["enabled"] ) )
+		
+		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ), expand = True )
+		
+		self._updateFromPlug()
 		
 	def _updateFromPlug( self ) :
 	
-		pass
+		if "enabled" in self.getPlug() :
+			with self.getContext() :
+				enabled = self.getPlug()["enabled"].getValue()
+				
+			self.__row[0].setEnabled( enabled )
+			self.__row[-1].setEnabled( enabled )
 						
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.staticTypeId(), CompoundDataPlugValueWidget )

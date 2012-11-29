@@ -32,6 +32,10 @@
 
 * Fixed crash when evaluating a ContextProcessor containing an entry with an empty name.
 
+* Added CompoundDataPlug::addOptionalMember(). This works as for addMember(), but adds an additional BoolPlug to allow the user to enable/disable that member. Both methods also take an additional parameter to specify the name of the plug used to represent the member.
+
+* ArnoldOptions and ArnoldAttributes nodes now create their plugs with sensible names, and allow options and attributes to be enabled and disabled - by default they are all disabled.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
