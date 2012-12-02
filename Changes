@@ -36,6 +36,8 @@
 
 * ArnoldOptions and ArnoldAttributes nodes now create their plugs with sensible names, and allow options and attributes to be enabled and disabled - by default they are all disabled.
 
+* Added a File/Settings... menu option which opens a window for editing the plugs of the ScriptNode.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

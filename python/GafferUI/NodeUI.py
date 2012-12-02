@@ -65,7 +65,10 @@ class NodeUI( GafferUI.Widget ) :
 		
 		if buildUI :
 			topLevelWidget.append( self._plugsWidget() )
-			if hasattr( node, "execute" ) :
+			# ScriptNode has an execute method but that is for something else.
+			## \todo Perhaps we need a more formalised way of defining which nodes
+			# are executable? Perhaps an interface class on the C++ side?
+			if hasattr( node, "execute" ) and not isinstance( node, Gaffer.ScriptNode ) :
 				topLevelWidget.append( GafferUI.ExecuteUI.ExecuteButton( self.__node ) )
 		
 			topLevelWidget.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )

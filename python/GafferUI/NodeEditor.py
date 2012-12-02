@@ -63,7 +63,11 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def acquire( cls, node ) :
 	
-		script = node.scriptNode()
+		if isinstance( node, Gaffer.ScriptNode ) :
+			script = node
+		else :
+			script = node.scriptNode()
+		
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 		
 		for editor in scriptWindow.getLayout().editors( type = GafferUI.NodeEditor ) :

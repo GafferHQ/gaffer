@@ -50,7 +50,9 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/OpenDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S" } )
 	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
-	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved }	)
+	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved } )
+	menuDefinition.append( prefix + "/SaveDivider", { "divider" : True } )
+	menuDefinition.append( prefix + "/Settings...", { "command" : showSettings } )
 
 ## A function suitable as the command for a File/New menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.
@@ -144,6 +146,25 @@ def revertToSaved( menu ) :
 		## \todo Warn
 		pass
 
+## A function suitable as the command for a File/Settings... menu item.
+def showSettings( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	
+	settingsWindow = None
+	for window in scriptWindow.childWindows() :
+		if hasattr( window, "_settingsEditor" ) :
+			settingsWindow = window
+			break
+	
+	if settingsWindow is None :
+		settingsWindow = GafferUI.Window( "Settings", borderWidth=8 )
+		settingsWindow._settingsEditor = True
+		settingsWindow.setChild( GafferUI.NodeUI.create( scriptWindow.scriptNode() ) )
+		scriptWindow.addChildWindow( settingsWindow )
+		
+	settingsWindow.setVisible( True )
+	
 def __scriptPathFilter() :
 
 	return Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] )
