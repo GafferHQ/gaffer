@@ -30,6 +30,10 @@
 
 * CompoundPlugs now accept input CompoundPlugs with more plugs than necessary, provided that the first N input child plugs match the N child plugs of the output. This allows Color3fPlugs to receive input directly from Color4fPlugs and arnold COLOR3 parameters to receive input from arnold COLOR4 outputs.
 
+* ArnoldOptions node now allows the specification of texture, shader and procedural searchpaths.
+
+* ArnoldRender node no longer specifies procedural location using a full path, allowing the procedural searchpath to be used if it has been set by an ArnoldOptions node.
+
 * Fixed crash when evaluating a ContextProcessor containing an entry with an empty name.
 
 * Added CompoundDataPlug::addOptionalMember(). This works as for addMember(), but adds an additional BoolPlug to allow the user to enable/disable that member. Both methods also take an additional parameter to specify the name of the plug used to represent the member.
