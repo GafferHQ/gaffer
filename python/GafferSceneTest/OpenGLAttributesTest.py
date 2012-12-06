@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,35 +34,29 @@
 #  
 ##########################################################################
 
+import IECore
+
+import Gaffer
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
-
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from OpenGLAttributesTest import OpenGLAttributesTest
-
+class OpenGLAttributesTest( GafferSceneTest.SceneTestCase ) :
+	
+	def test( self ) :
+	
+		p = GafferScene.Plane()
+		
+		a = GafferScene.OpenGLAttributes()
+		a["in"].setInput( p["out"] )
+		
+		aa = a["out"].attributes( "/plane" )
+		self.assertEqual( len( aa ), 0 )
+		
+		a["attributes"]["primitiveSolid"]["enabled"].setValue( True )
+		a["attributes"]["primitiveSolid"]["value"].setValue( False )
+		
+		aa = a["out"].attributes( "/plane" )
+		self.assertEqual( aa, IECore.CompoundObject( { "gl:primitive:solid" : IECore.BoolData( False ) } ) )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

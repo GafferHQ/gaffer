@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -141,6 +142,20 @@ Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, cons
 			plug->addChild( valuePlug );
 			break;
 		}
+		case Color4fDataTypeId :
+		{
+			Color4fPlugPtr valuePlug = new Color4fPlug(
+				"value",
+				direction(),
+				Color4f( 0 ),
+				Color4f( Imath::limits<float>::min() ),
+				Color4f( Imath::limits<float>::max() ),
+				getFlags()
+			);
+			valuePlug->setValue( static_cast<const Color4fData *>( value )->readable() );
+			plug->addChild( valuePlug );
+			break;
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Member \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
@@ -226,6 +241,9 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const CompoundPlug *paramet
 			break;
 		case Color3fPlugTypeId :
 			return new Color3fData( static_cast<const Color3fPlug *>( valuePlug )->getValue() );
+			break;
+		case Color4fPlugTypeId :
+			return new Color4fData( static_cast<const Color4fPlug *>( valuePlug )->getValue() );
 			break;	
 		default :
 			throw IECore::Exception(

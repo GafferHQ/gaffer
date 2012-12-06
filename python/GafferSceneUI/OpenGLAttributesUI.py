@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,35 +34,68 @@
 #  
 ##########################################################################
 
+import Gaffer
+import GafferUI
 import GafferScene
 
-from _GafferSceneTest import *
+GafferUI.PlugValueWidget.registerCreator(
+	
+	GafferScene.OpenGLAttributes.staticTypeId(),
+	"attributes",
+	GafferUI.SectionedCompoundDataPlugValueWidget,
+	sections = (
+	
+		(
+			"Drawing",
+			(
+				( "gl:primitive:solid", "Shaded" ),
+				
+				( "gl:primitive:wireframe", "Wireframe" ),
+				( "gl:primitive:wireframeColor", "Wireframe Color" ),
+				( "gl:primitive:wireframeWidth", "Wireframe Width" ),
+				
+				( "gl:primitive:outline", "Outline" ),
+				( "gl:primitive:outlineColor", "Outline Color" ),
+				( "gl:primitive:outlineWidth", "Outline Width" ),
+				
+				( "gl:primitive:points", "Points" ),
+				( "gl:primitive:pointColor", "Point Color" ),
+				( "gl:primitive:pointWidth", "Point Width" ),
+				
+				( "gl:primitive:bound", "Bound" ),
+				( "gl:primitive:boundColor", "Bound Color" ),
+				
+			),
+		),
+		
+		(
+			"Points Primitives",
+			(
+				( "gl:pointsPrimitive:useGLPoints", "Use GL Points" ),
+				( "gl:pointsPrimitive:glPointWidth", "GL Point Width" ),
+			),
+		),
+		
+		(
+			"Curves Primitives",
+			(
+				( "gl:curvesPrimitive:useGLLines", "Use GL Lines" ),
+				( "gl:curvesPrimitive:glLineWidth", "GL Line Width" ),
+				( "gl:curvesPrimitive:ignoreBasis", "Ignore Basis" ),
+			),
+		),
+		
+	),	
+	
+)
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from OpenGLAttributesTest import OpenGLAttributesTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.OpenGLAttributes.staticTypeId(),
+	"attributes.pointsPrimitiveUseGLPoints.value",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "For GL Points", "forGLPoints" ),
+		( "For Particles And Disks", "forParticlesAndDisks" ),
+		( "For All", "forAll" ),
+	),
+)

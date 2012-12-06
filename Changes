@@ -42,6 +42,10 @@
 
 * Added a File/Settings... menu option which opens a window for editing the plugs of the ScriptNode.
 
+* Gaffer::CompoundDataPlug now handles Color4fData.
+
+* Added a GafferScene::OpenGLAttributes node for controlling the drawing of objects in OpenGL.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

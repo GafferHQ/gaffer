@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,52 +34,26 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_OPENGLATTRIBUTES_H
+#define GAFFERSCENE_OPENGLATTRIBUTES_H
+
+#include "GafferScene/Attributes.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class OpenGLAttributes : public GafferScene::Attributes
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	OptionsTypeId = 110523,
-	ShaderTypeId = 110524,
-	AssignmentTypeId = 110525,
-	FilterTypeId = 110526,
-	PathFilterTypeId = 110527,
-	AttributesTypeId = 110528,
-	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
-	RenderCameraTypeId = 110532,
-	SubTreeTypeId = 110533,
-	OpenGLAttributesTypeId = 110534,
-	
-	LastTypeId = 110700
+
+	public :
+
+		OpenGLAttributes( const std::string &name=staticTypeName() );
+		virtual ~OpenGLAttributes();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenGLAttributes, OpenGLAttributesTypeId, Attributes );
+				
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_OPENGLATTRIBUTES_H
