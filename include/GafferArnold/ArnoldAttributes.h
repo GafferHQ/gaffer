@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ARNOLDATTRIBUTES_H
-#define GAFFERSCENE_ARNOLDATTRIBUTES_H
+#ifndef GAFFERARNOLD_ARNOLDATTRIBUTES_H
+#define GAFFERARNOLD_ARNOLDATTRIBUTES_H
 
 #include "GafferScene/Attributes.h"
 
@@ -58,4 +58,4 @@ class ArnoldAttributes : public GafferScene::Attributes
 
 } // namespace GafferArnold
 
-#endif // GAFFERSCENE_ARNOLDATTRIBUTES_H
+#endif // GAFFERARNOLD_ARNOLDATTRIBUTES_H

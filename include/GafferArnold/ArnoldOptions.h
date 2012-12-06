@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ARNOLDOPTIONS_H
-#define GAFFERSCENE_ARNOLDOPTIONS_H
+#ifndef GAFFERARNOLD_ARNOLDOPTIONS_H
+#define GAFFERARNOLD_ARNOLDOPTIONS_H
 
 #include "GafferScene/Options.h"
 
@@ -58,4 +58,4 @@ class ArnoldOptions : public GafferScene::Options
 
 } // namespace GafferArnold
 
-#endif // GAFFERSCENE_ARNOLDOPTIONS_H
+#endif // GAFFERARNOLD_ARNOLDOPTIONS_H
