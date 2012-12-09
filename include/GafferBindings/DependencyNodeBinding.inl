@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,55 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_OPHOLDER_H
-#define GAFFER_OPHOLDER_H
+#ifndef GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL
+#define GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL
 
-#include "Gaffer/ParameterisedHolder.h"
-
-namespace IECore
+namespace GafferBindings
 {
 
-IE_CORE_FORWARDDECLARE( Op )
-
-} // namespace IECore
-
-namespace Gaffer
+namespace Detail
 {
 
-IE_CORE_FORWARDDECLARE( ParameterHandler )
+// bindings for node wrapper functions
 
-class OpHolder : public ParameterisedHolderDependencyNode
+template<typename T>
+static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
 {
+	Gaffer::DependencyNode::AffectedPlugsContainer a;
+	n.T::affects( p, a );
+	boost::python::list result;
+	for( Gaffer::DependencyNode::AffectedPlugsContainer::const_iterator it=a.begin(); it!=a.end(); it++ )
+	{
+		result.append( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( *it ) ) );
+	}
+	return result;
+}
 
-	public :
+template<typename T, typename Ptr>
+void defDependencyNodeWrapperFunctions( NodeClass<T, Ptr> &cls )
+{
+	cls.def( "affects", &affects<T> );
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpHolder, OpHolderTypeId, ParameterisedHolderDependencyNode );
+} // namespace Detail
 
-		OpHolder( const std::string &name=staticTypeName() );
-			
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
-		
-		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues )
-		void setOp( const std::string &className, int classVersion, bool keepExistingValues=false );
-		/// Convenience function which returns runTimeCast<Op>( getParameterised() );
-		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
-		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
+template<typename T, typename Ptr>
+DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString )
+	:	NodeClass<T, Ptr>( docString )
+{
+	Detail::defDependencyNodeWrapperFunctions( *this );
+}
 
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-	
-	protected :
-	
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
-		
-	private :
-	
-		ParameterHandlerPtr m_resultParameterHandler;
-		
-};
+} // namespace GafferBindings
 
-IE_CORE_DECLAREPTR( OpHolder )
-
-} // namespace Gaffer
-
-#endif // GAFFER_OPHOLDER_H
+#endif // GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL

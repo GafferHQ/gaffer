@@ -37,8 +37,6 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_INL
 #define GAFFERBINDINGS_NODEBINDING_INL
 
-#include "IECorePython/Wrapper.h"
-
 namespace GafferBindings
 {
 
@@ -49,6 +47,11 @@ namespace Detail
 
 template<typename T, typename Ptr>
 struct IsWrapped : boost::is_base_of<IECorePython::Wrapper<T>, typename Ptr::element_type>
+{
+};
+
+template<typename T, typename Ptr>
+struct IsWrappedAndIsConcrete : boost::mpl::and_< IsWrapped<T, Ptr>, boost::mpl::not_< boost::is_abstract<typename Ptr::element_type> > >
 {
 };
 
@@ -73,7 +76,7 @@ typename T::Ptr nodeConstructor( const char *name, const boost::python::dict &in
 }
 
 template<typename T, typename Ptr>
-void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<IsWrapped<T, Ptr> >::type *enabler = 0 )
+void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<IsWrappedAndIsConcrete<T, Ptr> >::type *enabler = 0 )
 {
 	cls.def( boost::python::init< const std::string &, const boost::python::dict &, const boost::python::tuple & >
 		(
@@ -104,31 +107,17 @@ void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<IsNot
 }
 	
 template<typename T, typename Ptr>
-void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<boost::is_abstract<T> >::type *enabler = 0 )
+void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<boost::is_abstract<typename Ptr::element_type> >::type *enabler = 0 )
 {
 	// nothing to bind for abstract classes
 }
 
 // bindings for node wrapper functions
 
-template<typename T>
-static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
-{
-	Gaffer::Node::AffectedPlugsContainer a;
-	n.T::affects( p, a );
-	boost::python::list result;
-	for( Gaffer::Node::AffectedPlugsContainer::const_iterator it=a.begin(); it!=a.end(); it++ )
-	{
-		result.append( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( *it ) ) );
-	}
-	return result;
-}
-
 template<typename T, typename Ptr>
 void defNodeWrapperFunctions( NodeClass<T, Ptr> &cls )
 {
 	cls.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( T );
-	cls.def( "affects", &affects<T> );
 }
 
 } // namespace Detail

@@ -37,7 +37,7 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/FileSource.h"
@@ -94,32 +94,32 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		)
 	;
 
-	GafferBindings::NodeClass<SceneNode>();
-	GafferBindings::NodeClass<Source>();
-	GafferBindings::NodeClass<FileSource>();
-	GafferBindings::NodeClass<ModelCacheSource>();
-	GafferBindings::NodeClass<SceneProcessor>();
-	GafferBindings::NodeClass<SceneElementProcessor>();
-	GafferBindings::NodeClass<AttributeCache>();
-	GafferBindings::NodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::NodeClass<DeletePrimitiveVariables>();
-	GafferBindings::NodeClass<Group>();
-	GafferBindings::NodeClass<SceneContextProcessorBase>();
-	GafferBindings::NodeClass<SceneContextProcessor>();
-	GafferBindings::NodeClass<SceneTimeWarp>();
-	GafferBindings::NodeClass<ObjectSource>();
-	GafferBindings::NodeClass<Plane>();
-	GafferBindings::NodeClass<BranchCreator>();
-	GafferBindings::NodeClass<Seeds>();
-	GafferBindings::NodeClass<Instancer>();
-	GafferBindings::NodeClass<ObjectToScene>();
-	GafferBindings::NodeClass<Camera>();
-	GafferBindings::NodeClass<GlobalsProcessor>();
+	GafferBindings::DependencyNodeClass<SceneNode>();
+	GafferBindings::DependencyNodeClass<Source>();
+	GafferBindings::DependencyNodeClass<FileSource>();
+	GafferBindings::DependencyNodeClass<ModelCacheSource>();
+	GafferBindings::DependencyNodeClass<SceneProcessor>();
+	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
+	GafferBindings::DependencyNodeClass<AttributeCache>();
+	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
+	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<Group>();
+	GafferBindings::DependencyNodeClass<SceneContextProcessorBase>();
+	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
+	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
+	GafferBindings::DependencyNodeClass<ObjectSource>();
+	GafferBindings::DependencyNodeClass<Plane>();
+	GafferBindings::DependencyNodeClass<BranchCreator>();
+	GafferBindings::DependencyNodeClass<Seeds>();
+	GafferBindings::DependencyNodeClass<Instancer>();
+	GafferBindings::DependencyNodeClass<ObjectToScene>();
+	GafferBindings::DependencyNodeClass<Camera>();
+	GafferBindings::DependencyNodeClass<GlobalsProcessor>();
 
 	bindDisplays();
 	bindPathMatcher();
 	
-	GafferBindings::NodeClass<Options>();
+	GafferBindings::DependencyNodeClass<Options>();
 	
 	GafferBindings::NodeClass<Shader>()
 		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
@@ -127,10 +127,10 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		.def( "state", &Shader::state )
 	;
 	
-	GafferBindings::NodeClass<Assignment>();
+	GafferBindings::DependencyNodeClass<Assignment>();
 	
 	{
-		scope s = GafferBindings::NodeClass<Filter>();
+		scope s = GafferBindings::DependencyNodeClass<Filter>();
 	
 		enum_<Filter::Result>( "Result" )
 			.value( "NoMatch", Filter::NoMatch )
@@ -139,12 +139,12 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		;
 	}
 				
-	GafferBindings::NodeClass<PathFilter>();
-	GafferBindings::NodeClass<Attributes>();
-	GafferBindings::NodeClass<AlembicSource>();
-	GafferBindings::NodeClass<SceneContextVariables>();
-	GafferBindings::NodeClass<RenderCamera>();
-	GafferBindings::NodeClass<SubTree>();
+	GafferBindings::DependencyNodeClass<PathFilter>();
+	GafferBindings::DependencyNodeClass<Attributes>();
+	GafferBindings::DependencyNodeClass<AlembicSource>();
+	GafferBindings::DependencyNodeClass<SceneContextVariables>();
+	GafferBindings::DependencyNodeClass<RenderCamera>();
+	GafferBindings::DependencyNodeClass<SubTree>();
 	GafferBindings::NodeClass<OpenGLAttributes>();
 
 }

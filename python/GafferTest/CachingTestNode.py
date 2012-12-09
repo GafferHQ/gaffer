@@ -37,11 +37,11 @@
 import IECore
 import Gaffer
 
-class CachingTestNode( Gaffer.Node ) :
+class CachingTestNode( Gaffer.DependencyNode ) :
 		
 	def __init__( self, name="CachingTestNode", inputs={}, dynamicPlugs=() ) :
 
-		Gaffer.Node.__init__( self, name )
+		Gaffer.DependencyNode.__init__( self, name )
 
 		self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )

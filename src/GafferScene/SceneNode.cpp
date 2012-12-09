@@ -49,7 +49,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneNode );
 size_t SceneNode::g_firstPlugIndex = 0;
 
 SceneNode::SceneNode( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "out", Gaffer::Plug::Out ) );

@@ -39,7 +39,7 @@ import unittest
 import Gaffer
 import GafferTest
 
-class TimeWarpNodeTest( unittest.TestCase ) :
+class TimeWarpDependencyNodeTest( unittest.TestCase ) :
 
 	def test( self ) :
 	
@@ -52,7 +52,7 @@ class TimeWarpNodeTest( unittest.TestCase ) :
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
 		
-		s["w"] = Gaffer.TimeWarpNode()
+		s["w"] = Gaffer.TimeWarpDependencyNode()
 		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
 		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )
@@ -81,7 +81,7 @@ class TimeWarpNodeTest( unittest.TestCase ) :
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
 					
-		s["w"] = Gaffer.TimeWarpNode()
+		s["w"] = Gaffer.TimeWarpDependencyNode()
 		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
 		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )

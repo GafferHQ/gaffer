@@ -38,11 +38,11 @@ import IECore
 
 import Gaffer
 
-class BadNode( Gaffer.Node ) :
+class BadNode( Gaffer.DependencyNode ) :
 		
 	def __init__( self, name="BadNode", inputs={}, dynamicPlugs=() ) :
 
-		Gaffer.Node.__init__( self, name )
+		Gaffer.DependencyNode.__init__( self, name )
 
 		self.addChild( Gaffer.IntPlug( "in1", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.IntPlug( "in2", Gaffer.Plug.Direction.In ) )

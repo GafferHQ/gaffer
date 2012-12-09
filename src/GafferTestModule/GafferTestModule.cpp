@@ -34,7 +34,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferTest/MultiplyNode.h"
 
@@ -43,6 +43,6 @@ using namespace GafferTest;
 BOOST_PYTHON_MODULE( _GafferTest )
 {
 	
-	GafferBindings::NodeClass<MultiplyNode>();
+	GafferBindings::DependencyNodeClass<MultiplyNode>();
 
 }

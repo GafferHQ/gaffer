@@ -87,8 +87,6 @@ class Shader : public Gaffer::Node
 		
 		virtual void shaderHash( IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const = 0;
-			
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 };
 

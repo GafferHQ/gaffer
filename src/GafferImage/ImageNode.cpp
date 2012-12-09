@@ -47,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( ImageNode );
 
 ImageNode::ImageNode( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 	addChild( new ImagePlug( "out", Gaffer::Plug::Out ) );
 }
@@ -68,7 +68,7 @@ const ImagePlug *ImageNode::outPlug() const
 
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Node::hash( output, context, h );
+	DependencyNode::hash( output, context, h );
 	if( output == outPlug()->channelDataPlug() )
 	{
 		h.append( context->get<string>( ImagePlug::channelNameContextName ) );

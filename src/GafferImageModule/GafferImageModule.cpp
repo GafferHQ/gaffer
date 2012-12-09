@@ -36,7 +36,7 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageReader.h"
@@ -74,15 +74,15 @@ BOOST_PYTHON_MODULE( _GafferImage )
 		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
 	;
 
-	GafferBindings::NodeClass<ImageNode>();
-	GafferBindings::NodeClass<ImageReader>();
-	GafferBindings::NodeClass<ImagePrimitiveNode>();
-	GafferBindings::NodeClass<Display>()
+	GafferBindings::DependencyNodeClass<ImageNode>();
+	GafferBindings::DependencyNodeClass<ImageReader>();
+	GafferBindings::DependencyNodeClass<ImagePrimitiveNode>();
+	GafferBindings::DependencyNodeClass<Display>()
 		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 	;
-	GafferBindings::NodeClass<ImageProcessor>();
-	GafferBindings::NodeClass<ChannelDataProcessor>();
-	GafferBindings::NodeClass<OpenColorIO>();
+	GafferBindings::DependencyNodeClass<ImageProcessor>();
+	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
+	GafferBindings::DependencyNodeClass<OpenColorIO>();
 
 }

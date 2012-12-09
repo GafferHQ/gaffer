@@ -56,11 +56,6 @@ Node::UnaryPlugSignal &Node::plugSetSignal()
 	return m_plugSetSignal;
 }
 
-Node::UnaryPlugSignal &Node::plugDirtiedSignal()
-{
-	return m_plugDirtiedSignal;
-}
-
 Node::UnaryPlugSignal &Node::plugInputChangedSignal()
 {
 	return m_plugInputChangedSignal;
@@ -102,20 +97,6 @@ bool Node::acceptsParent( const GraphComponent *potentialParent ) const
 bool Node::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 {
 	return true;
-}
-
-void Node::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
-{
-}
-
-void Node::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( typeId() );
-	h.append( output->relativeName( this ) );
-}
-
-void Node::compute( ValuePlug *output, const Context *context ) const
-{
 }
 
 void Node::parentChanging( Gaffer::GraphComponent *newParent )

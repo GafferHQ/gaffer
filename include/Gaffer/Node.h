@@ -39,19 +39,14 @@
 #define GAFFER_NODE_H
 
 #include "Gaffer/GraphComponent.h"
-#include "Gaffer/PlugIterator.h"
 #include "Gaffer/FilteredChildIterator.h"
-
-#include "IECore/Object.h"
 
 namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( ValuePlug )
-IE_CORE_FORWARDDECLARE( Node )
 IE_CORE_FORWARDDECLARE( ScriptNode )
-IE_CORE_FORWARDDECLARE( Context )
 
 class Node : public GraphComponent
 {
@@ -65,9 +60,7 @@ class Node : public GraphComponent
 
 		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
 		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;
-		
-		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
-		
+				
 		/// @name Plug signals
 		/// These signals are emitted on events relating to child Plugs
 		/// of this Node. They are implemented on the Node rather than
@@ -75,10 +68,9 @@ class Node : public GraphComponent
 		/// of signals.
 		//////////////////////////////////////////////////////////////
 		//@{
-		/// Called when the value on a plug of this node is set.
+		/// Called when the value of an unconnected input plug of
+		/// this node is set.
 		UnaryPlugSignal &plugSetSignal();
-		/// Called when a plug of this node is dirtied.
-		UnaryPlugSignal &plugDirtiedSignal();
 		/// Called when the input changes on a plug of this node.
 		UnaryPlugSignal &plugInputChangedSignal();
 		/// Called when the flags are changed for a plug of this node.
@@ -94,11 +86,7 @@ class Node : public GraphComponent
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-				
-		/// Must be implemented to fill outputs with all the plugs whose computation
-		/// will be affected by the specified input.
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-		
+						
 	protected :
 
 		/// May be overridden to restrict the inputs that plugs on this node will
@@ -110,19 +98,6 @@ class Node : public GraphComponent
 		/// which calls through to this.
 		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
 		
-		/// Called to compute the hashes for output Plugs. Must be implemented to call the base
-		/// class method, then call input->hash( h ) for all input plugs used in the computation
-		/// of output. Must also hash in the value of any context items that will be accessed by
-		/// the computation.
-		///
-		/// In the special case that the node will pass through a value from an input plug
-		/// unchanged, the hash for the input plug should be assigned directly to the result
-		/// (rather than appended) - this allows cache entries to be shared.
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		/// Called to compute the values for output Plugs. Must be implemented to compute
-		/// an appropriate value and apply it using output->setValue().
-		virtual void compute( ValuePlug *output, const Context *context ) const;
-
 		/// Implemented to remove all connections when the node is being
 		/// unparented.
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
@@ -130,14 +105,14 @@ class Node : public GraphComponent
 	private :
 		
 		friend class Plug;
-		friend class ValuePlug;
 	
 		UnaryPlugSignal m_plugSetSignal;
-		UnaryPlugSignal m_plugDirtiedSignal;
 		UnaryPlugSignal m_plugInputChangedSignal;
 		UnaryPlugSignal m_plugFlagsChangedSignal;
 		
 };
+
+IE_CORE_DECLAREPTR( Node )
 
 typedef FilteredChildIterator<TypePredicate<Node> > ChildNodeIterator;
 

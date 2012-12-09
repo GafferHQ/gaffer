@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -243,8 +243,10 @@ namespace Gaffer
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderNode, ParameterisedHolderNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeTypeId )
 
 }
 
 // explicit instantiation
 template class ParameterisedHolder<Node>;
+template class ParameterisedHolder<DependencyNode>;

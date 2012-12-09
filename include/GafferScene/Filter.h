@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_FILTER_H
 #define GAFFERSCENE_FILTER_H
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferScene/TypeIds.h"
@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class Filter : public Gaffer::Node
+class Filter : public Gaffer::DependencyNode
 {
 
 	public :
@@ -57,7 +57,7 @@ class Filter : public Gaffer::Node
 			Match = 2
 		};
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Filter, FilterTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Filter, FilterTypeId, Gaffer::DependencyNode );
 
 		Filter( const std::string &name=staticTypeName() );
 		virtual ~Filter();

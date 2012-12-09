@@ -68,6 +68,7 @@
 #include "GafferBindings/TransformPlugBinding.h"
 #include "GafferBindings/CompoundDataPlugBinding.h"
 #include "GafferBindings/RandomBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -79,6 +80,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSignal();
 	bindGraphComponent();
 	bindNode();
+	bindDependencyNode();
 	bindPlug();
 	bindValuePlug();
 	bindNumericPlug();
@@ -105,9 +107,9 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindTransformPlug();
 	bindCompoundDataPlug();
 	bindRandom();
-		
-	NodeClass<ContextProcessorNode>();
-	NodeClass<TimeWarpNode>();
-	NodeClass<ContextVariablesNode>();
+			
+	DependencyNodeClass<ContextProcessorDependencyNode>();
+	DependencyNodeClass<TimeWarpDependencyNode>();
+	DependencyNodeClass<ContextVariablesDependencyNode>();
 
 }

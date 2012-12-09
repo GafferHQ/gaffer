@@ -48,7 +48,7 @@ IE_CORE_DEFINERUNTIMETYPED( Random );
 size_t Random::g_firstPlugIndex = 0;
 
 Random::Random( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -163,7 +163,7 @@ const Color3fPlug *Random::outColorPlug() const
 
 void Random::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	Node::affects( input, outputs );
+	DependencyNode::affects( input, outputs );
 	
 	if( input == seedPlug() || input == contextEntryPlug() )
 	{
@@ -187,7 +187,7 @@ void Random::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) 
 
 void Random::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	Node::hash( output, context, h );
+	DependencyNode::hash( output, context, h );
 	
 	if( output == outFloatPlug() )
 	{
@@ -211,6 +211,7 @@ void Random::compute( ValuePlug *output, const Context *context ) const
 		Rand48 random( computeSeed( context ) );
 		V2f range = floatRangePlug()->getValue();
 		static_cast<FloatPlug *>( output )->setValue( lerp( range[0], range[1], random.nextf() ) );
+		return;
 	}
 	else if( output->parent<Plug>() == outColorPlug() )
 	{
@@ -230,8 +231,10 @@ void Random::compute( ValuePlug *output, const Context *context ) const
 			result = c[2];
 		}
 		
-		static_cast<FloatPlug *>( output )->setValue( result );		
+		static_cast<FloatPlug *>( output )->setValue( result );
+		return;
 	}
+	DependencyNode::compute( output, context );	
 }
 
 Imath::Color3f Random::randomColor( unsigned long int seed ) const

@@ -45,7 +45,7 @@
 #include "IECore/LRUCache.h"
 
 #include "Gaffer/ValuePlug.h"
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Action.h"
 
@@ -168,10 +168,10 @@ class ValuePlug::Computation
 			}
 			else
 			{
-				const Node *n = m_resultPlug->node();
+				const DependencyNode *n = m_resultPlug->ancestor<DependencyNode>();
 				if( !n )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for orphan Plug \"%s\"." ) % m_resultPlug->fullName() ) );			
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no DependencyNode." ) % m_resultPlug->fullName() ) );			
 				}
 				// cast is ok - see comment above.
 				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
@@ -313,16 +313,16 @@ IECore::MurmurHash ValuePlug::hash() const
 		}
 		else
 		{
-			const Node *n = node();
+			const DependencyNode *n = ancestor<DependencyNode>();
 			if( !n )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for orphan Plug \"%s\"." ) % fullName() ) );			
+				throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no DependencyNode." ) % fullName() ) );			
 			}
 			IECore::MurmurHash emptyHash;
 			n->hash( this, Context::current(), h );
 			if( h == emptyHash )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Node::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
+				throw IECore::Exception( boost::str( boost::format( "DependencyNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
 			}
 		}
 	}
@@ -409,9 +409,9 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
 	propagateDirtiness();
 }
 
-void ValuePlug::emitDirtiness( Node *n )
+void ValuePlug::emitDirtiness( DependencyNode *n )
 {
-	n = n ? n : node();
+	n = n ? n : ancestor<DependencyNode>();
 	if( !n )
 	{
 		return;
@@ -427,14 +427,14 @@ void ValuePlug::emitDirtiness( Node *n )
 
 void ValuePlug::propagateDirtiness()
 {
-	Node *n = node();
+	DependencyNode *n = ancestor<DependencyNode>();
 	if( n )
 	{
 		if( direction()==In )
 		{
-			Node::AffectedPlugsContainer affected;
+			DependencyNode::AffectedPlugsContainer affected;
 			n->affects( this, affected );
-			for( Node::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
+			for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
 			{
 				const_cast<ValuePlug *>( *it )->emitDirtiness( n );
 				const_cast<ValuePlug *>( *it )->propagateDirtiness();

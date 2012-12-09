@@ -172,7 +172,7 @@ const Gaffer::IntPlug *Display::portPlug() const
 	return getChild<IntPlug>( "port" );
 }
 				
-void Display::affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const
+void Display::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImagePrimitiveNode::affects( input, outputs );
 	

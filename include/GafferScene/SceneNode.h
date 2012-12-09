@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_SCENENODE_H
 #define GAFFERSCENE_SCENENODE_H
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 
 #include "GafferScene/ScenePlug.h"
 
@@ -46,7 +46,7 @@ namespace GafferScene
 
 /// The SceneNode class is the base class for all Nodes which are capable of generating
 /// or processing scene graphs.
-class SceneNode : public Gaffer::Node
+class SceneNode : public Gaffer::DependencyNode
 {
 
 	public :
@@ -54,7 +54,7 @@ class SceneNode : public Gaffer::Node
 		SceneNode( const std::string &name=staticTypeName() );
 		virtual ~SceneNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneNode, SceneNodeTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneNode, SceneNodeTypeId, Gaffer::DependencyNode );
 		
 		/// All SceneNodes have at least one output ScenePlug for passing on their result. More
 		/// may be added by derived classes if necessary.

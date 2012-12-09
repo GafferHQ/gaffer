@@ -47,12 +47,13 @@
 
 #include "GafferBindings/ParameterisedHolderBinding.h"
 #include "GafferBindings/ProceduralHolderBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-typedef ParameterisedHolderWrapper<ProceduralHolder> ProceduralHolderWrapper;
+typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ProceduralHolder> > ProceduralHolderWrapper;
 IE_CORE_DECLAREPTR( ProceduralHolderWrapper );
 
 static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
@@ -63,7 +64,7 @@ static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
 void GafferBindings::bindProceduralHolder()
 {
 	
-	GafferBindings::NodeClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
+	GafferBindings::DependencyNodeClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
 		.def( "setProcedural", &ProceduralHolder::setProcedural )
 		.def( "getProcedural", &getProcedural )
 	;

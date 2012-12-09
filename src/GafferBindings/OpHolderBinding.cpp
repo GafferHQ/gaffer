@@ -47,12 +47,13 @@
 
 #include "GafferBindings/ParameterisedHolderBinding.h"
 #include "GafferBindings/OpHolderBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-typedef ParameterisedHolderWrapper<OpHolder> OpHolderWrapper;
+typedef ParameterisedHolderWrapper<DependencyNodeWrapper<OpHolder> > OpHolderWrapper;
 IE_CORE_DECLAREPTR( OpHolderWrapper );
 
 static IECore::OpPtr getOp( OpHolder &n )
@@ -63,7 +64,7 @@ static IECore::OpPtr getOp( OpHolder &n )
 void GafferBindings::bindOpHolder()
 {
 	
-	NodeClass<OpHolder, OpHolderWrapperPtr>()
+	DependencyNodeClass<OpHolder, OpHolderWrapperPtr>()
 		.def(
 			"setOp",
 			&OpHolder::setOp,

@@ -37,7 +37,7 @@
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferScene/Displays.h"
 
@@ -73,7 +73,7 @@ static tuple registeredDisplaysWrapper()
 
 void GafferSceneBindings::bindDisplays()
 {
-	NodeClass<Displays>()
+	DependencyNodeClass<Displays>()
 		.def( "addDisplay", &addDisplayWrapper1 )
 		.def( "addDisplay", &addDisplayWrapper2 )
 		.def( "registerDisplay", &Displays::registerDisplay ).staticmethod( "registerDisplay" )

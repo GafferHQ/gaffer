@@ -56,7 +56,7 @@ ContextProcessor<BaseType>::~ContextProcessor()
 }
 
 template<typename BaseType>
-void ContextProcessor<BaseType>::affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const
+void ContextProcessor<BaseType>::affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
 	
@@ -68,7 +68,7 @@ void ContextProcessor<BaseType>::affects( const ValuePlug *input, Node::Affected
 }
 
 template<typename BaseType>
-void ContextProcessor<BaseType>::appendAffectedPlugs( Node::AffectedPlugsContainer &outputs ) const
+void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
 	for( OutputPlugIterator it( n ); it != it.end(); it++ )

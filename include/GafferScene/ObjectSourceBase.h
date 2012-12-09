@@ -63,7 +63,7 @@ class ObjectSourceBase : public BaseType
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;
 		
-		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::Node::AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 

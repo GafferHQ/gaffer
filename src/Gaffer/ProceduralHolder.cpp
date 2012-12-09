@@ -47,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( ProceduralHolder )
 
 ProceduralHolder::ProceduralHolder( const std::string &name )
-	:	ParameterisedHolderNode( name )
+	:	ParameterisedHolderDependencyNode( name )
 {
 
 	addChild(
@@ -70,14 +70,14 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
 		throw IECore::Exception( "Parameterised object is not an IECore::ParameterisedProcedural" );
 	}
 	
-	ParameterisedHolderNode::setParameterised( parameterised );
+	ParameterisedHolderDependencyNode::setParameterised( parameterised );
 	
 	plugDirtiedSignal()( getChild<ObjectPlug>( "output" ) );
 }
 
 void ProceduralHolder::setProcedural( const std::string &className, int classVersion )
 {
-	ParameterisedHolderNode::setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" );
+	ParameterisedHolderDependencyNode::setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" );
 }
 
 IECore::ParameterisedProceduralPtr ProceduralHolder::getProcedural( std::string *className, int *classVersion )
@@ -92,6 +92,8 @@ IECore::ConstParameterisedProceduralPtr ProceduralHolder::getProcedural( std::st
 
 void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
+	ParameterisedHolderDependencyNode::affects( input, outputs );
+	
 	const Plug *parametersPlug = getChild<Plug>( "parameters" );
 	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
 	{
@@ -99,11 +101,14 @@ void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &
 	}
 }
 
-void ProceduralHolder::compute( Plug *output, const Context *context ) const
+void ProceduralHolder::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
 	{	
 		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
 		static_cast<ObjectPlug *>( output )->setValue( getProcedural() );
+		return;
 	}
+	
+	ParameterisedHolderDependencyNode::compute( output, context );	
 }

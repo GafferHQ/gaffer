@@ -80,14 +80,6 @@ void Shader::shaderHash( IECore::MurmurHash &h ) const
 	h.append( typeId() );
 }
 
-/// \todo We should perhaps move the compute() method onto a new DependencyNode class,
-/// so that nodes like Shader can derive straight from Node and not have any requirement
-/// to implement compute().
-void Shader::compute( ValuePlug *output, const Context *context ) const
-{
-	output->setToDefault();
-}
-
 //////////////////////////////////////////////////////////////////////////
 // NetworkBuilder implementation
 //////////////////////////////////////////////////////////////////////////

@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 ## This class is used by the CompoundNumericPlugTest.
@@ -47,10 +49,4 @@ class CompoundNumericNode( Gaffer.Node ) :
 
 		self._init( inputs, dynamicPlugs )
 
-	def dirty( self, inputPlug ) :
-	
-		pass
-
-	def typeName( self ) :
-	
-		return "CompoundNumericNode"
+IECore.registerRunTimeTyped( CompoundNumericNode )

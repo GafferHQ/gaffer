@@ -44,7 +44,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( MultiplyNode )
 
 MultiplyNode::MultiplyNode( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 	addChild( new IntPlug( "op1" ) );
 	addChild( new IntPlug( "op2" ) );
@@ -57,6 +57,8 @@ MultiplyNode::~MultiplyNode()
 
 void MultiplyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
+	DependencyNode::affects( input, outputs );
+	
 	if( input == getChild<IntPlug>( "op1" ) || input == getChild<IntPlug>( "op2" ) )
 	{
 		outputs.push_back( getChild<IntPlug>( "product" ) );
@@ -65,6 +67,8 @@ void MultiplyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outp
 
 void  MultiplyNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	DependencyNode::hash( output, context, h );
+	
 	if( output == getChild<IntPlug>( "product" ) )
 	{
 		getChild<IntPlug>( "op1" )->hash( h );
@@ -80,5 +84,8 @@ void MultiplyNode::compute( ValuePlug *output, const Context *context ) const
 			getChild<IntPlug>( "op1" )->getValue() *
 			getChild<IntPlug>( "op2" )->getValue()
 		);
+		return;
 	}
+	
+	DependencyNode::compute( output, context );
 }

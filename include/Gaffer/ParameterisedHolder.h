@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,7 +38,7 @@
 #ifndef GAFFER_PARAMETERISEDHOLDER_H
 #define GAFFER_PARAMETERISEDHOLDER_H
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 
 namespace IECore
 {
@@ -123,8 +123,10 @@ class ParameterisedHolder : public BaseType
 };
 
 typedef ParameterisedHolder<Node> ParameterisedHolderNode;
+typedef ParameterisedHolder<DependencyNode> ParameterisedHolderDependencyNode;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNode )
+IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNode )
 
 } // namespace Gaffer
 

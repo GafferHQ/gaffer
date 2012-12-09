@@ -44,6 +44,8 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( DependencyNode )
+
 /// The Plug base class defines the concept of a connection
 /// point with direction. The ValuePlug class extends this concept
 /// to allow the connections to pass values between connection
@@ -144,7 +146,7 @@ class ValuePlug : public Plug
 		/// Emits the dirty signal for this plug, and all ancestor ValuePlugs up
 		/// to node(). The result of node() can be passed to avoid repeatedly
 		/// finding the node in the case of making repeated calls.
-		void emitDirtiness( Node *n = 0 );
+		void emitDirtiness( DependencyNode *n = 0 );
 		/// Calls emitDirtiness() on affected plugs and output connections.
 		void propagateDirtiness();
 	

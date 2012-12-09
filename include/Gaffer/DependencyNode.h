@@ -34,45 +34,63 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTVARIABLES_H
-#define GAFFER_CONTEXTVARIABLES_H
+#ifndef GAFFER_DEPENDENCYNODE_H
+#define GAFFER_DEPENDENCYNODE_H
 
-#include "Gaffer/ContextProcessor.h"
-#include "Gaffer/CompoundDataPlug.h"
+#include "IECore/MurmurHash.h"
+
+#include "Gaffer/Node.h"
 
 namespace Gaffer
 {
 
-template<typename BaseType>
-class ContextVariables : public ContextProcessor<BaseType>
+IE_CORE_FORWARDDECLARE( Context )
+
+class DependencyNode : public Node
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextVariables<BaseType>, ContextProcessor<BaseType> );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextVariables<BaseType> );
+		DependencyNode( const std::string &name=staticTypeName() );
+		virtual ~DependencyNode();
 
-		ContextVariables( const std::string &name=staticTypeName() );
-		virtual ~ContextVariables();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DependencyNode, DependencyNodeTypeId, Node );
+
+		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
 		
-		CompoundDataPlug *variablesPlug();
-		const CompoundDataPlug *variablesPlug() const;
-
-		void affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		/// Called when a plug of this node is dirtied - this signifies that
+		/// any previously calculated values are invalid and should be recalculated.
+		UnaryPlugSignal &plugDirtiedSignal();
+				
+		/// Must be implemented to fill outputs with all the plugs whose computation
+		/// will be affected by the specified input.
+		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const = 0;
 		
 	protected :
-
-		virtual void processContext( Context *context ) const;		
-	
+		
+		/// Called to compute the hashes for output Plugs. Must be implemented to call the base
+		/// class method, then call input->hash( h ) for all input plugs used in the computation
+		/// of output. Must also hash in the value of any context items that will be accessed by
+		/// the computation.
+		///
+		/// In the special case that the node will pass through a value from an input plug
+		/// unchanged, the hash for the input plug should be assigned directly to the result
+		/// (rather than appended) - this allows cache entries to be shared.
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const = 0;
+		/// Called to compute the values for output Plugs. Must be implemented to compute
+		/// an appropriate value and apply it using output->setValue().
+		virtual void compute( ValuePlug *output, const Context *context ) const = 0;
+		
 	private :
-	
-		static size_t g_firstPlugIndex;
+			
+		friend class ValuePlug;
+
+		UnaryPlugSignal m_plugDirtiedSignal;
 		
 };
 
-typedef ContextVariables<DependencyNode> ContextVariablesDependencyNode;
-IE_CORE_DECLAREPTR( ContextVariablesDependencyNode );
+typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;
 
 } // namespace Gaffer
 
-#endif // GAFFER_CONTEXTVARIABLES_H
+#endif // GAFFER_DEPENDENCYNODE_H

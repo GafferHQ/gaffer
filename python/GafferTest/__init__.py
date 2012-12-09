@@ -98,7 +98,7 @@ from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
 from ExpressionNodeTest import ExpressionNodeTest
 from BlockedConnectionTest import BlockedConnectionTest
-from TimeWarpNodeTest import TimeWarpNodeTest
+from TimeWarpDependencyNodeTest import TimeWarpDependencyNodeTest
 from TransformPlugTest import TransformPlugTest
 from SequencePathTest import SequencePathTest
 from OpMatcherTest import OpMatcherTest
@@ -110,6 +110,7 @@ from ValuePlugTest import ValuePlugTest
 from RandomTest import RandomTest
 from ParameterPathTest import ParameterPathTest
 from CompoundDataPlugTest import CompoundDataPlugTest
+from DependencyNodeTest import DependencyNodeTest
 
 if __name__ == "__main__":
 	import unittest

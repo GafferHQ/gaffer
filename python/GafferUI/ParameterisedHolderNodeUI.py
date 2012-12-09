@@ -66,6 +66,7 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 				parameters.plugValueWidget().setReadOnly( readOnly )
 				
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), ParameterisedHolderNodeUI )
 
 def __parameterNoduleCreator( plug ) :
 	
@@ -75,4 +76,7 @@ def __parameterNoduleCreator( plug ) :
 		return None
 
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
+
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )

@@ -42,7 +42,7 @@
 #include "IECorePython/Wrapper.h"
 
 #include "Gaffer/ExpressionNode.h"
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExpressionNodeBinding.h"
 #include "GafferBindings/TranslatePythonException.h"
 
@@ -196,7 +196,7 @@ static tuple registeredEnginesWrapper()
 void GafferBindings::bindExpressionNode()
 {
 	
-	scope s = NodeClass<ExpressionNode>();
+	scope s = DependencyNodeClass<ExpressionNode>();
 	
 	IECorePython::RefCountedClass<ExpressionNode::Engine, IECore::RefCounted, EngineWrapperPtr>( "Engine" )
 		.def( init<>() )

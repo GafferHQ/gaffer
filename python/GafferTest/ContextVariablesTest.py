@@ -50,7 +50,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		n = GafferTest.StringInOutNode()
 		self.assertHashesValid( n )
 		
-		c = Gaffer.ContextVariablesNode()
+		c = Gaffer.ContextVariablesDependencyNode()
 		c["in"] = Gaffer.StringPlug()
 		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
 		c["in"].setInput( n["out"] )

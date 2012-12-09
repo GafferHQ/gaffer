@@ -39,11 +39,11 @@ import IECore
 import Gaffer
 
 ## This class is used by the CompoundPlugTest.
-class CompoundPlugNode( Gaffer.Node ) :
+class CompoundPlugNode( Gaffer.DependencyNode ) :
 
 	def __init__( self, name="Test", inputs={}, dynamicPlugs=() ) :
 	
-		Gaffer.Node.__init__( self, name )
+		Gaffer.DependencyNode.__init__( self, name )
 		
 		p = Gaffer.CompoundPlug( name = "p" )
 		c1 = Gaffer.FloatPlug( name = "f" )

@@ -36,7 +36,7 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ArnoldOptions.h"
@@ -52,7 +52,7 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 		.def( "setShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::setShader )
 	;
 
-	GafferBindings::NodeClass<ArnoldOptions>();
-	GafferBindings::NodeClass<ArnoldAttributes>();
+	GafferBindings::DependencyNodeClass<ArnoldOptions>();
+	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
 
 }

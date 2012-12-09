@@ -37,7 +37,7 @@
 #include "boost/python.hpp"
 
 #include "Gaffer/Random.h"
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/RandomBinding.h"
 
 using namespace boost::python;
@@ -47,7 +47,7 @@ using namespace Gaffer;
 void GafferBindings::bindRandom()
 {
 	
-	NodeClass<Random>()
+	DependencyNodeClass<Random>()
 		.def( "randomColor", &Random::randomColor )
 	;
 

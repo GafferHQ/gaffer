@@ -59,15 +59,7 @@ class Render( Gaffer.Node ) :
 			# derived class should call _init after adding
 			# its own plugs
 			pass
-			
-	def dirty( self, plug ) :
-	
-		pass
-		
-	def compute( self, plug ) :
-	
-		pass
-	
+				
 	def execute( self ) :
 	
 		renderer = self._createRenderer()

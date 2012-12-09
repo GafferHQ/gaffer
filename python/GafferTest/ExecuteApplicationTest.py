@@ -64,7 +64,7 @@ class ExecuteApplicationTest( unittest.TestCase ) :
 		s["sphere"] = Gaffer.SphereNode()
 		s["write"] = Gaffer.WriteNode(
 			inputs = {
-				"in" : s["sphere"]["output"],
+				"in" : s["sphere"]["out"],
 				"fileName" : self.__outputFileName,
 			}
 		)

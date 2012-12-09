@@ -37,13 +37,13 @@
 #ifndef GAFFER_EXPRESSIONNODE_H
 #define GAFFER_EXPRESSIONNODE_H
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {
 
-class ExpressionNode : public Node
+class ExpressionNode : public DependencyNode
 {
 
 	public :
@@ -51,7 +51,7 @@ class ExpressionNode : public Node
 		ExpressionNode( const std::string &name=staticTypeName() );
 		virtual ~ExpressionNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExpressionNode, ExpressionNodeTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExpressionNode, ExpressionNodeTypeId, DependencyNode );
 		
 		StringPlug *enginePlug();
 		const StringPlug *enginePlug() const;

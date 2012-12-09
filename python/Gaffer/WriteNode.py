@@ -62,14 +62,6 @@ class WriteNode( Gaffer.Node ) :
 		
 		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
-	def dirty( self, plug ) :
-	
-		pass
-		
-	def compute( self, plug ) :
-	
-		pass
-
 	def parameterHandler( self ) :
 	
 		return self.__parameterHandler

@@ -39,11 +39,11 @@ import IECore
 
 import Gaffer
 
-class GroupNode( Gaffer.Node ) :
+class GroupNode( Gaffer.DependencyNode ) :
 
 	def __init__( self, name="Group", inputs={}, dynamicPlugs=() ) :
 	
-		Gaffer.Node.__init__( self, name )
+		Gaffer.DependencyNode.__init__( self, name )
 		
 		self.addChild( Gaffer.V3fPlug( "translate" ) )
 		self.addChild( Gaffer.V3fPlug( "rotate" ) )

@@ -66,7 +66,6 @@ class ScriptWindow( GafferUI.Window ) :
 		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 
 		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
-		self.__scriptPlugDirtiedConnection = script.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
 	
 		self.__updateTitle()
 

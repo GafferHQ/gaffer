@@ -47,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( OpHolder )
 
 OpHolder::OpHolder( const std::string &name )
-	:	ParameterisedHolderNode( name ), m_resultParameterHandler( 0 )
+	:	ParameterisedHolderDependencyNode( name ), m_resultParameterHandler( 0 )
 {
 }
 			
@@ -58,7 +58,7 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 	{
 		throw IECore::Exception( "Parameterised object is not an IECore::Op" );
 	}
-	ParameterisedHolderNode::setParameterised( parameterised, keepExistingValues );
+	ParameterisedHolderDependencyNode::setParameterised( parameterised, keepExistingValues );
 		
 	m_resultParameterHandler = ParameterHandler::create( const_cast<Parameter *>( op->resultParameter() ) );
 	if( !m_resultParameterHandler )
@@ -77,7 +77,7 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 
 void OpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
 {
-	ParameterisedHolderNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
+	ParameterisedHolderDependencyNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
 }
 
 IECore::OpPtr OpHolder::getOp( std::string *className, int *classVersion )
@@ -105,7 +105,7 @@ void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs 
 
 void OpHolder::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ParameterisedHolderNode::hash( output, context, h );
+	ParameterisedHolderDependencyNode::hash( output, context, h );
 	if( output->getName()=="result" )
 	{
 		std::string className;
@@ -122,12 +122,15 @@ void OpHolder::hash( const ValuePlug *output, const Context *context, IECore::Mu
 	}
 }
 
-void OpHolder::compute( Plug *output, const Context *context ) const
+void OpHolder::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output->getName()=="result" )
 	{	
 		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
 		constPointerCast<Op>( getOp() )->operate();
 		m_resultParameterHandler->setPlugValue();
+		return;
 	}
+	
+	ParameterisedHolderDependencyNode::compute( output, context );
 }

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,55 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_OPHOLDER_H
-#define GAFFER_OPHOLDER_H
+#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ValuePlug.h"
 
-#include "Gaffer/ParameterisedHolder.h"
+using namespace Gaffer;
 
-namespace IECore
+IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
+
+DependencyNode::DependencyNode( const std::string &name )
+	:	Node( name )
 {
+}
 
-IE_CORE_FORWARDDECLARE( Op )
-
-} // namespace IECore
-
-namespace Gaffer
+DependencyNode::~DependencyNode()
 {
-
-IE_CORE_FORWARDDECLARE( ParameterHandler )
-
-class OpHolder : public ParameterisedHolderDependencyNode
+}
+		
+Node::UnaryPlugSignal &DependencyNode::plugDirtiedSignal()
 {
+	return m_plugDirtiedSignal;
+}
 
-	public :
+void DependencyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpHolder, OpHolderTypeId, ParameterisedHolderDependencyNode );
+void DependencyNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( typeId() );
+	h.append( output->relativeName( this ) );
+}
 
-		OpHolder( const std::string &name=staticTypeName() );
-			
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
-		
-		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues )
-		void setOp( const std::string &className, int classVersion, bool keepExistingValues=false );
-		/// Convenience function which returns runTimeCast<Op>( getParameterised() );
-		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
-		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
-
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
-	
-	protected :
-	
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
-		
-	private :
-	
-		ParameterHandlerPtr m_resultParameterHandler;
-		
-};
-
-IE_CORE_DECLAREPTR( OpHolder )
-
-} // namespace Gaffer
-
-#endif // GAFFER_OPHOLDER_H
+void DependencyNode::compute( ValuePlug *output, const Context *context ) const
+{
+}

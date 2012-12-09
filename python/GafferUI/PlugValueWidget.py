@@ -286,7 +286,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 		
 		if self.__plug is not None :
 			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			if hasattr( plug.node(), "plugDirtiedSignal" ) :
+				# only DependencyNodes have the plugDirtiedSignal
+				self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			else :
+				self.__plugDirtiedConnection = None
 			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
 			self.__plugFlagsChangedConnection = plug.node().plugFlagsChangedSignal().connect( Gaffer.WeakMethod( self.__plugFlagsChanged ) )
 			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )

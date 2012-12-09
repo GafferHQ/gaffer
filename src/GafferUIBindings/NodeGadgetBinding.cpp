@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,13 +37,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
+
+#include "Gaffer/Plug.h"
+
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Nodule.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
+#include "GafferUIBindings/NodeGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;

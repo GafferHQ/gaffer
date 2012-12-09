@@ -34,7 +34,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferSceneTest/CompoundObjectSource.h"
 
@@ -43,6 +43,6 @@ using namespace GafferSceneTest;
 BOOST_PYTHON_MODULE( _GafferSceneTest )
 {
 	
-	GafferBindings::NodeClass<CompoundObjectSource>();
+	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
 
 }

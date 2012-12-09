@@ -34,10 +34,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTPROCESSORNODE_H
-#define GAFFER_CONTEXTPROCESSORNODE_H
+#ifndef GAFFER_CONTEXTPROCESSOR_H
+#define GAFFER_CONTEXTPROCESSOR_H
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 
 namespace Gaffer
 {
@@ -58,7 +58,7 @@ class ContextProcessor : public BaseType
 		ContextProcessor( const std::string &name=staticTypeName() );
 		virtual ~ContextProcessor();
 
-		virtual void affects( const ValuePlug *input, Node::AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 		
@@ -70,7 +70,7 @@ class ContextProcessor : public BaseType
 		
 		/// Should be called by derived class affects() methods when the input
 		/// affects their implementation of processContext().
-		void appendAffectedPlugs( Node::AffectedPlugsContainer &outputs ) const;
+		void appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 		/// Must be implemented to modify context in place.
 		virtual void processContext( Context *context ) const = 0;
@@ -82,9 +82,9 @@ class ContextProcessor : public BaseType
 	
 };
 
-typedef ContextProcessor<Node> ContextProcessorNode;
-IE_CORE_DECLAREPTR( ContextProcessorNode );
+typedef ContextProcessor<DependencyNode> ContextProcessorDependencyNode;
+IE_CORE_DECLAREPTR( ContextProcessorDependencyNode );
 
 } // namespace Gaffer
 
-#endif // GAFFER_CONTEXTPROCESSORNODE_H
+#endif // GAFFER_CONTEXTPROCESSOR_H

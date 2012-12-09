@@ -37,94 +37,29 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/NodeBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
+
 #include "Gaffer/ParameterisedHolder.h"
 #include "Gaffer/CompoundParameterHandler.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
+#include "GafferBindings/ParameterisedHolderBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-typedef ParameterisedHolderWrapper<ParameterisedHolderNode> ParameterisedHolderNodeWrapper;
+typedef ParameterisedHolderWrapper<NodeWrapper<ParameterisedHolderNode> > ParameterisedHolderNodeWrapper;
+typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ParameterisedHolderDependencyNode> > ParameterisedHolderDependencyNodeWrapper;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNodeWrapper )
-
-static boost::python::tuple getParameterised( ParameterisedHolderNode &n )
-{
-	std::string className;
-	int classVersion;
-	std::string searchPathEnvVar;
-	IECore::RunTimeTypedPtr p = n.getParameterised( &className, &classVersion, &searchPathEnvVar );
-	return boost::python::make_tuple( p, className, classVersion, searchPathEnvVar );
-}
-
-class ParameterModificationContextWrapper
-{
-
-	public :
-	
-		ParameterModificationContextWrapper( ParameterisedHolderNodePtr parameterisedHolder )
-			:	m_parameterisedHolder( parameterisedHolder ), m_context()
-		{
-		}
-		
-		IECore::RunTimeTypedPtr enter()
-		{
-			m_context.reset( new ParameterisedHolderNode::ParameterModificationContext( m_parameterisedHolder ) );
-			return m_parameterisedHolder->getParameterised();
-		}
-		
-		bool exit( object excType, object excValue, object excTraceBack )
-		{
-			m_context.reset();
-			return false; // don't suppress exceptions
-		}
-		
-	private :
-	
-		ParameterisedHolderNodePtr m_parameterisedHolder;
-		boost::shared_ptr<ParameterisedHolderNode::ParameterModificationContext> m_context;
-
-};
-
-static ParameterModificationContextWrapper *parameterModificationContext( ParameterisedHolderNodePtr parameterisedHolder )
-{
-	return new ParameterModificationContextWrapper( parameterisedHolder );
-}
+IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNodeWrapper )
 
 void GafferBindings::bindParameterisedHolder()
 {
-	scope s = NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr>()
-		.def(
-			"setParameterised",
-			(void (ParameterisedHolderNode::*)( IECore::RunTimeTypedPtr, bool ))&ParameterisedHolderNode::setParameterised,
-			(
-				boost::python::arg_( "parameterised" ),
-				boost::python::arg_( "keepExistingValues" ) = false
-			)
-		)
-		.def(
-			"setParameterised",
-			(void (ParameterisedHolderNode::*)( const std::string &, int, const std::string &, bool ))&ParameterisedHolderNode::setParameterised,
-			(
-				boost::python::arg_( "className" ),
-				boost::python::arg_( "classVersion" ),
-				boost::python::arg_( "searchPathEnvVar" ),
-				boost::python::arg_( "keepExistingValues" ) = false
-			)
-		)
-		.def( "getParameterised", getParameterised )
-		.def( "parameterHandler", (CompoundParameterHandlerPtr (ParameterisedHolderNode::*)())&ParameterisedHolderNode::parameterHandler )
-		.def( "parameterModificationContext", &parameterModificationContext, return_value_policy<manage_new_object>() )
-		.def( "setParameterisedValues", &ParameterisedHolderNode::setParameterisedValues )
-	;
-	
-	class_<ParameterModificationContextWrapper>( "ParameterModificationContext", init<ParameterisedHolderNodePtr>() )
-		.def( "__enter__", &ParameterModificationContextWrapper::enter )
-		.def( "__exit__", &ParameterModificationContextWrapper::exit )
-	;
+
+	ParameterisedHolderClass<NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr> >();
+	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeWrapperPtr> >();
+
 }

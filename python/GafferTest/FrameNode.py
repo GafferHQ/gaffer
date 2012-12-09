@@ -40,11 +40,11 @@ import Gaffer
 
 ## The simplest possible node to use the context during
 # computation - just outputs the current frame.
-class FrameNode( Gaffer.Node ) :
+class FrameNode( Gaffer.DependencyNode ) :
 
 	def __init__( self ) :
 	
-		Gaffer.Node.__init__( self )
+		Gaffer.DependencyNode.__init__( self )
 		
 		self.addChild(
 			Gaffer.FloatPlug(

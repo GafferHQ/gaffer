@@ -209,7 +209,6 @@ void GafferBindings::bindNode()
 		.def( "scriptNode", (ScriptNodePtr (Node::*)())&Node::scriptNode )
 		.def( "_init", &initNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
-		.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
 		.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
 	;

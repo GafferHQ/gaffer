@@ -37,13 +37,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/StandardNodeGadgetBinding.h"
-#include "GafferUIBindings/NodeGadgetBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
+
+#include "Gaffer/Plug.h"
+
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
+#include "GafferUIBindings/StandardNodeGadgetBinding.h"
+#include "GafferUIBindings/NodeGadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
