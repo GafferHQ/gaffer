@@ -135,9 +135,9 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		}
 		
 		ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
-		if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
+		if( const VisibleRenderable *visibleRenderable = runTimeCast<const VisibleRenderable>( object.get() ) )
 		{
-			primitive->render( renderer );
+			visibleRenderable->render( renderer );
 		}
 		else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
 		{
