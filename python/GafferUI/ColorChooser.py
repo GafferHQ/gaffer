@@ -78,16 +78,18 @@ class ColorSlider( GafferUI.NumericSlider ) :
 		
 		displayTransform = GafferUI.DisplayTransform.get()
 
-		c1 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
-		c2 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
-		
-		if self.component in "hsv" :
-			c1 = c1.rgbToHSV()
-			c2 = c2.rgbToHSV()
-		
-		a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2 }[self.component]
-		c1[a] = 0
-		c2[a] = 1
+		if self.component == "a" :
+			c1 = IECore.Color3f( 0 )
+			c2 = IECore.Color3f( 1 )
+		else :
+			c1 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
+			c2 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
+			if self.component in "hsv" :
+				c1 = c1.rgbToHSV()
+				c2 = c2.rgbToHSV()
+			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2 }[self.component]
+			c1[a] = 0
+			c2[a] = 1
 					
 		numStops = max( 2, size.x / 2 )
 		for i in range( 0, numStops ) :
@@ -122,9 +124,11 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__sliders["r"] = ColorSlider( color, "r" )
 		self.__sliders["g"] = ColorSlider( color, "g" )
 		self.__sliders["b"] = ColorSlider( color, "b" )
+		self.__sliders["a"] = ColorSlider( color, "a" )
 		self.__column.append( self.__sliders["r"] )
 		self.__column.append( self.__sliders["g"] )
 		self.__column.append( self.__sliders["b"] )
+		self.__column.append( self.__sliders["a"] )
 
 		self.__sliders["h"] = ColorSlider( color, "h" )
 		self.__sliders["s"] = ColorSlider( color, "s" )
@@ -182,24 +186,25 @@ class ColorChooser( GafferUI.Widget ) :
 		self.setColor( self.getInitialColor() )
 
 	def __sliderChanged( self, slider ) :
-			
-		if slider.component in ( "r", "g", "b" ) :
-			color = IECore.Color3f( self.__sliders["r"].getValue(), self.__sliders["g"].getValue(), self.__sliders["b"].getValue() )
+		
+		newColor = self.__color.__class__( self.__color )	
+		if slider.component in ( "r", "g", "b", "a" ) :
+			a = { "r" : 0, "g" : 1, "b" : 2, "a" : 3 }[slider.component]
+			newColor[a] = slider.getValue()
 		else :
-			color = IECore.Color3f( self.__sliders["h"].getValue(), self.__sliders["s"].getValue(), self.__sliders["v"].getValue() )
-			color = color.hsvToRGB()
+			newColor[0] = self.__sliders["h"].getValue()
+			newColor[1] = self.__sliders["s"].getValue()
+			newColor[2] = self.__sliders["v"].getValue()
+			newColor = newColor.hsvToRGB()
 			
 		for slider in self.__sliders.values() :
-			slider.setColor( color )		
+			slider.setColor( newColor )		
 
-		self.setColor( color )
+		self.setColor( newColor )
 		
 	def __setSlidersFromColor( self ) :
 	
-		try :
-
-			for co in self.__sliderConnections :
-				co.block()
+		with Gaffer.BlockedConnection( self.__sliderConnections ) :
 	
 			c = self.getColor()
 
@@ -209,13 +214,14 @@ class ColorChooser( GafferUI.Widget ) :
 			self.__sliders["r"].setValue( c[0] )
 			self.__sliders["g"].setValue( c[1] )
 			self.__sliders["b"].setValue( c[2] )
+			
+			if c.dimensions() == 4 :
+				self.__sliders["a"].setValue( c[3] )
+				self.__sliders["a"].setVisible( True )
+			else :
+				self.__sliders["a"].setVisible( False )
 
 			c = c.rgbToHSV()
 			self.__sliders["h"].setValue( c[0] )
 			self.__sliders["s"].setValue( c[1] )
 			self.__sliders["v"].setValue( c[2] )
-			
-		finally :
-		
-			for co in self.__sliderConnections :
-				co.unblock()

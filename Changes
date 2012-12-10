@@ -48,6 +48,8 @@
 
 * Gaffer::TypedObjectPlug::setValue() now references the value directly rather than taking a copy.
 
+* Fixed bugs which prevented the ColorChooser working with colour types with an alpha channel.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
