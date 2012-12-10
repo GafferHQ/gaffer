@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -78,6 +79,19 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( p["out"] )		
 		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
+	
+	def testProceduralInput( self ) :
+	
+		p = Gaffer.ProceduralHolder()
+		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		p.setProcedural( *classSpec )
+		
+		s = GafferScene.ObjectToScene()
+		s["object"].setInput( p["output"] )
+		
+		self.failUnless( isinstance( s["out"].object( "/object" ), IECore.ParameterisedProcedural ) )
+	
+		p = s["out"].object( "/object" )
 	
 if __name__ == "__main__":
 	unittest.main()
