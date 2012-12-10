@@ -72,6 +72,18 @@ class ProceduralHolderTest( unittest.TestCase ) :
 		self.assertEqual( len( a ), 1 )
 		self.failUnless( a[0].isSame( n["output"] ) )	
 	
+	def testHash( self ) :
+	
+		n = Gaffer.ProceduralHolder()
+		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		n.setProcedural( *classSpec )
+		
+		h1 = n["output"].hash()
+		
+		n["parameters"]["files"]["name"].setValue( "something.cob" )
+		
+		self.assertNotEqual( h1, n["output"].hash() )
+	
 	def testRunTimeTyped( self ) :
 	
 		n = Gaffer.ProceduralHolder()

@@ -70,6 +70,7 @@ class ProceduralHolder : public ParameterisedHolderDependencyNode
 
 	protected :
 	
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( ValuePlug *output, const Context *context ) const;
 				
 };

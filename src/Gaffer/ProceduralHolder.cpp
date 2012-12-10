@@ -101,6 +101,25 @@ void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &
 	}
 }
 
+void ProceduralHolder::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	ParameterisedHolderDependencyNode::hash( output, context, h );
+	if( output->getName()=="output" )
+	{
+		std::string className;
+		int classVersion;
+		getParameterised( &className, &classVersion );
+		h.append( className );
+		h.append( classVersion );
+	
+		const ValuePlug *parametersPlug = getChild<ValuePlug>( "parameters" );
+		if( parametersPlug )
+		{
+			parametersPlug->hash( h );
+		}
+	}
+}
+
 void ProceduralHolder::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
