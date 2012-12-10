@@ -135,16 +135,23 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	return result;
 }
 
+// generally we copy the value when setting it from python, because the c++ side will
+// reference it directly, and subsequent modifications on the python side would be
+// disastrous. the copy parameter may be set to false by users who really know what
+// they're doing, but generally it should probably be avoided.
 template<typename T>
-static void setValue( typename T::Ptr p, typename T::ValuePtr v )
+static void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true )
 {
 	if( !v )
 	{
 		throw std::invalid_argument( "Value must not be None." );		
 	}
+	if( copy )
+	{
+		v = v->copy();
+	}
 	p->setValue( v );
 }
-
 
 // generally we copy the value when returning to python, because in C++
 // it's const, and we can only send non-const objects to python. letting
@@ -235,7 +242,7 @@ static void bind()
 		)
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &defaultValue<T> )
-		.def( "setValue", setValue<T> )
+		.def( "setValue", setValue<T>, ( boost::python::arg_( "value" ), boost::python::arg_( "_copy" ) = true ) )
 		.def( "getValue", getValue<T>, ( boost::python::arg_( "_copy" ) = true ) )
 	;
 

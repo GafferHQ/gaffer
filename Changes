@@ -46,6 +46,8 @@
 
 * Added a GafferScene::OpenGLAttributes node for controlling the drawing of objects in OpenGL.
 
+* Gaffer::TypedObjectPlug::setValue() now references the value directly rather than taking a copy.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

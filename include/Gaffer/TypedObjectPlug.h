@@ -77,15 +77,18 @@ class TypedObjectPlug : public ValuePlug
 
 		const ValueType *defaultValue() const;
 
-		/// A copy of value is taken - it must /not/ be null.
-		/// \undoable
-		/// \todo This is taking a copy - does that cause terrible performance?
-		/// I think the alternative would be to document that the caller must
-		/// under no circumstances modify value after calling setValue( value ).
+		/// Sets the value, which must be non-null. The value is referenced directly
+		/// and may be shared internally with other Plugs and the cache - under no
+		/// circumstances should you /ever/ modify value after calling setValue( value ).
+		/// Note that the python bindings perform an automatic copy before calling
+		/// setValue() (unless instructed otherwise), to make it harder
+		/// for less experienced coders to get this wrong. 
 		void setValue( ConstValuePtr value );
-		/// Returns the current value. Note that the returned value is not a copy
+		/// Returns the value. Note that the returned value is not a copy
 		/// and may be shared with other Plugs and the cache - it is therefore
-		/// imperative that it not be modified in any way.
+		/// imperative that it not be modified in any way. The python bindings
+		/// automatically return a copy from getValue() (unless instructed otherwise)
+		/// to make it harder for less experienced coders to get this wrong.
 		ConstValuePtr getValue() const;
 
 		virtual void setToDefault();

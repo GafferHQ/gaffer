@@ -206,6 +206,18 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
 		self.assertRaises( RuntimeError, p.setValue, IECore.IntData( 10 ) )
+	
+	def testSetValueCopying( self ) :
+	
+		p = Gaffer.ObjectPlug( defaultValue = IECore.IntData( 1 ) )
+		
+		i = IECore.IntData( 10 )
+		p.setValue( i )
+		self.failIf( p.getValue( _copy=False ).isSame( i ) )
+		
+		i = IECore.IntData( 20 )
+		p.setValue( i, _copy=False )
+		self.failUnless( p.getValue( _copy=False ).isSame( i ) )
 		
 if __name__ == "__main__":
 	unittest.main()

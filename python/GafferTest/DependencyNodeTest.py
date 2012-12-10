@@ -366,7 +366,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 	
 			assert( plug.isSame( self["out"] ) )
 
-			plug.setValue( self["in"].getValue( _copy=False ) )
+			plug.setValue( self["in"].getValue( _copy=False ), _copy=False )
 
 	IECore.registerRunTimeTyped( PassThrough )
 
@@ -378,7 +378,6 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n["in"].hash(), n["out"].hash() )
 		self.assertEqual( n["in"].getValue(), n["out"].getValue() )
 	
-	@GafferTest.expectedFailure
 	def testPassThroughSharesCacheEntries( self ) :
 	
 		n = self.PassThrough()

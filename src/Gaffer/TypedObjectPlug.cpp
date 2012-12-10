@@ -82,7 +82,7 @@ const typename TypedObjectPlug<T>::ValueType *TypedObjectPlug<T>::defaultValue()
 template<class T>
 void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 {
-	setObjectValue( value->copy() );
+	setObjectValue( value );
 }
 
 template<class T>
