@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -41,15 +42,91 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImagePlug.h"
+#include "tbb/tbb.h"
 
 using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+using namespace tbb;
 
 IE_CORE_DEFINERUNTIMETYPED( ImagePlug );
 
+//////////////////////////////////////////////////////////////////////////
+// Implementation of CopyTiles:
+// A simple class for multithreading the copying of
+// image tiles from an input plug to an output plug.
+//////////////////////////////////////////////////////////////////////////
+
+namespace GafferImage
+{
+
+namespace Detail
+{
+
+class CopyTiles
+{
+	public:
+		CopyTiles( const vector<float *> &imageChannelData, const vector<string> &channelNames, const Gaffer::FloatVectorDataPlug *channelDataPlug, const Box2i& dataWindow, const int tileSize ) :
+			m_imageChannelData( imageChannelData ),
+			m_channelNames( channelNames ),
+			m_channelDataPlug( channelDataPlug ),
+			m_dataWindow( dataWindow ),
+			m_tileSize( tileSize )
+		{}
+		
+		void operator()( const blocked_range2d<size_t>& r ) const
+		{
+			ContextPtr context = new Context( *Context::current() );
+			const Box2i operationWindow( V2i( r.rows().begin(), r.cols().begin() ), V2i( r.rows().end()-1, r.cols().end()-1 ) );
+			V2i minTileOrigin = ( operationWindow.min / m_tileSize ) * m_tileSize;
+			V2i maxTileOrigin = ( operationWindow.max / m_tileSize ) * m_tileSize;
+			size_t imageStride = m_dataWindow.size().x + 1;
+			
+			for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
+			{
+				for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
+				{
+					for( vector<string>::const_iterator it = m_channelNames.begin(), eIt = m_channelNames.end(); it != eIt; it++ )
+					{
+						context->set( ImagePlug::channelNameContextName, *it );
+						context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
+						Context::Scope scope( context );
+						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
+						Box2i b = boxIntersection( tileBound, operationWindow );
+					
+						ConstFloatVectorDataPtr tileData = m_channelDataPlug->getValue();
+					
+						for( int y = b.min.y; y<=b.max.y; y++ )
+						{
+							const float *tilePtr = &(tileData->readable()[0]) + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
+							float *channelPtr = m_imageChannelData[it-m_channelNames.begin()] + ( y - m_dataWindow.min.y ) * imageStride + (b.min.x - m_dataWindow.min.x);
+							for( int x = b.min.x; x <= b.max.x; x++ )
+							{
+								*channelPtr++ = *tilePtr++;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	private:
+		const vector<float *> &m_imageChannelData;
+		const vector<string> &m_channelNames;
+		const Gaffer::FloatVectorDataPlug *m_channelDataPlug;
+		const Box2i &m_dataWindow;
+		const int m_tileSize;
+};
+
+};
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of ImagePlug
+//////////////////////////////////////////////////////////////////////////
 const IECore::InternedString ImagePlug::channelNameContextName = "image:channelName";
 const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigin";
 
@@ -88,7 +165,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		new FloatVectorDataPlug(
 			"channelData",
 			direction,
-			new IECore::FloatVectorData(),
+			blackTile(),
 			flags
 		)
 	);
@@ -98,6 +175,12 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 ImagePlug::~ImagePlug()
 {
 }
+
+IECore::ConstFloatVectorDataPtr ImagePlug::blackTile()
+{
+	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 0. ) ) );
+	return g_blackTile;
+};
 
 bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
@@ -195,41 +278,8 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		imageChannelData.push_back( &(c[0]) );
 	}
 	
-	V2i minTileOrigin = ( dataWindow.min / tileSize() ) * tileSize();
-	V2i maxTileOrigin = ( dataWindow.max / tileSize() ) * tileSize();
-	
-	size_t imageStride = dataWindow.size().x + 1;
-	
-	ContextPtr context = new Context( *Context::current() );
-	for( int tileOriginY = minTileOrigin.y; tileOriginY<=maxTileOrigin.y; tileOriginY += tileSize() )
-	{
-		for( int tileOriginX = minTileOrigin.x; tileOriginX<=maxTileOrigin.x; tileOriginX += tileSize() )
-		{
-			for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
-			{
-				context->set( ImagePlug::channelNameContextName, *it );
-				context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-				Context::Scope scope( context );
-				
-				Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + tileSize(), tileOriginY + tileSize() ) );
-				Box2i b = boxIntersection( tileBound, dataWindow );
-								
-				ConstFloatVectorDataPtr tileData = channelDataPlug()->getValue();
-				if( tileData )
-				{
-					for( int y = b.min.y; y<=b.max.y; y++ )
-					{
-						const float *tilePtr = &(tileData->readable()[0]) + (y - tileOriginY) * tileSize() + (b.min.x - tileOriginX);
-						float *channelPtr = imageChannelData[it-channelNames.begin()] + ( y - dataWindow.min.y ) * imageStride + (b.min.x - dataWindow.min.x);
-						for( int x = b.min.x; x <= b.max.x; x++ )
-						{
-							*channelPtr++ = *tilePtr++;
-						}
-					}
-				}
-			}
-		}
-	}
+	parallel_for( blocked_range2d<size_t>(dataWindow.min.x, dataWindow.max.x+1, tileSize(), dataWindow.min.y, dataWindow.max.y+1, tileSize() ),
+		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, tileSize()) );
 	
 	return result;
 }

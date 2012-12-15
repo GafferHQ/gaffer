@@ -1,3 +1,6 @@
+
+* Multithreaded the ImagePlug class.
+
 * Fixed ParameterValueWidget.create() so that it always returns either None or an instance of ParameterValueWidget. Previously it was returning PlugValueWidget instances where no specific ParameterValueWidget registration had been made.
 
 * Added PlugValueWidget setReadOnly/getReadOnly methods. These can be used to force a ui to be read only when the plug itself allows editing. Note that they can not be used to force editing when the plug itself is not editable.

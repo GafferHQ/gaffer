@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -97,12 +98,13 @@ class ImagePlug : public Gaffer::CompoundPlug
 		////////////////////////////////////////////////////////////////////
 		//@{
 		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
-		/// \todo This should be spawning threads.
+		
 		IECore::ImagePrimitivePtr image() const;
 		//@}
 		
 		static int tileSize() { return 64; };
 		static Imath::Box2i tileBound( const Imath::V2i &tileOrigin ) { return Imath::Box2i( tileOrigin * tileSize(), ( tileOrigin + Imath::V2i( 1 ) ) * tileSize() - Imath::V2i( 1 ) ); }
+		static inline IECore::ConstFloatVectorDataPtr blackTile();
 	
 };
 
