@@ -53,6 +53,8 @@
 
 * Fixed bugs which prevented the ColorChooser working with colour types with an alpha channel.
 
+* Added a procedural app for visualising Cortex procedurals.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.
