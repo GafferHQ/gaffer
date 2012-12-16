@@ -64,7 +64,7 @@
 #include "GafferBindings/PreferencesNodeBinding.h"
 #include "GafferBindings/ContextBinding.h"
 #include "GafferBindings/BoxPlugBinding.h"
-#include "GafferBindings/ExpressionNodeBinding.h"
+#include "GafferBindings/ExpressionBinding.h"
 #include "GafferBindings/TransformPlugBinding.h"
 #include "GafferBindings/CompoundDataPlugBinding.h"
 #include "GafferBindings/RandomBinding.h"
@@ -103,7 +103,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindPreferencesNode();
 	bindContext();
 	bindBoxPlug();
-	bindExpressionNode();
+	bindExpression();
 	bindTransformPlug();
 	bindCompoundDataPlug();
 	bindRandom();

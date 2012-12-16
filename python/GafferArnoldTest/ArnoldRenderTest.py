@@ -57,7 +57,7 @@ class ArnoldRenderTest( unittest.TestCase ) :
 		s["render"]["mode"].setValue( "generate" )
 		s["render"]["in"].setInput( s["plane"]["out"] )
 		
-		s["expression"] = Gaffer.ExpressionNode()
+		s["expression"] = Gaffer.Expression()
 		s["expression"]["engine"].setValue( "python" )
 		s["expression"]["expression"].setValue( "parent['render']['fileName'] = '/tmp/test.%d.ass' % int( context['frame'] )" )
 

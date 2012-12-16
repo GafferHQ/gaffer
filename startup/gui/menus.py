@@ -107,6 +107,6 @@ GafferUI.NodeMenu.append( "/Cortex/Group", Gaffer.GroupNode )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
 
-GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.ExpressionNode )
+GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.Expression )
 GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
 GafferUI.NodeMenu.append( "/Utility/Random", Gaffer.Random )

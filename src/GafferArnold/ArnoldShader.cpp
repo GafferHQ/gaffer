@@ -324,7 +324,7 @@ void ArnoldShader::shaderHash( IECore::MurmurHash &h ) const
 
 IECore::ShaderPtr ArnoldShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue() );
+	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue(), "ai:surface" );
 	
 	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
 	if( parametersPlug )

@@ -46,7 +46,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["m"] = GafferTest.MultiplyNode()
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 		

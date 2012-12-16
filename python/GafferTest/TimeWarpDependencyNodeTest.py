@@ -48,7 +48,7 @@ class TimeWarpDependencyNodeTest( unittest.TestCase ) :
 		s["m"] = GafferTest.MultiplyNode()
 		s["m"]["op2"].setValue( 1 )
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
 		
@@ -77,7 +77,7 @@ class TimeWarpDependencyNodeTest( unittest.TestCase ) :
 		s["m"] = GafferTest.MultiplyNode()
 		s["m"]["op2"].setValue( 1 )
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
 					

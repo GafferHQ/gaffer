@@ -34,14 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_EXPRESSIONNODEBINDING_H
-#define GAFFERBINDINGS_EXPRESSIONNODEBINDING_H
+#ifndef GAFFERBINDINGS_EXPRESSIONBINDING_H
+#define GAFFERBINDINGS_EXPRESSIONBINDING_H
 
 namespace GafferBindings
 {
 		
-void bindExpressionNode();
+void bindExpression();
 
 } // namespace GafferBindings
 
-#endif // GAFFERBINDINGS_EXPRESSIONNODEBINDING_H
+#endif // GAFFERBINDINGS_EXPRESSIONBINDING_H

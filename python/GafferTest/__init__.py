@@ -96,7 +96,7 @@ from NodeBindingTest import NodeBindingTest
 from DictPathTest import DictPathTest
 from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
-from ExpressionNodeTest import ExpressionNodeTest
+from ExpressionTest import ExpressionTest
 from BlockedConnectionTest import BlockedConnectionTest
 from TimeWarpDependencyNodeTest import TimeWarpDependencyNodeTest
 from TransformPlugTest import TransformPlugTest

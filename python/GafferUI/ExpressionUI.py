@@ -43,7 +43,7 @@ import GafferUI
 # NodeUI implementation
 ##########################################################################
 
-class ExpressionNodeUI( GafferUI.NodeUI ) :
+class ExpressionUI( GafferUI.NodeUI ) :
 
 	def __init__( self, node ) :
 	
@@ -78,7 +78,7 @@ class ExpressionNodeUI( GafferUI.NodeUI ) :
 		
 		return None
 		
-GafferUI.NodeUI.registerNodeUI( Gaffer.ExpressionNode.staticTypeId(), ExpressionNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.Expression.staticTypeId(), ExpressionUI )
 
 # PlugValueWidget popup menu for creating expressions
 ##########################################################################
@@ -91,7 +91,7 @@ def __createExpression( plugValueWidget ) :
 
 	with Gaffer.UndoContext( node.scriptNode() ) :
 	
-		expressionNode = Gaffer.ExpressionNode()
+		expressionNode = Gaffer.Expression()
 		parentNode.addChild( expressionNode )
 		
 		expression = "parent['"
@@ -137,28 +137,28 @@ __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __po
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ExpressionNode.staticTypeId(),
+	Gaffer.Expression.staticTypeId(),
 	"engine",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = [
-		( IECore.CamelCase.toSpaced( e ), e ) for e in Gaffer.ExpressionNode.Engine.registeredEngines() 
+		( IECore.CamelCase.toSpaced( e ), e ) for e in Gaffer.Expression.Engine.registeredEngines() 
 	]
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ExpressionNode.staticTypeId(),
+	Gaffer.Expression.staticTypeId(),
 	"expression",
 	GafferUI.MultiLineStringPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ExpressionNode.staticTypeId(),
+	Gaffer.Expression.staticTypeId(),
 	"in",
 	None
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ExpressionNode.staticTypeId(),
+	Gaffer.Expression.staticTypeId(),
 	"out",
 	None
 )
@@ -166,4 +166,4 @@ GafferUI.PlugValueWidget.registerCreator(
 # Nodule deregistrations
 ##########################################################################
 
-GafferUI.Nodule.registerNodule( Gaffer.ExpressionNode.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.Expression.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )

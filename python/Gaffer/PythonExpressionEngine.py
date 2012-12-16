@@ -38,11 +38,11 @@ import ast
 
 import Gaffer
 
-class PythonExpressionEngine( Gaffer.ExpressionNode.Engine ) :
+class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def __init__( self, expression ) :
 	
-		Gaffer.ExpressionNode.Engine.__init__( self )
+		Gaffer.Expression.Engine.__init__( self )
 		
 		self.__expression = expression
 		
@@ -156,4 +156,4 @@ class _Parser( ast.NodeVisitor ) :
 		else :
 			return path[1]
 		
-Gaffer.ExpressionNode.Engine.registerEngine( "python", PythonExpressionEngine )
+Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )

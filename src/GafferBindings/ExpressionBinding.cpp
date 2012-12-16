@@ -41,21 +41,21 @@
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/Wrapper.h"
 
-#include "Gaffer/ExpressionNode.h"
+#include "Gaffer/Expression.h"
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ExpressionNodeBinding.h"
+#include "GafferBindings/ExpressionBinding.h"
 #include "GafferBindings/TranslatePythonException.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class EngineWrapper : public ExpressionNode::Engine, public IECorePython::Wrapper<ExpressionNode::Engine>
+class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Expression::Engine>
 {
 	public :
 	
 		EngineWrapper( PyObject *self )
-				:	Engine(), IECorePython::Wrapper<ExpressionNode::Engine>( self, this )
+				:	Engine(), IECorePython::Wrapper<Expression::Engine>( self, this )
 		{
 		}
 		
@@ -163,10 +163,10 @@ struct ExpressionEngineCreator
 	{
 	}
 	
-	ExpressionNode::EnginePtr operator()( const std::string &expression )
+	Expression::EnginePtr operator()( const std::string &expression )
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ExpressionNode::EnginePtr result = extract<ExpressionNode::EnginePtr>( m_fn( expression ) );
+		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn( expression ) );
 		return result;
 	}
 	
@@ -178,13 +178,13 @@ struct ExpressionEngineCreator
 
 static void registerEngine( const std::string &engineType, object creator )
 {
-	ExpressionNode::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
+	Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
 }
 
 static tuple registeredEnginesWrapper()
 {
 	std::vector<std::string> engineTypes;
-	ExpressionNode::Engine::registeredEngines( engineTypes );
+	Expression::Engine::registeredEngines( engineTypes );
 	boost::python::list l;
 	for( std::vector<std::string>::const_iterator it = engineTypes.begin(); it!=engineTypes.end(); it++ )
 	{
@@ -193,12 +193,12 @@ static tuple registeredEnginesWrapper()
 	return boost::python::tuple( l );
 }
 
-void GafferBindings::bindExpressionNode()
+void GafferBindings::bindExpression()
 {
 	
-	scope s = DependencyNodeClass<ExpressionNode>();
+	scope s = DependencyNodeClass<Expression>();
 	
-	IECorePython::RefCountedClass<ExpressionNode::Engine, IECore::RefCounted, EngineWrapperPtr>( "Engine" )
+	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapperPtr>( "Engine" )
 		.def( init<>() )
 		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )
 		.def( "registeredEngines", &registeredEnginesWrapper ).staticmethod( "registeredEngines" )

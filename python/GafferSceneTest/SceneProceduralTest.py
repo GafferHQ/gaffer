@@ -85,7 +85,7 @@ class SceneProceduralTest( unittest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["plane"] = GafferScene.Plane()
 		
-		script["expression"] = Gaffer.ExpressionNode()
+		script["expression"] = Gaffer.Expression()
 		script["expression"]["engine"].setValue( "python" )
 		script["expression"]["expression"].setValue( 'parent["plane"]["transform"]["translate"]["x"] = iDontExist["andNorDoI"]' )
 				

@@ -40,7 +40,7 @@ import unittest
 import Gaffer
 import GafferTest
 
-class ExpressionNodeTest( unittest.TestCase ) :
+class ExpressionTest( unittest.TestCase ) :
 
 	def test( self ) :
 	
@@ -53,7 +53,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["m2"] = GafferTest.MultiplyNode()
 		s["m2"]["op2"].setValue( 1 )
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		
 		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
@@ -67,7 +67,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["m"] = GafferTest.MultiplyNode()
 		s["m"]["op1"].setValue( 1 )
 
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op2\"] = int( context[\"frame\"] * 2 )" )
 
@@ -82,7 +82,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 
 		s["m"] = GafferTest.MultiplyNode()
 
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "" )		
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op2\"] = int( context[\"frame\"] * 2 )" )
 	
@@ -97,7 +97,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["m2"] = GafferTest.MultiplyNode()
 		s["m2"]["op2"].setValue( 1 )
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		
 		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
@@ -118,7 +118,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.StringPlug()
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		s["e"]["expression"].setValue( "parent['n']['p'] = '#%d' % int( context['frame'] )" )
 	
@@ -137,13 +137,13 @@ class ExpressionNodeTest( unittest.TestCase ) :
 	
 	def testRegisteredEngines( self ) :
 	
-		e = Gaffer.ExpressionNode.Engine.registeredEngines()
+		e = Gaffer.Expression.Engine.registeredEngines()
 		self.failUnless( isinstance( e, tuple ) )
 		self.failUnless( "python" in e )
 		
 	def testDefaultEngine( self ) :
 	
-		e = Gaffer.ExpressionNode()
+		e = Gaffer.Expression()
 		self.assertEqual( e["engine"].getValue(), "python" )
 	
 	def testCreateExpressionWithWatchers( self ) :
@@ -158,7 +158,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		
 		c = s["m1"].plugDirtiedSignal().connect( f )
 			
-		s["e"] = Gaffer.ExpressionNode()	
+		s["e"] = Gaffer.Expression()	
 		s["e"]["expression"].setValue( "parent[\"m1\"][\"op1\"] = 2" )
 
 	def testCompoundNumericPlugs( self ) :
@@ -168,7 +168,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["v"] = Gaffer.V2fPlug()
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["expression"].setValue( 'parent["n"]["v"]["x"] = parent["n"]["v"]["y"]' )
 		
 		s["n"]["v"]["y"].setValue( 21 )
@@ -183,7 +183,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["n"]["i1"] = Gaffer.IntPlug()
 		s["n"]["i2"] = Gaffer.IntPlug()
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["expression"].setValue( 'parent["n"]["i1"] = parent["n"]["i2"]' )
 		
 		s["n"]["i2"].setValue( 11 )
@@ -201,7 +201,7 @@ class ExpressionNodeTest( unittest.TestCase ) :
 		s["m2"] = GafferTest.MultiplyNode()
 		s["m2"]["op2"].setValue( 1 )
 		
-		s["e"] = Gaffer.ExpressionNode()
+		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 		
 		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )

@@ -40,7 +40,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/Exception.h"
 
-#include "Gaffer/ExpressionNode.h"
+#include "Gaffer/Expression.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
@@ -48,12 +48,12 @@
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
-// ExpressionNode implementation
+// Expression implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ExpressionNode );
+IE_CORE_DEFINERUNTIMETYPED( Expression );
 
-ExpressionNode::ExpressionNode( const std::string &name )
+Expression::Expression( const std::string &name )
 	:	DependencyNode( name ), m_engine( 0 )
 {
 	addChild(
@@ -73,35 +73,35 @@ ExpressionNode::ExpressionNode( const std::string &name )
 		)
 	);
 
-	plugSetSignal().connect( boost::bind( &ExpressionNode::plugSet, this, ::_1 ) );
-	parentChangedSignal().connect( boost::bind( &ExpressionNode::parentChanged, this, ::_1, ::_2 ) );
+	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
+	parentChangedSignal().connect( boost::bind( &Expression::parentChanged, this, ::_1, ::_2 ) );
 }
 
-ExpressionNode::~ExpressionNode()
+Expression::~Expression()
 {
 }
 
-StringPlug *ExpressionNode::enginePlug()
+StringPlug *Expression::enginePlug()
 {
 	return getChild<StringPlug>( "engine" );
 }
 
-const StringPlug *ExpressionNode::enginePlug() const
+const StringPlug *Expression::enginePlug() const
 {
 	return getChild<StringPlug>( "engine" );
 }
 		
-StringPlug *ExpressionNode::expressionPlug()
+StringPlug *Expression::expressionPlug()
 {
 	return getChild<StringPlug>( "expression" );
 }
 
-const StringPlug *ExpressionNode::expressionPlug() const
+const StringPlug *Expression::expressionPlug() const
 {
 	return getChild<StringPlug>( "expression" );
 }
 
-void ExpressionNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Expression::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 	
@@ -123,7 +123,7 @@ void ExpressionNode::affects( const ValuePlug *input, AffectedPlugsContainer &ou
 	}
 }
 
-void ExpressionNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+void Expression::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	DependencyNode::hash( output, context, h );
 	if( output == getChild<ValuePlug>( "out" ) )
@@ -147,7 +147,7 @@ void ExpressionNode::hash( const ValuePlug *output, const Context *context, IECo
 	}
 }
 
-void ExpressionNode::compute( ValuePlug *output, const Context *context ) const
+void Expression::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == getChild<ValuePlug>( "out" ) )
 	{
@@ -172,7 +172,7 @@ void ExpressionNode::compute( ValuePlug *output, const Context *context ) const
 	DependencyNode::compute( output, context );
 }
 
-void ExpressionNode::plugSet( Plug *plug )
+void Expression::plugSet( Plug *plug )
 {
 	if( !parent<Node>() )
 	{
@@ -208,14 +208,14 @@ void ExpressionNode::plugSet( Plug *plug )
 		catch( const std::exception &e )
 		{
 			/// \todo Report error to user somehow - error signal on Node?
-			IECore::msg( IECore::Msg::Error, "ExpressionNode::plugSet", e.what() );
+			IECore::msg( IECore::Msg::Error, "Expression::plugSet", e.what() );
 			m_engine = 0;
 		}
 		
 	}
 }
 
-void ExpressionNode::parentChanged( GraphComponent *child, GraphComponent *oldParent )
+void Expression::parentChanged( GraphComponent *child, GraphComponent *oldParent )
 {
 	assert( this == child );
 	if( oldParent == 0 && parent<GraphComponent>() )
@@ -230,7 +230,7 @@ void ExpressionNode::parentChanged( GraphComponent *child, GraphComponent *oldPa
 	}
 }
 
-void ExpressionNode::updatePlugs( const std::string &dstPlugPath, std::vector<std::string> &srcPlugPaths )
+void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::string> &srcPlugPaths )
 {
 	Node *p = parent<Node>();
 	
@@ -277,7 +277,7 @@ void ExpressionNode::updatePlugs( const std::string &dstPlugPath, std::vector<st
 	dstPlug->setInput( outPlug );
 }
 
-ValuePlugPtr ExpressionNode::createPlug( const ValuePlug *partner, Plug::Direction direction ) const
+ValuePlugPtr Expression::createPlug( const ValuePlug *partner, Plug::Direction direction ) const
 {
 	if( partner->isInstanceOf( FloatPlug::staticTypeId() ) )
 	{
@@ -314,10 +314,10 @@ ValuePlugPtr ExpressionNode::createPlug( const ValuePlug *partner, Plug::Directi
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ExpressionNode::Engine implementation
+// Expression::Engine implementation
 //////////////////////////////////////////////////////////////////////////
 
-ExpressionNode::EnginePtr ExpressionNode::Engine::create( const std::string engineType, const std::string &expression )
+Expression::EnginePtr Expression::Engine::create( const std::string engineType, const std::string &expression )
 {
 	const CreatorMap &m = creators();
 	CreatorMap::const_iterator it = m.find( engineType );
@@ -328,12 +328,12 @@ ExpressionNode::EnginePtr ExpressionNode::Engine::create( const std::string engi
 	return it->second( expression );
 }
 
-void ExpressionNode::Engine::registerEngine( const std::string engineType, Creator creator )
+void Expression::Engine::registerEngine( const std::string engineType, Creator creator )
 {
 	creators()[engineType] = creator;
 }
 
-void ExpressionNode::Engine::registeredEngines( std::vector<std::string> &engineTypes )
+void Expression::Engine::registeredEngines( std::vector<std::string> &engineTypes )
 {
 	const CreatorMap &m = creators();
 	for( CreatorMap::const_iterator it = m.begin(); it!=m.end(); it++ )
@@ -342,7 +342,7 @@ void ExpressionNode::Engine::registeredEngines( std::vector<std::string> &engine
 	}
 }
 
-ExpressionNode::Engine::CreatorMap &ExpressionNode::Engine::creators()
+Expression::Engine::CreatorMap &Expression::Engine::creators()
 {
 	static CreatorMap m;
 	return m;

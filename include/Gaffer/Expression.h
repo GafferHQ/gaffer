@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXPRESSIONNODE_H
-#define GAFFER_EXPRESSIONNODE_H
+#ifndef GAFFER_EXPRESSION_H
+#define GAFFER_EXPRESSION_H
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"
@@ -43,15 +43,15 @@
 namespace Gaffer
 {
 
-class ExpressionNode : public DependencyNode
+class Expression : public DependencyNode
 {
 
 	public :
 
-		ExpressionNode( const std::string &name=staticTypeName() );
-		virtual ~ExpressionNode();
+		Expression( const std::string &name=staticTypeName() );
+		virtual ~Expression();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExpressionNode, ExpressionNodeTypeId, DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Expression, ExpressionTypeId, DependencyNode );
 		
 		StringPlug *enginePlug();
 		const StringPlug *enginePlug() const;
@@ -70,7 +70,7 @@ class ExpressionNode : public DependencyNode
 				
 				/// Must return a path to the plug the expression wishes to set.
 				/// Paths should be of the form nodeName.plugName, and are expected to
-				/// be relative to the parent of the ExpressionNode.
+				/// be relative to the parent of the Expression.
 				virtual std::string outPlug() = 0;
 				/// Must fill plugs with paths to the plugs the expression wishes to read from.
 				/// Paths should be of the form nodeName.plugName, and are expected to be relative to
@@ -117,4 +117,4 @@ class ExpressionNode : public DependencyNode
 
 } // namespace Gaffer
 
-#endif // GAFFER_EXPRESSIONNODE_H
+#endif // GAFFER_EXPRESSION_H

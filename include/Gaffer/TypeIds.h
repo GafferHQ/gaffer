@@ -85,7 +85,7 @@ enum TypeId
 	Box2fPlugTypeId = 110038,
 	Box3fPlugTypeId = 110039,
 	PrimitivePlugTypeId = 110040,
-	ExpressionNodeTypeId = 110041,
+	ExpressionTypeId = 110041,
 	ContextProcessorDependencyNodeTypeId = 110042,
 	TimeWarpDependencyNodeTypeId = 110043,
 	TransformPlugTypeId = 110044,
