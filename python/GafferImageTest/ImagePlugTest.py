@@ -62,5 +62,13 @@ class ImagePlugTest( unittest.TestCase ) :
 			)
 		)
 		
+	def testDefaultChannelNamesMethod( self ) :
+	
+		channelNames = GafferImage.ImagePlug()['channelNames'].defaultValue()
+		self.assertTrue( 'R' in channelNames )
+		self.assertTrue( 'G' in channelNames )
+		self.assertTrue( 'B' in channelNames )
+	
+		
 if __name__ == "__main__":
 	unittest.main()
