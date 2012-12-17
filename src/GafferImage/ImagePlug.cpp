@@ -35,6 +35,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/tbb.h"
 #include "IECore/Exception.h"
 #include "IECore/BoxOps.h"
 #include "IECore/BoxAlgo.h"
@@ -42,7 +43,6 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImagePlug.h"
-#include "tbb/tbb.h"
 
 using namespace std;
 using namespace Imath;
@@ -182,10 +182,10 @@ ImagePlug::~ImagePlug()
 {
 }
 
-IECore::ConstFloatVectorDataPtr ImagePlug::blackTile()
+const IECore::FloatVectorData *ImagePlug::blackTile()
 {
 	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 0. ) ) );
-	return g_blackTile;
+	return g_blackTile.get();
 };
 
 bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const

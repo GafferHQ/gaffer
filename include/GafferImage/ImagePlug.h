@@ -104,7 +104,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		
 		static int tileSize() { return 64; };
 		static Imath::Box2i tileBound( const Imath::V2i &tileOrigin ) { return Imath::Box2i( tileOrigin * tileSize(), ( tileOrigin + Imath::V2i( 1 ) ) * tileSize() - Imath::V2i( 1 ) ); }
-		static inline IECore::ConstFloatVectorDataPtr blackTile();
+		static inline const IECore::FloatVectorData *blackTile();
 	
 };
 
