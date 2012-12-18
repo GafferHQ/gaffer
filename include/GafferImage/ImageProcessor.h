@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,6 +59,20 @@ class ImageProcessor : public ImageNode
 		ImagePlug *inPlug();
 		const ImagePlug *inPlug() const;
 	
+		/// Reimplements the functionality of ImageNode::Compute to pass through
+		/// the first input if the node is disabled.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+	protected:
+		/// Reimplemented to pass through the hashes of the first input when the node is disabled. When it is not
+		/// it will call hashXXXXXPlug() so that derived classes can implement their own hashing functions.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDisplayWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNamesPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+		
 	private :
 	
 		static size_t g_firstPlugIndex;

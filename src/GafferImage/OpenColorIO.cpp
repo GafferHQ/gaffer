@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -84,6 +85,17 @@ const Gaffer::StringPlug *OpenColorIO::outputSpacePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+bool OpenColorIO::enabled() const
+{
+	std::string outSpaceString( outputSpacePlug()->getValue() );
+	std::string inSpaceString( inputSpacePlug()->getValue() );
+	
+	return outSpaceString != inSpaceString &&
+		outSpaceString.size() &&
+		inSpaceString.size()
+		? ChannelDataProcessor::enabled() : false;
+}
+
 void OpenColorIO::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	ChannelDataProcessor::affects( input, outputs );
@@ -97,38 +109,25 @@ void OpenColorIO::affects( const Gaffer::ValuePlug *input, AffectedPlugsContaine
 	}
 }
 
-void OpenColorIO::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{	
-	if( output == outPlug()->channelDataPlug() )
+void OpenColorIO::hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	if( channelName == "R" || channelName == "G" || channelName == "B" )
 	{
-		const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-		if( channelName == "R" || channelName == "G" || channelName == "B" )
-		{
-			ChannelDataProcessor::hash( output, context, h );
-			
-			inPlug()->channelDataPlug()->hash( h );
-			
-			ContextPtr tmpContext = new Context( *Context::current() );
-			Context::Scope scopedContext( tmpContext );	
-			
-			tmpContext->set( ImagePlug::channelNameContextName, std::string( "R" ) );
-			inPlug()->channelDataPlug()->hash( h );
-			tmpContext->set( ImagePlug::channelNameContextName, std::string( "G" ) );
-			inPlug()->channelDataPlug()->hash( h );
-			tmpContext->set( ImagePlug::channelNameContextName, std::string( "B" ) );
-			inPlug()->channelDataPlug()->hash( h );
-			
-			inputSpacePlug()->hash( h );
-			outputSpacePlug()->hash( h );
-		}
-		else
-		{
-			h = inPlug()->channelDataPlug()->hash(); // we pass through the other channels
-		}
-	}
-	else
-	{
-		ChannelDataProcessor::hash( output, context, h );
+		inPlug()->channelDataPlug()->hash( h );
+		
+		ContextPtr tmpContext = new Context( *Context::current() );
+		Context::Scope scopedContext( tmpContext );	
+		
+		tmpContext->set( ImagePlug::channelNameContextName, std::string( "R" ) );
+		inPlug()->channelDataPlug()->hash( h );
+		tmpContext->set( ImagePlug::channelNameContextName, std::string( "G" ) );
+		inPlug()->channelDataPlug()->hash( h );
+		tmpContext->set( ImagePlug::channelNameContextName, std::string( "B" ) );
+		inPlug()->channelDataPlug()->hash( h );
+		
+		inputSpacePlug()->hash( h );
+		outputSpacePlug()->hash( h );
 	}
 }
 

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -102,6 +103,13 @@ Gaffer::StringPlug *ImageReader::fileNamePlug()
 const Gaffer::StringPlug *ImageReader::fileNamePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+bool ImageReader::enabled() const
+{
+	std::string fileName = fileNamePlug()->getValue();
+	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
+	return (spec != 0) ? ImageNode::enabled() : false;
 }
 
 void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const

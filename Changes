@@ -1,3 +1,6 @@
+
+* Image nodes can now be disabled.
+
 * Renamed ExpressionNode to simply Expression.
 
 * Multithreaded the ImagePlug class.

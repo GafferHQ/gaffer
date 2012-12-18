@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/ImageProcessor.h"
+#include "Gaffer/Context.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -64,3 +66,108 @@ const ImagePlug *ImageProcessor::inPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
+void ImageProcessor::hashDisplayWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( inPlug()->displayWindowPlug()->hash() );
+}
+
+void ImageProcessor::hashDataWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( inPlug()->dataWindowPlug()->hash() );
+}
+
+void ImageProcessor::hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( inPlug()->channelDataPlug()->hash() );
+}
+
+void ImageProcessor::hashChannelNamesPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( inPlug()->channelNamesPlug()->hash() );
+}
+
+void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( output, context, h );
+	h.append( enabledPlug()->hash() );
+	
+	if ( enabled() )
+	{
+		if( output == outPlug()->channelDataPlug() )
+		{
+			hashChannelDataPlug( context, h );
+			h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
+			h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
+		}
+		else if ( output == outPlug()->displayWindowPlug() )
+		{
+			hashDisplayWindowPlug( context, h );
+		}
+		else if ( output == outPlug()->dataWindowPlug() )
+		{
+			hashDataWindowPlug( context, h );
+		}
+		else if ( output == outPlug()->channelNamesPlug() )
+		{
+			hashChannelNamesPlug( context, h );
+		}
+	}
+	else
+	{
+		if( output == outPlug()->channelDataPlug() )
+		{
+			h = inPlug()->channelDataPlug()->hash();
+		}
+		else if ( output == outPlug()->displayWindowPlug() )
+		{
+			h = inPlug()->displayWindowPlug()->hash();
+		}
+		else if ( output == outPlug()->dataWindowPlug() )
+		{
+			h = inPlug()->dataWindowPlug()->hash();
+		}
+		else if ( output == outPlug()->channelNamesPlug() )
+		{
+			h = inPlug()->channelNamesPlug()->hash();
+		}
+	}
+}
+
+void ImageProcessor::compute( ValuePlug *output, const Context *context ) const
+{
+	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	if (imagePlug)
+	{
+		if( enabled() )
+		{
+			computeImagePlugs( output, context );
+		}
+		else
+		{
+			if( output == imagePlug->displayWindowPlug() )
+			{
+				static_cast<AtomicBox2iPlug *>( output )->setValue(
+					inPlug()->displayWindowPlug()->getValue()
+				);
+			}
+			else if( output == imagePlug->dataWindowPlug() )
+			{
+				static_cast<AtomicBox2iPlug *>( output )->setValue(
+					inPlug()->dataWindowPlug()->getValue()
+				);
+			}
+			else if( output == imagePlug->channelNamesPlug() )
+			{
+				static_cast<StringVectorDataPlug *>( output )->setValue(
+					inPlug()->channelNamesPlug()->getValue()
+				);
+			}
+			else if( output == imagePlug->channelDataPlug() )
+			{
+				static_cast<FloatVectorDataPlug *>( output )->setValue(
+					inPlug()->channelDataPlug()->getValue()
+				);
+			}
+		}
+	}
+}

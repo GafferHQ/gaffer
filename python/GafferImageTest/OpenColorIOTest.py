@@ -63,17 +63,27 @@ class OpenColorIOTest( unittest.TestCase ) :
 		
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
 	
-	@GafferTest.expectedFailure
 	def testHashPassThrough( self ) :
 	
-		# we should implement things so that if inputSpace==outputSpace
-		# or one of the spaces is not specified, the node is a no-op
-		# and just passes through the hash and data unmodified. we should
-		# also have an active plug for all ChannelDataProcessors, and
-		# an active() method they can override, to make it easy to do
-		# pass-through.
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.fileName )		
+
+		o = GafferImage.OpenColorIO()
+		o["in"].setInput( n["out"] )
 		
-		raise notImplementedError
+		self.assertEqual( n["out"].image(), o["out"].image() )
+	
+		o["inputSpace"].setValue( "linear" )
+		o["outputSpace"].setValue( "sRGB" )
+		
+		self.assertNotEqual( n["out"].image(), o["out"].image() )
+		
+		o["enabled"].setValue( False )
+		
+		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertEqual( n["out"]['displayWindow'].hash(), o["out"]['displayWindow'].hash() )
+		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
+		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 	
 if __name__ == "__main__":
 	unittest.main()

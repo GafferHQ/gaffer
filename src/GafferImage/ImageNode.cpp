@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,6 +51,7 @@ ImageNode::ImageNode( const std::string &name )
 	:	DependencyNode( name )
 {
 	addChild( new ImagePlug( "out", Gaffer::Plug::Out ) );
+	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 }
 
 ImageNode::~ImageNode()
@@ -66,51 +68,129 @@ const ImagePlug *ImageNode::outPlug() const
 	return getChild<ImagePlug>( "out" );
 }
 
+BoolPlug *ImageNode::enabledPlug()
+{
+	return getChild<BoolPlug>( "enabled" );
+}
+
+const BoolPlug *ImageNode::enabledPlug() const
+{
+	return getChild<BoolPlug>( "enabled" );
+}
+
+bool ImageNode::enabled() const
+{
+	return enabledPlug()->getValue();
+};
+
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	DependencyNode::hash( output, context, h );
-	if( output == outPlug()->channelDataPlug() )
+	h.append( enabledPlug()->hash() );
+	
+	if ( enabled() )
 	{
-		h.append( context->get<string>( ImagePlug::channelNameContextName ) );
-		h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );		
+		if( output == outPlug()->channelDataPlug() )
+		{
+			h.append( context->get<string>( ImagePlug::channelNameContextName ) );
+			h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
+			hashChannelDataPlug( context, h );
+		}
+		else if ( output == outPlug()->displayWindowPlug() )
+		{
+			hashDisplayWindowPlug( context, h );
+		}
+		else if ( output == outPlug()->dataWindowPlug() )
+		{
+			hashDataWindowPlug( context, h );
+		}
+		else if ( output == outPlug()->channelNamesPlug() )
+		{
+			hashChannelNamesPlug( context, h );
+		}
 	}
 }
-				
+
+void ImageNode::computeImagePlugs( ValuePlug *output, const Context *context ) const
+{
+	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	if( output == imagePlug->displayWindowPlug() )
+	{
+		static_cast<AtomicBox2iPlug *>( output )->setValue(
+			computeDisplayWindow( context, imagePlug )
+		);
+	}
+	else if( output == imagePlug->dataWindowPlug() )
+	{
+		static_cast<AtomicBox2iPlug *>( output )->setValue(
+			computeDataWindow( context, imagePlug )
+		);
+	}
+	else if( output == imagePlug->channelNamesPlug() )
+	{
+		static_cast<StringVectorDataPlug *>( output )->setValue(
+			computeChannelNames( context, imagePlug )
+		);
+	}
+	else if( output == imagePlug->channelDataPlug() )
+	{
+		std::string channelName = context->get<string>( ImagePlug::channelNameContextName );
+		V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
+		if( tileOrigin.x % ImagePlug::tileSize() || tileOrigin.y % ImagePlug::tileSize() )
+		{
+			throw Exception( "The image:tileOrigin must be a multiple of ImagePlug::tileSize()" );
+		}
+		static_cast<FloatVectorDataPlug *>( output )->setValue(
+			computeChannelData( channelName, tileOrigin, context, imagePlug )
+		);
+	}
+}
+
 void ImageNode::compute( ValuePlug *output, const Context *context ) const
 {
 	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
 	if( imagePlug )
 	{
-		if( output == imagePlug->displayWindowPlug() )
+		if( enabled() )
 		{
-			static_cast<AtomicBox2iPlug *>( output )->setValue(
-				computeDisplayWindow( context, imagePlug )
-			);
+			computeImagePlugs( output, context );
 		}
-		else if( output == imagePlug->dataWindowPlug() )
+		else
 		{
-			static_cast<AtomicBox2iPlug *>( output )->setValue(
-				computeDataWindow( context, imagePlug )
-			);
-		}
-		else if( output == imagePlug->channelNamesPlug() )
-		{
-			static_cast<StringVectorDataPlug *>( output )->setValue(
-				computeChannelNames( context, imagePlug )
-			);
-		}
-		else if( output == imagePlug->channelDataPlug() )
-		{
-			std::string channelName = context->get<string>( ImagePlug::channelNameContextName );
-			V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
-			if( tileOrigin.x % ImagePlug::tileSize() || tileOrigin.y % ImagePlug::tileSize() )
+			if( output == imagePlug->displayWindowPlug() )
 			{
-				throw Exception( "The image:tileOrigin must be a multiple of ImagePlug::tileSize()" );
+				static_cast<AtomicBox2iPlug *>( output )->setValue(
+					imagePlug->displayWindowPlug()->defaultValue()
+				);
 			}
-			static_cast<FloatVectorDataPlug *>( output )->setValue(
-				computeChannelData( channelName, tileOrigin, context, imagePlug )
-			);
+			else if( output == imagePlug->dataWindowPlug() )
+			{
+				static_cast<AtomicBox2iPlug *>( output )->setValue(
+					imagePlug->dataWindowPlug()->defaultValue()
+				);
+			}
+			else if( output == imagePlug->channelNamesPlug() )
+			{
+				static_cast<StringVectorDataPlug *>( output )->setValue(
+					imagePlug->channelNamesPlug()->defaultValue()
+				);
+			}
+			else if( output == imagePlug->channelDataPlug() )
+			{
+				static_cast<FloatVectorDataPlug *>( output )->setValue(
+					imagePlug->channelDataPlug()->defaultValue()
+				);
+			}
 		}
 	}
 }
 
+void ImageNode::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+	
+	if( input == enabledPlug() )
+	{
+		outputs.push_back( outPlug() );
+	}
+}

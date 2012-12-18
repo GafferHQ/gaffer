@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -44,7 +45,7 @@
 namespace GafferImage
 {
 
-/// The SceneNode class is the base class for all Nodes which are capable of generating
+/// The ImageNode class is the base class for all Nodes which are capable of generating
 /// or manipulating images.
 class ImageNode : public Gaffer::DependencyNode
 {
@@ -60,14 +61,29 @@ class ImageNode : public Gaffer::DependencyNode
 		/// may be added by derived classes if necessary.
 		ImagePlug *outPlug();
 		const ImagePlug *outPlug() const;
-				
+		
+		/// The enabled plug provides a mechanism for turning the effect of a node on and off.
+		/// When disabled the node will just pass through the plug's default values.
+		Gaffer::BoolPlug *enabledPlug();
+		const Gaffer::BoolPlug *enabledPlug() const;
+		
+		/// The default implementation returns the value of the enabled plug.
+		virtual bool enabled() const;
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 	protected :
 				
 		/// Implemented to append the image:channelName and image:tileOrigin context entries to the hash where appropriate.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDisplayWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashChannelNamesPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashDataWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
 
 		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+		void computeImagePlugs( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
