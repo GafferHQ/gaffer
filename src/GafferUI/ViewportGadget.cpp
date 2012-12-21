@@ -160,7 +160,7 @@ IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &pos
 
 	LineSegment3f result;
 	/// \todo The CameraController::unproject() method should be const.
-	const_cast<IECore::CameraController &>( m_cameraController ).unproject( V2i( position.x, position.y ), result.p0, result.p1 );
+	const_cast<IECore::CameraController &>( m_cameraController ).unproject( V2i( (int)position.x, (int)position.y ), result.p0, result.p1 );
 	if( gadget )
 	{
 		M44f m = gadget->fullTransform();
@@ -346,7 +346,7 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 		
 		if( motionType )
 		{
-			m_cameraController.motionStart( motionType, V2i( event.line.p1.x, event.line.p1.y ) );
+			m_cameraController.motionStart( motionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraInMotion = true;
 			// the const_cast is necessary because we don't want to give all the other
 			// Gadget types non-const access to the event, but we do need the ViewportGadget
@@ -408,7 +408,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( m_cameraInMotion )
 	{
-		m_cameraController.motionUpdate( V2i( event.line.p1.x, event.line.p1.y ) );
+		m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
  		renderRequestSignal()( this );
 		return true;
 	}
@@ -524,7 +524,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( m_cameraInMotion )
 	{
-		m_cameraController.motionEnd( V2i( event.line.p1.x, event.line.p1.y ) );
+		m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 		m_cameraInMotion = false;
 	 	renderRequestSignal()( this );
 		return true;
@@ -541,10 +541,10 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 {
-	V2i position( event.line.p0.x, event.line.p0.y );
+	V2i position( (int)event.line.p0.x, (int)event.line.p0.y );
 	
 	m_cameraController.motionStart( CameraController::Dolly, position );
-	position.x += event.wheelRotation * getViewport().x / 200.0f;
+	position.x += (int)(event.wheelRotation * getViewport().x / 200.0f);
 	m_cameraController.motionUpdate( position );
 	m_cameraController.motionEnd( position );
 

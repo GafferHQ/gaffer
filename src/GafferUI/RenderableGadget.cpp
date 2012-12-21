@@ -100,7 +100,7 @@ void RenderableGadget::doRender( const Style *style ) const
 {
 	if( m_scene )
 	{
-		m_scene->render( m_baseState );
+		m_scene->render( m_baseState.get() );
 	}
 	
 	if( m_dragSelecting )
@@ -158,7 +158,7 @@ std::string RenderableGadget::objectAt( const IECore::LineSegment3f &lineInGadge
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection );
-		m_scene->render( m_baseState );
+		m_scene->render( m_baseState.get() );
 	}
 	if( !selection.size() )
 	{

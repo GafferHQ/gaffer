@@ -396,4 +396,3 @@ IECore::DataPtr ArnoldShader::parameterValue( const Gaffer::ValuePlug *plug ) co
 	const T *typedPlug = static_cast<const T *>( plug );
 	return new TypedData<typename T::ValueType>( typedPlug->getValue() );
 }
-		

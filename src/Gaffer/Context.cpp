@@ -179,7 +179,7 @@ std::string Context::substitute( const std::string &s ) const
 				padding++;
 				i++;
 			}
-			int frame = round( getFrame() );
+			int frame = (int)round( getFrame() );
 			std::ostringstream padder;
 			padder << std::setw( padding ) << std::setfill( '0' ) << frame;
 			result += padder.str();

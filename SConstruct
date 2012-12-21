@@ -64,10 +64,13 @@ options.Add(
 	"g++",
 )
 
+## We really want to not have the -Wno-strict-aliasing flag, but it's necessary to stop boost
+# python warnings that don't seem to be prevented by including boost via -isystem even. Better to
+# be able to have -Werror but be missing one warning than to have no -Werror. Hopefully.
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" ]
+	[ "-pipe", "-Wall", "-Werror", "-Wno-strict-aliasing", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" ]
 )
 
 options.Add(
@@ -647,11 +650,6 @@ baseLibEnv.Append(
 
 	CPPPATH = [
 		"include",
-		"$BUILD_DIR/include",
-		"$BUILD_DIR/include/python$PYTHON_VERSION",
-		"$BUILD_DIR/include/OpenEXR",
-		"$BUILD_DIR/include/GL",
-		"$LOCATE_DEPENDENCY_CPPPATH",
 	],
 	
 	CPPFLAGS = [
@@ -681,6 +679,24 @@ baseLibEnv.Append(
 	
 )
 
+# include 3rd party headers with -isystem rather than -I.
+# this should turns off warnings from those headers, allowing us to
+# build with -Werror. there are so many warnings from boost
+# in particular that this would be otherwise impossible - note that
+# we're still having to turn off strict aliasing warnings in the
+# default CXXFLAGS because somehow they creep out of boost python
+# and past the defences.
+for path in [
+		"$BUILD_DIR/include",
+		"$BUILD_DIR/include/python$PYTHON_VERSION",
+		"$BUILD_DIR/include/OpenEXR",
+		"$BUILD_DIR/include/GL",
+	] + env["LOCATE_DEPENDENCY_CPPPATH"] :
+	
+	baseLibEnv.Append(
+		CXXFLAGS = [ "-isystem", path ]
+	)
+		
 ###############################################################################################
 # The basic environment for building python modules
 ###############################################################################################
