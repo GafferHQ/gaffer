@@ -66,67 +66,48 @@ const ImagePlug *ImageProcessor::inPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-void ImageProcessor::hashDisplayWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( inPlug()->displayWindowPlug()->hash() );
-}
-
-void ImageProcessor::hashDataWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( inPlug()->dataWindowPlug()->hash() );
-}
-
-void ImageProcessor::hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( inPlug()->channelDataPlug()->hash() );
-}
-
-void ImageProcessor::hashChannelNamesPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( inPlug()->channelNamesPlug()->hash() );
-}
-
 void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	DependencyNode::hash( output, context, h );
 	h.append( enabledPlug()->hash() );
 	
+	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
 	if ( enabled() )
 	{
-		if( output == outPlug()->channelDataPlug() )
+		if( output == imagePlug->channelDataPlug() )
 		{
-			hashChannelDataPlug( context, h );
+			hashChannelDataPlug( imagePlug, context, h );
 			h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 			h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
 		}
-		else if ( output == outPlug()->displayWindowPlug() )
+		else if ( output == imagePlug->displayWindowPlug() )
 		{
-			hashDisplayWindowPlug( context, h );
+			hashDisplayWindowPlug( imagePlug, context, h );
 		}
-		else if ( output == outPlug()->dataWindowPlug() )
+		else if ( output == imagePlug->dataWindowPlug() )
 		{
-			hashDataWindowPlug( context, h );
+			hashDataWindowPlug( imagePlug, context, h );
 		}
-		else if ( output == outPlug()->channelNamesPlug() )
+		else if ( output == imagePlug->channelNamesPlug() )
 		{
-			hashChannelNamesPlug( context, h );
+			hashChannelNamesPlug( imagePlug, context, h );
 		}
 	}
 	else
 	{
-		if( output == outPlug()->channelDataPlug() )
+		if( output == imagePlug->channelDataPlug() )
 		{
 			h = inPlug()->channelDataPlug()->hash();
 		}
-		else if ( output == outPlug()->displayWindowPlug() )
+		else if ( output == imagePlug->displayWindowPlug() )
 		{
 			h = inPlug()->displayWindowPlug()->hash();
 		}
-		else if ( output == outPlug()->dataWindowPlug() )
+		else if ( output == imagePlug->dataWindowPlug() )
 		{
 			h = inPlug()->dataWindowPlug()->hash();
 		}
-		else if ( output == outPlug()->channelNamesPlug() )
+		else if ( output == imagePlug->channelNamesPlug() )
 		{
 			h = inPlug()->channelNamesPlug()->hash();
 		}
@@ -136,7 +117,7 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 void ImageProcessor::compute( ValuePlug *output, const Context *context ) const
 {
 	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
-	if (imagePlug)
+	if ( imagePlug )
 	{
 		if( enabled() )
 		{

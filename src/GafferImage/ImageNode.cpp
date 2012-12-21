@@ -47,9 +47,12 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( ImageNode );
 
+size_t ImageNode::g_firstPlugIndex = 0;
+
 ImageNode::ImageNode( const std::string &name )
 	:	DependencyNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "out", Gaffer::Plug::Out ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 }
@@ -60,22 +63,22 @@ ImageNode::~ImageNode()
 
 ImagePlug *ImageNode::outPlug()
 {
-	return getChild<ImagePlug>( "out" );
+	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
 const ImagePlug *ImageNode::outPlug() const
 {
-	return getChild<ImagePlug>( "out" );
+	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
 BoolPlug *ImageNode::enabledPlug()
 {
-	return getChild<BoolPlug>( "enabled" );
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 const BoolPlug *ImageNode::enabledPlug() const
 {
-	return getChild<BoolPlug>( "enabled" );
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 bool ImageNode::enabled() const
@@ -90,23 +93,24 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	
 	if ( enabled() )
 	{
-		if( output == outPlug()->channelDataPlug() )
+		const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+		if( output == imagePlug->channelDataPlug() )
 		{
 			h.append( context->get<string>( ImagePlug::channelNameContextName ) );
 			h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
-			hashChannelDataPlug( context, h );
+			hashChannelDataPlug( imagePlug, context, h );
 		}
-		else if ( output == outPlug()->displayWindowPlug() )
+		else if ( output == imagePlug->displayWindowPlug() )
 		{
-			hashDisplayWindowPlug( context, h );
+			hashDisplayWindowPlug( imagePlug, context, h );
 		}
-		else if ( output == outPlug()->dataWindowPlug() )
+		else if ( output == imagePlug->dataWindowPlug() )
 		{
-			hashDataWindowPlug( context, h );
+			hashDataWindowPlug( imagePlug, context, h );
 		}
-		else if ( output == outPlug()->channelNamesPlug() )
+		else if ( output == imagePlug->channelNamesPlug() )
 		{
-			hashChannelNamesPlug( context, h );
+			hashChannelNamesPlug( imagePlug, context, h );
 		}
 	}
 }

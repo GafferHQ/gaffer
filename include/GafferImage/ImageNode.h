@@ -75,10 +75,10 @@ class ImageNode : public Gaffer::DependencyNode
 				
 		/// Implemented to append the image:channelName and image:tileOrigin context entries to the hash where appropriate.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDisplayWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-		virtual void hashChannelNamesPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-		virtual void hashDataWindowPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-		virtual void hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
 
 		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
@@ -90,6 +90,9 @@ class ImageNode : public Gaffer::DependencyNode
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		
+	private :
+		
+		static size_t g_firstPlugIndex;
 };
 
 } // namespace GafferImage

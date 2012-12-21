@@ -63,6 +63,21 @@ void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlug
 	}
 }
 
+void ChannelDataProcessor::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->displayWindowPlug()->hash();
+}
+
+void ChannelDataProcessor::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->channelDataPlug()->hash();
+}
+
+void ChannelDataProcessor::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->channelNamesPlug()->hash();
+}
+
 Imath::Box2i ChannelDataProcessor::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->displayWindowPlug()->getValue();
