@@ -183,6 +183,6 @@ GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 def __objectPlugViewCreator( plug, context ) :
 
 	with context :
-		return plug.getValue()
+		return plug.getValue( _copy=False )
 	
 Viewer.registerView( Gaffer.ObjectPlug.staticTypeId(), __objectPlugViewCreator )
