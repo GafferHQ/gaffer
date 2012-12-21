@@ -137,10 +137,10 @@ LOCATE_DEPENDENCY_CPPPATH = [
 ]
 
 if getOption( "RELEASE", "0" )=="0" :
-
+	
 	LOCATE_DEPENDENCY_CPPPATH.insert(
 		0,
-		os.path.join( os.path.expanduser( "~" ), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion )
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" )
 	)
 	
 ##########################################################################
