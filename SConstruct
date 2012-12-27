@@ -64,13 +64,10 @@ options.Add(
 	"g++",
 )
 
-## We really want to not have the -Wno-strict-aliasing flag, but it's necessary to stop boost
-# python warnings that don't seem to be prevented by including boost via -isystem even. Better to
-# be able to have -Werror but be missing one warning than to have no -Werror. Hopefully.
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall", "-Werror", "-Wno-strict-aliasing", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" ]
+	[ "-pipe", "-Wall", "-Werror", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" ]
 )
 
 options.Add(
@@ -385,7 +382,7 @@ options.Add(
 	"LOCATE_DEPENDENCY_CPPPATH",
 	"The locations on which to search for include files "
 	"for the dependencies.",
-	"",
+	[],
 )
 
 options.Add(
@@ -461,7 +458,7 @@ options.Add(
 )
 
 ###############################################################################################
-# Basic environment object. All the other environments will be based on this
+# Basic environment object. All the other environments will be based on this.
 ###############################################################################################
 
 env = Environment(
@@ -478,7 +475,17 @@ for e in env["ENV_VARS_TO_IMPORT"].split() :
 	if e in os.environ :
 		env["ENV"][e] = os.environ[e]
 
-env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
+if env["PLATFORM"] == "darwin" :
+	env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
+	env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
+	
+if env["PLATFORM"] == "posix" :
+	## We really want to not have the -Wno-strict-aliasing flag, but it's necessary to stop boost
+	# python warnings that don't seem to be prevented by including boost via -isystem even. Better to
+	# be able to have -Werror but be missing one warning than to have no -Werror.
+	## \todo This is probably only necessary for specific gcc versions where -isystem doesn't
+	# fully work. Reenable when we encounter versions that work correctly.
+	env.Append( CXXFLAGS = [ "-Wno-strict-aliasing" ] )
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )

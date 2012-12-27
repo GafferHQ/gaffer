@@ -70,7 +70,6 @@ RMAN_ROOT = "/Applications/Graphics/3Delight-10.0.41"
 ARNOLD_ROOT = "/Applications/Graphics/Arnold-4.0.9.1"
 NUKE_ROOT = "/Applications/Nuke6.3v6/Nuke6.3v6.app/Contents/MacOS"
 DOXYGEN = "/usr/local/bin/doxygen"
-CXXFLAGS = [ "-pipe", "-Wall", "-O2", "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS", "-D__USE_ISOC99" ]
 PYTHON_LINK_FLAGS = [ "-lpython$PYTHON_VERSION" ]
 
 APIEXTRACTOR_SRC_DIR = "$DEPENDENCIES_SRC_DIR/apiextractor-0.10.9"
