@@ -62,6 +62,18 @@ static PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr pa
 	return new PathMatcher( paths->readable().begin(), paths->readable().end() );
 }
 
+static list paths( const PathMatcher &p )
+{
+	std::vector<std::string> paths;
+	p.paths( paths );
+	list result;
+	for( std::vector<std::string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; it++ )
+	{
+		result.append( *it );
+	}
+	return result;
+}
+
 void bindPathMatcher()
 {
 	class_<PathMatcher>( "PathMatcher" )
@@ -71,6 +83,7 @@ void bindPathMatcher()
 		.def( "addPath", &PathMatcher::addPath )
 		.def( "removePath", &PathMatcher::removePath )
 		.def( "clear", &PathMatcher::clear )
+		.def( "paths", &paths )
 		.def( "match", &PathMatcher::match )
 		.def( self == self )
 		.def( self != self )

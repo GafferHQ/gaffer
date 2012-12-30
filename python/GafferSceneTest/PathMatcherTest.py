@@ -414,6 +414,26 @@ class PathMatcherTest( unittest.TestCase ) :
 		
 		m1.addPath( "/c*" )			
 		self.assertEqual( m1, m2 )
-			
+	
+	def testPaths( self ) :
+	
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.paths(), [] )
+		
+		m.addPath( "/a/b" )
+		self.assertEqual( m.paths(), [ "/a/b" ] )
+		
+		m.addPath( "/a/.../b" )
+		self.assertEqual( m.paths(), [ "/a/b", "/a/.../b" ] )
+		
+		m.removePath( "/a/.../b" )
+		self.assertEqual( m.paths(), [ "/a/b" ] )
+		
+		m.addPath( "/a/b/c*d*" )
+		self.assertEqual( m.paths(), [ "/a/b", "/a/b/c*d*" ] )
+		
+		m.clear()
+		self.assertEqual( m.paths(), [] )
+		
 if __name__ == "__main__":
 	unittest.main()

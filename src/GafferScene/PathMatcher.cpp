@@ -285,6 +285,11 @@ void PathMatcher::clear()
 	m_root = boost::shared_ptr<Node>( new Node );
 }
 
+void PathMatcher::paths( std::vector<std::string> &paths ) const
+{
+	pathsWalk( m_root.get(), "/", paths );
+}
+
 Filter::Result PathMatcher::match( const std::string &path ) const
 {
 	Filter::Result result = Filter::NoMatch;
@@ -447,5 +452,36 @@ void PathMatcher::removeWalk( Node *node, const TokenIterator &start, const Toke
 		{
 			node->ellipsis = 0;
 		}
+	}
+}
+
+void PathMatcher::pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const
+{
+	if( node->terminator )
+	{
+		paths.push_back( path );
+	}
+	
+	for( Node::ChildMapIterator it = node->children.begin(), eIt = node->children.end(); it != eIt; it++ )
+	{
+		std::string childPath = path;
+		if( node != m_root.get() )
+		{
+			childPath += "/";
+		}
+		childPath += it->first;
+		pathsWalk( it->second, childPath, paths );			
+	}
+
+	if( node->ellipsis )
+	{
+		std::string childPath = path;
+		if( node != m_root.get() )
+		{
+			childPath += "/";
+		}
+		childPath += "...";
+		pathsWalk( node->ellipsis, childPath, paths );			
+		
 	}
 }

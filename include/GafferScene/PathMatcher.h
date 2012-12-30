@@ -73,6 +73,10 @@ class PathMatcher
 	
 		void clear();
 		
+		/// Fills the paths container with all the paths held
+		/// within this matcher.
+		void paths( std::vector<std::string> &paths ) const;
+		
 		Filter::Result match( const std::string &path ) const;
 		
 		bool operator == ( const PathMatcher &other ) const;
@@ -86,7 +90,8 @@ class PathMatcher
 		
 		void matchWalk( Node *node, const TokenIterator &start, const TokenIterator &end, Filter::Result &result ) const;
 		void removeWalk( Node *node, const TokenIterator &start, const TokenIterator &end, bool &removed );
-		
+		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
+
 		boost::shared_ptr<Node> m_root;
 		
 };
