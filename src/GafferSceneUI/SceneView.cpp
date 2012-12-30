@@ -152,12 +152,7 @@ Imath::Box3f SceneView::framingBound() const
 
 void SceneView::selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget )
 {
-	/// \todo If RenderableGadget used PathMatcherData, then we might not need
-	/// to copy data here.
-	const RenderableGadget::Selection &selection = renderableGadget->getSelection();
-	StringVectorDataPtr s = new StringVectorData();
-	s->writable().insert( s->writable().end(), selection.begin(), selection.end() );
-	getContext()->set( "ui:scene:selectedPaths", s.get() );
+	transferSelectionToContext();
 }
 
 bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event )
@@ -221,6 +216,7 @@ void SceneView::expandSelection()
 	
 	if( needUpdate )
 	{
+		transferSelectionToContext();
 		updateRequestSignal()( this );
 	}
 }
@@ -265,5 +261,16 @@ void SceneView::collapseSelection()
 		selection.erase( **it );
 	}
 
+	transferSelectionToContext();
 	updateRequestSignal()( this );
+}
+
+void SceneView::transferSelectionToContext()
+{
+	/// \todo If RenderableGadget used PathMatcherData, then we might not need
+	/// to copy data here.
+	const RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
+	StringVectorDataPtr s = new StringVectorData();
+	s->writable().insert( s->writable().end(), selection.begin(), selection.end() );
+	getContext()->set( "ui:scene:selectedPaths", s.get() );
 }

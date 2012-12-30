@@ -71,6 +71,7 @@ class SceneView : public GafferUI::View3D
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
 		void expandSelection();
 		void collapseSelection();
+		void transferSelectionToContext();
 		
 		boost::signals::scoped_connection m_selectionChangedConnection;
 		

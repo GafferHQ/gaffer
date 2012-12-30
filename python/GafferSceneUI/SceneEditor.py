@@ -81,9 +81,12 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		
 	def _updateFromContext( self, modifiedItems ) :
 	
-		# the ScenePath will trigger an update anyway
-		pass
-		
+		if "ui:scene:selectedPaths" in modifiedItems :
+			p = self.__pathListing.getPath()
+			selection = [ p.copy().setFromString( s ) for s in self.getContext()["ui:scene:selectedPaths"] ]
+			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+				self.__pathListing.setSelectedPaths( selection )
+			
 	def __expansionChanged( self, pathListing ) :
 	
 		assert( pathListing is self.__pathListing )
