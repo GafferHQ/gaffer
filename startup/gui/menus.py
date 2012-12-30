@@ -75,6 +75,7 @@ GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Assignment", GafferScene.Assignment )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes )
+GafferUI.NodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )
 GafferUI.NodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
 GafferUI.NodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree )
 GafferUI.NodeMenu.append( "/Scene/Context/TimeWarp", GafferScene.SceneTimeWarp )

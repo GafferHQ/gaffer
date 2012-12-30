@@ -113,6 +113,10 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
+# SceneElementProcessor
+
+GafferUI.Nodule.registerNodule( GafferScene.SceneElementProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
+
 # Assignment
 
 GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader", GafferUI.StandardNodule )
