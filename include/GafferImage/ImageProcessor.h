@@ -58,16 +58,15 @@ class ImageProcessor : public ImageNode
 		/// Images enter the node through inPlug() and are output in processed form on ImageNode::outPlug()
 		ImagePlug *inPlug();
 		const ImagePlug *inPlug() const;
+			
+	protected :
 	
+		/// Reimplemented to pass through the hashes of the first input when the node is disabled. When it is not
+		/// it will call hashXXXXXPlug() so that derived classes can implement their own hashing functions.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;	
 		/// Reimplements the functionality of ImageNode::compute to pass through
 		/// the first input if the node is disabled.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		
-	protected:
-		/// Reimplemented to pass through the hashes of the first input when the node is disabled. When it is not
-		/// it will call hashXXXXXPlug() so that derived classes can implement their own hashing functions.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		
 		
 	private :
 	

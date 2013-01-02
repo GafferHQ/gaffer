@@ -68,9 +68,9 @@ void ChannelDataProcessor::hashDisplayWindowPlug( const GafferImage::ImagePlug *
 	h = inPlug()->displayWindowPlug()->hash();
 }
 
-void ChannelDataProcessor::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ChannelDataProcessor::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->channelDataPlug()->hash();
+	h = inPlug()->dataWindowPlug()->hash();
 }
 
 void ChannelDataProcessor::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

@@ -122,12 +122,26 @@ void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContaine
 	}
 }
 
-void ImageReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hash( output, context, h );
 	fileNamePlug()->hash( h );
 }
 
+void ImageReader::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	fileNamePlug()->hash( h );
+}
+
+void ImageReader::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	fileNamePlug()->hash( h );
+}
+
+void ImageReader::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	fileNamePlug()->hash( h );
+}
+		
 Imath::Box2i ImageReader::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();

@@ -62,12 +62,13 @@ class OpenColorIO : public ChannelDataProcessor
 
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 
-		/// Overrides the default implementation to disabled the node when the input color space is
+		/// Overrides the default implementation to disable the node when the input color space is
 		/// the same as the output color space.
 		virtual bool enabled() const;
+		
 	protected :
 		
-		virtual void hashChannelDataPlug( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 

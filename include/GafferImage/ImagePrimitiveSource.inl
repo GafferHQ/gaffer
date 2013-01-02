@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,12 +88,32 @@ void ImagePrimitiveSource<BaseType>::hash( const Gaffer::ValuePlug *output, cons
 	{
 		hashImagePrimitive( context, h );
 	}
-	else if( output->parent<ImagePlug>() == BaseType::outPlug() )
-	{
-		inputImagePrimitivePlug()->hash( h );
-	}
 }
 
+template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	inputImagePrimitivePlug()->hash( h );
+}
+
+template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	inputImagePrimitivePlug()->hash( h );
+}
+
+template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	inputImagePrimitivePlug()->hash( h );
+}
+
+template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	inputImagePrimitivePlug()->hash( h );
+}
+		
 template<typename BaseType>
 Gaffer::ObjectPlug *ImagePrimitiveSource<BaseType>::imagePrimitivePlug()
 {

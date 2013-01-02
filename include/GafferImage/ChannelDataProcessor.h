@@ -58,10 +58,11 @@ class ChannelDataProcessor : public ImageProcessor
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
+	
 		/// Reimplemented to pass through the hashes from the input plug as they don't change.
 		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
 		/// Implemented to pass through the input values. Derived classes need only implement computeChannelData().
 		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
