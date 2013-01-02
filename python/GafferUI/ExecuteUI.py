@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -84,9 +85,10 @@ def _execute( nodes ) :
 	script = nodes[0].scriptNode()
 	script._executeUILastExecuted = []
 	
-	for node in nodes :
-		node.execute()
-		script._executeUILastExecuted.append( weakref.ref( node ) )
+	with script.context() :
+		for node in nodes :
+			node.execute()
+			script._executeUILastExecuted.append( weakref.ref( node ) )
 
 def __selectedNodes( script ) :
 
