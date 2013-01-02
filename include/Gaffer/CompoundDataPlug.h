@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -81,6 +82,11 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		void fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const;
 		/// As above but fills a CompoundObjectMap instead.
 		void fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const;
+
+	private :
+	
+		template<typename T>
+		PlugPtr typedObjectValuePlug( const T *value );
 
 };
 

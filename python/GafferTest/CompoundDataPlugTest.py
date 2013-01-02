@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -90,6 +91,31 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		d, n = p.memberDataAndName( m3 )
 		self.assertEqual( d, None )
 		self.assertEqual( n, "" )
+	
+	def testVectorData( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		
+		m1 = p.addMember( "a", IECore.FloatVectorData( [ 1, 2, 3 ] ) )
+		self.failUnless( isinstance( m1, Gaffer.CompoundPlug ) )
+		
+		d, n = p.memberDataAndName( m1 )
+		self.assertEqual( d, IECore.FloatVectorData( [ 1, 2, 3 ] ) )
+		self.assertEqual( n, "a" )
+		
+		m2 = p.addMember( "b", IECore.IntVectorData( [ 1, 2, 3 ] ) )
+		self.failUnless( isinstance( m2, Gaffer.CompoundPlug ) )
+		
+		d, n = p.memberDataAndName( m2 )
+		self.assertEqual( d, IECore.IntVectorData( [ 1, 2, 3 ] ) )
+		self.assertEqual( n, "b" )
+		
+		m3 = p.addMember( "c", IECore.StringVectorData( [ "1", "2", "3" ] ) )
+		self.failUnless( isinstance( m3, Gaffer.CompoundPlug ) )
+		
+		d, n = p.memberDataAndName( m3 )
+		self.assertEqual( d, IECore.StringVectorData( [ "1", "2", "3" ] ) )
+		self.assertEqual( n, "c" )
 		
 if __name__ == "__main__":
 	unittest.main()

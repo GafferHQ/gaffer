@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,6 +38,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
 
 using namespace Imath;
@@ -156,6 +157,21 @@ Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, cons
 			plug->addChild( valuePlug );
 			break;
 		}
+		case FloatVectorDataTypeId :
+		{
+			plug->addChild( typedObjectValuePlug( static_cast<const FloatVectorData *>( value ) ) );
+			break;
+		}
+		case IntVectorDataTypeId :
+		{
+			plug->addChild( typedObjectValuePlug( static_cast<const IntVectorData *>( value ) ) );
+			break;
+		}
+		case StringVectorDataTypeId :
+		{
+			plug->addChild( typedObjectValuePlug( static_cast<const StringVectorData *>( value ) ) );
+			break;
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Member \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
@@ -166,6 +182,19 @@ Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, cons
 	return plug;
 }
 
+template<typename T>
+PlugPtr CompoundDataPlug::typedObjectValuePlug( const T *value )
+{
+	typename TypedObjectPlug<T>::Ptr result = new TypedObjectPlug<T>(
+		"value",
+		direction(),
+		new T(),
+		getFlags()	
+	);
+	result->setValue( value );
+	return result;
+}
+		
 Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, bool enabled )
 {
 	CompoundPlug *plug = addMember( name, value, plugName );
@@ -244,6 +273,15 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const CompoundPlug *paramet
 			break;
 		case Color4fPlugTypeId :
 			return new Color4fData( static_cast<const Color4fPlug *>( valuePlug )->getValue() );
+			break;
+		case FloatVectorDataPlugTypeId :
+			return static_cast<const FloatVectorDataPlug *>( valuePlug )->getValue()->copy();
+			break;
+		case IntVectorDataPlugTypeId :
+			return static_cast<const IntVectorDataPlug *>( valuePlug )->getValue()->copy();
+			break;
+		case StringVectorDataPlugTypeId :
+			return static_cast<const StringVectorDataPlug *>( valuePlug )->getValue()->copy();
 			break;	
 		default :
 			throw IECore::Exception(
