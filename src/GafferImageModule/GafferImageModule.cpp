@@ -44,6 +44,7 @@
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/OpenColorIO.h"
+#include "GafferImage/ObjectToImage.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -84,5 +85,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ImageProcessor>();
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
 	GafferBindings::DependencyNodeClass<OpenColorIO>();
+	GafferBindings::DependencyNodeClass<ObjectToImage>();
 
 }

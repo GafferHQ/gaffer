@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,28 +34,55 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "IECore/NullObject.h"
 
-namespace GafferImage
-{
+#include "GafferImage/ObjectToImage.h"
 
-enum TypeId
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferImage;
+
+IE_CORE_DEFINERUNTIMETYPED( ObjectToImage );
+
+size_t ObjectToImage::g_firstPlugIndex = 0;
+
+ObjectToImage::ObjectToImage( const std::string &name )
+	:	ImagePrimitiveNode( name )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ObjectPlug( "object", Plug::In, IECore::NullObject::defaultNullObject() ) );
+}
+
+ObjectToImage::~ObjectToImage()
+{
+}
+		
+Gaffer::ObjectPlug *ObjectToImage::objectPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::ObjectPlug *ObjectToImage::objectPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex );
+}
+				
+void ObjectToImage::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	ImagePrimitiveNode::affects( input, outputs );
 	
-	LastTypeId = 110899
-};
+	if( input == objectPlug() )
+	{
+		outputs.push_back( outPlug() );
+	}
+}
 
-} // namespace GafferImage
+void ObjectToImage::hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	objectPlug()->hash( h );
+}
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+IECore::ConstImagePrimitivePtr ObjectToImage::computeImagePrimitive( const Gaffer::Context *context ) const
+{
+	return runTimeCast<const ImagePrimitive>( objectPlug()->getValue() );
+}

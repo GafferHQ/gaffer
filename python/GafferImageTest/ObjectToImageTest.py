@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,11 +34,27 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
+import os
+import unittest
 
+import IECore
+
+import Gaffer
+import GafferImage
+
+class ObjectToImageTest( unittest.TestCase ) :
+
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+
+	def test( self ) :
+	
+		i = IECore.Reader.create( self.fileName ).read()
+		i.blindData().clear()
+		
+		n = GafferImage.ObjectToImage()
+		n["object"].setValue( i )
+		
+		self.assertEqual( n["out"].image(), i )
+				
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

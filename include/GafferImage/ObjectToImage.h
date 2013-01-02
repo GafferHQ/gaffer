@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,28 +34,42 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_OBJECTTOIMAGE_H
+#define GAFFERIMAGE_OBJECTTOIMAGE_H
+
+#include "GafferImage/ImagePrimitiveSource.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class ObjectToImage : public ImagePrimitiveNode
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
+
+		ObjectToImage( const std::string &name = staticTypeName() );
+		virtual ~ObjectToImage();
+		
+		Gaffer::ObjectPlug *objectPlug();
+		const Gaffer::ObjectPlug *objectPlug() const;
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+
+		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const;		
 	
-	LastTypeId = 110899
+	private :
+	
+		static size_t g_firstPlugIndex;
+	
 };
+
+IE_CORE_DECLAREPTR( ObjectToImage );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_OBJECTTOIMAGE_H

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -89,28 +89,33 @@ bool ImageNode::enabled() const
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	DependencyNode::hash( output, context, h );
-	h.append( enabledPlug()->hash() );
 	
-	if ( enabled() )
+	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	if( imagePlug )
 	{
-		const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
-		if( output == imagePlug->channelDataPlug() )
+		/// \todo Perhaps we don't need to hash enabledPlug() because enabled() will
+		/// compute its value anyway?
+		h.append( enabledPlug()->hash() ); 
+		if( enabled() )
 		{
-			h.append( context->get<string>( ImagePlug::channelNameContextName ) );
-			h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
-			hashChannelDataPlug( imagePlug, context, h );
-		}
-		else if ( output == imagePlug->displayWindowPlug() )
-		{
-			hashDisplayWindowPlug( imagePlug, context, h );
-		}
-		else if ( output == imagePlug->dataWindowPlug() )
-		{
-			hashDataWindowPlug( imagePlug, context, h );
-		}
-		else if ( output == imagePlug->channelNamesPlug() )
-		{
-			hashChannelNamesPlug( imagePlug, context, h );
+			if( output == imagePlug->channelDataPlug() )
+			{
+				h.append( context->get<string>( ImagePlug::channelNameContextName ) );
+				h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
+				hashChannelDataPlug( imagePlug, context, h );
+			}
+			else if( output == imagePlug->displayWindowPlug() )
+			{
+				hashDisplayWindowPlug( imagePlug, context, h );
+			}
+			else if( output == imagePlug->dataWindowPlug() )
+			{
+				hashDataWindowPlug( imagePlug, context, h );
+			}
+			else if( output == imagePlug->channelNamesPlug() )
+			{
+				hashChannelNamesPlug( imagePlug, context, h );
+			}
 		}
 	}
 }
