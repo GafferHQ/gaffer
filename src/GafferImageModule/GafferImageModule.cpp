@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,6 +37,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferImage/ImageNode.h"
@@ -55,6 +58,12 @@ static IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std
 	return d ? d->copy() : 0;
 }
 
+static IECore::ImagePrimitivePtr image( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.image();
+}
+
 BOOST_PYTHON_MODULE( _GafferImage )
 {
 	
@@ -70,7 +79,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 			)	
 		)
 		.def( "channelData", &channelData )
-		.def( "image", &ImagePlug::image )
+		.def( "image", &image )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
 		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
 	;
