@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,6 +34,8 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  
 ##########################################################################
+
+from __future__ import with_statement
 
 import IECore
 
@@ -86,7 +89,8 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		
 	def __addItem( self, name, value ) :
 	
-		self.getPlug().addOptionalMember( name, value, enabled=True )
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().addOptionalMember( name, value, enabled=True )
 
 class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 
