@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,28 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#ifndef GAFFERRENDERMAN_RENDERMANOPTIONS_H
+#define GAFFERRENDERMAN_RENDERMANOPTIONS_H
 
-#include "GafferScene/Shader.h"
+#include "GafferScene/Options.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "GafferRenderMan/TypeIds.h"
 
-namespace GafferArnold
+namespace GafferRenderMan
 {
 
-class ArnoldShader : public GafferScene::Shader
+class RenderManOptions : public GafferScene::Options
 {
 
 	public :
 
-		ArnoldShader( const std::string &name=staticTypeName() );
-		virtual ~ArnoldShader();
+		RenderManOptions( const std::string &name=staticTypeName() );
+		virtual ~RenderManOptions();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void setShader( const std::string &shaderName );
-
-	protected :
-	
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-		
-	private :
-		
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
-		
-		template<typename T>
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
-					
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManOptions, RenderManOptionsTypeId, GafferScene::Options );
+				
 };
 
-} // namespace GafferArnold
+} // namespace GafferRenderMan
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+#endif // GAFFERRENDERMAN_RENDERMANOPTIONS_H

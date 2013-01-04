@@ -46,7 +46,7 @@ enum TypeId
 	ArnoldOptionsTypeId = 110901,
 	ArnoldAttributesTypeId = 110902,
 	
-	LastTypeId = 110999
+	LastTypeId = 110949
 };
 
 } // namespace GafferArnold

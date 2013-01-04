@@ -79,14 +79,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 	}
 
 	getChild<StringPlug>( "__shaderName" )->setValue( AiNodeEntryGetName( shader ) );
-	
-	CompoundPlugPtr parametersPlug = getChild<CompoundPlug>( "parameters" );
-	if( !parametersPlug )
-	{
-		parametersPlug = new CompoundPlug( "parameters", Plug::In, Plug::Default | Plug::Dynamic );
-		addChild( parametersPlug );
-	}
-	
+		
 	AtParamIterator *it = AiNodeEntryGetParamIterator( shader );  	
 	while( const AtParamEntry *param = AiParamIteratorGetNext( it ) )
 	{
@@ -230,7 +223,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 		if( plug )
 		{
 			plug->setFlags( Plug::Dynamic, true );
-			parametersPlug->addChild( plug );
+			parametersPlug()->addChild( plug );
 		}
 		else
 		{
@@ -312,47 +305,18 @@ void ArnoldShader::shaderHash( IECore::MurmurHash &h ) const
 {
 	Shader::shaderHash( h );
 	getChild<StringPlug>( "__shaderName" )->hash( h );
-	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
-	if( parametersPlug )
-	{
-		for( InputValuePlugIterator it( parametersPlug ); it!=it.end(); it++ )
-		{
-			parameterHash( *it, h );
-		}
-	}
 }
 
 IECore::ShaderPtr ArnoldShader::shader( NetworkBuilder &network ) const
 {
 	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue(), "ai:surface" );
 	
-	const CompoundPlug *parametersPlug = getChild<CompoundPlug>( "parameters" );
-	if( parametersPlug )
+	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
-		for( InputValuePlugIterator it( parametersPlug ); it!=it.end(); it++ )
-		{
-			result->parameters()[(*it)->getName()] = parameterValue( *it, network );
-		}
+		result->parameters()[(*it)->getName()] = parameterValue( *it, network );
 	}
 	
 	return result;
-}
-
-void ArnoldShader::parameterHash( const Gaffer::ValuePlug *plug, IECore::MurmurHash &h ) const
-{
-	const Plug *inputPlug = plug->getInput<Plug>();
-	if( inputPlug )
-	{
-		const ArnoldShader *n = IECore::runTimeCast<const ArnoldShader>( inputPlug->node() );
-		if( n )
-		{
-			n->shaderHash( h );
-			return;
-		}
-		// fall through to hash plug value
-	}
-	
-	plug->hash( h );
 }
 
 IECore::DataPtr ArnoldShader::parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const

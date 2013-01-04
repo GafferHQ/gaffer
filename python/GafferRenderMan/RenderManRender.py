@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -36,21 +35,65 @@
 ##########################################################################
 
 import IECore
+import IECoreRI
 
+import Gaffer
 import GafferScene
 
-GafferScene.Displays.registerDisplay( 
-	"Interactive/Beauty",
-	IECore.Display( 
-		"beauty",
-		"ieDisplay",
-		"rgba",
-		{
-			"driverType" : "ClientDisplayDriver",
-			"displayHost" : "localhost",
-			"displayPort" : "1559",
-			"remoteDisplayType" : "GafferDisplayDriver",
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-	)
-)
+class RenderManRender( GafferScene.Render ) :
+
+	def __init__( self, name="RenderManRender", inputs={}, dynamicPlugs=() ) :
+	
+		GafferScene.Render.__init__( self, name )
+		
+		self.addChild(
+			Gaffer.StringPlug(
+				"ribFileName",
+			)
+		)
+		
+		self._init( inputs, dynamicPlugs )
+		
+	def _createRenderer( self ) :
+	
+		renderer = IECoreRI.Renderer( self.__fileName() )
+		return renderer
+		
+	def _outputProcedural( self, procedural, bound, renderer ) :
+	
+		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )	
+		
+		serialisedParameters = str( IECore.ParameterParser().serialise( procedural.parameters() ) )
+		pythonString = "IECoreRI.executeProcedural( 'gaffer/script', 1, %s )" % serialisedParameters
+		
+		## \todo Remove the version number from the IE cortex builds and remove it here too.
+		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython-7\" \"%s\" ] [ %f %f %f %f %f %f ]\n" % \
+			(
+				pythonString,
+				bound.min.x, bound.min.y, bound.min.z,
+				bound.max.x, bound.max.y, bound.max.z
+			)
+				
+		renderer.command(
+			"ri:archiveRecord",
+			{
+				"type" : "verbatim",	
+				"record" : dynamicLoadCommand
+			}
+		)
+		
+	def _commandAndArgs( self ) :
+		
+		return [ "renderdl", self.__fileName() ]
+			
+	def __fileName( self ) : 
+	
+		result = self["ribFileName"].getValue()
+		# because execute() isn't called inside a compute(), we
+		# don't get string expansions automatically, and have to
+		# do them ourselves.
+		## \todo Can we improve this situation?
+		result = Gaffer.Context.current().substitute( result )
+		return result
+
+IECore.registerRunTimeTyped( RenderManRender )

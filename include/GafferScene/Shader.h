@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -41,6 +42,7 @@
 #include "IECore/Shader.h"
 
 #include "Gaffer/Node.h"
+#include "Gaffer/CompoundPlug.h"
 
 #include "GafferScene/TypeIds.h"
 
@@ -56,6 +58,9 @@ class Shader : public Gaffer::Node
 		virtual ~Shader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Shader, ShaderTypeId, Gaffer::Node );
+		
+		Gaffer::CompoundPlug *parametersPlug();
+		const Gaffer::CompoundPlug *parametersPlug() const;
 		
 		IECore::MurmurHash stateHash() const;
 		void stateHash( IECore::MurmurHash &h ) const;
@@ -85,8 +90,10 @@ class Shader : public Gaffer::Node
 				
 		};
 		
-		virtual void shaderHash( IECore::MurmurHash &h ) const = 0;
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const = 0;
+		virtual void shaderHash( IECore::MurmurHash &h ) const;
+		/// \todo Try to implement this here in a way that can be shared by
+		/// the derived classes.
+		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const = 0;	
 		
 };
 

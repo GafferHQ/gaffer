@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#ifndef GAFFERRENDERMAN_RENDERMANSHADER_H
+#define GAFFERRENDERMAN_RENDERMANSHADER_H
+
+#include "IECore/CachedReader.h"
 
 #include "GafferScene/Shader.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "GafferRenderMan/TypeIds.h"
 
-namespace GafferArnold
+namespace GafferRenderMan
 {
 
-class ArnoldShader : public GafferScene::Shader
+class RenderManShader : public GafferScene::Shader
 {
 
 	public :
 
-		ArnoldShader( const std::string &name=staticTypeName() );
-		virtual ~ArnoldShader();
+		RenderManShader( const std::string &name=staticTypeName() );
+		virtual ~RenderManShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
 		
-		void setShader( const std::string &shaderName );
+		void loadShader( const std::string &shaderName );
+
+		/// The loader used by loadShader() - this is exposed so that the ui
+		/// can use it too.
+		static IECore::CachedReader *shaderLoader();
 
 	protected :
 	
 		virtual void shaderHash( IECore::MurmurHash &h ) const;
 		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-		
-	private :
-		
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
-		
-		template<typename T>
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
 					
 };
 
-} // namespace GafferArnold
+} // namespace GafferRenderMan
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+#endif // GAFFERRENDERMAN_RENDERMANSHADER_H

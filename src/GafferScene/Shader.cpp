@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,12 +51,26 @@ IE_CORE_DEFINERUNTIMETYPED( Shader );
 Shader::Shader( const std::string &name )
 	:	Node( name )
 {
+	addChild( new CompoundPlug( "parameters", Plug::In, Plug::Default | Plug::Dynamic ) );
 }
 
 Shader::~Shader()
 {
 }
 
+Gaffer::CompoundPlug *Shader::parametersPlug()
+{
+	/// \todo It'd be nice to access this by index, but currently I don't think the
+	/// ordering of dynamic plugs is respected across scene save and load. Ideally we'd
+	/// make the base plug non-dynamic but still be allowed to add dynamic children to it.
+	return getChild<CompoundPlug>( "parameters" );
+}
+
+const Gaffer::CompoundPlug *Shader::parametersPlug() const
+{
+	return getChild<CompoundPlug>( "parameters" );
+}
+		
 IECore::MurmurHash Shader::stateHash() const
 {
 	IECore::MurmurHash h;
@@ -78,6 +93,21 @@ IECore::ObjectVectorPtr Shader::state() const
 void Shader::shaderHash( IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
+	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	{
+		const Plug *inputPlug = (*it)->getInput<Plug>();
+		if( inputPlug )
+		{
+			const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
+			if( n )
+			{
+				n->shaderHash( h );
+				continue;
+			}
+			// fall through to hash plug value
+		}
+		(*it)->hash( h );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

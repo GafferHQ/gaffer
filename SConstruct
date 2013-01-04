@@ -631,7 +631,8 @@ if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py -d $BUILD_DIR/python  --confirm-license && make && make install" )
 
 # having MACOS_DEPLOYMENT_TARGET set breaks the pyside build for some reason
-del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
+if "MACOSX_DEPLOYMENT_TARGET" in depEnv["ENV"] :
+	del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
 if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
 	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
@@ -820,6 +821,16 @@ libraries = {
 	"GafferArnoldTest" : {},
 
 	"GafferArnoldUI" : {},
+
+	"GafferRenderMan" : {
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],
+		},
+	},
+
+	"GafferRenderManUI" : {},
+
+	"GafferRenderManTest" : {},
 		
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),

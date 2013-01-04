@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,22 +34,7 @@
 #  
 ##########################################################################
 
-import IECore
-
-import GafferScene
-
-GafferScene.Displays.registerDisplay( 
-	"Interactive/Beauty",
-	IECore.Display( 
-		"beauty",
-		"ieDisplay",
-		"rgba",
-		{
-			"driverType" : "ClientDisplayDriver",
-			"displayHost" : "localhost",
-			"displayPort" : "1559",
-			"remoteDisplayType" : "GafferDisplayDriver",
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-	)
-)
+import RenderManRenderUI
+import RenderManAttributesUI
+import RenderManOptionsUI
+import Menus

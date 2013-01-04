@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,27 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#include "boost/python.hpp"
 
-#include "GafferScene/Shader.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "GafferRenderMan/RenderManShader.h"
+#include "GafferRenderMan/RenderManAttributes.h"
+#include "GafferRenderMan/RenderManOptions.h"
 
-namespace GafferArnold
+using namespace boost::python;
+using namespace GafferRenderMan;
+
+BOOST_PYTHON_MODULE( _GafferRenderMan )
 {
-
-class ArnoldShader : public GafferScene::Shader
-{
-
-	public :
-
-		ArnoldShader( const std::string &name=staticTypeName() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void setShader( const std::string &shaderName );
-
-	protected :
 	
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-		
-	private :
-		
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
-		
-		template<typename T>
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
-					
-};
+	GafferBindings::NodeClass<RenderManShader>()
+		.def( "loadShader", &RenderManShader::loadShader )
+		.def( "shaderLoader", &RenderManShader::shaderLoader, return_value_policy<reference_existing_object>() )
+		.staticmethod( "shaderLoader" )
+	;
 
-} // namespace GafferArnold
+	GafferBindings::NodeClass<RenderManAttributes>();
+	GafferBindings::NodeClass<RenderManOptions>();
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+}

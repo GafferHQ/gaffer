@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -55,9 +55,11 @@ __definition = IECore.MenuDefinition()
 # nodeCreator must be a callable that returns a Gaffer.Node.	
 def append( path, nodeCreator ) :
 
-	definition().append( path, { "command" : __creatorWrapper( nodeCreator=nodeCreator ) } )
+	definition().append( path, { "command" : nodeCreatorWrapper( nodeCreator=nodeCreator ) } )
 
-def __creatorWrapper( nodeCreator ) :
+## Utility function which takes a callable that creates a node, and returns a new
+# callable which will add the node to the graph.
+def nodeCreatorWrapper( nodeCreator ) :
 
 	def f( menu ) :
 				
@@ -222,6 +224,6 @@ def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar ) :
 	for n in c.classNames() :
 		nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
 		v = c.getDefaultVersion( n )
-		d.append( "/" + nc, { "command" : __creatorWrapper( IECore.curry( __parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
+		d.append( "/" + nc, { "command" : nodeCreatorWrapper( IECore.curry( __parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
 
 	return d

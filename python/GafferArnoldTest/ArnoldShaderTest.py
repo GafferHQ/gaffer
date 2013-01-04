@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -141,7 +142,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		self.assertEqual( st[0].name, "noise" )
 		self.failUnless( "__handle" in st[0].parameters )
 		 
-		self.assertEqual( st[1].type, "surface" )
+		self.assertEqual( st[1].type, "ai:surface" )
 		self.assertEqual( st[1].name, "standard" )
 		self.failIf( "__handle" in st[1].parameters )
 		
@@ -156,7 +157,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		)
 		
 	def testShaderNetworkRender( self ) :
-			
+					
 		f = GafferArnold.ArnoldShader()
 		f.setShader( "flat" )
 		f["parameters"]["color"].setValue( IECore.Color3f( 1, 1, 0 ) )
@@ -235,14 +236,14 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		s.setShader( "standard" )
 		
 		t = GafferArnold.ArnoldShader()
-		s.setShader( "image" )
+		t.setShader( "image" )
 		
-		s["emission_color"].setInput( t["out"] )
+		s["parameters"]["emission_color"].setInput( t["out"] )
 		
-		self.failUnless( s["emission_color"].getInput().isSame( t["out"] ) )
-		self.failUnless( s["emission_color"][0].getInput().isSame( t["out"][0] ) )
-		self.failUnless( s["emission_color"][1].getInput().isSame( t["out"][1] ) )
-		self.failUnless( s["emission_color"][2].getInput().isSame( t["out"][2] ) )
+		self.failUnless( s["parameters"]["emission_color"].getInput().isSame( t["out"] ) )
+		self.failUnless( s["parameters"]["emission_color"][0].getInput().isSame( t["out"][0] ) )
+		self.failUnless( s["parameters"]["emission_color"][1].getInput().isSame( t["out"][1] ) )
+		self.failUnless( s["parameters"]["emission_color"][2].getInput().isSame( t["out"][2] ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,35 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#include "GafferRenderMan/RenderManOptions.h"
 
-#include "GafferScene/Shader.h"
+using namespace Imath;
+using namespace GafferRenderMan;
 
-#include "GafferArnold/TypeIds.h"
+IE_CORE_DEFINERUNTIMETYPED( RenderManOptions );
 
-namespace GafferArnold
+RenderManOptions::RenderManOptions( const std::string &name )
+	:	GafferScene::Options( name, Gaffer::Plug::Default )
 {
-
-class ArnoldShader : public GafferScene::Shader
-{
-
-	public :
-
-		ArnoldShader( const std::string &name=staticTypeName() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void setShader( const std::string &shaderName );
-
-	protected :
+	Gaffer::CompoundDataPlug *options = optionsPlug();
 	
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-		
-	private :
-		
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
-		
-		template<typename T>
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
-					
-};
+	// sampling parameters
+	
+	/*options->addOptionalMember( "ai:AA_samples", new IECore::IntData( 3 ), "aaSamples", false );
+	options->addOptionalMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), "giDiffuseSamples", false );
+	options->addOptionalMember( "ai:GI_glossy_samples", new IECore::IntData( 2 ), "giGlossySamples", false );
+	options->addOptionalMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ), "giRefractionSamples", false );*/
 
-} // namespace GafferArnold
+	// searchpath parameters
+	
+	options->addOptionalMember( "ri:searchpath:shader", new IECore::StringData( "" ), "shaderSearchPath", false );
+	options->addOptionalMember( "ri:searchpath:texture", new IECore::StringData( "" ), "textureSearchPath", false );
+	options->addOptionalMember( "ri:searchpath:display", new IECore::StringData( "" ), "displaySearchPath", false );
+	options->addOptionalMember( "ri:searchpath:archive", new IECore::StringData( "" ), "archiveSearchPath", false );
+	options->addOptionalMember( "ri:searchpath:procedural", new IECore::StringData( "" ), "proceduralSearchPath", false );
+	
+}
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+RenderManOptions::~RenderManOptions()
+{
+}

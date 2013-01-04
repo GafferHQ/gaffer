@@ -55,6 +55,7 @@ except Exception, m :
 	stacktrace = traceback.format_exc()
 	IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading GafferArnoldUI - \"%s\".\n %s" % ( m, stacktrace ) )
 
+import GafferRenderManUI
 	
 # ScriptWindow menu
 

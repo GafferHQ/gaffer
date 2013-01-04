@@ -74,125 +74,10 @@ Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, cons
 	namePlug->setValue( name );
 	plug->addChild( namePlug );
 	
-	/// \todo Support more plug types - perhaps using PlugType.h to simplify the code?
-	switch( value->typeId() )
-	{
-		case FloatDataTypeId :
-		{
-			FloatPlugPtr valuePlug = new FloatPlug(
-				"value",
-				direction(),
-				0,
-				Imath::limits<float>::min(),
-				Imath::limits<float>::max(),
-				getFlags()
-			);
-			valuePlug->setValue( static_cast<const FloatData *>( value )->readable() );
-			plug->addChild( valuePlug );
-			break;
-		}
-		case IntDataTypeId :
-		{
-			IntPlugPtr valuePlug = new IntPlug(
-				"value",
-				direction(),
-				0,
-				Imath::limits<int>::min(),
-				Imath::limits<int>::max(),
-				getFlags()
-			);
-			valuePlug->setValue( static_cast<const IntData *>( value )->readable() );
-			plug->addChild( valuePlug );
-			break;
-		}
-		case StringDataTypeId :
-		{
-			StringPlugPtr valuePlug = new StringPlug(
-				"value",
-				direction(),
-				"",
-				getFlags()
-			);
-			valuePlug->setValue( static_cast<const StringData *>( value )->readable() );
-			plug->addChild( valuePlug );
-			break;
-		}
-		case BoolDataTypeId :
-		{
-			BoolPlugPtr valuePlug = new BoolPlug(
-				"value",
-				direction(),
-				false,
-				getFlags()
-			);
-			valuePlug->setValue( static_cast<const BoolData *>( value )->readable() );
-			plug->addChild( valuePlug );
-			break;
-		}
-		case Color3fDataTypeId :
-		{
-			Color3fPlugPtr valuePlug = new Color3fPlug(
-				"value",
-				direction(),
-				Color3f( 0 ),
-				Color3f( Imath::limits<float>::min() ),
-				Color3f( Imath::limits<float>::max() ),
-				getFlags()
-			);
-			valuePlug->setValue( static_cast<const Color3fData *>( value )->readable() );
-			plug->addChild( valuePlug );
-			break;
-		}
-		case Color4fDataTypeId :
-		{
-			Color4fPlugPtr valuePlug = new Color4fPlug(
-				"value",
-				direction(),
-				Color4f( 0 ),
-				Color4f( Imath::limits<float>::min() ),
-				Color4f( Imath::limits<float>::max() ),
-				getFlags()
-			);
-			valuePlug->setValue( static_cast<const Color4fData *>( value )->readable() );
-			plug->addChild( valuePlug );
-			break;
-		}
-		case FloatVectorDataTypeId :
-		{
-			plug->addChild( typedObjectValuePlug( static_cast<const FloatVectorData *>( value ) ) );
-			break;
-		}
-		case IntVectorDataTypeId :
-		{
-			plug->addChild( typedObjectValuePlug( static_cast<const IntVectorData *>( value ) ) );
-			break;
-		}
-		case StringVectorDataTypeId :
-		{
-			plug->addChild( typedObjectValuePlug( static_cast<const StringVectorData *>( value ) ) );
-			break;
-		}
-		default :
-			throw IECore::Exception(
-				boost::str( boost::format( "Member \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
-			);
-	}
+	plug->addChild( createPlugFromData( "value", direction(), getFlags(), value ) );
 	
 	addChild( plug );
 	return plug;
-}
-
-template<typename T>
-PlugPtr CompoundDataPlug::typedObjectValuePlug( const T *value )
-{
-	typename TypedObjectPlug<T>::Ptr result = new TypedObjectPlug<T>(
-		"value",
-		direction(),
-		new T(),
-		getFlags()	
-	);
-	result->setValue( value );
-	return result;
 }
 		
 Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, bool enabled )
@@ -254,39 +139,160 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const CompoundPlug *paramet
 	}
 		
 	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( 1 );
-	switch( valuePlug->typeId() )
+	return extractDataFromPlug( valuePlug );
+}
+
+ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value )
+{
+	switch( value->typeId() )
 	{
-		case FloatPlugTypeId :
-			return new FloatData( static_cast<const FloatPlug *>( valuePlug )->getValue() );
-			break;
-		case IntPlugTypeId :
-			return new IntData( static_cast<const IntPlug *>( valuePlug )->getValue() );
-			break;
-		case StringPlugTypeId :
-			return new StringData( static_cast<const StringPlug *>( valuePlug )->getValue() );
-			break;
-		case BoolPlugTypeId :
-			return new BoolData( static_cast<const BoolPlug *>( valuePlug )->getValue() );
-			break;
-		case Color3fPlugTypeId :
-			return new Color3fData( static_cast<const Color3fPlug *>( valuePlug )->getValue() );
-			break;
-		case Color4fPlugTypeId :
-			return new Color4fData( static_cast<const Color4fPlug *>( valuePlug )->getValue() );
-			break;
-		case FloatVectorDataPlugTypeId :
-			return static_cast<const FloatVectorDataPlug *>( valuePlug )->getValue()->copy();
-			break;
-		case IntVectorDataPlugTypeId :
-			return static_cast<const IntVectorDataPlug *>( valuePlug )->getValue()->copy();
-			break;
-		case StringVectorDataPlugTypeId :
-			return static_cast<const StringVectorDataPlug *>( valuePlug )->getValue()->copy();
-			break;	
+		case FloatDataTypeId :
+		{
+			FloatPlugPtr valuePlug = new FloatPlug(
+				name,
+				direction,
+				0,
+				Imath::limits<float>::min(),
+				Imath::limits<float>::max(),
+				flags
+			);
+			valuePlug->setValue( static_cast<const FloatData *>( value )->readable() );
+			return valuePlug;
+		}
+		case IntDataTypeId :
+		{
+			IntPlugPtr valuePlug = new IntPlug(
+				name,
+				direction,
+				0,
+				Imath::limits<int>::min(),
+				Imath::limits<int>::max(),
+				flags
+			);
+			valuePlug->setValue( static_cast<const IntData *>( value )->readable() );
+			return valuePlug;
+		}
+		case StringDataTypeId :
+		{
+			StringPlugPtr valuePlug = new StringPlug(
+				name,
+				direction,
+				"",
+				flags
+			);
+			valuePlug->setValue( static_cast<const StringData *>( value )->readable() );
+			return valuePlug;
+		}
+		case BoolDataTypeId :
+		{
+			BoolPlugPtr valuePlug = new BoolPlug(
+				name,
+				direction,
+				false,
+				flags
+			);
+			valuePlug->setValue( static_cast<const BoolData *>( value )->readable() );
+			return valuePlug;
+		}
+		case V2fDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const V2fData *>( value ) );
+		}
+		case V3fDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const V3fData *>( value ) );
+		}
+		case Color3fDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color3fData *>( value ) );
+		}
+		case Color4fDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color4fData *>( value ) );
+		}
+		case FloatVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const FloatVectorData *>( value ) );
+		}
+		case IntVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const IntVectorData *>( value ) );
+		}
+		case StringVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const StringVectorData *>( value ) );
+		}
 		default :
 			throw IECore::Exception(
-				boost::str( boost::format( "Parameter \"%s\" has unsupported value plug type \"%s\"" ) % name % valuePlug->typeName() )
+				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
+			);
+	}
+}
+
+template<typename T>
+ValuePlugPtr CompoundDataPlug::compoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	typedef typename T::ValueType ValueType;
+	typedef typename ValueType::BaseType BaseType;
+	typedef CompoundNumericPlug<ValueType> PlugType;
+	
+	typename PlugType::Ptr result = new PlugType(
+		name,
+		direction,
+		ValueType( 0 ),
+		ValueType( Imath::limits<BaseType>::min() ),
+		ValueType( Imath::limits<BaseType>::max() ),
+		flags
+	);
+	
+	result->setValue( value->readable() );
+	return result;
+}
+
+template<typename T>
+ValuePlugPtr CompoundDataPlug::typedObjectValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	typename TypedObjectPlug<T>::Ptr result = new TypedObjectPlug<T>(
+		name,
+		direction,
+		new T(),
+		flags	
+	);
+	result->setValue( value );
+	return result;
+}
+
+IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
+{
+	switch( plug->typeId() )
+	{
+		case FloatPlugTypeId :
+			return new FloatData( static_cast<const FloatPlug *>( plug )->getValue() );
+		case IntPlugTypeId :
+			return new IntData( static_cast<const IntPlug *>( plug )->getValue() );
+		case StringPlugTypeId :
+			return new StringData( static_cast<const StringPlug *>( plug )->getValue() );
+		case BoolPlugTypeId :
+			return new BoolData( static_cast<const BoolPlug *>( plug )->getValue() );
+		case V2fPlugTypeId :
+			return new V2fData( static_cast<const V2fPlug *>( plug )->getValue() );
+		case V3fPlugTypeId :
+			return new V3fData( static_cast<const V3fPlug *>( plug )->getValue() );
+		case Color3fPlugTypeId :
+			return new Color3fData( static_cast<const Color3fPlug *>( plug )->getValue() );
+		case Color4fPlugTypeId :
+			return new Color4fData( static_cast<const Color4fPlug *>( plug )->getValue() );
+		case FloatVectorDataPlugTypeId :
+			return static_cast<const FloatVectorDataPlug *>( plug )->getValue()->copy();
+		case IntVectorDataPlugTypeId :
+			return static_cast<const IntVectorDataPlug *>( plug )->getValue()->copy();
+		case StringVectorDataPlugTypeId :
+			return static_cast<const StringVectorDataPlug *>( plug )->getValue()->copy();
+		default :
+			throw IECore::Exception(
+				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName() % plug->typeName() )
 			);
 	}		
+
 }
 

@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,36 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#include "GafferRenderMan/RenderManAttributes.h"
 
-#include "GafferScene/Shader.h"
+using namespace GafferRenderMan;
 
-#include "GafferArnold/TypeIds.h"
+IE_CORE_DEFINERUNTIMETYPED( RenderManAttributes );
 
-namespace GafferArnold
+RenderManAttributes::RenderManAttributes( const std::string &name )
+	:	GafferScene::Attributes( name, Gaffer::Plug::Default )
 {
-
-class ArnoldShader : public GafferScene::Shader
-{
-
-	public :
-
-		ArnoldShader( const std::string &name=staticTypeName() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void setShader( const std::string &shaderName );
-
-	protected :
+	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 	
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-		
-	private :
-		
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
-		
-		template<typename T>
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
-					
-};
+	// visibility and hit mode parameters
+	
+	attributes->addOptionalMember( "ri:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", false );
+	attributes->addOptionalMember( "ri:shade:camerahitmode", new IECore::StringData( "shader" ), "cameraHitMode", false );
+	
+	attributes->addOptionalMember( "ri:visibility:transmission", new IECore::BoolData( false ), "transmissionVisibility", false );
+	attributes->addOptionalMember( "ri:shade:transmissionhitmode", new IECore::StringData( "shader" ), "transmissionHitMode", false );
+	
+	attributes->addOptionalMember( "ri:visibility:diffuse", new IECore::BoolData( false ), "diffuseVisibility", false );
+	attributes->addOptionalMember( "ri:shade:diffusehitmode", new IECore::StringData( "primitive" ), "diffuseHitMode", false );
 
-} // namespace GafferArnold
+	attributes->addOptionalMember( "ri:visibility:specular", new IECore::BoolData( false ), "specularVisibility", false );
+	attributes->addOptionalMember( "ri:shade:specularhitmode", new IECore::StringData( "shader" ), "specularHitMode", false );
+	
+	attributes->addOptionalMember( "ri:visibility:photon", new IECore::BoolData( false ), "photonVisibility", false );
+	attributes->addOptionalMember( "ri:shade:photonhitmode", new IECore::StringData( "shader" ), "photonHitMode", false );
+	
+}
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+RenderManAttributes::~RenderManAttributes()
+{
+}
