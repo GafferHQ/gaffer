@@ -61,6 +61,12 @@ class PathMatcher
 		template<typename Iterator>
 		PathMatcher( Iterator pathsBegin, Iterator pathsEnd );
 		
+		/// \todo Should this keep the existing tree in place,
+		/// but just remove the terminator flags on any items
+		/// not present in the new paths? This might give
+		/// better performance for selections and expansions
+		/// which will tend to be adding and removing the same
+		/// paths repeatedly.
 		template<typename Iterator>
 		void init( Iterator pathsBegin, Iterator pathsEnd );
 
