@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,18 +78,14 @@ static object get( Context &c, const IECore::InternedString &name )
 	}
 }
 
-/// \todo It'd be nice if there was a get with default in C++ as well.
 static object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
 {
-	ConstDataPtr d;
-	try
-	{
-		d = c.get<Data>( name );
-	}
-	catch( ... )
+	ConstDataPtr d = c.get<Data>( name, 0 );
+	if( !d )
 	{
 		return defaultValue;
 	}
+	
 	try
 	{
 		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
