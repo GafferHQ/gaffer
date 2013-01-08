@@ -143,6 +143,12 @@ if getOption( "RELEASE", "0" )=="0" :
 		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" )
 	)
 	
+	if targetApp :
+		LOCATE_DEPENDENCY_CPPPATH.insert(
+			0,
+			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "include" )
+		)
+
 ##########################################################################
 # get lib locations right
 ##########################################################################
@@ -154,7 +160,14 @@ LOCATE_DEPENDENCY_LIBPATH = [
 ]
 
 if targetAppVersion :
-
+	
+	targetAppLocation = targetAppReg["location"]
+	for directory in targetAppReg.get( "libPaths", [] ) :
+		LOCATE_DEPENDENCY_LIBPATH.insert(
+			0,
+			os.path.join( IEEnv.Environment.rootPath(), targetAppLocation, directory ),
+		)
+	
 	LOCATE_DEPENDENCY_LIBPATH.insert(
 		0,
 		os.path.join( IEEnv.Environment.rootPath(), "tools", targetApp, targetAppVersion, "lib", IEEnv.platform() ),
