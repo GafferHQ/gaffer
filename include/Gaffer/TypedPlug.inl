@@ -35,56 +35,98 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
-#include "Gaffer/Context.h"
+/// This file contains the implementation of TypedPlug. Rather than include it
+/// in a public header it is #included in TypedPlug.cpp,
+/// and the relevant template classes are explicitly instantiated there. This prevents
+/// a host of problems to do with the definition of the same symbols in multiple object
+/// files.
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( BoolPlug, BoolPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringPlug, StringPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M33fPlug, M33fPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( M44fPlug, M44fPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox3fPlug, AtomicBox3fPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( AtomicBox2iPlug, AtomicBox2iPlugTypeId )
+template<class T>
+const IECore::RunTimeTyped::TypeDescription<TypedPlug<T> > TypedPlug<T>::g_typeDescription;
 
-// specialise StringPlug::getValue() to perform substitutions.
-
-template<>
-std::string StringPlug::getValue() const
-{	
-	bool performSubstitution = direction()==Plug::In && inCompute() && Plug::getFlags( Plug::PerformsSubstitutions );
-		
-	IECore::ConstObjectPtr o = getObjectValue();
-	const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
-	if( !s )
-	{
-		throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
-	}
-	return performSubstitution ? Context::current()->substitute( s->readable() ) : s->readable();
-}
-
-template<>
-IECore::MurmurHash StringPlug::hash() const
+template<class T>
+TypedPlug<T>::TypedPlug(
+	const std::string &name,
+	Direction direction,
+	const T &defaultValue,
+	unsigned flags
+)
+	:	ValuePlug( name, direction, new DataType( defaultValue ), flags ),
+		m_defaultValue( defaultValue )
 {
-	bool performSubstitution = direction()==Plug::In && !getInput<ValuePlug>() && Plug::getFlags( Plug::PerformsSubstitutions );
-	if( !performSubstitution )
-	{
-		return ValuePlug::hash();
-	}
-	
-	IECore::MurmurHash result;
-	result.append( Context::current()->substitute( getValue() ) );
-	return result;
 }
 
-// explicit instantiation
-template class TypedPlug<bool>;
-template class TypedPlug<std::string>;
-template class TypedPlug<Imath::M33f>;
-template class TypedPlug<Imath::M44f>;
-template class TypedPlug<Imath::Box3f>;
-template class TypedPlug<Imath::Box2i>;
+template<class T>
+TypedPlug<T>::~TypedPlug()
+{
+}
+
+template<class T>
+bool TypedPlug<T>::acceptsInput( const Plug *input ) const
+{
+	if( !ValuePlug::acceptsInput( input ) )
+	{
+		return false;
+	}
+	if( input )
+	{
+		return input->isInstanceOf( staticTypeId() );
+	}
+	return true;
+}
+
+template<class T>
+const T &TypedPlug<T>::defaultValue() const
+{
+	return m_defaultValue;
+}
+		
+template<class T>
+void TypedPlug<T>::setValue( const T &value )
+{
+	setObjectValue( new DataType( value ) );
+}
+
+template<class T>
+T TypedPlug<T>::getValue() const
+{
+	IECore::ConstObjectPtr o = getObjectValue();
+	return static_cast<const DataType *>( o.get() )->readable();
+}
+
+template<class T>
+void TypedPlug<T>::setToDefault()
+{
+	setValue( m_defaultValue );
+}
+
+template<class T>
+void TypedPlug<T>::setFrom( const ValuePlug *other )
+{
+	const TypedPlug<T> *tOther = IECore::runTimeCast<const TypedPlug<T> >( other );
+	if( tOther )
+	{
+		setValue( tOther->getValue() );
+	}
+	else
+	{
+		throw IECore::Exception( "Unsupported plug type" );
+	}
+}
+
+template<class T>
+IECore::MurmurHash TypedPlug<T>::hash() const
+{
+	return ValuePlug::hash();
+}
+
+template<class T>
+void TypedPlug<T>::hash( IECore::MurmurHash &h ) const
+{
+	ValuePlug::hash( h );
+}
 
 } // namespace Gaffer
