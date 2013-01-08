@@ -143,7 +143,7 @@ if getOption( "RELEASE", "0" )=="0" :
 		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" )
 	)
 	
-	if targetApp :
+	if targetAppVersion :
 		LOCATE_DEPENDENCY_CPPPATH.insert(
 			0,
 			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "include" )
