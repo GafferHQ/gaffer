@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -380,8 +380,15 @@ options.Add(
 
 options.Add(
 	"LOCATE_DEPENDENCY_CPPPATH",
-	"The locations on which to search for include files "
-	"for the dependencies.",
+	"Locations on which to search for include files "
+	"for the dependencies. These are included with -I.",
+	[],
+)
+
+options.Add(
+	"LOCATE_DEPENDENCY_SYSTEMPATH",
+	"Locations on which to search for include files "
+	"for the dependencies. These are included with -isystem.",
 	[],
 )
 
@@ -658,7 +665,7 @@ baseLibEnv.Append(
 
 	CPPPATH = [
 		"include",
-	],
+	] + env["LOCATE_DEPENDENCY_CPPPATH"],
 	
 	CPPFLAGS = [
 		"-DBOOST_FILESYSTEM_VERSION=2",
@@ -699,7 +706,7 @@ for path in [
 		"$BUILD_DIR/include/python$PYTHON_VERSION",
 		"$BUILD_DIR/include/OpenEXR",
 		"$BUILD_DIR/include/GL",
-	] + env["LOCATE_DEPENDENCY_CPPPATH"] :
+	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
 	
 	baseLibEnv.Append(
 		CXXFLAGS = [ "-isystem", path ]

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -122,11 +122,10 @@ if targetAppVersion :
 # get include locations right
 ##########################################################################
 
-LOCATE_DEPENDENCY_CPPPATH = [
+LOCATE_DEPENDENCY_SYSTEMPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), "gcc", "4.1.2", "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenImageIO", oiioVersion ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "cortex", cortexMajorVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ), "OpenEXR" ),
@@ -134,6 +133,10 @@ LOCATE_DEPENDENCY_CPPPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", targetAppReg.get( "boostVersion", cortexReg["boostVersion"] ) ),
 	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion )
 
+]
+
+LOCATE_DEPENDENCY_CPPPATH = [
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" ),
 ]
 
 if getOption( "RELEASE", "0" )=="0" :
@@ -177,7 +180,7 @@ if getOption( "RELEASE", "0" )=="0" :
 
 	LOCATE_DEPENDENCY_LIBPATH.insert(
 		0,
-		os.path.join( os.path.expanduser( "~" ), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 	)
 	
 ##########################################################################
