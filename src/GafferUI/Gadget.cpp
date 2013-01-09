@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -43,6 +43,7 @@
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/NameStateComponent.h"
+#include "IECoreGL/Selector.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
@@ -146,8 +147,11 @@ void Gadget::render( const Style *currentStyle ) const
 	
 		glMultMatrixf( m_transform.getValue() );
 	
-		glLoadName( m_glName );
-	
+		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+		{
+			selector->loadName( m_glName );
+		}
+		
 		if( !currentStyle )
 		{
 			currentStyle = style();

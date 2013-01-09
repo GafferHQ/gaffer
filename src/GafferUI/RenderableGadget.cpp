@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -100,7 +100,16 @@ void RenderableGadget::doRender( const Style *style ) const
 {
 	if( m_scene )
 	{
-		m_scene->render( m_baseState.get() );
+		/// \todo We're skipping rendering while in GL_SELECT mode
+		/// as it's crazy slow for large models. When we start using
+		/// IDRender selection mode for ViewportGadget::gadgetAt then
+		/// we can remove this workaround.
+		GLint renderMode = 0;
+		glGetIntegerv(GL_RENDER_MODE, &renderMode);
+		if( renderMode != GL_SELECT )
+		{
+			m_scene->render( m_baseState.get() );
+		}
 	}
 	
 	if( m_dragSelecting )
@@ -154,17 +163,35 @@ IECoreGL::State *RenderableGadget::baseState()
 }
 
 std::string RenderableGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
-{
+{	
 	std::vector<IECoreGL::HitRecord> selection;
 	{
-		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection );
-		m_scene->render( m_baseState.get() );
+		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
+		m_scene->render( selectionScope.baseState() );
 	}
+	
 	if( !selection.size() )
 	{
 		return "";
 	}
 	return selection[0].name.value();
+}
+
+size_t RenderableGadget::objectsAt( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, std::vector<std::string> &objectNames ) const
+{
+	std::vector<IECoreGL::HitRecord> selection;
+	{
+		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
+		m_scene->render( selectionScope.baseState() );
+	}
+	
+	objectNames.reserve( selection.size() );
+	for( size_t i = 0, e = selection.size(); i < e; i++ )
+	{
+		objectNames.push_back( selection[i].name.value() );
+	}
+	
+	return objectNames.size();
 }
 
 RenderableGadget::Selection &RenderableGadget::getSelection()
@@ -298,20 +325,16 @@ bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	
 	m_dragSelecting = false;
-
-	std::vector<IECoreGL::HitRecord> selection;
-	{
-		ViewportGadget::SelectionScope selectionScope( m_dragStartPosition, m_lastDragPosition, this, selection );
-		m_scene->render( m_baseState );
-	}
+	
+	std::vector<std::string> selection;
+	objectsAt( m_dragStartPosition, m_lastDragPosition, selection );
 	
 	bool selectionChanged = false;
-	for( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
+	for( std::vector<std::string>::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
 	{
-		const std::string &name = it->name.value();
-		if( m_selection.find( name ) == m_selection.end() )
+		if( m_selection.find( *it ) == m_selection.end() )
 		{
-			m_selection.insert( name );
+			m_selection.insert( *it );
 			selectionChanged = true;
 		}
 	}

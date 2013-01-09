@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -129,7 +130,8 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 
 	std::vector<HitRecord> selection;
 	{
-		SelectionScope selectionScope( this, rasterPosition, selection );
+		/// \todo Use IDRender selection mode - this requires cooperation from the style though.
+		SelectionScope selectionScope( this, rasterPosition, selection, IECoreGL::Selector::GLSelect );
 		
 		const Style *s = style();
 		s->bind();
@@ -617,15 +619,15 @@ typename Signal::result_type ViewportGadget::dispatchEvent( GadgetPtr gadget, Si
 // SelectionScope implementation
 //////////////////////////////////////////////////////////////////////////
 
-ViewportGadget::SelectionScope::SelectionScope( const IECore::LineSegment3f &lineInGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection )
+ViewportGadget::SelectionScope::SelectionScope( const IECore::LineSegment3f &lineInGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode )
 	:	m_selection( selection )
 {
 	const ViewportGadget *viewportGadget = gadget->ancestor<ViewportGadget>();
 	V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, gadget );
-	begin( viewportGadget, rasterPosition, gadget->fullTransform() );
+	begin( viewportGadget, rasterPosition, gadget->fullTransform(), mode );
 }
 
-ViewportGadget::SelectionScope::SelectionScope( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection )
+ViewportGadget::SelectionScope::SelectionScope( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode )
 	:	m_selection( selection )
 {
 	const ViewportGadget *viewportGadget = gadget->ancestor<ViewportGadget>();
@@ -634,13 +636,13 @@ ViewportGadget::SelectionScope::SelectionScope( const Imath::V3f &corner0InGadge
 	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( corner0InGadgetSpace, gadget ) );
 	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( corner1InGadgetSpace, gadget ) );
 	
-	begin( viewportGadget, rasterRegion, gadget->fullTransform() );
+	begin( viewportGadget, rasterRegion, gadget->fullTransform(), mode );
 }
 
-ViewportGadget::SelectionScope::SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection )
+ViewportGadget::SelectionScope::SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode )
 	:	m_selection( selection )
 {
-	begin( viewportGadget, rasterPosition, M44f() );
+	begin( viewportGadget, rasterPosition, M44f(), mode );
 }
 
 ViewportGadget::SelectionScope::~SelectionScope()
@@ -648,16 +650,22 @@ ViewportGadget::SelectionScope::~SelectionScope()
 	end();
 }
 
-void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform )
+IECoreGL::State *ViewportGadget::SelectionScope::baseState()
+{
+	return m_selector.baseState();
+}
+
+void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform, IECoreGL::Selector::Mode mode )
 {
 	begin(
 		viewportGadget,
 		Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ),
-		transform
+		transform,
+		mode
 	);
 }
 
-void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform )
+void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform, IECoreGL::Selector::Mode mode )
 {
 	V2f viewport = viewportGadget->getViewport();
 	Box2f ndcRegion( rasterRegion.min / viewport, rasterRegion.max / viewport );
@@ -672,7 +680,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	m_selector.begin( ndcRegion );
+	m_selector.begin( ndcRegion, mode );
 	
 	glPushMatrix();
 	glMultMatrixf( transform.getValue() );

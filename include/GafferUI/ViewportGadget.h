@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -93,19 +94,32 @@ class ViewportGadget : public IndividualContainer
 				/// Start an OpenGL selection operation for the specified position in the specified gadget. After construction,
 				/// perform drawing as usual in the object space of the Gadget, and upon destruction the selection
 				/// vector will have been filled with the specified hits.
-				SelectionScope( const IECore::LineSegment3f &lineInGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection );
+				SelectionScope(
+					const IECore::LineSegment3f &lineInGadgetSpace, const Gadget *gadget,
+					std::vector<IECoreGL::HitRecord> &selection,
+					IECoreGL::Selector::Mode mode = IECoreGL::Selector::GLSelect
+				);
 				/// As above, but selecting within a rectangle in screen space, defined by two corners in gadget space. 
-				SelectionScope( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, const Gadget *gadget, std::vector<IECoreGL::HitRecord> &selection );
+				SelectionScope(
+					const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, const Gadget *gadget,
+					std::vector<IECoreGL::HitRecord> &selection,
+					IECoreGL::Selector::Mode mode = IECoreGL::Selector::GLSelect
+				);
 				~SelectionScope();
+				
+				/// Returns the IECoreGL::State which should be used for rendering while selecting.
+				/// \todo Would it be better for IECoreGL::Selector to be scoped in the same way as this
+				/// class and for us to simply derive from it?
+				IECoreGL::State *baseState();
 				
 			private :
 
 				/// Private constructor for use by ViewportGadget.
-				SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection );
+				SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode );
 				friend class ViewportGadget;
 
-				void begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform );
-				void begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform );
+				void begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform, IECoreGL::Selector::Mode mode );
+				void begin( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, const Imath::M44f &transform, IECoreGL::Selector::Mode mode );
 				void end();
 				
 				IECoreGL::Selector m_selector;
