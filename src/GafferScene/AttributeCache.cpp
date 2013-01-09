@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -196,7 +197,7 @@ IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, con
 	IECore::PrimitivePtr result = inputGeometry->copy();
 	for( std::vector<IECore::InterpolatedCache::AttributeHandle>::const_iterator it = attributeNames.begin(); it!=attributeNames.end(); it++ )
 	{
-		if( it->compare( 0, 8, "primVar:" )==0 )
+		if( it->value().compare( 0, 8, "primVar:" )==0 )
 		{
 			std::string name( *it, 8 );
 			IECore::DataPtr value = IECore::runTimeCast<IECore::Data>( cache->read( frame, cacheObjectName, *it ) );

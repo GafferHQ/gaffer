@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -189,8 +190,16 @@ IECore::ConstStringVectorDataPtr ModelCacheSource::computeChildNames( const Scen
 {
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 
+	IndexedIO::EntryIDList c;
+	entry->modelCache()->childNames( c );
+	
 	StringVectorDataPtr result = new StringVectorData;
-	entry->modelCache()->childNames( result->writable() );
+	std::vector<std::string> &cn = result->writable();
+	cn.reserve( c.size() );
+	for( size_t i = 0, e = c.size(); i < e; i++ )
+	{
+		cn.push_back( c[i].value() );
+	}
 	
 	return result;
 }

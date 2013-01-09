@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -43,7 +43,7 @@
 #include "IECoreGL/GL.h"
 #include "IECoreGL/Font.h"
 #include "IECoreGL/FontLoader.h"
-#include "IECoreGL/ShaderManager.h"
+#include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/Camera.h"
 
@@ -86,7 +86,7 @@ void StandardStyle::bind( const Style *currentStyle ) const
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	
-	shader()->bind();
+	glUseProgram( shader()->program() );
 }
 
 Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
@@ -315,17 +315,17 @@ IECoreGL::Shader *StandardStyle::shader() const
 {
 	if( !m_shader )
 	{
-		m_shader = ShaderManager::defaultShaderManager()->load( "ui/standardStyle" );
-		m_borderParameter = m_shader->uniformParameterIndex( "border" );
-		m_borderRadiusParameter = m_shader->uniformParameterIndex( "borderRadius" );
-		m_edgeAntiAliasingParameter = m_shader->uniformParameterIndex( "edgeAntiAliasing" );
-		m_textureParameter = m_shader->uniformParameterIndex( "texture" );
-		m_textureTypeParameter = m_shader->uniformParameterIndex( "textureType" );
-		m_bezierParameter = m_shader->uniformParameterIndex( "bezier" );
-		m_v0Parameter = m_shader->uniformParameterIndex( "v0" );
-		m_v1Parameter = m_shader->uniformParameterIndex( "v1" );
-		m_v2Parameter = m_shader->uniformParameterIndex( "v2" );
-		m_v3Parameter = m_shader->uniformParameterIndex( "v3" );
+		m_shader = ShaderLoader::defaultShaderLoader()->load( "ui/standardStyle" );
+		m_borderParameter = m_shader->uniformParameter( "border" )->location;
+		m_borderRadiusParameter = m_shader->uniformParameter( "borderRadius" )->location;
+		m_edgeAntiAliasingParameter = m_shader->uniformParameter( "edgeAntiAliasing" )->location;
+		m_textureParameter = m_shader->uniformParameter( "texture" )->location;
+		m_textureTypeParameter = m_shader->uniformParameter( "textureType" )->location;
+		m_bezierParameter = m_shader->uniformParameter( "bezier" )->location;
+		m_v0Parameter = m_shader->uniformParameter( "v0" )->location;
+		m_v1Parameter = m_shader->uniformParameter( "v1" )->location;
+		m_v2Parameter = m_shader->uniformParameter( "v2" )->location;
+		m_v3Parameter = m_shader->uniformParameter( "v3" )->location;
 	}
 	
 	return m_shader.get();
