@@ -185,6 +185,13 @@ IECore::ConstStringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelN
 	{
 		image->channelNames( result->writable() );
 	}
+	else
+	{
+		std::vector<std::string> &channelStrVector( result->writable() );
+		channelStrVector.push_back("R");
+		channelStrVector.push_back("G");
+		channelStrVector.push_back("B");
+	}
 	return result;
 }
 
@@ -194,17 +201,13 @@ IECore::ConstFloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelDa
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( !image )
 	{
-		/// \todo Returning 0 is questionable here - plug values are never allowed to be null.
-		/// We're relying on no-one calling computeChannelData() when we've returned
-		/// an empty data window and empty channel names above. Perhaps we should return
-		/// a black tile or throw an exception instead?
-		return 0;
+		return ImagePlug::blackTile();
 	}
 	
 	IECore::ConstFloatVectorDataPtr channelData = image->getChannel<float>( channelName );
 	if( !channelData )
 	{
-		return 0;
+		return ImagePlug::blackTile();
 	}
 	const std::vector<float> &channel = channelData->readable();
 	
