@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -43,23 +44,23 @@ namespace GafferUI
 {
 
 template<typename T>
-typename T::Ptr IndividualContainer::getChild()
+T *IndividualContainer::getChild()
 {
 	if( !children().size() )
 	{
 		return 0;
 	}
-	return Gaffer::GraphComponent::getChild<T>( (*(children().begin()))->getName() );
+	return Gaffer::GraphComponent::getChild<T>( 0 );
 }
 
 template<typename T>
-typename T::ConstPtr IndividualContainer::getChild() const
+const T *IndividualContainer::getChild() const
 {
 	if( !children().size() )
 	{
 		return 0;
 	}
-	return IECore::runTimeCast<T>( *(children().begin()) );
+	return Gaffer::GraphComponent::getChild<T>( 0 );
 }
 
 

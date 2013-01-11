@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -47,6 +47,11 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+static GadgetPtr getChild( IndividualContainer &c )
+{
+	return c.getChild<Gadget>();
+}
+
 void GafferUIBindings::bindIndividualContainer()
 {
 	IECorePython::RunTimeTypedClass<IndividualContainer>()
@@ -54,6 +59,6 @@ void GafferUIBindings::bindIndividualContainer()
 		.def( init<GadgetPtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( IndividualContainer )
 		.def( "setChild", &IndividualContainer::setChild )
-		.def( "getChild", (GadgetPtr (IndividualContainer::*)())&IndividualContainer::getChild<Gadget> )
+		.def( "getChild", &getChild )
 	;
 }
