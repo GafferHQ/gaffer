@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,8 +62,8 @@ class StandardNodeGadget : public NodeGadget
 		/// the contents is a simple NameGadget for the node, but any Gadget or
 		/// Container can be placed there instead.
 		void setContents( GadgetPtr contents );
-		GadgetPtr getContents();
-		ConstGadgetPtr getContents() const;
+		Gadget *getContents();
+		const Gadget *getContents() const;
 		
 		Imath::Box3f bound() const;
 
@@ -74,6 +74,15 @@ class StandardNodeGadget : public NodeGadget
 	private :
 		
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
+		
+		LinearContainer *inputNoduleContainer();
+		const LinearContainer *inputNoduleContainer() const;
+		
+		IndividualContainer *contentsContainer();
+		const IndividualContainer *contentsContainer() const;
+		
+		LinearContainer *outputNoduleContainer();
+		const LinearContainer *outputNoduleContainer() const;
 	
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
 				
@@ -83,7 +92,7 @@ class StandardNodeGadget : public NodeGadget
 		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
 		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
 		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-				
+					
 };
 
 } // namespace GafferUI

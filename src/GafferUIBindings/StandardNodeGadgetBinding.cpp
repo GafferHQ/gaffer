@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -66,12 +66,17 @@ class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 
 IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
 
+static GadgetPtr getContents( StandardNodeGadget &g )
+{
+	return g.getContents();
+}
+
 void GafferUIBindings::bindStandardNodeGadget()
 {
 	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
 		.def( init<Gaffer::NodePtr, LinearContainer::Orientation>( ( arg( "node" ), arg( "orientation" )=LinearContainer::X ) ) )
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 		.def( "setContents", &StandardNodeGadget::setContents )
-		.def( "getContents", (GadgetPtr (StandardNodeGadget::*)())&StandardNodeGadget::getContents )
+		.def( "getContents", &getContents )
 	;
 }

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,21 +65,27 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 {
 	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
-	LinearContainerPtr mainContainer = new LinearContainer( "mainContainer", oppositeOrientation, LinearContainer::Centre, g_spacing );
+	LinearContainerPtr mainContainer = new LinearContainer(
+		"mainContainer",
+		oppositeOrientation,
+		LinearContainer::Centre,
+		g_spacing,
+		orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing
+	);
 
 	const float noduleSpacing = orientation == LinearContainer::X ? 2.0f : 0.2f;
 	LinearContainer::Direction noduleDirection = orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing;
 	LinearContainerPtr inputNoduleContainer = new LinearContainer( "inputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing, noduleDirection );
 	LinearContainerPtr outputNoduleContainer = new LinearContainer( "outputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing, noduleDirection );
 
-	mainContainer->addChild( orientation == LinearContainer::X ? outputNoduleContainer : inputNoduleContainer );
+	mainContainer->addChild( outputNoduleContainer );
 	
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
 	contentsContainer->setPadding( Box3f( V3f( -g_borderWidth ), V3f( g_borderWidth ) ) );
 	
 	mainContainer->addChild( contentsContainer );
-	mainContainer->addChild( orientation == LinearContainer::X ? inputNoduleContainer : outputNoduleContainer );
+	mainContainer->addChild( inputNoduleContainer );
 
 	setChild( mainContainer );
 	setContents( new NameGadget( node ) );
@@ -108,7 +114,7 @@ Imath::Box3f StandardNodeGadget::bound() const
 {
 	Box3f b = IndividualContainer::bound();
 	
-	LinearContainer::Orientation orientation = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->getOrientation();
+	LinearContainer::Orientation orientation = inputNoduleContainer()->getOrientation();
 
 	if( orientation == LinearContainer::X )
 	{
@@ -121,8 +127,8 @@ Imath::Box3f StandardNodeGadget::bound() const
 	
 	// add the missing spacing to the border if we have no nodules on a given side
 			
-	Box3f inputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->transformedBound( this );
-	Box3f outputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleContainer" )->transformedBound( this );
+	Box3f inputContainerBound = inputNoduleContainer()->transformedBound( this );
+	Box3f outputContainerBound = outputNoduleContainer()->transformedBound( this );
 	if( inputContainerBound.isEmpty() )
 	{
 		if( orientation == LinearContainer::X )
@@ -177,10 +183,10 @@ void StandardNodeGadget::doRender( const Style *style ) const
 	// draw 
 	Box3f b = bound();
 
-	LinearContainer::Orientation orientation = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->getOrientation();
+	LinearContainer::Orientation orientation = inputNoduleContainer()->getOrientation();
 	
-	Box3f inputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->transformedBound( this );
-	Box3f outputContainerBound = getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleContainer" )->transformedBound( this );
+	Box3f inputContainerBound = inputNoduleContainer()->transformedBound( this );
+	Box3f outputContainerBound = outputNoduleContainer()->transformedBound( this );
 	
 	if( !inputContainerBound.isEmpty() )
 	{
@@ -247,7 +253,7 @@ ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
 
 Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
 {
-	LinearContainer::Orientation orientation = getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->getOrientation();
+	LinearContainer::Orientation orientation = inputNoduleContainer()->getOrientation();
 	Plug::Direction direction = nodule->plug()->direction();
 	if( orientation == LinearContainer::X )
 	{
@@ -271,16 +277,47 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 	
 	if( plug->direction()==Gaffer::Plug::In )
 	{
-		getChild<Gadget>()->getChild<LinearContainer>( "inputNoduleContainer" )->addChild( nodule );
+		inputNoduleContainer()->addChild( nodule );
 	}
 	else
 	{
-		getChild<Gadget>()->getChild<LinearContainer>( "outputNoduleContainer" )->addChild( nodule );
+		outputNoduleContainer()->addChild( nodule );
 	}
 	
 	m_nodules[plug.get()] = nodule.get();
 	
 	return nodule;
+}
+
+LinearContainer *StandardNodeGadget::outputNoduleContainer()
+{
+	return getChild<Gadget>()->getChild<LinearContainer>( 0 );
+}
+
+const LinearContainer *StandardNodeGadget::outputNoduleContainer() const
+{
+	return getChild<Gadget>()->getChild<LinearContainer>( 0 );
+}
+
+IndividualContainer *StandardNodeGadget::contentsContainer()
+{
+	return getChild<Gadget>()->getChild<IndividualContainer>( 1 );
+
+}
+
+const IndividualContainer *StandardNodeGadget::contentsContainer() const
+{
+	return getChild<Gadget>()->getChild<IndividualContainer>( 1 );
+}
+
+LinearContainer *StandardNodeGadget::inputNoduleContainer()
+{
+	return getChild<Gadget>()->getChild<LinearContainer>( 2 );
+}
+
+const LinearContainer *StandardNodeGadget::inputNoduleContainer() const
+{
+	return getChild<Gadget>()->getChild<LinearContainer>( 2 );
 }
 
 void StandardNodeGadget::selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr n )
@@ -316,16 +353,16 @@ void StandardNodeGadget::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer:
 
 void StandardNodeGadget::setContents( GadgetPtr contents )
 {
-	getChild<LinearContainer>()->getChild<IndividualContainer>( "contentsContainer" )->setChild( contents );
+	contentsContainer()->setChild( contents );
 }
 
-GadgetPtr StandardNodeGadget::getContents()
+Gadget *StandardNodeGadget::getContents()
 {
-	return getChild<LinearContainer>()->getChild<IndividualContainer>( "contentsContainer" )->getChild<Gadget>();
+	return contentsContainer()->getChild<Gadget>();
 }
 
-ConstGadgetPtr StandardNodeGadget::getContents() const
+const Gadget *StandardNodeGadget::getContents() const
 {
-	return getChild<LinearContainer>()->getChild<IndividualContainer>( "contentsContainer" )->getChild<Gadget>();
+	return contentsContainer()->getChild<Gadget>();
 }
 
