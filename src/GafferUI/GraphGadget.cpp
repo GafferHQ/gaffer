@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -152,7 +152,7 @@ void GraphGadget::doRender( const Style *style ) const
 	// render connection first so they go underneath
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
-		if( ConnectionGadgetPtr c = IECore::runTimeCast<ConnectionGadget>( *it ) )
+		if( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
 		{
 			c->render( style );
 		}
@@ -163,7 +163,7 @@ void GraphGadget::doRender( const Style *style ) const
 	{
 		if( !((*it)->isInstanceOf( ConnectionGadget::staticTypeId() )) )
 		{
-			IECore::staticPointerCast<const Gadget>( *it )->render( style );
+			static_cast<const Gadget *>( it->get() )->render( style );
 		}
 	}
 
