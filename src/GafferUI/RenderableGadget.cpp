@@ -49,6 +49,7 @@
 #include "IECoreGL/Group.h"
 #include "IECoreGL/NameStateComponent.h"
 #include "IECoreGL/TypedStateComponent.h"
+#include "IECoreGL/Selector.h"
 
 #include "GafferUI/RenderableGadget.h"
 #include "GafferUI/ViewportGadget.h"
@@ -98,18 +99,19 @@ Imath::Box3f RenderableGadget::bound() const
 
 void RenderableGadget::doRender( const Style *style ) const
 {
-	if( m_scene )
+	if( IECoreGL::Selector::currentSelector() )
 	{
-		/// \todo We're skipping rendering while in GL_SELECT mode
-		/// as it's crazy slow for large models. When we start using
-		/// IDRender selection mode for ViewportGadget::gadgetAt then
-		/// we can remove this workaround.
-		GLint renderMode = 0;
-		glGetIntegerv(GL_RENDER_MODE, &renderMode);
-		if( renderMode != GL_SELECT )
-		{
-			m_scene->render( m_baseState.get() );
-		}
+		// our scene may contain shaders which don't work with
+		// the selector so we early out for now. we could override
+		// the base state with an appropriate selection shader and
+		// a name component matching the name for the gadget, but
+		// right now we have no need for that.
+		return;
+	}
+
+	if( m_scene )
+	{		
+		m_scene->render( m_baseState.get() );
 	}
 	
 	if( m_dragSelecting )

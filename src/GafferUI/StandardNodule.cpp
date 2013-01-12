@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,17 +35,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/StandardNodule.h"
-#include "GafferUI/Style.h"
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/NodeGadget.h"
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
+#include "IECoreGL/Selector.h"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "GafferUI/StandardNodule.h"
+#include "GafferUI/Style.h"
+#include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/NodeGadget.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -83,9 +85,7 @@ void StandardNodule::doRender( const Style *style ) const
 {
 	if( m_draggingConnection )
 	{
-		int renderMode = GL_RENDER;
-		glGetIntegerv( GL_RENDER_MODE, &renderMode );
-		if( renderMode != GL_SELECT )
+		if( !IECoreGL::Selector::currentSelector() )
 		{
 			V3f srcTangent( 0.0f, 1.0f, 0.0f );
 			const NodeGadget *nodeGadget = ancestor<NodeGadget>();

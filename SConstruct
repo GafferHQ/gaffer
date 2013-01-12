@@ -850,11 +850,7 @@ libraries = {
 	"startupScripts" : {
 		"additionalFiles" : glob.glob( "startup/*/*.py" ),
 	},
-	
-	"shaders" : {
-		"additionalFiles" : glob.glob( "shaders/*" ) + glob.glob( "shaders/*/*" ),
-	},
-	
+		
 	"misc" : {
 		"additionalFiles" : [ "LICENSE" ],
 	},
@@ -1231,7 +1227,6 @@ manifest = [
 	"startup/gui/layouts.py",
 	"startup/gui/graphs.py",
 
-	"shaders",
 	"fonts",
 	"ops",
 	"procedurals",

@@ -130,9 +130,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 
 	std::vector<HitRecord> selection;
 	{
-		/// \todo Use IDRender selection mode - this requires cooperation from the style though.
-		SelectionScope selectionScope( this, rasterPosition, selection, IECoreGL::Selector::GLSelect );
-		
+		SelectionScope selectionScope( this, rasterPosition, selection, IECoreGL::Selector::IDRender );
 		const Style *s = style();
 		s->bind();
 		IndividualContainer::doRender( s );

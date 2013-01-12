@@ -146,12 +146,7 @@ void Gadget::render( const Style *currentStyle ) const
 	glPushMatrix();
 	
 		glMultMatrixf( m_transform.getValue() );
-	
-		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
-		{
-			selector->loadName( m_glName );
-		}
-		
+			
 		if( !currentStyle )
 		{
 			currentStyle = style();
@@ -164,6 +159,11 @@ void Gadget::render( const Style *currentStyle ) const
 				m_style->bind();
 				currentStyle = m_style;
 			}
+		}
+
+		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+		{
+			selector->loadName( m_glName );
 		}
 		
 		doRender( currentStyle );

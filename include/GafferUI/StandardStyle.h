@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -97,18 +97,17 @@ class StandardStyle : public Style
 	
 		static unsigned int connectionDisplayList();
 	
-		IECoreGL::Shader *shader() const;
-		mutable IECoreGL::ShaderPtr m_shader;
-		mutable int m_borderParameter;
-		mutable int m_borderRadiusParameter;
-		mutable int m_edgeAntiAliasingParameter;
-		mutable int m_textureParameter;
-		mutable int m_textureTypeParameter;
-		mutable int m_bezierParameter;
-		mutable int m_v0Parameter;
-		mutable int m_v1Parameter;
-		mutable int m_v2Parameter;
-		mutable int m_v3Parameter;
+		static IECoreGL::Shader *shader();
+		static int g_borderParameter;
+		static int g_borderRadiusParameter;
+		static int g_edgeAntiAliasingParameter;
+		static int g_textureParameter;
+		static int g_textureTypeParameter;
+		static int g_bezierParameter;
+		static int g_v0Parameter;
+		static int g_v1Parameter;
+		static int g_v2Parameter;
+		static int g_v3Parameter;
 		
 		Imath::Color3f colorForState( Color c, State s ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;

@@ -46,6 +46,7 @@
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/Camera.h"
+#include "IECoreGL/Selector.h"
 
 #include "GafferUI/StandardStyle.h"
 
@@ -58,7 +59,6 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( StandardStyle );
 
 StandardStyle::StandardStyle()
-	:	m_shader( 0 )
 {
 	setFont( LabelText, FontLoader::defaultFontLoader()->load( "Vera.ttf" ) );
 	setColor( BackgroundColor, Color3f( 0.2 ) );
@@ -85,8 +85,12 @@ void StandardStyle::bind( const Style *currentStyle ) const
 	
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	
 	glUseProgram( shader()->program() );
+	
+	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+	{
+		selector->loadIDShader( shader() );
+	}
 }
 
 Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
@@ -103,15 +107,15 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-	glUniform1i( m_bezierParameter, 0 );
-	glUniform1i( m_borderParameter, 0 );
-	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_textureParameter, 0 );
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureParameter, 0 );
 	/// \todo IECore is currently providing sRGB data in IECore::Font::image() and therefore
 	/// in IECoreGL::Font::texture(). Either we should change image() to return linear data,
 	/// or use the sRGB texture extension in IECoreGL::Font::texture() to ensure that data is
 	/// automatically linearised before arriving in the shader.
-	glUniform1i( m_textureTypeParameter, 2 );
+	glUniform1i( g_textureTypeParameter, 2 );
 
 	glColor( m_colors[ForegroundColor] );
 
@@ -127,12 +131,12 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 	b.max += bw;
 	
 	V2f cornerSizes = bw / b.size();
-	glUniform1i( m_bezierParameter, 0 );
-	glUniform1i( m_borderParameter, 1 );
-	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
-	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_textureTypeParameter, 0 );
-	
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 1 );
+	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+
 	glColor( colorForState( RaisedColor, state ) );
 	
 	glBegin( GL_QUADS );
@@ -152,14 +156,14 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 
 void StandardStyle::renderNodule( float radius, State state ) const
 {		
-	glUniform1i( m_bezierParameter, 0 );
-	glUniform1i( m_borderParameter, 1 );
-	glUniform2f( m_borderRadiusParameter, 0.5f, 0.5f );
-	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_textureTypeParameter, 0 );
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 1 );
+	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state ) );
-
+	
 	glBegin( GL_QUADS );
 		
 		glTexCoord2f( 0, 0 );
@@ -176,19 +180,19 @@ void StandardStyle::renderNodule( float radius, State state ) const
 
 void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state ) const
 {
-	glUniform1i( m_borderParameter, 0 );
-	glUniform1i( m_edgeAntiAliasingParameter, 1 );
-	glUniform1i( m_textureTypeParameter, 0 );
-
-	float d = (srcPosition - dstPosition).length() / 2.0f;
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
 	
-	glUniform1i( m_bezierParameter, 1 );
-	glUniform3fv( m_v0Parameter, 1, srcPosition.getValue() ); 
-	glUniform3fv( m_v1Parameter, 1, ( srcPosition + srcTangent * d ).getValue() ); 
-	glUniform3fv( m_v2Parameter, 1, ( dstPosition + dstTangent * d ).getValue() ); 
-	glUniform3fv( m_v3Parameter, 1, dstPosition.getValue() ); 
-
+	float d = (srcPosition - dstPosition).length() / 2.0f;
 	glColor( colorForState( ConnectionColor, state ) );
+	
+	glUniform1i( g_bezierParameter, 1 );
+	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() ); 
+	glUniform3fv( g_v1Parameter, 1, ( srcPosition + srcTangent * d ).getValue() ); 
+	glUniform3fv( g_v2Parameter, 1, ( dstPosition + dstTangent * d ).getValue() ); 
+	glUniform3fv( g_v3Parameter, 1, dstPosition.getValue() ); 
+
 
 	glCallList( connectionDisplayList() );
 }
@@ -199,11 +203,11 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 	float cornerRadius = min( 5.0f, min( boxSize.x, boxSize.y ) / 2.0f );
 
 	V2f cornerSizes = V2f( cornerRadius ) / boxSize;
-	glUniform1i( m_bezierParameter, 0 );
-	glUniform1i( m_borderParameter, 1 );
-	glUniform2f( m_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
-	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_textureTypeParameter, 0 );
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 1 );
+	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
 	
 	Color4f c(
 		m_colors[HighlightColor][0],
@@ -238,11 +242,11 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	
-	glUniform1i( m_bezierParameter, 0 );
-	glUniform1i( m_borderParameter, 0 );
-	glUniform1i( m_edgeAntiAliasingParameter, 0 );
-	glUniform1i( m_textureParameter, 0 );
-	glUniform1i( m_textureTypeParameter, 1 );
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 1 );
 
 	glColor3f( 1.0f, 1.0f, 1.0f );
 
@@ -310,26 +314,6 @@ unsigned int StandardStyle::connectionDisplayList()
 	}
 	return g_list;
 }
-		
-IECoreGL::Shader *StandardStyle::shader() const
-{
-	if( !m_shader )
-	{
-		m_shader = ShaderLoader::defaultShaderLoader()->load( "ui/standardStyle" );
-		m_borderParameter = m_shader->uniformParameter( "border" )->location;
-		m_borderRadiusParameter = m_shader->uniformParameter( "borderRadius" )->location;
-		m_edgeAntiAliasingParameter = m_shader->uniformParameter( "edgeAntiAliasing" )->location;
-		m_textureParameter = m_shader->uniformParameter( "texture" )->location;
-		m_textureTypeParameter = m_shader->uniformParameter( "textureType" )->location;
-		m_bezierParameter = m_shader->uniformParameter( "bezier" )->location;
-		m_v0Parameter = m_shader->uniformParameter( "v0" )->location;
-		m_v1Parameter = m_shader->uniformParameter( "v1" )->location;
-		m_v2Parameter = m_shader->uniformParameter( "v2" )->location;
-		m_v3Parameter = m_shader->uniformParameter( "v3" )->location;
-	}
-	
-	return m_shader.get();
-}
 
 Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
 {
@@ -340,4 +324,148 @@ Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
 	}
 	
 	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// glsl source
+//////////////////////////////////////////////////////////////////////////
+
+static const char *g_vertexSource =
+	
+	"uniform bool bezier;"
+	"uniform vec3 v0;"
+	"uniform vec3 v1;"
+	"uniform vec3 v2;"
+	"uniform vec3 v3;"
+
+	"void main()"
+	"{"
+	"	if( bezier )"
+	"	{"
+	"		mat4 basis = mat4("
+	"			-1,  3, -3,  1,"
+	"			 3, -6,  3,  0,"
+	"			-3,  3,  0,  0,"
+	"			 1,  0,  0,  0"
+	"		);"
+
+	"		vec4 t = vec4("
+	"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
+	"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
+	"			gl_MultiTexCoord0.y,"
+	"			1.0"
+	"		);"
+
+	"		vec4 tDeriv = vec4( t[1] * 3.0, t[2] * 2.0, 1.0, 0.0 );"
+	"		vec4 w = basis * t;"
+	"		vec4 wDeriv = basis * tDeriv;"
+
+	"		vec3 p = w.x * v0 + w.y * v1 + w.z * v2 + w.w * v3;"
+	"		vec3 vTangent = wDeriv.x * v0 + wDeriv.y * v1 + wDeriv.z * v2 + wDeriv.w * v3;"
+
+	"		vec4 camZ = gl_ModelViewMatrixInverse * vec4( 0.0, 0.0, -1.0, 0.0 );"
+
+	"		vec3 uTangent = normalize( cross( camZ.xyz, vTangent ) );"
+
+	"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
+
+	"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4( p, 1 );"
+	"	}"
+	"	else"
+	"	{"
+	"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;"
+	"	}"
+	"	gl_FrontColor = gl_Color;"
+	"	gl_BackColor = gl_Color;"
+	"	gl_TexCoord[0] = gl_MultiTexCoord0;"
+	"}";
+
+static const char *g_fragmentSource = 
+
+	"#version 330 compatibility\n"
+	
+	"#include \"IECoreGL/FilterAlgo.h\"\n"
+	"#include \"IECoreGL/ColorAlgo.h\"\n"
+
+	"uniform bool border;"
+	"uniform vec2 borderRadius;"
+
+	"uniform bool edgeAntiAliasing;"
+
+	"uniform int textureType;"
+	"uniform sampler2D texture;"
+
+	"uniform uint ieCoreGLNameIn;"
+
+	"layout( location=0 ) out vec4 outColor;"
+	"layout( location=1 ) out uint ieCoreGLNameOut;"
+
+	"void main()"
+	"{"
+	"	outColor = gl_Color;"
+
+	"	if( border )"
+	"	{"
+	"		vec2 v = max( borderRadius - gl_TexCoord[0].xy, vec2( 0.0 ) ) + max( gl_TexCoord[0].xy - vec2( 1.0 ) + borderRadius, vec2( 0.0 ) );"
+	"		v /= borderRadius;"
+	"		float r = length( v );"
+
+	"		outColor = mix( outColor, vec4( 0.05, 0.05, 0.05, outColor.a ), ieFilteredStep( 0.8, r ) );"
+	"		outColor.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
+	"	}"
+
+	"	if( edgeAntiAliasing )"
+	"	{"
+	"		outColor.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
+	"	}"
+
+	/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
+	/// textures and output only linear data."
+
+	"	if( textureType==1 )"
+	"	{"
+	"		outColor = texture2D( texture, gl_TexCoord[0].xy );"
+	"		outColor = vec4( ieLinToSRGB( outColor.r ), ieLinToSRGB( outColor.g ), ieLinToSRGB( outColor.b ), ieLinToSRGB( outColor.a ) );"
+	"	}"
+	"	else if( textureType==2 )"
+	"	{"
+	"		outColor = texture2D( texture, gl_TexCoord[0].xy );"
+	"	}"
+
+	"	ieCoreGLNameOut = ieCoreGLNameIn;"
+
+	"}";
+
+int StandardStyle::g_borderParameter;
+int StandardStyle::g_borderRadiusParameter;
+int StandardStyle::g_edgeAntiAliasingParameter;
+int StandardStyle::g_textureParameter;
+int StandardStyle::g_textureTypeParameter;
+int StandardStyle::g_bezierParameter;
+int StandardStyle::g_v0Parameter;
+int StandardStyle::g_v1Parameter;
+int StandardStyle::g_v2Parameter;
+int StandardStyle::g_v3Parameter;
+					
+IECoreGL::Shader *StandardStyle::shader()
+{
+	
+	static ShaderPtr g_shader = 0;
+	
+	if( !g_shader )
+	{
+		g_shader = ShaderLoader::defaultShaderLoader()->create( g_vertexSource, "", g_fragmentSource );
+		g_borderParameter = g_shader->uniformParameter( "border" )->location;
+		g_borderRadiusParameter = g_shader->uniformParameter( "borderRadius" )->location;
+		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;
+		g_textureParameter = g_shader->uniformParameter( "texture" )->location;
+		g_textureTypeParameter = g_shader->uniformParameter( "textureType" )->location;
+		g_bezierParameter = g_shader->uniformParameter( "bezier" )->location;
+		g_v0Parameter = g_shader->uniformParameter( "v0" )->location;
+		g_v1Parameter = g_shader->uniformParameter( "v1" )->location;
+		g_v2Parameter = g_shader->uniformParameter( "v2" )->location;
+		g_v3Parameter = g_shader->uniformParameter( "v3" )->location;
+	}
+	
+	return g_shader.get();
 }
