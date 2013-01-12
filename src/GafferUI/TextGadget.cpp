@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -47,8 +47,9 @@ using namespace boost;
 IE_CORE_DEFINERUNTIMETYPED( TextGadget );
 
 TextGadget::TextGadget( const std::string &text )
-	:	Gadget( staticTypeName() ), m_text( text )
+	:	Gadget( staticTypeName() )
 {
+	setText( text );
 }
 
 TextGadget::~TextGadget()
@@ -65,13 +66,14 @@ void TextGadget::setText( const std::string &text )
 	if( text!=m_text )
 	{
 		m_text = text;
+		m_bound = style()->textBound( Style::LabelText, m_text );
 		renderRequestSignal()( this );
 	}
 }
 
 Imath::Box3f TextGadget::bound() const
 {
-	return style()->textBound( Style::LabelText, m_text );
+	return m_bound;
 }
 
 void TextGadget::doRender( const Style *style ) const
