@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -69,7 +69,7 @@ Imath::Box3f ContainerGadget::bound() const
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
 		// cast is safe because of the guarantees acceptsChild() gives us
-		ConstGadgetPtr c = IECore::staticPointerCast<const Gadget>( *it );
+		const Gadget *c = static_cast<const Gadget *>( it->get() );
 		Imath::Box3f b = c->bound();
 		b = Imath::transform( b, c->getTransform() );
 		result.extendBy( b );
@@ -100,7 +100,7 @@ void ContainerGadget::doRender( const Style *style ) const
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
 		// cast is safe because of the guarantees acceptsChild() gives us
-		ConstGadgetPtr c = IECore::staticPointerCast<const Gadget>( *it );
+		const Gadget *c = static_cast<const Gadget *>( it->get() );
 		c->render( style );
 	}
 }
