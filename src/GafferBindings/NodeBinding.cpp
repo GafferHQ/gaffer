@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,6 +40,9 @@
 
 #include "boost/format.hpp"
 
+#include "IECorePython/Wrapper.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -48,9 +51,6 @@
 #include "GafferBindings/Serialiser.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -200,13 +200,18 @@ struct BinaryPlugSlotCaller
 	}
 };
 
+static ScriptNodePtr scriptNode( Node &node )
+{
+	return node.scriptNode();
+}
+
 void GafferBindings::bindNode()
 {
 	typedef NodeWrapper<Node> Wrapper;
 	IE_CORE_DECLAREPTR( Wrapper );
 
 	scope s = NodeClass<Node, WrapperPtr>()
-		.def( "scriptNode", (ScriptNodePtr (Node::*)())&Node::scriptNode )
+		.def( "scriptNode", &scriptNode )
 		.def( "_init", &initNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
