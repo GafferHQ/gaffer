@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -55,6 +56,12 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
 	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : __selectionAvailable } )
+
+	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/InputsDivider", { "divider" : True } )
+	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : __selectionAvailable } )
 
 ## A function suitable as the command for an Edit/Undo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -132,6 +139,68 @@ def selectNone( menu ) :
 	
 	script.selection().clear()				
 
+## The command function for the default "Edit/Select Connected/Inputs" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectInputs( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	inputs = Gaffer.StandardSet()
+	for node in script.selection() :
+		__inputNodes( node, inputs )
+	
+	selection = script.selection()
+	selection.clear()
+	for node in inputs :
+		selection.add( node )
+
+## The command function for the default "Edit/Select Connected/Add Inputs" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectAddInputs( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	inputs = Gaffer.StandardSet()
+	for node in script.selection() :
+		__inputNodes( node, inputs )
+		
+	selection = script.selection()
+	for node in inputs :
+		selection.add( node )
+
+## The command function for the default "Edit/Select Connected/Outputs" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectOutputs( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	outputs = Gaffer.StandardSet()
+	for node in script.selection() :
+		__outputNodes( node, outputs )
+	
+	selection = script.selection()
+	selection.clear()
+	for node in outputs :
+		selection.add( node )
+
+## The command function for the default "Edit/Select Connected/Add Outputs" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectAddOutputs( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	outputs = Gaffer.StandardSet()
+	for node in script.selection() :
+		__outputNodes( node, outputs )
+	
+	selection = script.selection()
+	for node in outputs :
+		selection.add( node )
+				
 def __selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
@@ -152,3 +221,36 @@ def __redoAvailable( menu ) :
 
 	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
 	return scriptNode.redoAvailable()
+
+def __inputNodes( node, inputNodes ) :
+	
+	def __walkPlugs( parent ) :
+	
+		for plug in parent :
+			if isinstance( plug, Gaffer.Plug ) :
+				inputPlug = plug.getInput()
+				if inputPlug is not None :
+					inputNode = inputPlug.node()
+					if inputNode is not None and not inputNode.isSame( node ) :
+						inputNodes.add( inputNode )
+				else :
+					__walkPlugs( plug )
+
+	__walkPlugs( node )
+
+def __outputNodes( node, outputNodes ) :
+	
+	def __walkPlugs( parent ) :
+	
+		for plug in parent :
+			if isinstance( plug, Gaffer.Plug ) :
+				outputPlugs = plug.outputs()
+				if outputPlugs :
+					for outputPlug in outputPlugs :
+						outputNode = outputPlug.node()
+						if outputNode is not None and not outputNode.isSame( node ) :
+							outputNodes.add( outputNode )
+				else :
+					__walkPlugs( plug )
+
+	__walkPlugs( node )
