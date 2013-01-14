@@ -180,17 +180,18 @@ void StandardStyle::renderNodule( float radius, State state ) const
 
 void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state ) const
 {
+	glUniform1i( g_bezierParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
 	
-	float d = (srcPosition - dstPosition).length() / 2.0f;
 	glColor( colorForState( ConnectionColor, state ) );
 	
-	glUniform1i( g_bezierParameter, 1 );
-	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() ); 
-	glUniform3fv( g_v1Parameter, 1, ( srcPosition + srcTangent * d ).getValue() ); 
-	glUniform3fv( g_v2Parameter, 1, ( dstPosition + dstTangent * d ).getValue() ); 
+	V3f d = dstPosition - srcPosition;
+	
+	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( srcPosition + srcTangent * d.dot( srcTangent ) * 0.25f ).getValue() ); 
+	glUniform3fv( g_v2Parameter, 1, ( dstPosition - dstTangent * d.dot( dstTangent ) * 0.25f ).getValue() ); 
 	glUniform3fv( g_v3Parameter, 1, dstPosition.getValue() ); 
 
 
