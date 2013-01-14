@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -69,38 +69,48 @@ bool StandardSet::add( MemberPtr member )
 	return result;
 }
 
-bool StandardSet::remove( MemberPtr member )
+bool StandardSet::remove( Member *member )
 {
-	bool result = m_members.erase( member );
-	if( result )
+	MemberContainer::iterator it = m_members.find( member );
+	if( it != m_members.end() )
 	{
+		// we may be the only owner of member, in which
+		// case it would die immediately upon removal
+		// from m_members. so we have to make a temporary
+		// reference to keep it alive long enough to emit
+		// the memberRemovedSignal() - slots on the signal
+		// can then take ownership if they wish.
+		MemberPtr lifePreserver = member;
+		m_members.erase( it );
 		memberRemovedSignal()( this, member );
+		return true;
 	}
-	return result;
+
+	return false;
 }
 
 void StandardSet::clear()
 {
 	while( m_members.size() )
 	{
-		remove( *(m_members.begin()) );
+		remove( m_members.begin()->get() );
 	}
 }
 
-bool StandardSet::contains( ConstMemberPtr object ) const
+bool StandardSet::contains( const Member *object ) const
 {
 	// const cast is ugly but safe and it allows us to present the
 	// appropriate public interface (you should be able to query membership
 	// without non-const access to an object).
-	return m_members.find( const_cast<IECore::RunTimeTyped *>( object.get() ) )!=m_members.end();
+	return m_members.find( const_cast<IECore::RunTimeTyped *>( object ) )!=m_members.end();
 }
 
-Set::MemberPtr StandardSet::member( size_t index )
+Set::Member *StandardSet::member( size_t index )
 {
-	return m_members.get<1>()[index];
+	return m_members.get<1>()[index].get();
 }
 
-Set::ConstMemberPtr StandardSet::member( size_t index ) const
+const Set::Member *StandardSet::member( size_t index ) const
 {
 	return m_members.get<1>()[index];
 }

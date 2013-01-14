@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -104,7 +104,7 @@ void bindStandardSet()
 		.def( "add", &Detail::addFromSequence )
 		.def( "add", (bool (StandardSet::*)( Set::MemberPtr ) )&StandardSet::add )
 		.def( "remove", &Detail::removeFromSequence )
-		.def( "remove", (bool (StandardSet::*)( Set::MemberPtr ) )&StandardSet::remove )
+		.def( "remove", (bool (StandardSet::*)( Set::Member * ) )&StandardSet::remove )
 		.def( "clear", &StandardSet::clear )
 		.def( "memberAcceptanceSignal", &StandardSet::memberAcceptanceSignal, boost::python::return_internal_reference<1>() )
 	;	

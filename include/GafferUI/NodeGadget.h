@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,13 +58,13 @@ class NodeGadget : public IndividualContainer
 		
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( NodeGadget, NodeGadgetTypeId, ContainerGadget );
 		
-		Gaffer::NodePtr node();
-		Gaffer::ConstNodePtr node() const;
+		Gaffer::Node *node();
+		const Gaffer::Node *node() const;
 
 		/// Should be overridden by derived classes to return a nodule for
 		/// the plug if it has one, and 0 otherwise.
-		virtual NodulePtr nodule( Gaffer::ConstPlugPtr plug );
-		virtual ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		virtual Nodule *nodule( const Gaffer::Plug *plug );
+		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
 		/// Returns the tangent for a nodule - this is a direction which
 		/// can be considered to be "away" from the NodeGadget for the
 		/// purposes of drawing connections.

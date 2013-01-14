@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,7 +53,7 @@ ChildSet::~ChildSet()
 {
 }
 
-bool ChildSet::contains( ConstMemberPtr object ) const
+bool ChildSet::contains( const Member *object ) const
 {
 	const GraphComponent *g = IECore::runTimeCast<const GraphComponent>( object );
 	if( g )
@@ -63,12 +63,12 @@ bool ChildSet::contains( ConstMemberPtr object ) const
 	return false;
 }
 
-Set::MemberPtr ChildSet::member( size_t index )
+Set::Member *ChildSet::member( size_t index )
 {
 	return const_cast<GraphComponent *>( m_parent->getChild<GraphComponent>( index ) );
 }
 
-Set::ConstMemberPtr ChildSet::member( size_t index ) const
+const Set::Member *ChildSet::member( size_t index ) const
 {
 	return m_parent->getChild<GraphComponent>( index );
 }

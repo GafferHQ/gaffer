@@ -257,6 +257,20 @@ class StandardSetTest( unittest.TestCase ) :
 			self.failUnless( m is members[i] )
 			i += 1
 		
+	def testRemoveReferenceCounting( self ) :
+	
+		s = Gaffer.StandardSet()
+		for i in range( 0, 100 ) :
+			s.add( IECore.StringData( "hello there!" ) )
+		
+		def f( s, m ) :
+		
+			pass
+			
+		c = s.memberRemovedSignal().connect( f )
+		
+		s.clear()
+		
 if __name__ == "__main__":
 	unittest.main()
 	

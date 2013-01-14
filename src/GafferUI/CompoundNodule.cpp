@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -91,7 +91,7 @@ bool CompoundNodule::acceptsChild( const Gaffer::GraphComponent *potentialChild 
 	return children().size()==0;
 }
 
-NodulePtr CompoundNodule::nodule( Gaffer::ConstPlugPtr plug )
+Nodule *CompoundNodule::nodule( const Gaffer::Plug *plug )
 {
 	ChildNoduleIterator it = ChildNoduleIterator( m_row->children().begin(), m_row->children().end() );
 	ChildNoduleIterator end = ChildNoduleIterator( m_row->children().end(), m_row->children().end() );
@@ -99,21 +99,21 @@ NodulePtr CompoundNodule::nodule( Gaffer::ConstPlugPtr plug )
 	{
 		if( (*it)->plug() == plug )
 		{
-			return *it;
+			return it->get();
 		}
 	}
 	return 0;
 }
 
-ConstNodulePtr CompoundNodule::nodule( Gaffer::ConstPlugPtr plug ) const
+const Nodule *CompoundNodule::nodule( const Gaffer::Plug *plug ) const
 {
 	// preferring the nasty casts over mainaining two nearly identical implementations
 	return const_cast<CompoundNodule *>( this )->nodule( plug );
 }
 		
-void CompoundNodule::childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
+void CompoundNodule::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	Gaffer::PlugPtr plug = IECore::runTimeCast<Gaffer::Plug>( child );
+	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( !plug )
 	{
 		return;
@@ -126,9 +126,9 @@ void CompoundNodule::childAdded( Gaffer::GraphComponentPtr parent, Gaffer::Graph
 	}
 }
 
-void CompoundNodule::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
+void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	Gaffer::PlugPtr plug = IECore::runTimeCast<Gaffer::Plug>( child );
+	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( !plug )
 	{
 		return;

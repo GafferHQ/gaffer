@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -393,12 +393,12 @@ bool SplinePlugGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 {
 	if( event.key=="BackSpace" && m_selection->size() )
 	{
-		Plug *firstPlug = static_cast<Plug *>( m_selection->member( 0 ).get() );
+		Plug *firstPlug = static_cast<Plug *>( m_selection->member( 0 ) );
 		UndoContext undoEnabler( firstPlug->ancestor<ScriptNode>() );
 		
 		for( size_t i = 0, e = m_selection->size(); i < e ; i++ )
 		{
-			Plug *pointPlug = static_cast<Plug *>( m_selection->member( i ).get() );
+			Plug *pointPlug = static_cast<Plug *>( m_selection->member( i ) );
 			GraphComponentPtr parent = pointPlug->parent<GraphComponent>();
 			if( parent )
 			{

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -76,20 +76,20 @@ class GraphGadget : public ContainerGadget
 
 		/// Returns the Set specifying the contents of the graph - the
 		/// membership may be freely modified to change what is displayed.
-		Gaffer::SetPtr getGraphSet();
-		Gaffer::ConstSetPtr getGraphSet() const;
+		Gaffer::Set *getGraphSet();
+		const Gaffer::Set *getGraphSet() const;
 		/// Changes the set used to specify the graph contents.
 		void setGraphSet( Gaffer::SetPtr graphSet );
 
 		/// Returns the NodeGadget representing the specified node or 0
 		/// if none exists.
-		NodeGadgetPtr nodeGadget( Gaffer::ConstNodePtr node );
-		ConstNodeGadgetPtr nodeGadget( Gaffer::ConstNodePtr node ) const;
+		NodeGadget *nodeGadget( const Gaffer::Node *node );
+		const NodeGadget *nodeGadget( const Gaffer::Node *node ) const;
 		
 		/// Returns the ConnectionGadget representing the specified
 		/// destination Plug or 0 if none exists.
-		ConnectionGadgetPtr connectionGadget( Gaffer::ConstPlugPtr dstPlug );
-		ConstConnectionGadgetPtr connectionGadget( Gaffer::ConstPlugPtr dstPlug ) const;
+		ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug );
+		const ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug ) const;
 		
 	protected :
 
@@ -99,8 +99,8 @@ class GraphGadget : public ContainerGadget
 	
 		void constructCommon( Gaffer::SetPtr graphSet );
 		
-		void memberAdded( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member );
-		void memberRemoved( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member );
+		void memberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
+		void memberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void inputChanged( Gaffer::Plug *dstPlug );
 		void plugSet( Gaffer::Plug *plug );
 	

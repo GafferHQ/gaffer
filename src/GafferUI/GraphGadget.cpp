@@ -103,12 +103,12 @@ GraphGadget::~GraphGadget()
 }
 
 	
-Gaffer::SetPtr GraphGadget::getGraphSet()
+Gaffer::Set *GraphGadget::getGraphSet()
 {
 	return m_graphSet;
 }
 
-Gaffer::ConstSetPtr GraphGadget::getGraphSet() const
+const Gaffer::Set *GraphGadget::getGraphSet() const
 {
 	return m_graphSet;
 }
@@ -125,24 +125,24 @@ void GraphGadget::setGraphSet( Gaffer::SetPtr graphSet )
 	updateGraph();
 }
 
-NodeGadgetPtr GraphGadget::nodeGadget( Gaffer::ConstNodePtr node )
+NodeGadget *GraphGadget::nodeGadget( const Gaffer::Node *node )
 {
-	return findNodeGadget( node.get() );
+	return findNodeGadget( node );
 }
 
-ConstNodeGadgetPtr GraphGadget::nodeGadget( Gaffer::ConstNodePtr node ) const
+const NodeGadget *GraphGadget::nodeGadget( const Gaffer::Node *node ) const
 {
-	return findNodeGadget( node.get() );
+	return findNodeGadget( node );
 }
 
-ConnectionGadgetPtr GraphGadget::connectionGadget( Gaffer::ConstPlugPtr dstPlug )
+ConnectionGadget *GraphGadget::connectionGadget( const Gaffer::Plug *dstPlug )
 {
-	return findConnectionGadget( dstPlug.get() );
+	return findConnectionGadget( dstPlug );
 }
 
-ConstConnectionGadgetPtr GraphGadget::connectionGadget( Gaffer::ConstPlugPtr dstPlug ) const
+const ConnectionGadget *GraphGadget::connectionGadget( const Gaffer::Plug *dstPlug ) const
 {
-	return findConnectionGadget( dstPlug.get() );
+	return findConnectionGadget( dstPlug );
 }
 		
 void GraphGadget::doRender( const Style *style ) const
@@ -186,7 +186,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 	return false;
 }
 
-void GraphGadget::memberAdded( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member )
+void GraphGadget::memberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
 	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( member );
 	if( node )
@@ -196,7 +196,7 @@ void GraphGadget::memberAdded( Gaffer::SetPtr set, IECore::RunTimeTypedPtr membe
 	}
 }
 
-void GraphGadget::memberRemoved( Gaffer::SetPtr set, IECore::RunTimeTypedPtr member )
+void GraphGadget::memberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
 	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( member );
 	if( node )
@@ -445,7 +445,7 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 {
 	for( size_t i = 0, e = nodes->size(); i < e; i++ )
 	{
-		Gaffer::Node *node = runTimeCast<Gaffer::Node>( nodes->member( i ).get() );
+		Gaffer::Node *node = runTimeCast<Gaffer::Node>( nodes->member( i ) );
 		if( !node )
 		{
 			continue;

@@ -37,12 +37,12 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/CatchingSlotCaller.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/Set.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/CatchingSlotCaller.h"
 
 using namespace Gaffer;
 
@@ -67,6 +67,25 @@ static IECore::RunTimeTypedPtr getItem( Set &s, long index )
 	return s.member( index );
 }
 
+struct MemberSignalSlotCaller
+{
+	
+	boost::signals::detail::unusable operator()( boost::python::object slot, SetPtr s, Set::MemberPtr m )
+	{
+		try
+		{
+			slot( s, m );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+
+
+};
+
 void bindSet()
 {
 	
@@ -80,7 +99,7 @@ void bindSet()
 		.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
 	;	
 
-	SignalBinder<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, CatchingSlotCaller<Set::MemberSignal> >::bind( "MemberSignal" );
+	SignalBinder<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, MemberSignalSlotCaller>::bind( "MemberSignal" );
 	
 }
 

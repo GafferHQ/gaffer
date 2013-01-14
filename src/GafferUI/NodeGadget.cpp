@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,17 +35,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
+#include "IECore/SimpleTypedData.h"
+
+#include "Gaffer/ScriptNode.h"
+
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/NameGadget.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Nodule.h"
-
-#include "Gaffer/ScriptNode.h"
-
-#include "IECore/SimpleTypedData.h"
-
-#include "boost/bind.hpp"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -88,22 +88,22 @@ void NodeGadget::registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator 
 	creators()[nodeType] = creator;
 }
 
-Gaffer::NodePtr NodeGadget::node()
+Gaffer::Node *NodeGadget::node()
 {
 	return m_node;
 }
 
-Gaffer::ConstNodePtr NodeGadget::node() const
+const Gaffer::Node *NodeGadget::node() const
 {
 	return m_node;
 }
 
-NodulePtr NodeGadget::nodule( Gaffer::ConstPlugPtr plug )
+Nodule *NodeGadget::nodule( const Gaffer::Plug *plug )
 {
 	return 0;
 }
 
-ConstNodulePtr NodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
+const Nodule *NodeGadget::nodule( const Gaffer::Plug *plug ) const
 {
 	return 0;
 }

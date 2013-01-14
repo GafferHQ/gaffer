@@ -54,8 +54,8 @@ class StandardNodeGadget : public NodeGadget
 		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
 		virtual ~StandardNodeGadget();
 
-		virtual NodulePtr nodule( Gaffer::ConstPlugPtr plug );
-		virtual ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		virtual Nodule *nodule( const Gaffer::Plug *plug );
+		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
 		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
 		
 		/// The central content of the Gadget may be customised. By default
@@ -89,9 +89,9 @@ class StandardNodeGadget : public NodeGadget
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
 				
-		void selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr node );
-		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		void selectionChanged( Gaffer::Set *selection, IECore::RunTimeTyped *node );
+		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 					
 };
 

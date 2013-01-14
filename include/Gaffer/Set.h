@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,13 +65,13 @@ class Set : public IECore::RunTimeTyped, public boost::signals::trackable
 		/// Returns the number of members of the set.
 		virtual size_t size() const = 0;
 		/// Returns the indexth member of the set.
-		virtual MemberPtr member( size_t index ) = 0;
+		virtual Member *member( size_t index ) = 0;
 		/// Returns the indexth member of the set.
-		virtual ConstMemberPtr member( size_t index ) const = 0;
+		virtual const Member *member( size_t index ) const = 0;
 		/// Returns true if the object is a member of the set.
-		virtual bool contains( ConstMemberPtr object ) const = 0;
+		virtual bool contains( const Member *object ) const = 0;
 		
-		typedef boost::signal<void ( Ptr, MemberPtr )> MemberSignal;
+		typedef boost::signal<void ( Set *, Member * )> MemberSignal;
 		
 		/// A signal emitted when a new member is added to the Set. It is
 		/// the responsibility of derived classes to emit this when appropriate.

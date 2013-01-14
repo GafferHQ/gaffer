@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,19 +37,34 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "Gaffer/Node.h"
+
 #include "GafferUIBindings/GraphGadgetBinding.h"
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ConnectionGadget.h"
 
-#include "Gaffer/Node.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
-
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
+
+static Gaffer::SetPtr getGraphSet( GraphGadget &graphGadget )
+{
+	return graphGadget.getGraphSet();
+}
+
+static NodeGadgetPtr nodeGadget( GraphGadget &graphGadget, const Gaffer::Node *node )
+{
+	return graphGadget.nodeGadget( node );
+}
+
+static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaffer::Plug *dstPlug )
+{
+	return graphGadget.connectionGadget( dstPlug );
+}
 
 void GafferUIBindings::bindGraphGadget()
 {
@@ -57,9 +72,9 @@ void GafferUIBindings::bindGraphGadget()
 		.def( init<Gaffer::NodePtr>() )
 		.def( init<Gaffer::SetPtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( GraphGadget )
-		.def( "getGraphSet", (Gaffer::SetPtr (GraphGadget::*)())&GraphGadget::getGraphSet )
+		.def( "getGraphSet", &getGraphSet )
 		.def( "setGraphSet", &GraphGadget::setGraphSet )
-		.def( "nodeGadget", (NodeGadgetPtr (GraphGadget::*)( Gaffer::ConstNodePtr ))&GraphGadget::nodeGadget )
-		.def( "connectionGadget", (ConnectionGadgetPtr (GraphGadget::*)( Gaffer::ConstPlugPtr ))&GraphGadget::connectionGadget )
+		.def( "nodeGadget", &nodeGadget )
+		.def( "connectionGadget", &connectionGadget )
 	;
 }

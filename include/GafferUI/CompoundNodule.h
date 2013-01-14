@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -73,8 +73,8 @@ class CompoundNodule : public Nodule
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
 		/// Returns a Nodule for a child of the CompoundPlug being represented.
-		NodulePtr nodule( Gaffer::ConstPlugPtr plug );
-		ConstNodulePtr nodule( Gaffer::ConstPlugPtr plug ) const;
+		Nodule *nodule( const Gaffer::Plug *plug );
+		const Nodule *nodule( const Gaffer::Plug *plug ) const;
 		
 	protected :
 
@@ -82,8 +82,8 @@ class CompoundNodule : public Nodule
 	
 	private :
 	
-		void childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
-		void childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child );
+		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRenderRequest( Gadget *child );
 
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;

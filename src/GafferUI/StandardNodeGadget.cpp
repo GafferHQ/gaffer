@@ -216,20 +216,20 @@ void StandardNodeGadget::doRender( const Style *style ) const
 	NodeGadget::doRender( style );
 }
 
-NodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug )
+Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
 {	
-	NoduleMap::iterator it = m_nodules.find( plug.get() );
+	NoduleMap::iterator it = m_nodules.find( plug );
 	if( it==m_nodules.end() )
 	{
 		/// \todo This needs to be generalised so other compound nodule types
 		/// are possible, and so we can do nested compounds too.
-		Gaffer::ConstCompoundPlugPtr compoundParent = plug->parent<Gaffer::CompoundPlug>();
+		const Gaffer::CompoundPlug *compoundParent = plug->parent<Gaffer::CompoundPlug>();
 		if( compoundParent )
 		{
-			it = m_nodules.find( compoundParent.get() );
+			it = m_nodules.find( compoundParent );
 			if( it!=m_nodules.end() )
 			{
-				CompoundNodulePtr compoundNodule = IECore::runTimeCast<CompoundNodule>( it->second );
+				CompoundNodule *compoundNodule = IECore::runTimeCast<CompoundNodule>( it->second );
 				if( compoundNodule )
 				{
 					return compoundNodule->nodule( plug );
@@ -241,14 +241,10 @@ NodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug )
 	return it->second;
 }
 
-ConstNodulePtr StandardNodeGadget::nodule( Gaffer::ConstPlugPtr plug ) const
+const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
 {
-	NoduleMap::const_iterator it = m_nodules.find( plug.get() );
-	if( it==m_nodules.end() )
-	{
-		return 0;
-	}
-	return it->second;
+	// naughty cast is better than repeating the above logic.
+	return const_cast<StandardNodeGadget *>( this )->nodule( plug );
 }
 
 Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
@@ -320,7 +316,7 @@ const LinearContainer *StandardNodeGadget::inputNoduleContainer() const
 	return getChild<Gadget>()->getChild<LinearContainer>( 2 );
 }
 
-void StandardNodeGadget::selectionChanged( Gaffer::SetPtr selection, IECore::RunTimeTypedPtr n )
+void StandardNodeGadget::selectionChanged( Gaffer::Set *selection, IECore::RunTimeTyped *n )
 {
 	if( n==node() )
 	{
@@ -328,25 +324,25 @@ void StandardNodeGadget::selectionChanged( Gaffer::SetPtr selection, IECore::Run
 	}
 }
 
-void StandardNodeGadget::childAdded( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
+void StandardNodeGadget::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	Gaffer::PlugPtr p = IECore::runTimeCast<Gaffer::Plug>( child );
+	Gaffer::Plug *p = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( p )
 	{
 		addNodule( p );
 	}
 }
 
-void StandardNodeGadget::childRemoved( Gaffer::GraphComponentPtr parent, Gaffer::GraphComponentPtr child )
+void StandardNodeGadget::childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	Gaffer::PlugPtr p = IECore::runTimeCast<Gaffer::Plug>( child );
+	Gaffer::Plug *p = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( p )
 	{
-		NodulePtr n = nodule( p );
+		Nodule *n = nodule( p );
 		if( n )
 		{
 			n->parent<Gaffer::GraphComponent>()->removeChild( n );
-			m_nodules.erase( p.get() );
+			m_nodules.erase( p );
 		}
 	}	
 }

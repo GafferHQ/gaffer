@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,7 +87,7 @@ class StandardSet : public Gaffer::Set
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardSet, StandardSetTypeId, Gaffer::Set );
 		
-		typedef boost::signal<bool ( ConstPtr, ConstMemberPtr ), Detail::MemberAcceptanceCombiner> MemberAcceptanceSignal;
+		typedef boost::signal<bool ( const StandardSet *, const Member * ), Detail::MemberAcceptanceCombiner> MemberAcceptanceSignal;
 		/// This signal is emitted to determine whether or not a member is eligible
 		/// to be in the StandardSet. Members are only added if all slots of the signal
 		/// return true, or if no slots have been connected - otherwise an exception is thrown.
@@ -96,7 +96,7 @@ class StandardSet : public Gaffer::Set
 		/// A function suitable for use as a memberAcceptanceSignal slot. This rejects all
 		/// members not derived from T.
 		template<typename T>
-		static bool typedMemberAcceptor( Ptr set, ConstMemberPtr potentialMember );
+		static bool typedMemberAcceptor( const StandardSet *set, const Member *potentialMember );
 
 		/// @name Membership specification
 		/// These methods are used to explicitly add and remove members.
@@ -112,7 +112,7 @@ class StandardSet : public Gaffer::Set
 		size_t add( I first, I last );
 		/// Removes a member from the set. Returns true if the member
 		/// is removed and false if it wasn't there in the first place.
-		bool remove( MemberPtr member );
+		bool remove( Member *member );
 		/// Removes all the in the specified range from this set, returning the
 		/// number of members removed.
 		template<typename I>
@@ -124,9 +124,9 @@ class StandardSet : public Gaffer::Set
 		/// @name Implementation of the Set interface
 		////////////////////////////////////////////////////////////////////
 		//@{
-		virtual bool contains( ConstMemberPtr object ) const;
-		virtual MemberPtr member( size_t index );
-		virtual ConstMemberPtr member( size_t index ) const;
+		virtual bool contains( const Member *object ) const;
+		virtual Member *member( size_t index );
+		virtual const Member *member( size_t index ) const;
 		virtual size_t size() const;
 		//@}
 

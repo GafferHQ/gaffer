@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -57,9 +57,9 @@ class ChildSet : public Gaffer::Set
 		/// @name Implementation of the Set interface
 		////////////////////////////////////////////////////////////////////
 		//@{
-		virtual bool contains( ConstMemberPtr object ) const;
-		virtual MemberPtr member( size_t index );
-		virtual ConstMemberPtr member( size_t index ) const;
+		virtual bool contains( const Member *object ) const;
+		virtual Member *member( size_t index );
+		virtual const Member *member( size_t index ) const;
 		virtual size_t size() const;
 		//@}
 

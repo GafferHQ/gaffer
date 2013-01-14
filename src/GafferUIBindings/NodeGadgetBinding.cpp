@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,6 +77,11 @@ static void registerNodeGadget( IECore::TypeId nodeType, object creator )
 	NodeGadget::registerNodeGadget( nodeType, NodeGadgetCreator( creator ) );
 }
 
+static Gaffer::NodePtr node( NodeGadget &nodeGadget )
+{
+	return nodeGadget.node();
+}
+
 void GafferUIBindings::bindNodeGadget()
 {
 	typedef NodeGadgetWrapper<NodeGadget> Wrapper;
@@ -84,7 +89,7 @@ void GafferUIBindings::bindNodeGadget()
 
 	IECorePython::RunTimeTypedClass<NodeGadget, WrapperPtr>()
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( NodeGadget )
-		.def( "node", (Gaffer::NodePtr (NodeGadget::*)())&NodeGadget::node )
+		.def( "node", &node )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )
 		.def( "registerNodeGadget", &registerNodeGadget ).staticmethod( "registerNodeGadget" )
 	;
