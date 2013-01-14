@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -184,10 +184,12 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			object gafferModule = import( "Gaffer" );
 			m_executionDict["Gaffer"] = gafferModule;
 			
-			object weakMethod = gafferModule.attr( "WeakMethod" );
-			
 			object selfO( ScriptNodePtr( this ) );
 			
+			object weakrefModule = import( "weakref" );
+			m_executionDict["script"] = weakrefModule.attr( "ref" )( selfO );
+			
+			object weakMethod = gafferModule.attr( "WeakMethod" );
 			m_executionDict["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
 			m_executionDict["getChild"] = weakMethod( object( selfO.attr( "getChild" ) ) );
 			m_executionDict["childAddedSignal"] = weakMethod( object( selfO.attr( "childAddedSignal" ) ) );

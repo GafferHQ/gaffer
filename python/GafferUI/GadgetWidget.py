@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import time
+
 import IECore
 
 import Gaffer
@@ -91,6 +93,10 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.setViewportGadget( GafferUI.ViewportGadget( gadget ) )
 		
 		self._qtWidget().installEventFilter( _eventFilter )
+		
+		self.__frameCounter = 0
+		
+		self.__count = 0
 	
 	## Returns the ViewportGadget used to render this Widget. You can
 	# modify this freely to change the Gadgets being rendered.
@@ -122,11 +128,28 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__viewportGadget.setViewport( size )
 			
 	def _draw( self ) :
-			
+		
+		print "RENDER"
+		
+		if self.__frameCounter == 0 :
+			self.__then = time.clock()
+		else :
+			now = time.clock()
+			interval = now - self.__then
+			if interval > 1 :
+				print self.__frameCounter / interval, "FPS"
+				self.__then = now
+				self.__frameCounter = 0
+					
 		self.__viewportGadget.render()
+		
+		self.__frameCounter += 1
 			
 	def __renderRequest( self, gadget ) :
 	
+		self.__count += 1
+		print "RENDER REQUEST", self.__count
+		
 		self._redraw()
 			
 	def __buttonPress( self, widget, event ) :

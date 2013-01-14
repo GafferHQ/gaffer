@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -473,6 +473,11 @@ a = A()"""
 		self.failUnless( "n" in s )
 		self.failUnless( "n1" not in s )
 		self.failUnless( "n2" in s )
+	
+	def testScriptAccessor( self ) :
+	
+		s = Gaffer.ScriptNode()
+		self.failUnless( s.evaluate( "script()" ).isSame( s ) )
 			
 if __name__ == "__main__":
 	unittest.main()
