@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,12 +38,12 @@
 #ifndef GAFFER_GRAPHCOMPONENT_H
 #define GAFFER_GRAPHCOMPONENT_H
 
-#include "Gaffer/TypeIds.h"
+#include "boost/signals.hpp"
 
 #include "IECore/RunTimeTyped.h"
 #include "IECore/Interned.h"
 
-#include "boost/signals.hpp"
+#include "Gaffer/TypeIds.h"
 
 namespace Gaffer
 {
@@ -226,8 +226,6 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		void storeIndexOfNextChild( size_t &index ) const;
 		
 	private :
-
-		bool nameExists( const IECore::InternedString &name );
 
 		void setNameInternal( const IECore::InternedString &name );
 		void addChildInternal( GraphComponentPtr child );

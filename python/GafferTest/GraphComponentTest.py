@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -570,7 +570,39 @@ class GraphComponentTest( unittest.TestCase ) :
 		
 		for c in l :
 			g.removeChild( c )
+			
+	def testManyChildrenWithSameInitialName( self ) :
+			
+		g = Gaffer.GraphComponent()
+		for i in range( 0, 2000 ) :
+			g.addChild( Gaffer.GraphComponent() )
 		
+		for index, child in enumerate( g ) :
+			if index == 0 :
+				self.assertEqual( child.getName(), "GraphComponent" )
+			else :
+				self.assertEqual( child.getName(), "GraphComponent%d" % index )
+				
+	def testNamesWithStrangeSuffixes( self ) :
+	
+		g = Gaffer.GraphComponent()
+		g.addChild( Gaffer.GraphComponent( "a" ) )
+		g.addChild( Gaffer.GraphComponent( "a1somethingElse" ) )
+		self.assertEqual( g[0].getName(), "a" )
+		self.assertEqual( g[1].getName(), "a1somethingElse" )
+		
+		g.addChild( Gaffer.GraphComponent( "a" ) )
+		self.assertEqual( g[2].getName(), "a1" )
+	
+	def testAddChildWithExistingNumericSuffix( self ) :
+	
+		g = Gaffer.GraphComponent()
+		g.addChild( Gaffer.GraphComponent( "a1" ) )
+		g.addChild( Gaffer.GraphComponent( "a1" ) )
+	
+		self.assertEqual( g[0].getName(), "a1" )
+		self.assertEqual( g[1].getName(), "a2" )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

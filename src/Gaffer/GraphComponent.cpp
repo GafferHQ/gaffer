@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,17 +35,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/GraphComponent.h"
-#include "Gaffer/Action.h"
-
-#include "IECore/Exception.h"
+#include <set>
 
 #include "boost/format.hpp"
 #include "boost/bind.hpp"
 #include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include <set>
+#include "IECore/Exception.h"
+
+#include "Gaffer/GraphComponent.h"
+#include "Gaffer/Action.h"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -70,18 +71,6 @@ GraphComponent::~GraphComponent()
 	}	
 }
 
-bool GraphComponent::nameExists( const IECore::InternedString &name )
-{
-	for( ChildContainer::const_iterator it=m_parent->m_children.begin(); it!=m_parent->m_children.end(); it++ )
-	{
-		if( it->get()!=this && (*it)->m_name==name )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 const std::string &GraphComponent::setName( const std::string &name )
 {
 	// make sure the name is valid
@@ -96,25 +85,51 @@ const std::string &GraphComponent::setName( const std::string &name )
 	IECore::InternedString newName = name;
 	if( m_parent )
 	{
-		if( nameExists( newName ) )
+		// split name into a prefix and a numeric suffix. if no suffix
+		// exists then it defaults to 1.
+		std::string prefix = newName.value();
+		int suffix = 1;
+
+		static boost::regex g_prefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
+		boost::cmatch match;
+		if( regex_match( newName.value().c_str(), match, g_prefixSuffixRegex ) )
 		{
-			std::string prefix = newName.value();
-			int suffix = 1;
-			
-			static boost::regex reg( "^(.*[^0-9]+)([0-9]+)$" );
-			boost::cmatch match;
-			if( regex_match( newName.value().c_str(), match, reg ) )
+			prefix = match[1];
+			suffix = boost::lexical_cast<int>( match[2] );
+		}
+
+		// iterate over all siblings to :
+		//	a) see if we actually need renaming to be unique
+		//	b) find out the value of the numeric suffix
+		//     to be used in making us unique
+		bool uniqueAlready = true;
+		for( ChildContainer::const_iterator it=m_parent->m_children.begin(), eIt=m_parent->m_children.end(); it != eIt; it++ )
+		{
+			if( *it == this )
 			{
-				prefix = match[1];
-				suffix = boost::lexical_cast<int>( match[2] );
+				continue;
+			}
+
+			if( (*it)->m_name == m_name )
+			{
+				uniqueAlready = false;
 			}
 			
-			do
+			if( (*it)->m_name.value().compare( 0, prefix.size(), prefix ) == 0 )
 			{
-				static boost::format formatter( "%s%d" );
-				newName = boost::str( formatter % prefix % suffix );
-				suffix++;
-			} while( nameExists( newName ) );	
+				char *endPtr = 0;
+				long siblingSuffix = strtol( (*it)->m_name.value().c_str() + prefix.size(), &endPtr, 10 );
+				if( *endPtr == '\0' )
+				{
+					suffix = max( suffix, (int)siblingSuffix + 1 );
+				}
+			}
+		}
+
+		if( !uniqueAlready )
+		{
+			static boost::format formatter( "%s%d" );
+			newName = boost::str( formatter % prefix % suffix );
 		}
 	}
 	
