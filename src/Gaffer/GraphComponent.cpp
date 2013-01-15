@@ -85,49 +85,49 @@ const std::string &GraphComponent::setName( const std::string &name )
 	IECore::InternedString newName = name;
 	if( m_parent )
 	{
-		// split name into a prefix and a numeric suffix. if no suffix
-		// exists then it defaults to 1.
-		std::string prefix = newName.value();
-		int suffix = 1;
-
-		static boost::regex g_prefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
-		boost::cmatch match;
-		if( regex_match( newName.value().c_str(), match, g_prefixSuffixRegex ) )
-		{
-			prefix = match[1];
-			suffix = boost::lexical_cast<int>( match[2] );
-		}
-
-		// iterate over all siblings to :
-		//	a) see if we actually need renaming to be unique
-		//	b) find out the value of the numeric suffix
-		//     to be used in making us unique
 		bool uniqueAlready = true;
 		for( ChildContainer::const_iterator it=m_parent->m_children.begin(), eIt=m_parent->m_children.end(); it != eIt; it++ )
 		{
-			if( *it == this )
-			{
-				continue;
-			}
-
-			if( (*it)->m_name == m_name )
+			if( *it != this && (*it)->m_name == m_name )
 			{
 				uniqueAlready = false;
-			}
-			
-			if( (*it)->m_name.value().compare( 0, prefix.size(), prefix ) == 0 )
-			{
-				char *endPtr = 0;
-				long siblingSuffix = strtol( (*it)->m_name.value().c_str() + prefix.size(), &endPtr, 10 );
-				if( *endPtr == '\0' )
-				{
-					suffix = max( suffix, (int)siblingSuffix + 1 );
-				}
+				break;
 			}
 		}
-
+	
 		if( !uniqueAlready )
 		{
+			// split name into a prefix and a numeric suffix. if no suffix
+			// exists then it defaults to 1.
+			std::string prefix = newName.value();
+			int suffix = 1;
+
+			static boost::regex g_prefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
+			boost::cmatch match;
+			if( regex_match( newName.value().c_str(), match, g_prefixSuffixRegex ) )
+			{
+				prefix = match[1];
+				suffix = boost::lexical_cast<int>( match[2] );
+			}
+
+			// iterate over all the siblings to find the minimum value for the suffix which
+			// will be greater than any existing suffix.
+			for( ChildContainer::const_iterator it=m_parent->m_children.begin(), eIt=m_parent->m_children.end(); it != eIt; it++ )
+			{
+				if( *it == this )
+				{
+					continue;
+				}
+				if( (*it)->m_name.value().compare( 0, prefix.size(), prefix ) == 0 )
+				{
+					char *endPtr = 0;
+					long siblingSuffix = strtol( (*it)->m_name.value().c_str() + prefix.size(), &endPtr, 10 );
+					if( *endPtr == '\0' )
+					{
+						suffix = max( suffix, (int)siblingSuffix + 1 );
+					}
+				}
+			}
 			static boost::format formatter( "%s%d" );
 			newName = boost::str( formatter % prefix % suffix );
 		}
