@@ -66,8 +66,7 @@ class RenderManRender( GafferScene.Render ) :
 		serialisedParameters = str( IECore.ParameterParser().serialise( procedural.parameters() ) )
 		pythonString = "IECoreRI.executeProcedural( 'gaffer/script', 1, %s )" % serialisedParameters
 		
-		## \todo Remove the version number from the IE cortex builds and remove it here too.
-		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython-7\" \"%s\" ] [ %f %f %f %f %f %f ]\n" % \
+		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython\" \"%s\" ] [ %f %f %f %f %f %f ]\n" % \
 			(
 				pythonString,
 				bound.min.x, bound.min.y, bound.min.z,
