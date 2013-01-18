@@ -603,6 +603,48 @@ class GraphComponentTest( unittest.TestCase ) :
 		self.assertEqual( g[0].getName(), "a1" )
 		self.assertEqual( g[1].getName(), "a2" )
 	
+	def testSetChildDoesntRemoveChildIfNewChildIsntAccepted( self ) :
+		
+		class AddNodeAcceptor( Gaffer.Node ) :
+		
+			def __init__( self, name = "AddNodeAcceptor" ) :
+			
+				Gaffer.Node.__init__( self, name )
+				
+			def acceptsChild( self, potentialChild ) :
+								
+				return isinstance( potentialChild, GafferTest.AddNode )
+						
+		IECore.registerRunTimeTyped( AddNodeAcceptor )
+		
+		g = AddNodeAcceptor()
+		a = GafferTest.AddNode()
+		g["a"] = a
+		
+		self.assertRaises( RuntimeError, g.setChild, "a", GafferTest.MultiplyNode() )
+		
+		self.assertTrue( g["a"].isSame( a ) )
+	
+	def testCircularParentingThrows( self ) :
+	
+		a = Gaffer.GraphComponent()
+		b = Gaffer.GraphComponent()
+		
+		a["b"] = b
+		self.assertRaises( RuntimeError, b.addChild, a )
+		
+		a = Gaffer.GraphComponent()
+		b = Gaffer.GraphComponent()
+		c = Gaffer.GraphComponent()
+		
+		a["b"] = b
+		b["c"] = c
+		
+		self.assertRaises( RuntimeError, c.addChild, a )
+		
+		a = Gaffer.GraphComponent()
+		self.assertRaises( RuntimeError, a.addChild, a )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

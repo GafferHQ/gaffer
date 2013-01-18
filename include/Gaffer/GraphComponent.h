@@ -224,6 +224,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		
 	private :
 
+		void throwIfChildRejected( const GraphComponent *potentialChild ) const;
 		void setNameInternal( const IECore::InternedString &name );
 		void addChildInternal( GraphComponentPtr child );
 		void removeChildInternal( GraphComponentPtr child, bool emitParentChanged );

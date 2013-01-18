@@ -202,16 +202,8 @@ void GraphComponent::addChild( GraphComponentPtr child )
 	{
 		return;
 	}
-	if( !acceptsChild( child ) )
-	{
-		string what = boost::str( boost::format( "Parent \"%s\" rejects child \"%s\"." ) % m_name.value() % child->m_name.value() );
-		throw Exception( what );
-	}
-	if( !child->acceptsParent( this ) )
-	{
-		string what = boost::str( boost::format( "Child \"%s\" rejects parent \"%s\"." ) % child->m_name.value() % m_name.value() );
-		throw Exception( what );
-	}
+	
+	throwIfChildRejected( child );
 
 	if( refCount() )
 	{
@@ -246,17 +238,47 @@ void GraphComponent::addChild( GraphComponentPtr child )
 void GraphComponent::setChild( const std::string &name, GraphComponentPtr child )
 {
 	GraphComponentPtr existingChild = getChild<GraphComponent>( name );
+	if( existingChild && existingChild == child )
+	{
+		return;
+	}
+	
+	throwIfChildRejected( child );
+
 	if( existingChild )
 	{
-		if( existingChild == child )
-		{
-			return;
-		}
 		removeChild( existingChild );
 	}
 	
 	child->setName( name );
 	addChild( child );
+}
+
+void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild ) const
+{
+	if( potentialChild == this )
+	{
+		string what = boost::str( boost::format( "Child \"%s\" cannot be parented to itself." ) % m_name.value() );
+		throw Exception( what );
+	}
+	
+	if( potentialChild->isAncestorOf( this ) )
+	{
+		string what = boost::str( boost::format( "Child \"%s\" cannot be parented to parent \"%s\" as it is an ancestor of \"%s\"." ) % potentialChild->m_name.value() % m_name.value() % m_name.value() );
+		throw Exception( what );
+	}
+	
+	if( !acceptsChild( potentialChild ) )
+	{
+		string what = boost::str( boost::format( "Parent \"%s\" rejects child \"%s\"." ) % m_name.value() % potentialChild->m_name.value() );
+		throw Exception( what );
+	}
+	
+	if( !potentialChild->acceptsParent( this ) )
+	{
+		string what = boost::str( boost::format( "Child \"%s\" rejects parent \"%s\"." ) % potentialChild->m_name.value() % m_name.value() );
+		throw Exception( what );
+	}
 }
 
 void GraphComponent::addChildInternal( GraphComponentPtr child )

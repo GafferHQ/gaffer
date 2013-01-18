@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -148,7 +148,7 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		n["p"]["x"].setValue( 10 )
 		n["p"]["y"].setInput( a["sum"] )
 		s["n"] = n
-		a["a"] = a
+		s["a"] = a
 		
 		ss = s.serialise()
 		
