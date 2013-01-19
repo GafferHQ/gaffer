@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -83,6 +84,10 @@ class BoxPlug : public CompoundPlug
 		/// Returns the value, calling getValue() on the min and max child plugs to compute a component
 		/// of the result.
 		T getValue() const;
+
+	private :
+
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( BoxPlug<T> );
 			
 };
 
