@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,7 +45,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		Gaffer.Path.__init__( self, path, filter )
 	
 		if isinstance( indexedIO, basestring ) :
-			self.__indexedIO = IECore.IndexedIOInterface.create( indexedIO, "/", IECore.IndexedIOOpenMode.Read )
+			self.__indexedIO = IECore.IndexedIO.create( indexedIO, IECore.IndexedIO.OpenMode.Read )
 		else :
 			self.__indexedIO = indexedIO
 	
@@ -56,7 +56,7 @@ class IndexedIOPath( Gaffer.Path ) :
 			return True
 		except :
 			return False
-	
+			
 	def isLeaf( self ) :
 	
 		try :
@@ -64,7 +64,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		except :
 			return False
 			
-		return e.entryType() == IECore.IndexedIOEntryType.File
+		return e.entryType() == IECore.IndexedIO.EntryType.File
 		
 	def info( self ) :
 	
@@ -72,15 +72,10 @@ class IndexedIOPath( Gaffer.Path ) :
 		if result is None :
 			return None
 		
-		e = None
-		with IECore.IgnoredExceptions( Exception ) :
-			e = self.__entry()
-		
-		if e is None :
-			return result
-			
+		e = self.__entry()
+					
 		result["indexedIO:entryType"] = e.entryType()
-		if e.entryType() == IECore.IndexedIOEntryType.File :
+		if e.entryType() == IECore.IndexedIO.EntryType.File :
 			result["indexedIO:dataType"] = e.dataType()
 			with IECore.IgnoredExceptions( Exception ) :
 				result["indexedIO:arrayLength"] = e.arrayLength()
@@ -93,26 +88,25 @@ class IndexedIOPath( Gaffer.Path ) :
 	
 	def data( self ) :
 	
-		return self.__indexedIO.read( str( self ) )
+		d = self.__indexedIO.directory( self[:-1] )
+		return d.read( self[-1] )
 	
 	def _children( self ) :
 	
-		e = None
 		try :
-			e = self.__entry()
+			d = self.__indexedIO.directory( self[:] )
 		except :
 			return []
-		
-		if e is None or e.entryType() == IECore.IndexedIOEntryType.File :
-			return []
-			
-		self.__indexedIO.chdir( str( self ) )
-		entries = self.__indexedIO.ls()
-		result = [ IndexedIOPath( self.__indexedIO, self[:] + [ x.id() ] ) for x in entries ]
-		self.__indexedIO.chdir( "/" )
+	
+		entries = d.entryIds()
+		result = [ IndexedIOPath( self.__indexedIO, self[:] + [ x.value() ] ) for x in entries ]
 		
 		return result
 
 	def __entry( self ) :
 		
-		return self.__indexedIO.ls( str( self ) )
+		if len( self ) == 0 :
+			return IECore.IndexedIO.Entry( "/", IECore.IndexedIO.EntryType.Directory, IECore.IndexedIO.DataType.Invalid, 0 )
+			
+		d = self.__indexedIO.directory( self[:-1], IECore.IndexedIO.MissingBehaviour.ThrowIfMissing )
+		return d.entry( self[-1] )

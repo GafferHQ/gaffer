@@ -56,7 +56,7 @@ class ModelCacheSourceTest( GafferSceneTest.SceneTestCase ) :
 	
 	def testReadFile( self ) :
 	
-		mc = IECore.ModelCache( "/tmp/test.mdc", IECore.IndexedIOOpenMode.Write )
+		mc = IECore.ModelCache( "/tmp/test.mdc", IECore.IndexedIO.OpenMode.Write )
 		
 		t = mc.writableChild( "transform" )
 		t.writeTransform( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) )

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,17 +47,14 @@ class IndexedIOPathTest( unittest.TestCase ) :
 
 	def setUp( self ) :
 	
-		f = IECore.FileIndexedIO( self.__fileName, "/", IECore.IndexedIOOpenMode.Write )
-		f.mkdir( "d1" )
-		f.chdir( "d1" )
-		f.mkdir( "d2" )
-		f.chdir( "d2" )
-		f.write( "a", 1 )
-		f.write( "b", 2 )
-		f.write( "c", "three" )
-		f.write( "d", IECore.IntVectorData( [ 1, 2, 3 ] ) )
-		f.chdir( "../.." )
-		f.mkdir( "d3" )
+		f = IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Write )
+		d1 = f.subdirectory( "d1", IECore.FileIndexedIO.MissingBehaviour.CreateIfMissing )
+		d2 = d1.subdirectory( "d2", IECore.FileIndexedIO.MissingBehaviour.CreateIfMissing )
+		d2.write( "a", 1 )
+		d2.write( "b", 2 )
+		d2.write( "c", "three" )
+		d2.write( "d", IECore.IntVectorData( [ 1, 2, 3 ] ) )
+		f.subdirectory( "d3", IECore.FileIndexedIO.MissingBehaviour.CreateIfMissing )
 
 	def testConstructFromFileName( self ) :
 	
@@ -72,7 +69,7 @@ class IndexedIOPathTest( unittest.TestCase ) :
 		
 	def testConstructFromIndexedIO( self ) :
 	
-		p = Gaffer.IndexedIOPath( IECore.FileIndexedIO( self.__fileName, "/", IECore.IndexedIOOpenMode.Read ), "/" )
+		p = Gaffer.IndexedIOPath( IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Read ), "/" )
 		self.failUnless( p.isValid() )
 		
 		p.append( "d1" )
@@ -97,20 +94,25 @@ class IndexedIOPathTest( unittest.TestCase ) :
 		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/c" )
 		i = p.info()
 		
-		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIOEntryType.File )		
-		self.assertEqual( i["indexedIO:dataType"], IECore.IndexedIODataType.String )
+		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIO.EntryType.File )		
+		self.assertEqual( i["indexedIO:dataType"], IECore.IndexedIO.DataType.String )
 		
 		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/d" )
 		i = p.info()
 		
-		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIOEntryType.File )		
-		self.assertEqual( i["indexedIO:dataType"], IECore.IndexedIODataType.IntArray )
+		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIO.EntryType.File )		
+		self.assertEqual( i["indexedIO:dataType"], IECore.IndexedIO.DataType.IntArray )
 		self.assertEqual( i["indexedIO:arrayLength"], 3 )
 		
 		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2" )
 		i = p.info()
-		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIOEntryType.Directory )		
+		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIO.EntryType.Directory )		
 	
+	def testData( self ) :
+	
+		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/c" )
+		self.assertEqual( p.data(), IECore.StringData( "three" ) )
+			
 	def tearDown( self ) :
 	
 		if os.path.exists( self.__fileName ) :
