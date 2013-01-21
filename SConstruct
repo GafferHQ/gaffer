@@ -938,7 +938,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# library
 
-	librarySource = glob.glob( "src/" + libraryName + "/*.cpp" )
+	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) )
 	if librarySource :
 	
 		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
@@ -961,7 +961,7 @@ for libraryName, libraryDef in libraries.items() :
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
 	
-	bindingsSource = glob.glob( "src/" + libraryName + "Bindings/*.cpp" )
+	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
 	if bindingsSource :
 			
 		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
@@ -970,7 +970,7 @@ for libraryName, libraryDef in libraries.items() :
 		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
 	
-	pythonModuleSource = glob.glob( "src/" + libraryName + "Module/*.cpp" )
+	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )
 	if pythonModuleSource :
 		
 		pythonModuleEnv = pythonEnv.Clone()
