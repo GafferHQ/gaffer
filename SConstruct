@@ -830,6 +830,9 @@ libraries = {
 	"GafferArnoldUI" : {},
 
 	"GafferRenderMan" : {
+		"envAppends" : {
+			"LIBS" : [ "GafferScene" ],
+		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],
 		},
