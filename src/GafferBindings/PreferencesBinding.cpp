@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,13 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/PreferencesNode.h"
-#include "GafferBindings/PreferencesNodeBinding.h"
+#include "Gaffer/Preferences.h"
+#include "GafferBindings/PreferencesBinding.h"
 #include "GafferBindings/NodeBinding.h"
 
 using namespace Gaffer;
 
-void GafferBindings::bindPreferencesNode()
+void GafferBindings::bindPreferences()
 {
-	GafferBindings::NodeClass<PreferencesNode>();
+	GafferBindings::NodeClass<Preferences>();
 }

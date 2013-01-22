@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +35,33 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_PREFERENCESNODEBINDING_H
-#define GAFFERBINDINGS_PREFERENCESNODEBINDING_H
+#ifndef GAFFER_PREFERENCES_H
+#define GAFFER_PREFERENCES_H
 
-namespace GafferBindings
+#include "Gaffer/Node.h"
+
+namespace Gaffer
 {
 
-void bindPreferencesNode();
+class Preferences : public Node
+{
 
-} // namespace GafferBindings
+	public :
 
-#endif // GAFFERBINDINGS_PREFERENCESNODEBINDING_H
+		Preferences( const std::string &name=staticTypeName() );
+		virtual ~Preferences();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Preferences, PreferencesTypeId, Node );
+		
+		/// Accepts only Plugs.
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		/// Accepts only ApplicationRoots.
+		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
+		
+};
+
+IE_CORE_DECLAREPTR( Preferences );
+
+} // namespace Gaffer
+
+#endif // GAFFER_PREFERENCES_H

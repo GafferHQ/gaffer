@@ -47,7 +47,7 @@
 
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/CompoundPlug.h"
-#include "Gaffer/PreferencesNode.h"
+#include "Gaffer/Preferences.h"
 
 #include "GafferBindings/ApplicationRootBinding.h"
 #include "GafferBindings/Serialisation.h"

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,7 +78,7 @@ enum TypeId
 	BoolVectorDataPlugTypeId = 110031,
 	OpHolderTypeId = 110032,
 	ProceduralHolderTypeId = 110033,
-	PreferencesNodeTypeId = 110034,
+	PreferencesTypeId = 110034,
 	ObjectVectorPlugTypeId = 110035,
 	Box2iPlugTypeId = 110036,
 	Box3iPlugTypeId = 110037,

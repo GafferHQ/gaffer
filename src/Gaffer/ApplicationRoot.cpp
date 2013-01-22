@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,7 +38,7 @@
 #include "boost/filesystem.hpp"
 
 #include "Gaffer/ApplicationRoot.h"
-#include "Gaffer/PreferencesNode.h"
+#include "Gaffer/Preferences.h"
 
 using namespace Gaffer;
 
@@ -49,7 +49,7 @@ ApplicationRoot::ApplicationRoot( const std::string &name )
 {
 	ScriptContainerPtr s = new ScriptContainer;
 	setChild( "scripts", s );
-	PreferencesNodePtr p = new PreferencesNode;
+	PreferencesPtr p = new Preferences;
 	setChild( "preferences", p );
 }
 
@@ -91,14 +91,14 @@ void ApplicationRoot::setClipboardContents( IECore::ConstObjectPtr clip )
 	m_clipboardContents = clip->copy();
 }
 
-PreferencesNodePtr ApplicationRoot::preferences()
+PreferencesPtr ApplicationRoot::preferences()
 {
-	return getChild<PreferencesNode>( "preferences" );
+	return getChild<Preferences>( "preferences" );
 }
 
-ConstPreferencesNodePtr ApplicationRoot::preferences() const
+ConstPreferencesPtr ApplicationRoot::preferences() const
 {
-	return getChild<PreferencesNode>( "preferences" );
+	return getChild<Preferences>( "preferences" );
 }
 
 void ApplicationRoot::savePreferences() const

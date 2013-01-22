@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,31 +35,31 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PREFERENCESNODE_H
-#define GAFFER_PREFERENCESNODE_H
+#include "Gaffer/Preferences.h"
 
-#include "Gaffer/Node.h"
+using namespace Gaffer;
 
-namespace Gaffer
+IE_CORE_DEFINERUNTIMETYPED( Preferences );
+
+Preferences::Preferences( const std::string &name )
+	:	Node( name )
 {
+}
 
-class PreferencesNode : public Node
+Preferences::~Preferences()
 {
+}
 
-	public :
+bool Preferences::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	if( !Node::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
+	return potentialChild->isInstanceOf( (IECore::TypeId)PlugTypeId );
+}
 
-		PreferencesNode( const std::string &name=staticTypeName() );
-		virtual ~PreferencesNode();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PreferencesNode, PreferencesNodeTypeId, Node );
-		
-		/// Accepts only Plugs.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		/// Accepts only ApplicationRoots.
-		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-		
-};
-
-} // namespace Gaffer
-
-#endif // GAFFER_PREFERENCESNODE_H
+bool Preferences::acceptsParent( const GraphComponent *potentialParent ) const
+{
+	return potentialParent->isInstanceOf( (IECore::TypeId)ApplicationRootTypeId );
+}

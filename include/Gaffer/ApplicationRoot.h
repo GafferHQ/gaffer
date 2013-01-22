@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -43,7 +43,7 @@
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( PreferencesNode )
+IE_CORE_FORWARDDECLARE( Preferences )
 
 class ApplicationRoot : public GraphComponent
 {
@@ -90,8 +90,8 @@ class ApplicationRoot : public GraphComponent
 		/// a python dependency.
 		//@{
 		/// Returns the preferences node.
-		PreferencesNodePtr preferences();
-		ConstPreferencesNodePtr preferences() const;
+		PreferencesPtr preferences();
+		ConstPreferencesPtr preferences() const;
 		/// Saves the current preferences to preferencesLocation()/preferences.py.
 		void savePreferences() const;
 		/// Saves the current preferences value to the specified file.

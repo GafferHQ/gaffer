@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,31 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/PreferencesNode.h"
+#ifndef GAFFERBINDINGS_PREFERENCESBINDING_H
+#define GAFFERBINDINGS_PREFERENCESBINDING_H
 
-using namespace Gaffer;
-
-IE_CORE_DEFINERUNTIMETYPED( PreferencesNode );
-
-PreferencesNode::PreferencesNode( const std::string &name )
-	:	Node( name )
+namespace GafferBindings
 {
-}
 
-PreferencesNode::~PreferencesNode()
-{
-}
+void bindPreferences();
 
-bool PreferencesNode::acceptsChild( const GraphComponent *potentialChild ) const
-{
-	if( !Node::acceptsChild( potentialChild ) )
-	{
-		return false;
-	}
-	return potentialChild->isInstanceOf( (IECore::TypeId)PlugTypeId );
-}
+} // namespace GafferBindings
 
-bool PreferencesNode::acceptsParent( const GraphComponent *potentialParent ) const
-{
-	return potentialParent->isInstanceOf( (IECore::TypeId)ApplicationRootTypeId );
-}
+#endif // GAFFERBINDINGS_PREFERENCESBINDING_H

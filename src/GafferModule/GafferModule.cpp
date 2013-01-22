@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -61,7 +61,7 @@
 #include "GafferBindings/ChildSetBinding.h"
 #include "GafferBindings/OpHolderBinding.h"
 #include "GafferBindings/ProceduralHolderBinding.h"
-#include "GafferBindings/PreferencesNodeBinding.h"
+#include "GafferBindings/PreferencesBinding.h"
 #include "GafferBindings/ContextBinding.h"
 #include "GafferBindings/BoxPlugBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
@@ -100,7 +100,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindChildSet();
 	bindOpHolder();
 	bindProceduralHolder();
-	bindPreferencesNode();
+	bindPreferences();
 	bindContext();
 	bindBoxPlug();
 	bindExpression();
