@@ -66,24 +66,24 @@ bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) cons
 	return potentialChild->isInstanceOf( CompoundPlug::staticTypeId() );
 }
 
-Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value, const std::string &plugName )
-{
-	CompoundPlugPtr plug = new CompoundPlug( plugName, direction(), getFlags() );
+Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags )
+{	
+	CompoundPlugPtr plug = new CompoundPlug( plugName, direction(), plugFlags );
 	
-	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", getFlags() );
+	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", plugFlags );
 	namePlug->setValue( name );
 	plug->addChild( namePlug );
 	
-	plug->addChild( createPlugFromData( "value", direction(), getFlags(), value ) );
+	plug->addChild( createPlugFromData( "value", direction(), plugFlags, value ) );
 	
 	addChild( plug );
 	return plug;
 }
 		
-Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, bool enabled )
+Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags, bool enabled )
 {
-	CompoundPlug *plug = addMember( name, value, plugName );
-	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, getFlags() );
+	CompoundPlug *plug = addMember( name, value, plugName, plugFlags );
+	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, plugFlags );
 	plug->addChild( e );
 	return plug;
 }

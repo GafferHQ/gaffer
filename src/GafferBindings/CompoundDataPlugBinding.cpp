@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,14 +59,14 @@ static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::
 	return result;
 }
 
-static Gaffer::CompoundPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName )
+static Gaffer::CompoundPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName, unsigned plugFlags )
 {
-	return p.addMember( name, value );
+	return p.addMember( name, value, plugName, plugFlags );
 }
 
-static Gaffer::CompoundPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName, bool enabled )
+static Gaffer::CompoundPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName, unsigned plugFlags, bool enabled )
 {
-	return p.addOptionalMember( name, value, plugName, enabled );
+	return p.addOptionalMember( name, value, plugName, plugFlags, enabled );
 }
 
 static tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundPlug *member )
@@ -88,8 +89,8 @@ void GafferBindings::bindCompoundDataPlug()
 				)
 			)	
 		)
-		.def( "addMember", &addMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1" ) )
-		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1", arg_( "enabled" ) = false ) )
+		.def( "addMember", &addMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic ) )
+		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic, arg_( "enabled" ) = false ) )
 		.def( "addMembers", &CompoundDataPlug::addMembers )
 		.def( "memberDataAndName", &memberDataAndNameWrapper )
 	;

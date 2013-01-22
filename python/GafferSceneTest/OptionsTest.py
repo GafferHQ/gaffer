@@ -87,6 +87,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 		g = s2["optionsNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
 		self.assertEqual( g[0], IECore.Options( { "test" : 10, "test2" : "10" } ) )
+		self.assertTrue( "options1" not in s2["optionsNode"] )
 	
 	def testHashPassThrough( self ) :
 	

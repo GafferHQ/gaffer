@@ -39,11 +39,22 @@
 #define GAFFERBINDINGS_VALUEPLUGBINDING_H
 
 #include "Gaffer/ValuePlug.h"
+#include "GafferBindings/PlugBinding.h"
 
 namespace GafferBindings
 {
 
 void bindValuePlug();
+
+class ValuePlugSerialiser : public PlugSerialiser
+{
+
+	public :
+	
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
+		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+
+};
 
 } // namespace GafferBindings
 

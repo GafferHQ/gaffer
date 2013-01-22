@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -48,26 +49,7 @@ Attributes::Attributes( const std::string &name )
 	:	SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild(
-		new CompoundDataPlug(
-			"attributes",
-			Plug::In,
-			Plug::Default | Plug::Dynamic
-		)
-	);
-}
-
-Attributes::Attributes( const std::string &name, Gaffer::Plug::Flags attributesPlugFlags )
-	:	SceneElementProcessor( name )
-{
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild(
-		new CompoundDataPlug(
-			"attributes",
-			Plug::In,
-			attributesPlugFlags
-		)
-	);
+	addChild( new CompoundDataPlug( "attributes" ) );
 }
 
 Attributes::~Attributes()

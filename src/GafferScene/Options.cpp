@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,26 +51,7 @@ Options::Options( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild(
-		new CompoundDataPlug(
-			"options",
-			Plug::In,
-			Plug::Default | Plug::Dynamic
-		)
-	);
-}
-
-Options::Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags )
-	:	GlobalsProcessor( name )
-{
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild(
-		new CompoundDataPlug(
-			"options",
-			Plug::In,
-			optionsPlugFlags
-		)
-	);
+	addChild( new CompoundDataPlug( "options" ) );
 }
 
 Options::~Options()

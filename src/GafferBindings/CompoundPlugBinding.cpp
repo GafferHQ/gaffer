@@ -42,7 +42,7 @@
 
 #include "Gaffer/CompoundPlug.h"
 #include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -62,7 +62,7 @@ class CompoundPlugWrapper : public PlugWrapper<CompoundPlug>
 
 IE_CORE_DECLAREPTR( CompoundPlugWrapper );
 
-class CompoundPlugSerialiser : public PlugSerialiser
+class CompoundPlugSerialiser : public ValuePlugSerialiser
 {
 
 	public :

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,18 +43,18 @@ using namespace GafferArnold;
 IE_CORE_DEFINERUNTIMETYPED( ArnoldAttributes );
 
 ArnoldAttributes::ArnoldAttributes( const std::string &name )
-	:	GafferScene::Attributes( name, Gaffer::Plug::Default )
+	:	GafferScene::Attributes( name )
 {
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 	
 	// visibility parameters
 	
-	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", false );
-	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", false );
-	attributes->addOptionalMember( "ai:visibility:reflected", new IECore::BoolData( true ), "reflectedVisibility", false );
-	attributes->addOptionalMember( "ai:visibility:refracted", new IECore::BoolData( true ), "refractedVisibility", false );
-	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", false );
-	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", false );
+	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:reflected", new IECore::BoolData( true ), "reflectedVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:refracted", new IECore::BoolData( true ), "refractedVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
 	
 }
 

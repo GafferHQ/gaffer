@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,7 +44,7 @@ import GafferScene
 
 class Render( Gaffer.Node ) :
 
-	def __init__( self, name="Render", inputs={}, dynamicPlugs=() ) :
+	def __init__( self, name="Render" ) :
 	
 		Gaffer.Node.__init__( self, name )
 	
@@ -52,13 +53,6 @@ class Render( Gaffer.Node ) :
 				"in"
 			)
 		)
-	
-		if self.__class__ is Render :
-			self._init( inputs, dynamicPlugs )
-		else :
-			# derived class should call _init after adding
-			# its own plugs
-			pass
 				
 	def execute( self ) :
 	

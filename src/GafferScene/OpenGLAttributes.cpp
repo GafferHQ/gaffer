@@ -42,39 +42,39 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( OpenGLAttributes );
 
 OpenGLAttributes::OpenGLAttributes( const std::string &name )
-	:	Attributes( name, Gaffer::Plug::Default )
+	:	Attributes( name )
 {
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 	
 	// drawing parameters
 	
-	attributes->addOptionalMember( "gl:primitive:solid", new IECore::BoolData( true ), "primitiveSolid", false );
+	attributes->addOptionalMember( "gl:primitive:solid", new IECore::BoolData( true ), "primitiveSolid", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "gl:primitive:wireframe", new IECore::BoolData( true ), "primitiveWireframe", false );
-	attributes->addOptionalMember( "gl:primitive:wireframeColor", new IECore::Color4fData( Color4f( 0.25, 0.6, 0.85, 1 ) ), "primitiveWireframeColor", false );
-	attributes->addOptionalMember( "gl:primitive:wireframeWidth", new IECore::FloatData( 1.0f ), "primitiveWireframeWidth", false );
+	attributes->addOptionalMember( "gl:primitive:wireframe", new IECore::BoolData( true ), "primitiveWireframe", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:wireframeColor", new IECore::Color4fData( Color4f( 0.25, 0.6, 0.85, 1 ) ), "primitiveWireframeColor", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:wireframeWidth", new IECore::FloatData( 1.0f ), "primitiveWireframeWidth", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "gl:primitive:outline", new IECore::BoolData( true ), "primitiveOutline", false );
-	attributes->addOptionalMember( "gl:primitive:outlineColor", new IECore::Color4fData( Color4f( 0.85, 0.75, 0.45, 1 ) ), "primitiveOutlineColor", false );
-	attributes->addOptionalMember( "gl:primitive:outlineWidth", new IECore::FloatData( 1.0f ), "primitiveOutlineWidth", false );
+	attributes->addOptionalMember( "gl:primitive:outline", new IECore::BoolData( true ), "primitiveOutline", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:outlineColor", new IECore::Color4fData( Color4f( 0.85, 0.75, 0.45, 1 ) ), "primitiveOutlineColor", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:outlineWidth", new IECore::FloatData( 1.0f ), "primitiveOutlineWidth", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "gl:primitive:points", new IECore::BoolData( true ), "primitivePoints", false );
-	attributes->addOptionalMember( "gl:primitive:pointColor", new IECore::Color4fData( Color4f( 0.85, 0.45, 0, 1 ) ), "primitivePointColor", false );
-	attributes->addOptionalMember( "gl:primitive:pointWidth", new IECore::FloatData( 1.0f ), "primitivePointWidth", false );
+	attributes->addOptionalMember( "gl:primitive:points", new IECore::BoolData( true ), "primitivePoints", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:pointColor", new IECore::Color4fData( Color4f( 0.85, 0.45, 0, 1 ) ), "primitivePointColor", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:pointWidth", new IECore::FloatData( 1.0f ), "primitivePointWidth", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "gl:primitive:bound", new IECore::BoolData( true ), "primitiveBound", false );
-	attributes->addOptionalMember( "gl:primitive:boundColor", new IECore::Color4fData( Color4f( 0.36, 0.8, 0.85, 1 ) ), "primitiveBoundColor", false );
+	attributes->addOptionalMember( "gl:primitive:bound", new IECore::BoolData( true ), "primitiveBound", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:boundColor", new IECore::Color4fData( Color4f( 0.36, 0.8, 0.85, 1 ) ), "primitiveBoundColor", Gaffer::Plug::Default, false );
 
 	// points primitive parameters
 	
-	attributes->addOptionalMember( "gl:pointsPrimitive:useGLPoints", new IECore::StringData( "forGLPoints" ), "pointsPrimitiveUseGLPoints", false );
-	attributes->addOptionalMember( "gl:pointsPrimitive:glPointWidth", new IECore::FloatData( 1.0 ), "pointsPrimitiveGLPointWidth", false );
+	attributes->addOptionalMember( "gl:pointsPrimitive:useGLPoints", new IECore::StringData( "forGLPoints" ), "pointsPrimitiveUseGLPoints", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:pointsPrimitive:glPointWidth", new IECore::FloatData( 1.0 ), "pointsPrimitiveGLPointWidth", Gaffer::Plug::Default, false );
 		
 	// curves primitive parameters
 	
-	attributes->addOptionalMember( "gl:curvesPrimitive:useGLLines", new IECore::BoolData( false ), "curvesPrimitiveUseGLLines", false );
-	attributes->addOptionalMember( "gl:curvesPrimitive:glLineWidth", new IECore::FloatData( 1.0 ), "curvesPrimitiveGLLineWidth", false );
-	attributes->addOptionalMember( "gl:curvesPrimitive:ignoreBasis", new IECore::BoolData( false ), "curvesPrimitiveIgnoreBasis", false );
+	attributes->addOptionalMember( "gl:curvesPrimitive:useGLLines", new IECore::BoolData( false ), "curvesPrimitiveUseGLLines", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:curvesPrimitive:glLineWidth", new IECore::FloatData( 1.0 ), "curvesPrimitiveGLLineWidth", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:curvesPrimitive:ignoreBasis", new IECore::BoolData( false ), "curvesPrimitiveIgnoreBasis", Gaffer::Plug::Default, false );
 	
 }
 

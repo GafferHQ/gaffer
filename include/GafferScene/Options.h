@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -60,10 +61,6 @@ class Options : public GlobalsProcessor
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
-
-		/// Can be used by derived classes to declare an options plug which isn't dynamic, so
-		/// they can add a predefined set of static options at construction.
-		Options( const std::string &name, Gaffer::Plug::Flags optionsPlugFlags );
 
 		virtual void hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;

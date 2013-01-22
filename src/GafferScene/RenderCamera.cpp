@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,11 +43,11 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( RenderCamera );
 
 RenderCamera::RenderCamera( const std::string &name )
-	:	Options( name, Plug::Default )
+	:	Options( name )
 {
 	CompoundDataPlug *options = optionsPlug();
 	
-	options->addMember( "gaffer:renderCamera", new IECore::StringData() );	
+	options->addMember( "gaffer:renderCamera", new IECore::StringData(), "renderCamera", Plug::Default );	
 }
 
 RenderCamera::~RenderCamera()

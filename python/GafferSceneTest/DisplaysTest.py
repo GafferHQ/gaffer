@@ -97,7 +97,9 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		g = s2["displaysNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
 		self.assertEqual( g[0], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
-	
+		self.assertEqual( len( s2["displaysNode"]["displays"] ), 1 )
+		self.assertTrue( "displays1" not in s2["displaysNode"] )
+		
 	def testRegistry( self ) :
 	
 		GafferScene.Displays.registerDisplay( "test", IECore.Display( "test.exr", "exr", "rgba" ) )

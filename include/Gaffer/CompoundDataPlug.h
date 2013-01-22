@@ -67,10 +67,10 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
 		/// Adds a CompoundPlug to represent a CompoundData member with the specified name and value.
-		Gaffer::CompoundPlug *addMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1" );
+		Gaffer::CompoundPlug *addMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );
 		/// As above, but adds an additional BoolPlug to allow the user to control whether or not
 		/// this particular member is enabled.
-		Gaffer::CompoundPlug *addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", bool enabled = false );
+		Gaffer::CompoundPlug *addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic, bool enabled = false );
 		void addMembers( const IECore::CompoundData *parameters );
 		
 		/// Returns the value for the member specified by the child parameterPlug, and fills name with the

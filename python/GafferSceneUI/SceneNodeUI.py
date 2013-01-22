@@ -146,7 +146,7 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.RenderCamera.staticTypeId(),
-	"options.member1.value",
+	"options.renderCamera.value",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,
 		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -58,6 +59,20 @@ class ArnoldAttributesTest( GafferSceneTest.SceneTestCase ) :
 		
 		aa = a["out"].attributes( "/plane" )
 		self.assertEqual( aa, IECore.CompoundObject( { "ai:visibility:camera" : IECore.BoolData( False ) } ) )
-		
+	
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferArnold.ArnoldAttributes()
+		s["a"]["attributes"]["cameraVisibility"]["value"].setValue( False )
+		names = s["a"]["attributes"].keys()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+				
+		self.assertEqual( s2["a"]["attributes"].keys(), names )
+		self.assertTrue( "attributes1" not in s2["a"] )
+		self.assertEqual( s2["a"]["attributes"]["cameraVisibility"]["value"].getValue(), False )
+	
 if __name__ == "__main__":
 	unittest.main()

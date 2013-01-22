@@ -93,45 +93,41 @@ static std::string repr( const Plug *plug )
 	return result;
 }
 
-class ValuePlugSerialiser : public PlugSerialiser
+void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
 {
+	PlugSerialiser::moduleDependencies( graphComponent, modules );
 
-	virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+	const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
+	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
+	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
-		PlugSerialiser::moduleDependencies( graphComponent, modules );
-		
-		const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
-		object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
-		if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+		std::string module = Serialisation::modulePath( pythonDefaultValue );
+		if( module.size() )
 		{
-			object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-			std::string module = Serialisation::modulePath( pythonDefaultValue );
-			if( module.size() )
+			modules.insert( module );
+		}
+	}
+}
+
+std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+{
+	const Plug *plug = static_cast<const Plug *>( graphComponent );
+	if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) )
+	{
+		if( !serialisation.identifier( plug->getInput<Plug>() ).size() )
+		{
+			object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
+			if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
 			{
-				modules.insert( module );
+				object pythonValue = pythonPlug.attr( "getValue" )();
+				std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
+				return identifier + ".setValue( " + value + " )\n";
 			}
 		}
 	}
-
-	virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-	{
-		const Plug *plug = static_cast<const Plug *>( graphComponent );
-		if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) )
-		{
-			if( !serialisation.identifier( plug->getInput<Plug>() ).size() )
-			{
-				object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
-				if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
-				{
-					object pythonValue = pythonPlug.attr( "getValue" )();
-					std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-					return identifier + ".setValue( " + value + " )\n";
-				}
-			}
-		}
-		return "";
-	}
-};
+	return "";
+}
 
 void GafferBindings::bindValuePlug()
 {

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,6 +50,20 @@ class ArnoldOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		o["out"].transform( "/" )
 		self.failUnless( isinstance( o["out"].childNames( "/" ), IECore.StringVectorData ) )
+
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["o"] = GafferArnold.ArnoldOptions()
+		s["o"]["options"]["aaSamples"]["value"].setValue( 1 )
+		names = s["o"]["options"].keys()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+				
+		self.assertEqual( s2["o"]["options"].keys(), names )
+		self.assertTrue( "options1" not in s2["o"] )
+		self.assertEqual( s2["o"]["options"]["aaSamples"]["value"].getValue(), 1 )
 		
 if __name__ == "__main__":
 	unittest.main()

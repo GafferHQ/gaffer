@@ -34,10 +34,28 @@
 #  
 ##########################################################################
 
-from RenderManShaderTest import RenderManShaderTest
-from RenderManAttributesTest import RenderManAttributesTest
-from RenderManOptionsTest import RenderManOptionsTest
+import IECore
 
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import GafferRenderMan
+
+class RenderManOptionsTest( GafferSceneTest.SceneTestCase ) :
+		
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["o"] = GafferRenderMan.RenderManOptions()
+		s["o"]["options"]["shaderSearchPath"]["value"].setValue( "abc" )
+		names = s["o"]["options"].keys()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+				
+		self.assertEqual( s2["o"]["options"].keys(), names )
+		self.assertTrue( "options1" not in s2["o"] )
+		self.assertEqual( s2["o"]["options"]["shaderSearchPath"]["value"].getValue(), "abc" )
+	
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

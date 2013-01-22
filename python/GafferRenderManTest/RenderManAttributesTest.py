@@ -34,10 +34,28 @@
 #  
 ##########################################################################
 
-from RenderManShaderTest import RenderManShaderTest
-from RenderManAttributesTest import RenderManAttributesTest
-from RenderManOptionsTest import RenderManOptionsTest
+import IECore
 
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import GafferRenderMan
+
+class RenderManAttributesTest( GafferSceneTest.SceneTestCase ) :
+		
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferRenderMan.RenderManAttributes()
+		s["a"]["attributes"]["cameraVisibility"]["value"].setValue( False )
+		names = s["a"]["attributes"].keys()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+				
+		self.assertEqual( s2["a"]["attributes"].keys(), names )
+		self.assertTrue( "attributes1" not in s2["a"] )
+		self.assertEqual( s2["a"]["attributes"]["cameraVisibility"]["value"].getValue(), False )
+	
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -42,7 +42,7 @@ import GafferScene
 
 class RenderManRender( GafferScene.Render ) :
 
-	def __init__( self, name="RenderManRender", inputs={}, dynamicPlugs=() ) :
+	def __init__( self, name="RenderManRender" ) :
 	
 		GafferScene.Render.__init__( self, name )
 		
@@ -51,9 +51,7 @@ class RenderManRender( GafferScene.Render ) :
 				"ribFileName",
 			)
 		)
-		
-		self._init( inputs, dynamicPlugs )
-		
+				
 	def _createRenderer( self ) :
 	
 		renderer = IECoreRI.Renderer( self.__fileName() )

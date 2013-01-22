@@ -44,22 +44,23 @@ import GafferUI
 
 class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-	def __init__( self, plug, collapsed=True, label=None, **kw ) :
+	def __init__( self, plug, collapsed=True, label=None, editable=True, **kw ) :
 
 		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, **kw )
 
+		self.__editable = True
 		self.__footerWidget = None
 
 	def _childPlugWidget( self, childPlug ) :
 	
-		return _ChildPlugWidget( childPlug, self._label( childPlug["name"].getValue() ) )
+		return _ChildPlugWidget( childPlug, self._label( childPlug ) )
 		
 	def _footerWidget( self ) :
 	
 		if self.__footerWidget is not None :
 			return self.__footerWidget
 		
-		if self.getPlug().getFlags( Gaffer.Plug.Flags.Dynamic ) :	
+		if self.__class__ is CompoundDataPlugValueWidget : # slight hack so that SectionedCompoundDataPlugValueWidget doesn't get a plus button
 			self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 			self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) ) )
 			self.__footerWidget.append(
@@ -70,11 +71,11 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		return self.__footerWidget
 	
 	## May be reimplemented by derived classes to return a suitable label
-	# for the member of the given name.
-	def _label( self, name ) :
+	# for the member represented by childPlug.
+	def _label( self, childPlug ) :
 	
-		if not self.getPlug().getFlags( Gaffer.Plug.Flags.Dynamic ) :
-			return name
+		if not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
+			return childPlug["name"].getValue()
 		
 		return None
 		

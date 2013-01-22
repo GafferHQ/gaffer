@@ -41,26 +41,26 @@ using namespace GafferRenderMan;
 IE_CORE_DEFINERUNTIMETYPED( RenderManAttributes );
 
 RenderManAttributes::RenderManAttributes( const std::string &name )
-	:	GafferScene::Attributes( name, Gaffer::Plug::Default )
+	:	GafferScene::Attributes( name )
 {
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 	
 	// visibility and hit mode parameters
 	
-	attributes->addOptionalMember( "ri:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", false );
-	attributes->addOptionalMember( "ri:shade:camerahitmode", new IECore::StringData( "shader" ), "cameraHitMode", false );
+	attributes->addOptionalMember( "ri:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:shade:camerahitmode", new IECore::StringData( "shader" ), "cameraHitMode", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "ri:visibility:transmission", new IECore::BoolData( false ), "transmissionVisibility", false );
-	attributes->addOptionalMember( "ri:shade:transmissionhitmode", new IECore::StringData( "shader" ), "transmissionHitMode", false );
+	attributes->addOptionalMember( "ri:visibility:transmission", new IECore::BoolData( false ), "transmissionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:shade:transmissionhitmode", new IECore::StringData( "shader" ), "transmissionHitMode", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "ri:visibility:diffuse", new IECore::BoolData( false ), "diffuseVisibility", false );
-	attributes->addOptionalMember( "ri:shade:diffusehitmode", new IECore::StringData( "primitive" ), "diffuseHitMode", false );
+	attributes->addOptionalMember( "ri:visibility:diffuse", new IECore::BoolData( false ), "diffuseVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:shade:diffusehitmode", new IECore::StringData( "primitive" ), "diffuseHitMode", Gaffer::Plug::Default, false );
 
-	attributes->addOptionalMember( "ri:visibility:specular", new IECore::BoolData( false ), "specularVisibility", false );
-	attributes->addOptionalMember( "ri:shade:specularhitmode", new IECore::StringData( "shader" ), "specularHitMode", false );
+	attributes->addOptionalMember( "ri:visibility:specular", new IECore::BoolData( false ), "specularVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:shade:specularhitmode", new IECore::StringData( "shader" ), "specularHitMode", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "ri:visibility:photon", new IECore::BoolData( false ), "photonVisibility", false );
-	attributes->addOptionalMember( "ri:shade:photonhitmode", new IECore::StringData( "shader" ), "photonHitMode", false );
+	attributes->addOptionalMember( "ri:visibility:photon", new IECore::BoolData( false ), "photonVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:shade:photonhitmode", new IECore::StringData( "shader" ), "photonHitMode", Gaffer::Plug::Default, false );
 	
 }
 

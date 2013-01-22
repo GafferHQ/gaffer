@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -225,6 +226,18 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( a["out"]["bound"].hash(), input["out"]["bound"].hash() )
 			self.assertEqual( a["out"]["object"].hash(), input["out"]["object"].hash() )
 			self.assertNotEqual( a["out"]["attributes"].hash(), input["out"]["attributes"].hash() )
+	
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferScene.Attributes()
+		s["a"]["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 1.0 ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( len( s2["a"]["attributes"] ), 1 )
+		self.assertTrue( "attributes1" not in s2["a"] )
 	
 if __name__ == "__main__":
 	unittest.main()

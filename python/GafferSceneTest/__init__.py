@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -62,6 +63,7 @@ from SceneContextVariablesTest import SceneContextVariablesTest
 from ModelCacheSourceTest import ModelCacheSourceTest
 from SubTreeTest import SubTreeTest
 from OpenGLAttributesTest import OpenGLAttributesTest
+from RenderCameraTest import RenderCameraTest
 
 if __name__ == "__main__":
 	import unittest

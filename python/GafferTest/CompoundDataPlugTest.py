@@ -134,7 +134,21 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		d, n = p.memberDataAndName( m2 )
 		self.assertEqual( d, IECore.V2fData( IECore.V2f( 1, 2 ) ) )
 		self.assertEqual( n, "b" )
-				
+	
+	def testPlugFlags( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		m1 = p.addMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
+		self.assertEqual( m1.getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( m1["name"].getFlags(), Gaffer.Plug.Flags.Default)
+		self.assertEqual( m1["value"].getFlags(), Gaffer.Plug.Flags.Default )
+		
+		m2 = p.addOptionalMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
+		self.assertEqual( m2.getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( m2["name"].getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( m2["value"].getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( m2["enabled"].getFlags(), Gaffer.Plug.Flags.Default )
+					
 if __name__ == "__main__":
 	unittest.main()
 	

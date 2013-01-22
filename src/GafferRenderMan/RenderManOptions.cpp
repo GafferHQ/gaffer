@@ -42,24 +42,17 @@ using namespace GafferRenderMan;
 IE_CORE_DEFINERUNTIMETYPED( RenderManOptions );
 
 RenderManOptions::RenderManOptions( const std::string &name )
-	:	GafferScene::Options( name, Gaffer::Plug::Default )
+	:	GafferScene::Options( name )
 {
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 	
-	// sampling parameters
-	
-	/*options->addOptionalMember( "ai:AA_samples", new IECore::IntData( 3 ), "aaSamples", false );
-	options->addOptionalMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), "giDiffuseSamples", false );
-	options->addOptionalMember( "ai:GI_glossy_samples", new IECore::IntData( 2 ), "giGlossySamples", false );
-	options->addOptionalMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ), "giRefractionSamples", false );*/
-
 	// searchpath parameters
 	
-	options->addOptionalMember( "ri:searchpath:shader", new IECore::StringData( "" ), "shaderSearchPath", false );
-	options->addOptionalMember( "ri:searchpath:texture", new IECore::StringData( "" ), "textureSearchPath", false );
-	options->addOptionalMember( "ri:searchpath:display", new IECore::StringData( "" ), "displaySearchPath", false );
-	options->addOptionalMember( "ri:searchpath:archive", new IECore::StringData( "" ), "archiveSearchPath", false );
-	options->addOptionalMember( "ri:searchpath:procedural", new IECore::StringData( "" ), "proceduralSearchPath", false );
+	options->addOptionalMember( "ri:searchpath:shader", new IECore::StringData( "" ), "shaderSearchPath", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:searchpath:texture", new IECore::StringData( "" ), "textureSearchPath", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:searchpath:display", new IECore::StringData( "" ), "displaySearchPath", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:searchpath:archive", new IECore::StringData( "" ), "archiveSearchPath", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:searchpath:procedural", new IECore::StringData( "" ), "proceduralSearchPath", Gaffer::Plug::Default, false );
 	
 }
 
