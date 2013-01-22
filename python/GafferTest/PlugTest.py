@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -367,7 +367,21 @@ class PlugTest( unittest.TestCase ) :
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly
 		)
+	
+	def testRepr( self ) :
+	
+		p1 = Gaffer.Plug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
+		)
 		
+		p2 = eval( repr( p1 ) )
+		
+		self.assertEqual( p1.getName(), p2.getName() )
+		self.assertEqual( p1.direction(), p2.direction() )
+		self.assertEqual( p1.getFlags(), p2.getFlags() )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

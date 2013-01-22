@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -80,19 +80,7 @@ class NumericPlugTest( unittest.TestCase ) :
 		f = Gaffer.FloatPlug( maxValue=1 )
 		self.assertEqual( f.hasMinValue(), False )
 		self.assertEqual( f.hasMaxValue(), True )
-	
-	def testConstructWithInputOrValue( self ) :
-	
-		f1 = Gaffer.FloatPlug()
-		
-		f2 = Gaffer.FloatPlug( input=f1 )
-		self.assert_( f2.getInput().isSame( f1 ) )
-		
-		f1 = Gaffer.FloatPlug( value=10 )
-		self.assertEqual( f1.getValue(), 10 )
-		
-		self.assertRaises( ValueError, Gaffer.FloatPlug, input=f1, value=10 )
-		
+			
 	def testRunTimeTyping( self ) :
 	
 		f = Gaffer.FloatPlug()
@@ -247,7 +235,27 @@ class NumericPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
 		self.assertRaises( RuntimeError, p.setValue, 10 )
+	
+	def testRepr( self ) :
+	
+		p1 = Gaffer.IntPlug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			10,
+			-10,
+			100,
+			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
+		)
 		
+		p2 = eval( repr( p1 ) )
+		
+		self.assertEqual( p1.getName(), p2.getName() )
+		self.assertEqual( p1.direction(), p2.direction() )
+		self.assertEqual( p1.defaultValue(), p2.defaultValue() )
+		self.assertEqual( p1.minValue(), p2.minValue() )
+		self.assertEqual( p1.maxValue(), p2.maxValue() )
+		self.assertEqual( p1.getFlags(), p2.getFlags() )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

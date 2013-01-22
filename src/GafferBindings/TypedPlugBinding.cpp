@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,25 +40,24 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/IECoreBinding.h"
 
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/Serialiser.h"
-#include "GafferBindings/PlugBinding.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Node.h"
+
+#include "GafferBindings/TypedPlugBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
 template<typename T>
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
+static std::string typedPlugRepr( const T *plug )
 {
-	typename T::ConstPtr plug = IECore::staticPointerCast<const T>( g );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
+	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
 	
 	typename T::ValueType defaultValue = plug->defaultValue();
@@ -69,60 +68,11 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	
 	if( plug->getFlags() != Plug::Default )
 	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	bool connected = false;
-	ConstPlugPtr srcPlug = plug->template getInput<Plug>();
-	if( srcPlug )
-	{
-		std::string srcNodeName = s.add( srcPlug->node() );
-		if( srcNodeName!="" )
-		{
-			connected = true;
-			result += "input = " + srcNodeName + "[\"" + srcPlug->getName() + "\"]";
-		}
-	}
-	
-	if( !connected && plug->direction()==Plug::In )
-	{
-		typename T::Ptr p = IECore::constPointerCast<T>( plug );
-		typename T::ValueType value = p->getValue();
-		if( value!=plug->defaultValue() )
-		{
-			result += "value = " + IECorePython::repr( value ) + ", ";
-		}
+		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
 	}
 	
 	result += ")";
 
-	return result;
-}
-
-template<typename T>
-static typename T::Ptr construct(
-	const char *name,
-	Plug::Direction direction,
-	typename T::ValueType defaultValue,
-	unsigned flags,
-	PlugPtr input,
-	object value
-)
-{
-	typename T::Ptr result = new T( name, direction, defaultValue, flags );
-	if( input && value!=object() )
-	{
-		throw std::invalid_argument( "Must specify only one of input or value." );
-	}
-	if( input )
-	{
-		result->setInput( input );
-	}
-	else if( value!=object() )
-	{
-		typename T::ValueType v = extract<typename T::ValueType>( value )();
-		result->setValue( v );
-	}
 	return result;
 }
 
@@ -132,14 +82,12 @@ static void bind()
 	typedef typename T::ValueType V;
 	
 	IECorePython::RunTimeTypedClass<T>()
-		.def( "__init__", make_constructor( construct<T>, default_call_policies(), 
+		.def( init<const std::string &, Plug::Direction, const V &, unsigned>(
 				(
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
-					boost::python::arg_( "flags" )=Plug::Default,
-					boost::python::arg_( "input" )=PlugPtr( 0 ),
-					boost::python::arg_( "value" )=object()
+					boost::python::arg_( "flags" )=Plug::Default
 				)
 			)
 		)
@@ -147,9 +95,9 @@ static void bind()
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )
+		.def( "repr", &typedPlugRepr<T> )
 	;
 	
-	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 }
 
 void GafferBindings::bindTypedPlug()

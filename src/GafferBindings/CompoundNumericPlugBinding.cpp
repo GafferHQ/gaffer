@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,132 +36,55 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/lexical_cast.hpp"
+
+#include "IECorePython/IECoreBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferBindings/CompoundNumericPlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/Serialiser.h"
-#include "Gaffer/CompoundNumericPlug.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
 template<typename T>
-static std::string serialiseValue( Serialiser &s, const T &value )
+static std::string compoundNumericPlugRepr( const T *plug )
 {
-	object pythonValue( value );
-	s.modulePath( pythonValue );
-	return extract<std::string>( pythonValue.attr( "__repr__" )() );
-}
-
-template<typename T>
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
-{
-	typename T::ConstPtr plug = IECore::staticPointerCast<const T>( g );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
+	std::string result = std::string( "Gaffer." ) + plug->typeName() + "( \"" + plug->getName() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
-	
-	if( plug->defaultValue()!=typename T::ValueType() )
+		
+	typename T::ValueType v;
+	if( plug->defaultValue()!=typename T::ValueType( 0 ) )
 	{
-		result += "defaultValue = " + serialiseValue( s, plug->defaultValue() ) + ", ";
+		v = plug->defaultValue();
+		result += "defaultValue = " + IECorePython::repr( v ) + ", ";
 	}
 	
 	if( plug->hasMinValue() )
 	{
-		result += "minValue = " + serialiseValue( s, plug->minValue() ) + ", ";
+		v = plug->minValue();
+		result += "minValue = " + IECorePython::repr( v ) + ", ";
 	}
 	
 	if( plug->hasMaxValue() )
 	{
-		result += "maxValue = " + serialiseValue( s, plug->maxValue() ) + ", ";
+		v = plug->maxValue();
+		result += "maxValue = " + IECorePython::repr( v ) + ", ";
 	}
 	
 	if( plug->getFlags() != Plug::Default )
 	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	if( plug->direction() == Plug::In )
-	{
-		std::string input = serialisePlugInput( s, plug );
-		if( input != "" )
-		{
-			result += "input = " + input + ", ";
-		}
-		else
-		{
-			std::string value = "( ";
-			PlugIterator pIt( plug->children().begin(), plug->children().end() );
-			while( pIt!=plug->children().end() )
-			{
-				value += serialisePlugValue( s, IECore::staticPointerCast<ValuePlug>( *pIt++ ) ) + ", ";
-			}
-			value += " )";
-			result += "value = " + value + ", ";
-		}
+		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
 	}
 	
 	result += ")";
 
-	return result;
-}
-
-template<typename T>
-static typename T::Ptr construct(
-	const char *name,
-	Plug::Direction direction,
-	typename T::ValueType defaultValue,
-	typename T::ValueType minValue,
-	typename T::ValueType maxValue,
-	unsigned flags,
-	PlugPtr input,
-	object value
-)
-{
-	if( input && value!=object() )
-	{
-		throw std::invalid_argument( "Must specify only one of input or value." );
-	}
-	
-	typename T::Ptr result = new T( name, direction, defaultValue, minValue, maxValue, flags );
-	
-	if( input )
-	{
-		result->setInput( input );
-	}
-	else if( value!=object() )
-	{
-		extract<typename T::ValueType> valueExtractor( value );
-		if( valueExtractor.check() )
-		{
-			typename T::ValueType v = valueExtractor();
-			result->setValue( v );
-		}
-		else
-		{
-			tuple t = extract<tuple>( value )();
-			size_t l = extract<size_t>( t.attr( "__len__" )() )();
-			if( l!=T::ValueType::dimensions() )
-			{
-				PyErr_SetString( PyExc_ValueError, "Wrong number of items in value tuple." );			
-				throw_error_already_set();
-			}
-			size_t i = 0;
-			PlugIterator pIt( result->children().begin(), result->children().end() );
-			while( pIt!=result->children().end() )
-			{
-				setPlugValue( IECore::staticPointerCast<ValuePlug>( *pIt++ ), t[i++] );
-			}
-		}
-	}
 	return result;
 }
 
@@ -171,16 +94,14 @@ static void bind()
 	typedef typename T::ValueType V;
 		
 	IECorePython::RunTimeTypedClass<T>()
-		.def( "__init__", make_constructor( construct<T>, default_call_policies(),
+		.def( init<const char *, Plug::Direction, V, V, V, unsigned>(
 				(
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V( 0 ),
 					boost::python::arg_( "minValue" )=V(Imath::limits<typename V::BaseType>::min()),
 					boost::python::arg_( "maxValue" )=V(Imath::limits<typename V::BaseType>::max()),
-					boost::python::arg_( "flags" )=Plug::Default,
-					boost::python::arg_( "input" )=PlugPtr( 0 ),
-					boost::python::arg_( "value" )=object()
+					boost::python::arg_( "flags" )=Plug::Default
 				)
 			)
 		)
@@ -192,9 +113,8 @@ static void bind()
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )
+		.def( "__repr__", &compoundNumericPlugRepr<T> )
 	;
-
-	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 
 }
 

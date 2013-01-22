@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,10 +51,12 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 	
 		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
 		
-		read = Gaffer.ReadNode( inputs = { "fileName" : fileName } )
+		read = Gaffer.ReadNode()
+		read["fileName"].setValue( fileName )
 		object = IECore.Reader.create( fileName ).read()
 		
-		objectToScene = GafferScene.ObjectToScene( inputs = { "object" : read["output"] } )
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setInput( read["output"] )
 		
 		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
 		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )

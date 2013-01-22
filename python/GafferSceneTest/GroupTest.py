@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -67,7 +68,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 		
-		group = GafferScene.Group( inputs = { "in" : input["out"], "name" : "topLevel" } )
+		group = GafferScene.Group()
+		group["in"].setInput( input["out"] )
+		group["name"].setValue( "topLevel" )
+		 
 		self.assertEqual( group["name"].getValue(), "topLevel" )
 		
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
@@ -110,7 +114,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 		
-		group = GafferScene.Group( inputs = { "in" : input["out"], "transform.translate" : IECore.V3f( 0, 1, 0 ) } )
+		group = GafferScene.Group()
+		group["in"].setInput( input["out"] )
+		group["transform"]["translate"].setValue( IECore.V3f( 0, 1, 0 ) )
+		
 		self.assertEqual( group["name"].getValue(), "group" )
 		
 		groupedRootBound = IECore.Box3f( originalRootBound.min, originalRootBound.max )

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,7 +50,7 @@
 #include "Gaffer/PreferencesNode.h"
 
 #include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/Serialiser.h"
+#include "GafferBindings/Serialisation.h"
 #include "GafferBindings/ValuePlugBinding.h"
 
 using namespace boost::python;
@@ -72,8 +72,7 @@ class ApplicationRootWrapper : public ApplicationRoot, public IECorePython::Wrap
 			IECorePython::ScopedGILLock gilLock;
 			
 			// serialise everything
-			Serialiser s( preferences() );
-			serialisePlugs( s, preferences(), "application.root()[\"preferences\"]" );
+			Serialisation s( preferences(), "application.root()[\"preferences\"]" );
 			
 			// make the directory for the preferences file if it doesn't exist yet
 			boost::filesystem::path path( fileName );
@@ -96,30 +95,6 @@ class ApplicationRootWrapper : public ApplicationRoot, public IECorePython::Wrap
 			{
 				throw IECore::Exception( "Error while writing file \"" + fileName + "\"" );			
 			}
-		}
-		
-		void serialisePlugs( Serialiser &s, ConstGraphComponentPtr parent, const std::string &parentPath ) const
-		{
-			InputPlugIterator it( parent->children().begin(), parent->children().end() );
-			InputPlugIterator end( parent->children().end(), parent->children().end() );
-
-			for( ; it!=end; it++ )
-			{
-				if( (*it)->typeId() == CompoundPlug::staticTypeId() )
-				{
-					serialisePlugs( s, *it, parentPath + "[\"" + (*it)->getName() + "\"]" );
-				}
-				else
-				{
-					std::string ss = parentPath + "[\"" + (*it)->getName() + "\"].setValue( ";
-					ss += serialisePlugValue( s, *it );
-					ss += " )\n";
-					
-					s.add( ss );
-				}
-			}
-			
-		
 		}
 
 };

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,9 +38,10 @@
 #ifndef GAFFERBINDINGS_PLUGBINDING_H
 #define GAFFERBINDINGS_PLUGBINDING_H
 
-#include "GafferBindings/Serialiser.h"
-#include "GafferBindings/GraphComponentBinding.h"
 #include "Gaffer/Plug.h"
+
+#include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 namespace GafferBindings
 {
@@ -107,9 +108,17 @@ static void setInput( T &p, Gaffer::PlugPtr input )
 	
 void bindPlug();
 
-std::string serialisePlugDirection( Gaffer::Plug::Direction direction );
-std::string serialisePlugFlags( unsigned flags );
-std::string serialisePlugInput( Serialiser &s, Gaffer::ConstPlugPtr plug );
+class PlugSerialiser : public Serialisation::Serialiser
+{
+
+	public :
+	
+		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+		
+		static std::string directionRepr( Gaffer::Plug::Direction direction );
+		static std::string flagsRepr( unsigned flags );
+
+};
 
 } // namespace GafferBindings
 

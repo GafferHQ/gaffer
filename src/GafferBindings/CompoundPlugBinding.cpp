@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,13 +37,12 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/Serialiser.h"
-#include "GafferBindings/PlugBinding.h"
-#include "Gaffer/CompoundPlug.h"
-
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/Wrapper.h"
+
+#include "Gaffer/CompoundPlug.h"
+#include "GafferBindings/CompoundPlugBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -54,69 +53,44 @@ class CompoundPlugWrapper : public PlugWrapper<CompoundPlug>
 
 	public :
 	
-		CompoundPlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags, tuple children )
+		CompoundPlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags )
 			:	PlugWrapper<CompoundPlug>( self, name, direction, flags )
 		{
-			size_t s = extract<size_t>( children.attr( "__len__" )() );
-			for( size_t i=0; i<s; i++ )
-			{
-				PlugPtr c = extract<PlugPtr>( children[i] );
-				addChild( c );
-			}
 		}
 
 };
 
 IE_CORE_DECLAREPTR( CompoundPlugWrapper );
 
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
+class CompoundPlugSerialiser : public PlugSerialiser
 {
-	ConstCompoundPlugPtr plug = IECore::staticPointerCast<const CompoundPlug>( g );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
-	}
-		
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	if( plug->children().size() )
-	{
-		result += "children = ( ";
-	
-		PlugIterator pIt( plug->children().begin(), plug->children().end() );
-		while( pIt!=plug->children().end() )
-		{
-			result += s.serialiseC( *pIt++ ) + ", ";
-		}
-	
-		result += " )";
-	}
-		
-	result += " )";
 
-	return result;
-}
+	public :
+	
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+		{
+			// cast is safe because of constraints maintained by CompoundPlug.
+			const Plug *childPlug = static_cast<const Plug *>( child );
+			return childPlug->getFlags( Plug::Dynamic | Plug::Serialisable );
+		}
+		
+};
 
 void GafferBindings::bindCompoundPlug()
 {
 	IECorePython::RunTimeTypedClass<CompoundPlug, CompoundPlugWrapperPtr>()
-		.def(	init< const std::string &, Plug::Direction, unsigned, tuple >
+		.def(	init< const std::string &, Plug::Direction, unsigned >
 				(
 					(
 						arg( "name" ) = CompoundPlug::staticTypeName(),
 						arg( "direction" ) = Plug::In,
-						arg( "flags" ) = Plug::Default,
-						arg( "children" )=tuple()
+						arg( "flags" ) = Plug::Default
 					)
 				)	
 		)
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CompoundPlug )
 	;
 	
-	Serialiser::registerSerialiser( CompoundPlug::staticTypeId(), serialise );
+	Serialisation::registerSerialiser( Gaffer::CompoundPlug::staticTypeId(), new CompoundPlugSerialiser );
+
 }

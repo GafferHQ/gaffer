@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,14 +51,18 @@ class NodeBindingTest( unittest.TestCase ) :
 		self.failUnless( isinstance( m, GafferTest.MultiplyNode ) )
 		self.assertEqual( m.getName(), "a" )
 		
-		m = GafferTest.MultiplyNode( "a", inputs = { "op1" : 1, "op2" : 2 } )
+		m = GafferTest.MultiplyNode( "a" )
+		m["op1"].setValue( 1 )
+		m["op2"].setValue( 2 )
 
 		self.failUnless( isinstance( m, GafferTest.MultiplyNode ) )
 		self.assertEqual( m.getName(), "a" )
 		self.assertEqual( m["op1"].getValue(), 1 )
 		self.assertEqual( m["op2"].getValue(), 2 )
 
-		m = GafferTest.MultiplyNode( "a", dynamicPlugs = ( Gaffer.IntPlug( "a" ), ) )
+		m = GafferTest.MultiplyNode( "a" )
+		m["a"] = Gaffer.IntPlug()
+		
 		self.assertEqual( m.getName(), "a" )
 		self.failUnless( isinstance( m["a"], Gaffer.IntPlug ) )
 		

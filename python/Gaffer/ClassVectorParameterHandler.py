@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -66,8 +66,8 @@ class ClassVectorParameterHandler( Gaffer.CompoundParameterHandler ) :
 		# add the class specification plugs now if they're not there.
 		compoundPlug = self.plug()
 		if "__classNames" not in compoundPlug :
-			compoundPlug["__classNames"] = Gaffer.StringVectorDataPlug( "__classNames", Gaffer.Plug.Direction.In, IECore.StringVectorData() )
-			compoundPlug["__classVersions"] = Gaffer.IntVectorDataPlug( "__classVersions", Gaffer.Plug.Direction.In, IECore.IntVectorData() )
+			compoundPlug["__classNames"] = Gaffer.StringVectorDataPlug( "__classNames", Gaffer.Plug.Direction.In, IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			compoundPlug["__classVersions"] = Gaffer.IntVectorDataPlug( "__classVersions", Gaffer.Plug.Direction.In, IECore.IntVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		# store the current classes
 		self.__storeClasses()

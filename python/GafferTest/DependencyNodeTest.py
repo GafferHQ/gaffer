@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -136,7 +136,10 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		
 	def testOutputsDirtyForNewNodes( self ) :
 	
-		n = GafferTest.AddNode( inputs = { "op1" : 1, "op2" : 2 } )
+		n = GafferTest.AddNode()
+		n["op1"].setValue( 1 )
+		n["op2"].setValue( 2 )
+		
 		self.assertEqual( n["sum"].getValue(), 3 )
 			
 	def testComputeInContext( self ) :
@@ -268,15 +271,13 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 	
 		class Out( Gaffer.DependencyNode ) :
 		
-			def __init__( self, name="Out", inputs={}, dynamicPlugs=() ) :
+			def __init__( self, name="Out" ) :
 		
 				Gaffer.DependencyNode.__init__( self, name )
 		
 				self.addChild( Gaffer.ObjectPlug( "oOut", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
 				self.addChild( Gaffer.FloatPlug( "fOut", Gaffer.Plug.Direction.Out ) )
-		
-				self._init( inputs, dynamicPlugs )
-		
+				
 			def affects( self, input ) :
 					
 				return []
@@ -296,15 +297,13 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		
 		class In( Gaffer.DependencyNode ) :
 		
-			def __init__( self, name="In", inputs={}, dynamicPlugs=() ) :
+			def __init__( self, name="In" ) :
 		
 				Gaffer.DependencyNode.__init__( self, name )
 		
 				self.addChild( Gaffer.ObjectPlug( "oIn", Gaffer.Plug.Direction.In, IECore.NullObject() ) )	
 				self.addChild( Gaffer.IntPlug( "iIn", Gaffer.Plug.Direction.In ) )
-		
-				self._init( inputs, dynamicPlugs )
-	
+			
 		IECore.registerRunTimeTyped( In )
 					
 		nOut = Out()
@@ -345,9 +344,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 	
 			self.addChild( Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject() ) )	
 			self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
-	
-			self._init( inputs, dynamicPlugs )
-	
+		
 		def affects( self, input ) :
 				
 			assert( input.isSame( self["in"] ) )	

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -92,14 +92,6 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n.getName(), "a" )
 				
 		self.assertRaises( Exception, Gaffer.Node, "too", "many" )
-		
-		n = GafferTest.AddNode( "hello", inputs = { "op1" : 1, "op2" : 2 } )
-		self.assertEqual( n.getName(), "hello" )
-		self.assertEqual( n["op1"].getValue(), 1 )
-		self.assertEqual( n["op2"].getValue(), 2 )
-		
-		n2 = GafferTest.AddNode( "goodbye", inputs = { "op1" : n["sum"] } )
-		self.assert_( n2["op1"].getInput().isSame( n["sum"] ) )
 		
 	def testDynamicPlugSerialisationOrder( self ) :
 	

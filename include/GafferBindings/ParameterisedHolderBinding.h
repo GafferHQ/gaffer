@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -56,10 +56,9 @@ class ParameterisedHolderWrapper : public BaseType
 
 	public :
 	
-		ParameterisedHolderWrapper( PyObject *self, const std::string &name, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs )
-			:	BaseType( self, name, inputs, dynamicPlugs )
+		ParameterisedHolderWrapper( PyObject *self, const std::string &name )
+			:	BaseType( self, name )
 		{
-			BaseType::WrappedType::loadParameterised();
 		}
 		
 		virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const

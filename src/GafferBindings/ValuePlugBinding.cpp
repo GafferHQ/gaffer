@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,57 +36,102 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/format.hpp"
 
 #include "IECore/MurmurHash.h"
 #include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
+
+#include "GafferBindings/ValuePlugBinding.h"
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-std::string GafferBindings::serialisePlugValue( Serialiser &s, PlugPtr plug )
+static std::string repr( const Plug *plug )
 {
-	std::string input = serialisePlugInput( s, plug );
-	if( input!="" )
+	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName() + "\", ";
+	
+	if( plug->direction()!=Plug::In )
 	{
-		return input;
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
-
-	if( plug->isInstanceOf( ValuePlug::staticTypeId() ) )
+	
+	object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
+	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
-		object pythonPlug( plug );
-		if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
+		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+		object r = pythonDefaultValue.attr( "__repr__" )();
+		extract<std::string> defaultValueExtractor( r );
+		std::string defaultValue = defaultValueExtractor();
+		if( defaultValue.size() && defaultValue[0] != '<' )
 		{
-			object pythonValue = pythonPlug.attr( "getValue" )();
-			s.modulePath( pythonValue ); // to get the import statement for the module in the serialisation
-			std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-			return value;
+			result += "defaultValue = " + defaultValue + ", ";
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Default value for plug \"%s\" cannot be serialised" ) % plug->fullName()	
+				)
+			);
 		}
 	}
 	
-	return "";
-}
-
-void GafferBindings::setPlugValue( PlugPtr plug, boost::python::object value )
-{
-	object pythonPlug( plug );
-
-	extract<PlugPtr> inputExtractor( value );
-	if( inputExtractor.check() )
+	if( plug->getFlags() != Plug::Default )
 	{
-		pythonPlug.attr( "setInput" )( value );
+		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
 	}
-	else
-	{
-		pythonPlug.attr( "setValue" )( value );
-	}			
+		
+	result += ")";
+
+	return result;
 }
+
+class ValuePlugSerialiser : public PlugSerialiser
+{
+
+	virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+	{
+		PlugSerialiser::moduleDependencies( graphComponent, modules );
+		
+		const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
+		object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
+		if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+		{
+			object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+			std::string module = Serialisation::modulePath( pythonDefaultValue );
+			if( module.size() )
+			{
+				modules.insert( module );
+			}
+		}
+	}
+
+	virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		const Plug *plug = static_cast<const Plug *>( graphComponent );
+		if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) )
+		{
+			if( !serialisation.identifier( plug->getInput<Plug>() ).size() )
+			{
+				object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
+				if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
+				{
+					object pythonValue = pythonPlug.attr( "getValue" )();
+					std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
+					return identifier + ".setValue( " + value + " )\n";
+				}
+			}
+		}
+		return "";
+	}
+};
 
 void GafferBindings::bindValuePlug()
 {
@@ -100,5 +145,8 @@ void GafferBindings::bindValuePlug()
 		.staticmethod( "getCacheMemoryLimit" )
 		.def( "setCacheMemoryLimit", &ValuePlug::setCacheMemoryLimit )
 		.staticmethod( "setCacheMemoryLimit" )
+		.def( "__repr__", &repr )
 	;
+
+	Serialisation::registerSerialiser( Gaffer::ValuePlug::staticTypeId(), new ValuePlugSerialiser );
 }

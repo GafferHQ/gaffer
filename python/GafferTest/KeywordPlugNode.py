@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,7 +42,7 @@ import Gaffer
 ## This class is used by the ScriptNodeTest.
 class KeywordPlugNode( Gaffer.Node ) :
 
-	def __init__( self, name="Test", inputs={}, dynamicPlugs=() ) :
+	def __init__( self, name="Test" ) :
 
 		Gaffer.Node.__init__( self, name )
 
@@ -49,6 +50,4 @@ class KeywordPlugNode( Gaffer.Node ) :
 		# format to be able to cope with that
 		self.addChild( Gaffer.IntPlug( "in", Gaffer.Plug.Direction.In ) )
 		
-		self._init( inputs, dynamicPlugs )
-
 IECore.registerRunTimeTyped( KeywordPlugNode )

@@ -39,19 +39,17 @@
 
 #include <fstream>
 
-#include "boost/tokenizer.hpp"
-
 #include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/Serialiser.h"
-#include "GafferBindings/NodeBinding.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ApplicationRoot.h"
+
+#include "GafferBindings/ScriptNodeBinding.h"
+#include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/NodeBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -68,10 +66,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 	public :
 
-		ScriptNodeWrapper( PyObject *self, const std::string &name, const dict &inputs, const tuple &dynamicPlugs )
-			:	NodeWrapper<ScriptNode>( self, name, dict(), tuple() )
+		ScriptNodeWrapper( PyObject *self, const std::string &name )
+			:	NodeWrapper<ScriptNode>( self, name )
 		{
-			initNode( this, inputs, dynamicPlugs );
 		}
 
 		virtual ~ScriptNodeWrapper()
@@ -99,7 +96,8 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 		virtual std::string serialise( ConstSetPtr filter=0 ) const
 		{
-			return Serialiser::serialise( this, filter );
+			Serialisation serialisation( this, "parent()", filter );
+			return serialisation.result();
 		}
 		
 		/// We need to consider implementing a delete() method first though.
@@ -188,6 +186,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			
 			object weakrefModule = import( "weakref" );
 			m_executionDict["script"] = weakrefModule.attr( "ref" )( selfO );
+			m_executionDict["parent"] = weakrefModule.attr( "ref" )( selfO );
 			
 			object weakMethod = gafferModule.attr( "WeakMethod" );
 			m_executionDict["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
@@ -243,6 +242,20 @@ static ApplicationRootPtr applicationRoot( ScriptNode &s )
 	return s.applicationRoot();
 }
 
+class ScriptNodeSerialiser : public NodeSerialiser
+{
+
+	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+	{
+		if( child->isInstanceOf( Node::staticTypeId() ) )
+		{
+			return true;
+		}
+		return NodeSerialiser::childNeedsConstruction( child );
+	}	
+	
+};
+
 void bindScriptNode()
 {
 	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
@@ -268,6 +281,9 @@ void bindScriptNode()
 	
 	SignalBinder<ScriptNode::ScriptExecutedSignal>::bind( "ScriptExecutedSignal" );
 	SignalBinder<ScriptNode::ScriptEvaluatedSignal, DefaultSignalCaller<ScriptNode::ScriptEvaluatedSignal>, ScriptEvaluatedSlotCaller>::bind( "ScriptEvaluatedSignal" );	
+
+	Serialisation::registerSerialiser( ScriptNode::staticTypeId(), new ScriptNodeSerialiser );
+	
 }
 
 } // namespace GafferBindings

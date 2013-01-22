@@ -243,7 +243,33 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		self.failIf( p4.acceptsInput( p3 ) )
 		
 		self.assertRaises( RuntimeError, p3.setInput, p4 )
-				
+	
+	def testRepr( self ) :
+	
+		p1 = Gaffer.V3fPlug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			IECore.V3f( 1, 2, 3 ),
+			IECore.V3f( -1, -2, -3 ),
+			IECore.V3f( 10, 20, 30 ),
+			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
+		)
+		
+		p2 = eval( repr( p1 ) )
+		
+		self.assertEqual( p1.getName(), p2.getName() )
+		self.assertEqual( p1.direction(), p2.direction() )
+		self.assertEqual( p1.defaultValue(), p2.defaultValue() )
+		self.assertEqual( p1.minValue(), p2.minValue() )
+		self.assertEqual( p1.maxValue(), p2.maxValue() )
+		self.assertEqual( p1.getFlags(), p2.getFlags() )
+		
+	def testFlags( self ) :
+	
+		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		self.assertEqual( p[0].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+					
 if __name__ == "__main__":
 	unittest.main()
 	

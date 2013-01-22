@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,9 +54,10 @@ CompoundNumericPlug<T>::CompoundNumericPlug(
 	:	CompoundPlug( name, direction, flags )
 {
 	const char **n = childNames();
+	unsigned childFlags = flags & ~Dynamic;
 	for( unsigned i=0; i<T::dimensions(); i++ )
 	{
-		typename ChildType::Ptr p = new ChildType( *n++, direction, defaultValue[i], minValue[i], maxValue[i], flags );
+		typename ChildType::Ptr p = new ChildType( *n++, direction, defaultValue[i], minValue[i], maxValue[i], childFlags );
 		addChild( p );
 	}
 }

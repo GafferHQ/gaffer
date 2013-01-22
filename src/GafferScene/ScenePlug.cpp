@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,13 +52,18 @@ const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
 ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
-	
+	// we don't want the children to be serialised in any way - we always create
+	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
+	// want to store their values because they are meaningless without an input
+	// connection, so they aren't Serialisable either.
+	unsigned childFlags = flags & ~(Dynamic | Serialisable);
+
 	addChild(
 		new AtomicBox3fPlug(
 			"bound",
 			direction,
 			Imath::Box3f(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -66,7 +72,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			"transform",
 			direction,
 			Imath::M44f(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -75,7 +81,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			"attributes",
 			direction,
 			new IECore::CompoundObject(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -84,7 +90,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			"object",
 			direction,
 			new IECore::NullObject(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -93,7 +99,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			"childNames",
 			direction,
 			new IECore::StringVectorData(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -102,7 +108,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			"globals",	
 			direction,
 			new IECore::ObjectVector(),
-			flags
+			childFlags
 		)
 	);
 	

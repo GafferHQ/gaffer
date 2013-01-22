@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -92,10 +92,6 @@ class ParameterisedHolder : public BaseType
 	
 	protected :
 	
-		/// Should be called in the constructor for the python wrapper class after initNode() has been called.
-		/// This will then call setParameterised() appropriately to restore the class held at the time of
-		/// serialisation.
-		void loadParameterised();
 		/// Returns a new instance of the specified class. This is implemented to throw an
 		/// Exception in libGaffer, but the libGafferBindings library implements it
 		/// by using the IECore.ClassLoader in python. This allows us to keep libGaffer from

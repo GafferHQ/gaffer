@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -67,10 +68,9 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 {
 	public :
 	
-		DependencyNodeWrapper( PyObject *self, const std::string &name, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs )
-			:	NodeWrapper<WrappedType>( self, name, inputs, dynamicPlugs )
+		DependencyNodeWrapper( PyObject *self, const std::string &name )
+			:	NodeWrapper<WrappedType>( self, name )
 		{
-			initNode( this, inputs, dynamicPlugs );
 		}		
 		
 		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const

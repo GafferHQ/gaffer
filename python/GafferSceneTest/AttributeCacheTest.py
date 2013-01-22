@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,16 +45,12 @@ class AttributeCacheTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstructWithInputs( self ) :
 	
-		# this used to crash
 		m = GafferScene.ModelCacheSource()
-		a = GafferScene.AttributeCache(
-			inputs = {
-				"in.bound" : m["out.bound"],
-				"in.transform" : m["out.transform"],
-				"in.object" : m["out.object"],
-				"in.childNames" : m["out.childNames"],
-			}
-		)
+		a = GafferScene.AttributeCache()
+		a["in"]["bound"].setInput( m["out"]["bound"] )
+		a["in"]["transform"].setInput( m["out"]["transform"] )
+		a["in"]["object"].setInput( m["out"]["object"] )
+		a["in"]["childNames"].setInput( m["out"]["childNames"] )
 	
 	def testSerialisationOfMasterConnection( self ) :
 	

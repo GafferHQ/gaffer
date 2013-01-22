@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -147,18 +147,6 @@ void ParameterisedHolder<BaseType>::setParameterisedValues()
 	if( m_parameterHandler )
 	{
 		m_parameterHandler->setParameterValue();
-	}
-}
-
-template<typename BaseType>
-void ParameterisedHolder<BaseType>::loadParameterised()
-{
-	std::string className = GraphComponent::getChild<StringPlug>( "__className" )->getValue();
-	int classVersion = GraphComponent::getChild<IntPlug>( "__classVersion" )->getValue();
-	std::string searchPathEnvVar = GraphComponent::getChild<StringPlug>( "__searchPathEnvVar" )->getValue();
-	if( className.size() && searchPathEnvVar.size() )
-	{
-		setParameterised( className, classVersion, searchPathEnvVar, true );
 	}
 }
 

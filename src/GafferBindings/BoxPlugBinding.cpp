@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,94 +36,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/lexical_cast.hpp"
-
-#include "GafferBindings/BoxPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/Serialiser.h"
-#include "Gaffer/BoxPlug.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+
+#include "Gaffer/BoxPlug.h"
+
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/BoxPlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
-
-template<typename T>
-static std::string serialiseValue( Serialiser &s, const T &value )
-{
-	object pythonValue( value );
-	s.modulePath( pythonValue );
-	return extract<std::string>( pythonValue.attr( "__repr__" )() );
-}
-
-template<typename T>
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
-{
-	T *plug = const_cast<T *>( static_cast<const T *>( g.get() ) );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
-	}
-	
-	if( plug->defaultValue()!=typename T::ValueType() )
-	{
-		result += "defaultValue = " + serialiseValue( s, plug->defaultValue() ) + ", ";
-	}
-		
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	std::string value = std::string( "( " ) +
-		serialisePlugValue( s, plug->min() ) +
-		", " +
-		serialisePlugValue( s, plug->max() ) +
-		" )";
-	result += "value = " + value + ", ";
-	
-	result += ")";
-
-	return result;
-}
-
-template<typename T>
-static typename T::Ptr construct(
-	const char *name,
-	Plug::Direction direction,
-	typename T::ValueType defaultValue,
-	unsigned flags,
-	object value
-)
-{
-	typename T::Ptr result = new T( name, direction, defaultValue, flags );
-	if( value!=object() )
-	{
-		extract<typename T::ValueType> valueExtractor( value );
-		if( valueExtractor.check() )
-		{
-			typename T::ValueType v = valueExtractor();
-			result->setValue( v );
-		}
-		else
-		{
-			tuple t = extract<tuple>( value )();
-			size_t l = extract<size_t>( t.attr( "__len__" )() )();
-			if( l!=2 )
-			{
-				PyErr_SetString( PyExc_ValueError, "Wrong number of items in value tuple." );			
-				throw_error_already_set();
-			}
-			setPlugValue( result->min(), t[0] );
-			setPlugValue( result->max(), t[1] );
-		}
-	}
-	return result;
-}
 
 template<typename T>
 static void bind()
@@ -130,13 +54,12 @@ static void bind()
 	typedef typename T::ValueType V;
 		
 	IECorePython::RunTimeTypedClass<T>()
-		.def( "__init__", make_constructor( construct<T>, default_call_policies(),
+		.def( init<const std::string &, Plug::Direction, const V&, unsigned>(
 				(
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
-					boost::python::arg_( "flags" )=Plug::Default,
-					boost::python::arg_( "value" )=object()
+					boost::python::arg_( "flags" )=Plug::Default
 				)
 			)
 		)
@@ -145,9 +68,6 @@ static void bind()
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )
 	;
-
-	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
-
 }
 
 void GafferBindings::bindBoxPlug()

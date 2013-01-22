@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,18 +37,68 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/PlugBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/Wrapper.h"
+
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-std::string GafferBindings::serialisePlugDirection( Plug::Direction direction )
+static std::string repr( const Plug *plug )
+{
+	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName() + "\", ";
+	
+	if( plug->direction()!=Plug::In )
+	{
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
+	}
+		
+	if( plug->getFlags() != Plug::Default )
+	{
+		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
+	}
+		
+	result += ")";
+
+	return result;
+}
+
+static boost::python::tuple outputs( Plug &p )
+{
+	const Plug::OutputContainer &o = p.outputs();
+	boost::python::list l;
+	for( Plug::OutputContainer::const_iterator it=o.begin(); it!=o.end(); it++ )
+	{
+		l.append( PlugPtr( *it ) );
+	}
+	return boost::python::tuple( l );
+}
+
+static NodePtr node( Plug &p )
+{
+	return p.node();
+}
+
+std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+{
+	const Plug *plug = static_cast<const Plug *>( graphComponent );
+	if( plug->getFlags( Plug::Serialisable ) )
+	{
+		std::string inputIdentifier = serialisation.identifier( plug->getInput<Plug>() );
+		if( inputIdentifier.size() )
+		{
+			return identifier + ".setInput( " + inputIdentifier + " )\n";
+		}
+	}
+	return "";
+}
+
+std::string PlugSerialiser::directionRepr( Plug::Direction direction )
 {
 	switch( direction )
 	{
@@ -61,7 +111,7 @@ std::string GafferBindings::serialisePlugDirection( Plug::Direction direction )
 	}
 }
 
-std::string GafferBindings::serialisePlugFlags( unsigned flags )
+std::string PlugSerialiser::flagsRepr( unsigned flags )
 {
 	if( flags == Plug::Default )
 	{
@@ -85,64 +135,6 @@ std::string GafferBindings::serialisePlugFlags( unsigned flags )
 	}
 	
 	return result;
-}
-
-std::string GafferBindings::serialisePlugInput( Serialiser &s, ConstPlugPtr plug )
-{
-	std::string result = "";
-	ConstPlugPtr srcPlug = plug->getInput<Plug>();
-	if( srcPlug && srcPlug->node() )
-	{
-		std::string srcNodeName = s.add( srcPlug->node() );
-		if( srcNodeName!="" )
-		{
-			result = srcNodeName + "[\"" + srcPlug->relativeName( srcPlug->node() ) + "\"]";
-		}
-	}
-
-	return result;
-}
-
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
-{
-	ConstPlugPtr plug = IECore::staticPointerCast<const Plug>( g );
-	std::string result = s.modulePath( g ) + ".Plug( \"" + g->getName() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
-	}
-		
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	std::string input = serialisePlugInput( s, plug );
-	if( input.size() )
-	{
-		result += "input = " + input + ", ";
-	}
-		
-	result += ")";
-
-	return result;
-}
-
-static boost::python::tuple outputs( Plug &p )
-{
-	const Plug::OutputContainer &o = p.outputs();
-	boost::python::list l;
-	for( Plug::OutputContainer::const_iterator it=o.begin(); it!=o.end(); it++ )
-	{
-		l.append( PlugPtr( *it ) );
-	}
-	return boost::python::tuple( l );
-}
-
-static NodePtr node( Plug &p )
-{
-	return p.node();
 }
 
 void GafferBindings::bindPlug()
@@ -190,8 +182,9 @@ void GafferBindings::bindPlug()
 		.def( "getInput", (PlugPtr (Plug::*)())&Plug::getInput<Plug> )
 		.def( "removeOutputs", &Plug::removeOutputs )
 		.def( "outputs", &outputs )
+		.def( "__repr__", &repr )
 	;
-
-	Serialiser::registerSerialiser( Plug::staticTypeId(), serialise );
+	
+	Serialisation::registerSerialiser( Gaffer::Plug::staticTypeId(), new PlugSerialiser );
 	
 }

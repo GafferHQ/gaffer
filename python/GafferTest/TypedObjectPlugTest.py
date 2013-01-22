@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -155,16 +155,14 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 	
 	class TypedObjectPlugNode( Gaffer.Node ) :
 		
-		def __init__( self, name="TypedObjectPlugNode", inputs={}, dynamicPlugs=() ) :
+		def __init__( self, name="TypedObjectPlugNode" ) :
 		
 			Gaffer.Node.__init__( self, name )
 			
 			self.addChild(
 				Gaffer.ObjectPlug( "p", defaultValue = IECore.IntData( 1 ) ),
 			)
-			
-			self._init( inputs, dynamicPlugs )
-	
+				
 	IECore.registerRunTimeTyped( TypedObjectPlugNode )
 	
 	def testSerialisationOfStaticPlugs( self ) :

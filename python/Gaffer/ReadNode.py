@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,7 +43,7 @@ import Gaffer
 
 class ReadNode( Gaffer.DependencyNode ) :
 
-	def __init__( self, name="Read", inputs={}, dynamicPlugs=() ) :
+	def __init__( self, name="Read" ) :
 	
 		Gaffer.DependencyNode.__init__( self, name )
 		
@@ -50,20 +51,19 @@ class ReadNode( Gaffer.DependencyNode ) :
 		self.addChild( fileNamePlug )
 		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 		
+		self.addChild( Gaffer.CompoundPlug( "parameters" ) )
+		
 		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
 		self.addChild( resultPlug )
-		
-		self._init( inputs, dynamicPlugs )		
-		
+				
 		self.__reader = None
 		self.__exposedParameters = IECore.CompoundParameter()
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
-		self.__ensureReader()
-
+ 
 	def affects( self, input ) :
 		
 		outputs = []
-		if ("parameters" in self and self["parameters"].isAncestorOf( input )) or input.isSame( self["fileName"] ) :
+		if self["parameters"].isAncestorOf( input ) or input.isSame( self["fileName"] ) :
 			outputs.append( self["output"] )
 
 		return outputs
@@ -73,8 +73,7 @@ class ReadNode( Gaffer.DependencyNode ) :
 		assert( output.isSame( self["output"] ) )
 
 		self["fileName"].hash( h )
-		if "parameters" in self :
-			self["parameters"].hash( h )
+		self["parameters"].hash( h )
 		
 	def compute( self, plug, context ) :
 	
@@ -93,7 +92,7 @@ class ReadNode( Gaffer.DependencyNode ) :
 		
 	def __plugSet( self, plug ) :
 	
-		if plug.isSame( self["fileName"] ) and "parameters" in self :
+		if plug.isSame( self["fileName"] ) :
 			self.__ensureReader()
 			
 	def __ensureReader( self ) :
@@ -114,6 +113,7 @@ class ReadNode( Gaffer.DependencyNode ) :
 						if parameter.name != "fileName" :
 							self.__exposedParameters.addParameter( parameter )
 				self.__parameterHandler.setupPlug( self )
+				self["parameters"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 		else :
 		
 			self.__reader = None

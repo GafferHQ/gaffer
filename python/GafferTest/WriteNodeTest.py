@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,7 +53,10 @@ class WriteNodeTest( unittest.TestCase ) :
 		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
 		checker = IECore.Reader.create( checker ).read()
 		
-		node = Gaffer.WriteNode( inputs = { "fileName" : self.__exrFileName, "in" : checker } )
+		node = Gaffer.WriteNode()
+		node["fileName"].setValue( self.__exrFileName )
+		node["in"].setValue( checker )
+		
 		self.assertEqual( node["fileName"].getValue(), self.__exrFileName )
 		self.assertEqual( node["in"].getValue(), checker )
 				
@@ -81,9 +85,9 @@ class WriteNodeTest( unittest.TestCase ) :
 		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
 		checker = IECore.Reader.create( checker ).read()
 		
-		node = Gaffer.WriteNode( inputs = { "fileName" : self.__exrFileName, "in" : checker } )
-		self.assertEqual( node["fileName"].getValue(), self.__exrFileName )
-		self.assertEqual( node["in"].getValue(), checker )
+		node = Gaffer.WriteNode()
+		node["fileName"].setValue( self.__exrFileName )
+		node["in"].setValue( checker )
 				
 		node["fileName"].setValue( self.__tifFileName )
 		
@@ -98,6 +102,7 @@ class WriteNodeTest( unittest.TestCase ) :
 		s["n"] = Gaffer.WriteNode()
 		s["n"]["fileName"].setValue( self.__exrFileName )
 
+		self.failUnless( "parameters" in s["n"] )
 		self.failIf( "parameters1" in s["n"] )
 		
 		ss = s.serialise()
@@ -105,6 +110,7 @@ class WriteNodeTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
+		self.failUnless( "parameters" in s["n"] )
 		self.failIf( "parameters1" in s["n"] )
 		
 	def testStringSubstitutions( self ) :

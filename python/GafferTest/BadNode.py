@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,7 +41,7 @@ import Gaffer
 
 class BadNode( Gaffer.DependencyNode ) :
 		
-	def __init__( self, name="BadNode", inputs={}, dynamicPlugs=() ) :
+	def __init__( self, name="BadNode" ) :
 
 		Gaffer.DependencyNode.__init__( self, name )
 
@@ -51,8 +52,6 @@ class BadNode( Gaffer.DependencyNode ) :
 		self.addChild( Gaffer.IntPlug( "out2", Gaffer.Plug.Direction.Out ) )
 		self.addChild( Gaffer.IntPlug( "out3", Gaffer.Plug.Direction.Out ) )
 		
-		self._init( inputs, dynamicPlugs )
-
 	def affects( self, input ) :
 		
 		outputs = []

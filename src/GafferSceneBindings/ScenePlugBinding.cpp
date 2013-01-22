@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,7 +39,6 @@
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
-#include "GafferBindings/Serialiser.h"
 #include "GafferBindings/PlugBinding.h"
 
 #include "GafferScene/ScenePlug.h"
@@ -69,57 +69,15 @@ static IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const
 	return a ? a->copy() : 0;
 }
 
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
-{
-	ConstPlugPtr plug = IECore::staticPointerCast<const Plug>( g );
-	std::string result = s.modulePath( g ) + ".ScenePlug( \"" + g->getName() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
-	}
-		
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	std::string input = serialisePlugInput( s, plug );
-	if( input.size() )
-	{
-		result += "input = " + input + ", ";
-	}
-		
-	result += ")";
-
-	return result;
-}
-
-static ScenePlugPtr construct(
-	const char *name,
-	Plug::Direction direction,
-	unsigned flags,
-	ScenePlugPtr input
-)
-{
-	ScenePlugPtr result = new ScenePlug( name, direction, flags );
-	result->setInput( input );
-	return result;
-}
-
 void GafferSceneBindings::bindScenePlug()
 {
 
 	IECorePython::RunTimeTypedClass<ScenePlug>()
-		.def(
-			"__init__",
-			make_constructor(
-				construct, default_call_policies(),
+		.def( init<const std::string &, Plug::Direction, unsigned>(
 				(
 					arg( "name" ) = ScenePlug::staticTypeName(),
 					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default,
-					arg( "input" ) = object()
+					arg( "flags" ) = Gaffer::Plug::Default
 				)
 			)
 		)
@@ -137,7 +95,5 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "childNamesHash", &ScenePlug::childNamesHash )
 		.def( "attributesHash", &ScenePlug::attributesHash )
 	;
-
-	Serialiser::registerSerialiser( ScenePlug::staticTypeId(), serialise );
 	
 }

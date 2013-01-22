@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/format.hpp"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/Wrapper.h"
@@ -45,6 +46,7 @@
 
 #include "GafferBindings/ParameterisedHolderBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -56,10 +58,36 @@ typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ParameterisedHolderDepe
 IE_CORE_DECLAREPTR( ParameterisedHolderNodeWrapper )
 IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNodeWrapper )
 
+template<typename T>
+class ParameterisedHolderSerialiser : public NodeSerialiser
+{
+
+	virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		const T *parameterisedHolder = static_cast<const T *>( graphComponent );
+		
+		std::string className;
+		int classVersion = 0;
+		std::string searchPathEnvVar;
+		parameterisedHolder->getParameterised( &className, &classVersion, &searchPathEnvVar );
+		
+		if( className.size() )
+		{
+			return boost::str( boost::format( "%s.setParameterised( \"%s\", %d, \"%s\", keepExistingValues=True )\n" ) % identifier % className % classVersion % searchPathEnvVar );
+		}
+
+		return "";
+	}
+
+};
+
 void GafferBindings::bindParameterisedHolder()
 {
 
 	ParameterisedHolderClass<NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr> >();
 	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeWrapperPtr> >();
+
+	Serialisation::registerSerialiser( ParameterisedHolderNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderNode>() );
+	Serialisation::registerSerialiser( ParameterisedHolderNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderDependencyNode>() );
 
 }

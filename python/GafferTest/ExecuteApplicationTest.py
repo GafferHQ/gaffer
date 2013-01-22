@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -62,13 +63,10 @@ class ExecuteApplicationTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		
 		s["sphere"] = Gaffer.SphereNode()
-		s["write"] = Gaffer.WriteNode(
-			inputs = {
-				"in" : s["sphere"]["out"],
-				"fileName" : self.__outputFileName,
-			}
-		)
-		
+		s["write"] = Gaffer.WriteNode()
+		s["write"]["in"].setInput( s["sphere"]["out"] )
+		s["write"]["fileName"].setValue( self.__outputFileName )
+			
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()		
 	

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,63 +37,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/TransformPlugBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "Gaffer/TransformPlug.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/TransformPlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
-
-/*
-template<typename T>
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
-{
-	typename T::Ptr plug = IECore::constPointerCast<T>( IECore::staticPointerCast<const T>( g ) );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
-		
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
-	}
-	
-	object pythonPlug( plug );
-	if( plug->defaultValue()!=typename T::ValueType() )
-	{
-		object pythonValue = pythonPlug.attr( "defaultValue" )();
-		s.modulePath( pythonValue );
-		std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-		result += "defaultValue = " + value + ", ";
-	}
-	
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	result += "basisMatrix = " + serialisePlugValue( s, plug->basisMatrixPlug() ) + ", ";
-	result += "basisStep = " + serialisePlugValue( s, plug->basisStepPlug() ) + ", ";
-	
-	unsigned numPoints = plug->numPoints();
-	if( numPoints )
-	{
-		result += "points = ( ";
-	
-		for( unsigned i=0; i<numPoints; i++ )
-		{
-			result += "( " + serialisePlugValue( s, plug->pointXPlug( i ) ) + ", " +
-				serialisePlugValue( s, plug->pointYPlug( i ) ) + " ), ";
-		}
-	
-		result += "), ";
-	}
-	
-	result += ")";
-
-	return result;
-}*/
 
 void GafferBindings::bindTransformPlug()
 {	
@@ -110,6 +64,4 @@ void GafferBindings::bindTransformPlug()
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( TransformPlug )
 		.def( "matrix", &TransformPlug::matrix )
 	;
-	
-	//Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 }

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -53,7 +54,8 @@ class TimeWarpDependencyNodeTest( unittest.TestCase ) :
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
 		
 		s["w"] = Gaffer.TimeWarpDependencyNode()
-		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
+		s["w"]["in"] = Gaffer.IntPlug()
+		s["w"]["in"].setInput( s["m"]["product"] )
 		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )
 		s["w"]["speed"].setValue( 2 )
@@ -82,7 +84,8 @@ class TimeWarpDependencyNodeTest( unittest.TestCase ) :
 		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" ) 
 					
 		s["w"] = Gaffer.TimeWarpDependencyNode()
-		s["w"]["in"] = Gaffer.IntPlug( input = s["m"]["product"] )
+		s["w"]["in"] = Gaffer.IntPlug()
+		s["w"]["in"].setInput( s["m"]["product"] )
 		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		s["w"]["offset"].setValue( 2 )
 		

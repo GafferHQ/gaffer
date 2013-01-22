@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -43,67 +44,12 @@ namespace GafferBindings
 namespace Detail
 {
 
-// some traits to help us figure out what we're binding
+// node constructor bindings
 
 template<typename T, typename Ptr>
-struct IsWrapped : boost::is_base_of<IECorePython::Wrapper<T>, typename Ptr::element_type>
+void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<boost::mpl::not_< boost::is_abstract<typename Ptr::element_type> > >::type *enabler = 0 )
 {
-};
-
-template<typename T, typename Ptr>
-struct IsWrappedAndIsConcrete : boost::mpl::and_< IsWrapped<T, Ptr>, boost::mpl::not_< boost::is_abstract<typename Ptr::element_type> > >
-{
-};
-
-template<typename T, typename Ptr>
-struct IsNotWrapped : boost::mpl::not_< IsWrapped<T, Ptr> >
-{
-};
-
-template<typename T, typename Ptr>
-struct IsNotWrappedAndIsConcrete : boost::mpl::and_< IsNotWrapped<T, Ptr>, boost::mpl::not_< boost::is_abstract<T> > >
-{
-};
-
-// bindings for the node constructors of various kinds
-
-template<typename T>
-typename T::Ptr nodeConstructor( const char *name, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs )
-{
-	T *result = new T( name );
-	initNode( result, inputs, dynamicPlugs );
-	return result;
-}
-
-template<typename T, typename Ptr>
-void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<IsWrappedAndIsConcrete<T, Ptr> >::type *enabler = 0 )
-{
-	cls.def( boost::python::init< const std::string &, const boost::python::dict &, const boost::python::tuple & >
-		(
-			(
-				boost::python::arg( "name" ) = T::staticTypeName(),
-				boost::python::arg( "inputs" ) = boost::python::dict(),
-				boost::python::arg( "dynamicPlugs" ) = boost::python::tuple()
-			)
-		)
-	);
-}
-
-template<typename T, typename Ptr>
-void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<IsNotWrappedAndIsConcrete<T, Ptr> >::type *enabler = 0 )
-{
-	cls.def( 
-		"__init__",
-		boost::python::make_constructor( 
-			&nodeConstructor<T>,
-			boost::python::default_call_policies(), 
-			(
-				boost::python::arg_( "name" ) = T::staticTypeName(),
-				boost::python::arg( "inputs" ) = boost::python::dict(),
-				boost::python::arg( "dynamicPlugs" ) = boost::python::tuple()
-			)
-		)
-	);
+	cls.def( boost::python::init< const std::string & >( boost::python::arg( "name" ) = T::staticTypeName() ) );
 }
 	
 template<typename T, typename Ptr>

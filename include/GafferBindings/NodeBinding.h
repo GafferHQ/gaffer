@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,6 +45,7 @@
 #include "Gaffer/Node.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 namespace GafferBindings
 {
@@ -67,10 +68,9 @@ class NodeWrapper : public GraphComponentWrapper<T>
 	
 		typedef T WrappedType;
 	
-		NodeWrapper( PyObject *self, const std::string &name, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs )
+		NodeWrapper( PyObject *self, const std::string &name )
 			:	GraphComponentWrapper<T>( self, name )
 		{
-			initNode( this, inputs, dynamicPlugs );
 		}		
 		
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
@@ -91,8 +91,15 @@ class NodeWrapper : public GraphComponentWrapper<T>
 
 #define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
 	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )
-		
-void initNode( Gaffer::Node *node, const boost::python::dict &inputs, const boost::python::tuple &dynamicPlugs );
+
+class NodeSerialiser : public Serialisation::Serialiser
+{
+
+	public :
+	
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
+
+};
 
 } // namespace GafferBindings
 

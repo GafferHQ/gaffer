@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,11 +53,7 @@ class SceneTimeWarpTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["speed"].getValue(), 1 )
 		self.assertEqual( s["n"]["offset"].getValue(), 0 )
-	
-	def testConstructWithValues( self ) :
-	
-		s = GafferScene.SceneTimeWarp( inputs = { "speed" : 2, "offset" : 2 } )
-	
+		
 	def testRunTimeTyped( self ) :
 	
 		n = GafferScene.SceneTimeWarp()

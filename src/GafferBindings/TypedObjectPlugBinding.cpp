@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,95 +45,11 @@
 #include "Gaffer/Node.h"
 
 #include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/Serialiser.h"
 #include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
-
-/// \todo This is very similar to serialisePlugValue(), and also similar to 
-/// code in TypedPlugBinding which calls IECorePython::repr(). I think they
-/// could probably all be rationalised into one thing somehow.
-static std::string serialiseValue( Serialiser &s, IECore::ConstObjectPtr value )
-{
-	object o( IECore::constPointerCast<IECore::Object>( value ) );
-	s.modulePath( o );
-	object r = o.attr( "__repr__" )();
-	extract<std::string> resultExtractor( r );
-	std::string result = resultExtractor();
-	if( result.size() && result[0] == '<' )
-	{
-		// looks like the repr function hasn't been defined properly
-		// for this type.
-		return "";
-	}
-	return result;
-}
-
-template<typename T>
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
-{	
-	typename T::ConstPtr plug = IECore::staticPointerCast<const T>( g );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
-	}
-	
-	std::string defaultValue = serialiseValue( s, plug->defaultValue() );
-	if( defaultValue.size() )
-	{
-		result += "defaultValue = " + defaultValue + ", ";
-	}
-	else
-	{
-		throw IECore::Exception(
-			boost::str(
-				boost::format( "Default value for plug \"%s\" cannot be serialised" ) % g->fullName()	
-			)
-		);
-	}
-	
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
-	}
-	
-	bool connected = false;
-	ConstPlugPtr srcPlug = plug->template getInput<Plug>();
-	if( srcPlug )
-	{
-		std::string srcNodeName = s.add( srcPlug->node() );
-		if( srcNodeName!="" )
-		{
-			connected = true;
-			result += "input = " + srcNodeName + "[\"" + srcPlug->getName() + "\"]";
-		}
-	}
-	
-	if( !connected && plug->direction()==Plug::In )
-	{
-		std::string value = serialiseValue( s, plug->getValue() );
-		if( value.size() )
-		{
-			result += "value = " + value + ", ";
-		}
-		else
-		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Value for plug \"%s\" cannot be serialised" ) % g->fullName()	
-				)
-			);
-		}
-	}
-	
-	result += ")";
-
-	return result;
-}
 
 // generally we copy the value when setting it from python, because the c++ side will
 // reference it directly, and subsequent modifications on the python side would be
@@ -179,39 +95,6 @@ static IECore::ObjectPtr getValue( typename T::Ptr p, bool copy=true )
 	return 0;
 }
 
-/// \todo This has a lot in common with construct() functions in the other Plug
-/// bindings - can they not be consolidated somehow?
-template<typename T>
-static typename T::Ptr construct(
-	const char *name,
-	Plug::Direction direction,
-	typename T::ValuePtr defaultValue,
-	unsigned flags,
-	PlugPtr input,
-	IECore::ObjectPtr value	
-)
-{
-	if( !defaultValue )
-	{
-		throw std::invalid_argument( "Default value must not be None." );	
-	}
-	
-	typename T::Ptr result = new T( name, direction, defaultValue, flags );
-	if( input && value )
-	{
-		throw std::invalid_argument( "Must specify only one of input or value." );
-	}
-	if( input )
-	{
-		result->setInput( input );
-	}
-	else if( value )
-	{
-		result->setValue( IECore::runTimeCast<typename T::ValueType>( value ) );
-	}
-	return result;
-}
-
 template<typename T>
 static typename T::ValuePtr defaultValue( typename T::Ptr p )
 {
@@ -221,6 +104,22 @@ static typename T::ValuePtr defaultValue( typename T::Ptr p )
 		return v->copy();
 	}
 	return 0;
+}
+
+template<typename T>
+static typename T::Ptr construct(
+	const char *name,
+	Plug::Direction direction,
+	typename T::ValuePtr defaultValue,
+	unsigned flags
+)
+{
+	if( !defaultValue )
+	{
+		throw std::invalid_argument( "Default value must not be None." );
+	}
+	typename T::Ptr result = new T( name, direction, defaultValue, flags );
+	return result;
 }
 
 template<typename T>
@@ -234,9 +133,7 @@ static void bind()
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" ),
-					boost::python::arg_( "flags" )=Plug::Default,
-					boost::python::arg_( "input" )=PlugPtr( 0 ),
-					boost::python::arg_( "value" )=object()
+					boost::python::arg_( "flags" )=Plug::Default
 				)
 			)
 		)
@@ -251,8 +148,6 @@ static void bind()
 	)->get_class_object();
 	
 	s.attr( "ValueType" ) = object( handle<>( borrowed( valueType ) ) );
-	
-	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 
 }
 

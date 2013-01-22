@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -48,7 +49,8 @@ class ReadNodeTest( unittest.TestCase ) :
 	
 		fileName = os.path.dirname( __file__ ) + "/images/checker.exr"
 		
-		node = Gaffer.ReadNode(	inputs = { "fileName" : fileName } )
+		node = Gaffer.ReadNode()
+		node["fileName"].setValue( fileName )
 		self.assertEqual( node["fileName"].getValue(), fileName )
 				
 		# check that there are plugs for the reader parameters,
@@ -115,7 +117,7 @@ class ReadNodeTest( unittest.TestCase ) :
 		self.failIf( "parameters1" in s["n"] )
 		
 		ss = s.serialise()
-		
+
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 

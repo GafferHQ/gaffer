@@ -38,27 +38,26 @@
 #include "boost/python.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/Serialiser.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Node.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferBindings/NumericPlugBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
 template<typename T>
-static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
+static std::string repr( const T *plug )
 {
-	typename T::ConstPtr plug = IECore::staticPointerCast<const T>( g );
-	std::string result = s.modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\", ";
+	std::string result = std::string( "Gaffer." ) + plug->typeName() + "( \"" + plug->getName() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{
-		result += "direction = " + serialisePlugDirection( plug->direction() ) + ", ";
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
 	
 	if( plug->defaultValue()!=typename T::ValueType() )
@@ -78,62 +77,11 @@ static std::string serialise( Serialiser &s, ConstGraphComponentPtr g )
 	
 	if( plug->getFlags() != Plug::Default )
 	{
-		result += "flags = " + serialisePlugFlags( plug->getFlags() ) + ", ";
+		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
 	}
-	
-	bool connected = false;
-	ConstPlugPtr srcPlug = plug->template getInput<Plug>();
-	if( srcPlug )
-	{
-		std::string srcNodeName = s.add( srcPlug->node() );
-		if( srcNodeName!="" )
-		{
-			connected = true;
-			result += "input = " + srcNodeName + "[\"" + srcPlug->getName() + "\"]";
-		}
-	}
-	
-	if( !connected && plug->direction()==Plug::In )
-	{
-		typename T::Ptr p = IECore::constPointerCast<T>( plug );
-		typename T::ValueType value = p->getValue();
-		if( value!=plug->defaultValue() )
-		{
-			result += "value = " + boost::lexical_cast<std::string>( value ) + ", ";
-		}
-	}
-	
+		
 	result += ")";
 
-	return result;
-}
-
-template<typename T>
-static typename T::Ptr construct(
-	const char *name,
-	Plug::Direction direction,
-	typename T::ValueType defaultValue,
-	typename T::ValueType minValue,
-	typename T::ValueType maxValue,
-	unsigned flags,
-	PlugPtr input,
-	object value
-)
-{
-	typename T::Ptr result = new T( name, direction, defaultValue, minValue, maxValue, flags );
-	if( input && value!=object() )
-	{
-		throw std::invalid_argument( "Must specify only one of input or value." );
-	}
-	if( input )
-	{
-		result->setInput( input );
-	}
-	else if( value!=object() )
-	{
-		typename T::ValueType v = extract<typename T::ValueType>( value )();
-		result->setValue( v );
-	}
 	return result;
 }
 
@@ -143,16 +91,14 @@ static void bind()
 	typedef typename T::ValueType V;
 	
 	IECorePython::RunTimeTypedClass<T>()
-		.def( "__init__", make_constructor( construct<T>, default_call_policies(),
+		.def( init<const char *, Plug::Direction, typename T::ValueType, typename T::ValueType, typename T::ValueType, unsigned>(
 				(
 					boost::python::arg_( "name" )=T::staticTypeName(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
 					boost::python::arg_( "minValue" )=Imath::limits<V>::min(),
 					boost::python::arg_( "maxValue" )=Imath::limits<V>::max(),
-					boost::python::arg_( "flags" )=Plug::Default,
-					boost::python::arg_( "input" )=PlugPtr( 0 ),
-					boost::python::arg_( "value" )=object()
+					boost::python::arg_( "flags" )=Plug::Default
 				)
 			)
 		)
@@ -164,9 +110,8 @@ static void bind()
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )
+		.def( "__repr__", &repr<T> )
 	;
-
-	Serialiser::registerSerialiser( T::staticTypeId(), serialise<T> );
 
 }
 

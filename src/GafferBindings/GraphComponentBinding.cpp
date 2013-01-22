@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,12 +38,14 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "Gaffer/GraphComponent.h"
-
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/Wrapper.h"
+
+#include "Gaffer/GraphComponent.h"
+
+#include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -175,6 +177,11 @@ static GraphComponentPtr commonAncestor( GraphComponent &g, const GraphComponent
 	return g.commonAncestor( other, t );
 }
 
+static std::string repr( const GraphComponent *g )
+{
+	return Serialisation::modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\" )";
+}
+
 struct UnarySlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GraphComponentPtr g )
@@ -233,6 +240,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "__contains__", contains )
 		.def( "__len__", &length )
 		.def( "__nonzero__", &nonZero )
+		.def( "__repr__", &repr )
 		.def( "items", &items )
 		.def( "keys", &keys )
 		.def( "values", &values )

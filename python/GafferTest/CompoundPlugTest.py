@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -80,7 +80,7 @@ class CompoundPlugTest( unittest.TestCase ) :
 		s["n1"]["p"]["f"].setValue( 10 )
 		
 		ss = s.serialise()
-				
+
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 		
@@ -354,6 +354,19 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 		self.failUnless( n["c1"]["i"].getInput().isSame( n["c2"]["i1"] ) )
 		self.failUnless( n["c1"].getInput().isSame( n["c2"] ) )
+	
+	def testSerialisationOfDynamicPlugsOnNondynamicParent( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.CompoundPlugNode()
+		
+		s["n"]["nonDynamicParent"]["dynamicPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["nonDynamicParent"]["dynamicPlug"].setValue( 10 )
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["n"]["nonDynamicParent"]["dynamicPlug"].getValue(), 10 )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,7 +43,7 @@ import Gaffer
 
 class WriteNode( Gaffer.Node ) :
 
-	def __init__( self, name="Write", inputs={}, dynamicPlugs=() ) :
+	def __init__( self, name="Write" ) :
 	
 		Gaffer.Node.__init__( self, name )
 		
@@ -51,14 +52,13 @@ class WriteNode( Gaffer.Node ) :
 		
 		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
 		self.addChild( fileNamePlug )
-				
-		self._init( inputs, dynamicPlugs )
-
+		
+		self.addChild( Gaffer.CompoundPlug( "parameters" ) )
+		
 		self.__writer = None
 		self.__writerExtension = ""
 		self.__exposedParameters = IECore.CompoundParameter()
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
-		self.__ensureWriter()
 		
 		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
@@ -73,6 +73,7 @@ class WriteNode( Gaffer.Node ) :
 		if self.__writer is None :
 			raise RuntimeError( "No Writer" )
 				
+		self.__writer["object"].setValue( self["in"].getValue() )
 		self.__writer.write()
 		
 	def __plugSet( self, plug ) :
@@ -87,34 +88,32 @@ class WriteNode( Gaffer.Node ) :
 		fileName = Gaffer.Context.current().substitute( fileName )
 		if fileName :
 		
-			object = self["in"].getValue()
-			if object != IECore.NullObject.defaultNullObject() :
-				
-				extension = os.path.splitext( fileName )[-1]
-				if self.__writer is not None and extension==self.__writerExtension and self.__writer.canWrite( object, fileName ) :
-				
-					self.__writer["fileName"].setTypedValue( fileName )
-					self.__writer["object"].setValue( object )
-				
-				else :
+			extension = os.path.splitext( fileName )[-1]
+			if self.__writer is not None and extension==self.__writerExtension :
 
-					self.__writer = None
-					self.__exposedParameters.clearParameters()
-					with IECore.IgnoredExceptions( RuntimeError ) :
-						self.__writer = IECore.Writer.create( object, fileName )
+				self.__writer["fileName"].setTypedValue( fileName )
 
-					if self.__writer is not None :
-						self.__writerExtension = extension
-						for parameter in self.__writer.parameters().values() :
-							if parameter.name not in ( "fileName", "object" ) :
-								self.__exposedParameters.addParameter( parameter )
+			else :
 
-					self.__parameterHandler.setupPlug( self )
-		
+				self.__writer = None
+				self.__exposedParameters.clearParameters()
+				with IECore.IgnoredExceptions( RuntimeError ) :
+					self.__writer = IECore.Writer.create( fileName )
+
+				if self.__writer is not None :
+					self.__writerExtension = extension
+					for parameter in self.__writer.parameters().values() :
+						if parameter.name not in ( "fileName", "object" ) :
+							self.__exposedParameters.addParameter( parameter )
+
+				self.__parameterHandler.setupPlug( self )
+				
 		else :
 		
 			self.__writer = None
 			self.__exposedParameters.clearParameters()
 			self.__parameterHandler.setupPlug( self )		
+
+		self["parameters"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
 IECore.registerRunTimeTyped( WriteNode )

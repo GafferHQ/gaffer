@@ -124,8 +124,13 @@ class ScriptNodeTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		
-		s["a1"] = GafferTest.AddNode( inputs = { "op1" : 5, "op2" : 6 } )
-		s["a2"] = GafferTest.AddNode( inputs = { "op1" : s["a1"]["sum"], "op2" : 10 } )
+		s["a1"] = GafferTest.AddNode()
+		s["a1"]["op1"].setValue( 5 )
+		s["a1"]["op2"].setValue( 6 )
+		
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["a1"]["sum"] )
+		s["a2"]["op2"].setValue( 10 )
 		
 		s2 = Gaffer.ScriptNode()
 		se = s.serialise()
@@ -144,11 +149,12 @@ class ScriptNodeTest( unittest.TestCase ) :
 		s1["n1"]["dynamicPlug"].setInput( s1["n2"]["sum"] )
 		s1["n1"]["dynamicPlug2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s1["n1"]["dynamicPlug2"].setValue( 100 )
-		s1["n1"]["dynamicStringPlug"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, value="hiThere" )
+		s1["n1"]["dynamicStringPlug"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s1["n1"]["dynamicStringPlug"].setValue( "hiThere" )
 		s1["n1"]["dynamicOutPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
 		s1["n1"]["dynamicColorOutPlug"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction=Gaffer.Plug.Direction.Out )
-				
-		s2 = Gaffer.ScriptNode()
+		
+		s2 = Gaffer.ScriptNode()		
 		s2.execute( s1.serialise() )
 		
 		self.assert_( s2["n1"]["dynamicPlug"].getInput().isSame( s2["n2"]["sum"] ) )
@@ -170,8 +176,15 @@ class ScriptNodeTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		
-		s["a1"] = GafferTest.AddNode( inputs = { "op1" : 5, "op2" : 6 } )
-		s["a2"] = GafferTest.AddNode( inputs = { "op1" : s["a1"]["sum"], "op2" : 10 } )
+		s["a1"] = GafferTest.AddNode()
+		s["a2"] = GafferTest.AddNode()
+
+		s["a1"]["op1"].setValue( 5 )
+		s["a1"]["op2"].setValue( 6 )
+		
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["a1"]["sum"] )
+		s["a2"]["op2"].setValue( 10 )
 		
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
@@ -196,7 +209,7 @@ class ScriptNodeTest( unittest.TestCase ) :
 	def testSaveFailureHandling( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["a1"] = GafferTest.AddNode( inputs = { "op1" : 5, "op2" : 6 } )
+		s["a1"] = GafferTest.AddNode()
 
 		s["fileName"].setValue( "/this/directory/doesnt/exist" )
 		self.assertRaises( Exception, s.save )
@@ -204,7 +217,6 @@ class ScriptNodeTest( unittest.TestCase ) :
 	def testLoadFailureHandling( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["a1"] = GafferTest.AddNode( inputs = { "op1" : 5, "op2" : 6 } )
 
 		s["fileName"].setValue( "/this/file/doesnt/exist" )
 		self.assertRaises( Exception, s.load )
@@ -478,7 +490,62 @@ a = A()"""
 	
 		s = Gaffer.ScriptNode()
 		self.failUnless( s.evaluate( "script()" ).isSame( s ) )
-			
+	
+	def testDynamicPlugSaveAndLoad( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["customSetting"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["customSetting"].setValue( 100 )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s2 = Gaffer.ScriptNode()
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.load()
+
+		self.assertEqual( s2["customSetting"].getValue(), 100 )
+	
+	def testSerialiseCircularConnections( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		
+		s["n1"]["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out,  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		s["n2"]["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n2"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+	
+		s["n1"]["in"].setInput( s["n2"]["out"] )
+		s["n2"]["in"].setInput( s["n1"]["out"] )
+	
+		s2 = Gaffer.ScriptNode()		
+		s2.execute( s.serialise() )
+		
+		self.assertTrue( s2["n1"]["in"].getInput().isSame( s2["n2"]["out"] ) )
+		self.assertTrue( s2["n2"]["in"].getInput().isSame( s2["n1"]["out"] ) )
+	
+	def testSerialiseWithFilter( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+	
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise( Gaffer.StandardSet( [ s["n2"] ] ) ) )
+		
+		self.assertTrue( "n2" in s2 )
+		self.assertTrue( "n1" not in s2 )
+		
+		self.assertEqual( s2["n2"]["op1"].getInput(), None )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

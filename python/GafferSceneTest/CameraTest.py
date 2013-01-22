@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,12 +53,11 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	
 	def testCompute( self ) :
 	
-		p = GafferScene.Camera( inputs = {
-			"resolution" : IECore.V2i( 200, 100 ),
-			"projection" : "perspective",
-			"fieldOfView" : 45,
-		} )
-	
+		p = GafferScene.Camera()
+	 	p["resolution"].setValue( IECore.V2i( 200, 100 ) )
+		p["projection"].setValue( "perspective" )
+		p["fieldOfView"].setValue( 45 )
+		
 		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "camera" ] ) )
@@ -75,11 +75,10 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	
 	def testHashes( self ) :
 	
-		p = GafferScene.Camera( inputs = {
-			"resolution" : IECore.V2i( 200, 100 ),
-			"projection" : "perspective",
-			"fieldOfView" : 45,
-		} )
+		p = GafferScene.Camera()
+		p["resolution"].setValue( IECore.V2i( 200, 100 ) )
+		p["projection"].setValue( "perspective" )
+		p["fieldOfView"].setValue( 45 )
 	
 		for path in [ "/", "/camera" ] :
 			c = Gaffer.Context()
@@ -89,11 +88,10 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	
 	def testBound( self ) :
 	
-		p = GafferScene.Camera( inputs = {
-			"resolution" : IECore.V2i( 200, 100 ),
-			"projection" : "perspective",
-			"fieldOfView" : 45,
-		} )
+		p = GafferScene.Camera()
+		p["resolution"].setValue( IECore.V2i( 200, 100 ) )
+		p["projection"].setValue( "perspective" )
+		p["fieldOfView"].setValue( 45 )
 		
 		self.failIf( p["out"].bound( "/" ).isEmpty() )
 		self.failIf( p["out"].bound( "/camera" ).isEmpty() )
