@@ -87,4 +87,4 @@ def __plugSet( plug ) :
 	
 	__setDisplayTransform()
 	
-preferences.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plugSet )
+application.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plugSet )
