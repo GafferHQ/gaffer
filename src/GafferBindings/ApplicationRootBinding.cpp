@@ -51,7 +51,6 @@
 
 #include "GafferBindings/ApplicationRootBinding.h"
 #include "GafferBindings/Serialisation.h"
-#include "GafferBindings/ValuePlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
