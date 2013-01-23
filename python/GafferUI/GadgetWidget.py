@@ -131,54 +131,67 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			
 	def __buttonPress( self, widget, event ) :
 		
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.buttonPressSignal()( self.__viewportGadget, event )
 
 	def __buttonRelease( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.buttonReleaseSignal()( self.__viewportGadget, event )
 		
 	def __buttonDoubleClick( self, widget, event ) :
 						
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.buttonDoubleClickSignal()( self.__viewportGadget, event )
 		
 	def __mouseMove( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
 
 	def __dragBegin( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.dragBeginSignal()( self.__viewportGadget, event )
 
 	def __dragEnter( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.dragEnterSignal()( self.__viewportGadget, event )
 
 	def __dragMove( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.dragMoveSignal()( self.__viewportGadget, event )
 
 	def __dragLeave( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.dragLeaveSignal()( self.__viewportGadget, event )
 
 	def __drop( self, widget, event ) :
 
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.dropSignal()( self.__viewportGadget, event )
 		
 	def __dragEnd( self, widget, event ) :
 	
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.dragEndSignal()( self.__viewportGadget, event )
 		
 	def __keyPress( self, widget, event ) :
 						
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.keyPressSignal()( self.__viewportGadget, event )
 
 	def __keyRelease( self, widget, event ) :
 		
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.keyReleaseSignal()( self.__viewportGadget, event )
 	
 	def __wheel( self, widget, event ) :
 	
+		self._qtWidget().makeCurrent()
 		return self.__viewportGadget.wheelSignal()( self.__viewportGadget, event )
 				
 ## Used to make the tooltips dependent on which gadget is under the mouse
