@@ -383,6 +383,21 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		# this fails because TypedObjectPlug::setValue() currently does a copy. i think we can
 		# optimise things by allowing a copy-free setValue() function for use during computations.
 		self.failUnless( n["in"].getValue( _copy=False ).isSame( n["out"].getValue( _copy=False ) ) )
+	
+	def testInternalConnections( self ) :
+	
+		a = GafferTest.AddNode()
+		a["op1"].setValue( 10 )
+		
+		n = Gaffer.Node()
+		n["in"] = Gaffer.IntPlug()
+		n["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		n["out"].setInput( n["in"] )
+		
+		n["in"].setInput( a["sum"] )
+		
+		self.assertEqual( n["out"].getValue(), a["sum"].getValue() )
+		self.assertEqual( n["out"].hash(), a["sum"].hash() )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -242,7 +242,7 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		
 		self.failIf( p4.acceptsInput( p3 ) )
 		
-		self.assertRaises( RuntimeError, p3.setInput, p4 )
+		self.assertRaises( RuntimeError, p4.setInput, p3 )
 	
 	def testRepr( self ) :
 	

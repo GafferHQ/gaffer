@@ -148,7 +148,7 @@ bool Plug::acceptsInput( const Plug *input ) const
 	}
 	/// \todo Possibly allow in->out connections as long
 	/// as the Plugs share the same parent (for internal shortcuts).
-	return m_direction!=Out && !getFlags( ReadOnly );
+	return !getFlags( ReadOnly );
 }
 
 void Plug::setInput( PlugPtr input )
