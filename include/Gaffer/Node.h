@@ -114,7 +114,7 @@ class Node : public GraphComponent
 
 IE_CORE_DECLAREPTR( Node )
 
-typedef FilteredChildIterator<TypePredicate<Node> > ChildNodeIterator;
+typedef FilteredChildIterator<TypePredicate<Node> > NodeIterator;
 
 } // namespace Gaffer
 

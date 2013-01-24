@@ -46,6 +46,7 @@
 #include "IECore/CompoundObject.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/BlockedConnection.h"
 
 #include "GafferScene/Group.h"
 
@@ -71,7 +72,7 @@ Group::Group( const std::string &name )
 	addChild( new Gaffer::ObjectPlug( "__inputMapping", Gaffer::Plug::In, new CompoundObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputMappingPlug()->setInput( mappingPlug() );
 	
-	plugInputChangedSignal().connect( boost::bind( &Group::plugInputChanged, this, ::_1 ) );
+	m_plugInputChangedConnection = plugInputChangedSignal().connect( boost::bind( &Group::plugInputChanged, this, ::_1 ) );
 	childAddedSignal().connect( boost::bind( &Group::childAdded, this, ::_1, ::_2 ) );
 }
 
@@ -498,4 +499,19 @@ void Group::addAndRemoveInputs()
 			removeChild( inputs[i] );
 		}
 	}
+}
+
+void Group::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	// we block m_plugInputChangedConnection when we're being unparented, as the
+	// calls to addAndRemoveInputs() it triggers would result in crashes in Node::parentChanging(),
+	// because it iterates over all the plugs and the iterators aren't stable in the face
+	// of plugs being removed mid-iteration.
+	/// \todo I think the whole concept of Group adding and removing plugs on the fly based
+	/// purely on connections/disconnections is flawed. I think we should have a method to
+	/// explicitly request a new input, and a ui which uses that. We could also wrap up the
+	/// multiple inputs behaviour into something we could reuse elsewhere - Plug::createCounterpart()
+	/// might be useful for automatically making new plugs of the appropriate type.
+	BlockedConnection block( m_plugInputChangedConnection, newParent == 0 );
+	SceneProcessor::parentChanging( newParent );
 }

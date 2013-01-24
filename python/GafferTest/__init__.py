@@ -112,6 +112,7 @@ from ParameterPathTest import ParameterPathTest
 from CompoundDataPlugTest import CompoundDataPlugTest
 from DependencyNodeTest import DependencyNodeTest
 from BoxPlugTest import BoxPlugTest
+from BoxTest import BoxTest
 
 if __name__ == "__main__":
 	import unittest

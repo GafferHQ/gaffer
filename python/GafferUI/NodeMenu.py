@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import inspect
+
 import IECore
 
 import Gaffer
@@ -66,10 +68,20 @@ def nodeCreatorWrapper( nodeCreator ) :
 		editor = menu.ancestor( GafferUI.EditorWidget )
 		script = editor.scriptNode()
 
-		node = nodeCreator()
-
+		commandArgs = []
+		with IECore.IgnoredExceptions( TypeError ) :
+			commandArgs = inspect.getargspec( nodeCreator )[0]
+		
 		with Gaffer.UndoContext( script ) :
-			script.addChild( node )
+			
+			if "menu" in commandArgs :
+				node = nodeCreator( menu = menu )
+			else :
+				node = nodeCreator()
+
+			if node.parent() is None :
+				script.addChild( node )
+			
 			__connectNode( node, menu )
 
 		__positionNode( node, menu )

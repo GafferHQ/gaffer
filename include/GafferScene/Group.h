@@ -85,8 +85,12 @@ class Group : public SceneProcessor
 		const Gaffer::ObjectPlug *inputMappingPlug() const;
 	
 		void childAdded( GraphComponent *parent, GraphComponent *child );
+		
 		void plugInputChanged( Gaffer::Plug *plug );
 		void addAndRemoveInputs();
+		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		
+		boost::signals::connection m_plugInputChangedConnection;
 	
 		// we keep this up to date in childAdded(), so no matter how
 		// we get the plugs, we can access them quickly.

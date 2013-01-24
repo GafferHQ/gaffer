@@ -37,6 +37,7 @@
 
 import unittest
 import threading
+import gc
 
 import IECore
 
@@ -514,6 +515,37 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			a = g.affects( c )
 			self.assertEqual( len( a ), 1 if c.getName() != "childNames" else 2 )
 			self.assertEqual( a[0].fullName(), "Group.out." + c.getName() )			
+	
+	def testGroupInABox( self ) :
+		
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		s["g1"] = GafferScene.Group()
+		s["g2"] = GafferScene.Group()
+		
+		s["g1"]["in"].setInput( s["p"]["out"] )
+		s["g2"]["in"].setInput( s["g1"]["out"] )
+		
+		s.selection().add( s["g1"] )
+		b = Gaffer.Box.create( s, s.selection() )
+		
+		self.assertEqual( len( b ), 3 ) # one for the child, one for the input and one for the output
+		
+		self.assertTrue( b["g1"]["in"].getInput().isSame( b["in"] ) )
+		self.assertTrue( b["in"].getInput().isSame( s["p"]["out"] ) )
+		
+		self.assertTrue( s["g2"]["in"].getInput().isSame( b["out"] ) )
+		self.assertTrue( b["out"].getInput().isSame( b["g1"]["out"] ) )
+		
+		# this test was causing crashes elsewhere when the script
+		# was finally garbage collected, so we force the collection
+		# here so we can be sure the problem is fixed.
+		del s
+		del b
+		while gc.collect() :
+			pass
+		IECore.RefCounted.collectGarbage()
 		
 	def setUp( self ) :
 	
