@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +37,7 @@
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+#include "boost/format.hpp"
 
 #include "IECore/MurmurHash.h"
 
@@ -106,6 +107,21 @@ void CompoundPlug::setInput( PlugPtr input )
 		return;
 	}
 	
+	// unfortunately we have to duplicate the check in Plug::setInput()
+	// ourselves as we delay calling Plug::setInput() until we've connected
+	// the children, but need to do the check first.
+	/// \todo I think there's a case for not having CompoundPlug at all,
+	/// and having Plug have all its functionality.
+	if( input && !acceptsInput( input ) )
+	{
+		std::string what = boost::str(
+			boost::format( "Plug \"%s\" rejects input \"%s\"." )
+			% fullName()
+			% input->fullName()
+		);
+		throw IECore::Exception( what );
+	}
+	
 	// we use the plugInputChangedConnection to trigger calls to updateInputFromChildInputs()
 	// when child inputs are changed by code elsewhere. it would be counterproductive for
 	// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
@@ -139,7 +155,19 @@ void CompoundPlug::setInput( PlugPtr input )
 		m_plugInputChangedConnection.unblock();
 	}
 	
+	// we connect ourselves last, so that all our child plugs are correctly connected
+	// before we signal our own connection change.
 	ValuePlug::setInput( input );
+}
+
+PlugPtr CompoundPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	CompoundPlugPtr result = new CompoundPlug( name, direction, getFlags() );
+	for( PlugIterator it( this ); it != it.end(); it++ )
+	{
+		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+	}
+	return result;
 }
 
 void CompoundPlug::setToDefault()
