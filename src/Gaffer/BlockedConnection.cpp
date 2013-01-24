@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,13 +38,20 @@
 
 using namespace Gaffer;
 
-BlockedConnection::BlockedConnection( boost::signals::connection &connection )
-	:	m_connection( connection )
+BlockedConnection::BlockedConnection( boost::signals::connection &connection, bool block )
+	:	m_connection( 0 )
 {
-	m_connection.block();
+	if( block )
+	{
+		m_connection = &connection;
+		m_connection->block();
+	}
 }
 
 BlockedConnection::~BlockedConnection()
 {
-	m_connection.unblock();
+	if( m_connection )
+	{
+		m_connection->unblock();
+	}
 }
