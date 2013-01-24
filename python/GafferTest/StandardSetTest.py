@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -270,6 +270,30 @@ class StandardSetTest( unittest.TestCase ) :
 		c = s.memberRemovedSignal().connect( f )
 		
 		s.clear()
+	
+	def testAddAndRemoveFromSet( self ) :
+	
+		ints = [ IECore.IntData( i ) for i in range( 0, 10 ) ]
+		
+		all = Gaffer.StandardSet( ints )
+		evens = Gaffer.StandardSet( [ x for x in ints if x.value % 2 == 0 ] )
+		odds = Gaffer.StandardSet( [ x for x in ints if x.value % 2 == 1 ] )
+				
+		s = Gaffer.StandardSet()
+		self.assertEqual( s.add( evens ), len( evens ) )
+		self.assertEqual( len( s ), len( evens ) )
+		for e in evens :
+			self.assertTrue( e in s )
+		
+		self.assertEqual( s.add( odds ), len( odds ) )
+		self.assertEqual( len( s ), len( all ) )
+		for e in all :
+			self.assertTrue( e in s )
+		
+		self.assertEqual( s.remove( evens ), len( evens ) )
+		self.assertEqual( len( s ), len( odds ) )
+		for e in odds :
+			self.assertTrue( e in s )
 		
 if __name__ == "__main__":
 	unittest.main()

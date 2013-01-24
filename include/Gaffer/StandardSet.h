@@ -110,6 +110,9 @@ class StandardSet : public Gaffer::Set
 		/// the number of new members added.
 		template<typename I>
 		size_t add( I first, I last );
+		/// Adds all the objects in the other set into this set, returning
+		/// the number of new members added.
+		size_t add( const Set *other );
 		/// Removes a member from the set. Returns true if the member
 		/// is removed and false if it wasn't there in the first place.
 		bool remove( Member *member );
@@ -117,6 +120,9 @@ class StandardSet : public Gaffer::Set
 		/// number of members removed.
 		template<typename I>
 		size_t remove( I first, I last );
+		/// Removes all the objects in the other set from this set, returning
+		/// the number of members removed.
+		size_t remove( const Set *other );
 		/// Removes all members from the set.
 		void clear();
 		//@}

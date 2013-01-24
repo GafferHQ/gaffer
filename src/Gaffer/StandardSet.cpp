@@ -69,6 +69,16 @@ bool StandardSet::add( MemberPtr member )
 	return result;
 }
 
+size_t StandardSet::add( const Set *other )
+{
+	size_t result = 0;
+	for( size_t i = 0, e = other->size(); i < e; i++ )
+	{
+		result += add( const_cast<Member *>( other->member( i ) ) );
+	}
+	return result;
+}
+
 bool StandardSet::remove( Member *member )
 {
 	MemberContainer::iterator it = m_members.find( member );
@@ -87,6 +97,16 @@ bool StandardSet::remove( Member *member )
 	}
 
 	return false;
+}
+
+size_t StandardSet::remove( const Set *other )
+{
+	size_t result = 0;
+	for( size_t i = 0, e = other->size(); i < e; i++ )
+	{
+		result += remove( const_cast<Member *>( other->member( i ) ) );
+	}
+	return result;
 }
 
 void StandardSet::clear()
