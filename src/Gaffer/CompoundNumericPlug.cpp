@@ -80,27 +80,15 @@ PlugPtr CompoundNumericPlug<T>::createCounterpart( const std::string &name, Dire
 }
 
 template<typename T>
-typename CompoundNumericPlug<T>::ChildType::Ptr CompoundNumericPlug<T>::getChild( unsigned i )
+typename CompoundNumericPlug<T>::ChildType *CompoundNumericPlug<T>::getChild( size_t index )
 {
-	ChildContainer::const_iterator it = children().begin();
-	while( i>0 )
-	{
-		it++;
-		i -= 1;
-	}
-	return IECore::staticPointerCast<ChildType>( *it );
+	return GraphComponent::getChild<ChildType>( index );
 }
 
 template<typename T>
-typename CompoundNumericPlug<T>::ChildType::ConstPtr CompoundNumericPlug<T>::getChild( unsigned i ) const
+const typename CompoundNumericPlug<T>::ChildType *CompoundNumericPlug<T>::getChild( size_t index ) const
 {
-	ChildContainer::const_iterator it = children().begin();
-	while( i>0 )
-	{
-		it++;
-		i -= 1;
-	}
-	return IECore::staticPointerCast<ChildType>( *it );
+	return GraphComponent::getChild<ChildType>( index );
 }
 
 template<typename T>

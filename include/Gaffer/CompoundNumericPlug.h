@@ -72,8 +72,8 @@ class CompoundNumericPlug : public CompoundPlug
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
-		typename ChildType::Ptr getChild( unsigned i );
-		typename ChildType::ConstPtr getChild( unsigned i ) const;	
+		ChildType *getChild( size_t index );
+		const ChildType *getChild( size_t index ) const;	
 
 		T defaultValue() const;
 		
