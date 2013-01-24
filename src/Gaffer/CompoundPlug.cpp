@@ -43,6 +43,7 @@
 
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/BlockedConnection.h"
 
 using namespace Gaffer;
 using namespace boost;
@@ -122,16 +123,12 @@ void CompoundPlug::setInput( PlugPtr input )
 		throw IECore::Exception( what );
 	}
 	
-	// we use the plugInputChangedConnection to trigger calls to updateInputFromChildInputs()
-	// when child inputs are changed by code elsewhere. it would be counterproductive for
-	// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
-	// so we temporarily block the connection.
-	/// \todo It'd be nice to have a C++ equivalent of the Python BlockedConnection object.
-	bool needBlock = m_plugInputChangedConnection.connected();
-	if( needBlock )
 	{
-		m_plugInputChangedConnection.block();
-	}
+		// we use the plugInputChangedConnection to trigger calls to updateInputFromChildInputs()
+		// when child inputs are changed by code elsewhere. it would be counterproductive for
+		// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
+		// so we temporarily block the connection.
+		BlockedConnection block( m_plugInputChangedConnection );
 	
 		if( !input )
 		{
@@ -149,10 +146,6 @@ void CompoundPlug::setInput( PlugPtr input )
 				IECore::staticPointerCast<Plug>( *it1 )->setInput( IECore::staticPointerCast<Plug>( *it2 ) );
 			}
 		}
-
-	if( needBlock )
-	{
-		m_plugInputChangedConnection.unblock();
 	}
 	
 	// we connect ourselves last, so that all our child plugs are correctly connected
