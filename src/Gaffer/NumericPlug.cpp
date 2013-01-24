@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,6 +87,12 @@ bool NumericPlug<T>::acceptsInput( const Plug *input ) const
 		return input->isInstanceOf( FloatPlug::staticTypeId() ) || input->isInstanceOf( IntPlug::staticTypeId() );
 	}
 	return true;
+}
+
+template<class T>
+PlugPtr NumericPlug<T>::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new NumericPlug<T>( name, direction, defaultValue(), minValue(), maxValue(), getFlags() );
 }
 
 template<class T>

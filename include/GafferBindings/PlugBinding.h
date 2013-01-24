@@ -84,6 +84,20 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			}
 			WrappedType::setInput( input );
 		}
+
+		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Gaffer::Plug::Direction direction ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "createCounterpart" ) )
+			{
+				boost::python::override f = this->get_override( "createCounterpart" );
+				if( f )
+				{
+					return f( name, direction );
+				}
+			}
+			return WrappedType::createCounterpart( name, direction );
+		}
 	
 };
 
@@ -92,7 +106,8 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 #define GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
 	.def( "acceptsInput", &acceptsInput<CLASSNAME> )\
-	.def( "setInput", &setInput<CLASSNAME> )
+	.def( "setInput", &setInput<CLASSNAME> )\
+	.def( "createCounterpart", &createCounterpart<CLASSNAME> )
 
 template<typename T>
 static bool acceptsInput( const T &p, Gaffer::ConstPlugPtr input )
@@ -104,6 +119,12 @@ template<typename T>
 static void setInput( T &p, Gaffer::PlugPtr input )
 {
 	p.T::setInput( input );
+}
+
+template<typename T>
+static Gaffer::PlugPtr createCounterpart( T &p, const std::string &name, Gaffer::Plug::Direction direction )
+{
+	return p.T::createCounterpart( name, direction );
 }
 	
 void bindPlug();

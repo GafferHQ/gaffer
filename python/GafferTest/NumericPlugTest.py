@@ -255,6 +255,26 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( p1.minValue(), p2.minValue() )
 		self.assertEqual( p1.maxValue(), p2.maxValue() )
 		self.assertEqual( p1.getFlags(), p2.getFlags() )
+	
+	def testCreateCounterpart( self ) :
+	
+		p1 = Gaffer.IntPlug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			10,
+			-10,
+			100,
+			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
+		)
+		
+		p2 = p1.createCounterpart( "c", Gaffer.Plug.Direction.In )
+		
+		self.assertEqual( p2.getName(), "c" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.getFlags(), p1.getFlags() )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
+		self.assertEqual( p2.minValue(), p1.minValue() )
+		self.assertEqual( p2.maxValue(), p1.maxValue() )
 			
 if __name__ == "__main__":
 	unittest.main()

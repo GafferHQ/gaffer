@@ -367,7 +367,21 @@ class CompoundPlugTest( unittest.TestCase ) :
 		s2.execute( s.serialise() )
 		
 		self.assertEqual( s2["n"]["nonDynamicParent"]["dynamicPlug"].getValue(), 10 )
+	
+	def testCreateCounterpart( self ) :
+	
+		c = Gaffer.CompoundPlug( "a", Gaffer.Plug.Direction.Out )
+		c["b"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		c["c"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 		
+		c2 = c.createCounterpart( "aa", Gaffer.Plug.Direction.In )
+		
+		self.assertEqual( c2.getName(), "aa" )
+		self.assertEqual( c2.direction(), Gaffer.Plug.Direction.In )
+		
+		self.assertEqual( c2["b"].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( c2["c"].direction(), Gaffer.Plug.Direction.In )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -55,6 +56,7 @@ class CompoundPlug : public ValuePlug
 		/// Accepts any child provided it's a Plug and has the same direction
 		/// as this CompoundPlug.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 				
 		/// Only accepts inputs which are CompoundPlugs with child
 		/// Plugs compatible with this plug.

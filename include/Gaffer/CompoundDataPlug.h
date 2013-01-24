@@ -65,6 +65,7 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 
 		/// Accepts only children that can generate values for the CompoundData.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		/// Adds a CompoundPlug to represent a CompoundData member with the specified name and value.
 		Gaffer::CompoundPlug *addMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );

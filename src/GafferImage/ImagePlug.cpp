@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -204,6 +204,11 @@ bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
 		return input->isInstanceOf( staticTypeId() );
 	}
 	return true;
+}
+
+Gaffer::PlugPtr ImagePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new ImagePlug( name, direction, getFlags() );
 }
 
 Gaffer::AtomicBox2iPlug *ImagePlug::displayWindowPlug()

@@ -148,6 +148,22 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		self.assertEqual( m2["name"].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( m2["value"].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( m2["enabled"].getFlags(), Gaffer.Plug.Flags.Default )
+	
+	def testCreateCounterpart( self ) :
+	
+		p1 = Gaffer.CompoundDataPlug()
+		m1 = p1.addMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
+
+		p2 = p1.createCounterpart( "c", Gaffer.Plug.Direction.Out )
+		self.assertEqual( p2.getName(), "c" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( len( p2 ), len( p1 ) )
+		self.assertEqual( p2.getFlags(), p1.getFlags() )
+		
+		m2 = p2["member1"]
+		self.assertEqual( m2.getFlags(), m1.getFlags() )
+		self.assertEqual( m2.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( m2.keys(), m1.keys() )
 					
 if __name__ == "__main__":
 	unittest.main()

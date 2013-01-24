@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -142,7 +142,22 @@ class TypedPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
 		self.assertRaises( RuntimeError, p.setValue, True )
-						
+	
+	def testCreateCounterpart( self ) :
+	
+		p1 = Gaffer.BoolPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			True
+		)
+		
+		p2 = p1.createCounterpart( "a", Gaffer.Plug.Direction.Out )
+		
+		self.assertEqual( p2.getName(), "a" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
+		self.assertEqual( p2.getFlags(), p1.getFlags() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

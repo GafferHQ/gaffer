@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,6 +54,7 @@ class TransformPlug : public CompoundPlug
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TransformPlug, TransformPlugTypeId, CompoundPlug );
 
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		V3fPlug *translatePlug();
 		const V3fPlug *translatePlug() const;
@@ -62,6 +64,7 @@ class TransformPlug : public CompoundPlug
 		const V3fPlug *scalePlug() const;
 
 		Imath::M44f matrix() const;
+
 
 };
 

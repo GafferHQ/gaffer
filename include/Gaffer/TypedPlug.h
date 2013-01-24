@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -67,6 +67,7 @@ class TypedPlug : public ValuePlug
 
 		/// Accepts only instances of TypedPlug<T> or derived classes.
 		virtual bool acceptsInput( const Plug *input ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		const T &defaultValue() const;
 

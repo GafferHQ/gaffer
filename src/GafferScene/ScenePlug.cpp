@@ -123,6 +123,11 @@ bool ScenePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	return children().size() != 6;
 }
 
+Gaffer::PlugPtr ScenePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new ScenePlug( name, direction, getFlags() );
+}
+
 bool ScenePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
 	if( !CompoundPlug::acceptsInput( input ) )

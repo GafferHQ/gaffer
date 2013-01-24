@@ -73,6 +73,12 @@ bool CompoundNumericPlug<T>::acceptsChild( const GraphComponent *potentialChild 
 	return children().size() != T::dimensions();
 }
 
+template<class T>
+PlugPtr CompoundNumericPlug<T>::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new CompoundNumericPlug<T>( name, direction, defaultValue(), minValue(), maxValue(), getFlags() );
+}
+
 template<typename T>
 typename CompoundNumericPlug<T>::ChildType::Ptr CompoundNumericPlug<T>::getChild( unsigned i )
 {

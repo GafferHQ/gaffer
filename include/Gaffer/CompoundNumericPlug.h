@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -69,6 +70,7 @@ class CompoundNumericPlug : public CompoundPlug
 
 		/// Accepts no children following construction.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		typename ChildType::Ptr getChild( unsigned i );
 		typename ChildType::ConstPtr getChild( unsigned i ) const;	

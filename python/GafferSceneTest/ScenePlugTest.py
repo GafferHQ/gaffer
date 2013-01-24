@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -94,7 +95,16 @@ class ScenePlugTest( unittest.TestCase ) :
 		self.assertEqual( m.translation(), IECore.V3f( 1 ) )
 		self.assertEqual( m.extractScaling(), IECore.V3f( 10 ) )
 		self.assertEqual( m, scaling * translation )
+	
+	def testCreateCounterpart( self ) :
+	
+		s1 = GafferScene.ScenePlug( "a", Gaffer.Plug.Direction.Out )
+		s2 = s1.createCounterpart( "b", Gaffer.Plug.Direction.In )
 		
+		self.assertEqual( s2.getName(), "b" )
+		self.assertEqual( s2.getFlags(), s1.getFlags() )
+		self.assertEqual( s2.direction(), Gaffer.Plug.Direction.In )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

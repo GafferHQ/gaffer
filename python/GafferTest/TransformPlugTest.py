@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -63,6 +64,15 @@ class TransformPlugTest( unittest.TestCase ) :
 			transform = transform * transforms[m]
 
 		self.assertEqual( p.matrix(), transform )
+	
+	def testCreateCounterpart( self ) :
+	
+		t = Gaffer.TransformPlug()
+		t2 = t.createCounterpart( "a", Gaffer.Plug.Direction.Out )
+		
+		self.assertEqual( t2.getName(), "a" )
+		self.assertEqual( t2.direction(), Gaffer.Plug.Direction.Out )
+		self.assertTrue( isinstance( t2, Gaffer.TransformPlug ) )
 		
 	def testRunTimeTyped( self ) :
 	

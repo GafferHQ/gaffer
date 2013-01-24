@@ -165,6 +165,10 @@ class PlugTest( unittest.TestCase ) :
 					
 				return True
 				
+			def createCounterpart( self, name, direction ) :
+			
+				return TestPlug( name, direction, self.getFlags() )
+				
 		IECore.registerRunTimeTyped( TestPlug )
 		
 		# check the constructor
@@ -198,6 +202,12 @@ class PlugTest( unittest.TestCase ) :
 		
 		p2 = TestPlug()
 		self.assertRaises( RuntimeError, Gaffer.CompoundPlug().addChild, p2 )
+		
+		# try making a counterpart
+		
+		p3 = p2.createCounterpart( "ll", Gaffer.Plug.Direction.Out )
+		self.assertEqual( p3.getName(), "ll" )
+		self.assertEqual( p3.direction(), Gaffer.Plug.Direction.Out )
 		
 	def testRemovePlugRemovesInputs( self ) :
 
@@ -381,7 +391,21 @@ class PlugTest( unittest.TestCase ) :
 		self.assertEqual( p1.getName(), p2.getName() )
 		self.assertEqual( p1.direction(), p2.direction() )
 		self.assertEqual( p1.getFlags(), p2.getFlags() )
-			
+	
+	def testCreateCounterpart( self ) :
+	
+		p = Gaffer.Plug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
+		)
+		
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		
+		self.assertEqual( p2.getName(), "p2" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.getFlags(), p.getFlags() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

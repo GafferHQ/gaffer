@@ -66,6 +66,16 @@ bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) cons
 	return potentialChild->isInstanceOf( CompoundPlug::staticTypeId() );
 }
 
+PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	CompoundDataPlugPtr result = new CompoundDataPlug( name, direction, getFlags() );
+	for( PlugIterator it( this ); it != it.end(); it++ )
+	{
+		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+	}
+	return result;
+}
+
 Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags )
 {	
 	CompoundPlugPtr plug = new CompoundPlug( plugName, direction(), plugFlags );

@@ -68,6 +68,7 @@ class BoxPlug : public CompoundPlug
 
 		/// Accepts no children following construction.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		ChildType *min();
 		const ChildType *min() const;	

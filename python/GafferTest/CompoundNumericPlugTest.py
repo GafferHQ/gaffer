@@ -269,7 +269,26 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
 		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
 		self.assertEqual( p[0].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
-					
+	
+	def testCreateCounterpart( self ) :
+	
+		p1 = Gaffer.V3fPlug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			IECore.V3f( 1, 2, 3 ),
+			IECore.V3f( -1, -2, -3 ),
+			IECore.V3f( 10, 20, 30 ),
+			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
+		)
+		
+		p2 = p1.createCounterpart( "a", Gaffer.Plug.Direction.In )
+		
+		self.assertEqual( p2.getName(), "a" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
+		self.assertEqual( p2.minValue(), p1.minValue() )
+		self.assertEqual( p2.maxValue(), p1.maxValue() )		
+				
 if __name__ == "__main__":
 	unittest.main()
 	

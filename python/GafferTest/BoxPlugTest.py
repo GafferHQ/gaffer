@@ -50,6 +50,15 @@ class BoxPlugTest( unittest.TestCase ) :
 
 		t = p.typeId()
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.CompoundPlug.staticTypeId() )
+	
+	def testCreateCounterpart( self ) :
+	
+		p1 = Gaffer.Box3fPlug( "b", Gaffer.Plug.Direction.Out, IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		p2 = p1.createCounterpart( "c", Gaffer.Plug.Direction.In )
+		
+		self.assertEqual( p2.getName(), "c" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
 		
 if __name__ == "__main__":
 	unittest.main()

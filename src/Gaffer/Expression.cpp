@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -267,50 +268,14 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 		{
 			throw IECore::Exception( boost::str( boost::format( "Source plug \"%s\" does not exist" ) % *it ) );
 		}
-		PlugPtr inPlug = createPlug( srcPlug, Plug::In );
+		PlugPtr inPlug = srcPlug->createCounterpart( "plug", Plug::In );
 		inPlugs->addChild( inPlug );
 		inPlug->setInput( srcPlug );
 	}
 	
-	PlugPtr outPlug = createPlug( dstPlug, Plug::Out );
+	PlugPtr outPlug = dstPlug->createCounterpart( "out", Plug::Out );
 	setChild( "out", outPlug );
 	dstPlug->setInput( outPlug );
-}
-
-ValuePlugPtr Expression::createPlug( const ValuePlug *partner, Plug::Direction direction ) const
-{
-	if( partner->isInstanceOf( FloatPlug::staticTypeId() ) )
-	{
-		return new FloatPlug(
-			"plug",
-			direction,
-			0,
-			Imath::limits<float>::min(),
-			Imath::limits<float>::max(),
-			Plug::Default | Plug::Dynamic
-		);
-	}
-	else if( partner->isInstanceOf( IntPlug::staticTypeId() ) )
-	{
-		return new IntPlug(
-			"plug",
-			direction,
-			0,
-			Imath::limits<int>::min(),
-			Imath::limits<int>::max(),
-			Plug::Default | Plug::Dynamic
-		);
-	}
-	else if( partner->isInstanceOf( StringPlug::staticTypeId() ) )
-	{
-		return new StringPlug(
-			"plug",
-			direction,
-			"",
-			Plug::Default | Plug::Dynamic
-		);
-	}
-	throw IECore::Exception( boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % partner->fullName() % partner->typeName() ) );
 }
 
 //////////////////////////////////////////////////////////////////////////

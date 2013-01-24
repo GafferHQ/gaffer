@@ -216,6 +216,16 @@ class TypedObjectPlugTest( unittest.TestCase ) :
 		i = IECore.IntData( 20 )
 		p.setValue( i, _copy=False )
 		self.failUnless( p.getValue( _copy=False ).isSame( i ) )
+	
+	def testCreateCounterpart( self ) :
+	
+		p = Gaffer.ObjectPlug( defaultValue = IECore.IntData( 20 ) )
+		p2 = p.createCounterpart( "c", Gaffer.Plug.Direction.Out )
+		
+		self.assertEqual( p2.getName(), "c" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( p2.defaultValue(), p.defaultValue() )
+		self.assertEqual( p2.getFlags(), p.getFlags() )
 		
 if __name__ == "__main__":
 	unittest.main()
