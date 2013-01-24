@@ -92,25 +92,25 @@ PlugPtr BoxPlug<T>::createCounterpart( const std::string &name, Direction direct
 template<typename T>
 typename BoxPlug<T>::ChildType *BoxPlug<T>::min()
 {
-	return getChild<ChildType>( "min" );
+	return getChild<ChildType>( 0 );
 }
 
 template<typename T>
 const typename BoxPlug<T>::ChildType *BoxPlug<T>::min() const
 {
-	return getChild<ChildType>( "min" );
+	return getChild<ChildType>( 0 );
 }
 
 template<typename T>
 typename BoxPlug<T>::ChildType *BoxPlug<T>::max()
 {
-	return getChild<ChildType>( "max" );
+	return getChild<ChildType>( 1 );
 }
 
 template<typename T>
 const typename BoxPlug<T>::ChildType *BoxPlug<T>::max() const
 {
-	return getChild<ChildType>( "max" );
+	return getChild<ChildType>( 1 );
 }
 
 template<typename T>
