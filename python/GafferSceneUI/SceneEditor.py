@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -71,7 +72,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		
 		self.__plug = None
 		node = self._lastAddedNode()
-		if node and isinstance( node, GafferScene.SceneNode ) :
+		if node and "out" in node and isinstance( node["out"], GafferScene.ScenePlug ) :
 			self.__plug = node["out"]
 			
 		if self.__plug is not None :		
