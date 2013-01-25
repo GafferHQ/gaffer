@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -57,11 +58,7 @@ class DependencyNode : public Node
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DependencyNode, DependencyNodeTypeId, Node );
 
 		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
-		
-		/// Called when a plug of this node is dirtied - this signifies that
-		/// any previously calculated values are invalid and should be recalculated.
-		UnaryPlugSignal &plugDirtiedSignal();
-				
+						
 		/// Must be implemented to fill outputs with all the plugs whose computation
 		/// will be affected by the specified input.
 		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const = 0;
@@ -84,8 +81,6 @@ class DependencyNode : public Node
 	private :
 			
 		friend class ValuePlug;
-
-		UnaryPlugSignal m_plugDirtiedSignal;
 		
 };
 

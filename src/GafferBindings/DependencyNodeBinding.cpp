@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -47,7 +48,5 @@ void GafferBindings::bindDependencyNode()
 	typedef DependencyNodeWrapper<DependencyNode> Wrapper;
 	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = DependencyNodeClass<DependencyNode, WrapperPtr>()
-		.def( "plugDirtiedSignal", &DependencyNode::plugDirtiedSignal, return_internal_reference<1>() )
-	;	
+	DependencyNodeClass<DependencyNode, WrapperPtr>();	
 }

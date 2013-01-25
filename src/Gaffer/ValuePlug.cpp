@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -409,9 +409,9 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
 	propagateDirtiness();
 }
 
-void ValuePlug::emitDirtiness( DependencyNode *n )
+void ValuePlug::emitDirtiness( Node *n )
 {
-	n = n ? n : ancestor<DependencyNode>();
+	n = n ? n : ancestor<Node>();
 	if( !n )
 	{
 		return;

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -146,7 +146,7 @@ class ValuePlug : public Plug
 		/// Emits the dirty signal for this plug, and all ancestor ValuePlugs up
 		/// to node(). The result of node() can be passed to avoid repeatedly
 		/// finding the node in the case of making repeated calls.
-		void emitDirtiness( DependencyNode *n = 0 );
+		void emitDirtiness( Node *n = 0 );
 		/// Calls emitDirtiness() on affected plugs and output connections.
 		void propagateDirtiness();
 	

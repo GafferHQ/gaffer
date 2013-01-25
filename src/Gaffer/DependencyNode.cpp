@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,11 +51,6 @@ DependencyNode::~DependencyNode()
 {
 }
 		
-Node::UnaryPlugSignal &DependencyNode::plugDirtiedSignal()
-{
-	return m_plugDirtiedSignal;
-}
-
 void DependencyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 }

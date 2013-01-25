@@ -66,6 +66,11 @@ Node::UnaryPlugSignal &Node::plugFlagsChangedSignal()
 	return m_plugFlagsChangedSignal;
 }
 
+Node::UnaryPlugSignal &Node::plugDirtiedSignal()
+{
+	return m_plugDirtiedSignal;
+}
+
 ScriptNode *Node::scriptNode()
 {
 	return ancestor<ScriptNode>();

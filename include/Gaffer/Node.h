@@ -75,6 +75,9 @@ class Node : public GraphComponent
 		UnaryPlugSignal &plugInputChangedSignal();
 		/// Called when the flags are changed for a plug of this node.
 		UnaryPlugSignal &plugFlagsChangedSignal();
+		/// Called when a plug of this node is dirtied - this signifies that
+		/// any previously calculated values are invalid and should be recalculated.
+		UnaryPlugSignal &plugDirtiedSignal();
 		//@}
 		
 		/// Convenience function which simply returns ancestor<ScriptNode>()
@@ -109,6 +112,7 @@ class Node : public GraphComponent
 		UnaryPlugSignal m_plugSetSignal;
 		UnaryPlugSignal m_plugInputChangedSignal;
 		UnaryPlugSignal m_plugFlagsChangedSignal;
+		UnaryPlugSignal m_plugDirtiedSignal;
 		
 };
 
