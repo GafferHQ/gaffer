@@ -216,6 +216,13 @@ void GraphGadget::inputChanged( Gaffer::Plug *dstPlug )
 		return;
 	}
 	
+	if( dstPlug->direction() == Gaffer::Plug::Out )
+	{
+		// it's an internal connection - no need to
+		// represent it.
+		return;
+	}
+	
 	addConnectionGadget( dstPlug );
 }
 
