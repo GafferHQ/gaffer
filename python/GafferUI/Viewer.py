@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -114,7 +114,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__plugDirtiedConnection = None
 		if node :
 		
-			for plug in node.children() :
+			for plug in node.children( Gaffer.Plug.staticTypeId() ) :
 				if plug.direction() == Gaffer.Plug.Direction.Out and plug.typeId() in self.__typesToCreators :
 					self.__viewedPlug = plug
 					self.__viewCreator = self.__typesToCreators[plug.typeId()]
