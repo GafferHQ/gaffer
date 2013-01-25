@@ -98,6 +98,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					if( mapIt == plugMap.end() )
 					{
 						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
+						intermediateInput->setFlags( Plug::Dynamic, true );
 						result->addChild( intermediateInput );
 						intermediateInput->setInput( input );
 						mapIt = plugMap.insert( PlugPair( input, intermediateInput.get() ) ).first;
@@ -120,6 +121,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 						if( mapIt == plugMap.end() )
 						{
 							PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
+							intermediateOutput->setFlags( Plug::Dynamic, true );
 							result->addChild( intermediateOutput );
 							intermediateOutput->setInput( plug );
 							mapIt = plugMap.insert( PlugPair( plug, intermediateOutput.get() ) ).first;

@@ -227,7 +227,51 @@ class BoxTest( unittest.TestCase ) :
 		
 		self.assertTrue( b["n2"]["out"].getInput().isSame( b["n2"]["in"] ) )
 		self.assertTrue( s["n3"]["op1"].getInput().isSame( b["out"] ) )
+	
+	def testSerialisationOfCreatedResult( self ) :
+	
+		s = Gaffer.ScriptNode()
 		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n3"] = GafferTest.AddNode()
+		s["n4"] = GafferTest.AddNode()
+		
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		s["n2"]["op2"].setInput( s["n1"]["sum"] )
+		
+		s["n3"]["op1"].setInput( s["n2"]["sum"] )
+		
+		s["n4"]["op1"].setInput( s["n3"]["sum"] )
+		s["n4"]["op2"].setInput( s["n3"]["sum"] )
+		
+		Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"], s["n3"] ] ) )
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertTrue( isinstance( s2["Box"], Gaffer.Box ) )
+
+		self.assertTrue( "n2" not in s2 )
+		self.assertTrue( "n3" not in s2 )
+
+		self.assertTrue( "n2" in s2["Box"] )
+		self.assertTrue( "n3" in s2["Box"] )
+
+		self.assertTrue( s2["Box"]["n3"]["op1"].getInput().isSame( s2["Box"]["n2"]["sum"] ) )
+
+		self.assertTrue( s2["Box"]["n2"]["op1"].getInput().node().isSame( s2["Box"] ) )
+		self.assertTrue( s2["Box"]["n2"]["op2"].getInput().node().isSame( s2["Box"] ) )
+
+		self.assertTrue( s2["Box"]["n2"]["op1"].getInput().getInput().isSame( s2["n1"]["sum"] ) )
+		self.assertTrue( s2["Box"]["n2"]["op2"].getInput().getInput().isSame( s2["n1"]["sum"] ) )
+		self.assertTrue( s2["Box"]["n2"]["op1"].getInput().isSame( s2["Box"]["n2"]["op2"].getInput() ) )
+
+		self.assertTrue( s2["n4"]["op1"].getInput().node().isSame( s2["Box"] ) )
+		self.assertTrue( s2["n4"]["op2"].getInput().node().isSame( s2["Box"] ) )
+
+		self.assertTrue( s2["n4"]["op1"].getInput().isSame( s2["n4"]["op2"].getInput() ) )
+			
 if __name__ == "__main__":
 	unittest.main()
 	
