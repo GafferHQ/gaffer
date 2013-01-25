@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import re
+
 import IECore
 
 import Gaffer
@@ -49,3 +51,10 @@ def nodeMenuCreateCommand( menu ) :
 	script = editor.scriptNode()
 	
 	return Gaffer.Box.create( script, script.selection() )
+
+# PlugValueWidget registrations
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "in[0-9]*" ), None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "out[0-9]*" ), None )
+
