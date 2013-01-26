@@ -271,7 +271,21 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( s2["n4"]["op2"].getInput().node().isSame( s2["Box"] ) )
 
 		self.assertTrue( s2["n4"]["op1"].getInput().isSame( s2["n4"]["op2"].getInput() ) )
-			
+	
+	def testSelection( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		
+		s.selection().add( s["n"] )
+		s.selection().add( s["b"]["n"] )
+		
+		self.assertTrue( s["n"] in s.selection() )
+		self.assertTrue( s["b"]["n"] in s.selection() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

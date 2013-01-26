@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -97,14 +97,14 @@ const ApplicationRoot *ScriptNode::applicationRoot() const
 	return ancestor<ApplicationRoot>();
 }
 
-bool ScriptNode::selectionSetAcceptor( Set::ConstPtr s, Set::ConstMemberPtr m )
+bool ScriptNode::selectionSetAcceptor( const Set *s, const Set::Member *m )
 {
-	ConstNodePtr n = IECore::runTimeCast<const Node>( m );
+	const Node *n = IECore::runTimeCast<const Node>( m );
 	if( !n )
 	{
 		return false;
 	}
-	return n->parent<ScriptNode>()==this;
+	return this->isAncestorOf( n );
 }
 
 StandardSetPtr ScriptNode::selection()
