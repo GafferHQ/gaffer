@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -73,20 +74,23 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	
 	def __update( self ) :
 			
-		sceneNodes = [ node for node in self.getNodeSet() if isinstance( node, GafferScene.SceneNode ) ]
+		scenePlugs = []
+		for node in self.getNodeSet() :
+			scenePlugs.extend( [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ] )
+
 		selectedPaths = self.getContext().get( "ui:scene:selectedPaths", [] )
 
 		self.__textWidget.setText( "" )
 		
-		numCombinations = len( sceneNodes ) * len( selectedPaths )
+		numCombinations = len( scenePlugs ) * len( selectedPaths )
 		if numCombinations == 0 or numCombinations > 2 :
 			return
 		
 		inspections = []
 		with self.getContext() :
-			for node in sceneNodes :
+			for scenePlug in scenePlugs :
 				for path in selectedPaths :
-					inspections.append( self.__inspect( node, path ) )
+					inspections.append( self.__inspect( scenePlug, path ) )
 				
 		html = "<table cellpadding=4 cellspacing=0 style='table-layout: fixed;'>"
 
@@ -115,18 +119,18 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 						
 		self.__textWidget.setText( html )
 	
-	def __inspect( self, node, path ) :
+	def __inspect( self, plug, path ) :
 	
 		# basic info
 		
 		result = {}
-		result["node"] = node.relativeName( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) )
+		result["node"] = plug.node().relativeName( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) )
 		result["path"] = path
-		result["bound"] = node["out"].bound( path )
+		result["bound"] = plug.bound( path )
 		
 		# transform
 		
-		transform = node["out"].transform( path )
+		transform = plug.transform( path )
 		if transform != IECore.M44f() :
 			result["transform"] = transform
 		
@@ -135,14 +139,14 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		pathParts = path.strip( "/" ).split( "/" )
 		for i in range( 0, len( pathParts ) + 1 ) :
 			path = "/" + "/".join( pathParts[:i] )
-			attributes = node["out"].attributes( path )
+			attributes = plug.attributes( path )
 			if attributes :
 				for k, v in attributes.items() :
 					result["attr:" + k] = v
 		
 		# object
 		
-		object = node["out"].object( path )
+		object = plug.object( path )
 		if object is not None :
 			result["object:Type"] = object.typeName()
 			if isinstance( object, IECore.Primitive ) :
