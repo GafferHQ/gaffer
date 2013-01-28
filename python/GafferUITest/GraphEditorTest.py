@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -119,9 +119,9 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
+		nodeFilter = Gaffer.StandardSet( [ script["add2"] ] )
 		
-		g = GafferUI.GraphGadget( graphSet )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 		
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -133,29 +133,29 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 
-		graphSet = Gaffer.StandardSet( script.children() )
+		nodeFilter = Gaffer.StandardSet( script.children() )
 		
-		g = GafferUI.GraphGadget( graphSet )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
 			
-		graphSet.remove( script["add1"] )
+		nodeFilter.remove( script["add1"] )
 			
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
 		
-		graphSet.remove( script["add2"] )
+		nodeFilter.remove( script["add2"] )
 		
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )
 		
-		graphSet.add( script["add1"] )
+		nodeFilter.add( script["add1"] )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )
 
-		graphSet.add( script["add2"] )
+		nodeFilter.add( script["add2"] )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -169,14 +169,14 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		script["add2"]["op1"].setInput( script["add1"]["sum"] )
 		
-		graphSet = Gaffer.StandardSet( [ script["add1"] ] )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( [ script["add1"] ] )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )
 		self.failIf( g.connectionGadget( script["add2"]["op1"] ) )
 		
-		graphSet.add( script["add2"] )
+		nodeFilter.add( script["add2"] )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -191,9 +191,9 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		script["add2"]["op1"].setInput( script["add1"]["sum"] )
 		
-		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
+		nodeFilter = Gaffer.StandardSet( [ script["add2"] ] )
 		
-		g = GafferUI.GraphGadget( graphSet )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -213,14 +213,14 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		script["add2"]["op1"].setInput( script["add1"]["sum"] )
 		
-		graphSet = Gaffer.StandardSet( script.children() )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( script.children() )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
 		self.failUnless( g.connectionGadget( script["add2"]["op1"] ) )
 		
-		graphSet.remove( script["add2"] )
+		nodeFilter.remove( script["add2"] )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )
@@ -235,9 +235,9 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		script["add2"]["op1"].setInput( script["add1"]["sum"] )
 		
-		graphSet = Gaffer.StandardSet( [ script["add1"], script["add2"] ] )
+		nodeFilter = Gaffer.StandardSet( [ script["add1"], script["add2"] ] )
 		
-		g = GafferUI.GraphGadget( graphSet )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -248,7 +248,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		self.failUnless( c.srcNodule().plug().isSame( script["add1"]["sum"] ) )
 		self.failUnless( c.dstNodule().plug().isSame( script["add2"]["op1"] ) )
 		
-		graphSet.remove( script["add1"] )
+		nodeFilter.remove( script["add1"] )
 
 		self.failIf( g.nodeGadget( script["add1"] ) )
 	
@@ -264,8 +264,8 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet( [ script["add1"] ] )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( [ script["add1"] ] )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )		
@@ -283,13 +283,13 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet( script.children() )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( script.children() )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )		
 		
-		graphSet.remove( script["add2"] )
+		nodeFilter.remove( script["add2"] )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )		
@@ -307,8 +307,8 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( [ script["add2"] ] )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 	
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -329,8 +329,8 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet( [ script["add2"] ] )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( [ script["add2"] ] )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 	
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -344,7 +344,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		self.failUnless( c )
 		self.failUnless( c.srcNodule() is None )
 	
-		graphSet.add( script["add1"] )
+		nodeFilter.add( script["add1"] )
 		
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -353,45 +353,45 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		self.failUnless( c )
 		self.failUnless( c.srcNodule().plug().isSame( script["add1"]["sum"] ) )
 		
-	def testChangingSet( self ) :
+	def testChangingFilter( self ) :
 	
 		script = Gaffer.ScriptNode()
 		
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet( [ script["add1"] ] )
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet( [ script["add1"] ] )
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failUnless( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )
 		
-		graphSet2 = Gaffer.StandardSet( [ script["add2"] ] )
-		g.setGraphSet( graphSet2 )
+		nodeFilter2 = Gaffer.StandardSet( [ script["add2"] ] )
+		g.setFilter( nodeFilter2 )
 		
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
 		
-	def testChangingSetAndEditingOriginal( self ) :
+	def testChangingFilterAndEditingOriginal( self ) :
 	
 		script = Gaffer.ScriptNode()
 		
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 		
-		graphSet = Gaffer.StandardSet()
-		g = GafferUI.GraphGadget( graphSet )
+		nodeFilter = Gaffer.StandardSet()
+		g = GafferUI.GraphGadget( script, nodeFilter )
 
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failIf( g.nodeGadget( script["add2"] ) )
 		
-		graphSet2 = Gaffer.StandardSet( [ script["add2"] ] )
-		g.setGraphSet( graphSet2 )
+		nodeFilter2 = Gaffer.StandardSet( [ script["add2"] ] )
+		g.setFilter( nodeFilter2 )
 		
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )	
 		
-		graphSet.add( script["add1"] )
+		nodeFilter.add( script["add1"] )
 		
 		self.failIf( g.nodeGadget( script["add1"] ) )
 		self.failUnless( g.nodeGadget( script["add2"] ) )
@@ -411,7 +411,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		script["n"]["c"]["i"].setInput( script["n2"]["c"]["o"] )
 		
 		s = Gaffer.StandardSet( script.children() )
-		g = GafferUI.GraphGadget( s )
+		g = GafferUI.GraphGadget( script, s )
 				
 		c = g.connectionGadget( script["n"]["c"]["i"] )
 		self.failUnless( c )
@@ -531,7 +531,55 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 			self.failIf( b.isEmpty() )
 			
 			self.failUnless( gb.contains( b ) )
-				
+	
+	def testNoFilter( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		
+		g = GafferUI.GraphGadget( s )
+		
+		self.assertTrue( g.getRoot() is s )
+		self.assertTrue( g.getFilter() is None )
+		self.assertTrue( g.nodeGadget( s["n1"] ) )
+		
+		s["n2"] = Gaffer.Node()
+		self.assertTrue( g.nodeGadget( s["n1"] ) )		
+	
+	def testFilterIsChildSet( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		
+		g = GafferUI.GraphGadget( s, Gaffer.ChildSet( s ) )
+		self.assertTrue( g.nodeGadget( s["n1"] ) )
+		
+		l = len( g )
+		
+		s["n2"] = Gaffer.Node()
+		self.assertTrue( g.nodeGadget( s["n2"] ) )
+		
+		self.assertEqual( len( g ), l + 1 )
+	
+	def testSetRoot( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		
+		f = Gaffer.StandardSet( [ s["b"] ] )
+		g = GafferUI.GraphGadget( s, f )
+		
+		self.assertTrue( g.nodeGadget( s["b"] ) )
+		self.assertFalse( g.nodeGadget( s["b"]["n"] ) )
+		
+		g.setRoot( s["b"] )
+		self.assertTrue( g.getRoot().isSame( s["b"] ) )
+		self.assertEqual( g.getFilter(), None )
+		
+		self.assertTrue( g.nodeGadget( s["b"]["n"] ) )
+		self.assertFalse( g.nodeGadget( s["b"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

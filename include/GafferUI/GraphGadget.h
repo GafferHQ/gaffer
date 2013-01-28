@@ -62,24 +62,23 @@ class GraphGadget : public ContainerGadget
 
 		IE_CORE_FORWARDDECLARE( Filter )
 
-		/// Creates a graph showing the nodes held in the graphSet
-		/// set.
-		GraphGadget( Gaffer::SetPtr graphSet );
-		/// Creates a graph showing all the children of graphRoot. This
-		/// is equivalent to calling the Set based constructor passing
-		/// ChildSet( graphRoot ).
-		GraphGadget( Gaffer::NodePtr graphRoot );
+		/// Creates a graph showing the children of root, optionally
+		/// filtered by the specified set. Nodes are only displayed if
+		/// they are both a child of root and a member of filter.
+		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = 0 );
 		
 		virtual ~GraphGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GraphGadget, GraphGadgetTypeId, ContainerGadget );
 
-		/// Returns the Set specifying the contents of the graph - the
-		/// membership may be freely modified to change what is displayed.
-		Gaffer::Set *getGraphSet();
-		const Gaffer::Set *getGraphSet() const;
-		/// Changes the set used to specify the graph contents.
-		void setGraphSet( Gaffer::SetPtr graphSet );
+		Gaffer::Node *getRoot();
+		const Gaffer::Node *getRoot() const;
+		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = 0 );
+
+		/// May return 0 if no filter has been specified.
+		Gaffer::Set *getFilter();
+		const Gaffer::Set *getFilter() const;
+		void setFilter( Gaffer::SetPtr filter );
 
 		/// Returns the NodeGadget representing the specified node or 0
 		/// if none exists.
@@ -96,11 +95,11 @@ class GraphGadget : public ContainerGadget
 		void doRender( const Style *style ) const;
 		
 	private :
-	
-		void constructCommon( Gaffer::SetPtr graphSet );
 		
-		void memberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
-		void memberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
+		void rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
+		void rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
+		void filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
+		void filterMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void inputChanged( Gaffer::Plug *dstPlug );
 		void plugSet( Gaffer::Plug *plug );
 	
@@ -128,11 +127,14 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
 	
-		Gaffer::SetPtr m_graphSet;
-		boost::signals::scoped_connection m_graphSetMemberAddedConnection;
-		boost::signals::scoped_connection m_graphSetMemberRemovedConnection;
-		
+		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
+		boost::signals::scoped_connection m_rootChildAddedConnection;
+		boost::signals::scoped_connection m_rootChildRemovedConnection;
+
+		Gaffer::SetPtr m_filter;
+		boost::signals::scoped_connection m_filterMemberAddedConnection;
+		boost::signals::scoped_connection m_filterMemberRemovedConnection;
 		
 		struct NodeGadgetEntry
 		{

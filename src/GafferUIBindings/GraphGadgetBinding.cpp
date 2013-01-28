@@ -41,19 +41,25 @@
 
 #include "Gaffer/Node.h"
 
-#include "GafferUIBindings/GraphGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ConnectionGadget.h"
+
+#include "GafferUIBindings/GraphGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
-static Gaffer::SetPtr getGraphSet( GraphGadget &graphGadget )
+static Gaffer::NodePtr getRoot( GraphGadget &graphGadget )
 {
-	return graphGadget.getGraphSet();
+	return graphGadget.getRoot();
+}
+
+static Gaffer::SetPtr getFilter( GraphGadget &graphGadget )
+{
+	return graphGadget.getFilter();
 }
 
 static NodeGadgetPtr nodeGadget( GraphGadget &graphGadget, const Gaffer::Node *node )
@@ -69,11 +75,12 @@ static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaf
 void GafferUIBindings::bindGraphGadget()
 {
 	IECorePython::RunTimeTypedClass<GraphGadget>()
-		.def( init<Gaffer::NodePtr>() )
-		.def( init<Gaffer::SetPtr>() )
+		.def( init<Gaffer::NodePtr, Gaffer::SetPtr>( ( arg_( "root" ), arg_( "filter" ) = object() ) ) )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( GraphGadget )
-		.def( "getGraphSet", &getGraphSet )
-		.def( "setGraphSet", &GraphGadget::setGraphSet )
+		.def( "getRoot", &getRoot )
+		.def( "setRoot", &GraphGadget::setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
+		.def( "getFilter", &getFilter )
+		.def( "setFilter", &GraphGadget::setFilter )
 		.def( "nodeGadget", &nodeGadget )
 		.def( "connectionGadget", &connectionGadget )
 	;
