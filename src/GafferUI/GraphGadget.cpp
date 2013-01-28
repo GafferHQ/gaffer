@@ -104,9 +104,14 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 		return;
 	}
 
-	m_root = root;
-	m_rootChildAddedConnection = m_root->childAddedSignal().connect( boost::bind( &GraphGadget::rootChildAdded, this, ::_1, ::_2 ) );
-	m_rootChildRemovedConnection = m_root->childRemovedSignal().connect( boost::bind( &GraphGadget::rootChildRemoved, this, ::_1, ::_2 ) );
+	bool rootChanged = false;
+	if( root != m_root )
+	{
+		rootChanged = true;
+		m_root = root;
+		m_rootChildAddedConnection = m_root->childAddedSignal().connect( boost::bind( &GraphGadget::rootChildAdded, this, ::_1, ::_2 ) );
+		m_rootChildRemovedConnection = m_root->childRemovedSignal().connect( boost::bind( &GraphGadget::rootChildRemoved, this, ::_1, ::_2 ) );
+	}
 	
 	m_scriptNode = runTimeCast<Gaffer::ScriptNode>( m_root );
 	if( !m_scriptNode )
@@ -123,6 +128,16 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	{
 		updateGraph();
 	}
+
+	if( rootChanged )
+	{
+		m_rootChangedSignal( this );
+	}
+}
+
+GraphGadget::GraphGadgetSignal &GraphGadget::rootChangedSignal()
+{
+	return m_rootChangedSignal;
 }
 
 Gaffer::Set *GraphGadget::getFilter()

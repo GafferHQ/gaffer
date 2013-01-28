@@ -579,6 +579,34 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		self.assertTrue( g.nodeGadget( s["b"]["n"] ) )
 		self.assertFalse( g.nodeGadget( s["b"] ) )
+	
+	def testRootChangedSignal( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		
+		roots = []
+		def f( gg ) :
+		
+			self.failUnless( gg.isSame( g ) )
+			roots.append( gg.getRoot() )
+		
+		g = GafferUI.GraphGadget( s )
+		c = g.rootChangedSignal().connect( f )
+		
+		self.assertEqual( len( roots ), 0 )
+		
+		g.setRoot( s["b"] )
+		self.assertEqual( len( roots ), 1 )
+		self.assertTrue( roots[0].isSame( s["b"] ) )
+		
+		g.setRoot( s["b"] )
+		self.assertEqual( len( roots ), 1 )
+		self.assertTrue( roots[0].isSame( s["b"] ) )
+		
+		g.setRoot( s )
+		self.assertEqual( len( roots ), 2 )
+		self.assertTrue( roots[1].isSame( s ) )
 		
 if __name__ == "__main__":
 	unittest.main()
