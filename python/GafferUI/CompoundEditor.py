@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -243,7 +243,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			assert( editor.scriptNode().isSame( self.scriptNode() ) )
 						
 		tabbedContainer.append( editor )
-		tabbedContainer.setLabel( editor, IECore.CamelCase.toSpaced( editor.__class__.__name__ ) )
+		tabbedContainer.setLabel( editor, editor.getTitle() )
+		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 		tabbedContainer.setCurrent( editor )
 		
 	def __split( self, splitContainer, orientation, subPanelIndex ) :
@@ -293,6 +294,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			layoutButton.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
 		
 		splitContainer[0].setCornerWidget( row )
+	
+	def __titleChanged( self, editor ) :
+	
+		editor.parent().setLabel( editor, editor.getTitle() )
 				
 	def __layoutButtonClicked( self, button ) :
 	

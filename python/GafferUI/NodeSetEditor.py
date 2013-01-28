@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -51,6 +53,8 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
 
 		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode, **kw )
+		
+		self.__titleFormat = None
 		
 		self.__updateScheduled = False
 		# allow derived classes to call _updateFromSet() themselves after construction,
@@ -69,17 +73,81 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	
 		return self.__nodeSetChangedSignal
 	
+	## Overridden to display the names of the nodes being edited.
+	# Derived classes should override _titleFormat() rather than
+	# reimplement this again.
+	def getTitle( self ) :
+		
+		t = GafferUI.EditorWidget.getTitle( self )
+		if t :
+			return t
+		
+		if self.__titleFormat is None :
+			self.__titleFormat = self._titleFormat()
+			self.__nameChangedConnections = []
+			for n in self.__titleFormat :
+				if isinstance( n, Gaffer.GraphComponent ) :
+					self.__nameChangedConnections.append( n.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
+		
+		result = ""
+		for t in self.__titleFormat :
+			if isinstance( t, basestring ) :
+				result += t
+			else :
+				result += t.getName()
+				
+		return result
+		
 	def _lastAddedNode( self ) :
 	
 		if len( self.__nodeSet ) :
 			return self.__nodeSet[-1]
 		
 		return None
-		
+	
+	## Called whenever the contents of getNodeSet() have changed - must be
+	# implemented by derived classes to update the UI appropriately. Implementations
+	# must first call the base class implementation.
 	def _updateFromSet( self ) :
 	
-		raise NotImplementedError
-
+		# flush information needed for making the title -
+		# we'll update it lazily in getTitle().
+		self.__nameChangedConnections = []
+		self.__titleFormat = None
+	
+		self.titleChangedSignal()( self )
+		
+	## May be reimplemented by derived classes to specify a combination of
+	# strings and node names to use in building the title. The NodeSetEditor
+	# will take care of updating the title appropriately as the nodes are renamed.
+	def _titleFormat( self, _prefix = None, _maxNodes = 2, _reverseNodes = False, _ellipsis = True ) :
+	
+		if _prefix is None :
+			result = [ IECore.CamelCase.toSpaced( self.__class__.__name__ ) ]
+		else :
+			result = [ _prefix ]
+			
+		numNames = min( _maxNodes, len( self.__nodeSet ) )
+		if numNames :
+			
+			result.append( " : " )
+			
+			if _reverseNodes :
+				nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
+				nodes.reverse()
+			else :
+				nodes = self.__nodeSet[:numNames]
+				
+			for i, node in enumerate( nodes ) :
+				result.append( node )
+				if i < numNames - 1 :
+					result.append( ", " )
+					
+			if _ellipsis and len( self.__nodeSet ) > _maxNodes :
+				result.append( "..." )
+				
+		return result
+		
 	def __setNodeSetInternal( self, nodeSet, callUpdateFromSet ) :
 	
 		prevSet = self.__nodeSet
@@ -101,6 +169,10 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 			
 		self.__nodeSetChangedSignal( self )	
 
+	def __nameChanged( self, node ) :
+	
+		self.titleChangedSignal()( self )
+	
 	def __membersChanged( self, set, member ) :
 		
 		if self.__updateScheduled :

@@ -69,12 +69,18 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		return "GafferSceneUI.SceneEditor( scriptNode )"
 
 	def _updateFromSet( self ) :
-		
+
+		# first of all decide what plug we're viewing.
 		self.__plug = None
 		node = self._lastAddedNode()
 		if node and "out" in node and isinstance( node["out"], GafferScene.ScenePlug ) :
 			self.__plug = node["out"]
-			
+		
+		# call base class update - this will trigger a call to _titleFormat(),
+		# hence the need for already figuring out the plug.
+		GafferUI.NodeSetEditor._updateFromSet( self )
+		
+		# finish our update
 		if self.__plug is not None :		
 			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, self.getContext(), "/" ) )
 		else :
@@ -84,6 +90,15 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 	
 		# the ScenePath will trigger an update anyway
 		pass
+
+	def _titleFormat( self ) :
+	
+		return GafferUI.NodeSetEditor._titleFormat(
+			self,
+			_maxNodes = 1 if self.__plug is not None else 0,
+			_reverseNodes = True,
+			_ellipsis = False
+		)
 		
 	def __expansionChanged( self, pathListing ) :
 	

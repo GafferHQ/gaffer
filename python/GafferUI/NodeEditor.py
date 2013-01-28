@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -100,6 +100,8 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		return "GafferUI.NodeEditor( scriptNode )"
 
 	def _updateFromSet( self ) :
+		
+		GafferUI.NodeSetEditor._updateFromSet( self )
 				
 		del self.__column[:]
 		
@@ -115,6 +117,10 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None )
 		self.__column.append( frame, expand=True )
 		frame.setChild( GafferUI.NodeUI.create( node ) )
+
+	def _titleFormat( self ) :
+	
+		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
 		
 	@staticmethod
 	def __deleteWindow( windowWeakRef, *unusedArgs ) :

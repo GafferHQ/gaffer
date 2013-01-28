@@ -106,6 +106,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		return "GafferUI.Viewer( scriptNode )"
 
 	def _updateFromSet( self ) :
+		
+		GafferUI.NodeSetEditor._updateFromSet( self )
 			
 		node = self._lastAddedNode()
 		
@@ -128,6 +130,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def _updateFromContext( self ) :
 	
 		self.__update()
+
+	def _titleFormat( self ) :
+	
+		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
 
 	def __update( self ) :
 

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,6 +37,8 @@
 
 import types
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -52,11 +54,51 @@ class EditorWidget( GafferUI.Widget ) :
 		
 		self.__scriptNode = scriptNode
 		self.__context = None
+		
+		self.__title = ""
+		self.__titleChangedSignal = GafferUI.WidgetSignal()
+		
 		self.__setContextInternal( scriptNode.context(), callUpdate=False )
 				
 	def scriptNode( self ) :
 	
 		return self.__scriptNode
+	
+	## May be called to explicitly set the title for this editor. The
+	# editor itself is not responsible for displaying the title - this
+	# is left to the enclosing ui.
+	def setTitle( self, title ) :
+	
+		if title == self.__title :
+			return
+			
+		self.__title = title
+		self.titleChangedSignal()( self )
+		
+	## May be overridden to provide sensible default behaviour for
+	# the title, but must return BaseClass.getTitle() if it is non-empty.
+	def getTitle( self ) :
+	
+		if self.__title :
+			return self.__title
+		
+		# if there's no explicit title and a derived class
+		# has overridden getTitle() then we return the empty
+		# string to signify that the derived class is free
+		# to return what it wants
+		c = self.__class__
+		while c is not EditorWidget :
+			if "getTitle" in c.__dict__ :
+				return ""
+			c = c.__bases__[0]
+			
+		# otherwise we default to using the classname		
+		return IECore.CamelCase.toSpaced( self.__class__.__name__ )
+	
+	## A signal emitted whenever the title changes.	
+	def titleChangedSignal( self ) :
+
+		return self.__titleChangedSignal
 	
 	## By default Editors operate in the main context held by the script node. This function
 	# allows an alternative context to be provided, making it possible for an editor to 
