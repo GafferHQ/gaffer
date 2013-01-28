@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -115,7 +115,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
 			if self.scriptNode().isAncestorOf( dragData ) :
-				return "getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
+				return "script().getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
 		elif isinstance( dragData, Gaffer.Set ) :
 			if len( dragData ) == 1 :
 				return self.__dropText( widget, dragData[0] )
