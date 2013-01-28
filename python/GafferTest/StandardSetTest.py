@@ -294,7 +294,20 @@ class StandardSetTest( unittest.TestCase ) :
 		self.assertEqual( len( s ), len( odds ) )
 		for e in odds :
 			self.assertTrue( e in s )
+	
+	def testSlicing( self ) :
+	
+		l = [ IECore.IntData( i ) for i in range( 0, 10 ) ]
+		s = Gaffer.StandardSet( l )
 		
+		self.assertEqual( l[:], s[:] )
+		self.assertEqual( l[1:4], s[1:4] )
+		self.assertEqual( l[:4], s[:4] )
+		self.assertEqual( l[2:], s[2:] )
+		self.assertEqual( l[2:-2], s[2:-2] )
+		self.assertEqual( l[:40], s[:40] )
+		self.assertEqual( l[1:-20], s[1:-20] )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

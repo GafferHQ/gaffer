@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/slice.hpp"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -67,6 +68,22 @@ static IECore::RunTimeTypedPtr getItem( Set &s, long index )
 	return s.member( index );
 }
 
+static boost::python::list getSlice( Set &s, boost::python::slice sl )
+{
+	Py_ssize_t start, stop, step, length;
+	if( PySlice_GetIndicesEx( (PySliceObject *)sl.ptr(), s.size(), &start, &stop, &step, &length ) )
+	{
+		boost::python::throw_error_already_set();
+	}
+	
+	boost::python::list result;
+	for( Py_ssize_t i = start; i < stop; i++ )
+	{
+		result.append( Set::MemberPtr( s.member( i ) ) );
+	}
+	return result;
+}
+
 struct MemberSignalSlotCaller
 {
 	
@@ -94,6 +111,12 @@ void bindSet()
 		.def( "size", &Set::size )
 		.def( "__contains__", &Set::contains )
 		.def( "__len__", &Set::size )
+		// boost python overload resolution will try the functions in the reverse
+		// order to which they were def'd. so getItem is bound last as that's the
+		// one that needs the best performance - there's a small but measurable speed
+		// hit to indexing if the getSlice binding is tried and rejected before finding the
+		// getItem binding.
+		.def( "__getitem__", &getSlice )
 		.def( "__getitem__", &getItem )
 		.def( "memberAddedSignal", &Set::memberAddedSignal, boost::python::return_internal_reference<1>() )
 		.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
