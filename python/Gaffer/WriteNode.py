@@ -59,6 +59,7 @@ class WriteNode( Gaffer.Node ) :
 		self.__writerExtension = ""
 		self.__exposedParameters = IECore.CompoundParameter()
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
+		self.__parameterHandler.setupPlug( self )
 		
 		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
