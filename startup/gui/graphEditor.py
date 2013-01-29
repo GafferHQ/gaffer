@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,10 +46,11 @@ def __nodeDoubleClick( graphEditor, node ) :
 
 __nodeDoubleClickConnection = GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
-def __nodeContextMenu( node, menuDefinition ) :
+def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
 
-	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( node, menuDefinition )
+	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.BoxUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 
 __nodeContextMenuConnection = GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )

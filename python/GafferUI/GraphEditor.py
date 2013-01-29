@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -54,7 +54,10 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		
 		GafferUI.EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 		
-		self.__gadgetWidget.getViewportGadget().setChild( GafferUI.GraphGadget( self.scriptNode() ) )
+		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
+		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
+		
+		self.__gadgetWidget.getViewportGadget().setChild( graphGadget )
 		self.__frame()		
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
@@ -73,11 +76,21 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	
 		return self.graphGadgetWidget().getViewportGadget().getChild()
 	
-	__nodeContextMenuSignal = Gaffer.Signal2()
+	def getTitle( self ) :
+	
+		result = IECore.CamelCase.toSpaced( self.__class__.__name__ )
+	
+		root = self.graphGadget().getRoot()
+		if not root.isSame( self.scriptNode() ) :
+			result += " : " + root.relativeName( self.scriptNode() )
+		
+		return result
+		
+	__nodeContextMenuSignal = Gaffer.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
-	# ( node, menuDefinition ) and the menu definition should just be
+	# ( graphEditor, node, menuDefinition ) and the menu definition should just be
 	# edited in place. Typically you would add slots to this signal
 	# as part of a startup script.
 	@classmethod
@@ -92,6 +105,30 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	def nodeDoubleClickSignal( cls ) :
 	
 		return cls.__nodeDoubleClickSignal
+	
+	## Ensures that the specified node has a visible GraphEditor viewing
+	# it, and returns that editor.
+	## \todo Consider how this relates to the todo items in NodeEditor.acquire().
+	@classmethod
+	def acquire( cls, rootNode ) :
+	
+		if isinstance( rootNode, Gaffer.ScriptNode ) :
+			script = rootNode
+		else :
+			script = rootNode.scriptNode()
+			
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+		tabbedContainer = None
+		for editor in scriptWindow.getLayout().editors( type = GafferUI.GraphEditor ) :
+			if rootNode.isSame( editor.graphGadget().getRoot() ) :
+				editor.parent().setCurrent( editor )
+				return editor
+					
+		editor = GraphEditor( script )
+		editor.graphGadget().setRoot( rootNode )
+		scriptWindow.getLayout().addEditor( editor )
+		
+		return editor
 		
 	def __repr__( self ) :
 
@@ -109,7 +146,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			nodeGadget = self.__nodeGadgetAt( event.line.p1 )				
 			if nodeGadget :
 				nodeMenuDefinition = IECore.MenuDefinition()
-				self.nodeContextMenuSignal()( nodeGadget.node(), nodeMenuDefinition )
+				self.nodeContextMenuSignal()( self, nodeGadget.node(), nodeMenuDefinition )
 				if len( nodeMenuDefinition.items() ) :
 					menuDefinition = nodeMenuDefinition
 		
@@ -137,7 +174,24 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		if event.key == "F" :
 			self.__frame()
 			return True
-		
+		## \todo This cursor key navigation might not make sense for all applications,
+		# so we should move it into BoxUI and load it in a config file that the gui app uses.
+		# I think this implies that every Widget.*Signal() method should have a
+		# Widget.static*Signal() method to allow global handlers to be registered by widget type.
+		# We already have a mix of static/nonstatic signals for menus, so that might make a nice
+		# generalisation.
+		elif event.key == "Down" :
+			selection = self.scriptNode().selection()
+			if selection.size() and isinstance( selection[0], Gaffer.Box ) :
+				self.graphGadget().setRoot( selection[0] )
+				self.__frame()
+				return True
+		elif event.key == "Up" :
+			root = self.graphGadget().getRoot()
+			if isinstance( root, Gaffer.Box ) :
+				self.graphGadget().setRoot( root.parent() )
+				return True
+				
 		return False
 		
 	def __frame( self ) :
@@ -184,5 +238,28 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		nodeGadget = self.__nodeGadgetAt( event.line.p1 )				
 		if nodeGadget is not None :
 			return self.nodeDoubleClickSignal()( self, nodeGadget.node() )
+	
+	def __rootChanged( self, graphGadget ) :
+	
+		if graphGadget.getRoot().isSame( self.scriptNode() ) :
+			self.__rootNameChangedConnection = None
+			self.__rootParentChangedConnection = None
+		else :
+			self.__rootNameChangedConnection = graphGadget.getRoot().nameChangedSignal().connect( Gaffer.WeakMethod( self.__rootNameChanged ) )
+			self.__rootParentChangedConnection = graphGadget.getRoot().parentChangedSignal().connect( Gaffer.WeakMethod( self.__rootParentChanged ) )
+			
+		self.titleChangedSignal()( self )
 		
+	def __rootNameChanged( self, root ) :
+	
+		self.titleChangedSignal()( self )
+		
+	def __rootParentChanged( self, root, oldParent ) :
+	
+		# root has been deleted
+		## \todo I'm not sure if we should be responsible for removing ourselves or not.
+		# Perhaps we should just signal that we're not valid in some way and the CompoundEditor should
+		# remove us? Consider how this relates to NodeEditor.__deleteWindow() too.
+		self.parent().removeChild( self )
+	
 GafferUI.EditorWidget.registerType( "GraphEditor", GraphEditor )

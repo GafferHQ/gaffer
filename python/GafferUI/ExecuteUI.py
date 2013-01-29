@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -60,7 +60,7 @@ def appendMenuDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Repeat Previous", { "command" : repeatPrevious, "shortCut" : "Ctrl+R", "active" : __previousAvailable } )
 
-def appendNodeContextMenuDefinitions( node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 	
 	if not hasattr( node, "execute" ) :
 		return

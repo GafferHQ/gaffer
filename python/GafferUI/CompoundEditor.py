@@ -86,6 +86,27 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		__recurse( self.__splitContainer )
 		
 		return result
+	
+	## Adds an editor to the layout, trying to place it in the same place
+	# as editors of the same type.
+	def addEditor( self, editor ) :
+	
+		def __findContainer( w, editorType ) :
+			if len( w ) > 1 :
+				ideal, backup = __findContainer( w[0], editorType )
+				if ideal is not None :
+					return ideal, backup
+				return __findContainer( w[1], editorType )
+			else :
+				for e in w[0] :
+					if isinstance( e, editorType ) :
+						return w, w
+				return None, w
+				
+		ideal, backup = __findContainer( self.__splitContainer, editor.__class__ )
+		container = ideal if ideal is not None else backup
+		
+		self.__addChild( container, editor )
 		
 	def __repr__( self ) :
 	

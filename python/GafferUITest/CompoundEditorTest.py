@@ -34,43 +34,34 @@
 #  
 ##########################################################################
 
-import re
-
-import IECore
+import unittest
+import weakref
 
 import Gaffer
+import GafferTest
 import GafferUI
+import GafferUITest
 
-## A command suitable for use with NodeMenu.append(), to add a menu
-# item for the creation of a Box from the current selection. We don't
-# actually append it automatically, but instead let the startup files
-# for particular applications append it if it suits their purposes.
-def nodeMenuCreateCommand( menu ) :
+class CompoundEditorTest( GafferUITest.TestCase ) :
 
-	editor = menu.ancestor( GafferUI.EditorWidget )
-	script = editor.scriptNode()
-	
-	return Gaffer.Box.create( script, script.selection() )
+	def testAddEditorLifetime( self ) :
 
-## A callback suitable for use with GraphEditor.nodeContextMenuSignal - it provides
-# menu options specific to Boxes. We don't actually register it automatically,
-# but instead let the startup files for particular applications register
-# it if it suits their purposes.
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
-	
-	if not isinstance( node, Gaffer.Box ) :
-		return
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		
+		c = GafferUI.CompoundEditor( s )
+		e = GafferUI.GraphEditor( s )
+		c.addEditor( e )
+		
+		wc = weakref.ref( c )
+		we = weakref.ref( e )
+		
+		del c
+		del e
+		
+		self.assertEqual( wc(), None )
+		self.assertEqual( we(), None )
 			
-	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Show Contents...", { "command" : IECore.curry( __showContents, graphEditor, node ) } )
-
-def __showContents( graphEditor, box ) :
-
-	GafferUI.GraphEditor.acquire( box )
-
-# PlugValueWidget registrations
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "in[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "out[0-9]*" ), None )
-
+if __name__ == "__main__":
+	unittest.main()
+	

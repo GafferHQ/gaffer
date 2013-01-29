@@ -38,6 +38,7 @@
 from __future__ import with_statement
 
 import unittest
+import weakref
 
 import IECore
 
@@ -607,6 +608,18 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		g.setRoot( s )
 		self.assertEqual( len( roots ), 2 )
 		self.assertTrue( roots[1].isSame( s ) )
+	
+	def testLifetime( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		
+		e = GafferUI.GraphEditor( s )
+		
+		we = weakref.ref( e )
+		del e
+		
+		self.assertEqual( we(), None )
 		
 if __name__ == "__main__":
 	unittest.main()
