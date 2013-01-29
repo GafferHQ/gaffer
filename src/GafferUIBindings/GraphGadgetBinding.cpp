@@ -41,6 +41,8 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ConnectionGadget.h"
@@ -51,6 +53,15 @@
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
+
+struct GraphGadgetSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, GraphGadgetPtr g )
+	{
+		slot( g );
+		return boost::signals::detail::unusable();
+	}
+};
 
 static Gaffer::NodePtr getRoot( GraphGadget &graphGadget )
 {
@@ -74,14 +85,18 @@ static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaf
 
 void GafferUIBindings::bindGraphGadget()
 {
-	IECorePython::RunTimeTypedClass<GraphGadget>()
+	scope s = IECorePython::RunTimeTypedClass<GraphGadget>()
 		.def( init<Gaffer::NodePtr, Gaffer::SetPtr>( ( arg_( "root" ), arg_( "filter" ) = object() ) ) )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( GraphGadget )
 		.def( "getRoot", &getRoot )
 		.def( "setRoot", &GraphGadget::setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
+		.def( "rootChangedSignal", &GraphGadget::rootChangedSignal, return_internal_reference<1>() )
 		.def( "getFilter", &getFilter )
 		.def( "setFilter", &GraphGadget::setFilter )
 		.def( "nodeGadget", &nodeGadget )
 		.def( "connectionGadget", &connectionGadget )
 	;
+
+	GafferBindings::SignalBinder<GraphGadget::GraphGadgetSignal, GafferBindings::DefaultSignalCaller<GraphGadget::GraphGadgetSignal>, GraphGadgetSlotCaller>::bind( "GraphGadgetSignal" );	
+
 }
