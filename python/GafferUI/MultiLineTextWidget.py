@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -51,6 +51,20 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit(), **kw )
 
+		## \todo This should come from the Style when we get Styles applied to Widgets
+		# (and not just Gadgets as we have currently).
+		self._qtWidget().document().setDefaultStyleSheet(
+			"""
+			h1 { font-weight : bold; font-size : large; }
+			h1[class="ERROR"] { color : #ff5555 }
+			h1[class="WARNING"] { color : #ffb655 }
+			h1[class="INFO"] { color : #80b3ff }
+			h1[class="DEBUG"] { color : #aaffcc }
+			body { color : red }
+			span[class="message"] { color : #999999 }
+			"""
+		)
+				
 		self.setText( text )
 		self.setEditable( editable )
 		self.setWrapMode( wrapMode )

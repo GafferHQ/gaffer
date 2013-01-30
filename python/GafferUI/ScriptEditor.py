@@ -45,6 +45,7 @@ from Widget import Widget
 from EditorWidget import EditorWidget
 
 QtGui = GafferUI._qtImport( "QtGui" )
+QtCore = GafferUI._qtImport( "QtCore" )
 
 ## \todo Output redirection of both python stderr and stdout and IECore::msg - with the option to still output to the shell as well
 #		- but how do we know which script editor to output to? eh?
@@ -62,7 +63,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		
 		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode, **kw )
 			
-		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False )
+		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False )			
 		self.__inputWidget = GafferUI.MultiLineTextWidget()
 		
 		self.__splittable.append( self.__outputWidget )
@@ -92,10 +93,12 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			toExecute = widget.getText()
 		
 		try :
-		
-			exec( toExecute, self.__executionDict, self.__executionDict )
 			
 			self.__outputWidget.appendText( toExecute )
+	
+			with _MessageHandler( self.__outputWidget ) :
+			
+				exec( toExecute, self.__executionDict, self.__executionDict )
 			
 			if not haveSelection :
 				widget.setText( "" )
@@ -122,3 +125,24 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		return None		
 				
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
+
+class _MessageHandler( IECore.MessageHandler ) :
+
+	def __init__( self, textWidget ) :
+	
+		IECore.MessageHandler.__init__( self )
+		
+		self.__textWidget = textWidget
+		
+	def handle( self, level, context, message ) :
+	
+		html = formatted = "<h1 class='%s'>%s : %s </h1><span class='message'>%s</span><br>" % ( 
+			IECore.Msg.levelAsString( level ),
+			IECore.Msg.levelAsString( level ),
+			context,
+			message.replace( "\n", "<br>" )
+		)
+		self.__textWidget.appendHTML( html )
+		# update the gui so messages are output as they occur, rather than all getting queued
+		# up till the end.
+		QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
