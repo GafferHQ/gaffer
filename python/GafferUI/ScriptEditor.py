@@ -51,10 +51,6 @@ from EditorWidget import EditorWidget
 QtGui = GafferUI._qtImport( "QtGui" )
 QtCore = GafferUI._qtImport( "QtCore" )
 
-## \todo Output redirection of both python stderr and stdout and IECore::msg - with the option to still output to the shell as well
-#		- but how do we know which script editor to output to? eh?
-#			- perhaps we should only output things that this editor does and ignore all other actions?
-#			- then where do messages go? a special console ui?
 ## \todo Custom right click menu with script load, save, execute file, undo, redo etc.
 ## \todo Standard way for users to customise all menus
 ## \todo Tab completion and popup help. rlcompleter module should be useful for tab completion. Completer( dict ) constructs a completer
@@ -110,19 +106,20 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 				
 		self.__outputWidget.appendHTML( self.__codeToHTML( toExecute ) )
 
-		with _MessageHandler( self.__outputWidget ) :
-			with Gaffer.UndoContext( self.scriptNode() ) :
-				try :
-					if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
-						result = eval( toExecute, self.__executionDict, self.__executionDict )
-						self.__outputWidget.appendText( str( result ) )
-					else :
-						exec( toExecute, self.__executionDict, self.__executionDict )
-					if not haveSelection :
-						widget.setText( "" )
-				except Exception, e :
-					self.__outputWidget.appendHTML( self.__exceptionToHTML() )
-		
+		with Gaffer.OutputRedirection( stdOut = Gaffer.WeakMethod( self.__redirectOutput ), stdErr = Gaffer.WeakMethod( self.__redirectOutput ) ) :
+			with _MessageHandler( self.__outputWidget ) :
+				with Gaffer.UndoContext( self.scriptNode() ) :
+					try :
+						if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
+							result = eval( toExecute, self.__executionDict, self.__executionDict )
+							self.__outputWidget.appendText( str( result ) )
+						else :
+							exec( toExecute, self.__executionDict, self.__executionDict )
+						if not haveSelection :
+							widget.setText( "" )
+					except Exception, e :
+						self.__outputWidget.appendHTML( self.__exceptionToHTML() )
+
 		return True
 
 	def __dropText( self, widget, dragData ) :
@@ -165,7 +162,15 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			result += "<br>" + self.__codeToHTML( "".join( traceback.format_list( t[2:] ) ) )
 		
 		return result
-				
+	
+	def __redirectOutput( self, output ) :
+		
+		if output != "\n" :
+			self.__outputWidget.appendText( output )
+			# update the gui so messages are output as they occur, rather than all getting queued
+			# up till the end.
+			QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
 
 class _MessageHandler( IECore.MessageHandler ) :

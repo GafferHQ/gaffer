@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,34 +34,61 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
+import sys
+import threading
+
+## A threadsafe means of temporarily diverting sys.stdout and/or sys.stderr
+# to alternative functions.
+class OutputRedirection :
+
+	def __init__( self, stdOut = None, stdErr = None ) :
+	
+		self.__stdOut = stdOut
+		self.__stdErr = stdErr
+	
+	def __enter__( self ) :
+
+		with self.__sysLock :
+			if not isinstance( sys.stdout, _StdOut ) :
+				OutputRedirection._originalStdOut = sys.stdout
+				OutputRedirection._originalStdErr = sys.stderr
+				sys.stdout = _StdOut()
+				sys.stderr = _StdErr()
+		
+		stdOutStack = self._streams.__dict__.setdefault( "out", [] )
+		if self.__stdOut is not None :
+			stdOutStack.append( self.__stdOut )
+			
+		stdErrStack = self._streams.__dict__.setdefault( "err", [] )
+		if self.__stdErr is not None :
+			stdErrStack.append( self.__stdErr )
+				
+	def __exit__( self, type, value, traceBack ) :
+
+		if self.__stdOut :
+			self._streams.out.pop()
+		if self.__stdErr :
+			self._streams.err.pop()
+
+	__sysLock = threading.RLock()
+	_streams = threading.local()
+
+class _StdOut() :
+
+	def write( self, text ) :
+	
+		stdOutStack = OutputRedirection._streams.__dict__.get( "out" )
+		if stdOutStack :
+			stdOutStack[-1]( text )
+		else :
+			OutputRedirection._originalStdOut.write( text )
+
+class _StdErr() :
+
+	def write( self, text ) :
+	
+		stdErrStack = OutputRedirection._streams.__dict__.get( "err" )
+		if stdErrStack :
+			stdErrStack[-1]( text )
+		else :
+			OutputRedirection._originalStdErr.write( text )

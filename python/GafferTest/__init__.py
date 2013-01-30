@@ -113,6 +113,7 @@ from CompoundDataPlugTest import CompoundDataPlugTest
 from DependencyNodeTest import DependencyNodeTest
 from BoxPlugTest import BoxPlugTest
 from BoxTest import BoxTest
+from OutputRedirectionTest import OutputRedirectionTest
 
 if __name__ == "__main__":
 	import unittest

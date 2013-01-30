@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,34 +34,65 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
+import sys
+import unittest
+import threading
+import time
+
+import Gaffer
+
+class OutputRedirectionTest( unittest.TestCase ) :
+
+	def testRedirection( self ) :
+	
+		out = []
+		err = []
+		with Gaffer.OutputRedirection( stdOut = out.append, stdErr = err.append ) :
+		
+			sys.stdout.write( "OUT" )
+			print "PRINT",
+			sys.stderr.write( "ERR" )
+			
+		self.assertEqual( out, [ "OUT", "PRINT" ] )
+		self.assertEqual( err, [ "ERR" ] )
+		
+		sys.stdout.write( "" )
+		sys.stderr.write( "" )
+		
+		self.assertEqual( out, [ "OUT", "PRINT" ] )
+		self.assertEqual( err, [ "ERR" ] )
+	
+	def testThreading( self ) :
+	
+		perThreadOuts = []
+		perThreadErrs = []
+		threads = []
+		
+		def f( threadIndex ) :
+		
+			with Gaffer.OutputRedirection( stdOut = perThreadOuts[threadIndex].append, stdErr = perThreadErrs[threadIndex].append ) :
+				for i in range( 0, 100 ) :
+					sys.stdout.write( "OUT %d %d" % ( threadIndex, i ) )
+					sys.stderr.write( "ERR %d %d" % ( threadIndex, i ) )
+			time.sleep( 0.001 )
+		
+		for i in range( 0, 100 ) :
+			perThreadOuts.append( [] )
+			perThreadErrs.append( [] )
+			t = threading.Thread( target = f, args = ( i, ) )
+			threads.append( t )
+			t.start()
+			
+		for t in threads :
+			t.join()
+			
+		for i in range( 0, 100 ) :
+			self.assertEqual( len( perThreadOuts[i] ), 100 )
+			self.assertEqual( len( perThreadErrs[i] ), 100 )
+			for j in range( 0, 100 ) :
+				self.assertEqual( perThreadOuts[i][j], "OUT %d %d" % ( i, j ) )
+				self.assertEqual( perThreadErrs[i][j], "ERR %d %d" % ( i, j ) )
+			
+if __name__ == "__main__":
+	unittest.main()
+	
