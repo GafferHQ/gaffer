@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -76,7 +77,7 @@ class makeModelCache( IECore.Op ) :
 		if not files :
 			raise Exception( "No valid files found" )
 			
-		outFile = IECore.ModelCache( args["outputFile"].value, IECore.IndexedIOOpenMode.Write )
+		outFile = IECore.ModelCache( args["outputFile"].value, IECore.IndexedIO.OpenMode.Write )
 		
 		for f in files :
 		
