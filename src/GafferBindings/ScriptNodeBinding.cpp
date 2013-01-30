@@ -46,6 +46,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ApplicationRoot.h"
+#include "Gaffer/StandardSet.h"
 
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -75,16 +76,18 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 		}
 
-		virtual void execute( const std::string &pythonScript )
+		virtual void execute( const std::string &pythonScript, Node *parent = 0 )
 		{
-			object e = executionDict();
+			IECorePython::ScopedGILLock gilLock;
+			object e = executionDict( parent );
 			exec( pythonScript.c_str(), e, e );
 			scriptExecutedSignal()( this, pythonScript );
 		}
 
-		virtual PyObject *evaluate( const std::string &pythonExpression )
+		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
 		{
-			object e = executionDict();
+			IECorePython::ScopedGILLock gilLock;
+			object e = executionDict( parent );
 			object result = eval( pythonExpression.c_str(), e, e );
 			scriptEvaluatedSignal()( this, pythonExpression, result.ptr() );
 			
@@ -94,16 +97,15 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return result.ptr();
 		}
 
-		virtual std::string serialise( ConstSetPtr filter=0 ) const
+		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const
 		{
-			Serialisation serialisation( this, "parent()", filter );
+			Serialisation serialisation( parent ? parent : this, "parent", filter );
 			return serialisation.result();
 		}
 		
-		/// We need to consider implementing a delete() method first though.
 		virtual void load()
 		{
-			std::string fileName = IECore::constPointerCast<StringPlug>( fileNamePlug() )->getValue();
+			std::string fileName = fileNamePlug()->getValue();
 			std::ifstream f( fileName.c_str() );
 			if( !f.good() )
 			{
@@ -131,7 +133,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 			std::string s = serialise();
 			
-			std::string fileName = IECore::constPointerCast<StringPlug>( fileNamePlug() )->getValue();
+			std::string fileName = fileNamePlug()->getValue();
 			std::ofstream f( fileName.c_str() );
 			if( !f.good() )
 			{
@@ -147,65 +149,28 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		}
 				
 	private :
-
-		virtual void parentChanging( Gaffer::GraphComponent *newParent )
-		{
-			if( !newParent )
-			{
-				// we ditch m_executionDict when we lose our parent, so
-				// that we're not kept alive unecessarily by potential
-				// circular references created by variables in the dict.
-				// see GafferTest.ScriptNodeTest.testLifeTimeAfterExecution()
-				// for further discussion.
-				IECorePython::ScopedGILLock gilLock;
-				m_executionDict = object();
-			}
-		}
 	
 		// the dict returned will form both the locals and the globals for the execute()
 		// and evaluate() methods. it's not possible to have a separate locals
 		// and globals dictionary and have things work as intended. see
 		// ScriptNodeTest.testClassScope() for an example, and 
 		// http://bugs.python.org/issue991196 for an explanation.
-		object executionDict()
+		object executionDict( Node *parent )
 		{
-			if( !m_executionDict.is_none() )
-			{
-				return m_executionDict;
-			}
-			
-			m_executionDict = dict();
+			dict result;
 				
 			object builtIn = import( "__builtin__" );
-			m_executionDict["__builtins__"] = builtIn;
+			result["__builtins__"] = builtIn;
 			
 			object gafferModule = import( "Gaffer" );
-			m_executionDict["Gaffer"] = gafferModule;
+			result["Gaffer"] = gafferModule;
 			
-			object selfO( ScriptNodePtr( this ) );
-			
-			object weakrefModule = import( "weakref" );
-			m_executionDict["script"] = weakrefModule.attr( "ref" )( selfO );
-			m_executionDict["parent"] = weakrefModule.attr( "ref" )( selfO );
-			
-			object weakMethod = gafferModule.attr( "WeakMethod" );
-			m_executionDict["addChild"] = weakMethod( object( selfO.attr( "addChild" ) ) );
-			m_executionDict["getChild"] = weakMethod( object( selfO.attr( "getChild" ) ) );
-			m_executionDict["childAddedSignal"] = weakMethod( object( selfO.attr( "childAddedSignal" ) ) );
-			m_executionDict["childRemovedSignal"] = weakMethod( object( selfO.attr( "childRemovedSignal" ) ) );
-			m_executionDict["selection"] = weakMethod( object( selfO.attr( "selection" ) ) );
-			m_executionDict["undo"] = weakMethod( object( selfO.attr( "undo" ) ) );
-			m_executionDict["redo"] = weakMethod( object( selfO.attr( "redo" ) ) );
-			m_executionDict["deleteNodes"] = weakMethod( object( selfO.attr( "deleteNodes" ) ) );
-			m_executionDict["serialise"] = weakMethod( object( selfO.attr( "serialise" ) ) );
-			m_executionDict["save"] = weakMethod( object( selfO.attr( "save" ) ) );
-			m_executionDict["load"] = weakMethod( object( selfO.attr( "load" ) ) );
+			result["script"] = object( ScriptNodePtr( this ) );
+			result["parent"] = object( NodePtr( parent ? parent : this ) );
 
-			return m_executionDict;
+			return result;
 		}
-		
-		object m_executionDict;
-		
+				
 };
 
 IE_CORE_DECLAREPTR( ScriptNodeWrapper )
@@ -232,14 +197,14 @@ static ContextPtr context( ScriptNode &s )
 	return s.context();
 }
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( serialiseOverloads, serialise, 0, 1 );
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( copyOverloads, copy, 0, 1 );
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( cutOverloads, cut, 0, 1 );
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( deleteNodesOverloads, deleteNodes, 0, 1 );
-
 static ApplicationRootPtr applicationRoot( ScriptNode &s )
 {
 	return s.applicationRoot();
+}
+
+static StandardSetPtr selection( ScriptNode &s )
+{
+	return s.selection();
 }
 
 class ScriptNodeSerialiser : public NodeSerialiser
@@ -260,20 +225,20 @@ void bindScriptNode()
 {
 	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( "applicationRoot", &applicationRoot )
-		.def( "selection", (StandardSetPtr (ScriptNode::*)())&ScriptNode::selection )
+		.def( "selection", &selection )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )
 		.def( "undo", &ScriptNode::undo )
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
 		.def( "redo", &ScriptNode::redo )
-		.def( "copy", &ScriptNode::copy, copyOverloads() )
-		.def( "cut", &ScriptNode::cut, cutOverloads() )
-		.def( "paste", &ScriptNode::paste )
-		.def( "deleteNodes", &ScriptNode::deleteNodes, deleteNodesOverloads() )
-		.def( "execute", &ScriptNode::execute )
-		.def( "evaluate", &ScriptNode::evaluate )
+		.def( "copy", &ScriptNode::copy, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
+		.def( "cut", &ScriptNode::cut, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
+		.def( "paste", &ScriptNode::paste, ( arg_( "parent" ) = object() ) )
+		.def( "deleteNodes", &ScriptNode::deleteNodes, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
+		.def( "execute", &ScriptNode::execute, ( arg_( "parent" ) = object() ) )
+		.def( "evaluate", &ScriptNode::evaluate, ( arg_( "parent" ) = object() ) )
 		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, return_internal_reference<1>() )
 		.def( "scriptEvaluatedSignal", &ScriptNode::scriptEvaluatedSignal, return_internal_reference<1>() )
-		.def( "serialise", &ScriptNode::serialise, serialiseOverloads() )
+		.def( "serialise", &ScriptNode::serialise, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
 		.def( "save", &ScriptNode::save )
 		.def( "load", &ScriptNode::load )
 		.def( "context", &context )

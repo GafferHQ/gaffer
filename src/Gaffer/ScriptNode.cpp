@@ -35,6 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
 #include "IECore/Exception.h"
 #include "IECore/SimpleTypedData.h"
 
@@ -44,9 +47,7 @@
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/CompoundPlug.h"
-
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
+#include "Gaffer/StandardSet.h"
 
 using namespace Gaffer;
 
@@ -107,12 +108,12 @@ bool ScriptNode::selectionSetAcceptor( const Set *s, const Set::Member *m )
 	return this->isAncestorOf( n );
 }
 
-StandardSetPtr ScriptNode::selection()
+StandardSet *ScriptNode::selection()
 {
-	return m_selection;
+	return m_selection.get();
 }
 
-ConstStandardSetPtr ScriptNode::selection() const
+const StandardSet *ScriptNode::selection() const
 {
 	return m_selection;
 }
@@ -153,7 +154,7 @@ void ScriptNode::redo()
 	m_undoIterator++;
 }
 
-void ScriptNode::copy( ConstSetPtr filter )
+void ScriptNode::copy( const Node *parent, const Set *filter )
 {
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
@@ -161,17 +162,17 @@ void ScriptNode::copy( ConstSetPtr filter )
 		throw( "ScriptNode has no ApplicationRoot" );
 	}
 	
-	std::string s = serialise( filter );
+	std::string s = serialise( parent, filter );
 	app->setClipboardContents( new IECore::StringData( s ) );
 }
 
-void ScriptNode::cut( ConstSetPtr filter )
+void ScriptNode::cut( Node *parent, const Set *filter )
 {
-	copy( filter );
-	deleteNodes( filter );
+	copy( parent, filter );
+	deleteNodes( parent, filter );
 }
 
-void ScriptNode::paste()
+void ScriptNode::paste( Node *parent )
 {
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
@@ -182,12 +183,13 @@ void ScriptNode::paste()
 	IECore::ConstStringDataPtr s = IECore::runTimeCast<const IECore::StringData>( app->getClipboardContents() );
 	if( s )
 	{
+		parent = parent ? parent : this;
 		// set up something to catch all the newly created nodes
 		StandardSetPtr newNodes = new StandardSet;
-		childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newNodes.get(), ::_2 ) );
+		parent->childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newNodes.get(), ::_2 ) );
 			
 			// do the paste
-			execute( s->readable() );
+			execute( s->readable(), parent );
 
 		// transfer the newly created nodes into the selection
 		selection()->clear();
@@ -198,34 +200,35 @@ void ScriptNode::paste()
 	}
 }
 
-void ScriptNode::deleteNodes( ConstSetPtr filter )
+void ScriptNode::deleteNodes( Node *parent, const Set *filter )
 {
+	parent = parent ? parent : this;
 	// because children are stored as a vector, it's
 	// much more efficient to delete those at the end before
 	// those at the beginning.
-	int i = (int)(children().size()) - 1;
+	int i = (int)(parent->children().size()) - 1;
 	while( i >= 0 )
 	{
-		Node *node = getChild<Node>( i );
+		Node *node = parent->getChild<Node>( i );
 		if( node && ( !filter || filter->contains( node ) ) )
 		{
-			removeChild( node );
+			parent->removeChild( node );
 		}
 		i--;
 	}
 }
 
-StringPlugPtr ScriptNode::fileNamePlug()
+StringPlug *ScriptNode::fileNamePlug()
 {
 	return m_fileNamePlug;
 }
 
-ConstStringPlugPtr ScriptNode::fileNamePlug() const
+const StringPlug *ScriptNode::fileNamePlug() const
 {
 	return m_fileNamePlug;
 }
 
-void ScriptNode::execute( const std::string &pythonScript )
+void ScriptNode::execute( const std::string &pythonScript, Node *parent )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
 }
@@ -235,7 +238,7 @@ ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
 	return m_scriptExecutedSignal;
 }
 
-PyObject *ScriptNode::evaluate( const std::string &pythonExpression )
+PyObject *ScriptNode::evaluate( const std::string &pythonExpression, Node *parent )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
 }
@@ -245,7 +248,7 @@ ScriptNode::ScriptEvaluatedSignal &ScriptNode::scriptEvaluatedSignal()
 	return m_scriptEvaluatedSignal;
 }
 
-std::string ScriptNode::serialise( ConstSetPtr filter ) const
+std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 {
 	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );
 }

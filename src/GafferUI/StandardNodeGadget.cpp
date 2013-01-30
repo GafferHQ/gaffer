@@ -40,6 +40,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/StandardSet.h"
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"

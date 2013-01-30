@@ -70,25 +70,19 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 	
 		self.__inputWidgetActivatedConnection = self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 		self.__inputWidgetDropTextConnection = self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
-
-		self.__execConnection = self.scriptNode().scriptExecutedSignal().connect( Gaffer.WeakMethod( self.__execSlot ) )
-		self.__evalConnection = self.scriptNode().scriptEvaluatedSignal().connect( Gaffer.WeakMethod( self.__evalSlot ) )
+	
+		self.__executionDict = {
+			"IECore" : IECore,
+			"Gaffer" : Gaffer,
+			"GafferUI" : GafferUI,
+			"script" : scriptNode,
+			"parent" : scriptNode
+		}
 	
 	def __repr__( self ) :
 
 		return "GafferUI.ScriptEditor( scriptNode )"
-			
-	def __execSlot( self, scriptNode, script ) :
-	
-		assert( scriptNode.isSame( self.scriptNode() ) )
-		self.__outputWidget.appendText( script )
-		
-	def __evalSlot( self, scriptNode, script, result ) :
-	
-		assert( scriptNode.isSame( self.scriptNode() ) )
-		text = script + "\nResult : " + str( result ) + "\n"
-		self.__outputWidget.appendText( text )
-		
+				
 	def __activated( self, widget ) :
 		
 		haveSelection = True
@@ -99,7 +93,10 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		
 		try :
 		
-			self.scriptNode().execute( toExecute )
+			exec( toExecute, self.__executionDict, self.__executionDict )
+			
+			self.__outputWidget.appendText( toExecute )
+			
 			if not haveSelection :
 				widget.setText( "" )
 		
@@ -115,7 +112,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
 			if self.scriptNode().isAncestorOf( dragData ) :
-				return "script().getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
+				return "script.getChild( '" + dragData.relativeName( self.scriptNode() ) + "' )"
 		elif isinstance( dragData, Gaffer.Set ) :
 			if len( dragData ) == 1 :
 				return self.__dropText( widget, dragData[0] )

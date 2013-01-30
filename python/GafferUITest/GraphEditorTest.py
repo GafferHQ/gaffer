@@ -93,7 +93,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		self.failUnless( g.nodeGadget( n ) is not None )
 		
-		s.deleteNodes( Gaffer.StandardSet( [ n ] ) )
+		s.deleteNodes( filter = Gaffer.StandardSet( [ n ] ) )
 
 		self.failUnless( g.nodeGadget( n ) is None )
 	
@@ -109,7 +109,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		g = GafferUI.GraphEditor( s )
 
-		s.deleteNodes( Gaffer.StandardSet( [ s["add1"] ] ) )
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["add1"] ] ) )
 		
 		self.failIf( g.graphGadget().connectionGadget( n["op1"] ) )
 

@@ -77,7 +77,7 @@ class AttributeCacheTest( GafferSceneTest.SceneTestCase ) :
 		s["a"]["in"].setInput( s["m"]["out"] )
 		self.failUnless( s["a"]["in"].getInput().isSame( s["m"]["out"] ) )
 		
-		ss = s.serialise( Gaffer.StandardSet( [ s["a"] ] ) )
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["a"] ] ) )
 		
 		s = Gaffer.ScriptNode()
 		s.execute( ss )	

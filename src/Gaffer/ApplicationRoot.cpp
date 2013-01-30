@@ -71,19 +71,19 @@ bool ApplicationRoot::acceptsParent( const GraphComponent *potentialParent ) con
 	return false;
 }
 
-ScriptContainerPtr ApplicationRoot::scripts()
+ScriptContainer *ApplicationRoot::scripts()
 {
 	return getChild<ScriptContainer>( "scripts" );
 }
 
-ConstScriptContainerPtr ApplicationRoot::scripts() const
+const ScriptContainer *ApplicationRoot::scripts() const
 {
 	return getChild<ScriptContainer>( "scripts" );
 }
 
-IECore::ConstObjectPtr ApplicationRoot::getClipboardContents() const
+const IECore::Object *ApplicationRoot::getClipboardContents() const
 {
-	return m_clipboardContents;
+	return m_clipboardContents.get();
 }
 
 void ApplicationRoot::setClipboardContents( IECore::ConstObjectPtr clip )
@@ -91,12 +91,12 @@ void ApplicationRoot::setClipboardContents( IECore::ConstObjectPtr clip )
 	m_clipboardContents = clip->copy();
 }
 
-PreferencesPtr ApplicationRoot::preferences()
+Preferences *ApplicationRoot::preferences()
 {
 	return getChild<Preferences>( "preferences" );
 }
 
-ConstPreferencesPtr ApplicationRoot::preferences() const
+const Preferences *ApplicationRoot::preferences() const
 {
 	return getChild<Preferences>( "preferences" );
 }

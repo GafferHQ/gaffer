@@ -46,8 +46,8 @@
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/ChildSet.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/StandardSet.h"
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"

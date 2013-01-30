@@ -70,9 +70,9 @@ class ScriptNodeTest( unittest.TestCase ) :
 			
 		c = s.scriptExecutedSignal().connect( f )
 
-		s.execute( "addChild( Gaffer.Node( 'child' ) )" )
+		s.execute( "script.addChild( Gaffer.Node( 'child' ) )" )
 		self.assertEqual( ScriptNodeTest.lastNode, s )
-		self.assertEqual( ScriptNodeTest.lastScript, "addChild( Gaffer.Node( 'child' ) )" )
+		self.assertEqual( ScriptNodeTest.lastScript, "script.addChild( Gaffer.Node( 'child' ) )" )
 				
 		self.assert_( s["child"].typeName(), "Node" )
 		
@@ -316,13 +316,13 @@ class ScriptNodeTest( unittest.TestCase ) :
 		
 	def testVariableScope( self ) :
 	
-		# if a variable gets made in one execution, then it should be available in the next
+		# if a variable gets made in one execution, it shouldn't persist in the next.
 	
 		n = Gaffer.ScriptNode()
 		
 		n.execute( "a = 10" )
 		
-		self.assertEqual( n.evaluate( "a" ), 10 )
+		self.assertRaises( NameError, n.evaluate, "a" )
 	
 	def testClassScope( self ) :
 	
@@ -422,23 +422,20 @@ a = A()"""
 			
 	def testLifeTimeAfterExecution( self ) :
 	
+		# the ScriptNode used to keep an internal dictionary
+		# as the context for all script execution. this created the
+		# danger of circular references keeping it alive forever.
+		# that is no longer the case, but this test remains to ensure
+		# that the same problem doesn't crop up in the future.
+	
 		a = Gaffer.ApplicationRoot()
 		a["scripts"]["s"] = Gaffer.ScriptNode()
 		
-		# because the script editor allows execution of arbitrary code,
-		# there's nothing stopping a user from making variables that refer
-		# to the ScriptNode itself, causing circular references.
-		a["scripts"]["s"].execute( "addChild( Gaffer.Node( \"a\" ) )" )
-		a["scripts"]["s"].execute( "circularRef = getChild( \"a\" ).parent()" )
+		a["scripts"]["s"].execute( "script.addChild( Gaffer.Node( \"a\" ) )" )
+		a["scripts"]["s"].execute( "circularRef = script.getChild( \"a\" ).parent()" )
 		
 		w = weakref.ref( a["scripts"]["s"] )
 		
-		# we use the removal of the script from its parent to trigger a cleanup
-		# of the execution context, allowing the ScriptNode to die. it's still
-		# possible to create circular references that never die if the ScriptNode
-		# never has a parent, but that is unlikely to be the case in the real world.
-		## \todo Should it instead be the ScriptEditor that owns the execution
-		# context perhaps? Then this wouldn't be an issue.
 		del a["scripts"]["s"]
 		IECore.RefCounted.collectGarbage()
 	
@@ -480,7 +477,7 @@ a = A()"""
 		s["n2"] = Gaffer.Node()
 		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 3 )
 		
-		s.deleteNodes( Gaffer.StandardSet( [ s["n1"] ] ) )
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n1"] ] ) )
 		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 2 )
 		self.failUnless( "n" in s )
 		self.failUnless( "n1" not in s )
@@ -489,8 +486,16 @@ a = A()"""
 	def testScriptAccessor( self ) :
 	
 		s = Gaffer.ScriptNode()
-		self.failUnless( s.evaluate( "script()" ).isSame( s ) )
+		self.failUnless( s.evaluate( "script" ).isSame( s ) )
+		
+	def testParentAccessor( self ) :
 	
+		s = Gaffer.ScriptNode()
+		self.failUnless( s.evaluate( "parent" ).isSame( s ) )	
+	
+		s["b"] = Gaffer.Box()
+		self.failUnless( s.evaluate( "parent", parent = s["b"] ).isSame( s["b"] ) )
+		
 	def testDynamicPlugSaveAndLoad( self ) :
 	
 		s = Gaffer.ScriptNode()
@@ -539,13 +544,130 @@ a = A()"""
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 	
 		s2 = Gaffer.ScriptNode()
-		s2.execute( s.serialise( Gaffer.StandardSet( [ s["n2"] ] ) ) )
+		s2.execute( s.serialise( filter = Gaffer.StandardSet( [ s["n2"] ] ) ) )
 		
 		self.assertTrue( "n2" in s2 )
 		self.assertTrue( "n1" not in s2 )
 		
 		self.assertEqual( s2["n2"]["op1"].getInput(), None )
 	
+	def testCopyIgnoresNestedSelections( self ) :
+	
+		a = Gaffer.ApplicationRoot()
+		s = Gaffer.ScriptNode()
+		a["scripts"].addChild( s )
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n1"] = GafferTest.AddNode()
+		
+		s.selection().add( s["n1"] )
+		s.selection().add( s["b"]["n1"] )
+		s.copy( filter = s.selection() )
+		
+		s2 = Gaffer.ScriptNode()
+		a["scripts"].addChild( s2 )
+		s2.paste()
+		
+		self.assertTrue( "n1" in s2 )
+		self.assertTrue( "b" not in s2 )
+		
+		s.selection().clear()
+		s.selection().add( s["b"]["n1"] )
+		s.copy( filter = s.selection() )
+		
+		s2 = Gaffer.ScriptNode()
+		a["scripts"].addChild( s2 )
+		s2.paste()
+		
+		self.assertTrue( "b" not in s2 )
+		self.assertTrue( "n1" not in s2 )
+		
+	def testCopyPasteWithSpecificSourceParent( self ) :
+	
+		a = Gaffer.ApplicationRoot()
+		s = Gaffer.ScriptNode()
+		a["scripts"].addChild( s )
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n3"] = GafferTest.AddNode()
+		s["b"]["n4"] = GafferTest.AddNode()
+		
+		s.selection().add( s["n1"] )
+		s.selection().add( s["b"]["n3"] )
+		
+		s.copy( parent=s["b"], filter = s.selection() )	
+		
+		s2 = Gaffer.ScriptNode()
+		a["scripts"].addChild( s2 )
+		s2.paste()
+		
+		self.assertTrue( "n1" not in s2 )
+		self.assertTrue( "n2" not in s2 )
+		self.assertTrue( "b" not in s2 )
+		self.assertTrue( "n3" in s2 )
+		self.assertTrue( "n4" not in s2 )
+	
+	def testCopyPasteWithSpecificDestinationParent( self ) :
+	
+		a = Gaffer.ApplicationRoot()
+		s = Gaffer.ScriptNode()
+		a["scripts"].addChild( s )
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		
+		s.selection().add( s["n1"] )
+		s.copy( filter = s.selection() )
+		
+		s2 = Gaffer.ScriptNode()
+		a["scripts"].addChild( s2 )
+		s2["b"] = Gaffer.Box()
+		s2.paste( parent = s2["b"] )
+		
+		self.assertTrue( "n1" not in s2 )
+		self.assertTrue( "n2" not in s2 )
+		self.assertTrue( "n1" in s2["b"] )
+		self.assertTrue( "n2" not in s2["b"] )
+		
+		self.assertEqual( len( s2.selection() ), 1 )
+		self.assertTrue( s2["b"]["n1"] in s2.selection() )
+	
+	def testCutWithSpecificSourceParent( self ) :
+	
+		a = Gaffer.ApplicationRoot()
+		s = Gaffer.ScriptNode()
+		a["scripts"].addChild( s )
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n3"] = GafferTest.AddNode()
+		s["b"]["n4"] = GafferTest.AddNode()
+		
+		s.selection().add( s["n1"] )
+		s.selection().add( s["b"]["n3"] )
+		
+		s.cut( parent=s["b"], filter = s.selection() )	
+		self.assertTrue( "n1" in s )
+		self.assertTrue( "n2" in s )
+		self.assertTrue( "b" in s )
+		self.assertTrue( "n3" not in s["b"] )
+		self.assertTrue( "n4" in s["b"] )
+		
+		s2 = Gaffer.ScriptNode()
+		a["scripts"].addChild( s2 )
+		s2.paste()
+		
+		self.assertTrue( "n1" not in s2 )
+		self.assertTrue( "n2" not in s2 )
+		self.assertTrue( "b" not in s2 )
+		self.assertTrue( "n3" in s2 )
+		self.assertTrue( "n4" not in s2 )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

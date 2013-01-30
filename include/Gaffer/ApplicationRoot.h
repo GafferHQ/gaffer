@@ -60,8 +60,8 @@ class ApplicationRoot : public GraphComponent
 		/// Accepts no parent.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 		
-		ScriptContainerPtr scripts();
-		ConstScriptContainerPtr scripts() const;
+		ScriptContainer *scripts();
+		const ScriptContainer *scripts() const;
 		
 		//! @name Clipboard
 		/// The ApplicationRoot class holds a clipboard which is
@@ -73,7 +73,7 @@ class ApplicationRoot : public GraphComponent
 		//@{
 		/// Returns the clipboard contents, a copy should be taken
 		/// if it must be modified.
-		IECore::ConstObjectPtr getClipboardContents() const;
+		const IECore::Object *getClipboardContents() const;
 		/// Sets the clipboard contents - a copy of clip is taken.
 		void setClipboardContents( IECore::ConstObjectPtr clip );
 		//@}
@@ -90,8 +90,8 @@ class ApplicationRoot : public GraphComponent
 		/// a python dependency.
 		//@{
 		/// Returns the preferences node.
-		PreferencesPtr preferences();
-		ConstPreferencesPtr preferences() const;
+		Preferences *preferences();
+		const Preferences *preferences() const;
 		/// Saves the current preferences to preferencesLocation()/preferences.py.
 		void savePreferences() const;
 		/// Saves the current preferences value to the specified file.

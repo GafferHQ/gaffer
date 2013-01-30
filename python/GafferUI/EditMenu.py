@@ -83,52 +83,40 @@ def redo( menu ) :
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def cut( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-
+	script, parent = __scriptAndParent( menu )
 	with Gaffer.UndoContext( script ) :
-		script.cut( script.selection() )
+		script.cut( parent, script.selection() )
 
 ## A function suitable as the command for an Edit/Copy menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def copy( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	script.copy( script.selection() )
+	script, parent = __scriptAndParent( menu )
+	script.copy( parent, script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def paste( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	
+	script, parent = __scriptAndParent( menu )
 	with Gaffer.UndoContext( script ) :
-	
-		script.paste()
+		script.paste( parent )
 	
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def delete( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	
+	script, parent = __scriptAndParent( menu )
 	with Gaffer.UndoContext( script ) :
-		
-		script.deleteNodes( script.selection() )
+		script.deleteNodes( parent, script.selection() )
 	
 ## A function suitable as the command for an Edit/Select All menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAll( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	
-	for c in script.children() :
-		if c.isInstanceOf( Gaffer.Node.staticTypeId() ) :
-			script.selection().add( c )	
+	script, parent = __scriptAndParent( menu )
+	for c in parent.children( Gaffer.Node.staticTypeId() ) :
+		script.selection().add( c )
 			
 ## A function suitable as the command for an Edit/Select None menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -211,6 +199,24 @@ def __pasteAvailable( menu ) :
 	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
 	root = scriptNode.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
+
+def __scriptAndParent( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	## \todo Does this belong as a Window.focussedChild() method?
+	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
+	graphEditor = None
+	if focusWidget is not None :
+		graphEditor = focusWidget.ancestor( GafferUI.GraphEditor )
+	
+	if graphEditor is not None :
+		parent = graphEditor.graphGadget().getRoot()
+	else :
+		parent = script
+	
+	return script, parent
 
 def __undoAvailable( menu ) :
 

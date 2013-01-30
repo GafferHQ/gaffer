@@ -44,7 +44,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Container.h"
-#include "Gaffer/StandardSet.h"
+#include "Gaffer/Set.h"
 #include "Gaffer/UndoContext.h"
 
 typedef struct _object PyObject;
@@ -56,6 +56,7 @@ IE_CORE_FORWARDDECLARE( Action );
 IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( ApplicationRoot );
 IE_CORE_FORWARDDECLARE( Context );
+IE_CORE_FORWARDDECLARE( StandardSet );
 
 typedef Container<GraphComponent, ScriptNode> ScriptContainer;
 IE_CORE_DECLAREPTR( ScriptContainer );
@@ -88,8 +89,8 @@ class ScriptNode : public Node
 		/// selection any way they see fit.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		StandardSetPtr selection();
-		ConstStandardSetPtr selection() const;
+		StandardSet *selection();
+		const StandardSet *selection() const;
 		//@}
 		
 		//! @name History and undo
@@ -111,26 +112,32 @@ class ScriptNode : public Node
 		/// These methods provide higher level editing functions for the
 		/// script.
 		////////////////////////////////////////////////////////////////////
-		/// Copies the contents of this script to the clipboard in the
-		/// application(). If specified then filter limits what is copied.
-		void copy( ConstSetPtr filter=0 );
+		/// Copies nodes from this script to the clipboard in the
+		/// application(). Only children of the parent which are contained by
+		/// the filter will be copied. If unspecified, parent defaults to
+		/// the ScriptNode and if no filter is specified all children will
+		/// be copied.
+		void copy( const Node *parent = 0, const Set *filter = 0 );
 		/// Performs a copy() and then deletes the copied nodes.
 		/// \undoable
-		void cut( ConstSetPtr filter=0 );
-		/// Pastes the contents of the global clipboard into the script.
+		void cut( Node *parent = 0, const Set *filter = 0 );
+		/// Pastes the contents of the global clipboard into the script below
+		/// the specified parent. If parent is unspecified then it defaults
+		/// to the script itself.
 		/// \undoable
-		void paste();
-		/// Removes Nodes from the script, making sure they are
+		void paste( Node *parent = 0 );
+		/// Removes Nodes from the parent node, making sure they are
 		/// disconnected from the remaining Nodes and removed from the current
-		/// selection. If specified then filter limits what is deleted. Note
+		/// selection. If unspecified then the parent defaults to the script
+		/// itself. If specified then filter limits what is deleted. Note
 		/// that it is also possible to call removeChild( node ) to remove
 		/// nodes, and that the node will still be properly disconnected
 		/// and unselected - this function is just a convenience method
 		/// for efficiently deleting many nodes at once.
 		/// \undoable
-		void deleteNodes( ConstSetPtr filter=0 );
+		void deleteNodes( Node *parent = 0, const Set *filter = 0 );
 		//@}
-			
+		
 		//! @name Script evaluation
 		/// These methods allow the execution of python scripts in the
 		/// context of the ScriptNode. The methods are only available on
@@ -146,13 +153,13 @@ class ScriptNode : public Node
 		/// \todo I think we'll need a version of this that takes a python callable.
 		/// We might expose that here or just introduce it in the binding layer for
 		/// use from the python side only.
-		virtual void execute( const std::string &pythonScript );
+		virtual void execute( const std::string &pythonScript, Node *parent = 0 );
 		/// This signal is emitted following successful execution of a script.
 		ScriptExecutedSignal &scriptExecutedSignal();
 		/// Evaluates the specified python expression. The caller owns a reference to
 		/// the result, and must therefore decrement the reference count when
 		/// appropriate.
-		virtual PyObject *evaluate( const std::string &pythonExpression );
+		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 );
 		/// This signal is emitted following sucessful evaluation of an expression. The PyObject *
 		/// is the result of the script evaluation - slots must increment the reference count on
 		/// this if they intend to keep the result.
@@ -166,18 +173,17 @@ class ScriptNode : public Node
 		/// for the cut and paste mechanism. As serialisation depends on
 		/// python, these methods will throw Exceptions if called on ScriptNodes
 		/// created from C++.
-		/// \todo Very much need to consider how these will work for group
-		/// nodes.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// Returns a string which when executed will recreate the child nodes
-		/// of this script and the connections between them. A Set may be
-		/// specified to limit the serialised nodes to those contained in the set.
-		virtual std::string serialise( ConstSetPtr filter=0 ) const;
+		/// Returns a string which when executed will recreate the children
+		/// of the parent and the connections between them. If unspecified, parent
+		/// default to the ScriptNode itself. The filter may be specified to limit
+		/// serialised nodes to those contained in the set.
+		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Returns the plug which specifies the file used in all load and save
 		/// operations.
-		StringPlugPtr fileNamePlug();
-		ConstStringPlugPtr fileNamePlug() const;
+		StringPlug *fileNamePlug();
+		const StringPlug *fileNamePlug() const;
 		/// Loads the script specified in the filename plug.
 		virtual void load();
 		/// Saves the script to the file specified by the filename plug.
