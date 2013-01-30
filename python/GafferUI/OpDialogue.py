@@ -92,7 +92,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 				button = self.waitForButton( **kw )					
 				if button is self.__executeButton :
 					result = self.__execute()
-					if not isinstance( result, Exception ) :
+					if result is not None :
 						return result
 				else :
 					return None
@@ -110,10 +110,11 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 			return result
 			
-		except Exception, e :
+		except :
 			
 			GafferUI.ErrorDialogue.displayException( parentWindow=self )
-			return e
+			
+			return None
 	
 	def __buttonClicked( self, button ) :
 	
