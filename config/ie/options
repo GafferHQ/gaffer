@@ -159,6 +159,7 @@ if getOption( "RELEASE", "0" )=="0" :
 LOCATE_DEPENDENCY_LIBPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 
 ]
 
