@@ -35,6 +35,10 @@
 #  
 ##########################################################################
 
+import ast
+import sys
+import traceback
+
 import IECore
 
 import Gaffer
@@ -63,8 +67,8 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		
 		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode, **kw )
 			
-		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False )			
-		self.__inputWidget = GafferUI.MultiLineTextWidget()
+		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False, wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None )			
+		self.__inputWidget = GafferUI.MultiLineTextWidget( wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None )
 		
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
@@ -86,26 +90,38 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 				
 	def __activated( self, widget ) :
 		
+		# decide what to execute
 		haveSelection = True
 		toExecute = widget.selectedText()
 		if not toExecute :
 			haveSelection = False
 			toExecute = widget.getText()
 		
+		# parse it first. this lets us give better error formatting
+		# for syntax errors, and also figure out whether we can eval()
+		# and display the result or must exec() only.
 		try :
-			
-			self.__outputWidget.appendText( toExecute )
-	
-			with _MessageHandler( self.__outputWidget ) :
-			
-				exec( toExecute, self.__executionDict, self.__executionDict )
-			
-			if not haveSelection :
-				widget.setText( "" )
+			parsed = ast.parse( toExecute )
+		except SyntaxError, e :
+			self.__outputWidget.appendHTML( self.__syntaxErrorToHTML( e ) )
+			return
 		
-		except Exception, e :
-		
-			self.__outputWidget.appendText( str( e ) )
+		# execute it
+				
+		self.__outputWidget.appendHTML( self.__codeToHTML( toExecute ) )
+
+		with _MessageHandler( self.__outputWidget ) :
+			with Gaffer.UndoContext( self.scriptNode() ) :
+				try :
+					if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
+						result = eval( toExecute, self.__executionDict, self.__executionDict )
+						self.__outputWidget.appendText( str( result ) )
+					else :
+						exec( toExecute, self.__executionDict, self.__executionDict )
+					if not haveSelection :
+						widget.setText( "" )
+				except Exception, e :
+					self.__outputWidget.appendHTML( self.__exceptionToHTML() )
 		
 		return True
 
@@ -122,7 +138,33 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			else :
 				return "[ " + ", ".join( [ self.__dropText( widget, d ) for d in dragData ] ) + " ]"
 				
-		return None		
+		return None
+		
+	def __codeToHTML( self, code ) :
+	
+		code = code.replace( "<", "&lt;" ).replace( ">", "&gt;" )
+		return "<pre>" + code + "</pre>"
+	
+	def __syntaxErrorToHTML( self, syntaxError ) :
+	
+		formatted = traceback.format_exception_only( SyntaxError, syntaxError )
+		lineNumber = formatted[0].rpartition( "," )[2].strip()
+		headingText = formatted[-1].replace( ":", " : " + lineNumber + " : ", 1 )
+		result = "<h1 class='ERROR'>%s</h1>" % headingText
+		result += "<br>" + self.__codeToHTML( "".join( formatted[1:-1] ) )
+		
+		return result
+	
+	def __exceptionToHTML( self ) :
+	
+		t = traceback.extract_tb( sys.exc_info()[2] )
+		lineNumber = str( t[1][1] )
+		headingText = traceback.format_exception_only( *(sys.exc_info()[:2]) )[0].replace( ":", " : line " + lineNumber + " : ", 1 )
+		result = "<h1 class='ERROR'>%s</h1>" % headingText
+		if len( t ) > 2 :
+			result += "<br>" + self.__codeToHTML( "".join( traceback.format_list( t[2:] ) ) )
+		
+		return result
 				
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
 
