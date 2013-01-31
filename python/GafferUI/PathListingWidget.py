@@ -278,7 +278,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	# \todo Remove me
 	def selectedPaths( self ) :
 
-		warnings.warn( "PathListingWidget.selectedPaths() is deprecated, use PathListingWidget.getSelectdPaths() instead.", DeprecationWarning, 2 )		
+		warnings.warn( "PathListingWidget.selectedPaths() is deprecated, use PathListingWidget.getSelectedPaths() instead.", DeprecationWarning, 2 )		
 	
 		return self.getSelectedPaths()
 	
@@ -431,7 +431,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragBegin( self, widget, event ) :
 
 		self.__borrowedButtonPress = None
-		selectedPaths = self.selectedPaths()
+		selectedPaths = self.getSelectedPaths()
 		if len( selectedPaths ) :		
 			return IECore.StringVectorData(
 				[ str( p ) for p in selectedPaths ],
