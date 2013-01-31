@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -229,7 +229,7 @@ void LinearContainer::calculateChildTransforms() const
 			}
 			offset += b.size()[axis] * ( m_direction==Increasing ? 1.0f : -1.0f );
 		}
-		offset += m_spacing;
+		offset += m_spacing * ( m_direction==Increasing ? 1.0f : -1.0f );
 		
 		M44f m; m.translate( childOffset );
 		static_cast<const Gadget *>(it->get())->setTransform( m );

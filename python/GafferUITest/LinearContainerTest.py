@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -193,6 +193,24 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -4, 0 ), IECore.V3f( 1, 4, 0 ) ) )
 		self.assertEqual( first.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, 2, 0 ) ) )
 		self.assertEqual( second.getTransform(), IECore.M44f.createTranslated( IECore.V3f( 0, -2, 0 ) ) )
+	
+	def testDirectionAndSpacing( self ) :
+		
+		c = GafferUI.LinearContainer( orientation = GafferUI.LinearContainer.Orientation.Y )
+		c["g1"] = GafferUI.RenderableGadget(
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		)
+		c["g2"] = GafferUI.RenderableGadget(
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		)
+		
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
+		
+		c.setSpacing( 2 )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -3, 0 ), IECore.V3f( 1, 3, 0 ) ) )
+		
+		c.setDirection( GafferUI.LinearContainer.Direction.Decreasing )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -3, 0 ), IECore.V3f( 1, 3, 0 ) ) )
 		
 if __name__ == "__main__":
 	unittest.main()
