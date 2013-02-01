@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,7 +59,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( a["out"], s["out"] )
 		## \todo We should be able to remove the pathsToIgnore
-		self.assertSceneHashesEqual( a["out"], s["out"], pathsToIgnore = [ "/" ] )	
+		self.assertSceneHashesEqual( a["out"], s["out"], pathsToIgnore = [ "/" ] )
+		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
 		
 	def testSubTree( self ) :
 	
@@ -68,10 +69,11 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
-		s["root"].setValue( "pCube1" )
-		
+		s["root"].setValue( "/pCube1" )
+				
 		self.assertSceneValid( s["out"] )
 		self.assertScenesEqual( s["out"], a["out"], scenePlug2PathPrefix = "/pCube1" )
+		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCubeShape1", _copy = False ) ) )
 
 	@GafferTest.expectedFailure
 	def testRootHashesEqual( self ) :

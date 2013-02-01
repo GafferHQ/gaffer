@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,13 +51,13 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 			thisBound = scenePlug.bound( scenePath )
 			
-			o = scenePlug.object( scenePath )
+			o = scenePlug.object( scenePath, _copy = False )
 			if isinstance( o, IECore.VisibleRenderable ) :
 				 if not thisBound.contains( o.bound() ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
 	
 			unionOfTransformedChildBounds = IECore.Box3f()
-			childNames = scenePlug.childNames( scenePath )
+			childNames = scenePlug.childNames( scenePath, _copy = False )
 			for childName in childNames :
 				
 				if scenePath == "/" :

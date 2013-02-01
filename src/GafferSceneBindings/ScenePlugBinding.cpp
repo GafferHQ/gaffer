@@ -50,23 +50,23 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-static IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const std::string &scenePath )
+static IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const std::string &scenePath, bool copy=true )
 {
 	IECore::ConstObjectPtr o = plug.object( scenePath );
-	return o ? o->copy() : 0;
+	return copy ? o->copy() : IECore::constPointerCast<IECore::Object>( o );
 }
 
 
-static IECore::StringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const std::string &scenePath )
+static IECore::StringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const std::string &scenePath, bool copy=true )
 {
 	IECore::ConstStringVectorDataPtr n = plug.childNames( scenePath );
-	return n ? n->copy() : 0;
+	return copy ? n->copy() : IECore::constPointerCast<IECore::StringVectorData>( n );
 }
 
-static IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const std::string &scenePath )
+static IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const std::string &scenePath, bool copy=true )
 {
 	IECore::ConstCompoundObjectPtr a = plug.attributes( scenePath );
-	return a ? a->copy() : 0;
+	return copy ? a->copy() : IECore::constPointerCast<IECore::CompoundObject>( a );
 }
 
 void GafferSceneBindings::bindScenePlug()
@@ -85,9 +85,9 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "bound", &ScenePlug::bound )
 		.def( "transform", &ScenePlug::transform )
 		.def( "fullTransform", &ScenePlug::fullTransform )
-		.def( "object", &objectWrapper )
-		.def( "childNames", &childNamesWrapper )
-		.def( "attributes", &attributesWrapper )
+		.def( "object", &objectWrapper, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		// hash accessors
 		.def( "boundHash", &ScenePlug::boundHash )
 		.def( "transformHash", &ScenePlug::transformHash )
