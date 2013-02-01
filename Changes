@@ -1,3 +1,5 @@
+* Fixed exception caused by undefined subMenuDefinition in GafferUI.Menu
+
 * Catching all exception types in ErrorDialogue
 
 * Image nodes can now be disabled.

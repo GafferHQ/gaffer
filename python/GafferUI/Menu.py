@@ -183,7 +183,7 @@ class Menu( GafferUI.Widget ) :
 						subMenu = qtMenu.addMenu( label )
 						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, item.subMenu ) )
 						if recurse :
-							self.__build( subMenu, subMenuDefinition, activeOverride, recurse )
+							self.__build( subMenu, item.subMenu, activeOverride, recurse )
 							
 					else :
 				
