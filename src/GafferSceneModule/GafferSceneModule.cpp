@@ -66,6 +66,7 @@
 #include "GafferScene/RenderCamera.h"
 #include "GafferScene/SubTree.h"
 #include "GafferScene/OpenGLAttributes.h"
+#include "GafferScene/SceneWriter.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -115,6 +116,9 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
 	GafferBindings::DependencyNodeClass<Camera>();
 	GafferBindings::DependencyNodeClass<GlobalsProcessor>();
+	GafferBindings::NodeClass<SceneWriter>()
+		.def( "execute", &SceneWriter::execute )
+	;
 
 	bindDisplays();
 	bindPathMatcher();
