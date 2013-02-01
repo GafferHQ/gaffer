@@ -38,7 +38,7 @@
 #define GAFFER_CONTEXT_H
 
 #include "IECore/CompoundData.h"
-#include "IECore/Interned.h"
+#include "IECore/InternedString.h"
 
 #include "boost/signals.hpp"
 

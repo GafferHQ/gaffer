@@ -41,7 +41,7 @@
 #include "boost/signals.hpp"
 
 #include "IECore/RunTimeTyped.h"
-#include "IECore/Interned.h"
+#include "IECore/InternedString.h"
 
 #include "Gaffer/TypeIds.h"
 
