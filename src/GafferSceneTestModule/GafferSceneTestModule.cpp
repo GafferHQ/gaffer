@@ -38,7 +38,6 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/TraverseScene.h"
 
 using namespace boost::python;
 using namespace GafferSceneTest;
@@ -47,7 +46,5 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 {
 	
 	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-
-	def( "traverseScene", traverseScene );
 
 }
