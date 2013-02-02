@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -67,6 +66,7 @@
 #include "GafferScene/SubTree.h"
 #include "GafferScene/OpenGLAttributes.h"
 #include "GafferScene/SceneWriter.h"
+#include "GafferScene/SceneReader.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -116,6 +116,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
 	GafferBindings::DependencyNodeClass<Camera>();
 	GafferBindings::DependencyNodeClass<GlobalsProcessor>();
+	GafferBindings::DependencyNodeClass<SceneReader>();
 	GafferBindings::NodeClass<SceneWriter>()
 		.def( "execute", &SceneWriter::execute )
 	;
