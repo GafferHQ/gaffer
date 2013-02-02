@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -71,6 +71,7 @@
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
 #include "GafferSceneBindings/PathMatcherBinding.h"
+#include "GafferSceneBindings/SceneProceduralBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -80,20 +81,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 {
 	
 	bindScenePlug();
-	
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def(
-			init<ScenePlugPtr, const Gaffer::Context *, const std::string &, optional<const IECore::StringVectorData *> >
-			(
-				(	
-					arg( "scenePlug" ),
-					arg( "context" ),
-					arg( "scenePath" ),
-					arg( "pathsToExpand" ) = 0
-				)
-			)
-		)
-	;
+	bindSceneProcedural();
 
 	GafferBindings::DependencyNodeClass<SceneNode>();
 	GafferBindings::DependencyNodeClass<Source>();
