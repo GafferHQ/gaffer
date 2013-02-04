@@ -45,7 +45,7 @@ class Button( GafferUI.Widget ) :
 
 	__palette = None
 
-	def __init__( self, text="", image=None, hasFrame=True, **kw ) :
+	def __init__( self, text="", image=None, hasFrame=True, highlightOnOver=True, **kw ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QPushButton(), **kw )
 		
@@ -70,8 +70,9 @@ class Button( GafferUI.Widget ) :
 
 		self._qtWidget().setPalette( Button.__palette )
 
-		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
-		self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
+		if highlightOnOver :
+			self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+			self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 		
 	def setHighlighted( self, highlighted ) :
 	
