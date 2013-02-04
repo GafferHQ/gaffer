@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,21 +34,20 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENETEST_TRAVERSESCENE_H
+#define GAFFERSCENETEST_TRAVERSESCENE_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/Context.h"
+#include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/TraverseScene.h"
-
-using namespace boost::python;
-using namespace GafferSceneTest;
-
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+namespace GafferSceneTest
 {
-	
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
 
-	def( "traverseScene", &traverseScene );
+/// Traverses the entire scene once, evaluating every aspect of the scene, using parallel
+/// threads to process different children. It's useful to use this in test cases to exercise
+/// any thread related crashes, and also in profiling for performance improvement.
+void traverseScene( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context );
 
-}
+} // namespace GafferSceneTest
+
+#endif // GAFFERSCENETEST_TRAVERSESCENE_H

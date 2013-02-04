@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,21 +34,82 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "tbb/task.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferSceneTest/CompoundObjectSource.h"
 #include "GafferSceneTest/TraverseScene.h"
 
-using namespace boost::python;
-using namespace GafferSceneTest;
+using namespace std;
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+namespace GafferSceneTest
 {
-	
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
+namespace Detail
+{
 
-	def( "traverseScene", &traverseScene );
+class SceneTraversalTask : public tbb::task
+{
 
+	public :
+
+		SceneTraversalTask( ScenePlug *scenePlug, Gaffer::Context *context, const std::string &scenePath )
+			:	m_scenePlug( scenePlug ), m_context( context ), m_scenePath( scenePath )
+		{			
+		}
+
+		virtual ~SceneTraversalTask()
+		{
+		}
+
+		virtual task *execute()
+		{				
+			
+			ContextPtr context = new Context( *m_context );
+			context->set( ScenePlug::scenePathContextName, m_scenePath );
+			Context::Scope scopedContext( context );
+			
+			m_scenePlug->transformPlug()->getValue();
+			m_scenePlug->boundPlug()->getValue();
+			m_scenePlug->attributesPlug()->getValue();
+			m_scenePlug->objectPlug()->getValue();
+				
+			ConstStringVectorDataPtr childNamesData = m_scenePlug->childNamesPlug()->getValue();
+			const vector<std::string> &childNames = childNamesData->readable();
+			
+			set_ref_count( 1 + childNames.size() );
+						
+			for( vector<std::string>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
+			{
+				std::string childPath = m_scenePath;
+				if( childPath.size() > 1 )
+				{
+					childPath += "/";
+				}
+				childPath += *it;
+				SceneTraversalTask *t = new( allocate_child() ) SceneTraversalTask( m_scenePlug, m_context, childPath );
+				spawn( *t );
+			}
+			
+			wait_for_all();
+			
+			return 0;
+		}
+
+	private :
+
+		ScenePlug *m_scenePlug;
+		Context *m_context;
+		std::string m_scenePath;
+
+};
+
+} // namespace Detail
+
+void traverseScene( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
+{
+	Detail::SceneTraversalTask *task = new( tbb::task::allocate_root() ) Detail::SceneTraversalTask( scenePlug, context, "/" );
+	tbb::task::spawn_root_and_wait( *task );
 }
+
+} // namespace GafferSceneTest

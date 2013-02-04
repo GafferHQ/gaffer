@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -114,6 +115,50 @@ class InstancerTest( unittest.TestCase ) :
 			self.assertEqual( instancer["out"].transform( instancePath + "/sphere" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) )
 			self.assertEqual( instancer["out"].bound( instancePath + "/sphere" ), sphere.bound() )
 			self.assertEqual( instancer["out"].childNames( instancePath + "/sphere" ), IECore.StringVectorData() )
+
+	def testThreading( self ) :
+	
+		sphere = IECore.SpherePrimitive()
+		instanceInput = GafferSceneTest.CompoundObjectSource()
+		instanceInput["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) ),
+				"children" : {
+					"sphere" : {
+						"object" : sphere,
+						"bound" : IECore.Box3fData( sphere.bound() ),
+						"transform" : IECore.M44fData( IECore.M44f.createScaled( IECore.V3f( 2 ) ) ),
+					},
+				}
+			} )
+		)
+		
+		seeds = IECore.PointsPrimitive(
+			IECore.V3fVectorData(
+				[ IECore.V3f( 1, 0, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 0, 0, 0 ) ]
+			)
+		)
+		seedsInput = GafferSceneTest.CompoundObjectSource()
+		seedsInput["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( IECore.Box3f( IECore.V3f( 1, 0, 0 ), IECore.V3f( 2, 1, 0 ) ) ),
+				"children" : {
+					"seeds" : {
+						"bound" : IECore.Box3fData( seeds.bound() ),
+						"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) ),
+						"object" : seeds,
+					},
+				},
+			}, )
+		)
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( seedsInput["out"] )
+		instancer["instance"].setInput( instanceInput["out"] )
+		instancer["parent"].setValue( "/seeds" )
+		instancer["name"].setValue( "instances" )
+		
+		GafferSceneTest.traverseScene( instancer["out"], Gaffer.Context() )
 
 if __name__ == "__main__":
 	unittest.main()
