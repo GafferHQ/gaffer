@@ -667,7 +667,42 @@ a = A()"""
 		self.assertTrue( "b" not in s2 )
 		self.assertTrue( "n3" in s2 )
 		self.assertTrue( "n4" not in s2 )
-			
+	
+	def testActionSignal( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		cs = GafferTest.CapturingSlot( s.actionSignal() )
+		
+		# shouldn't trigger anything, because it's not in an undo context
+		s.addChild( Gaffer.Node() )
+		self.assertEqual( len( cs ), 0 )
+		
+		# should trigger something, because it's in an undo context
+		with Gaffer.UndoContext( s ) :
+			s.addChild( Gaffer.Node( "a" ) )
+		
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0].isSame( s ) )
+		self.assertTrue( isinstance( cs[0][1], Gaffer.Action ) )
+		self.assertEqual( cs[0][2], Gaffer.Action.Stage.Do )
+		
+		# undo should trigger as well
+		s.undo()
+		
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[1][0].isSame( s ) )
+		self.assertTrue( cs[1][1].isSame( cs[0][1] ) )
+		self.assertEqual( cs[1][2], Gaffer.Action.Stage.Undo )
+		
+		# as should redo
+		s.redo()
+		
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[2][0].isSame( s ) )
+		self.assertTrue( cs[2][1].isSame( cs[0][1] ) )
+		self.assertEqual( cs[2][2], Gaffer.Action.Stage.Redo )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

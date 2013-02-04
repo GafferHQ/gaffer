@@ -46,13 +46,13 @@
 #include "Gaffer/Container.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/UndoContext.h"
+#include "Gaffer/Action.h"
 
 typedef struct _object PyObject;
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Action );
 IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( ApplicationRoot );
 IE_CORE_FORWARDDECLARE( Context );
@@ -102,10 +102,20 @@ class ScriptNode : public Node
 		/// be active while those operations are being performed.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		typedef boost::signal<void ( ScriptNode *, const Action *, Action::Stage stage )> ActionSignal;
 		bool undoAvailable() const;
 		void undo();
 		bool redoAvailable() const;
 		void redo();
+		/// A signal emitted after an action is performed on the script or
+		/// one of its children. Note that this is only emitted for actions
+		/// performed within an UndoContext.
+		/// \todo Have methods on Actions to provide a textual description
+		/// of what is being done, for use in Undo/Redo menu items, history
+		/// displays etc. Also have a CompoundAction so it's easy to tell what
+		/// actions were performed together undo a single UndoContext (I think
+		/// CompoundAction would replace ActionVector).
+		ActionSignal &actionSignal();
 		//@}
 		
 		//! @name Editing
@@ -225,6 +235,7 @@ class ScriptNode : public Node
 		typedef std::list<ActionVectorPtr> UndoList;
 		typedef UndoList::iterator UndoIterator;
 		
+		ActionSignal m_actionSignal;
 		UndoStateStack m_undoStateStack; // pushed and popped by the creation and destruction of UndoContexts
 		ActionVectorPtr m_actionAccumulator; // Actions are accumulated here until the state stack hits 0 size
 		UndoList m_undoList; // then the accumulated actions are transferred to this list for storage

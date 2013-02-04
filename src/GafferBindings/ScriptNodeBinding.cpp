@@ -221,6 +221,24 @@ class ScriptNodeSerialiser : public NodeSerialiser
 	
 };
 
+struct ActionSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr script, ConstActionPtr action, Action::Stage stage )
+	{
+		try
+		{
+			slot( script, IECore::constPointerCast<Action>( action ), stage );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+	
+};
+
 void bindScriptNode()
 {
 	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
@@ -230,6 +248,7 @@ void bindScriptNode()
 		.def( "undo", &ScriptNode::undo )
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
 		.def( "redo", &ScriptNode::redo )
+		.def( "actionSignal", &ScriptNode::actionSignal, return_internal_reference<1>() )
 		.def( "copy", &ScriptNode::copy, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
 		.def( "cut", &ScriptNode::cut, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
 		.def( "paste", &ScriptNode::paste, ( arg_( "parent" ) = object() ) )
@@ -244,6 +263,8 @@ void bindScriptNode()
 		.def( "context", &context )
 	;
 	
+	SignalBinder<ScriptNode::ActionSignal, DefaultSignalCaller<ScriptNode::ActionSignal>, ActionSlotCaller>::bind( "ActionSignal" );	
+
 	SignalBinder<ScriptNode::ScriptExecutedSignal>::bind( "ScriptExecutedSignal" );
 	SignalBinder<ScriptNode::ScriptEvaluatedSignal, DefaultSignalCaller<ScriptNode::ScriptEvaluatedSignal>, ScriptEvaluatedSlotCaller>::bind( "ScriptEvaluatedSignal" );	
 

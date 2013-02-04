@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,61 +34,30 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Exception.h"
-#include "IECore/RunTimeTyped.h"
+#include "boost/python.hpp"
+
+#include "IECorePython/RefCountedBinding.h"
 
 #include "Gaffer/Action.h"
-#include "Gaffer/ScriptNode.h"
 
+#include "GafferBindings/ActionBinding.h"
+
+using namespace boost::python;
 using namespace Gaffer;
 
-Action::Action( const Function &doFn, const Function &undoFn )
-	:	m_doFn( doFn ), m_undoFn( undoFn ), m_done( false )
+namespace GafferBindings
 {
+
+void bindAction()
+{	
+	scope s = IECorePython::RefCountedClass<Action, IECore::RefCounted>( "Action" );
+
+	enum_<Action::Stage>( "Stage" )
+		.value( "Invalid", Action::Invalid )
+		.value( "Do", Action::Do )
+		.value( "Undo", Action::Undo )
+		.value( "Redo", Action::Redo )
+	;
 }
 
-Action::~Action()
-{
-}
-
-void Action::enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
-{
-	ScriptNodePtr s = IECore::runTimeCast<ScriptNode>( subject );
-	if( !s )
-	{
-		s = subject->ancestor<ScriptNode>();
-	}
-	
-	if( s && s->m_actionAccumulator )
-	{
-		ActionPtr a = new Action( doFn, undoFn );
-		a->doAction();
-		s->m_actionAccumulator->push_back( a );
-		s->actionSignal()( s, a.get(), Do );
-	}
-	else
-	{
-		doFn();
-	}
-	
-}
-	
-void Action::doAction()
-{
-	if( m_done ) 
-	{
-		throw IECore::Exception( "Action cannot be done again without being undone first." );
-	}
-	m_doFn();
-	m_done = true;
-}
-
-void Action::undoAction()
-{
-	if( !m_done ) 
-	{
-		throw IECore::Exception( "Action cannot be undone without being done first." );
-	}
-	m_undoFn();
-	m_done = false;
-}
+} // namespace GafferBindings

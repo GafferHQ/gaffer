@@ -133,6 +133,7 @@ void ScriptNode::undo()
 	for( ActionVector::reverse_iterator it=(*m_undoIterator)->rbegin(); it!=(*m_undoIterator)->rend(); it++ )
 	{
 		(*it)->undoAction();
+		actionSignal()( this, it->get(), Action::Undo );
 	}
 }
 
@@ -150,8 +151,14 @@ void ScriptNode::redo()
 	for( ActionVector::iterator it=(*m_undoIterator)->begin(); it!=(*m_undoIterator)->end(); it++ )
 	{
 		(*it)->doAction();
+		actionSignal()( this, it->get(), Action::Redo );
 	}
 	m_undoIterator++;
+}
+
+ScriptNode::ActionSignal &ScriptNode::actionSignal()
+{
+	return m_actionSignal;
 }
 
 void ScriptNode::copy( const Node *parent, const Set *filter )
