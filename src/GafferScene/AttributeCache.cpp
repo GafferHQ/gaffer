@@ -217,7 +217,10 @@ IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, con
 
 std::string AttributeCache::entryForPath( const ScenePath &path ) const
 {
-	std::string result = path;
-	std::replace( result.begin(), result.end(), '/', '-' );
+	std::string result = "";
+	for( ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
+	{
+		result += "/" + it->value();
+	}
 	return result;
 }

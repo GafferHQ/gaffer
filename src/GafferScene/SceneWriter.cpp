@@ -88,7 +88,7 @@ bool SceneWriter::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 }
 
 
-void SceneWriter::writeLocation( ScenePlug* scenePlug, const std::string& scenePath, SceneInterfacePtr output )
+void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const ScenePlug::ScenePath &scenePath, IECore::SceneInterface *output )
 {
 	ContextPtr context = new Context;
 	
@@ -126,16 +126,14 @@ void SceneWriter::writeLocation( ScenePlug* scenePlug, const std::string& sceneP
 		output->writeTransform( new IECore::M44dData( transform ), 0.0 );
 	}
 	
-	ConstStringVectorDataPtr childNames = scenePlug->childNamesPlug()->getValue();
+	ConstInternedStringVectorDataPtr childNames = scenePlug->childNamesPlug()->getValue();
 	
-	for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+	ScenePlug::ScenePath childScenePath = scenePath;
+	childScenePath.push_back( InternedString() );
+	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 	{
-		string childScenePath = scenePath;
-		if( scenePath.size() > 1 )
-		{
-			childScenePath += "/";
-		}
-		childScenePath += *it;
+		childScenePath[scenePath.size()] = *it;
+		
 		SceneInterfacePtr outputChild = output->createChild( *it );
 		
 		writeLocation( scenePlug, childScenePath, outputChild );
@@ -150,5 +148,5 @@ void SceneWriter::execute()
 
 	SceneInterfacePtr output = new SceneCache( fileNamePlug()->getValue(), IndexedIO::Write );
 	
-	writeLocation( scenePlug, "/", output );
+	writeLocation( scenePlug, ScenePlug::ScenePath(), output.get() );
 }

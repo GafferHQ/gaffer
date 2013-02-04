@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,38 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MODELCACHESOURCE_H
-#define GAFFERSCENE_MODELCACHESOURCE_H
+#ifndef GAFFERSCENEBINDINGS_SCENEPROCEDURALBINDING_H
+#define GAFFERSCENEBINDINGS_SCENEPROCEDURALBINDING_H
 
-#include "GafferScene/FileSource.h"
-
-namespace GafferScene
+namespace GafferSceneBindings
 {
 
-class ModelCacheSource : public FileSource
-{
+void bindSceneProcedural();
 
-	public :
+} // namespace GafferSceneBindings
 
-		ModelCacheSource( const std::string &name=staticTypeName() );
-		virtual ~ModelCacheSource();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ModelCacheSource, ModelCacheSourceTypeId, FileSource )
-		
-	private :
-	
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
-		
-		class Cache;
-		static Cache &cache();
-		
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_MODELCACHESOURCE_H
+#endif // GAFFERSCENEBINDINGS_SCENEPROCEDURALBINDING_H

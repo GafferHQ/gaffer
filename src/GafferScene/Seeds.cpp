@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -92,7 +93,7 @@ void Seeds::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 
 void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath=="/" )
+	if( branchPath.size() == 0 )
 	{
 		h = inPlug()->boundHash( parentPath );
 	}
@@ -100,7 +101,7 @@ void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branc
 
 Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath=="/" )
+	if( branchPath.size() == 0 )
 	{
 		 return inPlug()->bound( parentPath );
 	}
@@ -127,7 +128,7 @@ IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &
 
 void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath=="/" )
+	if( branchPath.size() == 0 )
 	{
 		h.append( inPlug()->objectHash( parentPath ) );
 		densityPlug()->hash( h );
@@ -137,7 +138,7 @@ void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &bran
 
 IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath == "/" )
+	if( branchPath.size() == 0 )
 	{
 		// do what we came for
 		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->object( parentPath ) );
@@ -162,7 +163,7 @@ void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &
 {
 }
 
-IECore::ConstStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstInternedStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	return outPlug()->childNamesPlug()->defaultValue();
 }

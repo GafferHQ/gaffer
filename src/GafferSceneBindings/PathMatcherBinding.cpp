@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -67,7 +68,7 @@ void bindPathMatcher()
 	class_<PathMatcher>( "PathMatcher" )
 		.def( "__init__", make_constructor( constructFromObject ) )
 		.def( "__init__", make_constructor( constructFromVectorData ) )
-		.def( "match", &PathMatcher::match )
+		.def( "match", (Filter::Result (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
 	;
 }
 

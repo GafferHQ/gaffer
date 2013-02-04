@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <set>
+
+#include "boost/tokenizer.hpp"
 
 #include "Gaffer/Context.h"
 
@@ -92,8 +95,8 @@ void SubTree::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *cont
 		}
 		else
 		{
-			const std::string &path = context->get<std::string>( ScenePlug::scenePathContextName );
-			std::string source = sourcePath( path );
+			const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
+			ScenePath source = sourcePath( path );
 			
 			if( output == outPlug()->boundPlug() )
 			{
@@ -103,21 +106,21 @@ void SubTree::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *cont
 			{
 				/// \todo If there were virtual hash*() methods in SceneNode
 				/// then we wouldn't need to do this check.
-				if( path != "/" )
+				if( path.size() )
 				{
 					h = inPlug()->transformHash( source );
 				}
 			}
 			else if( output == outPlug()->attributesPlug() )
 			{
-				if( path != "/" )
+				if( path.size() )
 				{
 					h = inPlug()->attributesHash( source );
 				}
 			}
 			else if( output == outPlug()->objectPlug() )
 			{
-				if( path != "/" )
+				if( path.size() )
 				{
 					h = inPlug()->objectHash( source );
 				}
@@ -150,7 +153,7 @@ IECore::ConstObjectPtr SubTree::computeObject( const ScenePath &path, const Gaff
 	return inPlug()->object( sourcePath( path ) );
 }
 
-IECore::ConstStringVectorDataPtr SubTree::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {		
 	return inPlug()->childNames( sourcePath( path ) );
 }
@@ -160,13 +163,17 @@ IECore::ConstObjectVectorPtr SubTree::computeGlobals( const Gaffer::Context *con
 	return inPlug()->globalsPlug()->getValue();
 }
 
-std::string SubTree::sourcePath( const std::string &outputPath ) const
+SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath ) const
 {
-	std::string p = rootPlug()->getValue();
-	if( p.size() && *p.rbegin() == '/' )
+	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
+	string rootAsString = rootPlug()->getValue();
+	Tokenizer rootTokenizer( rootAsString, boost::char_separator<char>( "/" ) );	
+	ScenePath result;
+	for( Tokenizer::const_iterator it = rootTokenizer.begin(), eIt = rootTokenizer.end(); it != eIt; it++ )
 	{
-		p.resize( p.size() - 1 );
+		result.push_back( *it );
 	}
-	p += outputPath;
-	return p;
+	result.insert( result.end(), outputPath.begin(), outputPath.end() );
+	return result;
 }

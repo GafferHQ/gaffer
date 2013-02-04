@@ -71,7 +71,7 @@ class SceneWriter : public Gaffer::Node
 		
 	private :
 	
-		void writeLocation( GafferScene::ScenePlug* plug, const std::string& scenePath, IECore::SceneInterfacePtr output );
+		void writeLocation( GafferScene::ScenePlug *scenePlug, const ScenePlug::ScenePath &scenePath, IECore::SceneInterface *output );
 		
 		static size_t g_firstPlugIndex;
 	

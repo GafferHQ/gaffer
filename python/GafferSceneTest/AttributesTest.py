@@ -219,7 +219,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesEqual( input["out"], a["out"], pathsToIgnore = ( "/ball1", ) )
 		
 		c = Gaffer.Context()
-		c["scene:path"] = "/ball1"
+		c["scene:path"] = IECore.InternedStringVectorData( [ "ball1" ] )
 		with c :
 			self.assertEqual( a["out"]["childNames"].hash(), input["out"]["childNames"].hash() )
 			self.assertEqual( a["out"]["transform"].hash(), input["out"]["transform"].hash() )

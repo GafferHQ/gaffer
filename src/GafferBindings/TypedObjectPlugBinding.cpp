@@ -158,6 +158,7 @@ void GafferBindings::bindTypedObjectPlug()
 	bind<IntVectorDataPlug>();
 	bind<FloatVectorDataPlug>();
 	bind<StringVectorDataPlug>();
+	bind<InternedStringVectorDataPlug>();
 	bind<V3fVectorDataPlug>();
 	bind<ObjectVectorPlug>();
 	bind<CompoundObjectPlug>();

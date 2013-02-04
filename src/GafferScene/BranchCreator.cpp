@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -108,11 +109,11 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		{	
 			ScenePath path = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			ScenePath parentPath, branchPath;
-			parentAndBranchPaths( path, parentPath, branchPath );
+			bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
 			
 			if( output == outPlug()->boundPlug() )
 			{
-				if( branchPath.size() )
+				if( onBranch )
 				{
 					SceneProcessor::hash( output, context, h );
 					hashBranchBound( parentPath, branchPath, context, h );
@@ -128,7 +129,7 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 			}
 			else if( output == outPlug()->transformPlug() )
 			{
-				if( branchPath.size() )
+				if( onBranch )
 				{
 					SceneProcessor::hash( output, context, h );
 					hashBranchTransform( parentPath, branchPath, context, h );				
@@ -140,7 +141,7 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 			}
 			else if( output == outPlug()->attributesPlug() )
 			{
-				if( branchPath.size() )
+				if( onBranch )
 				{
 					SceneProcessor::hash( output, context, h );
 					hashBranchAttributes( parentPath, branchPath, context, h );
@@ -152,7 +153,7 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 			}
 			else if( output == outPlug()->objectPlug() )
 			{
-				if( branchPath.size() )
+				if( onBranch )
 				{
 					SceneProcessor::hash( output, context, h );
 					hashBranchObject( parentPath, branchPath, context, h );
@@ -164,7 +165,7 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 			}
 			else if( output == outPlug()->childNamesPlug() )
 			{
-				if( branchPath.size() )
+				if( onBranch )
 				{
 					SceneProcessor::hash( output, context, h );
 					hashBranchChildNames( parentPath, branchPath, context, h );
@@ -190,8 +191,8 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
-	parentAndBranchPaths( path, parentPath, branchPath );
-	if( branchPath.size() )
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	if( onBranch )
 	{
 		return computeBranchBound( parentPath, branchPath, context );
 	}
@@ -208,8 +209,8 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
-	parentAndBranchPaths( path, parentPath, branchPath );
-	if( branchPath.size() )
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	if( onBranch )
 	{
 		return computeBranchTransform( parentPath, branchPath, context );
 	}
@@ -222,8 +223,8 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
-	parentAndBranchPaths( path, parentPath, branchPath );
-	if( branchPath.size() )
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	if( onBranch )
 	{
 		return computeBranchAttributes( parentPath, branchPath, context );
 	}
@@ -236,8 +237,8 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
-	parentAndBranchPaths( path, parentPath, branchPath );
-	if( branchPath.size() )
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	if( onBranch )
 	{
 		return computeBranchObject( parentPath, branchPath, context );
 	}
@@ -247,11 +248,11 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 	}
 }
 
-IECore::ConstStringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ScenePath parentPath, branchPath;
-	parentAndBranchPaths( path, parentPath, branchPath );
-	if( branchPath.size() )
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	if( onBranch )
 	{
 		return computeBranchChildNames( parentPath, branchPath, context );
 	}
@@ -262,7 +263,7 @@ IECore::ConstStringVectorDataPtr BranchCreator::computeChildNames( const ScenePa
 		/// of the old bound and the bound at the root of the branch. we could then
 		/// optimise the propagation of the bound back to the root by just unioning the
 		/// appropriately transformed branch bound with the bound from the input scene.
-		StringVectorDataPtr result = new StringVectorData;
+		InternedStringVectorDataPtr result = new InternedStringVectorData;
 		result->writable().push_back( namePlug()->getValue() );
 		return result;		
 	}
@@ -277,52 +278,51 @@ IECore::ConstObjectVectorPtr BranchCreator::computeGlobals( const Gaffer::Contex
 	return inPlug()->globalsPlug()->getValue();
 }
 
-void BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
+bool BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
 {
-	string parent = parentPlug()->getValue();
+	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	
+	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
+	string parentAsString = parentPlug()->getValue();
+	Tokenizer parentTokenizer( parentAsString, boost::char_separator<char>( "/" ) );	
+	ScenePath parent;
+	for( Tokenizer::const_iterator it = parentTokenizer.begin(), eIt = parentTokenizer.end(); it != eIt; it++ )
+	{
+		parent.push_back( *it );
+	}
+	
 	string name = namePlug()->getValue();
 	
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-
-	Tokenizer parentTokenizer( parent, boost::char_separator<char>( "/" ) );	
-	Tokenizer pathTokenizer( path, boost::char_separator<char>( "/" ) );
-	
-	Tokenizer::iterator parentIterator, pathIterator;
+	ScenePath::const_iterator parentIterator, parentIteratorEnd, pathIterator, pathIteratorEnd;
 	
 	for(
-		parentIterator = parentTokenizer.begin(), pathIterator = pathTokenizer.begin();	
-		parentIterator != parentTokenizer.end() && pathIterator != pathTokenizer.end();
+		parentIterator = parent.begin(), parentIteratorEnd = parent.end(),
+		pathIterator = path.begin(), pathIteratorEnd = path.end();	
+		parentIterator != parentIteratorEnd && pathIterator != pathIteratorEnd;
 		parentIterator++, pathIterator++
 	)
 	{
 		if( *parentIterator != *pathIterator )
 		{
-			return;
+			return false;
 		}
 	}
 	
-	if( pathIterator == pathTokenizer.end() )
+	if( pathIterator == pathIteratorEnd )
 	{
 		// ancestor of parent, or parent itself
 		parentPath = parent;
-		return;
+		return false;
 	}
 	
 	if( *pathIterator++ != name )
 	{
 		// another child of parent, one we don't need to worry about
-		return;
+		return false;
 	}
 	
 	// somewhere on the new branch
 	parentPath = parent;
-	branchPath = "/";
-	while( pathIterator != pathTokenizer.end() )
-	{
-		if( branchPath.size() > 1 )
-		{
-			branchPath += "/";
-		}
-		branchPath += *pathIterator++;
-	}
+	branchPath.insert( branchPath.end(), pathIterator, pathIteratorEnd );
+	return true;
 }

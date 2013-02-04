@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,38 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MODELCACHESOURCE_H
-#define GAFFERSCENE_MODELCACHESOURCE_H
+#include "boost/python.hpp"
 
-#include "GafferScene/FileSource.h"
+#include "IECorePython/RefCountedBinding.h"
 
-namespace GafferScene
+#include "Gaffer/Context.h"
+
+#include "GafferScene/SceneProcedural.h"
+
+#include "GafferSceneBindings/ScenePlugBinding.h"
+#include "GafferSceneBindings/SceneProceduralBinding.h"
+
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferScene;
+
+static SceneProceduralPtr construct( ScenePlugPtr scenePlug, Gaffer::ContextPtr context, object scenePath, const IECore::StringVectorDataPtr pathsToExpand = 0 )
+{
+	ScenePlug::ScenePath p;
+	GafferSceneBindings::objectToScenePath( scenePath, p );
+	return new SceneProcedural( scenePlug, context, p, pathsToExpand );
+}
+
+void GafferSceneBindings::bindSceneProcedural()
 {
 
-class ModelCacheSource : public FileSource
-{
-
-	public :
-
-		ModelCacheSource( const std::string &name=staticTypeName() );
-		virtual ~ModelCacheSource();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ModelCacheSource, ModelCacheSourceTypeId, FileSource )
+	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
+		.def( "__init__", make_constructor(
 		
-	private :
+				construct,
+				default_call_policies(),
+				(	
+					boost::python::arg( "scenePlug" ),
+					boost::python::arg( "context" ),
+					boost::python::arg( "scenePath" ),
+					boost::python::arg( "pathsToExpand" ) = IECore::StringVectorDataPtr( 0 )
+				)
+			)
+		)
+	;
 	
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
-		
-		class Cache;
-		static Cache &cache();
-		
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_MODELCACHESOURCE_H
+}

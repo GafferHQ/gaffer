@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -53,15 +54,15 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		s["parent"].setValue( "/plane" )
 		s["name"].setValue( "seeds" )
 				
-		self.assertEqual( s["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane" ), IECore.StringVectorData( [ "seeds" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane/seeds" ), IECore.StringVectorData() )
+		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane/seeds" ), IECore.InternedStringVectorData() )
 
 		s["name"].setValue( "points" )
 		
-		self.assertEqual( s["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane" ), IECore.StringVectorData( [ "points" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane/points" ), IECore.StringVectorData() )
+		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "points" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane/points" ), IECore.InternedStringVectorData() )
 	
 	def testObject( self ) :
 	

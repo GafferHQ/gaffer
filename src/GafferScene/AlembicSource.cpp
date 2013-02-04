@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -160,11 +161,14 @@ IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, cons
 	return result;
 }
 
-IECore::ConstStringVectorDataPtr AlembicSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr AlembicSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
-		return i->childNames();
+		ConstStringVectorDataPtr c = i->childNames();
+		InternedStringVectorDataPtr result = new InternedStringVectorData;
+		result->writable().insert( result->writable().end(), c->readable().begin(), c->readable().end() );
+		return result;
 	}
 	else
 	{
@@ -178,14 +182,11 @@ IECore::ConstObjectVectorPtr AlembicSource::computeGlobals( const Gaffer::Contex
 }
 
 IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &path ) const
-{
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer tokens( path, boost::char_separator<char>( "/" ) );
-	
+{	
 	AlembicInputPtr result = Detail::alembicInputCache()->get( fileNamePlug()->getValue() );
-	for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
+	for( ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
 	{	
-		result = result->child( *tIt );
+		result = result->child( it->value() );
 	}
 	
 	return result;

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -76,16 +77,16 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( output == scenePlug->boundPlug() )
 		{
-			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
+			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			static_cast<AtomicBox3fPlug *>( output )->setValue(
 				computeBound( scenePath, context, scenePlug )
 			);
 		}
 		else if( output == scenePlug->transformPlug() )
 		{
-			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
+			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			M44f transform;
-			if( scenePath != "/" ) // scene root must have identity transform
+			if( scenePath.size() ) // scene root must have identity transform
 			{
 				transform = computeTransform( scenePath, context, scenePlug );
 			}
@@ -93,9 +94,9 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->attributesPlug() )
 		{
-			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
+			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			CompoundObjectPlug *attributesPlug = static_cast<CompoundObjectPlug *>( output );
-			if( scenePath != "/" ) // scene root must have no attributes
+			if( scenePath.size() ) // scene root must have no attributes
 			{
 				attributesPlug->setValue( computeAttributes( scenePath, context, scenePlug ) );
 			}
@@ -106,9 +107,9 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
-			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
+			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			ObjectPlug *objectPlug = static_cast<ObjectPlug *>( output );
-			if( scenePath != "/" ) // scene root must have no object
+			if( scenePath.size() ) // scene root must have no object
 			{
 				objectPlug->setValue( computeObject( scenePath, context, scenePlug ) );
 			}
@@ -119,8 +120,8 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->childNamesPlug() )
 		{
-			std::string scenePath = context->get<std::string>( ScenePlug::scenePathContextName );
-			static_cast<StringVectorDataPlug *>( output )->setValue(
+			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+			static_cast<InternedStringVectorDataPlug *>( output )->setValue(
 				computeChildNames( scenePath, context, scenePlug )
 			);
 		}
@@ -136,18 +137,15 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const
 {
 	IECore::MurmurHash result;
-	ConstStringVectorDataPtr childNames = out->childNames( path );
-	if( childNames )
+	ConstInternedStringVectorDataPtr childNamesData = out->childNames( path );
+	vector<InternedString> childNames = childNamesData->readable();
+	if( childNames.size() )
 	{
-		for( vector<string>::const_iterator it = childNames->readable().begin(); it != childNames->readable().end(); it++ )
+		ScenePath childPath( path );
+		childPath.push_back( InternedString() ); // room for the child name
+		for( vector<InternedString>::const_iterator it = childNames.begin(); it != childNames.end(); it++ )
 		{
-			string childPath = path;
-			if( childPath.size() > 1 )
-			{	
-				childPath += "/";
-			}
-			childPath += *it;
-			
+			childPath[path.size()] = *it;
 			result.append( out->boundHash( childPath ) );
 			result.append( out->transformHash( childPath ) );
 		}
@@ -163,21 +161,17 @@ IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &pat
 Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const
 {
 	Box3f result;
-	ConstStringVectorDataPtr childNames = out->childNames( path );
-	if( childNames )
+	ConstInternedStringVectorDataPtr childNamesData = out->childNames( path );
+	vector<InternedString> childNames = childNamesData->readable();
+	
+	ScenePath childPath( path );
+	childPath.push_back( InternedString() ); // room for the child name
+	for( vector<InternedString>::const_iterator it = childNames.begin(); it != childNames.end(); it++ )
 	{
-		for( vector<string>::const_iterator it = childNames->readable().begin(); it != childNames->readable().end(); it++ )
-		{
-			string childPath = path;
-			if( childPath.size() > 1 )
-			{	
-				childPath += "/";
-			}
-			childPath += *it;
-			Box3f childBound = out->bound( childPath );
-			childBound = transform( childBound, out->transform( childPath ) );
-			result.extendBy( childBound );
-		}
+		childPath[path.size()] = *it;
+		Box3f childBound = out->bound( childPath );
+		childBound = transform( childBound, out->transform( childPath ) );
+		result.extendBy( childBound );
 	}
 	return result;
 }

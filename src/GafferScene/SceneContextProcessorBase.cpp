@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -73,7 +74,7 @@ IECore::ConstObjectPtr SceneContextProcessorBase::computeObject( const ScenePath
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeObject" );
 }
 
-IECore::ConstStringVectorDataPtr SceneContextProcessorBase::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr SceneContextProcessorBase::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeChildNames" );
 }

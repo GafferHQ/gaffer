@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/lexical_cast.hpp"
+
+#include "IECore/VectorTypedData.h"
 
 #include "Gaffer/Context.h"
 
@@ -113,9 +116,12 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	ConstV3fVectorDataPtr p = sourcePoints( parentPath );
 	if( p )
 	{
+		ScenePath branchChildPath( branchPath );
+		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
 		for( size_t i=0; i<p->readable().size(); i++ )
 		{
-			std::string branchChildPath = branchPath + boost::lexical_cast<string>( i );
+			/// \todo We could have a very fast InternedString( int ) constructor rather than all this lexical cast nonsense
+			branchChildPath[branchChildPath.size()-1] = boost::lexical_cast<string>( i );
 			Box3f branchChildBound = computeBranchBound( parentPath, branchChildPath, context );
 			branchChildBound = transform( branchChildBound, computeBranchTransform( parentPath, branchChildPath, context ) );
 			result.extendBy( branchChildBound );			
@@ -134,7 +140,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 		h = instancePlug()->transformPlug()->hash();
 	}
 	
-	if( branchPath.size() > 1 && branchPath.find( '/', 1 ) == string::npos )
+	if( branchPath.size() == 1 )
 	{
 		h.append( inPlug()->objectHash( parentPath ) );
 		h.append( instanceIndex( branchPath ) );
@@ -151,7 +157,7 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 		result = instancePlug()->transformPlug()->getValue();
 	}
 	
-	if( branchPath.size() > 1 && branchPath.find( '/', 1 ) == string::npos )
+	if( branchPath.size() == 1 )
 	{
 		int index = instanceIndex( branchPath );
 		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
@@ -209,7 +215,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 
 void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath == "/" )
+	if( branchPath.size() == 0 )
 	{
 		namePlug()->hash( h );
 		h.append( inPlug()->objectHash( parentPath ) );
@@ -222,9 +228,9 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	}
 }
 
-IECore::ConstStringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
+IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath == "/" )
+	if( branchPath.size() == 0 )
 	{
 		std::string name = namePlug()->getValue();
 		if( !name.size() )
@@ -237,7 +243,7 @@ IECore::ConstStringVectorDataPtr Instancer::computeBranchChildNames( const Scene
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
 		
-		StringVectorDataPtr result = new StringVectorData();
+		InternedStringVectorDataPtr result = new InternedStringVectorData();
 		for( size_t i=0; i<p->readable().size(); i++ )
 		{
 			result->writable().push_back( boost::lexical_cast<string>( i ) );
@@ -266,29 +272,21 @@ ConstV3fVectorDataPtr Instancer::sourcePoints( const ScenePath &parentPath ) con
 
 int Instancer::instanceIndex( const ScenePath &branchPath ) const
 {
-	size_t p = branchPath.find( '/', 1 );
-	std::string number( branchPath, 1, p != string::npos ? p-1 : p );
-	return boost::lexical_cast<int>( number );
+	return boost::lexical_cast<int>( branchPath[0].value() );
 }
 
 Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const
 {
-	if( branchPath=="/" )
+	if( branchPath.size() == 0 )
 	{
 		return 0;
 	}
 	
 	ContextPtr result = new Context( *parentContext );
 
-	size_t s = branchPath.find( '/', 1 );
-	if( s == string::npos )
-	{
-		result->set( ScenePlug::scenePathContextName, string( "/" ) );
-	}
-	else
-	{
-		result->set( ScenePlug::scenePathContextName, string( branchPath, s ) );
-	}	
+	InternedStringVectorDataPtr instancePath = new InternedStringVectorData;
+	instancePath->writable().insert( instancePath->writable().end(), branchPath.begin() + 1, branchPath.end() );
+	result->set( ScenePlug::scenePathContextName, instancePath.get() );
 	
 	result->set( "instancer:id", instanceIndex( branchPath ) );
 	

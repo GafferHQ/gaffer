@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -166,7 +167,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		] :
 		
 			c = Gaffer.Context()
-			c["scene:path"] = path
+			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )
 	
@@ -186,7 +187,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		] :
 		
 			c = Gaffer.Context()
-			c["scene:path"] = path
+			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )
 
@@ -200,7 +201,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		)
 		
 		c = Gaffer.Context()
-		c["scene:path"] = "/a/s"
+		c["scene:path"] = IECore.InternedStringVectorData( [ "a", "s" ] )
 		with c :
 			self.assertEqual( f["match"].getValue(), int( GafferScene.Filter.Result.Match ) )
 
@@ -230,7 +231,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		] :
 		
 			c = Gaffer.Context()
-			c["scene:path"] = path
+			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )
 
@@ -260,7 +261,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		] :
 		
 			c = Gaffer.Context()
-			c["scene:path"] = path
+			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )
 	
@@ -282,7 +283,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		 ] :
 		
 			c = Gaffer.Context()
-			c["scene:path"] = path
+			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )		
 

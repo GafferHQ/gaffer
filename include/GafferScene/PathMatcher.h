@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,6 +66,7 @@ class PathMatcher
 		void clear();
 		
 		Filter::Result match( const std::string &path ) const;
+		Filter::Result match( const std::vector<IECore::InternedString> &path ) const;
 		
 	private :
 
@@ -73,7 +75,9 @@ class PathMatcher
 		struct Node;
 		
 		void addPath( const std::string &path );
-		void matchWalk( Node *node, const TokenIterator &start, const TokenIterator &end, Filter::Result &result ) const;
+		
+		template<typename NameIterator>
+		void matchWalk( Node *node, const NameIterator &start, const NameIterator &end, Filter::Result &result ) const;
 		
 		boost::shared_ptr<Node> m_root;
 		

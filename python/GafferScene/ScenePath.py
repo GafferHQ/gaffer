@@ -86,7 +86,7 @@ class ScenePath( Gaffer.Path ) :
 		if childNames is None :
 			return []
 		
-		return [ ScenePath( self.__scenePlug, self.__context, self[:] + [ x ] ) for x in childNames ]
+		return [ ScenePath( self.__scenePlug, self.__context, self[:] + [ x.value() ] ) for x in childNames ]
 	
 	def copy( self ) :
 	

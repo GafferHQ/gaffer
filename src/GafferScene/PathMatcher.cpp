@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -207,7 +208,21 @@ Filter::Result PathMatcher::match( const std::string &path ) const
 	return result;
 }
 
-void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const TokenIterator &end, Filter::Result &result ) const
+Filter::Result PathMatcher::match( const std::vector<IECore::InternedString> &path ) const
+{
+   Node *node = m_root.get();
+   if( !node )
+   {
+       return Filter::NoMatch;
+   }
+
+	Filter::Result result = Filter::NoMatch;
+	matchWalk( node, path.begin(), path.end(), result );
+	return result;
+}
+
+template<typename NameIterator>
+void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIterator &end, Filter::Result &result ) const
 {
 	// either we've matched to the end of the path
 	if( start == end )
@@ -220,7 +235,7 @@ void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const Token
 	Node::ChildMapRange range = node->childRange( *start );
 	if( range.first != range.second )
 	{
-		TokenIterator newStart = start; newStart++;
+		NameIterator newStart = start; newStart++;
 		for( Node::ChildMapIterator it = range.first; it != range.second; it++ )
 		{
 			if( Detail::wildcardMatch( start->c_str(), it->first.c_str() ) )
@@ -239,7 +254,7 @@ void PathMatcher::matchWalk( Node *node, const TokenIterator &start, const Token
 	
 	if( node->ellipsis )
 	{
-		TokenIterator newStart = start;
+		NameIterator newStart = start;
 		while( newStart != end )
 		{
 			matchWalk( node->ellipsis, newStart, end, result );

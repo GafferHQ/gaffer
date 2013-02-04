@@ -60,10 +60,10 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "camera" ] ) )
+		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "camera" ] ) )
 		
 		self.assertEqual( p["out"].transform( "/camera" ), IECore.M44f() )
-		self.assertEqual( p["out"].childNames( "/camera" ), IECore.StringVectorData() )
+		self.assertEqual( p["out"].childNames( "/camera" ), IECore.InternedStringVectorData() )
 		
 		o = p["out"].object( "/camera" )
 		self.failUnless( isinstance( o, IECore.Camera ) )
@@ -82,7 +82,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	
 		for path in [ "/", "/camera" ] :
 			c = Gaffer.Context()
-			c["scene:path"] = path
+			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertHashesValid( p )	
 	

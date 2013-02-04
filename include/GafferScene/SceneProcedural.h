@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,6 +41,9 @@
 #include "IECore/Renderer.h"
 #include "IECore/Camera.h"
 
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/PathMatcher.h"
+
 namespace Gaffer
 {
 
@@ -49,8 +53,6 @@ IE_CORE_FORWARDDECLARE( Context )
 
 namespace GafferScene
 {
-
-IE_CORE_FORWARDDECLARE( ScenePlug )
 
 /// The SceneProcedural class passes the output from a ScenePlug to an IECore::Renderer
 /// in a tree of nested deferred procedurals. See the python ScriptProcedural for 
@@ -64,7 +66,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath="/", const IECore::StringVectorData *pathsToExpand = 0 );
+		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::StringVectorData *pathsToExpand = 0 );
 		virtual ~SceneProcedural();
 		
 		virtual Imath::Box3f bound() const;
@@ -72,14 +74,13 @@ class SceneProcedural : public IECore::Renderer::Procedural
 				
 	protected :
 		
-		SceneProcedural( const SceneProcedural &other, const std::string &scenePath );
+		SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath );
 		
 		ScenePlugPtr m_scenePlug;
 		Gaffer::ContextPtr m_context;
-		std::string m_scenePath;
+		ScenePlug::ScenePath m_scenePath;
 		
-		typedef std::set<std::string> ExpandedPathsSet;
-		boost::shared_ptr<ExpandedPathsSet> m_pathsToExpand;
+		boost::shared_ptr<PathMatcher> m_pathsToExpand;
 		
 	private :
 	

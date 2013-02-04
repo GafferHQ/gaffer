@@ -92,8 +92,8 @@ class ScenePlug : public Gaffer::CompoundPlug
 		const Gaffer::ObjectPlug *objectPlug() const;
 		/// The plug used to pass the names of the child nodes of the current node
 		/// in the scene graph.
-		Gaffer::StringVectorDataPlug *childNamesPlug();
-		const Gaffer::StringVectorDataPlug *childNamesPlug() const;
+		Gaffer::InternedStringVectorDataPlug *childNamesPlug();
+		const Gaffer::InternedStringVectorDataPlug *childNamesPlug() const;
 		/// The plug used to pass renderer options including displays etc,
 		/// represented as an ObjectVector of IECore::PreWorldRenderables.
 		/// Note that this is not sensitive to the "scene:path" context
@@ -102,6 +102,9 @@ class ScenePlug : public Gaffer::CompoundPlug
 		const Gaffer::ObjectVectorPlug *globalsPlug() const;
 		//@}
 		
+		/// The type used to specify the current scene path in
+		/// a Context object.
+		typedef std::vector<IECore::InternedString> ScenePath;
 		/// The name used to specify the current scene path in a
 		/// Context object. You should use this variable instead
 		/// of hardcoding strings - it is both less error prone
@@ -115,18 +118,18 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// appropriate child plug.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		Imath::Box3f bound( const std::string &scenePath ) const;
-		Imath::M44f transform( const std::string &scenePath ) const;
-		Imath::M44f fullTransform( const std::string &scenePath ) const;
-		IECore::ConstCompoundObjectPtr attributes( const std::string &scenePath ) const;
-		IECore::ConstObjectPtr object( const std::string &scenePath ) const;
-		IECore::ConstStringVectorDataPtr childNames( const std::string &scenePath ) const;
+		Imath::Box3f bound( const ScenePath &scenePath ) const;
+		Imath::M44f transform( const ScenePath &scenePath ) const;
+		Imath::M44f fullTransform( const ScenePath &scenePath ) const;
+		IECore::ConstCompoundObjectPtr attributes( const ScenePath &scenePath ) const;
+		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
+		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
 		
-		IECore::MurmurHash boundHash( const std::string &scenePath ) const;
-		IECore::MurmurHash transformHash( const std::string &scenePath ) const;
-		IECore::MurmurHash attributesHash( const std::string &scenePath ) const;
-		IECore::MurmurHash objectHash( const std::string &scenePath ) const;
-		IECore::MurmurHash childNamesHash( const std::string &scenePath ) const;		
+		IECore::MurmurHash boundHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash transformHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash attributesHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;		
 		//@}
 	
 };

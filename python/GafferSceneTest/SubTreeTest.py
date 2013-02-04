@@ -58,8 +58,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( s["out"] )
 
 		self.assertScenesEqual( a["out"], s["out"] )
-		## \todo We should be able to remove the pathsToIgnore
-		self.assertSceneHashesEqual( a["out"], s["out"], pathsToIgnore = [ "/" ] )
+		self.assertSceneHashesEqual( a["out"], s["out"] )
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
 		
 	def testSubTree( self ) :

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -86,13 +87,14 @@ void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer
 
 void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h.append( context->get<string>( ScenePlug::scenePathContextName ) );
+	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	h.append( &(path[0]), path.size() );
 	pathsPlug()->hash( h );
 }
 
 Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
 {
-	const std::string &path = context->get<string>( ScenePlug::scenePathContextName );
+	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	return m_matcher.match( path );
 }
 

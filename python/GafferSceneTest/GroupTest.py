@@ -78,22 +78,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "topLevel" ] ) )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.StringVectorData( [ "group" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "group" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/group" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel/group" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/group" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/group" ), IECore.StringVectorData( [ "sphere" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel/group" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/group/sphere" ), sphere )
 		self.assertEqual( group["out"].transform( "/topLevel/group/sphere" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/group/sphere" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/group/sphere" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/group/sphere" ), IECore.InternedStringVectorData() )
 	
 	def testTransform( self ) :
 	
@@ -128,17 +128,17 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), groupedRootBound )
-		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "group" ] ) )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group" ] ) )
 		
 		self.assertEqual( group["out"].object( "/group" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/group" ), IECore.M44f.createTranslated( IECore.V3f( 0, 1, 0 ) ) )
 		self.assertEqual( group["out"].bound( "/group" ), originalRootBound )
-		self.assertEqual( group["out"].childNames( "/group" ), IECore.StringVectorData( [ "sphere" ] ) )
+		self.assertEqual( group["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 	
 		self.assertEqual( group["out"].object( "/group/sphere" ), sphere )
 		self.assertEqual( group["out"].transform( "/group/sphere" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( group["out"].bound( "/group/sphere" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/group/sphere" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/group/sphere" ), IECore.InternedStringVectorData() )
 	
 	def testAddAndRemoveInputs( self ) :
 	
@@ -222,32 +222,32 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), combinedBound )
-		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "topLevel" ] ) )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
-		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.StringVectorData( [ "sphereGroup", "planeGroup" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "sphereGroup", "planeGroup" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/sphereGroup" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel/sphereGroup" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/sphereGroup" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/sphereGroup" ), IECore.StringVectorData( [ "sphere" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel/sphereGroup" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/sphereGroup/sphere" ), sphere )
 		self.assertEqual( group["out"].transform( "/topLevel/sphereGroup/sphere" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/sphereGroup/sphere" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/sphereGroup/sphere" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/sphereGroup/sphere" ), IECore.InternedStringVectorData() )
 		
 		self.assertEqual( group["out"].object( "/topLevel/planeGroup" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel/planeGroup" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/planeGroup" ), plane.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/planeGroup" ), IECore.StringVectorData( [ "plane" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel/planeGroup" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/planeGroup/plane" ), plane )
 		self.assertEqual( group["out"].transform( "/topLevel/planeGroup/plane" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/planeGroup/plane" ), plane.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/planeGroup/plane" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/planeGroup/plane" ), IECore.InternedStringVectorData() )
 	
 	def testNameClashes( self ) :
 	
@@ -290,22 +290,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), combinedBound )
-		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "topLevel" ] ) )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
-		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.StringVectorData( [ "myLovelyObject", "myLovelyObject1" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "myLovelyObject", "myLovelyObject1" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject" ), sphere )
 		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject" ), IECore.InternedStringVectorData() )
 		
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject1" ), plane )
 		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject1" ), plane.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), IECore.InternedStringVectorData() )
 	
 	def testSerialisationOfDynamicInputs( self ) :
 	
@@ -369,22 +369,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), combinedBound )
-		self.assertEqual( group["out"].childNames( "/" ), IECore.StringVectorData( [ "topLevel" ] ) )
+		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
-		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.StringVectorData( [ "myLovelyObject1", "myLovelyObject2" ] ) )
+		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "myLovelyObject1", "myLovelyObject2" ] ) )
 		
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject1" ), sphere )
 		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject1" ), sphere.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), IECore.InternedStringVectorData() )
 		
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject2" ), plane )
 		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject2" ), IECore.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject2" ), plane.bound() )
-		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject2" ), IECore.StringVectorData() )
+		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject2" ), IECore.InternedStringVectorData() )
 	
 	def testNameClashesWithThreading( self ) :
 	

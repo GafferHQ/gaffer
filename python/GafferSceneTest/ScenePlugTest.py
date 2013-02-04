@@ -105,6 +105,24 @@ class ScenePlugTest( unittest.TestCase ) :
 		self.assertEqual( s2.getFlags(), s1.getFlags() )
 		self.assertEqual( s2.direction(), Gaffer.Plug.Direction.In )
 	
+	def testAccessorOverloads( self ) :
+	
+		p = GafferScene.Plane()
+		
+		self.assertEqual( p["out"].attributes( "/plane" ), p["out"].attributes( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].transform( "/plane" ), p["out"].transform( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].object( "/plane" ), p["out"].object( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].bound( "/plane" ), p["out"].bound( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].childNames( "/plane" ), p["out"].childNames( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+	
+		self.assertEqual( p["out"].attributesHash( "/plane" ), p["out"].attributesHash( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].transformHash( "/plane" ), p["out"].transformHash( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].objectHash( "/plane" ), p["out"].objectHash( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].boundHash( "/plane" ), p["out"].boundHash( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		self.assertEqual( p["out"].childNamesHash( "/plane" ), p["out"].childNamesHash( IECore.InternedStringVectorData( [ "plane" ] ) ) )
+		
+		self.assertRaises( TypeError, p["out"].boundHash, 10 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

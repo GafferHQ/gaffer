@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,12 +58,12 @@ class PlaneTest( unittest.TestCase ) :
 		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-		self.assertEqual( p["out"].childNames( "/" ), IECore.StringVectorData( [ "plane" ] ) )
+		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 		
 		self.assertEqual( p["out"].object( "/plane" ), IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
 		self.assertEqual( p["out"].transform( "/plane" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
-		self.assertEqual( p["out"].childNames( "/plane" ), IECore.StringVectorData() )
+		self.assertEqual( p["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 	
 	def testAffects( self ) :
 	

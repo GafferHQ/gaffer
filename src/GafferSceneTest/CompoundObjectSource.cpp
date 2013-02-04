@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -123,7 +124,7 @@ IECore::ConstObjectPtr CompoundObjectSource::computeObject( const ScenePath &pat
 	}
 }
 
-IECore::ConstStringVectorDataPtr CompoundObjectSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr CompoundObjectSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	ConstCompoundObjectPtr entry = entryForPath( path );
 	ConstCompoundObjectPtr children = entry->member<CompoundObject>( "children" );
@@ -131,7 +132,7 @@ IECore::ConstStringVectorDataPtr CompoundObjectSource::computeChildNames( const 
 	{
 		return outPlug()->childNamesPlug()->defaultValue();
 	}
-	StringVectorDataPtr result = new StringVectorData;
+	InternedStringVectorDataPtr result = new InternedStringVectorData;
 	for( CompoundObject::ObjectMap::const_iterator it = children->members().begin(); it!=children->members().end(); it++ )
 	{
 		result->writable().push_back( it->first.value() );
@@ -146,19 +147,16 @@ IECore::ConstObjectVectorPtr CompoundObjectSource::computeGlobals( const Gaffer:
 
 const IECore::CompoundObject *CompoundObjectSource::entryForPath( const ScenePath &path ) const
 {
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer tokens( path, boost::char_separator<char>( "/" ) );
-	
 	const CompoundObject *result = runTimeCast<const CompoundObject>( inPlug()->getValue() );
 	if( !result )
 	{
 		throw Exception( "Input plug has no value" );
 	}
 		
-	for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
+	for( ScenePath::const_iterator it=path.begin(); it!=path.end(); it++ )
 	{	
 		result = result->member<CompoundObject>( "children", true /* throw exceptions */ );
-		result = result->member<CompoundObject>( *tIt, true /* throw exceptions */ );
+		result = result->member<CompoundObject>( *it, true /* throw exceptions */ );
 	}
 	
 	return result;

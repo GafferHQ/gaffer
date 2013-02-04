@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,8 +38,14 @@
 #ifndef GAFFERSCENEBINDINGS_SCENEPLUGBINDING_H
 #define GAFFERSCENEBINDINGS_SCENEPLUGBINDING_H
 
+#include "boost/python.hpp"
+
+#include "GafferScene/ScenePlug.h"
+
 namespace GafferSceneBindings
 {
+
+void objectToScenePath( boost::python::object o, GafferScene::ScenePlug::ScenePath &path );
 
 void bindScenePlug();
 

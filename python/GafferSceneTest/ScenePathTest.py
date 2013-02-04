@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,38 +34,25 @@
 #  
 ##########################################################################
 
+import os
+import unittest
+
+import Gaffer
 import GafferScene
 
-from _GafferSceneTest import *
+class ScenePathTest( unittest.TestCase ) :
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from OpenGLAttributesTest import OpenGLAttributesTest
-from RenderCameraTest import RenderCameraTest
-from SceneReadWriteTest import SceneReadWriteTest
-from ScenePathTest import ScenePathTest
-
+	def test( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+		
+		p = GafferScene.ScenePath( a["out"], Gaffer.Context(), "/" )
+		c = p.children()
+	
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( str( c[0] ), "/group1" )
+	
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
+	

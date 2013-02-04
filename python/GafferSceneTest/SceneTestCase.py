@@ -60,10 +60,8 @@ class SceneTestCase( GafferTest.TestCase ) :
 			childNames = scenePlug.childNames( scenePath, _copy = False )
 			for childName in childNames :
 				
-				if scenePath == "/" :
-					childPath = scenePath + childName
-				else :
-					childPath = scenePath + "/" + childName
+				childPath = IECore.InternedStringVectorData( scenePath )
+				childPath.append( childName )
 				
 				childBound = scenePlug.bound( childPath )
 				childTransform = scenePlug.transform( childPath )
@@ -82,7 +80,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 		self.assertEqual( scenePlug.object( "/" ), IECore.NullObject() )
 		
 		# then walk the scene to check the bounds
-		walkScene( "/" )
+		walkScene( IECore.InternedStringVectorData() )
 
 	def __childPlugNames( self, childPlugNames, childPlugNamesToIgnore ) :
 	
@@ -103,20 +101,27 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
 			
-		def walkScene( scenePath ) :
+		def walkScene( scenePath1, scenePath2 ) :
 
-			if scenePath not in pathsToIgnore :
-				self.assertPathsEqual( scenePlug1, scenePath, scenePlug2, scenePlug2PathPrefix + scenePath, childPlugNames, childPlugNamesToIgnore )
-			childNames = scenePlug1.childNames( scenePath )
+			if scenePath1 not in pathsToIgnore :
+				self.assertPathsEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames, childPlugNamesToIgnore )
+			childNames = scenePlug1.childNames( scenePath1 )
 			for childName in childNames :
-				if scenePath == "/" :
-					childPath = scenePath + childName
-				else :
-					childPath = scenePath + "/" + childName
-		
-				walkScene( childPath )
+				
+				childPath1 = IECore.InternedStringVectorData( scenePath1 )
+				childPath1.append( childName )
+				
+				childPath2 = IECore.InternedStringVectorData( scenePath2 )
+				childPath2.append( childName )
+				
+				walkScene( childPath1, childPath2 )
 	
-		walkScene( "/" )
+		scenePath1 = IECore.InternedStringVectorData()
+		scenePath2 = IECore.InternedStringVectorData()
+		if scenePlug2PathPrefix :
+			scenePath2.extend( IECore.InternedStringVectorData( scenePlug2PathPrefix[1:].split( "/" ) ) )
+					
+		walkScene( scenePath1, scenePath2 )
 
 	def assertPathHashesEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames = None, childPlugNamesToIgnore = () ) :
 	
@@ -143,19 +148,18 @@ class SceneTestCase( GafferTest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = scenePath
 			with c :
-				if scenePath not in pathsToIgnore :
+				if ( not pathsToIgnore ) or ( self.__pathToString( scenePath ) not in pathsToIgnore ) :
 					for childPlugName in childPlugNames :
 						self.assertEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
-				childNames = scenePlug1["childNames"].getValue() or []
+				childNames = scenePlug1["childNames"].getValue()
 				for childName in childNames :
-					if scenePath == "/" :
-						childPath = scenePath + childName
-					else :
-						childPath = scenePath + "/" + childName
+					
+					childPath = IECore.InternedStringVectorData( scenePath )
+					childPath.append( childName )
 			
 					walkScene( childPath )
 		
-		walkScene( "/" )
+		walkScene( IECore.InternedStringVectorData() )
 		
 	def assertSceneHashesNotEqual( self, scenePlug1, scenePlug2, childPlugNames = None, childPlugNamesToIgnore = (), pathsToIgnore = () ) :
 	
@@ -166,19 +170,18 @@ class SceneTestCase( GafferTest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = scenePath
 			with c :
-				if scenePath not in pathsToIgnore :
+				if ( not pathsToIgnore ) or ( self.__pathToString( scenePath ) not in pathsToIgnore ) :
 					for childPlugName in childPlugNames :
 						self.assertNotEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
 				childNames = scenePlug1["childNames"].getValue() or []
 				for childName in childNames :
-					if scenePath == "/" :
-						childPath = scenePath + childName
-					else :
-						childPath = scenePath + "/" + childName
+				
+					childPath = IECore.InternedStringVectorData( scenePath )
+					childPath.append( childName )
 			
 					walkScene( childPath )
 		
-		walkScene( "/" )
+		walkScene( IECore.InternedStringVectorData() )
 		
 	def assertBoxesEqual( self, box1, box2 ) :
 	
@@ -195,4 +198,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 			v2 = getattr( box1, n )
 			for i in range( 0, 3 ) :
 				self.assertAlmostEqual( v1[i], v2[i], places )			
-		
+	
+	def __pathToString( self, path ) :
+	
+		return "/" + "/".join( [ p.value() for p in path ] )

@@ -141,7 +141,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	if( output == mappingPlug() )
 	{
 		ContextPtr tmpContext = new Context( *Context::current() );
-		tmpContext->set( ScenePlug::scenePathContextName, std::string( "/" ) );
+		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext );
 		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 		{
@@ -159,15 +159,12 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		{
 			std::string groupName = namePlug()->getValue();
 			// one of the plugs which varies with scene:path.
-			std::string path = context->get<std::string>( ScenePlug::scenePathContextName );
-			if( path=="/" )
+			ScenePath path = context->get<ScenePath>( ScenePlug::scenePathContextName );
+			if( path.size() == 0 )
 			{
 				// root. we only compute bound and childNames.
 				if( output == outPlug()->boundPlug() )
 				{
-					ContextPtr tmpContext = new Context( *Context::current() );
-					tmpContext->set( ScenePlug::scenePathContextName, std::string( "/" ) );
-					Context::Scope scopedContext( tmpContext );
 					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 					{
 						(*it)->boundPlug()->hash( h );
@@ -179,13 +176,13 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 					namePlug()->hash( h );
 				}
 			}
-			else if( path.size() == groupName.size() + 1 )
+			else if( path.size() == 1 )
 			{
 				// /groupName
 				if( output == outPlug()->boundPlug() )
 				{
 					ContextPtr tmpContext = new Context( *Context::current() );
-					tmpContext->set( ScenePlug::scenePathContextName, std::string( "/" ) );
+					tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 					Context::Scope scopedContext( tmpContext );
 					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 					{
@@ -206,7 +203,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 				// /groupName/something
 				// we're just a pass through of one of our inputs.
 				ScenePlug *sourcePlug = 0;
-				std::string source = sourcePath( path, groupName, &sourcePlug );
+				ScenePath source = sourcePath( path, groupName, &sourcePlug );
 				if( output == outPlug()->boundPlug() )
 				{
 					h = sourcePlug->boundHash( source );
@@ -249,26 +246,22 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	/// for passing the information we want.
 	CompoundObjectPtr result = new CompoundObject();
 	
-	StringVectorDataPtr childNamesData = new StringVectorData();
-	vector<string> &childNames = childNamesData->writable();
+	InternedStringVectorDataPtr childNamesData = new InternedStringVectorData();
+	vector<InternedString> &childNames = childNamesData->writable();
 	result->members()["__GroupChildNames"] = childNamesData;
 	
 	boost::regex namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
 	boost::format namePrefixSuffixFormatter( "%s%d" );
 
-	set<string> allNames;
+	set<InternedString> allNames;
 	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 	{
-		ConstStringVectorDataPtr inChildNamesData = (*it)->childNames( "/" );
-		if( !inChildNamesData )
+		ConstInternedStringVectorDataPtr inChildNamesData = (*it)->childNames( ScenePath() );
+
+		const vector<InternedString> &inChildNames = inChildNamesData->readable();
+		for( vector<InternedString>::const_iterator cIt = inChildNames.begin(), ceIt = inChildNames.end(); cIt!=ceIt; cIt++ )
 		{
-			continue;
-		}
-		
-		const vector<string> &inChildNames = inChildNamesData->readable();
-		for( vector<string>::const_iterator cIt = inChildNames.begin(), ceIt = inChildNames.end(); cIt!=ceIt; cIt++ )
-		{
-			string name = *cIt;
+			InternedString name = *cIt;
 			if( allNames.find( name ) != allNames.end() )
 			{
 				// uniqueify the name
@@ -279,7 +272,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 				int suffix = 1;
 				
 				boost::cmatch match;
-				if( regex_match( name.c_str(), match, namePrefixSuffixRegex ) )
+				if( regex_match( name.value().c_str(), match, namePrefixSuffixRegex ) )
 				{
 					prefix = match[1];
 					suffix = boost::lexical_cast<int>( match[2] );
@@ -295,7 +288,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 			allNames.insert( name );
 			childNames.push_back( name );
 			CompoundObjectPtr entry = new CompoundObject;
-			entry->members()["n"] = new StringData( *cIt );
+			entry->members()["n"] = new InternedStringData( *cIt );
 			entry->members()["i"] = new IntData( it - m_inPlugs.begin() );
 			result->members()[name] = entry;
 		}
@@ -308,7 +301,7 @@ Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *
 {
 	std::string groupName = namePlug()->getValue();
 	
-	if( path.size() <= groupName.size() + 1 )
+	if( path.size() <= 1 )
 	{
 		// either / or /groupName
 		Box3f combinedBound;
@@ -316,10 +309,10 @@ Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *
 		{
 			// we don't need to transform these bounds, because the SceneNode
 			// guarantees that the transform for root nodes is always identity.
-			Box3f bound = (*it)->bound( "/" );
+			Box3f bound = (*it)->bound( ScenePath() );
 			combinedBound.extendBy( bound );
 		}
-		if( path == "/" )
+		if( path.size() == 0 )
 		{
 			combinedBound = transform( combinedBound, transformPlug()->matrix() );
 		}
@@ -328,7 +321,7 @@ Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *
 	else
 	{
 		ScenePlug *sourcePlug = 0;
-		std::string source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
 		return sourcePlug->bound( source );
 	}
 }
@@ -337,18 +330,18 @@ Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Contex
 {
 	std::string groupName = namePlug()->getValue();
 	
-	if( path == "/" )
+	if( path.size() == 0 )
 	{
 		return Imath::M44f();
 	}
-	else if( path.size() == groupName.size() + 1 )
+	else if( path.size() == 1 )
 	{
 		return transformPlug()->matrix();
 	}
 	else
 	{
 		ScenePlug *sourcePlug = 0;
-		std::string source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
 		return sourcePlug->transform( source );
 	}
 }
@@ -357,14 +350,14 @@ IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, 
 {
 	std::string groupName = namePlug()->getValue();
 	
-	if( path.size() <= groupName.size() + 1 )
+	if( path.size() <= 1 )
 	{
 		return parent->attributesPlug()->defaultValue();
 	}
 	else
 	{
 		ScenePlug *sourcePlug = 0;
-		std::string source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
 		return sourcePlug->attributes( source );
 	}
 }
@@ -373,37 +366,37 @@ IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer
 {
 	std::string groupName = namePlug()->getValue();
 	
-	if( path.size() <= groupName.size() + 1 )
+	if( path.size() <= 1 )
 	{
 		return parent->objectPlug()->defaultValue();
 	}
 	else
 	{
 		ScenePlug *sourcePlug = 0;
-		std::string source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
 		return sourcePlug->object( source );
 	}
 }
 
-IECore::ConstStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {		
 	std::string groupName = namePlug()->getValue();
 	
-	if( path == "/" )
+	if( path.size() == 0 )
 	{
-		StringVectorDataPtr result = new StringVectorData();
+		InternedStringVectorDataPtr result = new InternedStringVectorData();
 		result->writable().push_back( groupName );
 		return result;
 	}
-	else if( path.size() == groupName.size() + 1 )
+	else if( path.size() == 1 )
 	{
 		ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
-		return mapping->member<StringVectorData>( "__GroupChildNames" );
+		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
 	}
 	else
 	{
 		ScenePlug *sourcePlug = 0;
-		std::string source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
 		return sourcePlug->childNames( source );
 	}
 }
@@ -413,25 +406,23 @@ IECore::ConstObjectVectorPtr Group::computeGlobals( const Gaffer::Context *conte
 	return inPlug()->globalsPlug()->getValue();
 }
 
-std::string Group::sourcePath( const std::string &outputPath, const std::string &groupName, ScenePlug **source ) const
-{	
-	size_t slashPos = outputPath.find( "/", groupName.size() + 2 );
-	std::string mappedChildName( outputPath, groupName.size() + 2, slashPos - groupName.size() - 2 );
+SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::string &groupName, ScenePlug **source ) const
+{		
+	const InternedString mappedChildName = outputPath[1];
 	
 	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{
-		throw Exception( boost::str( boost::format( "Unable to find mapping for output path \"%s\"" ) % outputPath ) );
+		throw Exception( boost::str( boost::format( "Unable to find mapping for output path" ) ) );
 	}
 		
 	*source = m_inPlugs[entry->member<IntData>( "i" )->readable()];
-	string result = "/" + entry->member<StringData>( "n" )->readable();
-	if( slashPos != string::npos )
-	{
-		result += string( outputPath, slashPos );
-	}
-		
+	
+	ScenePath result;
+	result.reserve( outputPath.size() - 1 );
+	result.push_back( entry->member<InternedStringData>( "n" )->readable() );
+	result.insert( result.end(), outputPath.begin() + 2, outputPath.end() );
 	return result;
 }
 

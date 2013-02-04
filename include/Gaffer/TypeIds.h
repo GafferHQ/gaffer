@@ -98,6 +98,7 @@ enum TypeId
 	DependencyNodeTypeId = 110051,
 	ParameterisedHolderDependencyNodeTypeId = 110052,
 	BoxTypeId = 110053,
+	InternedStringVectorDataPlugTypeId = 110054,
 	
 	LastTypeId = 110200,
 	

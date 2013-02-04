@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,22 +54,18 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const std::string &scenePath, const IECore::StringVectorData *pathsToExpand )
+SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::StringVectorData *pathsToExpand )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath )
 {
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 	
 	if( pathsToExpand )
 	{
-		m_pathsToExpand = boost::shared_ptr<ExpandedPathsSet>( new ExpandedPathsSet );
-		for( std::vector<std::string>::const_iterator it = pathsToExpand->readable().begin(); it != pathsToExpand->readable().end(); it++ )
-		{
-			m_pathsToExpand->insert( *it );
-		}
+		m_pathsToExpand = boost::shared_ptr<PathMatcher>( new PathMatcher( pathsToExpand->readable().begin(), pathsToExpand->readable().end() ) );
 	}	
 }
 
-SceneProcedural::SceneProcedural( const SceneProcedural &other, const std::string &scenePath )
+SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ), m_pathsToExpand( other.m_pathsToExpand )
 {
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
@@ -103,7 +100,13 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	AttributeBlock attributeBlock( renderer );
 	Context::Scope scopedContext( m_context );
 	
-	renderer->setAttribute( "name", new StringData( m_scenePath ) );
+	std::string name = "";
+	for( ScenePlug::ScenePath::const_iterator it = m_scenePath.begin(), eIt = m_scenePath.end(); it != eIt; it++ )
+	{
+		name += "/" + it->string();
+	}
+	
+	renderer->setAttribute( "name", new StringData( name ) );
 	
 	/// \todo See above.
 	try
@@ -153,22 +156,19 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		bool expand = true;
 		if( m_pathsToExpand )
 		{
-			expand = m_pathsToExpand->find( m_scenePath ) != m_pathsToExpand->end();
+			expand = m_pathsToExpand->match( m_scenePath ) == Filter::Match;
 		}
 				
-		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
+		ConstInternedStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
 		if( childNames->readable().size() )
 		{		
 			if( expand )
 			{
-				for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+				ScenePlug::ScenePath childScenePath = m_scenePath;
+				childScenePath.push_back( InternedString() ); // for the child name
+				for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 				{
-					string childScenePath = m_scenePath;
-					if( m_scenePath.size() > 1 )
-					{
-						childScenePath += "/";
-					}
-					childScenePath += *it;
+					childScenePath[m_scenePath.size()] = *it;
 					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
 				}	
 			}

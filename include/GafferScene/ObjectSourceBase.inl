@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -134,7 +135,7 @@ void ObjectSourceBase<BaseType>::hash( const Gaffer::ValuePlug *output, const Ga
 	else if( output == BaseType::outPlug()->boundPlug() )
 	{
 		inputSourcePlug()->hash( h );	
-		if( context->get<std::string>( "scene:path" ) == "/" )
+		if( context->get<SceneNode::ScenePath>( ScenePlug::scenePathContextName ).size() == 0 )
 		{
 			transformPlug()->hash( h );
 		}
@@ -201,7 +202,7 @@ Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePat
 		result = Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
 	}
 	
-	if( path == "/" )
+	if( path.size() == 0 )
 	{
 		result = Imath::transform( result, transformPlug()->matrix() );
 	}
@@ -211,7 +212,7 @@ Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePat
 template<typename BaseType>
 Imath::M44f ObjectSourceBase<BaseType>::computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( path != "/" )
+	if( path.size() == 1 )
 	{
 		return transformPlug()->matrix();
 	}
@@ -227,7 +228,7 @@ IECore::ConstCompoundObjectPtr ObjectSourceBase<BaseType>::computeAttributes( co
 template<typename BaseType>
 IECore::ConstObjectPtr ObjectSourceBase<BaseType>::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( path != "/" )
+	if( path.size() == 1 )
 	{
 		return inputSourcePlug()->getValue();
 	}
@@ -235,11 +236,11 @@ IECore::ConstObjectPtr ObjectSourceBase<BaseType>::computeObject( const SceneNod
 }
 
 template<typename BaseType>
-IECore::ConstStringVectorDataPtr ObjectSourceBase<BaseType>::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr ObjectSourceBase<BaseType>::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( path == "/" )
+	if( path.size() == 0 )
 	{
-		IECore::StringVectorDataPtr result = new IECore::StringVectorData();
+		IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
 		const std::string &name = namePlug()->getValue();
 		if( name.size() )
 		{

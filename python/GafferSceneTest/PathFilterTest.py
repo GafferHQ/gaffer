@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -60,40 +61,27 @@ class PathFilterTest( unittest.TestCase ) :
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
 	
-		with Gaffer.Context() as c :
-		
-			c["scene:path"] = "/a"
-			self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
-		
-			c["scene:path"] = "/red"
-			self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
-			
-			c["scene:path"] = "/re"
-			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
-			
-			c["scene:path"] = "/redThing"
-			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
-			
-			c["scene:path"] = "/b/c/d"
-			self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
-		
-			c["scene:path"] = "/c"
-			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
-		
-			c["scene:path"] = "/a/b"
-			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
-		
-			c["scene:path"] = "/blue"
-			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
-		
-			c["scene:path"] = "/b/c"
-			self.assertEqual( f["match"].getValue(), int( f.Result.DescendantMatch ) )
+		for path, result in [
+			( "/a",  f.Result.Match ),
+			( "/red", f.Result.Match ),
+			( "/re", f.Result.NoMatch ),
+			( "/redThing", f.Result.NoMatch ),
+			( "/b/c/d", f.Result.Match ),
+			( "/c", f.Result.NoMatch ),
+			( "/a/b", f.Result.NoMatch ),
+			( "/blue", f.Result.NoMatch ),
+			( "/b/c", f.Result.DescendantMatch ),
+		] :
+
+			with Gaffer.Context() as c :
+				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				self.assertEqual( f["match"].getValue(), int( result ) )
 	
 	def testNullPaths( self ) :
 	
 		f = GafferScene.PathFilter()
 		with Gaffer.Context() as c :
-			c["scene:path"] = "/a"
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
 			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
 	
 	def testScaling( self ) :
@@ -108,7 +96,7 @@ class PathFilterTest( unittest.TestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( paths ) )
 		with Gaffer.Context() as c :
 			for path in paths :
-				c["scene:path"] = path
+				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 				self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
 	
 	def testInputsDenied( self ) :

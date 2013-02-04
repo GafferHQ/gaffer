@@ -53,7 +53,7 @@ class SceneTraversalTask : public tbb::task
 
 	public :
 
-		SceneTraversalTask( ScenePlug *scenePlug, Gaffer::Context *context, const std::string &scenePath )
+		SceneTraversalTask( ScenePlug *scenePlug, Gaffer::Context *context, const ScenePlug::ScenePath &scenePath )
 			:	m_scenePlug( scenePlug ), m_context( context ), m_scenePath( scenePath )
 		{			
 		}
@@ -74,19 +74,16 @@ class SceneTraversalTask : public tbb::task
 			m_scenePlug->attributesPlug()->getValue();
 			m_scenePlug->objectPlug()->getValue();
 				
-			ConstStringVectorDataPtr childNamesData = m_scenePlug->childNamesPlug()->getValue();
-			const vector<std::string> &childNames = childNamesData->readable();
+			ConstInternedStringVectorDataPtr childNamesData = m_scenePlug->childNamesPlug()->getValue();
+			const vector<InternedString> &childNames = childNamesData->readable();
 			
 			set_ref_count( 1 + childNames.size() );
-						
-			for( vector<std::string>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
+			
+			ScenePlug::ScenePath childPath = m_scenePath;
+			childPath.push_back( InternedString() ); // space for the child name
+			for( vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
 			{
-				std::string childPath = m_scenePath;
-				if( childPath.size() > 1 )
-				{
-					childPath += "/";
-				}
-				childPath += *it;
+				childPath[m_scenePath.size()] = *it;
 				SceneTraversalTask *t = new( allocate_child() ) SceneTraversalTask( m_scenePlug, m_context, childPath );
 				spawn( *t );
 			}
@@ -100,7 +97,7 @@ class SceneTraversalTask : public tbb::task
 
 		ScenePlug *m_scenePlug;
 		Context *m_context;
-		std::string m_scenePath;
+		ScenePlug::ScenePath m_scenePath;
 
 };
 
@@ -108,7 +105,7 @@ class SceneTraversalTask : public tbb::task
 
 void traverseScene( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
 {
-	Detail::SceneTraversalTask *task = new( tbb::task::allocate_root() ) Detail::SceneTraversalTask( scenePlug, context, "/" );
+	Detail::SceneTraversalTask *task = new( tbb::task::allocate_root() ) Detail::SceneTraversalTask( scenePlug, context, ScenePlug::ScenePath() );
 	tbb::task::spawn_root_and_wait( *task );
 }
 

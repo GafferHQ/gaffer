@@ -100,19 +100,11 @@ class SceneReader::Cache
 
 		IE_CORE_DECLAREPTR( Entry )
 		
-		EntryPtr entry( const std::string &fileName, const std::string &scenePath )
+		EntryPtr entry( const std::string &fileName, const ScenePath &scenePath )
 		{
 			FileAndMutexPtr f = m_fileCache.get( fileName );
 			EntryPtr result = new Entry( f ); // this locks the mutex for us
-			result->m_entry = result->m_fileAndMutex->file;
-			
-			typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-			Tokenizer tokens( scenePath, boost::char_separator<char>( "/" ) );			
-			for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
-			{
-				result->m_entry = result->m_entry->child( *tIt, SceneInterface::ThrowIfMissing );
-			}
-			
+			result->m_entry = result->m_fileAndMutex->file->scene( scenePath );
 			return result;
 		}
 		
@@ -210,20 +202,12 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 	return o ? o : parent->objectPlug()->defaultValue();
 }
 
-IECore::ConstStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 
-	IndexedIO::EntryIDList c;
-	entry->sceneCache()->childNames( c );
-	
-	StringVectorDataPtr result = new StringVectorData;
-	std::vector<std::string> &cn = result->writable();
-	cn.reserve( c.size() );
-	for( size_t i = 0, e = c.size(); i < e; i++ )
-	{
-		cn.push_back( c[i].value() );
-	}
+	InternedStringVectorDataPtr result = new InternedStringVectorData;
+	entry->sceneCache()->childNames( result->writable() );
 	
 	return result;
 }

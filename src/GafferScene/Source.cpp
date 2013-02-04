@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -69,6 +70,7 @@ void Source::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		)
 	)
 	{
-		h.append( context->get<std::string>( ScenePlug::scenePathContextName ) );
+		const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
+		h.append( &(path[0]), path.size() );
 	}
 }

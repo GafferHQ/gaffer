@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,25 +58,25 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( a["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) )
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
-		self.assertEqual( a["out"].childNames( "/" ), IECore.StringVectorData( [ "group1"] ) )
+		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1"] ) )
 		
 		self.assertEqual( a["out"].object( "/group1" ), IECore.NullObject() )
 		self.assertEqual( a["out"].transform( "/group1" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) * IECore.M44f.createTranslated( IECore.V3f( 2, 0, 0 ) ) )
 		self.assertEqual( a["out"].bound( "/group1" ), IECore.Box3f( IECore.V3f( -2, -1, -1 ), IECore.V3f( 0, 1, 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1" ), IECore.CompoundObject() )
-		self.assertEqual( a["out"].childNames( "/group1" ), IECore.StringVectorData( [ "pCube1"] ) )
+		self.assertEqual( a["out"].childNames( "/group1" ), IECore.InternedStringVectorData( [ "pCube1"] ) )
 
 		self.assertEqual( a["out"].object( "/group1/pCube1" ), IECore.NullObject() )
 		self.assertEqual( a["out"].transform( "/group1/pCube1" ), IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) ) )
 		self.assertEqual( a["out"].bound( "/group1/pCube1" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1/pCube1" ), IECore.CompoundObject() )
-		self.assertEqual( a["out"].childNames( "/group1/pCube1" ), IECore.StringVectorData( [ "pCubeShape1"] ) )
+		self.assertEqual( a["out"].childNames( "/group1/pCube1" ), IECore.InternedStringVectorData( [ "pCubeShape1"] ) )
 		
 		self.assertTrue( isinstance( a["out"].object( "/group1/pCube1/pCubeShape1" ), IECore.MeshPrimitive ) )
 		self.assertEqual( a["out"].transform( "/group1/pCube1/pCubeShape1" ), IECore.M44f() )
 		self.assertEqual( a["out"].bound( "/group1/pCube1/pCubeShape1" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1/pCube1/pCubeShape1" ), IECore.CompoundObject() )
-		self.assertEqual( a["out"].childNames( "/group1/pCube1/pCubeShape1" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( a["out"].childNames( "/group1/pCube1/pCubeShape1" ), IECore.InternedStringVectorData( [] ) )
 
 	def testAnimation( self ) :
 			
