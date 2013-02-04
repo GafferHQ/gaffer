@@ -81,7 +81,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	def __update( self ) :
 			
 		scenePlugs = []
-		for node in self.getNodeSet()[:-2] :
+		for node in self.getNodeSet()[-2:] :
 			scenePlugs.extend( [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ] )
 
 		selectedPaths = self.getContext().get( "ui:scene:selectedPaths", [] )
