@@ -64,6 +64,7 @@ from ModelCacheSourceTest import ModelCacheSourceTest
 from SubTreeTest import SubTreeTest
 from OpenGLAttributesTest import OpenGLAttributesTest
 from RenderCameraTest import RenderCameraTest
+from SceneReadWriteTest import SceneReadWriteTest
 
 if __name__ == "__main__":
 	import unittest

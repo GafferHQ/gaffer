@@ -47,9 +47,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 	
 	def testWriteRead( self ) :
 		
-		print "yeah!!!!"
-		
-		pass
+		raise NotImplementedError
 			 		
 if __name__ == "__main__":
 	unittest.main()
