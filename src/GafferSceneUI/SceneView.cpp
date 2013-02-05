@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,7 +42,10 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/BlockedConnection.h"
+
 #include "GafferScene/SceneProcedural.h"
+#include "GafferScene/PathMatcherData.h"
+
 #include "GafferSceneUI/SceneView.h"
 
 using namespace std;
@@ -99,8 +102,7 @@ SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene:
 
 SceneView::SceneView( GafferScene::ScenePlugPtr inPlug )
 	:	View3D( staticTypeName(), new GafferScene::ScenePlug() ),
-		m_renderableGadget( new RenderableGadget ),
-		m_expandedPaths( new PathMatcherData() )
+		m_renderableGadget( new RenderableGadget )
 {
 	View3D::inPlug<ScenePlug>()->setInput( inPlug );
 	viewportGadget()->setChild( m_renderableGadget );
@@ -113,30 +115,47 @@ SceneView::~SceneView()
 {
 }
 
-void SceneView::update( const std::vector<IECore::InternedString> &modifiedContextItems )
+void SceneView::contextChanged( const IECore::InternedString &name )
 {
-	bool selectionChanged = find( modifiedContextItems.begin(), modifiedContextItems.end(), "ui:scene:selectedPaths" ) != modifiedContextItems.end();
-
-	if( modifiedContextItems.size() != 1 || !selectionChanged )
+	if( name.value() == "ui:scene:selectedPaths" )
 	{
-		SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext(), "/", m_expandedPaths );
-		WrappingProceduralPtr wp = new WrappingProcedural( p );
-	
-		bool hadRenderable = m_renderableGadget->getRenderable();
-		m_renderableGadget->setRenderable( wp );
-		if( !hadRenderable )
-		{
-			viewportGadget()->frame( m_renderableGadget->bound() );
-		}
-	}
-	
-	if( selectionChanged )
-	{
-		BlockedConnection blockedConnection( m_selectionChangedConnection );
+		// if only the selection has changed then we can just update the selection
+		// on our existing scene representation.
 		const StringVectorData *sc = getContext()->get<StringVectorData>( "ui:scene:selectedPaths" );
 		RenderableGadget::Selection sr;
 		sr.insert( sc->readable().begin(), sc->readable().end() );
+
+		BlockedConnection blockedConnection( m_selectionChangedConnection );
 		m_renderableGadget->setSelection( sr );
+		return;
+	}
+	
+	if(
+		name.value().compare( 0, 3, "ui:" ) == 0 &&
+		name.value() != "ui:scene:expandedPaths"
+	)
+	{
+		// if it's just a ui context entry that has changed, and it doesn't
+		// affect our expansion, then early out.
+		return;
+	}
+	
+	// the context change might affect the scene itself, so we must
+	// schedule an update.
+	updateRequestSignal()( this );
+}
+
+void SceneView::update()
+{	
+	std::cerr << "SCENEVIEW UPDATE" << std::endl;
+	SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext(), "/", expandedPaths() );
+	WrappingProceduralPtr wp = new WrappingProcedural( p );
+	
+	bool hadRenderable = m_renderableGadget->getRenderable();
+	m_renderableGadget->setRenderable( wp );
+	if( !hadRenderable )
+	{
+		viewportGadget()->frame( m_renderableGadget->bound() );
 	}
 }
 
@@ -152,6 +171,7 @@ Imath::Box3f SceneView::framingBound() const
 
 void SceneView::selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget )
 {
+	BlockedConnection blockedConnection( contextChangedConnection() );
 	transferSelectionToContext();
 }
 
@@ -177,12 +197,13 @@ void SceneView::expandSelection()
 	
 	vector<string> pathsToSelect;
 	vector<const string *> pathsToDeselect;
-	PathMatcher &expandedPaths = m_expandedPaths->writable();
+	IECore::PathMatcherData *expandedData = expandedPaths();
+	PathMatcher &expanded = expandedData->writable();
 	
 	bool needUpdate = false;
 	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
 	{
-		if( expandedPaths.addPath( *it ) )
+		if( expanded.addPath( *it ) )
 		{
 			needUpdate = true;
 			ConstStringVectorDataPtr childNamesData = inPlug<ScenePlug>()->childNames( *it );
@@ -216,8 +237,14 @@ void SceneView::expandSelection()
 	
 	if( needUpdate )
 	{
+		// this will trigger update() via contextChanged().
+		
+		//THIS ISN'T TRIGGERING BECAUSE WE JUST MODIFIED THE INTERNAL CONTEXT
+		//VALUE IN PLACE SO CONTEXT::SET DOESN'T DETECT A CHANGE
+		
+		getContext()->set( "ui:scene:expandedPaths", expandedData );
+		// and this will trigger a selection update also via contextChanged().
 		transferSelectionToContext();
-		updateRequestSignal()( this );
 	}
 }
 
@@ -231,11 +258,12 @@ void SceneView::collapseSelection()
 	
 	set<string> pathsToSelect;
 	vector<const string *> pathsToDeselect;
-	PathMatcher &expandedPaths = m_expandedPaths->writable();
+	IECore::PathMatcherData *expandedData = expandedPaths();
+	PathMatcher &expanded = expandedData->writable();
 	
 	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
 	{
-		if( !expandedPaths.removePath( *it ) )
+		if( !expanded.removePath( *it ) )
 		{
 			if( *it == "/" )
 			{
@@ -247,7 +275,7 @@ void SceneView::collapseSelection()
 			{
 				parentPath = "/";
 			}
-			expandedPaths.removePath( parentPath );
+			expanded.removePath( parentPath );
 			pathsToSelect.insert( parentPath );
 		}
 	}
@@ -261,8 +289,10 @@ void SceneView::collapseSelection()
 		selection.erase( **it );
 	}
 
+	// this will trigger update() via contextChanged().
+	getContext()->set( "ui:scene:expandedPaths", expandedData );
+	// and this will trigger a selection update also via contextChanged().
 	transferSelectionToContext();
-	updateRequestSignal()( this );
 }
 
 void SceneView::transferSelectionToContext()
@@ -273,4 +303,15 @@ void SceneView::transferSelectionToContext()
 	StringVectorDataPtr s = new StringVectorData();
 	s->writable().insert( s->writable().end(), selection.begin(), selection.end() );
 	getContext()->set( "ui:scene:selectedPaths", s.get() );
+}
+
+IECore::PathMatcherData *SceneView::expandedPaths()
+{
+	const IECore::PathMatcherData *m = getContext()->get<IECore::PathMatcherData>( "ui:scene:expandedPaths", 0 );
+	if( !m )
+	{
+		getContext()->set( "ui:scene:expandedPaths", new IECore::PathMatcherData );
+		m = getContext()->get<IECore::PathMatcherData>( "ui:scene:expandedPaths" );
+	}
+	return const_cast<IECore::PathMatcherData *>( m );
 }

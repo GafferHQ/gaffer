@@ -85,9 +85,9 @@ class EditorWidget( GafferUI.Widget ) :
 		if callUpdate :
 			modifiedItems = set()
 			if previousContext is not None :
-				modifiedItems |= previousContext.names()
+				modifiedItems |= set( previousContext.names() )
 			if self.__context is not None :
-				modifiedItems |= self.__context.names()
+				modifiedItems |= set( self.__context.names() )
 			self._updateFromContext( modifiedItems )
 		
 	## May be implemented by derived classes to update state based on a change of context.

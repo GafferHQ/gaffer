@@ -56,7 +56,7 @@ ObjectView::ObjectView( Gaffer::ObjectPlugPtr inPlug )
 	viewportGadget()->setChild( m_renderableGadget );
 }
 
-void ObjectView::update( const std::vector<IECore::InternedString> &modifiedContextItems )
+void ObjectView::update()
 {
 	ConstVisibleRenderablePtr renderable = 0;
 	{

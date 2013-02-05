@@ -50,12 +50,14 @@ size_t View::g_firstPlugIndex = 0;
 
 View::View( const std::string &name, Gaffer::PlugPtr inPlug )
 	:	Node( name ),
-		m_viewportGadget( new ViewportGadget ),
-		m_context( new Context() )
+		m_viewportGadget( new ViewportGadget )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
 	
+	setContext( new Context() );
+	
+	plugDirtiedSignal().connect( boost::bind( &View::plugDirtied, this, ::_1 ) );	
 	viewportGadget()->keyPressSignal().connect( boost::bind( &View::keyPress, this, ::_1, ::_2 ) );	
 }
 
@@ -76,8 +78,9 @@ const Gaffer::Context *View::getContext() const
 void View::setContext( Gaffer::ContextPtr context )
 {	
 	m_context = context;
+	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &View::contextChanged, this, ::_2 ) );
 }
-		
+
 ViewportGadget *View::viewportGadget()
 {
 	return m_viewportGadget;
@@ -91,6 +94,24 @@ const ViewportGadget *View::viewportGadget() const
 View::UnarySignal &View::updateRequestSignal()
 {
 	return m_updateRequestSignal;
+}
+
+void View::contextChanged( const IECore::InternedString &name )
+{
+	updateRequestSignal()( this );
+}
+
+boost::signals::connection &View::contextChangedConnection()
+{
+	return m_contextChangedConnection;
+}
+
+void View::plugDirtied( const Gaffer::Plug *plug )
+{
+	if( plug == inPlug<Gaffer::Plug>() )
+	{
+		updateRequestSignal()( this );
+	}
 }
 
 bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )

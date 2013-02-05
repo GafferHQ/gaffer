@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,6 +62,13 @@ static PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr pa
 	return new PathMatcher( paths->readable().begin(), paths->readable().end() );
 }
 
+static void initWrapper( PathMatcher &m, boost::python::object oPaths )
+{
+	std::vector<std::string> paths;
+	container_utils::extend_container( paths, oPaths );
+	return m.init( paths.begin(), paths.end() );
+}
+
 static list paths( const PathMatcher &p )
 {
 	std::vector<std::string> paths;
@@ -80,6 +87,7 @@ void bindPathMatcher()
 		.def( "__init__", make_constructor( constructFromObject ) )
 		.def( "__init__", make_constructor( constructFromVectorData ) )
 		.def( init<const PathMatcher &>() )
+		.def( "init", &initWrapper )
 		.def( "addPath", &PathMatcher::addPath )
 		.def( "removePath", &PathMatcher::removePath )
 		.def( "clear", &PathMatcher::clear )

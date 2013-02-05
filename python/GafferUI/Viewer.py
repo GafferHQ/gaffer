@@ -80,7 +80,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		node = self._lastAddedNode()
 		
 		self.__currentView = None
-		self.__plugDirtiedConnection = None
 		if node :	
 			for plug in node.children() :
 				if isinstance( plug, Gaffer.Plug ) and plug.direction() == Gaffer.Plug.Direction.Out :
@@ -95,9 +94,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 							self.__views.append( self.__currentView )
 					if self.__currentView is not None :
 						break
-						
+										
 		if self.__currentView is not None :	
-			self.__plugDirtiedConnection = self.__currentView.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 			self.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
 			self.__update()
@@ -105,35 +103,29 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
 			self.__updateRequestConnection = None
 				
-	def _updateFromContext( self, modifiedItems ) :
-	
-		self.__update( modifiedItems )
-	
-	def __update( self, modifiedContextItems = () ) :
+	def __update( self ) :
 	
 		if self.__currentView is None :
 			return
 			
-		self.__currentView.setContext( self.getContext() )	
-		self.__currentView._update( modifiedContextItems )
+		if not self.__currentView.getContext().isSame( self.getContext() ) :
+			self.__currentView.setContext( self.getContext() )
+		
+		self.__currentView._update()
 	
 	def __updateRequest( self, view ) :
 	
 		assert( view.isSame( self.__currentView ) )
 		
-		self.__update()
-		
-	def __plugDirtied( self, plug ) :
-	
-		# Ideally we might want the view to be doing the update automatically on dirty,
-		# rather than for to call _updateFromPlug ourselves. Currently we can't do that
-		# because the Views are implemented in C++ and might spawn threads which need
-		# to call back into Python - leading to deadlock if the GIL hasn't been released
-		# previously. The binding for View.updateFromPlug() releases the GIL for us to
-		# work around that problem - another solution might be to release the GIL in all
-		# bindings which might eventually trigger a plug dirtied signal, but that could
+		# Ideally we might want the view to be doing the update automatically whenever it
+		# wants, rather than using updateRequestSignal() to request a call back in to update().
+		# Currently we can't do that because the Views are implemented in C++ and might spawn
+		# threads which need to call back into Python - leading to deadlock if the GIL hasn't
+		# been released previously. The binding for View._update() releases the GIL for
+		# us to work around that problem - another solution might be to release the GIL in all
+		# bindings which might eventually trigger a viewer update, but that could
 		# be nearly anything.
-		if plug.isSame( self.__currentView["in"] ) :
-			self.__update()	
+		
+		self.__update()
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )

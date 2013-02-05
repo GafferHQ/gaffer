@@ -96,14 +96,27 @@ class View : public Gaffer::Node
 	protected :
 
 		View( const std::string &name, Gaffer::PlugPtr input );
-
+		
+		/// Called when the context changes. The default implementation triggers
+		/// updateRequestSignal(), but derived classes may reimplement the method
+		/// to perform more specific actions.
+		virtual void contextChanged( const IECore::InternedString &name );
+		/// Returns the connection used to trigger the call to contextChanged(). Derived
+		/// classes may block this temporarily if they want to prevent the triggering - 
+		/// this can be useful when modifying the context.
+		boost::signals::connection &contextChangedConnection();
+		/// Called when a plug on this node is dirtied. The default implementation
+		/// triggers updateRequestSignal() when the plug is inPlug(), but derived
+		/// classes may reimplement the method to perform more specific actions.
+		virtual void plugDirtied( const Gaffer::Plug *plug );
 		/// Must be implemented by derived classes to update the view from inPlug()
 		/// using the context provided by getContext(). This method will be called
-		/// by the Viewer whenever appropriate. See notes in Viewer.__plugDirtied
-		/// explaining why it's better for the Viewer to be responsible for calling
-		/// this than the View to do it itself.
+		/// by the Viewer following a triggering of the updateRequestSignal().
+		/// See notes in Viewer.__updateRequest explaining why it's necessary for the
+		/// Viewer to be responsible for calling this rather than have the View
+		/// do it itself.
 		/// \see View::updateRequestSignal().
-		virtual void update( const std::vector<IECore::InternedString> &modifiedContextItems ) = 0;
+		virtual void update() = 0;
 		
 		/// May be overridden by derived classes to control the region that is framed
 		/// when "F" is pressed.
@@ -121,6 +134,7 @@ class View : public Gaffer::Node
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_updateRequestSignal;
+		boost::signals::scoped_connection m_contextChangedConnection;
 
 		bool keyPress( GadgetPtr gadget, const KeyEvent &keyEvent );
 		
@@ -129,7 +143,7 @@ class View : public Gaffer::Node
 	
 		static size_t g_firstPlugIndex;
 		
-		friend void GafferUIBindings::updateView( View &, const std::vector<IECore::InternedString> & );
+		friend void GafferUIBindings::updateView( View & );
 					
 };
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -99,67 +99,75 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	/// \todo See above.
 	try
 	{
+		// transform
+		
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
 		
-		bool expand = true;
-		if( m_pathsToExpand )
+		// attributes
+		
+		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
+		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 		{
-			expand = m_pathsToExpand->readable().match( m_scenePath ) == Filter::Match;
-		}
-			
-		if( !expand )
-		{
-			renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
-			renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
-			renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
-			Box3f b = m_scenePlug->boundPlug()->getValue();
-			CurvesPrimitive::createBox( b )->render( renderer );	
-		}
-		else
-		{
-			ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
-			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 			{
-				if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
+				s->render( renderer );
+			}
+			else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+			{
+				for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
 				{
-					s->render( renderer );
-				}
-				else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-				{
-					for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+					const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+					if( s )
 					{
-						const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-						if( s )
-						{
-							s->render( renderer );
-						}
+						s->render( renderer );
 					}
 				}
-				else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-				{
-					renderer->setAttribute( it->first, d );
-				}
+			}
+			else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+			{
+				renderer->setAttribute( it->first, d );
+			}
+		}
+		
+		// object
+		
+		ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
+		if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
+		{
+			primitive->render( renderer );
+		}
+		else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
+		{
+			/// \todo This absolutely does not belong here, but until we have
+			/// a mechanism for drawing manipulators, we don't have any other
+			/// means of visualising the cameras.
+			if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+			{
+				drawCamera( camera, renderer.get() );
+			}
+		}
+	
+		// children
+
+		ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
+		if( childNames->readable().size() )
+		{		
+			bool expand = true;
+			if( m_pathsToExpand )
+			{
+				expand = m_pathsToExpand->readable().match( m_scenePath ) == Filter::Match;
 			}
 			
-			ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
-			if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
+			if( !expand )
 			{
-				primitive->render( renderer );
+				renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
+				renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
+				renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
+				Box3f b = m_scenePlug->boundPlug()->getValue();
+				CurvesPrimitive::createBox( b )->render( renderer );	
 			}
-			else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
+			else
 			{
-				/// \todo This absolutely does not belong here, but until we have
-				/// a mechanism for drawing manipulators, we don't have any other
-				/// means of visualising the cameras.
-				if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
-				{
-					drawCamera( camera, renderer.get() );
-				}
-			}
-					
-			ConstStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
-			if( childNames->readable().size() )
-			{				
 				for( vector<string>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 				{
 					string childScenePath = m_scenePath;
@@ -169,8 +177,8 @@ void SceneProcedural::render( RendererPtr renderer ) const
 					}
 					childScenePath += *it;
 					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
-				}	
-			}
+				}
+			}	
 		}
 	}
 	catch( const std::exception &e )

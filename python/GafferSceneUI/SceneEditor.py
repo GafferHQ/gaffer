@@ -85,7 +85,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 			p = self.__pathListing.getPath()
 			selection = [ p.copy().setFromString( s ) for s in self.getContext()["ui:scene:selectedPaths"] ]
 			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
-				self.__pathListing.setSelectedPaths( selection )
+				self.__pathListing.setSelectedPaths( selection, scrollToFirst=False, expandNonLeaf=False )
 			
 	def __expansionChanged( self, pathListing ) :
 	
@@ -93,8 +93,11 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		
 		paths = pathListing.getExpandedPaths()
 		paths = IECore.StringVectorData( [ "/" ] + [ str( path ) for path in paths ] )
+		pathMatcherData = GafferScene.PathMatcherData()
+		pathMatcherData.value.init( paths )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			self.getContext().set( "ui:scene:expandedPaths", paths )
+			print "SCENE EDITOR SETTING EXPANSION"
+			self.getContext().set( "ui:scene:expandedPaths", pathMatcherData )
 	
 	def __selectionChanged( self, pathListing ) :
 	

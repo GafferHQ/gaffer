@@ -62,7 +62,8 @@ class SceneView : public GafferUI::View3D
 		
 	protected :
 
-		virtual void update( const std::vector<IECore::InternedString> &modifiedContextItems );
+		virtual void contextChanged( const IECore::InternedString &name );
+		virtual void update();
 		virtual Imath::Box3f framingBound() const;
 
 	private :
@@ -72,11 +73,11 @@ class SceneView : public GafferUI::View3D
 		void expandSelection();
 		void collapseSelection();
 		void transferSelectionToContext();
+		IECore::PathMatcherData *expandedPaths();
 		
 		boost::signals::scoped_connection m_selectionChangedConnection;
 		
 		GafferUI::RenderableGadgetPtr m_renderableGadget;
-		IECore::PathMatcherDataPtr m_expandedPaths;
 	
 		static ViewDescription<SceneView> g_viewDescription;
 	

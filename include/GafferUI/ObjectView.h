@@ -58,7 +58,7 @@ class ObjectView : public View3D
 
 	protected :
 
-		virtual void update( const std::vector<IECore::InternedString> &modifiedContextItems );
+		virtual void update();
 								
 	private :
 
