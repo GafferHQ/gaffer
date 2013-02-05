@@ -106,6 +106,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	m_fonts[textType]->texture()->bind();
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.25 );
 
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
