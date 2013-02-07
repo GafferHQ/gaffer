@@ -48,6 +48,7 @@ FileSource::FileSource( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
+	addChild( new IntPlug( "refreshCount" ) );
 }
 
 FileSource::~FileSource()
@@ -64,11 +65,21 @@ const Gaffer::StringPlug *FileSource::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::IntPlug *FileSource::refreshCountPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *FileSource::refreshCountPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
 void FileSource::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	Source::affects( input, outputs );
 	
-	if( input == fileNamePlug() )
+	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
@@ -81,5 +92,6 @@ void FileSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *c
 	if( output->parent<ScenePlug>() == outPlug() )
 	{
 		fileNamePlug()->hash( h );
+		refreshCountPlug()->hash( h );
 	}
 }

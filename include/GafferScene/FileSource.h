@@ -57,6 +57,10 @@ class FileSource : public Source
 		/// Holds the name of the file to be loaded.
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
+		
+		/// Number of times the node has been refreshed.
+		Gaffer::IntPlug *refreshCountPlug();
+		const Gaffer::IntPlug *refreshCountPlug() const;
 
 		/// Implemented to specify that fileNamePlug() affects all the scene output.
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
