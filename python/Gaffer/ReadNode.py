@@ -59,7 +59,8 @@ class ReadNode( Gaffer.DependencyNode ) :
 		self.__reader = None
 		self.__exposedParameters = IECore.CompoundParameter()
 		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
- 
+ 		self.__parameterHandler.setupPlug( self )
+
 	def affects( self, input ) :
 		
 		outputs = []
