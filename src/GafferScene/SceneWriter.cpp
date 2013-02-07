@@ -37,7 +37,7 @@
 #include "GafferScene/SceneWriter.h"
 #include "Gaffer/Context.h"
 
-#include "IECore/SceneCache.h"
+#include "IECore/SceneInterface.h"
 #include "IECore/Transform.h"
 
 using namespace std;
@@ -113,7 +113,7 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 	
 	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), 0.0 );
 	
-	if( scenePath.size() > 1 )
+	if( scenePath.size() )
 	{
 		Imath::M44f t = scenePlug->transformPlug()->getValue();
 		Imath::M44d transform(
@@ -146,7 +146,7 @@ void SceneWriter::execute()
 {
 	ScenePlug* scenePlug = inPlug();
 
-	SceneInterfacePtr output = new SceneCache( fileNamePlug()->getValue(), IndexedIO::Write );
+	SceneInterfacePtr output = SceneInterface::create( fileNamePlug()->getValue(), IndexedIO::Write );
 	
 	writeLocation( scenePlug, ScenePlug::ScenePath(), output.get() );
 }
