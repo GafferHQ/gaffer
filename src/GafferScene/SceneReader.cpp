@@ -38,9 +38,10 @@
 
 #include "IECore/FileIndexedIO.h"
 #include "IECore/LRUCache.h"
-#include "IECore/SceneCache.h"
+#include "IECore/SceneInterface.h"
 #include "IECore/InternedString.h"
 
+#include "Gaffer/Context.h"
 #include "GafferScene/SceneReader.h"
 
 using namespace Imath;
@@ -69,14 +70,14 @@ class SceneReader::Cache
 		};
 		
 		/// This class provides access to a particular location within
-		/// the SceneCache, and ensures that access is threadsafe by holding
+		/// the SceneInterface, and ensures that access is threadsafe by holding
 		/// a mutex on the file.
 		class Entry : public IECore::RefCounted
 		{
 		
 			public :
 			
-				SceneInterface *sceneCache()
+				SceneInterface *sceneInterface()
 				{
 					return m_entry;
 				}
@@ -121,7 +122,7 @@ class SceneReader::Cache
 		static FileAndMutexPtr fileCacheGetter( const std::string &fileName, size_t &cost )
 		{
 			FileAndMutexPtr result = new FileAndMutex;
-			result->file = new SceneCache( fileName, IndexedIO::Read );
+			result->file = SceneInterface::create( fileName, IndexedIO::Read );
 			cost = 1;
 			return result;
 		}
@@ -147,19 +148,14 @@ SceneReader::~SceneReader()
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
-	Box3d b = entry->sceneCache()->readBound( 0 );
+	Box3d b = entry->sceneInterface()->readBound( 0 );
 	return Box3f( b.min, b.max );
 }
 
 Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
-	M44d t;
-	try
-	{
-		t = entry->sceneCache()->readTransformAsMatrix( 0 );
-	}
-	catch(...) {}
+	M44d t = entry->sceneInterface()->readTransformAsMatrix( context->getFrame() );
 	
 	return M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
@@ -174,13 +170,13 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 	
 	SceneInterface::NameList nameList;
-	entry->sceneCache()->readAttributeNames( nameList );
+	entry->sceneInterface()->readAttributeNames( nameList );
 	
 	CompoundObjectPtr result = new CompoundObject;
 	
 	for( SceneInterface::NameList::iterator it = nameList.begin(); it != nameList.end(); ++it )
 	{
-		result->members()[ std::string( *it ) ] = entry->sceneCache()->readAttribute( *it, 0 );
+		result->members()[ std::string( *it ) ] = entry->sceneInterface()->readAttribute( *it, context->getFrame() );
 	}
 	
 	return parent->attributesPlug()->defaultValue();
@@ -191,13 +187,14 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 	ObjectPtr o;
 	
-	try
+	if( entry->sceneInterface()->hasObject() )
 	{
-		o = entry->sceneCache()->readObject( 0 );
+		ObjectPtr o = entry->sceneInterface()->readObject( context->getFrame() );
+		
+		return o? o : parent->objectPlug()->defaultValue();
 	}
-	catch(...){}
 	
-	return o ? o : parent->objectPlug()->defaultValue();
+	return parent->objectPlug()->defaultValue();
 }
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -205,7 +202,7 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 
 	InternedStringVectorDataPtr result = new InternedStringVectorData;
-	entry->sceneCache()->childNames( result->writable() );
+	entry->sceneInterface()->childNames( result->writable() );
 	
 	return result;
 }

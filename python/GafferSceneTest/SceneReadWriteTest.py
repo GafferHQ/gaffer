@@ -45,9 +45,52 @@ import GafferSceneTest
 
 class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 	
-	def testWriteRead( self ) :
+	def testRead( self ) :
 		
-		raise NotImplementedError
-			 		
+		sc = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		
+		t = sc.createChild( "transform" )
+		t.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		
+		s = t.createChild( "shape" )
+		s.writeObject( IECore.SpherePrimitive( 10 ), 0.0 )
+		
+		del sc, t, s
+		
+		m = GafferScene.SceneReader()
+		m["fileName"].setValue( "/tmp/test.scc" )
+		self.assertSceneValid( m["out"] )
+		
+		self.assertEqual( m["out"].transform( "/transform" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( m["out"].object( "/transform/shape" ), IECore.SpherePrimitive( 10 ) )
+	
+	def testWrite( self ) :
+		
+		s = Gaffer.SphereNode()
+		
+		o = GafferScene.ObjectToScene()
+		
+		o["__inputSource"].setInput( s["out"] )
+		
+		g = GafferScene.Group()
+		g["in"].setInput( o["out"] )
+		
+		g["transform"]["translate"]["x"].setValue( 5 )
+		g["transform"]["translate"]["z"].setValue( 2 )
+		
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( g["out"] )
+		writer["fileName"].setValue( "/tmp/test.scc" )
+		
+		writer.execute()
+		
+		sc = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Read )
+		
+		t = sc.child( "group" )
+		
+		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 5, 0, 2 ) ) )
+		
+		
+	
 if __name__ == "__main__":
 	unittest.main()
