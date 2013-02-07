@@ -83,14 +83,24 @@ bool ConnectionGadget::acceptsParent( const Gaffer::GraphComponent *potentialPar
 	return IECore::runTimeCast<const GraphGadget>( potentialParent );
 }	
 
-NodulePtr ConnectionGadget::srcNodule()
+Nodule *ConnectionGadget::srcNodule()
 {
-	return m_srcNodule;
+	return m_srcNodule.get();
 }
 
-NodulePtr ConnectionGadget::dstNodule()
+const Nodule *ConnectionGadget::srcNodule() const
 {
-	return m_dstNodule;
+	return m_srcNodule.get();
+}
+
+Nodule *ConnectionGadget::dstNodule()
+{
+	return m_dstNodule.get();
+}
+
+const Nodule *ConnectionGadget::dstNodule() const
+{
+	return m_dstNodule.get();
 }
 
 void ConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
@@ -284,9 +294,9 @@ bool ConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	return true;
 }
 
-std::string ConnectionGadget::getToolTip() const
+std::string ConnectionGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	std::string result = Gadget::getToolTip();
+	std::string result = Gadget::getToolTip( line );
 	if( result.size() )
 	{
 		return result;

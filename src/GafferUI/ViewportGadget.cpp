@@ -41,7 +41,7 @@
 #include "IECore/MatrixTransform.h"
 
 #include "IECoreGL/ToGLCameraConverter.h"
-#include "IECoreGL/Camera.h"
+#include "IECoreGL/PerspectiveCamera.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/Selector.h"
 
@@ -88,6 +88,34 @@ bool ViewportGadget::acceptsParent( const Gaffer::GraphComponent *potentialParen
 	return false;
 }	
 
+std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) const
+{
+	std::string result = IndividualContainer::getToolTip( line );
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	std::vector<GadgetPtr> gadgets;
+	gadgetsAt( V2f( line.p0.x, line.p0.y ), gadgets );
+	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
+	{
+		GadgetPtr gadget = *it;
+		while( gadget && gadget != this )
+		{
+			IECore::LineSegment3f lineInGadgetSpace = rasterToGadgetSpace( V2f( line.p0.x, line.p0.y) );
+			result = gadget->getToolTip( lineInGadgetSpace );
+			if( result.size() )
+			{
+				return result;
+			}
+			gadget = gadget->parent<Gadget>();
+		}
+	}
+
+	return result;
+}
+
 const Imath::V2i &ViewportGadget::getViewport() const
 {
 	return m_cameraController.getResolution();
@@ -121,7 +149,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	renderRequestSignal()( this );
 }
 
-void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets )
+void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
 {
 	if( !getChild<Gadget>() )
 	{
@@ -147,7 +175,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 	
 	if( !gadgets.size() )
 	{
-		gadgets.push_back( getChild<Gadget>() );
+		gadgets.push_back( const_cast<Gadget *>( getChild<Gadget>() ) );
 	}
 }
 
@@ -544,7 +572,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	V2i position( (int)event.line.p0.x, (int)event.line.p0.y );
 	
 	m_cameraController.motionStart( CameraController::Dolly, position );
-	position.x += (int)(event.wheelRotation * getViewport().x / 200.0f);
+	position.x += (int)(event.wheelRotation * getViewport().x / 80.0f);
 	m_cameraController.motionUpdate( position );
 	m_cameraController.motionEnd( position );
 
@@ -672,6 +700,9 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
  		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
  	);
  	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
+ 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
+ 	/// we don't have access to that information right now.
+ 	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
  	camera->render( 0 );
 	
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
@@ -688,9 +719,8 @@ void ViewportGadget::SelectionScope::end()
 {
 	glPopMatrix();
 	m_selector.end( m_selection );
-	
-	/// \todo Figure out how to know when we've been doing depth-tested rendering
-	if( false )
+		
+	if( m_depthSort )
 	{
 		std::sort( m_selection.begin(), m_selection.end() );
 	}

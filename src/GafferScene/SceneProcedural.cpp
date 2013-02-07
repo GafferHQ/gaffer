@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -54,15 +53,10 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::StringVectorData *pathsToExpand )
-	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath )
+SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::PathMatcherData *pathsToExpand )
+	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 )
 {
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
-	
-	if( pathsToExpand )
-	{
-		m_pathsToExpand = boost::shared_ptr<PathMatcher>( new PathMatcher( pathsToExpand->readable().begin(), pathsToExpand->readable().end() ) );
-	}	
 }
 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
@@ -105,13 +99,16 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		name += "/" + it->string();
 	}
-	
 	renderer->setAttribute( "name", new StringData( name ) );
-	
+
 	/// \todo See above.
 	try
 	{
+		// transform
+		
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
+		
+		// attributes
 		
 		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
 		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
@@ -137,10 +134,12 @@ void SceneProcedural::render( RendererPtr renderer ) const
 			}
 		}
 		
+		// object
+		
 		ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
-		if( const VisibleRenderable *visibleRenderable = runTimeCast<const VisibleRenderable>( object.get() ) )
+		if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
 		{
-			visibleRenderable->render( renderer );
+			primitive->render( renderer );
 		}
 		else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
 		{
@@ -152,27 +151,19 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				drawCamera( camera, renderer.get() );
 			}
 		}
-		
-		bool expand = true;
-		if( m_pathsToExpand )
-		{
-			expand = m_pathsToExpand->match( m_scenePath ) == Filter::Match;
-		}
-				
+	
+		// children
+
 		ConstInternedStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
 		if( childNames->readable().size() )
 		{		
-			if( expand )
+			bool expand = true;
+			if( m_pathsToExpand )
 			{
-				ScenePlug::ScenePath childScenePath = m_scenePath;
-				childScenePath.push_back( InternedString() ); // for the child name
-				for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
-				{
-					childScenePath[m_scenePath.size()] = *it;
-					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
-				}	
+				expand = m_pathsToExpand->readable().match( m_scenePath ) == Filter::Match;
 			}
-			else
+			
+			if( !expand )
 			{
 				renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
 				renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
@@ -180,6 +171,16 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				Box3f b = m_scenePlug->boundPlug()->getValue();
 				CurvesPrimitive::createBox( b )->render( renderer );	
 			}
+			else
+			{
+				ScenePlug::ScenePath childScenePath = m_scenePath;
+				childScenePath.push_back( InternedString() ); // for the child name
+				for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+				{
+					childScenePath[m_scenePath.size()] = *it;
+					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
+				}
+			}	
 		}
 	}
 	catch( const std::exception &e )
@@ -206,7 +207,10 @@ void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer
 
 	const std::string &projection = fullCamera->parametersData()->member<StringData>( "projection" )->readable();
 	const Box2f &screenWindow = fullCamera->parametersData()->member<Box2fData>( "screenWindow" )->readable();
-	const V2f &clippingPlanes = fullCamera->parametersData()->member<V2fData>( "clippingPlanes" )->readable();
+	/// \todo When we're drawing the camera by some means other than creating a primitive for it,
+	/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
+	/// framing bounds when the viewer frames a selected camera.
+	V2f clippingPlanes( 0, 5 );
 	
 	Box2f near( screenWindow );
 	Box2f far( screenWindow );

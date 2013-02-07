@@ -123,7 +123,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		filterNode = filterType()
 		
 		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
-			self.getPlug().node().addChild( filterNode )
+			self.getPlug().node().parent().addChild( filterNode )
 			self.getPlug().setInput( filterNode["match"] )
 		
 	def __linkFilter( self ) :

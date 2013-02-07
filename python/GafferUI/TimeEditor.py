@@ -99,8 +99,11 @@ class TimeEditor( GafferUI.EditorWidget ) :
 	
 		self.__scriptNodePlugSetConnection = scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
 	
-	def _updateFromContext( self ) :
-			
+	def _updateFromContext( self, modifiedItems ) :
+		
+		if "frame" not in modifiedItems :
+			return
+		
 		# update the frame counter and slider position
 		with Gaffer.BlockedConnection( [ self.__frameChangedConnection, self.__sliderValueChangedConnection ] ) :
 			self.__frame.setValue( self.getContext().getFrame() )

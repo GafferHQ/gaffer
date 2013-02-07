@@ -146,7 +146,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// reimplement this, in which case they should return Base::getToolTip()
 		/// if it is non-empty (ie has been set by setToolTip()) and otherwise
 		/// return some automatically generated tip.
-		virtual std::string getToolTip() const;
+		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const;
 		/// Sets the tool tip - pass the empty string if you wish to reset this
 		/// and revert to default behaviour.
 		void setToolTip( const std::string &toolTip );

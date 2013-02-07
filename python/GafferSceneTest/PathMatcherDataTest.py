@@ -34,42 +34,30 @@
 #  
 ##########################################################################
 
-import GafferUI
+import unittest
 
-import GafferImage
+import IECore
 
-__all__ = []
+import Gaffer
+import GafferScene
+
+class PathMatcherDataTest( unittest.TestCase ) :
+
+	def test( self ) :
+	
+		d = GafferScene.PathMatcherData()
+		self.assertEqual( d.value, GafferScene.PathMatcher() )
 		
-def __imageViewCreator( plug, context ) :
+		d.value.addPath( "/a" )
+		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
 
-	with context :
-		image = plug.image()
+		dd = d.copy()
+		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
+		self.assertEqual( dd.value, GafferScene.PathMatcher( [ "/a" ] ) )
 
-	return image
-	
-GafferUI.Viewer.registerView( GafferImage.ImagePlug.staticTypeId(), __imageViewCreator )
-
-## Here we're taking signals the Display node emits when it has new data, and using them
-# to trigger a plugDirtiedSignal on the main ui thread. This is necessary because the Display
-# receives data on a background thread, where we can't do ui stuff.
-
-__dataReceivedCount = 0
-def __displayDataReceived( plug ) :
-
-	global __dataReceivedCount
-	
-	## \todo We're not emitting on every update because it's quite slow doing that. When we have a proper
-	# fleshed out view class, we'll be able to ignore updates unless we've processed the previous update.
-	# We should also have an extra signal on ImageNode classes, which tells you which specific area of the
-	# image has changed so that the updates can be much quicker.
-	if __dataReceivedCount % 50 == 0:
-		GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
-	
-	__dataReceivedCount += 1
-
-def __displayImageReceived( plug ) :
-	
-	GafferUI.EventLoop.executeOnUIThread( lambda : plug.node().plugDirtiedSignal()( plug ) )
-
-__displayDataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( __displayDataReceived )
-__displayImageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( __displayImageReceived )
+		dd.value.addPath( "/b" )
+		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
+		self.assertEqual( dd.value, GafferScene.PathMatcher( [ "/a", "/b" ] ) )
+		
+if __name__ == "__main__":
+	unittest.main()

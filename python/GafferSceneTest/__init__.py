@@ -66,6 +66,7 @@ from OpenGLAttributesTest import OpenGLAttributesTest
 from RenderCameraTest import RenderCameraTest
 from SceneReadWriteTest import SceneReadWriteTest
 from ScenePathTest import ScenePathTest
+from PathMatcherDataTest import PathMatcherDataTest
 
 if __name__ == "__main__":
 	import unittest

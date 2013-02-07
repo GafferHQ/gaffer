@@ -42,7 +42,7 @@
 #include "IECore/Camera.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcher.h"
+#include "GafferScene/PathMatcherData.h"
 
 namespace Gaffer
 {
@@ -66,7 +66,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::StringVectorData *pathsToExpand = 0 );
+		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0 );
 		virtual ~SceneProcedural();
 		
 		virtual Imath::Box3f bound() const;
@@ -80,7 +80,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		Gaffer::ContextPtr m_context;
 		ScenePlug::ScenePath m_scenePath;
 		
-		boost::shared_ptr<PathMatcher> m_pathsToExpand;
+		IECore::PathMatcherDataPtr m_pathsToExpand;
 		
 	private :
 	

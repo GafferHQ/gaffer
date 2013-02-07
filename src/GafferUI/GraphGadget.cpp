@@ -48,6 +48,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -56,6 +57,7 @@
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
+#include "GafferUI/StandardGraphLayout.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -80,6 +82,8 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	dragLeaveSignal().connect( boost::bind( &GraphGadget::dragLeave, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
 
+	m_layout = new StandardGraphLayout;
+	
 	setRoot( root, filter );
 }
 
@@ -191,6 +195,40 @@ const ConnectionGadget *GraphGadget::connectionGadget( const Gaffer::Plug *dstPl
 {
 	return findConnectionGadget( dstPlug );
 }
+
+void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
+{
+	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+	if( !plug )
+	{
+		plug = new Gaffer::V2fPlug( "__uiPosition", Gaffer::Plug::In );
+		plug->setFlags( Gaffer::Plug::Dynamic, true );
+		node->addChild( plug );
+	}
+	
+	plug->setValue( position );
+}
+
+Imath::V2f GraphGadget::getNodePosition( Gaffer::Node *node ) const
+{
+	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+	return plug ? plug->getValue() : V2f( 0 );
+}
+
+void GraphGadget::setLayout( GraphLayoutPtr layout )
+{
+	m_layout = layout;
+}
+
+GraphLayout *GraphGadget::getLayout()
+{
+	return m_layout;
+}
+
+const GraphLayout *GraphGadget::getLayout() const
+{
+	return m_layout;
+}
 		
 void GraphGadget::doRender( const Style *style ) const
 {
@@ -299,7 +337,7 @@ void GraphGadget::inputChanged( Gaffer::Plug *dstPlug )
 void GraphGadget::plugSet( Gaffer::Plug *plug )
 {
 	const std::string &name = plug->getName();
-	if( name=="__uiX" || name=="__uiY" )
+	if( name=="__uiPosition" )
 	{
 		Gaffer::Node *node = plug->node();
 		NodeGadget *ng = findNodeGadget( node );
@@ -530,11 +568,9 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 		
 		NodeGadget *gadget = nodeGadget( node );
 		if( gadget )
-		{			
-			Gaffer::FloatPlug *xp = node->getChild<Gaffer::FloatPlug>( "__uiX" );
-			Gaffer::FloatPlug *yp = node->getChild<Gaffer::FloatPlug>( "__uiY" );
-			xp->setValue( xp->getValue() + offset.x );
-			yp->setValue( yp->getValue() + offset.y );
+		{		
+			Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+			p->setValue( p->getValue() + offset );
 		}
 	}
 }
@@ -589,30 +625,13 @@ void GraphGadget::addNodeGadget( Gaffer::Node *node )
 	
 	m_nodeGadgets[node] = nodeGadgetEntry;
 	
-	// place it if it's not placed already.
-	/// \todo we need to do this intelligently rather than randomly!!
-	/// this probably means knowing what part of the graph is being viewed at the time. i think we
-	/// can do this by having the panning and zooming handled by a parent ViewportGadget rather than
-	/// letting the GadgetWidget do it. or do we need to query mouse position??
-	
-	/// \todo Use a V2f plug when we get one
-	static Imath::Rand32 r;
-	Gaffer::FloatPlugPtr xPlug = node->getChild<Gaffer::FloatPlug>( "__uiX" );
-	if( !xPlug )
+	// place it if it's not placed already.	
+	if( !node->getChild<Gaffer::V2fPlug>( "__uiPosition" ) )
 	{
-		xPlug = new Gaffer::FloatPlug( "__uiX", Gaffer::Plug::In );
-		xPlug->setFlags( Gaffer::Plug::Dynamic, true );
-		xPlug->setValue( r.nextf( -10, 10 ) );
-		node->addChild( xPlug );
-	}
-	
-	Gaffer::FloatPlugPtr yPlug = node->getChild<Gaffer::FloatPlug>( "__uiY" );
-	if( !yPlug )
-	{	
-		Gaffer::FloatPlugPtr yPlug = new Gaffer::FloatPlug( "__uiY", Gaffer::Plug::In );
-		yPlug->setFlags( Gaffer::Plug::Dynamic, true );
-		yPlug->setValue( r.nextf( -10, 10 ) );
-		node->addChild( yPlug );
+		if( !m_layout->positionNode( this, node ) )
+		{
+			setNodePosition( node, V2f( 0 ) );
+		}
 	}
 	
 	updateNodeGadgetTransform( nodeGadget.get() );
@@ -645,22 +664,16 @@ NodeGadget *GraphGadget::findNodeGadget( const Gaffer::Node *node ) const
 
 void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 {
-	Gaffer::NodePtr node = nodeGadget->node();
-	V3f t( 0 );
-
-	Gaffer::FloatPlugPtr x = node->getChild<Gaffer::FloatPlug>( "__uiX" );
-	if( x )
+	Gaffer::Node *node = nodeGadget->node();
+	M44f m;
+	
+	Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+	if( p )
 	{
-		t[0] = x->getValue();
+		V2f t = p->getValue();
+	 	m.translate( V3f( t[0], t[1], 0 ) );
 	}
 
-	Gaffer::FloatPlugPtr y = node->getChild<Gaffer::FloatPlug>( "__uiY" );
-	if( y )
-	{
-		t[1] = y->getValue();
-	}
-
-	M44f m; m.translate( t );
 	nodeGadget->setTransform( m );
 }
 

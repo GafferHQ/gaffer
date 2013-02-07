@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -41,13 +41,13 @@ namespace Gaffer
 {
 
 template<typename T>
-typename T::Ptr Plug::getInput()
+T *Plug::getInput()
 {
 	return IECore::runTimeCast<T>( m_input );
 }
 		
 template<typename T>
-typename T::ConstPtr Plug::getInput() const
+const T *Plug::getInput() const
 {
 	return IECore::runTimeCast<const T>( m_input );
 }

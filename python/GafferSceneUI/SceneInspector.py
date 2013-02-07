@@ -70,7 +70,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 		self.__update()
 				
-	def _updateFromContext( self ) :
+	def _updateFromContext( self, modifiedItems ) :
 	
 		self.__update()
 	

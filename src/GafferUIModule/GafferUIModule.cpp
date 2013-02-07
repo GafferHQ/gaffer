@@ -63,6 +63,10 @@
 #include "GafferUIBindings/StyleBinding.h"
 #include "GafferUIBindings/StandardStyleBinding.h"
 #include "GafferUIBindings/ViewportGadgetBinding.h"
+#include "GafferUIBindings/ViewBinding.h"
+#include "GafferUIBindings/View3DBinding.h"
+#include "GafferUIBindings/PlugGadgetBinding.h"
+#include "GafferUIBindings/GraphLayoutBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -95,5 +99,9 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindStyle();
 	bindStandardStyle();
 	bindViewportGadget();
+	bindView();
+	bindView3D();
+	bindPlugGadget();
+	bindGraphLayout();
 	
 }

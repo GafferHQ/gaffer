@@ -46,60 +46,31 @@ import GafferUI
 # import lazily to improve startup of apps which don't use GL functionality
 IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
-## The Viewer provides the primary means for the user to look at the output
-# of Nodes.
+## The Viewer provides the primary means of visualising the output
+# of Nodes. It defers responsibility for the generation of content to
+# the View classes, which are registered against specific types of
+# Plug.
+## \todo Support split screening two Views together and overlaying
+# them etc. Hopefully we can support that entirely within the Viewer
+# without modifying the Views themselves.
 class Viewer( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 	
-		self.__renderableGadget = GafferUI.RenderableGadget( None )
 		self.__gadgetWidget = GafferUI.GadgetWidget(
-			
-			self.__renderableGadget,
-			
 			bufferOptions = set( (
 				GafferUI.GLWidget.BufferOptions.Depth,
 				GafferUI.GLWidget.BufferOptions.Double )
-			),
-					
+			),					
 		)
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
-		self.__renderableGadget.baseState().add( IECoreGL.Primitive.DrawWireframe( True ) )
-		self.__gadgetWidget.getViewportGadget().setCamera(
-			IECore.Camera( parameters = { "projection" : IECore.StringData( "perspective" ) } )
-		)
-		
-		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		
-		self.__viewedPlug = None		
-		self.__viewCreator = None
+		self.__views = []
+		self.__currentView = None
+		self.__pendingUpdate = False
 
 		self._updateFromSet()
-	
-	## Returns an IECore.MenuDefinition which is used to define the right click menu for all Viewers.
-	# This can be edited at any time to modify the menu - typically this would be done from a startup
-	# script.
-	@staticmethod
-	def menuDefinition() :
-	
-		return Viewer.__menuDefinition
-
-	__menuDefinition = IECore.MenuDefinition()
-	
-	## Registers a function which can extract a VisibleRenderable from
-	# a plug of a given type for viewing.
-	## \todo This will need to become much more complex to support incremental
-	# update, on screen editing handles etc. At that point we should probably
-	# define a new View class which the creator should return instances of.
-	@classmethod
-	def registerView( cls, plugTypeId, creator ) :
-	
-		cls.__typesToCreators[plugTypeId] = creator
-		
-	__typesToCreators = {}
 	
 	def __repr__( self ) :
 
@@ -108,87 +79,70 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def _updateFromSet( self ) :
 		
 		GafferUI.NodeSetEditor._updateFromSet( self )
-			
+		
+		self.__currentView = None
+		self.__updateRequestConnection = None
+		needToUpdate = False
+		
 		node = self._lastAddedNode()
-		
-		self.__viewedPlug = None
-		self.__viewCreator = None
-		self.__plugDirtiedConnection = None
-		if node :
-		
+		if node :	
 			for plug in node.children( Gaffer.Plug.staticTypeId() ) :
-				if plug.direction() == Gaffer.Plug.Direction.Out and plug.typeId() in self.__typesToCreators :
-					self.__viewedPlug = plug
-					self.__viewCreator = self.__typesToCreators[plug.typeId()]
-					break
-			
-			if self.__viewedPlug is not None :
-				self.__plugDirtiedConnection = node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-
-		self.__update()	
-	
-	def _updateFromContext( self ) :
-	
-		self.__update()
-
+				if isinstance( plug, Gaffer.Plug ) and plug.direction() == Gaffer.Plug.Direction.Out :
+					# try to reuse an existing view
+					for view in self.__views :
+						if view["in"].acceptsInput( plug ) :
+							self.__currentView = view
+							viewInput = self.__currentView["in"].getInput()
+							if not viewInput or not viewInput.isSame( plug ) :
+								self.__currentView["in"].setInput( plug )
+								needToUpdate = True
+							break
+					# if that failed then make a new one
+					if self.__currentView is None :
+						self.__currentView = GafferUI.View.create( plug )
+						if self.__currentView is not None:
+							self.__views.append( self.__currentView )
+							needToUpdate = True
+							break
+										
+		if self.__currentView is not None :	
+			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
+			self.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
+			if needToUpdate :
+				self.__update()
+		else :
+			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+				
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
 
 	def __update( self ) :
-
-		renderable = None	
-		if self.__viewedPlug is not None :
-			renderable = self.__viewCreator( self.__viewedPlug, self.getContext() )
-			renderable = renderable if isinstance( renderable, IECore.Renderable ) else None
+	
+		self.__pendingUpdate = False
+	
+		if self.__currentView is None :
+			return
 			
-		self.__renderableGadget.setRenderable( renderable )
+		if not self.__currentView.getContext().isSame( self.getContext() ) :
+			self.__currentView.setContext( self.getContext() )
+		
+		self.__currentView._update()
 	
-	def __plugDirtied( self, plug ) :
+	def __updateRequest( self, view ) :
 	
-		if plug.isSame( self.__viewedPlug ) :
-			self.__update()
+		assert( view.isSame( self.__currentView ) )
+		
+		# Ideally we might want the view to be doing the update automatically whenever it
+		# wants, rather than using updateRequestSignal() to request a call back in to update().
+		# Currently we can't do that because the Views are implemented in C++ and might spawn
+		# threads which need to call back into Python - leading to deadlock if the GIL hasn't
+		# been released previously. The binding for View._update() releases the GIL for
+		# us to work around that problem - another solution might be to release the GIL in all
+		# bindings which might eventually trigger a viewer update, but that could
+		# be nearly anything.
+		if not self.__pendingUpdate :
+			self.__pendingUpdate = True
+			GafferUI.EventLoop.executeOnUIThread( self.__update )
 			
-	def __buttonPress( self, widget, event ) :
-	
-		if event.buttons & GafferUI.ButtonEvent.Buttons.Right :
-		
-			# right click menu
-			menuDefinition = copy.deepcopy( self.menuDefinition() )
-			menuDefinition.append( "/Style/Wireframe", { "checkBox" : IECore.curry( self.__baseState, componentType=IECoreGL.Primitive.DrawWireframe ), "command" : IECore.curry( self.__toggleBaseState, componentType=IECoreGL.Primitive.DrawWireframe ) } )
-			menuDefinition.append( "/Style/Solid", { "checkBox" : IECore.curry( self.__baseState, componentType=IECoreGL.Primitive.DrawSolid ), "command" : IECore.curry( self.__toggleBaseState, componentType=IECoreGL.Primitive.DrawSolid ) } )
-			menuDefinition.append( "/Style/Points", { "checkBox" : IECore.curry( self.__baseState, componentType=IECoreGL.Primitive.DrawPoints ), "command" : IECore.curry( self.__toggleBaseState, componentType=IECoreGL.Primitive.DrawPoints ) } )
-			menuDefinition.append( "/Style/Bound", { "checkBox" : IECore.curry( self.__baseState, componentType=IECoreGL.Primitive.DrawBound ), "command" : IECore.curry( self.__toggleBaseState, componentType=IECoreGL.Primitive.DrawBound ) } )
-			
-			self.__m = GafferUI.Menu( menuDefinition )
-			self.__m.popup( self ) 
-			
-			return True
-		
-		return False
-	
-	def __keyPress( self, widget, event ) :
-	
-		if event.key == "F" :
-			self.__gadgetWidget.getViewportGadget().frame( self.__renderableGadget.bound() )
-			return True
-		
-		return False
-	
-	def __baseState( self, componentType=None ) :
-	
-		return self.__renderableGadget.baseState().get( componentType.staticTypeId() ).value
-		
-	def __toggleBaseState( self, checkBox, componentType=None ) :
-	
-		self.__renderableGadget.baseState().add( componentType( checkBox ) )
-		self.__renderableGadget.renderRequestSignal()( self.__renderableGadget )
-		
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
-
-def __objectPlugViewCreator( plug, context ) :
-
-	with context :
-		return plug.getValue( _copy=False )
-	
-Viewer.registerView( Gaffer.ObjectPlug.staticTypeId(), __objectPlugViewCreator )

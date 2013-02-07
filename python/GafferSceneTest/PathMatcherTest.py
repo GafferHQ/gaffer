@@ -170,7 +170,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )
-	
+				
 	def testWildcardsWithSiblings( self ) :
 	
 		f = GafferScene.PathFilter()
@@ -287,5 +287,154 @@ class PathMatcherTest( unittest.TestCase ) :
 			with c :
 				self.assertEqual( f["match"].getValue(), int( result ) )		
 
+	def testCopyConstructorIsDeep( self ) :
+	
+		m = GafferScene.PathMatcher( [ "/a" ] )
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.Match )
+		
+		m2 = GafferScene.PathMatcher( m )
+		self.assertEqual( m2.match( "/a" ), GafferScene.Filter.Result.Match )
+		
+		m.clear()
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.NoMatch )
+
+		self.assertEqual( m2.match( "/a" ), GafferScene.Filter.Result.Match )
+
+	def testAddAndRemovePaths( self ) :
+	
+		m = GafferScene.PathMatcher()
+		m.addPath( "/a" )
+		m.addPath( "/a/b" )
+		
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.Match )
+		
+		m.removePath( "/a" )
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.DescendantMatch )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.Match )
+		
+		m.removePath( "/a/b" )
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.NoMatch )
+	
+	def testRemovePathRemovesIntermediatePaths( self ) :
+	
+		m = GafferScene.PathMatcher()
+		m.addPath( "/a/b/c" )
+		
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.DescendantMatch )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.DescendantMatch )
+		self.assertEqual( m.match( "/a/b/c" ), GafferScene.Filter.Result.Match )
+	
+		m.removePath( "/a/b/c" )
+		
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( m.match( "/a/b/c" ), GafferScene.Filter.Result.NoMatch )
+	
+	def testRemoveEllipsis( self ) :
+	
+		m = GafferScene.PathMatcher()
+		m.addPath( "/a/.../b" )
+		
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.DescendantMatch )
+		self.assertEqual( m.match( "/a/c" ), GafferScene.Filter.Result.DescendantMatch )
+		self.assertEqual( m.match( "/a/c/b" ), GafferScene.Filter.Result.Match )
+		
+		m.removePath( "/a/.../b" )
+		
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( m.match( "/a/c" ), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( m.match( "/a/c/b" ), GafferScene.Filter.Result.NoMatch )
+	
+	def testAddPathReturnValue( self ) :
+	
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.addPath( "/" ), True )
+		self.assertEqual( m.addPath( "/a/b" ), True )
+		self.assertEqual( m.addPath( "/a/b" ), False )
+		self.assertEqual( m.addPath( "/a" ), True )
+		self.assertEqual( m.addPath( "/" ), False )
+		
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.addPath( "/a/b/c" ), True )
+		self.assertEqual( m.addPath( "/a/b/c" ), False )
+		self.assertEqual( m.addPath( "/" ), True )
+		self.assertEqual( m.addPath( "/*" ), True )
+		self.assertEqual( m.addPath( "/*" ), False )
+		self.assertEqual( m.addPath( "/..." ), True )
+		self.assertEqual( m.addPath( "/..." ), False )
+	
+		self.assertEqual( m.addPath( "/a/b/c/d" ), True )
+		self.assertEqual( m.addPath( "/a/b/c/d" ), False )
+		m.removePath( "/a/b/c/d" )
+		self.assertEqual( m.addPath( "/a/b/c/d" ), True )
+		self.assertEqual( m.addPath( "/a/b/c/d" ), False )
+		
+	def testRemovePathReturnValue( self ) :
+	
+		m = GafferScene.PathMatcher()
+		
+		self.assertEqual( m.removePath( "/" ), False )
+		m.addPath( "/" )
+		self.assertEqual( m.removePath( "/" ), True )
+		self.assertEqual( m.removePath( "/" ), False )
+		
+		self.assertEqual( m.removePath( "/a/b/c" ), False )
+		m.addPath( "/a/b/c" )
+		self.assertEqual( m.removePath( "/a/b/c" ), True )
+		self.assertEqual( m.removePath( "/a/b/c" ), False )
+	
+	def testEquality( self ) :
+	
+		m1 = GafferScene.PathMatcher()
+		m2 = GafferScene.PathMatcher()
+		
+		self.assertEqual( m1, m2 )
+		
+		m1.addPath( "/a" )
+		self.assertNotEqual( m1, m2 )
+		
+		m2.addPath( "/a" )
+		self.assertEqual( m1, m2 )
+					
+		m2.addPath( "/a/b" )			
+		self.assertNotEqual( m1, m2 )
+		
+		m1.addPath( "/a/b" )			
+		self.assertEqual( m1, m2 )
+
+		m1.addPath( "/a/b/.../c" )			
+		self.assertNotEqual( m1, m2 )
+
+		m2.addPath( "/a/b/.../c" )			
+		self.assertEqual( m1, m2 )
+
+		m2.addPath( "/c*" )			
+		self.assertNotEqual( m1, m2 )
+		
+		m1.addPath( "/c*" )			
+		self.assertEqual( m1, m2 )
+	
+	def testPaths( self ) :
+	
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.paths(), [] )
+		
+		m.addPath( "/a/b" )
+		self.assertEqual( m.paths(), [ "/a/b" ] )
+		
+		m.addPath( "/a/.../b" )
+		self.assertEqual( m.paths(), [ "/a/b", "/a/.../b" ] )
+		
+		m.removePath( "/a/.../b" )
+		self.assertEqual( m.paths(), [ "/a/b" ] )
+		
+		m.addPath( "/a/b/c*d*" )
+		self.assertEqual( m.paths(), [ "/a/b", "/a/b/c*d*" ] )
+		
+		m.clear()
+		self.assertEqual( m.paths(), [] )
+		
 if __name__ == "__main__":
 	unittest.main()

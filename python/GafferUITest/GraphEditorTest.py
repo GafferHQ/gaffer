@@ -620,7 +620,17 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		del e
 		
 		self.assertEqual( we(), None )
+			
+	def testSetNodePosition( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
 		
+		g = GafferUI.GraphGadget( s )
+		
+		g.setNodePosition( s["n"], IECore.V2f( -100, 2000 ) )
+		self.assertEqual( g.getNodePosition( s["n"] ), IECore.V2f( -100, 2000 ) )
+				
 if __name__ == "__main__":
 	unittest.main()
 	

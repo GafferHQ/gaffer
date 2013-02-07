@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "OpenEXR/ImathBoxAlgo.h"
+
 #include "IECore/SimpleTypedData.h"
 #include "IECore/WorldBlock.h"
 #include "IECore/VectorTypedData.h"
@@ -47,6 +49,7 @@
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/Group.h"
+#include "IECoreGL/Primitive.h"
 #include "IECoreGL/NameStateComponent.h"
 #include "IECoreGL/TypedStateComponent.h"
 #include "IECoreGL/Selector.h"
@@ -55,11 +58,16 @@
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/Style.h"
 
-using namespace GafferUI;
-using namespace Imath;
 using namespace std;
+using namespace Imath;
+using namespace IECoreGL;
+using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( RenderableGadget );
+
+// handles we use for stuffing some data into the userAttributes() map of the state.
+static IECore::InternedString g_wireframeColorName( "renderableGadget:wireframeColor" );
+static IECore::InternedString g_drawWireframeName( "renderableGadget:drawWireframe" );
 
 RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
 	: Gadget( staticTypeName() ),
@@ -67,6 +75,7 @@ RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
 	  m_scene( 0 ),
 	  m_baseState( new IECoreGL::State( true ) ),
 	  m_selectionColor( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ) ),
+	  m_wireframeOn( new IECoreGL::Primitive::DrawWireframe( true ) ),
 	  m_dragSelecting( false )
 {
 	// IECoreGL default wireframe colour is far too similar to the blue we use for selection.
@@ -127,7 +136,7 @@ void RenderableGadget::doRender( const Style *style ) const
 	}
 }
 
-void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
+void RenderableGadget::setRenderable( IECore::ConstVisibleRenderablePtr renderable )
 {
 	if( renderable!=m_renderable )
 	{
@@ -147,11 +156,6 @@ void RenderableGadget::setRenderable( IECore::VisibleRenderablePtr renderable )
 		}
 		renderRequestSignal()( this );
 	}
-}
-
-IECore::VisibleRenderablePtr RenderableGadget::getRenderable()
-{
-	return m_renderable;
 }
 
 IECore::ConstVisibleRenderablePtr RenderableGadget::getRenderable() const
@@ -222,6 +226,50 @@ void RenderableGadget::setSelection( const std::set<std::string> &selection )
 RenderableGadget::SelectionChangedSignal &RenderableGadget::selectionChangedSignal()
 {
 	return m_selectionChangedSignal;
+}
+
+Imath::Box3f RenderableGadget::selectionBound() const
+{
+	if( m_scene )
+	{
+		return selectionBound( m_scene->root() );
+	}
+	return Box3f();
+}
+
+Imath::Box3f RenderableGadget::selectionBound( IECoreGL::Group *group ) const
+{
+	IECoreGL::State *state = group->getState();
+	IECoreGL::NameStateComponent *nameState = state->get<IECoreGL::NameStateComponent>();
+	if( nameState && m_selection.find( nameState->name() ) != m_selection.end() )
+	{
+		return group->bound();
+	}
+	else
+	{
+		Box3f childSelectionBound;
+		const IECoreGL::Group::ChildContainer &children = group->children();
+		for( IECoreGL::Group::ChildContainer::const_iterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
+		{
+			IECoreGL::Group *childGroup = IECore::runTimeCast<IECoreGL::Group>( (*it).get() );
+			if( childGroup )
+			{
+				childSelectionBound.extendBy( selectionBound( childGroup ) );
+			}
+		}
+		return transform( childSelectionBound, group->getTransform() );
+	}
+}
+
+std::string RenderableGadget::getToolTip( const IECore::LineSegment3f &line ) const
+{
+	std::string result = Gadget::getToolTip( line );
+	if( result.size() )
+	{
+		return result;
+	}
+	
+	return objectAt( line );
 }
 
 bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
@@ -364,13 +412,60 @@ void RenderableGadget::applySelection( IECoreGL::Group *group )
 	
 	IECoreGL::State *state = group->getState();
 	IECoreGL::NameStateComponent *nameState = state->get<IECoreGL::NameStateComponent>();
+	WireframeColorStateComponent *currentWireframeColor = state->get<WireframeColorStateComponent>();
+	IECore::CompoundDataMap &userAttributes = state->userAttributes()->writable();
 	if( nameState && m_selection.find( nameState->name() ) != m_selection.end() )
 	{
-		state->add( m_selectionColor );
+		// object is selected
+		if( currentWireframeColor != m_selectionColor )
+		{
+			// store existing state. this would be easier if UserAttributesMap stored
+			// RunTimeTyped rather than just Data, as then we could just store the
+			// StateComponents in there directly.
+			if( currentWireframeColor )
+			{
+				if( userAttributes.find( g_wireframeColorName ) == userAttributes.end() )
+				{
+					userAttributes[g_wireframeColorName] = new IECore::Color4fData( currentWireframeColor->value() );
+				}
+			}
+			if( Primitive::DrawWireframe *drawWireframe = state->get<Primitive::DrawWireframe>() )
+			{
+				if( userAttributes.find( g_drawWireframeName ) == userAttributes.end() )
+				{
+					userAttributes[g_drawWireframeName] = new IECore::BoolData( drawWireframe->value() );
+				}
+			}
+			// overwrite it with our selection state
+			state->add( m_selectionColor );
+			state->add( m_wireframeOn );
+		}
 	}
 	else
 	{
-		state->remove<IECoreGL::WireframeColorStateComponent>();
+		// object is not selected
+		if( currentWireframeColor == m_selectionColor )
+		{
+			// restore original state
+			IECore::CompoundDataMap::const_iterator it = userAttributes.find( g_wireframeColorName );
+			if( it != userAttributes.end() )
+			{
+				state->add( new WireframeColorStateComponent( static_cast<const IECore::Color4fData *>( it->second.get() )->readable() ) );
+			}
+			else
+			{
+				state->remove<WireframeColorStateComponent>();
+			}
+			it = userAttributes.find( g_drawWireframeName );
+			if( it != userAttributes.end() )
+			{
+				state->add( new Primitive::DrawWireframe( static_cast<const IECore::BoolData *>( it->second.get() )->readable() ) );			
+			}
+			else
+			{
+				state->remove<Primitive::DrawWireframe>();			
+			}
+		}
 	}
 	
 	const IECoreGL::Group::ChildContainer &children = group->children();

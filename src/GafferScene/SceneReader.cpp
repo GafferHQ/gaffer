@@ -36,8 +36,6 @@
 
 #include "tbb/mutex.h"
 
-#include "boost/tokenizer.hpp"
-
 #include "IECore/FileIndexedIO.h"
 #include "IECore/LRUCache.h"
 #include "IECore/SceneCache.h"

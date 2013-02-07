@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,8 +79,9 @@ enum TypeId
 	OpenGLAttributesTypeId = 110534,
 	SceneWriterTypeId = 110535,
 	SceneReaderTypeId = 110536,
+	PathMatcherDataTypeId = 110537,
 	
-	LastTypeId = 110700
+	LastTypeId = 110650
 };
 
 } // namespace GafferScene

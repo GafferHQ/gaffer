@@ -110,6 +110,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, _TreeView(), **kw )
 				
 		self._qtWidget().setAlternatingRowColors( True )
+		self._qtWidget().setUniformRowHeights( True )
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().header().setMovable( False )
@@ -125,16 +126,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		self.__selectionModel = QtGui.QItemSelectionModel( self.__sortProxyModel )
 		self._qtWidget().setSelectionModel( self.__selectionModel )
-		self._qtWidget().selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self.__selectionChangedSlot = Gaffer.WeakMethod( self.__selectionChanged )
+		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )			
 
 		self.__columns = columns
 		self.__displayMode = displayMode
-		
-		self.__path = None
-		self.setPath( path )
-		
+				
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
@@ -146,6 +145,9 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		
+		self.__path = None
+		self.setPath( path )
+
 	def setPath( self, path ) :
 	
 		if path is self.__path :
@@ -261,6 +263,8 @@ class PathListingWidget( GafferUI.Widget ) :
 			assert( len( paths ) <= 1 )
 				
 		selectionModel = self._qtWidget().selectionModel()
+		selectionModel.selectionChanged.disconnect( self.__selectionChangedSlot )
+
 		selectionModel.clear()
 		
 		for path in paths :
@@ -273,6 +277,10 @@ class PathListingWidget( GafferUI.Widget ) :
 					scrollToFirst = False
 				if expandNonLeaf and not path.isLeaf() :
 					self._qtWidget().setExpanded( indexToSelect, True )
+
+		selectionModel.selectionChanged.connect( self.__selectionChangedSlot )
+		
+		self.selectionChangedSignal()( self )		
 					
 	## \deprecated Use getSelectedPaths() instead.
 	# \todo Remove me
@@ -358,7 +366,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		return False
 		
 	def __selectionChanged( self, selected, deselected ) :
-		 				
+		 
 		self.selectionChangedSignal()( self )
 		return True
 			
@@ -740,7 +748,7 @@ class _PathModel( QtCore.QAbstractItemModel ) :
 		parentItem = parentIndex.internalPointer() if parentIndex.isValid() else self.__rootItem
 		
 		childItems = parentItem.childItems()
-		if row < len( childItems ) :
+		if row >=0 and row < len( childItems ) and column >= 0 and column < len( self.__columns ) :
 			return self.createIndex( row, column, childItems[row] )
 		else :
 			return QtCore.QModelIndex()

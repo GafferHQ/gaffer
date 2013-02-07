@@ -146,9 +146,9 @@ class Plug : public GraphComponent
 		/// \undoable
 		virtual void setInput( PlugPtr input );
 		template<typename T>
-		typename T::Ptr getInput();
+		T *getInput();
 		template<typename T>
-		typename T::ConstPtr getInput() const;
+		const T *getInput() const;
 		void removeOutputs();
 		const OutputContainer &outputs() const;
 		//@}

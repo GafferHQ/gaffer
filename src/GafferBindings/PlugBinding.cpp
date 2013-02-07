@@ -137,6 +137,11 @@ std::string PlugSerialiser::flagsRepr( unsigned flags )
 	return result;
 }
 
+static PlugPtr getInput( Plug &p )
+{
+	return p.getInput<Plug>();
+}
+
 void GafferBindings::bindPlug()
 {
 	typedef PlugWrapper<Plug> Wrapper;
@@ -179,7 +184,7 @@ void GafferBindings::bindPlug()
 		.def( "setFlags", (void (Plug::*)( unsigned ) )&Plug::setFlags )
 		.def( "setFlags", (void (Plug::*)( unsigned, bool ) )&Plug::setFlags )
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( Plug )
-		.def( "getInput", (PlugPtr (Plug::*)())&Plug::getInput<Plug> )
+		.def( "getInput", &getInput )
 		.def( "removeOutputs", &Plug::removeOutputs )
 		.def( "outputs", &outputs )
 		.def( "__repr__", &repr )

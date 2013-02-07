@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,18 +78,14 @@ static object get( Context &c, const IECore::InternedString &name )
 	}
 }
 
-/// \todo It'd be nice if there was a get with default in C++ as well.
 static object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
 {
-	ConstDataPtr d;
-	try
-	{
-		d = c.get<Data>( name );
-	}
-	catch( ... )
+	ConstDataPtr d = c.get<Data>( name, 0 );
+	if( !d )
 	{
 		return defaultValue;
 	}
+	
 	try
 	{
 		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
@@ -98,6 +94,19 @@ static object getWithDefault( Context &c, const IECore::InternedString &name, ob
 	{
 		return object( DataPtr( d->copy() ) );
 	}
+}
+
+static list names( const Context &context )
+{
+	std::vector<IECore::InternedString> names;
+	context.names( names );
+	
+	list result;
+	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; it++ )
+	{
+		result.append( it->value() );
+	}
+	return result;
 }
 
 struct ChangedSlotCaller
@@ -140,6 +149,8 @@ void bindContext()
 		.def( "get", &get )
 		.def( "get", &getWithDefault )
 		.def( "__getitem__", &get )
+		.def( "names", &names )
+		.def( "keys", &names )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
 		.def( self == self )
 		.def( self != self )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/GraphLayout.h"
 
 #include "GafferUIBindings/GraphGadgetBinding.h"
 #include "GafferUIBindings/GadgetBinding.h"
@@ -83,6 +84,16 @@ static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaf
 	return graphGadget.connectionGadget( dstPlug );
 }
 
+static void setLayout( GraphGadget &g, GraphLayoutPtr l )
+{
+	return g.setLayout( l );
+}
+
+static GraphLayoutPtr getLayout( GraphGadget &g )
+{
+	return g.getLayout();
+}
+
 void GafferUIBindings::bindGraphGadget()
 {
 	scope s = IECorePython::RunTimeTypedClass<GraphGadget>()
@@ -95,6 +106,10 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "setFilter", &GraphGadget::setFilter )
 		.def( "nodeGadget", &nodeGadget )
 		.def( "connectionGadget", &connectionGadget )
+		.def( "setNodePosition", &GraphGadget::setNodePosition )
+		.def( "getNodePosition", &GraphGadget::getNodePosition )
+		.def( "setLayout", &setLayout )
+		.def( "getLayout", &getLayout )
 	;
 
 	GafferBindings::SignalBinder<GraphGadget::GraphGadgetSignal, GafferBindings::DefaultSignalCaller<GraphGadget::GraphGadgetSignal>, GraphGadgetSlotCaller>::bind( "GraphGadgetSignal" );	

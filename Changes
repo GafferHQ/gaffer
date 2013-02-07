@@ -64,6 +64,32 @@
 
 * Added a procedural app for visualising Cortex procedurals.
 
+* Plug::getInput() now returns a raw rather than reference counted pointer.
+
+* Added RenderableGadget::selectionBound() method which returns the bounding box of all selected objects.
+
+* Added View::framingBound() method which can be overridden by derived classes to control the framing behaviour when "F" is pressed.
+
+* SceneView now frames the current selection when "F" is pressed.
+
+* IndividualContainer::getChild() now returns raw pointers rather than smart pointers and uses a direct method of indexing.
+
+* Gadget::getToolTip() now takes a line in gadget space, allowing the tooltip to be varied with the position of the mouse.
+
+* RenderableGadget implements getToolTip() to display the name of the object under the mouse.
+
+* PathMatcher is now editable after construction, with addPath() and removePath() methods. Because of this the copy constructor also now performs a full deep copy which can be expensive.
+
+* Added PathMatcherData to make sharing PathMatchers easy, and to introduce the possibility of storing them in Plugs and Contexts. Copying is lazy-copy-on-write which can be used to avoid the expensive PathMatcher copy constructor where possible.
+
+* Added Context::names() method.
+
+* EditorWidget._updateFromContext() is now passed a set containing the names of items changed since the last call to _updateFromContext().
+
+* Fixed bug which caused PathListingWidget.selectionChangedSignal() to fire far too frequently.
+
+* Added a GraphLayout class, used in conjunction with the GraphGadget to perform automatic node connections and graph layout. This replaces ad-hoc code from NodeMenu.py. Still needs a decent fully automatic layout implementation for situations where the user doesn't build the graph manually.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

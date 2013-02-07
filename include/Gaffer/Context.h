@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,6 +78,13 @@ class Context : public IECore::RefCounted
 		///		const FloatData *f = context->get<FloatData>( "myFloat" )
 		template<typename T>
 		typename Accessor<T>::ResultType get( const IECore::InternedString &name ) const;
+		/// As above but returns defaultValue when an entry is not found, rather than throwing
+		/// an Exception.
+		template<typename T>
+		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
+		
+		/// Fills the specified vector with the names of all items in the Context.
+		void names( std::vector<IECore::InternedString> &names ) const;
 		
 		/// Convenience method returning get<float>( "frame" ).
 		float getFrame() const;

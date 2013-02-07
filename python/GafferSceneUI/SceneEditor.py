@@ -83,14 +83,18 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		# finish our update
 		if self.__plug is not None :		
 			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, self.getContext(), "/" ) )
+			self.__transferExpansionFromContext()
+			self.__transferSelectionFromContext()
 		else :
 			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
 		
-	def _updateFromContext( self ) :
+	def _updateFromContext( self, modifiedItems ) :
 	
-		# the ScenePath will trigger an update anyway
-		pass
-
+		if "ui:scene:selectedPaths" in modifiedItems :
+			self.__transferSelectionFromContext()
+		elif "ui:scene:expandedPaths" in modifiedItems :
+			self.__transferExpansionFromContext()
+			
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat(
@@ -106,8 +110,10 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		
 		paths = pathListing.getExpandedPaths()
 		paths = IECore.StringVectorData( [ "/" ] + [ str( path ) for path in paths ] )
+		pathMatcherData = GafferScene.PathMatcherData()
+		pathMatcherData.value.init( paths )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			self.getContext().set( "ui:scene:expandedPaths", paths )
+			self.getContext().set( "ui:scene:expandedPaths", pathMatcherData )
 	
 	def __selectionChanged( self, pathListing ) :
 	
@@ -117,5 +123,28 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		paths = IECore.StringVectorData( [ str( path ) for path in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
 			self.getContext().set( "ui:scene:selectedPaths", paths )
+	
+	def __transferExpansionFromContext( self ) :
+	
+		p = self.__pathListing.getPath()
+		expandedPaths = [ p.copy().setFromString( s ) for s in self.getContext()["ui:scene:expandedPaths"].value.paths() ]
+		with Gaffer.BlockedConnection( self.__expansionChangedConnection ) :
+			self.__pathListing.setExpandedPaths( expandedPaths )
+	
+	def __transferSelectionFromContext( self ) :
+	
+		selection = self.getContext()["ui:scene:selectedPaths"]
+		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			## \todo Qt is dog slow with large non-contiguous selections,
+			# so we're only mirroring single selections currently. Rewrite
+			# PathListingWidget so it manages selection itself using a PathMatcher
+			# and we can refer to the same data structure everywhere, and reenable
+			# mirroring of multi-selection.
+			if len( selection ) == 1 :
+				p = self.__pathListing.getPath()
+				selection = [ p.copy().setFromString( s ) for s in selection ]
+				self.__pathListing.setSelectedPaths( selection, scrollToFirst=True, expandNonLeaf=False )
+			else :
+				self.__pathListing.setSelectedPaths( [] )
 		
 GafferUI.EditorWidget.registerType( "SceneEditor", SceneEditor )

@@ -54,7 +54,7 @@ enum TypeId
 	OpenColorIOTypeId = 110758,
 	ObjectToImageTypeId = 110759,
 	
-	LastTypeId = 110899
+	LastTypeId = 110849
 };
 
 } // namespace GafferImage

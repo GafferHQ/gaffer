@@ -115,18 +115,26 @@ class EditorWidget( GafferUI.Widget ) :
 	
 		assert( isinstance( context, ( Gaffer.Context, types.NoneType ) ) )
 	
+		previousContext = self.__context
 		self.__context = context
 		if self.__context is not None :
 			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 		else :
+			## \todo I'm not sure why this code allows a None context - surely we
+			# should always have a valid one?
 			self.__contextChangedConnection = None
 	
 		if callUpdate :
-			self._updateFromContext()
+			modifiedItems = set()
+			if previousContext is not None :
+				modifiedItems |= set( previousContext.names() )
+			if self.__context is not None :
+				modifiedItems |= set( self.__context.names() )
+			self._updateFromContext( modifiedItems )
 		
 	## May be implemented by derived classes to update state based on a change of context.
 	# To temporarily suspend calls to this function, use Gaffer.BlockedConnection( self._contextChangedConnection() ).
-	def _updateFromContext( self ) :
+	def _updateFromContext( self, modifiedItems ) :
 	
 		pass
 		
@@ -146,7 +154,7 @@ class EditorWidget( GafferUI.Widget ) :
 		
 		assert( context.isSame( self.getContext() ) )
 		
-		self._updateFromContext()
+		self._updateFromContext( set( [ key ] ) )
 	
 	@classmethod
 	def types( cls ) :

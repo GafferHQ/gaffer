@@ -209,19 +209,14 @@ class _EventFilter( QtCore.QObject ) :
 			
 			assert( isinstance( widget, GadgetWidget ) )
 		
-			gadgets = widget.getViewportGadget().gadgetsAt( IECore.V2f( qEvent.x(), qEvent.y() ) )
-			
-			toolTip = None
-			for g in gadgets :
-				while g is not None :
-					toolTip = g.getToolTip()
-					if toolTip :
-						break
-					g = g.parent()
-				if toolTip :
-					break
-						
-			QtGui.QToolTip.showText( qEvent.globalPos(), toolTip if toolTip is not None else "", qObject )
+			toolTip = widget.getViewportGadget().getToolTip( 
+				IECore.LineSegment3f(
+					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
+					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+				)
+			 )
+
+			QtGui.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 
 			return True
 			

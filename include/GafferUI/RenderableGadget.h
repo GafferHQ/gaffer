@@ -63,15 +63,14 @@ class RenderableGadget : public Gadget
 
 	public :
 
-		RenderableGadget( IECore::VisibleRenderablePtr renderable );
+		RenderableGadget( IECore::VisibleRenderablePtr renderable = 0 );
 		virtual ~RenderableGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderableGadget, RenderableGadgetTypeId, Gadget );
 
 		virtual Imath::Box3f bound() const;
 		
-		void setRenderable( IECore::VisibleRenderablePtr renderable );
-		IECore::VisibleRenderablePtr getRenderable();
+		void setRenderable( IECore::ConstVisibleRenderablePtr renderable );
 		IECore::ConstVisibleRenderablePtr getRenderable() const;
 		
 		/// Returns the IECoreGL::State object used as the base display
@@ -111,7 +110,13 @@ class RenderableGadget : public Gadget
 		/// a call to setSelection() or through user action.
 		typedef boost::signal<void ( RenderableGadgetPtr )> SelectionChangedSignal; 
 		SelectionChangedSignal &selectionChangedSignal();
+		/// Returns the bounding box of all the selected objects.
+		Imath::Box3f selectionBound() const;
 		//@}
+
+		/// Implemented to return the name of the object under the mouse as
+		/// a tooltip.
+		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 		
 	protected :
 	
@@ -126,11 +131,13 @@ class RenderableGadget : public Gadget
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		
 		void applySelection( IECoreGL::Group *group = 0 );
+		Imath::Box3f selectionBound( IECoreGL::Group *group ) const;
 		
-		IECore::VisibleRenderablePtr m_renderable;
+		IECore::ConstVisibleRenderablePtr m_renderable;
 		IECoreGL::ScenePtr m_scene;
 		IECoreGL::StatePtr m_baseState;
 		IECoreGL::StateComponentPtr m_selectionColor;
+		IECoreGL::StateComponentPtr m_wireframeOn;
 		
 		Selection m_selection;
 		SelectionChangedSignal m_selectionChangedSignal;

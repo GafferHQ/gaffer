@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -50,13 +50,23 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+static NodulePtr srcNodule( ConnectionGadget &c )
+{
+	return c.srcNodule();
+}
+
+static NodulePtr dstNodule( ConnectionGadget &c )
+{
+	return c.dstNodule();
+}
+
 void GafferUIBindings::bindConnectionGadget()
 {
 	IECorePython::RunTimeTypedClass<ConnectionGadget>()
 		.def( init<GafferUI::NodulePtr, GafferUI::NodulePtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ConnectionGadget )
-		.def( "srcNodule", &ConnectionGadget::srcNodule )
-		.def( "dstNodule", &ConnectionGadget::dstNodule )
+		.def( "srcNodule", &srcNodule )
+		.def( "dstNodule", &dstNodule )
 		.def( "setNodules", &ConnectionGadget::setNodules )
 	;
 }

@@ -110,7 +110,29 @@ class PathListingWidgetTest( unittest.TestCase ) :
 
 		w.setExpandedPaths( e )
 		self.assertEqual( len( c ), 4 )
+		
+	def testSelectionSignalFrequency( self ) :
+	
+		d = {
+			"a" : {
+				"e" : 10,
+			},
+			"b" : {
+				"f" : "g",
+			},
+		}
 
+		p = Gaffer.DictPath( d, "/" )
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection=True )
+		
+		c = GafferTest.CapturingSlot( w.selectionChangedSignal() )
+		self.assertEqual( len( c ), 0 )
+
+		w.setSelectedPaths( [ Gaffer.DictPath( d, "/a" ), Gaffer.DictPath( d, "/b" ) ] )
+		self.assertEqual( set( [ str( p ) for p in w.getSelectedPaths() ] ), set( [ "/a", "/b" ] ) )
+		
+		self.assertEqual( len( c ), 1 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

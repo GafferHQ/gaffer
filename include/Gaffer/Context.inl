@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -48,9 +48,9 @@ struct Context::Accessor
 	typedef const T &ResultType;
 	
 	/// Returns true if the value has changed
-	bool set( IECore::CompoundData *data, const IECore::InternedString &name, const T &value )
+	bool set( IECore::DataPtr &data, const T &value )
 	{
-		IECore::TypedData<T> *d = data->member<IECore::TypedData<T> >( name );
+		IECore::TypedData<T> *d = IECore::runTimeCast<IECore::TypedData<T> >( data.get() );
 		if( d )
 		{
 			if( d->readable() == value )
@@ -67,14 +67,18 @@ struct Context::Accessor
 		}
 		else
 		{
-			data->writable()[name] = new IECore::TypedData<T>( value );
+			data = new IECore::TypedData<T>( value );
 			return true;
 		}
 	}
 	
-	ResultType get( const IECore::CompoundData *data, const IECore::InternedString &name )
+	ResultType get( const IECore::ConstDataPtr &data )
 	{
-		return data->member<IECore::TypedData<T> >( name, true )->readable();		
+		if( !data->isInstanceOf( IECore::TypedData<T>::staticTypeId() ) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % IECore::TypedData<T>::staticTypeName() ) );
+		}
+		return static_cast<const IECore::TypedData<T> *>( data.get() )->readable();
 	}
 };
 
@@ -84,32 +88,37 @@ struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::
 	typedef typename boost::remove_pointer<T>::type ValueType;
 	typedef const ValueType *ResultType;
 	
-	bool set( IECore::CompoundData *data, const IECore::InternedString &name, const T &value )
+	bool set( IECore::DataPtr &data, const T &value )
 	{
-		const ValueType *d = data->member<ValueType>( name );
+		const ValueType *d = IECore::runTimeCast<const ValueType>( data.get() );
 		if( d && d->isEqualTo( value ) )
 		{
 			return false;
 		}
 		
-		data->writable()[name] = value->copy();
+		data = value->copy();
 		return true;
 	}
 	
-	ResultType get( const IECore::CompoundData *data, const IECore::InternedString &name )
+	ResultType get( const IECore::DataPtr &data )
 	{
-		return data->member<T>( name, true );		
+		if( !data->isInstanceOf( T::staticTypeId() ) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % T::staticTypeName() ) );
+		}
+		return static_cast<const T *>( data.get() );	
 	}
 };
 
 template<typename T>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
-	if( Accessor<T>().set( m_data.get(), name, value ) )
+	IECore::DataPtr &d = m_data->writable()[name];
+	if( Accessor<T>().set( d, value ) )
 	{
 		if( m_changedSignal )
 		{
-			(*m_changedSignal)( this, name );
+			(*m_changedSignal)( this, name );		
 		}
 	}
 }
@@ -117,7 +126,23 @@ void Context::set( const IECore::InternedString &name, const T &value )
 template<typename T>
 typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name ) const
 {
-	return Accessor<T>().get( m_data.get(), name );
+	IECore::CompoundDataMap::const_iterator it = m_data->readable().find( name );
+	if( it == m_data->readable().end() )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
+	}
+	return Accessor<T>().get( it->second );
+}
+
+template<typename T>
+typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const
+{
+	IECore::CompoundDataMap::const_iterator it = m_data->readable().find( name );
+	if( it == m_data->readable().end() )
+	{
+		return defaultValue;
+	}
+	return Accessor<T>().get( it->second );
 }
 		
 } // namespace Gaffer

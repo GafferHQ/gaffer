@@ -56,17 +56,39 @@ class PathMatcher
 	public :
 	
 		PathMatcher();
+		/// Constructs a deep copy of other.
+		PathMatcher( const PathMatcher &other );
 		
 		template<typename Iterator>
 		PathMatcher( Iterator pathsBegin, Iterator pathsEnd );
 		
+		/// \todo Should this keep the existing tree in place,
+		/// but just remove the terminator flags on any items
+		/// not present in the new paths? This might give
+		/// better performance for selections and expansions
+		/// which will tend to be adding and removing the same
+		/// paths repeatedly.
 		template<typename Iterator>
 		void init( Iterator pathsBegin, Iterator pathsEnd );
+
+		/// Returns true if the path was added, false if
+		/// it was already there.
+		bool addPath( const std::string &path );
+		/// Returns true if the path was removed, false if
+		/// it was not there.
+		bool removePath( const std::string &path );
 	
 		void clear();
 		
+		/// Fills the paths container with all the paths held
+		/// within this matcher.
+		void paths( std::vector<std::string> &paths ) const;
+		
 		Filter::Result match( const std::string &path ) const;
 		Filter::Result match( const std::vector<IECore::InternedString> &path ) const;
+		
+		bool operator == ( const PathMatcher &other ) const;
+		bool operator != ( const PathMatcher &other ) const;
 		
 	private :
 
@@ -74,8 +96,9 @@ class PathMatcher
 		typedef Tokenizer::iterator TokenIterator;
 		struct Node;
 		
-		void addPath( const std::string &path );
-		
+		void removeWalk( Node *node, const TokenIterator &start, const TokenIterator &end, bool &removed );
+		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
+
 		template<typename NameIterator>
 		void matchWalk( Node *node, const NameIterator &start, const NameIterator &end, Filter::Result &result ) const;
 		
