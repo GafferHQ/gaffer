@@ -84,7 +84,7 @@ class ReadNode( Gaffer.DependencyNode ) :
 			self.__parameterHandler.setParameterValue()
 			result = self.__reader.read()
 		
-		plug.setValue( result )
+		plug.setValue( result if result is not None else plug.defaultValue() )
 	
 	def parameterHandler( self ) :
 	

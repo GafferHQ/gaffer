@@ -137,7 +137,12 @@ class ReadNodeTest( unittest.TestCase ) :
 		s.execute( ss )
 
 		self.assertEqual( s["n"]["output"].getValue(), r )
-		
+	
+	def testReadNoFilename( self ) :
+	
+		r = Gaffer.ReadNode()
+		self.assertEqual( r["output"].getValue(), r["output"].defaultValue() )
+			
 if __name__ == "__main__":
 	unittest.main()
 	
