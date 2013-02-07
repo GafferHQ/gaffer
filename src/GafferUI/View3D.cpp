@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,11 +37,14 @@
 
 #include "IECore/Camera.h"
 #include "IECore/Transform.h"
+#include "IECore/AngleConversion.h"
+#include "IECore/MatrixTransform.h"
 
 #include "Gaffer/Plug.h"
 
 #include "GafferUI/View3D.h"
 
+using namespace Imath;
 using namespace Gaffer;
 using namespace GafferUI;
 
@@ -50,6 +54,14 @@ View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
 	:	View( name, inPlug )
 {
 	IECore::CameraPtr camera = new IECore::Camera();
+	
 	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
+	camera->parameters()["projection:fov"] = new IECore::FloatData( 54.43 ); // 35 mm focal length
+	
+	M44f matrix;
+	matrix.translate( V3f( 0, 0, 1 ) );
+	matrix.rotate( IECore::degreesToRadians( V3f( -25, 45, 0 ) ) );
+	camera->setTransform( new IECore::MatrixTransform( matrix ) );
+	
 	viewportGadget()->setCamera( camera );
 }
