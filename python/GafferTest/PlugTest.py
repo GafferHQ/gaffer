@@ -405,6 +405,26 @@ class PlugTest( unittest.TestCase ) :
 		self.assertEqual( p2.getName(), "p2" )
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.getFlags(), p.getFlags() )
+	
+	def testSource( self ) :
+		
+		p1 = Gaffer.Plug( "p1" )
+		p2 = Gaffer.Plug( "p2" )
+		p3 = Gaffer.Plug( "p3" )
+		
+		self.assertTrue( p1.source().isSame( p1 ) )
+		self.assertTrue( p2.source().isSame( p2 ) )
+		self.assertTrue( p3.source().isSame( p3 ) )
+		
+		p2.setInput( p1 )
+		self.assertTrue( p1.source().isSame( p1 ) )
+		self.assertTrue( p2.source().isSame( p1 ) )
+		self.assertTrue( p3.source().isSame( p3 ) )
+		
+		p3.setInput( p2 )
+		self.assertTrue( p1.source().isSame( p1 ) )
+		self.assertTrue( p2.source().isSame( p1 ) )
+		self.assertTrue( p3.source().isSame( p1 ) )
 		
 if __name__ == "__main__":
 	unittest.main()

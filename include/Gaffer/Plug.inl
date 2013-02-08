@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,6 +51,31 @@ template<typename T>
 const T *Plug::getInput() const
 {
 	return IECore::runTimeCast<const T>( m_input );
+}
+
+
+template<typename T>
+T *Plug::source()
+{	
+	Plug *p = this;
+	while( p->m_input )
+	{
+		p = p->m_input;	
+	}
+
+	return IECore::runTimeCast<T>( p );
+}
+		
+template<typename T>
+const T *Plug::source() const
+{
+	const Plug *p = this;
+	while( p->m_input )
+	{
+		p = p->m_input;	
+	}
+
+	return IECore::runTimeCast<T>( p );
 }
 
 } // namespace Gaffer

@@ -145,11 +145,29 @@ class Plug : public GraphComponent
 		/// Pass 0 to remove the current input.
 		/// \undoable
 		virtual void setInput( PlugPtr input );
+		/// Returns the immediate input to this Plug - the
+		/// one set with setInput().
 		template<typename T>
 		T *getInput();
 		template<typename T>
 		const T *getInput() const;
+		/// The immediate input to this Plug as returned by getInput() may
+		/// itself have an input, which may itself have an input and so on.
+		/// This method follows such connections and returns the first plug
+		/// without an input of its own - this can be used to find the node
+		/// ultimately responsible for delivering information to the plug.
+		/// \note If a plug has no input then source() returns the
+		/// plug itself.
+		/// \note The cast to type T is performed after finding the
+		/// source, and not on the intermediate inputs along
+		/// the way.
+		template<typename T>
+		T *source();
+		template<typename T>
+		const T *source() const;
+		/// Removes all outputs from this plug.
 		void removeOutputs();
+		/// Allows iteration over all the outputs of this plug.
 		const OutputContainer &outputs() const;
 		//@}
 	

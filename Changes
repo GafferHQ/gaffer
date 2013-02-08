@@ -90,6 +90,8 @@
 
 * Added a GraphLayout class, used in conjunction with the GraphGadget to perform automatic node connections and graph layout. This replaces ad-hoc code from NodeMenu.py. Still needs a decent fully automatic layout implementation for situations where the user doesn't build the graph manually.
 
+* Added Plug::source() method.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

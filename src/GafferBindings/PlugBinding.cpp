@@ -142,6 +142,11 @@ static PlugPtr getInput( Plug &p )
 	return p.getInput<Plug>();
 }
 
+static PlugPtr source( Plug &p )
+{
+	return p.source<Plug>();
+}
+
 void GafferBindings::bindPlug()
 {
 	typedef PlugWrapper<Plug> Wrapper;
@@ -185,6 +190,7 @@ void GafferBindings::bindPlug()
 		.def( "setFlags", (void (Plug::*)( unsigned, bool ) )&Plug::setFlags )
 		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( Plug )
 		.def( "getInput", &getInput )
+		.def( "source", &source )
 		.def( "removeOutputs", &Plug::removeOutputs )
 		.def( "outputs", &outputs )
 		.def( "__repr__", &repr )
