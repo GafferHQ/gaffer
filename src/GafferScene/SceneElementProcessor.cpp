@@ -84,15 +84,20 @@ void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContai
 
 bool SceneElementProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
+	if( !SceneProcessor::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+	
 	if( plug == filterPlug() )
 	{
-		const Node *n = inputPlug->node();
+		const Node *n = inputPlug->source<Plug>()->node();	
 		if( !n || !n->isInstanceOf( Filter::staticTypeId() ) )
 		{
 			return false;
 		}
 	}
-	return SceneProcessor::acceptsInput( plug, inputPlug );
+	return true;
 }
 
 void SceneElementProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

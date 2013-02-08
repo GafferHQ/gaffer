@@ -106,6 +106,19 @@ class PathFilterTest( unittest.TestCase ) :
 		self.failIf( f["paths"].acceptsInput( p ) )
 		
 		self.failUnless( f["paths"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
+	
+	def testBox( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		s["a"] = GafferScene.Attributes()
+		s["a"]["in"].setInput( s["p"]["out"] )
+		
+		s["f"] = GafferScene.PathFilter()
+		s["a"]["filter"].setInput( s["f"]["match"] )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

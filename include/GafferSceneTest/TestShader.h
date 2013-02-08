@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,76 +34,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Assignment.h"
+#ifndef GAFFERSCENETEST_TESTSHADER_H
+#define GAFFERSCENETEST_TESTSHADER_H
+
 #include "GafferScene/Shader.h"
 
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferScene;
+#include "GafferSceneTest/TypeIds.h"
 
-IE_CORE_DEFINERUNTIMETYPED( Assignment );
-
-size_t Assignment::g_firstPlugIndex = 0;
-
-Assignment::Assignment( const std::string &name )
-	:	SceneElementProcessor( name )
+namespace GafferSceneTest
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "shader" ) );
-}
 
-Assignment::~Assignment()
+class TestShader : public GafferScene::Shader
 {
-}
 
-Gaffer::Plug *Assignment::shaderPlug()
-{
-	return getChild<Plug>( g_firstPlugIndex );
-}
+	public :
 
-const Gaffer::Plug *Assignment::shaderPlug() const
-{
-	return getChild<Plug>( g_firstPlugIndex );
-}
+		TestShader( const std::string &name=staticTypeName() );
+		virtual ~TestShader();
 
-bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !SceneElementProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-	
-	if( plug == shaderPlug() )
-	{
-		return inputPlug->source<Plug>()->ancestor<Shader>();
-	}
-	return true;
-}
-
-bool Assignment::processesAttributes() const
-{
-	return true;
-}
-
-void Assignment::hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
-	if( shader )
-	{
-		shader->stateHash( h );
-	}
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TestShader, TestShaderTypeId, GafferScene::Shader );
 		
-IECore::ConstCompoundObjectPtr Assignment::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
-{
-	CompoundObjectPtr result = inputAttributes->copy();
-	
-	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
-	if( shader )
-	{
-		IECore::ObjectVectorPtr state = shader->state();
-		result->members()["shader"] = state;
-	}
-	
-	return result;
-}
+	protected :
+
+		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;	
+
+};
+
+} // namespace GafferSceneTest
+
+#endif // GAFFERSCENETEST_TESTSHADER_H

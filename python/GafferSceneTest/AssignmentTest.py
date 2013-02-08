@@ -69,31 +69,48 @@ class AssignmentTest( unittest.TestCase ) :
 		a = GafferScene.Assignment()
 		a["in"].setInput( input["out"] )
 		
+		s = GafferSceneTest.TestShader()
+		a["shader"].setInput( s["out"] )
+		
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
 		a["filter"].setInput( f["match"] )
 		
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
-		self.assertNotEqual( len( a["out"].attributes( "/ball1" ) ), IECore.CompoundObject() )
+		self.assertNotEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject() )		
 	
-	@GafferTest.expectedFailure
-	def testFilterSerialisation( self ) :
+	def testFilterInputAcceptance( self ) :
+	
+		a = GafferScene.Assignment()
+		
+		f = GafferScene.PathFilter()
+		self.assertTrue( a["filter"].acceptsInput( f["match"] ) )
+		
+		n = GafferTest.AddNode()
+		self.assertFalse( a["filter"].acceptsInput( n["sum"] ) )
+		
+		p = Gaffer.IntPlug()
+		p.setInput( f["match"] )
+		
+		self.assertTrue( a["filter"].acceptsInput( p ) )
+	
+	def testAssignShaderFromOutsideBox( self ) :
 	
 		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		s["s"] = GafferSceneTest.TestShader()
 		s["a"] = GafferScene.Assignment()
-		s["a"]["f"] = GafferScene.PathFilter()
-		s["a"]["f"]["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
-		s["a"]["filter"].setInput( s["a"]["f"]["match"] )
+		s["a"]["in"].setInput( s["p"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		ss = s.serialise()
+		s["o"] = GafferScene.Options()
+		s["o"]["in"].setInput( s["a"]["out"] )
 		
-		s = Gaffer.ScriptNode()
-		s.execute( ss )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["p"], s["a"] ] ) )
 		
-		self.failUnless( isinstance( s["a"]["f"], GafferScene.PathFilter ) )
-		self.assertEqual( s["a"]["f"]["paths"].getValue( IECore.StringVectorData( [ "/ball1" ] ) ) )
-		self.failUnless( s["a"]["filter"].getInput().isSame( s["a"]["f"]["match"] ) )
+		self.assertTrue( "shader" in s["o"]["out"].attributes( "/plane" ) )
 		
 if __name__ == "__main__":
 	unittest.main()
