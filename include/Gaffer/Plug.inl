@@ -75,7 +75,7 @@ const T *Plug::source() const
 		p = p->m_input;	
 	}
 
-	return IECore::runTimeCast<T>( p );
+	return IECore::runTimeCast<const T>( p );
 }
 
 } // namespace Gaffer
