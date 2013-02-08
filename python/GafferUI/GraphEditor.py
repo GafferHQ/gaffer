@@ -159,15 +159,9 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	
 	def __nodeGadgetAt( self, position ) :
 	
-		gadgets = self.__gadgetWidget.getViewportGadget().gadgetsAt( IECore.V2f( position.x, position.y ) )
-		
-		result = None
-		if len( gadgets ) :
-			result = gadgets[0]
-			if not isinstance( result, GafferUI.NodeGadget ) :
-				result = result.ancestor( GafferUI.NodeGadget.staticTypeId() )	
-	
-		return result
+		viewport = self.__gadgetWidget.getViewportGadget()
+		line = viewport.rasterToGadgetSpace( IECore.V2f( position.x, position.y ) )
+		return self.graphGadget().nodeGadgetAt( line )
 	
 	def __keyPress( self, widget, event ) :
 	

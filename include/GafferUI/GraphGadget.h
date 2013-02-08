@@ -109,6 +109,9 @@ class GraphGadget : public ContainerGadget
 		GraphLayout *getLayout();
 		const GraphLayout *getLayout() const;
 		
+		/// Returns the nodeGadget under the specified line.
+		NodeGadget *nodeGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
+		
 	protected :
 
 		void doRender( const Style *style ) const;
@@ -130,7 +133,6 @@ class GraphGadget : public ContainerGadget
 		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		void offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset );
 		
@@ -167,10 +169,18 @@ class GraphGadget : public ContainerGadget
 	
 		typedef std::map<const Gaffer::Plug *, ConnectionGadget *> ConnectionGadgetMap;
 		ConnectionGadgetMap m_connectionGadgets;
+		
+		enum DragMode
+		{
+			None,
+			Selecting,
+			Moving,
+			Sending
+		};
 
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
-		bool m_dragSelecting;
+		DragMode m_dragMode;
 		
 		GraphLayoutPtr m_layout;
 		

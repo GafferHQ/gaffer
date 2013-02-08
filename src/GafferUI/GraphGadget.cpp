@@ -41,8 +41,7 @@
 #include "OpenEXR/ImathRandom.h"
 #include "OpenEXR/ImathPlane.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -71,7 +70,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragSelecting( false )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -79,7 +78,6 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	dragBeginSignal().connect( boost::bind( &GraphGadget::dragBegin, this, ::_1, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &GraphGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &GraphGadget::dragMove, this, ::_1, ::_2 ) );
-	dragLeaveSignal().connect( boost::bind( &GraphGadget::dragLeave, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
 
 	m_layout = new StandardGraphLayout;
@@ -229,6 +227,30 @@ const GraphLayout *GraphGadget::getLayout() const
 {
 	return m_layout;
 }
+
+NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+				
+	std::vector<GadgetPtr> gadgetsUnderMouse;
+	viewportGadget->gadgetsAt(
+		viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this ),
+		gadgetsUnderMouse
+	);
+				
+	if( !gadgetsUnderMouse.size() )
+	{
+		return 0;
+	}
+	
+	NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0] );
+	if( !nodeGadget )
+	{
+		nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
+	}
+
+	return nodeGadget;
+}
 		
 void GraphGadget::doRender( const Style *style ) const
 {
@@ -253,7 +275,7 @@ void GraphGadget::doRender( const Style *style ) const
 	}
 
 	// render drag select thing if needed
-	if( m_dragSelecting )
+	if( m_dragMode == Selecting )
 	{
 		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 		ViewportGadget::RasterScope rasterScope( viewportGadget );
@@ -374,8 +396,13 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 				
 		if( !gadgetsUnderMouse.size() || gadgetsUnderMouse[0] == this )
 		{
-			// background click - clear the current selection
-			m_scriptNode->selection()->clear();
+			// background click. clear selection unless shift is
+			// held, in which case we're expecting a shift drag
+			// to add to the selection.
+			if( !(event.modifiers & ButtonEvent::Shift) )
+			{
+				m_scriptNode->selection()->clear();
+			}
 			return true;
 		}
 				
@@ -410,6 +437,12 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			return true;
 		}
 	}
+	else if( event.buttons == ButtonEvent::Middle )
+	{
+		// potentially the start of a middle button drag on a node
+		return nodeGadgetAt( event.line );		
+	}
+	
 	return false;
 }
 
@@ -426,15 +459,42 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 		return 0;
 	}
 	
+	m_dragMode = None;
 	m_dragStartPosition = m_lastDragPosition = V2f( i.x, i.y );
-	if( m_scriptNode->selection()->size() )
+	
+	NodeGadget *nodeGadget = nodeGadgetAt( event.line );
+	if( event.buttons == ButtonEvent::Left )
 	{
-		return m_scriptNode->selection();
+		if( nodeGadget && m_scriptNode->selection()->contains( nodeGadget->node() ) )
+		{
+			m_dragMode = Moving;
+			// we have to return an object to start the drag but the drag we're
+			// starting is for our purposes only, so we return an object that won't
+			// be accepted by any other drag targets.
+			return IECore::NullObject::defaultNullObject();
+		}
+		else if( !nodeGadget )
+		{
+			m_dragMode = Selecting;
+			return IECore::NullObject::defaultNullObject();
+		}
 	}
-	else
+	else if( event.buttons == ButtonEvent::Middle )
 	{
-		return new IECore::V2fData( m_dragStartPosition );
+		if( nodeGadget )
+		{
+			m_dragMode = Sending;
+			if( m_scriptNode->selection()->contains( nodeGadget->node() ) )
+			{
+				return m_scriptNode->selection();
+			}
+			else
+			{
+				return nodeGadget->node();
+			}
+		}
 	}
+	
 	return 0;
 }
 
@@ -446,15 +506,23 @@ bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	if( event.sourceGadget == this )
+	if( event.sourceGadget != this )
+	{
+		return false;
+	}
+
+	if( m_dragMode == Moving )
 	{
 		V2f pos = V2f( i.x, i.y );
-		if( event.data->isInstanceOf( Gaffer::Set::staticTypeId() ) )
-		{
-			offsetNodes( static_cast<Gaffer::Set *>( event.data.get() ), pos - m_lastDragPosition );
-		}
+		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
-		renderRequestSignal()( this );		
+		renderRequestSignal()( this );
+		return true;
+	}
+	else if( m_dragMode == Selecting )
+	{
+		m_lastDragPosition = V2f( i.x, i.y );
+		renderRequestSignal()( this );
 		return true;
 	}
 	
@@ -474,11 +542,10 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 	
-	if( event.data->isInstanceOf( Gaffer::Set::staticTypeId() ) )
+	if( m_dragMode == Moving )
 	{
-		// we're dragging some nodes around
 		V2f pos = V2f( i.x, i.y );
-		offsetNodes( static_cast<Gaffer::Set *>( event.data.get() ), pos - m_lastDragPosition );
+		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
 		renderRequestSignal()( this );
 		return true;
@@ -486,7 +553,6 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	else
 	{
 		// we're drag selecting
-		m_dragSelecting	= true;
 		m_lastDragPosition = V2f( i.x, i.y );
 		renderRequestSignal()( this );
 		return true;
@@ -496,28 +562,10 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	return false;
 }
 
-bool GraphGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
-{
-	V3f i;
-	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
-	{
-		return false;
-	}
-
-	if( event.data->isInstanceOf( Gaffer::Set::staticTypeId() ) )
-	{
-		// we've been dragging some nodes around, but now they've been accepted
-		// by some other destination. put the nodes back where they came from.
-		offsetNodes( static_cast<Gaffer::Set *>( event.data.get() ), m_dragStartPosition - m_lastDragPosition );
-		m_lastDragPosition = m_dragStartPosition;		
-	}
-	
-	return true;
-}
-
 bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
-	m_dragSelecting = false;
+	DragMode dragMode = m_dragMode;
+	m_dragMode = None;
 	
 	if( !m_scriptNode )
 	{
@@ -530,7 +578,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	if( event.data->isInstanceOf( V2fData::staticTypeId() ) )
+	if( dragMode == Selecting )
 	{
 		Box2f selectionBound;
 		selectionBound.extendBy( m_dragStartPosition );
