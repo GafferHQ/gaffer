@@ -96,14 +96,17 @@ class Viewer( GafferUI.NodeSetEditor ) :
 							if not viewInput or not viewInput.isSame( plug ) :
 								self.__currentView["in"].setInput( plug )
 								needToUpdate = True
-							break
-					# if that failed then make a new one
+							break # break out of view loop
+					# if that failed then try to make a new one
 					if self.__currentView is None :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
 							self.__views.append( self.__currentView )
 							needToUpdate = True
-							break
+					# if we succeeded in getting a suitable view, then
+					# don't bother checking the other plugs
+					if self.__currentView is not None :
+						break
 										
 		if self.__currentView is not None :	
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
