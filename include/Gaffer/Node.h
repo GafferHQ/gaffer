@@ -97,6 +97,11 @@ class Node : public GraphComponent
 		/// PlugType::acceptsInput() must also be true to allow a successful
 		/// connection, so this function may only place additional restrictions on
 		/// inputs - it cannot enable inputs that the plugs themselves will not accept.
+		/// Similarly, when overriding this method, you must first call the base class
+		/// implementation, and only return true if that too returned true. In other
+		/// words, classes must not be more permissive than their base classes
+		/// in accepting connections.
+		/// 
 		/// This is protected, and its results are made public by Plug::acceptsInput()
 		/// which calls through to this.
 		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;

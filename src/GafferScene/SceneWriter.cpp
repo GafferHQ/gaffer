@@ -81,13 +81,6 @@ const StringPlug *SceneWriter::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-
-bool SceneWriter::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
-{
-	return true;
-}
-
-
 void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const ScenePlug::ScenePath &scenePath, IECore::SceneInterface *output )
 {
 	ContextPtr context = new Context;

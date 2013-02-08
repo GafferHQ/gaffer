@@ -64,10 +64,6 @@ class SceneWriter : public Gaffer::Node
 		const ScenePlug *inPlug() const;
 		
 		void execute();
-				
-	protected :
-		
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 		
 	private :
 	
