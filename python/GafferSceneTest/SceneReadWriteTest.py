@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import os
 import unittest
 import threading
 
@@ -90,7 +91,54 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 5, 0, 2 ) ) )
 		
+	def testSceneCacheRoundtrip( self ) :
 		
+		scene = IECore.SceneCache( "/tmp/fromPython.scc", IECore.IndexedIO.OpenMode.Write )
+		sc = scene.createChild( "a" )
+		sc.writeObject( IECore.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
+		matrix = IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ).rotate( IECore.V3d( 0, 0, IECore.degreesToRadians( -30 ) ) )
+		sc.writeTransform( IECore.M44dData( matrix ), 0 )
+		sc = sc.createChild( "b" )
+		sc.writeObject( IECore.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
+		sc.writeTransform( IECore.M44dData( matrix ), 0 )
+		sc = sc.createChild( "c" )
+		sc.writeObject( IECore.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
+		sc.writeTransform( IECore.M44dData( matrix ), 0 )
+		
+		del scene, sc
+		
+		def testCacheFile( f ) :
+			sc = IECore.SceneCache( f, IECore.IndexedIO.OpenMode.Read )
+			a = sc.child( "a" )
+			self.failUnless( a.hasObject() )
+			self.failUnless( isinstance( a.readObject( 0 ), IECore.MeshPrimitive ) )
+			self.failUnless( a.readTransformAsMatrix( 0 ).equalWithAbsError( matrix, 1e-6 ) )
+			b = a.child( "b" )
+			self.failUnless( b.hasObject() )
+			self.failUnless( isinstance( b.readObject( 0 ), IECore.MeshPrimitive ) )
+			self.failUnless( b.readTransformAsMatrix( 0 ).equalWithAbsError( matrix, 1e-6 ) )
+			c = b.child( "c" )
+			self.failUnless( c.hasObject() )
+			self.failUnless( isinstance( c.readObject( 0 ), IECore.MeshPrimitive ) )
+			self.failUnless( c.readTransformAsMatrix( 0 ).equalWithAbsError( matrix, 1e-6 ) )
+		
+		testCacheFile( "/tmp/fromPython.scc" )
+		
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( "/tmp/fromPython.scc" )
+		self.assertSceneValid( reader["out"] )
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( reader["out"] )
+		writer["fileName"].setValue( "/tmp/test.scc" )
+		writer.execute()
+		os.remove( "/tmp/fromPython.scc" )
+		
+		testCacheFile( "/tmp/test.scc" )
 	
+	def tearDown( self ) :
+		
+		if os.path.exists( "/tmp/test.scc" ) :
+			os.remove( "/tmp/test.scc" )
+
 if __name__ == "__main__":
 	unittest.main()
