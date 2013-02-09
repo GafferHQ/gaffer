@@ -96,6 +96,8 @@
 
 * GraphGadget now uses middle mouse drag for sending nodes to other widgets - left mouse drag is for moving nodes only. Shift drags can be used to add nodes to the current selection.
 
+* TabbedContainer switches tabs automatically on drag enter, to allow drags to access targets that aren't current at the start of the drag.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

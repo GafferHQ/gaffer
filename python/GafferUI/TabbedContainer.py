@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,9 +45,20 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
+	__DragState = IECore.Enum.create( "None", "Waiting", "Active" )
+
 	def __init__( self, cornerWidget=None, **kw ) :
 	
 		GafferUI.ContainerWidget.__init__( self, QtGui.QTabWidget(), **kw )
+		
+		self.__tabBar = GafferUI.Widget( QtGui.QTabBar() )
+		self.__tabBar._qtWidget().setDrawBase( False )
+		self.__tabBarDragEnterConnection = self.__tabBar.dragEnterSignal().connect( Gaffer.WeakMethod( self.__tabBarDragEnter ) )
+		self.__tabBarDragMoveConnection = self.__tabBar.dragMoveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragMove ) )
+		self.__tabBarDragLeaveConnection = self.__tabBar.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragLeave ) )
+		self.__tabBarDragState = self.__DragState.None
+		
+		self._qtWidget().setTabBar( self.__tabBar._qtWidget() )
 		
 		self._qtWidget().setUsesScrollButtons( False )
 		self._qtWidget().setElideMode( QtCore.Qt.ElideNone )
@@ -175,4 +186,36 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def __currentChanged( self, index ) :
 		
 		self.__currentChangedSignal( self, self[index] )
+	
+	def __tabBarDragEnter( self, widget, event ) :
+	
+		if isinstance( event.data, IECore.NullObject ) :
+			return False
 		
+		# we delay the tab switch a little to make sure that the user isn't just passing through
+		self.__tabBarDragState = self.__DragState.Waiting
+		QtCore.QTimer.singleShot( QtGui.QApplication.doubleClickInterval(), self.__tabBarDragActivate )
+		return True
+
+	def __tabBarDragMove( self, widget, event ) :
+	
+		if self.__tabBarDragState == self.__DragState.Active :
+			self.__switchToTabUnderCursor()
+	
+	def __tabBarDragLeave( self, widget, event ) :
+	
+		self.__tabBarDragState = self.__DragState.None
+		return True
+
+	def __tabBarDragActivate( self ) :
+	
+		if self.__tabBarDragState == self.__DragState.Waiting :
+			self.__tabBarDragState = self.__DragState.Active
+			self.__switchToTabUnderCursor()
+	
+	def __switchToTabUnderCursor( self ) :
+	
+		p = self.__tabBar._qtWidget().mapFromGlobal( QtGui.QCursor.pos() )
+		tab = self.__tabBar._qtWidget().tabAt( p )
+		if tab >= 0 :
+			self._qtWidget().setCurrentIndex( tab )

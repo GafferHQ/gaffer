@@ -39,6 +39,7 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "IECore/MatrixTransform.h"
+#include "IECore/NullObject.h"
 
 #include "IECoreGL/ToGLCameraConverter.h"
 #include "IECoreGL/PerspectiveCamera.h"
@@ -382,7 +383,9 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 			// set of non-const signals on the ViewportGadget, or maybe even having ViewportGadget
 			// not derived from Gadget at all. this seems the lesser of two evils.
 			const_cast<DragDropEvent &>( event ).sourceGadget = this;
-			return this;
+			// we have to return something to start the drag, but we return something that
+			// noone else will accept to make sure we keep the drag to ourself.
+			return IECore::NullObject::defaultNullObject();
 		}
 		else
 		{
