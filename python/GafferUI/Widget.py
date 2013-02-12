@@ -969,7 +969,18 @@ class Widget( object ) :
 			border-top: 1px solid $backgroundDark;
 			top: -1px;
 		}
+		
+		QTabWidget[gafferHighlighted=\"true\"]::pane {
+			border: 1px solid $brightColor;
+			border-top: 1px solid $brightColor;
+			top: -1px;
+		}
 
+		QTabWidget[gafferHighlighted=\"true\"] QTabBar::tab:selected {
+			border: 1px solid $brightColor;
+			border-bottom-color: $backgroundMid; /* blend into frame below */
+		}
+		
 		QCheckBox#gafferCollapsibleToggle {
 		
 			font-weight: bold;
