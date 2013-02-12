@@ -46,6 +46,13 @@ GafferUI.PlugValueWidget.registerCreator(
 	sections = (
 		
 		(
+			"Quality",
+			(
+				( "ri:pixelSamples", "Pixel Samples" ),
+			),
+		),
+		
+		(
 			"Search Paths",
 			(
 				( "ri:searchpath:shader", "Shaders" ),

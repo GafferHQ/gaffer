@@ -46,6 +46,8 @@ RenderManOptions::RenderManOptions( const std::string &name )
 {
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 	
+	options->addOptionalMember( "ri:pixelSamples", new IECore::V2iData( V2i( 3 ) ), "pixelSamples", Gaffer::Plug::Default, false );
+
 	// searchpath parameters
 	
 	options->addOptionalMember( "ri:searchpath:shader", new IECore::StringData( "" ), "shaderSearchPath", Gaffer::Plug::Default, false );

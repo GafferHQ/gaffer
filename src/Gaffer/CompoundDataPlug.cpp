@@ -204,6 +204,14 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 			valuePlug->setValue( static_cast<const BoolData *>( value )->readable() );
 			return valuePlug;
 		}
+		case V2iDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const V2iData *>( value ) );
+		}
+		case V3iDataTypeId :
+		{
+			return compoundNumericValuePlug( name, direction, flags, static_cast<const V3iData *>( value ) );
+		}
 		case V2fDataTypeId :
 		{
 			return compoundNumericValuePlug( name, direction, flags, static_cast<const V2fData *>( value ) );
@@ -284,6 +292,10 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return new StringData( static_cast<const StringPlug *>( plug )->getValue() );
 		case BoolPlugTypeId :
 			return new BoolData( static_cast<const BoolPlug *>( plug )->getValue() );
+		case V2iPlugTypeId :
+			return new V2iData( static_cast<const V2iPlug *>( plug )->getValue() );
+		case V3iPlugTypeId :
+			return new V3iData( static_cast<const V3iPlug *>( plug )->getValue() );
 		case V2fPlugTypeId :
 			return new V2fData( static_cast<const V2fPlug *>( plug )->getValue() );
 		case V3fPlugTypeId :
