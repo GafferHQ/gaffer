@@ -148,7 +148,7 @@ SceneReader::~SceneReader()
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
-	Box3d b = entry->sceneInterface()->readBound( 0 );
+	Box3d b = entry->sceneInterface()->readBound( context->getFrame() );
 	return Box3f( b.min, b.max );
 }
 
