@@ -48,6 +48,14 @@ class RenderManRender( GafferScene.Render ) :
 		
 		self.addChild(
 			Gaffer.StringPlug(
+				"mode",
+				Gaffer.Plug.Direction.In,
+				"render",
+			)
+		)
+		
+		self.addChild(
+			Gaffer.StringPlug(
 				"ribFileName",
 			)
 		)
@@ -67,8 +75,9 @@ class RenderManRender( GafferScene.Render ) :
 		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython\" \"%s\" ] [ %f %f %f %f %f %f ]\n" % \
 			(
 				pythonString,
-				bound.min.x, bound.min.y, bound.min.z,
-				bound.max.x, bound.max.y, bound.max.z
+				bound.min.x, bound.max.x,
+				bound.min.y, bound.max.y,
+				bound.min.z, bound.max.z,
 			)
 				
 		renderer.command(
@@ -81,7 +90,11 @@ class RenderManRender( GafferScene.Render ) :
 		
 	def _commandAndArgs( self ) :
 		
-		return [ "renderdl", self.__fileName() ]
+		mode = self["mode"].getValue()
+		if mode == "render" :
+			return [ "renderdl", self.__fileName() ]
+		else :
+			return []
 			
 	def __fileName( self ) : 
 	

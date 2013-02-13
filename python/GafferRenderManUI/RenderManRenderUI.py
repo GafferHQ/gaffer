@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,6 +37,16 @@
 import Gaffer
 import GafferUI
 import GafferRenderMan
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferRenderMan.RenderManRender.staticTypeId(),
+	"mode",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Render", "render" ),
+		( "Generate RIB only", "generate" ),
+	),
+)
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManRender.staticTypeId(),
