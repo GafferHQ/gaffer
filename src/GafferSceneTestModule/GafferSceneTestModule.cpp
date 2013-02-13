@@ -37,6 +37,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferSceneTest/CompoundObjectSource.h"
@@ -46,12 +48,18 @@
 using namespace boost::python;
 using namespace GafferSceneTest;
 
+static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	traverseScene( scenePlug, context );
+}
+
 BOOST_PYTHON_MODULE( _GafferSceneTest )
 {
 	
 	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
 	GafferBindings::NodeClass<TestShader>();
 
-	def( "traverseScene", &traverseScene );
+	def( "traverseScene", &traverseSceneWrapper );
 
 }
