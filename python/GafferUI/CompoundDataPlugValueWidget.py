@@ -102,11 +102,12 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
 				
 		if label is not None :
-			nameWidget = GafferUI.Label(
-				label,
+			nameWidget = GafferUI.NameLabel( 
+				childPlug,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 			)
+			nameWidget.setText( label )
 		else :
 			nameWidget = GafferUI.PlugValueWidget.create( childPlug["name"] )
 			
