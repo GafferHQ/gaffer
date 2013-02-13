@@ -60,16 +60,15 @@ class Render( Gaffer.Node ) :
 				
 		scenePlug = self["in"].getInput()
 		globals = scenePlug["globals"].getValue()
-		cameraPath = ""
-		if globals :
-			for g in globals :
-				if isinstance( g, IECore.PreWorldRenderable ) :
-					g.render( renderer )
-				if isinstance( g, IECore.Options ) :
-					if "gaffer:renderCamera" in g.options :
-						cameraPath = g.options["gaffer:renderCamera"].value
-
-		self.__outputCamera( scenePlug, cameraPath, renderer )
+				
+		for name, value in globals.items() :
+			if isinstance( value, IECore.PreWorldRenderable ) :
+				value.render( renderer )
+			elif isinstance( value, IECore.Data ) :
+				renderer.setOption( name, value )
+		
+		if "gaffer:renderCamera" in globals :
+			self.__outputCamera( scenePlug, globals["gaffer:renderCamera"].value, renderer )
 										
 		with IECore.WorldBlock( renderer ) :
 		

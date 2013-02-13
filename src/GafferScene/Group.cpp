@@ -401,7 +401,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	}
 }
 
-IECore::ConstObjectVectorPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->globalsPlug()->getValue();
 }

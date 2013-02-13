@@ -72,11 +72,11 @@ class GlobalsProcessor : public SceneProcessor
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		/// Implemented to call processGlobals.
-		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
 		/// Must be implemented by derived classes.
 		virtual void hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const = 0;
+		virtual IECore::ConstCompoundObjectPtr processGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const = 0;
 		
 };
 

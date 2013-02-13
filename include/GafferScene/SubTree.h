@@ -70,7 +70,7 @@ class SubTree : public SceneProcessor
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		ScenePath sourcePath( const ScenePath &outputPath ) const;
 		

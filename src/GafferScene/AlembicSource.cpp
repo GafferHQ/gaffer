@@ -176,7 +176,7 @@ IECore::ConstInternedStringVectorDataPtr AlembicSource::computeChildNames( const
 	}
 }
 
-IECore::ConstObjectVectorPtr AlembicSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr AlembicSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
 }

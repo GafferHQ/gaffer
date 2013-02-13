@@ -273,7 +273,7 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 	}
 }
 
-IECore::ConstObjectVectorPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->globalsPlug()->getValue();
 }

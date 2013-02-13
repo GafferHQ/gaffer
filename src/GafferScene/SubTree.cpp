@@ -158,7 +158,7 @@ IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const Scene
 	return inPlug()->childNames( sourcePath( path ) );
 }
 
-IECore::ConstObjectVectorPtr SubTree::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->globalsPlug()->getValue();
 }

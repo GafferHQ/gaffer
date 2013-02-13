@@ -256,7 +256,7 @@ IECore::ConstInternedStringVectorDataPtr ObjectSourceBase<BaseType>::computeChil
 }
 
 template<typename BaseType>
-IECore::ConstObjectVectorPtr ObjectSourceBase<BaseType>::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr ObjectSourceBase<BaseType>::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
 }

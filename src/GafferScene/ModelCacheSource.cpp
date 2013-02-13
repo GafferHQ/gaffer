@@ -194,7 +194,7 @@ IECore::ConstInternedStringVectorDataPtr ModelCacheSource::computeChildNames( co
 	return result;
 }
 
-IECore::ConstObjectVectorPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr ModelCacheSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
 }

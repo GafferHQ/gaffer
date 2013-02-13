@@ -83,13 +83,9 @@ void Options::hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h
 	optionsPlug()->hash( h );
 }
 
-IECore::ConstObjectVectorPtr Options::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr Options::processGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	IECore::ObjectVectorPtr result = inputGlobals->copy();
-
-	IECore::OptionsPtr options = new IECore::Options;
-	optionsPlug()->fillCompoundData( options->options() );
-	result->members().push_back( options );
-
+	IECore::CompoundObjectPtr result = inputGlobals->copy();
+	optionsPlug()->fillCompoundObject( result->members() );
 	return result;
 }

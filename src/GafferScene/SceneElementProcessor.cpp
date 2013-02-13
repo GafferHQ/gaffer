@@ -228,7 +228,7 @@ IECore::ConstInternedStringVectorDataPtr SceneElementProcessor::computeChildName
 	return inPlug()->childNamesPlug()->getValue();
 }
 
-IECore::ConstObjectVectorPtr SceneElementProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr SceneElementProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->globalsPlug()->getValue();
 }

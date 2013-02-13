@@ -167,13 +167,17 @@ void Displays::hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &
 	displaysPlug()->hash( h );
 }
 
-IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr Displays::processGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	ObjectVectorPtr result = new ObjectVector;
+	const CompoundPlug *dsp = displaysPlug(); 
+	if( !dsp->children().size() )
+	{
+		return inputGlobals;
+	}
+	
+	CompoundObjectPtr result = inputGlobals->copy();
 	
 	// add our displays to the result
-	set<string> displaysCreated;
-	const CompoundPlug *dsp = displaysPlug(); 
 	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
 	{
 		const CompoundPlug *displayPlug = *it;
@@ -186,27 +190,8 @@ IECore::ConstObjectVectorPtr Displays::processGlobals( const Gaffer::Context *co
 			{
 				DisplayPtr d = new Display( name, type, data );
 				displayPlug->getChild<CompoundDataPlug>( "parameters" )->fillCompoundData( d->parameters() );
-				result->members().push_back( d );
-				displaysCreated.insert( name );
+				result->members()["display:" + name] = d;
 			}
-		}
-	}
-	
-	// copy over the input globals, unless they're a display with a name clashing with one
-	// we made ourselves.
-	for( vector<ObjectPtr>::const_iterator it = inputGlobals->members().begin(), eIt = inputGlobals->members().end(); it!=eIt; it++ )
-	{
-		bool transfer = true;
-		if( const Display *d = runTimeCast<Display>( it->get() ) )
-		{
-			if( displaysCreated.find( d->getName() ) != displaysCreated.end() )
-			{
-				transfer = false;
-			}
-		}
-		if( transfer )
-		{
-			result->members().push_back( *it );
 		}
 	}
 	

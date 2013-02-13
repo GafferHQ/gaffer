@@ -207,7 +207,7 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 	return result;
 }
 
-IECore::ConstObjectVectorPtr SceneReader::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
 }

@@ -79,7 +79,7 @@ IECore::ConstInternedStringVectorDataPtr SceneContextProcessorBase::computeChild
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeChildNames" );
 }
 
-IECore::ConstObjectVectorPtr SceneContextProcessorBase::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr SceneContextProcessorBase::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeGlobals" );
 }

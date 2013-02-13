@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,7 +48,7 @@ class ModelCacheSourceTest( GafferSceneTest.SceneTestCase ) :
 	def testGlobals( self ) :
 	
 		m = GafferScene.ModelCacheSource()
-		self.assertEqual( m["out"]["globals"].getValue(), IECore.ObjectVector() )
+		self.assertEqual( m["out"]["globals"].getValue(), IECore.CompoundObject() )
 	
 	def testAttributes( self ) :
 	

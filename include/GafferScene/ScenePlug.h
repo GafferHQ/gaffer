@@ -95,11 +95,10 @@ class ScenePlug : public Gaffer::CompoundPlug
 		Gaffer::InternedStringVectorDataPlug *childNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *childNamesPlug() const;
 		/// The plug used to pass renderer options including displays etc,
-		/// represented as an ObjectVector of IECore::PreWorldRenderables.
-		/// Note that this is not sensitive to the "scene:path" context
-		/// entry.
-		Gaffer::ObjectVectorPlug *globalsPlug();
-		const Gaffer::ObjectVectorPlug *globalsPlug() const;
+		/// represented as a CompoundObject. Note that this is not sensitive
+		/// to the "scene:path" context entry.
+		Gaffer::CompoundObjectPlug *globalsPlug();
+		const Gaffer::CompoundObjectPlug *globalsPlug() const;
 		//@}
 		
 		/// The type used to specify the current scene path in

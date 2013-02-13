@@ -81,7 +81,7 @@ class SceneElementProcessor : public SceneProcessor
 		/// Implemented as a pass-through.
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
-		virtual IECore::ConstObjectVectorPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
 		/// @name Scene processing methods
 		/// These methods should be reimplemented by derived classes to process the input scene - they will be called as

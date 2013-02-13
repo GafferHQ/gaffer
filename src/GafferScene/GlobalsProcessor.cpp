@@ -108,8 +108,8 @@ IECore::ConstInternedStringVectorDataPtr GlobalsProcessor::computeChildNames( co
 	return inPlug()->childNamesPlug()->getValue();
 }
 
-IECore::ConstObjectVectorPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::ConstObjectVectorPtr globals = inPlug()->globalsPlug()->getValue();
+	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	return processGlobals( context, globals );
 }

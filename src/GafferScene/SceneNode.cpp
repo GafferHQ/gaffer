@@ -127,7 +127,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else if( output == scenePlug->globalsPlug() )
 		{
-			static_cast<ObjectVectorPlug *>( output )->setValue(
+			static_cast<CompoundObjectPlug *>( output )->setValue(
 				computeGlobals( context, scenePlug )
 			);
 		}

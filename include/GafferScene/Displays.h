@@ -69,7 +69,7 @@ class Displays : public GlobalsProcessor
 	protected :
 
 		virtual void hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectVectorPtr processGlobals( const Gaffer::Context *context, IECore::ConstObjectVectorPtr inputGlobals ) const;
+		virtual IECore::ConstCompoundObjectPtr processGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
 
 	private :
 	

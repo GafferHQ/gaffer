@@ -104,10 +104,10 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 	);
 	
 	addChild(
-		new ObjectVectorPlug(
+		new CompoundObjectPlug(
 			"globals",	
 			direction,
-			new IECore::ObjectVector(),
+			new IECore::CompoundObject(),
 			childFlags
 		)
 	);
@@ -191,14 +191,14 @@ const Gaffer::InternedStringVectorDataPlug *ScenePlug::childNamesPlug() const
 	return getChild<InternedStringVectorDataPlug>( 4 );
 }
 
-Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug()
+Gaffer::CompoundObjectPlug *ScenePlug::globalsPlug()
 {
-	return getChild<ObjectVectorPlug>( 5 );
+	return getChild<CompoundObjectPlug>( 5 );
 }
 
-const Gaffer::ObjectVectorPlug *ScenePlug::globalsPlug() const
+const Gaffer::CompoundObjectPlug *ScenePlug::globalsPlug() const
 {
-	return getChild<ObjectVectorPlug>( 5 );
+	return getChild<CompoundObjectPlug>( 5 );
 }
 
 Imath::Box3f ScenePlug::bound( const ScenePath &scenePath ) const

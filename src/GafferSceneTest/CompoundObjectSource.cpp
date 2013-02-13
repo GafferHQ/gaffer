@@ -140,7 +140,7 @@ IECore::ConstInternedStringVectorDataPtr CompoundObjectSource::computeChildNames
 	return result;
 }
 
-IECore::ConstObjectVectorPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	return outPlug()->globalsPlug()->defaultValue();
 }
