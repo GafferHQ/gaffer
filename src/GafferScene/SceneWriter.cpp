@@ -97,7 +97,7 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 	
 	ConstObjectPtr object = scenePlug->objectPlug()->getValue();
 	
-	if( object && scenePath.size() > 0 )
+	if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 	{
 		output->writeObject( object, 0 );
 	}
