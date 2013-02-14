@@ -416,6 +416,10 @@ class _TargetButton( GafferUI.Button ) :
 		GafferUI.Button.__init__( self, image="targetNodesLocked.png", hasFrame=False )
 		
 		self.__currentTabChangedConnection = tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
+		self.__dragEnterConnection = tabbedContainer.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragLeaveConnection = tabbedContainer.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__dropConnection = tabbedContainer.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		
 		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 	
 		self.__update( tabbedContainer.getCurrent() )
@@ -463,3 +467,40 @@ class _TargetButton( GafferUI.Button ) :
 			nodeSet = selectionSet
 		editor.setNodeSet( nodeSet )
 	
+	def __dragEnter( self, tabbedContainer, event ) :
+	
+		currentEditor = tabbedContainer.getCurrent()
+		if not isinstance( currentEditor, GafferUI.NodeSetEditor ) :
+			return False
+		
+		result = False
+		if isinstance( event.data, Gaffer.Node ) :
+			result = True
+		elif isinstance( event.data, Gaffer.Set ) :
+			if event.data.size() and isinstance( event.data[0], Gaffer.Node ) :
+				result = True
+		
+		if result :
+			self.setHighlighted( True )
+			tabbedContainer.setHighlighted( True )
+		
+		return result
+		
+	def __dragLeave( self, tabbedContainer, event ) :
+	
+		self.setHighlighted( False )
+		tabbedContainer.setHighlighted( False )
+
+	def __drop( self, tabbedContainer, event ) :
+	
+		if isinstance( event.data, Gaffer.Node ) :
+			nodeSet = Gaffer.StandardSet( [ event.data ] )
+		else :
+			nodeSet = Gaffer.StandardSet( [ x for x in event.data if isinstance( x, Gaffer.Node ) ] )		
+	
+		tabbedContainer.getCurrent().setNodeSet( nodeSet )
+		
+		self.setHighlighted( False )
+		tabbedContainer.setHighlighted( False )
+		
+		return True

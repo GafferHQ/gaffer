@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -904,7 +904,6 @@ class Widget( object ) :
 			border-top-left-radius: 3px;
 			border-top-right-radius: 3px;
 			margin: 0px;
-			margin-left: -1px; /* share edge with previous tab */
 
 		}
 
@@ -926,9 +925,13 @@ class Widget( object ) :
 		
 			color: $foregroundFaded;
 			background-color: $backgroundDark;
-		
+			border-color: transparent;
+			border-radius: 0px;
+			padding-bottom: 2px;
+			padding-top: 2px;
+			margin-top: 4px;
 		}
-		
+ 	
 		QSplitter::handle:vertical {
 		
 			background-color: $backgroundDark;
@@ -979,6 +982,10 @@ class Widget( object ) :
 		QTabWidget[gafferHighlighted=\"true\"] QTabBar::tab:selected {
 			border: 1px solid $brightColor;
 			border-bottom-color: $backgroundMid; /* blend into frame below */
+		}
+		
+		QTabWidget[gafferHighlighted=\"true\"] QTabBar::tab:!selected {
+			border-bottom-color: $brightColor;
 		}
 		
 		QCheckBox#gafferCollapsibleToggle {
