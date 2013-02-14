@@ -115,7 +115,8 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 				for( OutputIterator oIt = outputs.begin(), eIt = outputs.end(); oIt != eIt; oIt++ )
 				{
 					Plug *output = *oIt;
-					if( !verifiedChildNodes->contains( output->node() ) )
+					const Node *outputNode = output->node();
+					if( outputNode->parent<Node>() == parent && !verifiedChildNodes->contains( outputNode ) )
 					{
 						PlugMap::const_iterator mapIt = plugMap.find( plug );
 						if( mapIt == plugMap.end() )
