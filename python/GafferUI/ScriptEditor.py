@@ -112,7 +112,8 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 					try :
 						if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
 							result = eval( toExecute, self.__executionDict, self.__executionDict )
-							self.__outputWidget.appendText( str( result ) )
+							if result is not None :
+								self.__outputWidget.appendText( str( result ) )
 						else :
 							exec( toExecute, self.__executionDict, self.__executionDict )
 						if not haveSelection :
