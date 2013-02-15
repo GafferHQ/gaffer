@@ -34,22 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_TYPEIDS_H
-#define GAFFERRENDERMAN_TYPEIDS_H
+#ifndef GAFFERRENDERMAN_RENDERMANLIGHT_H
+#define GAFFERRENDERMAN_RENDERMANLIGHT_H
+
+#include "GafferScene/Light.h"
+
+#include "GafferRenderMan/TypeIds.h"
 
 namespace GafferRenderMan
 {
 
-enum TypeId
+class RenderManLight : public GafferScene::Light
 {
-	RenderManShaderTypeId = 110950,
-	RenderManOptionsTypeId = 110951,
-	RenderManAttributesTypeId = 110952,
-	RenderManLightTypeId = 110953,
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManLight, RenderManLightTypeId, GafferScene::Light );
+
+		RenderManLight( const std::string &name=staticTypeName() );
+		virtual ~RenderManLight();
+
+		void loadShader( const std::string &shaderName );
+				
+	protected :
+
+		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::LightPtr computeLight( const Gaffer::Context *context ) const;
+
+	private :
 	
-	LastTypeId = 110999
+		static size_t g_firstPlugIndex;
+
 };
 
 } // namespace GafferRenderMan
 
-#endif // GAFFERRENDERMAN_TYPEIDS_H
+#endif // GAFFERRENDERMAN_RENDERMANLIGHT_H

@@ -80,6 +80,7 @@ enum TypeId
 	SceneWriterTypeId = 110535,
 	SceneReaderTypeId = 110536,
 	PathMatcherDataTypeId = 110537,
+	LightTypeId = 110538,
 	
 	LastTypeId = 110650
 };

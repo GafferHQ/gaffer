@@ -90,8 +90,8 @@ void SubTree::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *cont
 	{
 		if( output == outPlug()->globalsPlug() )
 		{
-			// pass-through for globals
-			h = inPlug()->globalsPlug()->hash();
+			inPlug()->globalsPlug()->hash( h );
+			rootPlug()->hash( h );
 		}
 		else
 		{
@@ -160,7 +160,23 @@ IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const Scene
 
 IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return inPlug()->globalsPlug()->getValue();
+	IECore::CompoundObjectPtr result = inPlug()->globalsPlug()->getValue()->copy();
+
+	const IECore::CompoundData *inputForwardDeclarations = result->member<IECore::CompoundData>( "gaffer:forwardDeclarations" );
+	if( inputForwardDeclarations )
+	{
+		std::string root = rootPlug()->getValue();
+		IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
+		for( IECore::CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
+		{
+			const IECore::InternedString &inputPath = it->first;
+			std::string outputPath( inputPath, root.size() );
+			forwardDeclarations->writable()[outputPath] = it->second;
+		}
+		result->members()["gaffer:forwardDeclarations"] = forwardDeclarations;
+	}
+
+	return result;
 }
 
 SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath ) const

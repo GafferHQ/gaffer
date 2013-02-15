@@ -41,6 +41,7 @@
 #include "GafferRenderMan/RenderManShader.h"
 #include "GafferRenderMan/RenderManAttributes.h"
 #include "GafferRenderMan/RenderManOptions.h"
+#include "GafferRenderMan/RenderManLight.h"
 
 using namespace boost::python;
 using namespace GafferRenderMan;
@@ -53,8 +54,12 @@ BOOST_PYTHON_MODULE( _GafferRenderMan )
 		.def( "shaderLoader", &RenderManShader::shaderLoader, return_value_policy<reference_existing_object>() )
 		.staticmethod( "shaderLoader" )
 	;
+	
+	GafferBindings::NodeClass<RenderManLight>()
+		.def( "loadShader", &RenderManLight::loadShader )
+	;
 
 	GafferBindings::NodeClass<RenderManAttributes>();
 	GafferBindings::NodeClass<RenderManOptions>();
-
+	
 }

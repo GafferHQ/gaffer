@@ -119,13 +119,9 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	}
 	else if( const ScenePlug *s = input->parent<ScenePlug>() )
 	{
-		// all input scene plugs affect the output, except the globals, where only
-		// the first affects the output.
-		if( s == inPlug() || input->getName() != inPlug()->globalsPlug()->getName() )
-		{
-			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-		}
-		
+		// all input scene plugs affect the output
+		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) )
+		;		
 		if( input == s->childNamesPlug() )
 		{
 			outputs.push_back( mappingPlug() );
@@ -152,8 +148,12 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	{
 		if( output == outPlug()->globalsPlug() )
 		{
-			// pass-through for globals
-			h = inPlug()->globalsPlug()->hash();
+			// all input globals affect the output, as does the mapping, because we use it to compute the forwardDeclarations
+			for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+			{
+				(*it)->globalsPlug()->hash( h );
+			}
+			inputMappingPlug()->hash( h );
 		}
 		else
 		{
@@ -250,6 +250,9 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	vector<InternedString> &childNames = childNamesData->writable();
 	result->members()["__GroupChildNames"] = childNamesData;
 	
+	ObjectVectorPtr forwardMappings = new ObjectVector;
+	result->members()["__GroupForwardMappings"] = forwardMappings;
+	
 	boost::regex namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
 	boost::format namePrefixSuffixFormatter( "%s%d" );
 
@@ -257,7 +260,9 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 	{
 		ConstInternedStringVectorDataPtr inChildNamesData = (*it)->childNames( ScenePath() );
-
+		CompoundDataPtr forwardMapping = new CompoundData;
+		forwardMappings->members().push_back( forwardMapping );
+	
 		const vector<InternedString> &inChildNames = inChildNamesData->readable();
 		for( vector<InternedString>::const_iterator cIt = inChildNames.begin(), ceIt = inChildNames.end(); cIt!=ceIt; cIt++ )
 		{
@@ -287,6 +292,8 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 			
 			allNames.insert( name );
 			childNames.push_back( name );
+			forwardMapping->writable()[*cIt] = new InternedStringData( name );
+			
 			CompoundObjectPtr entry = new CompoundObject;
 			entry->members()["n"] = new InternedStringData( *cIt );
 			entry->members()["i"] = new IntData( it - m_inPlugs.begin() );
@@ -403,7 +410,42 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 
 IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	return inPlug()->globalsPlug()->getValue();
+	IECore::CompoundObjectPtr result = inPlug()->globalsPlug()->getValue()->copy();
+	
+	std::string groupName = namePlug()->getValue();
+
+	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
+	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
+
+	IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
+	for( size_t i = 0, e = m_inPlugs.size(); i < e; i++ )
+	{
+		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
+		ConstCompoundObjectPtr inputGlobals = m_inPlugs[i]->globalsPlug()->getValue();
+		const CompoundData *inputForwardDeclarations = inputGlobals->member<CompoundData>( "gaffer:forwardDeclarations" );
+		if( inputForwardDeclarations )
+		{
+			for( CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
+			{
+				/// \todo This would all be much nicer if the forward declarations data structure
+				/// used ScenePlug::ScenePaths or something similar - then we could ditch all the
+				/// string munging.
+				const InternedString &inputPath = it->first;
+				size_t secondSlashPos = inputPath.string().find( '/', 1 );
+				const std::string inputName( inputPath.string(), 1, secondSlashPos - 1 );
+				const InternedString &outputName = forwardMapping->member<InternedStringData>( inputName, true /* throw if missing */ )->readable();
+				std::string outputPath = std::string( "/" ) + groupName + "/" + outputName.string();
+				if( secondSlashPos != string::npos )
+				{
+					outputPath += inputPath.string().substr( secondSlashPos );
+				}
+				forwardDeclarations->writable()[outputPath] = it->second;
+			}
+		}
+	}
+	result->members()["gaffer:forwardDeclarations"] = forwardDeclarations;
+	
+	return result;
 }
 
 SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::string &groupName, ScenePlug **source ) const

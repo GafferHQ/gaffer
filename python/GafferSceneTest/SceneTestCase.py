@@ -49,6 +49,9 @@ class SceneTestCase( GafferTest.TestCase ) :
 	
 		def walkScene( scenePath ) :
 
+			# at least pull on the attributes, even though we don't have any test cases for that right now
+			attributes = scenePlug.attributes( scenePath )
+
 			thisBound = scenePlug.bound( scenePath )
 			
 			o = scenePlug.object( scenePath, _copy = False )
@@ -81,6 +84,16 @@ class SceneTestCase( GafferTest.TestCase ) :
 		
 		# then walk the scene to check the bounds
 		walkScene( IECore.InternedStringVectorData() )
+
+		self.assertForwardDeclarationsValid( scenePlug )
+		
+	def assertForwardDeclarationsValid( self, scenePlug ) :
+	
+		globals = scenePlug["globals"].getValue()
+		if "gaffer:forwardDeclarations" in globals :
+			for path, declaration in globals["gaffer:forwardDeclarations"].items() :
+				object = scenePlug.object( path )
+				self.assertTrue( object.isInstanceOf( IECore.TypeId( declaration["type"].value ) ) )
 
 	def __childPlugNames( self, childPlugNames, childPlugNamesToIgnore ) :
 	

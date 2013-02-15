@@ -35,40 +35,58 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
+import Gaffer
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
+class LightTest( GafferSceneTest.SceneTestCase ) :
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from OpenGLAttributesTest import OpenGLAttributesTest
-from RenderCameraTest import RenderCameraTest
-from SceneReadWriteTest import SceneReadWriteTest
-from ScenePathTest import ScenePathTest
-from PathMatcherDataTest import PathMatcherDataTest
-from LightTest import LightTest
-
+	def test( self ) :
+	
+		l = GafferSceneTest.TestLight()
+		
+		self.assertSceneValid( l["out"] )
+		
+		self.assertEqual( l["out"].object( "/" ), IECore.NullObject() )
+		self.assertEqual( l["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( l["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "light" ] ) )
+	
+		self.assertTrue( isinstance( l["out"].object( "/light" ), IECore.Light ) )
+		
+		self.assertEqual( l["out"].transform( "/light" ), IECore.M44f() )
+		self.assertEqual( l["out"].childNames( "/light" ), IECore.InternedStringVectorData() )
+	
+		forwardDeclarations = l["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual(
+			forwardDeclarations,
+			IECore.CompoundData( {
+				"/light" : {
+					"type" : IECore.IntData( IECore.TypeId.Light ),
+				},
+			} )
+		)
+	
+	def testGroupMaintainsForwardDeclarations( self ) :
+	
+		l = GafferSceneTest.TestLight()
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+		
+		self.assertSceneValid( g["out"] )
+	
+		forwardDeclarations = g["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual(
+			forwardDeclarations,
+			IECore.CompoundData( {
+				"/group/light" : {
+					"type" : IECore.IntData( IECore.TypeId.Light ),
+				},
+			} )
+		)
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -108,6 +108,23 @@ class RenderManShaderTest( unittest.TestCase ) :
 		
 		n["parameters"]["Kd"].setValue( 0.25 )
 		self.assertNotEqual( n.stateHash(), h1 )
+	
+	def testParameterOrdering( self ) :
+	
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( "plastic" )
+		
+		self.assertEqual( n["parameters"][0].getName(), "Ks" )
+		self.assertEqual( n["parameters"][1].getName(), "Kd" )
+		self.assertEqual( n["parameters"][2].getName(), "Ka" )
+		self.assertEqual( n["parameters"][3].getName(), "roughness" )
+		self.assertEqual( n["parameters"][4].getName(), "specularcolor" )
+		
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( "matte" )
+		
+		self.assertEqual( n["parameters"][0].getName(), "Ka" )
+		self.assertEqual( n["parameters"][1].getName(), "Kd" )
 		
 if __name__ == "__main__":
 	unittest.main()

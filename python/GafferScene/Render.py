@@ -75,6 +75,8 @@ class Render( Gaffer.Node ) :
 			scriptNode = self.ancestor( Gaffer.ScriptNode.staticTypeId() )
 			scriptNode.save()			
 			
+			self.__outputLights( scenePlug, globals, renderer )
+			
 			procedural = GafferScene.ScriptProcedural()
 			procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )
 			procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
@@ -144,5 +146,21 @@ class Render( Gaffer.Node ) :
 		with IECore.TransformBlock( renderer ) :
 			renderer.concatTransform( scenePlug.fullTransform( cameraPath ) )
 			camera.render( renderer )
-			
+	
+	def __outputLights( self, scenePlug, globals, renderer ) :
+	
+		if "gaffer:forwardDeclarations" not in globals :
+			return
+	
+		for path, declaration in globals["gaffer:forwardDeclarations"].items() :
+			if declaration["type"].value == IECore.TypeId.Light :
+				
+				transform = scenePlug.fullTransform( path )
+				light = scenePlug.object( path )
+				
+				with IECore.TransformBlock( renderer ) :
+
+					renderer.concatTransform( transform )
+					light.render( renderer )
+				
 IECore.registerRunTimeTyped( Render )

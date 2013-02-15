@@ -34,22 +34,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_TYPEIDS_H
-#define GAFFERRENDERMAN_TYPEIDS_H
+#ifndef GAFFERSCENE_LIGHT_H
+#define GAFFERSCENE_LIGHT_H
 
-namespace GafferRenderMan
+#include "IECore/Light.h"
+
+#include "GafferScene/ObjectSourceBase.h"
+
+namespace GafferScene
 {
 
-enum TypeId
+class Light : public ObjectSource
 {
-	RenderManShaderTypeId = 110950,
-	RenderManOptionsTypeId = 110951,
-	RenderManAttributesTypeId = 110952,
-	RenderManLightTypeId = 110953,
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Light, LightTypeId, ObjectSource );
+
+		Light( const std::string &name=staticTypeName() );
+		virtual ~Light();
+		
+		Gaffer::CompoundPlug *parametersPlug();
+		const Gaffer::CompoundPlug *parametersPlug() const;
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
+		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+
+		/// Must be implemented by derived classes to hash and generate the light to be placed
+		/// in the scene graph.
+		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual IECore::LightPtr computeLight( const Gaffer::Context *context ) const = 0;
+
+	private :
 	
-	LastTypeId = 110999
+		static size_t g_firstPlugIndex;
+
 };
 
-} // namespace GafferRenderMan
+} // namespace GafferScene
 
-#endif // GAFFERRENDERMAN_TYPEIDS_H
+#endif // GAFFERSCENE_LIGHT_H

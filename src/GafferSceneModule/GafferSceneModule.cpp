@@ -67,6 +67,7 @@
 #include "GafferScene/OpenGLAttributes.h"
 #include "GafferScene/SceneWriter.h"
 #include "GafferScene/SceneReader.h"
+#include "GafferScene/Light.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -141,6 +142,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<SceneContextVariables>();
 	GafferBindings::DependencyNodeClass<RenderCamera>();
 	GafferBindings::DependencyNodeClass<SubTree>();
-	GafferBindings::NodeClass<OpenGLAttributes>();
+	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
+	GafferBindings::DependencyNodeClass<Light>();
 
 }

@@ -49,9 +49,15 @@ def __shaderCreator( shaderName ) :
 	nodeName = os.path.split( shaderName )[-1]
 	nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
 
-	shader = GafferRenderMan.RenderManShader( nodeName )
-	shader.loadShader( shaderName )
-	return shader
+	shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
+	if shader.type == "light" :
+		node = GafferRenderMan.RenderManLight( nodeName )
+	else :
+		node = GafferRenderMan.RenderManShader( nodeName )
+	
+	node.loadShader( shaderName )
+	
+	return node
 
 def __shaderSubMenu() :
 

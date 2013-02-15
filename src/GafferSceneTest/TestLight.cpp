@@ -34,22 +34,33 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_TYPEIDS_H
-#define GAFFERRENDERMAN_TYPEIDS_H
+#include "Gaffer/CompoundNumericPlug.h"
 
-namespace GafferRenderMan
+#include "GafferSceneTest/TestLight.h"
+
+using namespace Gaffer;
+using namespace GafferSceneTest;
+
+IE_CORE_DEFINERUNTIMETYPED( TestLight )
+
+TestLight::TestLight( const std::string &name )
+	:	Light( name )
 {
+	parametersPlug()->addChild( new Color3fPlug( "intensity" ) );
+}
 
-enum TypeId
+TestLight::~TestLight()
 {
-	RenderManShaderTypeId = 110950,
-	RenderManOptionsTypeId = 110951,
-	RenderManAttributesTypeId = 110952,
-	RenderManLightTypeId = 110953,
-	
-	LastTypeId = 110999
-};
+}
 
-} // namespace GafferRenderMan
+void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	parametersPlug()->hash( h );
+}
 
-#endif // GAFFERRENDERMAN_TYPEIDS_H
+IECore::LightPtr TestLight::computeLight( const Gaffer::Context *context ) const
+{
+	IECore::LightPtr result = new IECore::Light( "testLight" );
+	result->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
+	return result;
+}

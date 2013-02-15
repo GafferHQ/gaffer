@@ -35,12 +35,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/CachedReader.h"
+#include "IECore/VectorTypedData.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -61,19 +63,7 @@ RenderManShader::~RenderManShader()
 
 void RenderManShader::loadShader( const std::string &shaderName )
 {
-	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
-		
-	for( CompoundDataMap::const_iterator it = shader->parameters().begin(), eIt = shader->parameters().end(); it != eIt; it++ )
-	{
-		ValuePlugPtr valuePlug = CompoundDataPlug::createPlugFromData(
-			it->first,
-			Plug::In,
-			Plug::Default | Plug::Dynamic,
-			it->second
-		);
-		parametersPlug()->addChild( valuePlug );
-	}
-	
+	loadShaderParameters( shaderName, parametersPlug() );
 	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
 }
 
@@ -103,4 +93,24 @@ IECore::CachedReader *RenderManShader::shaderLoader()
 		g_loader = new CachedReader( SearchPath( sp, ":" ), 10 * 1024 * 1024 );
 	}
 	return g_loader.get();
+}
+
+void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffer::CompoundPlug *parametersPlug )
+{
+	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
+	
+	const StringVectorData *orderedParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:orderedParameterNames", true );
+	const vector<string> &orderedParameterNames = orderedParameterNamesData->readable();
+	
+	for( vector<string>::const_iterator it = orderedParameterNames.begin(), eIt = orderedParameterNames.end(); it != eIt; it++ )
+	{
+		CompoundDataMap::const_iterator vIt = shader->parameters().find( *it );
+		ValuePlugPtr valuePlug = CompoundDataPlug::createPlugFromData(
+			*it,
+			Plug::In,
+			Plug::Default | Plug::Dynamic,
+			vIt->second
+		);
+		parametersPlug->addChild( valuePlug );
+	}
 }

@@ -74,6 +74,20 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( s["out"], a["out"], scenePlug2PathPrefix = "/pCube1" )
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCubeShape1", _copy = False ) ) )
 
+	def testForwardDeclarations( self ) :
+	
+		l = GafferSceneTest.TestLight()
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+		
+		self.assertForwardDeclarationsValid( g["out"] )
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "/group" )
+		
+		self.assertForwardDeclarationsValid( s["out"] )
+
 	@GafferTest.expectedFailure
 	def testRootHashesEqual( self ) :
 	

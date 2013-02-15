@@ -441,7 +441,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"].setInput( p["out"] )
 
 		self.assertSceneValid( g["out"] )
-		self.assertSceneHashesEqual( g["out"], p["out"], childPlugNames = ( "globals", ) )
+		self.assertSceneHashesNotEqual( g["out"], p["out"], childPlugNames = ( "globals", ) )
 	
 		self.assertPathHashesEqual( g["out"], "/group/plane", p["out"], "/plane" )
 	
@@ -546,6 +546,30 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		while gc.collect() :
 			pass
 		IECore.RefCounted.collectGarbage()
+	
+	def testForwardDeclarationsWithRenaming( self ) :
+	
+		l1 = GafferSceneTest.TestLight()
+		l2 = GafferSceneTest.TestLight()
+		
+		g = GafferScene.Group()
+		g["in"].setInput( l1["out"] )
+		g["in1"].setInput( l2["out"] )
+		
+		forwardDeclarations = g["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( len( forwardDeclarations ), 2 )		
+		self.assertTrue( "/group/light" in forwardDeclarations )
+		self.assertTrue( "/group/light1" in forwardDeclarations )
+		
+		self.assertSceneValid( g["out"] )
+		
+		g2 = GafferScene.Group()
+		g2["in"].setInput( g["out"] )
+		
+		forwardDeclarations = g2["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( len( forwardDeclarations ), 2 )		
+		self.assertTrue( "/group/group/light" in forwardDeclarations )
+		self.assertTrue( "/group/group/light1" in forwardDeclarations )
 		
 	def setUp( self ) :
 	

@@ -34,22 +34,48 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_TYPEIDS_H
-#define GAFFERRENDERMAN_TYPEIDS_H
+#include "Gaffer/Context.h"
+#include "Gaffer/CompoundDataPlug.h"
 
-namespace GafferRenderMan
+#include "GafferRenderMan/RenderManLight.h"
+#include "GafferRenderMan/RenderManShader.h"
+
+using namespace Gaffer;
+using namespace GafferRenderMan;
+
+IE_CORE_DEFINERUNTIMETYPED( RenderManLight );
+
+size_t RenderManLight::g_firstPlugIndex = 0;
+
+RenderManLight::RenderManLight( const std::string &name )
+	:	GafferScene::Light( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "__shaderName" ) );
+}
 
-enum TypeId
+RenderManLight::~RenderManLight()
 {
-	RenderManShaderTypeId = 110950,
-	RenderManOptionsTypeId = 110951,
-	RenderManAttributesTypeId = 110952,
-	RenderManLightTypeId = 110953,
-	
-	LastTypeId = 110999
-};
+}
 
-} // namespace GafferRenderMan
+void RenderManLight::loadShader( const std::string &shaderName )
+{
+	RenderManShader::loadShaderParameters( shaderName, parametersPlug() );
+	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
+}
 
-#endif // GAFFERRENDERMAN_TYPEIDS_H
+void RenderManLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	parametersPlug()->hash( h );
+	getChild<StringPlug>( "__shaderName" )->hash( h );
+}
+
+IECore::LightPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
+{
+	IECore::LightPtr result = new IECore::Light( getChild<StringPlug>( "__shaderName" )->getValue() );
+	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	{
+		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( *it );
+	}
+	return result;
+}

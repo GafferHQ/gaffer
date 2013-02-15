@@ -46,6 +46,8 @@
 namespace GafferRenderMan
 {
 
+class RenderManLight;
+
 class RenderManShader : public GafferScene::Shader
 {
 
@@ -66,6 +68,14 @@ class RenderManShader : public GafferScene::Shader
 	
 		virtual void shaderHash( IECore::MurmurHash &h ) const;
 		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
+	
+	private :
+	
+		// RenderMan light is a friend to allow it to share the shader loading code.
+		/// \todo Perhaps some other code sharing mechanism makes more sense?
+		friend class RenderManLight;
+		
+		static void loadShaderParameters( const std::string &shaderName, Gaffer::CompoundPlug *parametersPlug );
 					
 };
 

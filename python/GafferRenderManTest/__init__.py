@@ -38,6 +38,7 @@ from RenderManShaderTest import RenderManShaderTest
 from RenderManAttributesTest import RenderManAttributesTest
 from RenderManOptionsTest import RenderManOptionsTest
 from RenderManRenderTest import RenderManRenderTest
+from RenderManLightTest import RenderManLightTest
 
 if __name__ == "__main__":
 	import unittest
