@@ -83,6 +83,8 @@ class RenderManShaderTest( unittest.TestCase ) :
 		self.failUnless( isinstance( s["n"]["parameters"]["roughness"], Gaffer.FloatPlug ) )
 		self.failUnless( isinstance( s["n"]["parameters"]["specularcolor"], Gaffer.Color3fPlug ) )
 	
+		self.assertTrue( "parameters1" not in s["n"] )
+	
 	def testShader( self ) :
 	
 		n = GafferRenderMan.RenderManShader()

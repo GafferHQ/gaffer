@@ -48,10 +48,13 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Shader );
 
+size_t Shader::g_firstPlugIndex = 0;
+
 Shader::Shader( const std::string &name )
 	:	Node( name )
 {
-	addChild( new CompoundPlug( "parameters", Plug::In, Plug::Default | Plug::Dynamic ) );
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new CompoundPlug( "parameters" ) );
 }
 
 Shader::~Shader()
@@ -60,15 +63,12 @@ Shader::~Shader()
 
 Gaffer::CompoundPlug *Shader::parametersPlug()
 {
-	/// \todo It'd be nice to access this by index, but currently I don't think the
-	/// ordering of dynamic plugs is respected across scene save and load. Ideally we'd
-	/// make the base plug non-dynamic but still be allowed to add dynamic children to it.
-	return getChild<CompoundPlug>( "parameters" );
+	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::CompoundPlug *Shader::parametersPlug() const
 {
-	return getChild<CompoundPlug>( "parameters" );
+	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 		
 IECore::MurmurHash Shader::stateHash() const

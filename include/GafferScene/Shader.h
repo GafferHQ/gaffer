@@ -94,6 +94,10 @@ class Shader : public Gaffer::Node
 		/// \todo Try to implement this here in a way that can be shared by
 		/// the derived classes.
 		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const = 0;	
+
+	private :
+	
+		static size_t g_firstPlugIndex;
 		
 };
 
