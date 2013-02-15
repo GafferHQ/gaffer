@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -123,6 +124,21 @@ class _Parser( ast.NodeVisitor ) :
 				if contextName :
 					self.contextReads.append( contextName )
 				
+	def visit_Call( self, node ) :
+			
+		if isinstance( node.func, ast.Attribute ) :
+			if isinstance( node.func.value, ast.Name ) :
+				if node.func.value.id == "context" :
+					# it's a method call on the context
+					if node.func.attr == "getFrame" :
+						self.contextReads.append( "frame" )
+					elif node.func.attr == "get" :
+						if not isinstance( node.args[0], ast.Str ) :
+							raise SyntaxError( "Context name must be a string" )
+						self.contextReads.append( node.args[0].s )
+			
+		ast.NodeVisitor.generic_visit( self, node )
+					
 	def __path( self, node ) :
 	
 		result = []

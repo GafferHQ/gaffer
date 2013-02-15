@@ -98,6 +98,8 @@
 
 * TabbedContainer switches tabs automatically on drag enter, to allow drags to access targets that aren't current at the start of the drag.
 
+* Expression node now supports calls to context.getFrame() and context.get() in addition to context["name"] dictionary style access. The get( name, defaultValue ) method is particularly useful when an expression may be executed in a context without the required entry.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

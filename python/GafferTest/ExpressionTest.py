@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -127,14 +127,7 @@ class ExpressionTest( unittest.TestCase ) :
 			context.setFrame( i )
 			with context :
 				self.assertEqual( s["n"]["p"].getValue(), "#%d" % i )
-	
-	@GafferTest.expectedFailure
-	def testContextMethodCallsDisallowed( self ) :
-	
-		# we need to prevent expressions calling anything other
-		# than __getitem__ on the context object.
-		raise NotImplementedError
-	
+		
 	def testRegisteredEngines( self ) :
 	
 		e = Gaffer.Expression.Engine.registeredEngines()
@@ -216,6 +209,51 @@ class ExpressionTest( unittest.TestCase ) :
 		s["e"]["expression"].setValue( "" )
 		self.failUnless( s["m2"]["op1"].getInput().isSame( s["e"]["out"] ) )
 		self.assertEqual( s["m2"]["product"].getValue(), 0 )
+	
+	def testContextGetFrameMethod( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.AddNode()
+		s["n"]["op1"].setValue( 0 )
+		
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent['n']['op2'] = int( context.getFrame() )" )
+		
+		with Gaffer.Context() as c :
+			for i in range( 0, 10 ) :
+				c.setFrame( i )
+				self.assertEqual( s["n"]["sum"].getValue(), i )
+
+	def testContextGetMethod( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.AddNode()
+		s["n"]["op1"].setValue( 0 )
+		
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent['n']['op2'] = int( context.get( 'frame' ) )" )
+		
+		with Gaffer.Context() as c :
+			for i in range( 0, 10 ) :
+				c.setFrame( i )
+				self.assertEqual( s["n"]["sum"].getValue(), i )
+	
+	def testContextGetWithDefault( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.AddNode()
+		s["n"]["op1"].setValue( 0 )
+		
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent['n']['op2'] = context.get( 'iDontExist', 101 )" )
+		
+		self.assertEqual( s["n"]["sum"].getValue(), 101 )
 		
 if __name__ == "__main__":
 	unittest.main()

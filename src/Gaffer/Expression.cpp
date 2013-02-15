@@ -142,7 +142,15 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 			m_engine->contextNames( contextNames );
 			for( std::vector<std::string>::const_iterator it = contextNames.begin(); it != contextNames.end(); it++ )
 			{
-				context->get<IECore::Data>( *it )->hash( h );
+				const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
+				if( d )
+				{
+					d->hash( h );
+				}
+				else
+				{
+					h.append( 0 );
+				}
 			}
 		}
 	}
