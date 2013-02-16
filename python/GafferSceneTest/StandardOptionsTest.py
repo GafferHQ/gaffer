@@ -40,12 +40,12 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class RenderCameraTest( GafferSceneTest.SceneTestCase ) :
+class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 	def testSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["r"] = GafferScene.RenderCamera()
+		s["r"] = GafferScene.StandardOptions()
 		s["r"]["options"]["renderCamera"]["value"].setValue( "/path/to/a/camera" )
 		names = s["r"]["options"].keys()
 
@@ -55,6 +55,28 @@ class RenderCameraTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s2["r"]["options"].keys(), names )
 		self.assertTrue( "options1" not in s2["r"] )
 		self.assertEqual( s2["r"]["options"]["renderCamera"]["value"].getValue(), "/path/to/a/camera" )
+	
+	def testResolution( self ) :
+	
+		o = GafferScene.StandardOptions()
+		
+		o["options"]["renderResolution"]["value"].setValue( IECore.V2i( 10 ) )
+		self.assertEqual( o["out"]["globals"].getValue()["render:resolution"].value, IECore.V2i( 10 ) )
+
+		o["options"]["renderResolution"]["value"].setValue( IECore.V2i( 20 ) )
+		self.assertEqual( o["out"]["globals"].getValue()["render:resolution"].value, IECore.V2i( 20 ) )
+	
+	def testHashIncludesInputHash( self ) :
+	
+		o1 = GafferScene.StandardOptions()
+		o2 = GafferScene.StandardOptions()
+		o2["in"].setInput( o1["out"] )
+		
+		h = o2["out"]["globals"].hash()
+		
+		o1["options"]["renderResolution"]["value"].setValue( IECore.V2i( 10 ) )
+		
+		self.assertNotEqual( o2["out"]["globals"].hash(), h )
 	
 if __name__ == "__main__":
 	unittest.main()

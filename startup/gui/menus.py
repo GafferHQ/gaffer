@@ -87,8 +87,8 @@ GafferUI.NodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree )
 GafferUI.NodeMenu.append( "/Scene/Context/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables )
 GafferUI.NodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )
+GafferUI.NodeMenu.append( "/Scene/Globals/Standard Options", GafferScene.StandardOptions )
 GafferUI.NodeMenu.append( "/Scene/Globals/Options", GafferScene.Options )
-GafferUI.NodeMenu.append( "/Scene/Globals/RenderCamera", GafferScene.RenderCamera )
 
 try :	
 	import GafferImage

@@ -54,7 +54,6 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	def testCompute( self ) :
 	
 		p = GafferScene.Camera()
-	 	p["resolution"].setValue( IECore.V2i( 200, 100 ) )
 		p["projection"].setValue( "perspective" )
 		p["fieldOfView"].setValue( 45 )
 		
@@ -67,7 +66,6 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		
 		o = p["out"].object( "/camera" )
 		self.failUnless( isinstance( o, IECore.Camera ) )
-		self.assertEqual( o.parameters()["resolution"].value, IECore.V2i( 200, 100 ) )
 		self.assertEqual( o.parameters()["projection"].value, "perspective" )
 		self.assertEqual( o.parameters()["projection:fov"].value, 45 )
 	
@@ -76,7 +74,6 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	def testHashes( self ) :
 	
 		p = GafferScene.Camera()
-		p["resolution"].setValue( IECore.V2i( 200, 100 ) )
 		p["projection"].setValue( "perspective" )
 		p["fieldOfView"].setValue( 45 )
 	
@@ -89,7 +86,6 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 	def testBound( self ) :
 	
 		p = GafferScene.Camera()
-		p["resolution"].setValue( IECore.V2i( 200, 100 ) )
 		p["projection"].setValue( "perspective" )
 		p["fieldOfView"].setValue( 45 )
 		

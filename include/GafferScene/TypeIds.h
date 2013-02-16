@@ -74,7 +74,7 @@ enum TypeId
 	AlembicSourceTypeId = 110529,
 	SourceTypeId = 110530,
 	SceneContextVariablesTypeId = 110531,
-	RenderCameraTypeId = 110532,
+	StandardOptionsTypeId = 110532,
 	SubTreeTypeId = 110533,
 	OpenGLAttributesTypeId = 110534,
 	SceneWriterTypeId = 110535,

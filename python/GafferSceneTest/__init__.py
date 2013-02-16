@@ -63,7 +63,7 @@ from SceneContextVariablesTest import SceneContextVariablesTest
 from ModelCacheSourceTest import ModelCacheSourceTest
 from SubTreeTest import SubTreeTest
 from OpenGLAttributesTest import OpenGLAttributesTest
-from RenderCameraTest import RenderCameraTest
+from StandardOptionsTest import StandardOptionsTest
 from SceneReadWriteTest import SceneReadWriteTest
 from ScenePathTest import ScenePathTest
 from PathMatcherDataTest import PathMatcherDataTest

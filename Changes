@@ -102,6 +102,8 @@
 
 * ScriptEditor no longer displays the result of execution if the result is None.
 
+* Replaced RenderCamera node with more general StandardOptions node, which will define all the render globals type stuff that can be shared between renderers. Fixed bug in hash computation of GlobalsProcessor. Removed resolution from camera, putting it on the StandardOptions node instead.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

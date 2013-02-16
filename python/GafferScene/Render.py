@@ -67,8 +67,7 @@ class Render( Gaffer.Node ) :
 			elif isinstance( value, IECore.Data ) :
 				renderer.setOption( name, value )
 		
-		if "gaffer:renderCamera" in globals :
-			self.__outputCamera( scenePlug, globals["gaffer:renderCamera"].value, renderer )
+		self.__outputCamera( scenePlug, globals, renderer )
 										
 		with IECore.WorldBlock( renderer ) :
 		
@@ -127,24 +126,29 @@ class Render( Gaffer.Node ) :
 		if applicationRoot is None or applicationRoot.getName() != "gui" :
 			p.wait()
 	
-	def __outputCamera( self, scenePlug, cameraPath, renderer ) :
-				
+	def __outputCamera( self, scenePlug, globals, renderer ) :
+		
+		cameraPath = globals.get( "render:camera", None )
+		
 		camera = None
-		if cameraPath :
-			o = scenePlug.object( cameraPath )
+		cameraTransform = IECore.M44f()
+		if cameraPath is not None :
+			o = scenePlug.object( cameraPath.value )
 			if isinstance( o, IECore.Camera ) :
 				camera = o
-				
-		if not camera :
-			## \todo We shouldn't need to do this but I don't think IECoreArnold is
-			# setting a default camera as expected.
+			cameraTransform = scenePlug.fullTransform( cameraPath.value )
+			
+		if camera is None :
 			camera = IECore.Camera()
-			camera.addStandardParameters()		
-			camera.render( renderer )
-			return
-		
+			
+		resolution = globals.get( "render:resolution", None )
+		if resolution is not None :
+			camera.parameters()["resolution"] = resolution
+
+		camera.addStandardParameters()		
+
 		with IECore.TransformBlock( renderer ) :
-			renderer.concatTransform( scenePlug.fullTransform( cameraPath ) )
+			renderer.concatTransform( cameraTransform )
 			camera.render( renderer )
 	
 	def __outputLights( self, scenePlug, globals, renderer ) :

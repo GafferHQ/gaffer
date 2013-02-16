@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,9 +52,6 @@ class Camera : public ObjectSource
 
 		Camera( const std::string &name=staticTypeName() );
 		virtual ~Camera();
-		
-		Gaffer::V2iPlug *resolutionPlug();
-		const Gaffer::V2iPlug *resolutionPlug() const;
 		
 		Gaffer::StringPlug *projectionPlug();
 		const Gaffer::StringPlug *projectionPlug() const;

@@ -35,21 +35,26 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/RenderCamera.h"
+#ifndef GAFFERSCENE_STANDARDOPTIONS_H
+#define GAFFERSCENE_STANDARDOPTIONS_H
 
-using namespace Gaffer;
-using namespace GafferScene;
+#include "GafferScene/Options.h"
 
-IE_CORE_DEFINERUNTIMETYPED( RenderCamera );
-
-RenderCamera::RenderCamera( const std::string &name )
-	:	Options( name )
+namespace GafferScene
 {
-	CompoundDataPlug *options = optionsPlug();
-	
-	options->addMember( "gaffer:renderCamera", new IECore::StringData(), "renderCamera", Plug::Default );	
-}
 
-RenderCamera::~RenderCamera()
+class StandardOptions : public Options
 {
-}
+
+	public :
+
+		StandardOptions( const std::string &name=staticTypeName() );
+		virtual ~StandardOptions();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardOptions, StandardOptionsTypeId, Options );
+				
+};
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_STANDARDOPTIONS_H

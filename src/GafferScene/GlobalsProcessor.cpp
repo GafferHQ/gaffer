@@ -69,6 +69,7 @@ void GlobalsProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Cont
 		if( output == outPlug()->globalsPlug() )
 		{
 			SceneProcessor::hash( output, context, h );
+			inPlug()->globalsPlug()->hash( h );
 			hashGlobals( context, h );
 		}
 		else

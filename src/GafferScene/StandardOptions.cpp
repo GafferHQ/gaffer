@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,26 +35,22 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_RENDERCAMERA_H
-#define GAFFERSCENE_RENDERCAMERA_H
+#include "GafferScene/StandardOptions.h"
 
-#include "GafferScene/Options.h"
+using namespace Gaffer;
+using namespace GafferScene;
 
-namespace GafferScene
+IE_CORE_DEFINERUNTIMETYPED( StandardOptions );
+
+StandardOptions::StandardOptions( const std::string &name )
+	:	Options( name )
 {
+	CompoundDataPlug *options = optionsPlug();
+	
+	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, true );	
+	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, true );	
+}
 
-class RenderCamera : public Options
+StandardOptions::~StandardOptions()
 {
-
-	public :
-
-		RenderCamera( const std::string &name=staticTypeName() );
-		virtual ~RenderCamera();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderCamera, RenderCameraTypeId, Options );
-				
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_RENDERCAMERA_H
+}
