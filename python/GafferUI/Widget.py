@@ -1227,6 +1227,14 @@ class Widget( object ) :
 		QCheckBox::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
 		}
+		
+		QCheckBox::indicator:checked:disabled {
+			image: url($GAFFER_ROOT/graphics/checkBoxCheckedDisabled.png);
+		}
+		
+		QCheckBox::indicator:unchecked:disabled {
+			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedDisabled.png);
+		}
 
 		.QFrame#borderStyleNone {
 			border: 1px solid transparent;
