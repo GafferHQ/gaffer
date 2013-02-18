@@ -91,8 +91,21 @@ Imath::Box3f SceneProcedural::bound() const
 
 void SceneProcedural::render( RendererPtr renderer ) const
 {	
-	AttributeBlock attributeBlock( renderer );
 	Context::Scope scopedContext( m_context );
+	
+	// get all the attributes, and early out if we're not visibile
+	
+	ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
+	const BoolData *visibilityData = attributes->member<BoolData>( "gaffer:visibility" );
+	if( visibilityData && !visibilityData->readable() )
+	{
+		return;
+	}
+
+	// if we are visible then make an attribute block to contain everything, set the name
+	// and get on with generating things.
+
+	AttributeBlock attributeBlock( renderer );
 	
 	std::string name = "";
 	for( ScenePlug::ScenePath::const_iterator it = m_scenePath.begin(), eIt = m_scenePath.end(); it != eIt; it++ )
@@ -110,7 +123,6 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		
 		// attributes
 		
-		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
 		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 		{
 			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
