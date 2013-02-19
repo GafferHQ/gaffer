@@ -37,6 +37,8 @@
 
 import fnmatch
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -63,6 +65,16 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer.staticTypeId(), 
 # ObjectToScene
 
 GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene.staticTypeId(), "object", GafferUI.StandardNodule )
+
+# SceneReader
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.SceneReader.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = IECore.SceneInterface.supportedExtensions() ) )
+	)
+)
 
 # ModelCacheSource
 

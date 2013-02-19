@@ -69,6 +69,7 @@ GafferUI.ExecuteUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
 # Node menu
 
+GafferUI.NodeMenu.append( "/Scene/Source/SceneReader", GafferScene.SceneReader )
 GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
 GafferUI.NodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
 GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
