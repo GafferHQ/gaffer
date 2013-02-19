@@ -47,6 +47,8 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # entries (append [] del etc).
 class SelectionMenu( GafferUI.Widget ) :
 
+	__palette = None
+
 	def __init__( self, **kw ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QComboBox(), **kw )
@@ -56,6 +58,17 @@ class SelectionMenu( GafferUI.Widget ) :
 		self.__currentIndexChangedSignal = GafferUI.WidgetSignal()
 		self.__selectedSignal = GafferUI.WidgetSignal()
 		
+		# combo boxes appear to totally ignore the etch-disabled-text stylesheet option,
+		# and we really don't like the etching. the only effective way of disabling it
+		# seems to be to apply this palette which makes the etched text transparent.
+		## \todo When we extend the Style classes to deal with Widgets, this should be
+		# done there. The same code exists in the Button class too.
+		if SelectionMenu.__palette is None :
+			SelectionMenu.__palette = QtGui.QPalette( QtGui.QApplication.instance().palette() )
+			SelectionMenu.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
+
+		self._qtWidget().setPalette( SelectionMenu.__palette )
+
 		# removing the annoying checkbox and setting a nice selection menu popup behavior
 		self._qtWidget().setStyle( QtGui.QStyleFactory.create("plastique") )
 		self._qtWidget().setView( QtGui.QListView() )
