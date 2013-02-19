@@ -437,8 +437,8 @@ void RenderableGadget::applySelection( IECoreGL::Group *group )
 				}
 			}
 			// overwrite it with our selection state
-			state->add( m_selectionColor );
-			state->add( m_wireframeOn );
+			state->add( m_selectionColor, true );
+			state->add( m_wireframeOn, true );
 		}
 	}
 	else

@@ -40,6 +40,7 @@
 
 #include "IECore/Renderer.h"
 #include "IECore/Camera.h"
+#include "IECore/Light.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
@@ -85,6 +86,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 	private :
 	
 		void drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const;
+		void drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const;
 		
 };
 

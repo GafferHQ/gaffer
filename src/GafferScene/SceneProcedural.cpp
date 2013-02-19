@@ -163,6 +163,14 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				drawCamera( camera, renderer.get() );
 			}
 		}
+		else if( const Light *light = runTimeCast<const Light>( object.get() ) )
+		{
+			/// \todo This doesn't belong here.
+			if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+			{
+				drawLight( light, renderer.get() );
+			}
+		}
 	
 		// children
 
@@ -211,6 +219,7 @@ void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer
 	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
 	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
 	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
+	renderer->setAttribute( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0, 0.25, 0, 1 ) ) );
 
 	CurvesPrimitive::createBox( Box3f(
 		V3f( -0.5, -0.5, 0 ),
@@ -271,5 +280,48 @@ void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer
 	p->writable().push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
 	
 	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( n, CubicBasisf::linear(), false, p );
+	c->render( renderer );
+}
+
+void SceneProcedural::drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const
+{	
+	AttributeBlock attributeBlock( renderer );
+
+	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
+	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
+	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
+	renderer->setAttribute( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.5, 0, 0, 1 ) ) );
+
+	const float a = 0.5f;
+	const float phi = 1.0f + sqrt( 5.0f ) / 2.0f;
+	const float b = 1.0f / ( 2.0f * phi );
+	
+	// icosahedron points
+	IECore::V3fVectorDataPtr pData = new V3fVectorData;
+	vector<V3f> &p = pData->writable();
+	p.resize( 24 );
+	p[0] = V3f( 0, b, -a );
+	p[2] = V3f( b, a, 0 );
+	p[4] = V3f( -b, a, 0 );
+	p[6] = V3f( 0, b, a );
+	p[8] = V3f( 0, -b, a );
+	p[10] = V3f( -a, 0, b );
+	p[12] = V3f( 0, -b, -a );
+	p[14] = V3f( a, 0, -b );
+	p[16] = V3f( a, 0, b );
+	p[18] = V3f( -a, 0, -b );
+	p[20] = V3f( b, -a, 0 );
+	p[22] = V3f( -b, -a, 0 );
+	
+	for( size_t i = 0; i<12; i++ )
+	{
+		p[i*2] = 2.0f * p[i*2].normalized();
+		p[i*2+1] = V3f( 0 );
+	}
+	
+	IntVectorDataPtr vertIds = new IntVectorData;
+	vertIds->writable().resize( 12, 2 );
+	
+	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( vertIds, CubicBasisf::linear(), false, pData );
 	c->render( renderer );
 }
