@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,6 +38,54 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+def __drawingSummary( plug ) :
+
+	info = []
+	for name, label in (
+	
+		( "Solid", "Shaded" ),
+		( "Wireframe", "Wireframe" ),
+		( "Outline", "Outline" ),
+		( "Point", "Point" ),
+		( "Bound", "Bound" ),
+	
+	) :
+	
+		values = []
+		if plug["primitive"+name]["enabled"].getValue() :
+			values.append( "On" if plug["primitive"+name]["value"].getValue() else "Off" )
+		if name != "Solid" and plug["primitive"+name+"Color"]["enabled"].getValue() :
+			values.append( "Color" )
+		if name != "Solid" and name != "Bound" and plug["primitive"+name+"Width"]["enabled"].getValue() :
+			values.append( "%0gpx" % plug["primitive"+name+"Width"]["value"].getValue() )
+		
+		if values :
+			info.append( label + " : " + "/".join( values ) )
+		
+	return ", ".join( info )
+
+def __pointsPrimitivesSummary( plug ) :
+
+	info = []
+	if plug["pointsPrimitiveUseGLPoints"]["enabled"].getValue() :
+		info.append( "Points On" if plug["pointsPrimitiveUseGLPoints"]["value"].getValue() else "Points Off" )
+	if plug["pointsPrimitiveGLPointWidth"]["enabled"].getValue() :
+		info.append( "Width %0gpx" % plug["pointsPrimitiveGLPointWidth"]["value"].getValue() )
+	
+	return ", ".join( info )
+	
+def __curvesPrimitivesSummary( plug ) :
+
+	info = []
+	if plug["curvesPrimitiveUseGLLines"]["enabled"].getValue() :
+		info.append( "Lines On" if plug["curvesPrimitiveUseGLLines"]["value"].getValue() else "Lines Off" )
+	if plug["curvesPrimitiveGLLineWidth"]["enabled"].getValue() :
+		info.append( "Width %0gpx" % plug["curvesPrimitiveGLLineWidth"]["value"].getValue() )
+	if plug["curvesPrimitiveIgnoreBasis"]["enabled"].getValue() :
+		info.append( "Basis Ignored" if plug["curvesPrimitiveIgnoreBasis"]["value"].getValue() else "Basis On" )
+		
+	return ", ".join( info )
+		
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferScene.OpenGLAttributes.staticTypeId(),
@@ -45,9 +93,10 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 	
-		(
-			"Drawing",
-			(
+		{
+			"label" : "Drawing",
+			"summary" : __drawingSummary,
+			"namesAndLabels" : (
 				( "gl:primitive:solid", "Shaded" ),
 				
 				( "gl:primitive:wireframe", "Wireframe" ),
@@ -66,24 +115,26 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "gl:primitive:boundColor", "Bound Color" ),
 				
 			),
-		),
+		},
 		
-		(
-			"Points Primitives",
-			(
+		{
+			"label" : "Points Primitives",
+			"summary" : __pointsPrimitivesSummary,
+			"namesAndLabels" : (
 				( "gl:pointsPrimitive:useGLPoints", "Use GL Points" ),
 				( "gl:pointsPrimitive:glPointWidth", "GL Point Width" ),
 			),
-		),
+		},
 		
-		(
-			"Curves Primitives",
-			(
+		{
+			"label" : "Curves Primitives",
+			"summary" : __curvesPrimitivesSummary,
+			"namesAndLabels" : (
 				( "gl:curvesPrimitive:useGLLines", "Use GL Lines" ),
 				( "gl:curvesPrimitive:glLineWidth", "GL Line Width" ),
 				( "gl:curvesPrimitive:ignoreBasis", "Ignore Basis" ),
 			),
-		),
+		},
 		
 	),	
 	

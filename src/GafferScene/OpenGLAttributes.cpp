@@ -58,7 +58,7 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	attributes->addOptionalMember( "gl:primitive:outlineColor", new IECore::Color4fData( Color4f( 0.85, 0.75, 0.45, 1 ) ), "primitiveOutlineColor", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "gl:primitive:outlineWidth", new IECore::FloatData( 1.0f ), "primitiveOutlineWidth", Gaffer::Plug::Default, false );
 	
-	attributes->addOptionalMember( "gl:primitive:points", new IECore::BoolData( true ), "primitivePoints", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gl:primitive:points", new IECore::BoolData( true ), "primitivePoint", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "gl:primitive:pointColor", new IECore::Color4fData( Color4f( 0.85, 0.45, 0, 1 ) ), "primitivePointColor", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "gl:primitive:pointWidth", new IECore::FloatData( 1.0f ), "primitivePointWidth", Gaffer::Plug::Default, false );
 	

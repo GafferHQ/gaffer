@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,15 +39,34 @@ import Gaffer
 import GafferUI
 import GafferArnold
 
+def __visibilitySummary( plug ) :
+
+	info = []
+	for childName, label in (
+	
+		( "camera", "Camera" ),
+		( "shadow", "Shad" ),
+		( "reflected", "Refl" ),
+		( "refracted", "Refr" ),
+		( "diffuse", "Diff" ),
+		( "glossy", "Glossy" ),
+	
+	)	:
+		if plug[childName+"Visibility"]["enabled"].getValue() :
+			info.append( label + ( " On" if plug[childName+"Visibility"]["value"].getValue() else " Off" ) )
+			
+	return ", ".join( info )
+	
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferArnold.ArnoldAttributes.staticTypeId(),
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
-		(
-			"Visibility",
-			(
+		{
+			"label" : "Visibility",
+			"summary" : __visibilitySummary,
+			"namesAndLabels" : (
 				( "ai:visibility:camera", "Camera" ),
 				( "ai:visibility:shadow", "Shadow" ),
 				( "ai:visibility:reflected", "Reflections" ),
@@ -54,7 +74,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ai:visibility:diffuse", "Diffuse" ),
 				( "ai:visibility:glossy", "Glossy" ),
 			),
-		),
+		},
 	),	
 	
 )

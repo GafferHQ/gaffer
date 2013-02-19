@@ -38,6 +38,17 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+def __cameraSummary( plug ) :
+
+	info = []
+	if plug["renderCamera"]["enabled"].getValue() :
+		info.append( plug["renderCamera"]["value"].getValue() )
+	if plug["renderResolution"]["enabled"].getValue() :
+		resolution = plug["renderResolution"]["value"].getValue()
+		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
+
+	return ", ".join( info )
+
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferScene.StandardOptions.staticTypeId(),
@@ -45,13 +56,14 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 		
-		(
-			"Camera",
-			(
+		{
+			"label" : "Camera",
+			"summary" : __cameraSummary,
+			"namesAndLabels" : (
 				( "render:camera", "Camera" ),
 				( "render:resolution", "Resolution" ),
 			),
-		),
+		},
 		
 	),
 	

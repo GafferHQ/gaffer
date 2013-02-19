@@ -38,6 +38,28 @@ import Gaffer
 import GafferUI
 import GafferRenderMan
 
+def __visibilitySummary( plug ) :
+
+	info = []
+	for childName, label in (
+	
+		( "camera", "Camera" ),
+		( "transmission", "Trans" ),
+		( "diffuse", "Diff" ),
+		( "specular", "Spec" ),
+		( "photon", "Photon" )
+	
+	)	:
+		values = []
+		if plug[childName+"Visibility"]["enabled"].getValue() :
+			values.append( "On" if plug[childName+"Visibility"]["value"].getValue() else "Off" )
+		if plug[childName+"HitMode"]["enabled"].getValue() :
+			values.append( plug[childName+"HitMode"]["value"].getValue().capitalize() )
+		if values :
+			info.append( label + " : " + "/".join( values ) )
+			
+	return ", ".join( info )
+		
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferRenderMan.RenderManAttributes.staticTypeId(),
@@ -45,9 +67,10 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 		
-		(
-			"Visibility",
-			(
+		{
+			"label" : "Visibility",
+			"summary" : __visibilitySummary,
+			"namesAndLabels" : (
 				( "ri:visibility:camera", "Camera" ),
 				( "ri:shade:camerahitmode", "Camera Mode" ),
 				
@@ -63,7 +86,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:visibility:photon", "Photon" ),
 				( "ri:shade:photonhitmode", "Photon Mode" ),
 			),
-		),
+		},
 		
 	),	
 	

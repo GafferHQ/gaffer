@@ -38,6 +38,32 @@ import Gaffer
 import GafferUI
 import GafferRenderMan
 
+def __qualitySummary( plug ) :
+
+	info = []
+	
+	if plug["pixelSamples"]["enabled"].getValue() :
+		ps = plug["pixelSamples"]["value"].getValue()
+		info.append( "Pixel Samples %dx%d" % ( ps[0], ps[1] ) )
+		
+	return ", ".join( info )
+	
+def __searchPathsSummary( plug ) :
+
+	info = []
+	
+	for childName, label in (
+		( "shaderSearchPath", "Shaders" ),
+		( "textureSearchPath", "Textures" ),
+		( "displaySearchPath", "Displays" ),
+		( "archiveSearchPath", "Archives" ),
+		( "proceduralSearchPath", "Procedurals" ),
+	) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( label )
+		
+	return ", ".join( info )
+
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferRenderMan.RenderManOptions.staticTypeId(),
@@ -45,23 +71,25 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 		
-		(
-			"Quality",
-			(
+		{
+			"label" : "Quality",
+			"summary" : __qualitySummary,
+			"namesAndLabels" : (
 				( "ri:pixelSamples", "Pixel Samples" ),
 			),
-		),
+		},
 		
-		(
-			"Search Paths",
-			(
+		{
+			"label" : "Search Paths",
+			"summary" : __searchPathsSummary,
+			"namesAndLabels" : (
 				( "ri:searchpath:shader", "Shaders" ),
 				( "ri:searchpath:texture", "Textures" ),
 				( "ri:searchpath:display", "Displays" ),
 				( "ri:searchpath:archive", "Archives" ),
 				( "ri:searchpath:procedural", "Procedurals" ),
 			),
-		),
+		},
 		
 	),	
 	

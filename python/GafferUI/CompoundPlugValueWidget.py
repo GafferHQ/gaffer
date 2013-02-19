@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,6 +42,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtGui = GafferUI._qtImport( "QtGui" )
+
 class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## Possible values for collapsed are :
@@ -48,7 +51,10 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	#	True  : use CollapsibleContainer which starts off collapsed
 	#	False : use CollapsibleContainer which starts off opened
 	#	None  : don't use CollapsibleContainer
-	def __init__( self, plug, collapsed=True, label=None, **kw ) :
+	#
+	# If summary is specified it will be called each time a child plug changes value,
+	# and the result used to provide a summary in the collapsible header.
+	def __init__( self, plug, collapsed=True, label=None, summary=None, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		
@@ -59,6 +65,10 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				collapsed = collapsed,
 			)
 			self.__collapsible.setChild( self.__column )
+			self.__collapsible.setCornerWidget( GafferUI.Label(), True )
+			## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
+			# way of controlling size behaviours for all widgets in the public API.
+			self.__collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
 				
 		GafferUI.PlugValueWidget.__init__(
 			self,
@@ -86,6 +96,10 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		
 		self.__childPlugUIs = {} # mapping from child plug name to PlugWidget
+
+		self.__summary = summary	
+
+		self._updateFromPlug()
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	# Because the ui is built lazily on demand, this might return None due
@@ -125,8 +139,13 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				w.plugValueWidget().setReadOnly( readOnly )
 
 	def _updateFromPlug( self ) :
-	
-		pass
+				
+		if self.__summary is not None :
+			with self.getContext() :
+				s = self.__summary( self.getPlug() )
+				if s :
+					s = "<small>" + "&nbsp;( " + s + " ) </small>"
+				self.__collapsible.getCornerWidget().setText( s )
 	
 	## May be overridden by derived classes to return a widget to be placed
 	# at the top of the layout.	

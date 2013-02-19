@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,6 +38,14 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+def __attributesSummary( plug ) :
+
+	info = []
+	if plug["visibility"]["enabled"].getValue() :
+		info.append( "Visible" if plug["visibility"]["value"].getValue() else "Invisible" )
+		
+	return ", ".join( info )
+
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferScene.StandardAttributes.staticTypeId(),
@@ -45,12 +53,13 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
 	
-		(
-			"Attributes",
-			(
+		{
+			"label" : "Attributes",
+			"summary" : __attributesSummary,
+			"namesAndLabels" : (
 				( "gaffer:visibility", "Visibility" ),
 			),
-		),
+		},
 		
 	),
 
