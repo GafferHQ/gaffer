@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,42 +34,36 @@
 #  
 ##########################################################################
 
+import IECore
+
+import Gaffer
 import GafferScene
 
-from _GafferSceneTest import *
+## This class is used by the RenderTest unit test - it
+# is not a unittest itself, it is a Node.
+class TestRender( GafferScene.Render ) :
 
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from OpenGLAttributesTest import OpenGLAttributesTest
-from StandardOptionsTest import StandardOptionsTest
-from SceneReadWriteTest import SceneReadWriteTest
-from ScenePathTest import ScenePathTest
-from PathMatcherDataTest import PathMatcherDataTest
-from LightTest import LightTest
-from TestRender import TestRender
-from RenderTest import RenderTest
+	def __init__( self, name="TestRender" ) :
+	
+		GafferScene.Render.__init__( self, name )
+		
+		self.__renderer = None
+	
+	def world( self ) :
+	
+		return self.__renderer.world()
+				
+	def _createRenderer( self ) :
+	
+		self.__renderer = IECore.CapturingRenderer()
+		return self.__renderer
+		
+	def _outputProcedural( self, procedural, bound, renderer ) :
+	
+		procedural.render( renderer )
+		
+	def _commandAndArgs( self ) :
+	
+		return []
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+IECore.registerRunTimeTyped( TestRender )

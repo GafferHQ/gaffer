@@ -159,8 +159,14 @@ class Render( Gaffer.Node ) :
 		for path, declaration in globals["gaffer:forwardDeclarations"].items() :
 			if declaration["type"].value == IECore.TypeId.Light :
 				
+				attributes = scenePlug.fullAttributes( path )
+				visibility = attributes.get( "gaffer:visibility", None )
+				if visibility is not None and not visibility.value :
+					continue
+				
 				transform = scenePlug.fullTransform( path )
 				light = scenePlug.object( path )
+				light.handle = path
 				
 				with IECore.TransformBlock( renderer ) :
 
