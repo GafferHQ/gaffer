@@ -106,6 +106,8 @@
 
 * CompoundPlugValueWidget can now display a summary of the plug values in the collapsible header. Used this to provide useful summaries for all options and attributes nodes in GafferScene. Renamed in OpenGLAttribute plug for consistency with the others.
 
+* Fixed SceneEditor bug which meant that items were only displayed if the first selected node contained them.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

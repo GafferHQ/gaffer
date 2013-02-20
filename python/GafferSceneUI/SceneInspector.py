@@ -101,10 +101,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		html = "<table cellpadding=4 cellspacing=0 style='table-layout: fixed;'>"
 
 		rows = []
-		self.__appendRow( rows, "Node", inspections, "node" )
-		self.__appendRow( rows, "Path", inspections, "path" )
-		self.__appendRow( rows, "Transform", inspections, "transform" )
-		self.__appendRow( rows, "Bound", inspections, "bound" )
+		self.__appendDiffRow( rows, "Node", inspections, "node" )
+		self.__appendDiffRow( rows, "Path", inspections, "path" )
+		self.__appendDiffRow( rows, "Transform", inspections, "transform" )
+		self.__appendDiffRow( rows, "Bound", inspections, "bound" )
 		
 		for keyPrefix, heading in [ ( "attr:", "Attributes" ), ( "object:", "Object" ) ] :
 			
@@ -112,12 +112,9 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			for inspection in inspections :
 				keys |= set( [ k for k in inspection.keys() if k.startswith( keyPrefix ) ] )
 			if len( keys ) :
-	
 				self.__appendRow( rows, "<h3>" + heading + "</h3>" )
-					
-				keys = sorted( list( keys ) )
-				for index, key in enumerate( keys ) :
-					self.__appendRow( rows, key[len( keyPrefix ):], inspections, key )
+				for key in sorted( list( keys ) ) :
+					self.__appendDiffRow( rows, key[len( keyPrefix ):], inspections, key )
 		
 		html += "\n".join( rows )
 		
@@ -164,48 +161,41 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		return result
 	
-	def __appendRow( self, rows, label, inspections=[], name=None ) :
-	
-		if name is not None and name not in inspections[0] :
-			return
-	
+	def __appendRow( self, rows, label, value="" ) :
+		
 		backgroundColor = "#454545" if len( rows ) % 2 else "#4c4c4c"
 		
 		row = "<tr>"
 		row += "<td align=right bgcolor=%s><b>%s</b></td>" % ( backgroundColor, label )
-		
-		valueText = ""
-		if inspections and name is not None :
-			valueText = self.__diff( inspections, name )
-			
-		row += "<td bgcolor=%s>%s</td>" % ( backgroundColor, valueText )
+		row += "<td bgcolor=%s>%s</td>" % ( backgroundColor, value )
 		row += "</tr>"
 	
 		rows.append( row )
-		
-	def __diff( self, inspections, name ) :
-		
+	
+	def __appendDiffRow( self, rows, label, inspections, key ) :
+							
 		if len( inspections ) == 1 :
-			return self.__formatValue( inspections[0][name] )
-		elif name in inspections[0] and name in inspections[1] and inspections[0][name] == inspections[1][name] :
-			return self.__formatValue( inspections[0][name] )
+			if key in inspections[0] :
+				self.__appendRow( rows, label, self.__formatValue( inspections[0][key] ) )
+		elif key in inspections[0] and key in inspections[1] and inspections[0][key] == inspections[1][key] :
+			self.__appendRow( rows, label, self.__formatValue( inspections[0][key] ) )
 		else :
 	
-			result = "<table>"
+			diff = "<table>"
 			
-			if name in inspections[0] :
-				result += "<tr>"
-				result += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][name] )
-				result += "</tr>"
+			if key in inspections[0] :
+				diff += "<tr>"
+				diff += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][key] )
+				diff += "</tr>"
 				
-			if name in inspections[1] :
-				result += "<tr>"
-				result += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][name] )
-				result += "</tr>"
+			if key in inspections[1] :
+				diff += "<tr>"
+				diff += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][key] )
+				diff += "</tr>"
 				
-			result += "</table>"
-			
-			return result	
+			diff += "</table>"
+
+			self.__appendRow( rows, label, diff )
 	
 	def __formatValue( self, value ) :
 	
