@@ -53,6 +53,7 @@ enum TypeId
 	ChannelDataProcessorTypeId = 110757,
 	OpenColorIOTypeId = 110758,
 	ObjectToImageTypeId = 110759,
+	MergeTypeId = 110760,
 	
 	LastTypeId = 110849
 };
