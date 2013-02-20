@@ -108,6 +108,8 @@
 
 * Fixed SceneEditor bug which meant that items were only displayed if the first selected node contained them.
 
+* Added TransformPlugValueWidget which provides a useful summary of the transform in the collapsible header.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

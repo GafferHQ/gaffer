@@ -179,6 +179,7 @@ from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
 import ExecuteUI
 import ScriptNodeUI
+from TransformPlugValueWidget import TransformPlugValueWidget
 
 # then stuff specific to parameterised objects
 
