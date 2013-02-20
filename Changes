@@ -1,3 +1,6 @@
+
+* Added a Merge node to GafferImage
+
 * Added option to disable highlight in GafferUI.Button
 
 * Fixed exception caused by undefined subMenuDefinition in GafferUI.Menu
