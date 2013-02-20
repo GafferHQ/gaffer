@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -200,7 +200,14 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
 	if( channelIt == spec->channelnames.end() )
 	{
-		return parent->channelDataPlug()->defaultValue();
+		if ( channelName == "A" )
+		{
+			return ImagePlug::whiteTile();
+		}
+		else
+		{
+			return parent->channelDataPlug()->defaultValue();
+		}
 	}
 	
 	std::vector<float> interleaved;

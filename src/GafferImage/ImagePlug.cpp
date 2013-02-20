@@ -182,6 +182,12 @@ ImagePlug::~ImagePlug()
 {
 }
 
+const IECore::FloatVectorData *ImagePlug::whiteTile()
+{
+	static IECore::ConstFloatVectorDataPtr g_whiteTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 1. ) ) );
+	return g_whiteTile.get();
+};
+
 const IECore::FloatVectorData *ImagePlug::blackTile()
 {
 	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 0. ) ) );
