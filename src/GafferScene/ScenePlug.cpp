@@ -242,6 +242,32 @@ IECore::ConstCompoundObjectPtr ScenePlug::attributes( const ScenePath &scenePath
 	return attributesPlug()->getValue();
 }
 
+IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath ) const
+{
+	ContextPtr tmpContext = new Context( *Context::current() );
+	Context::Scope scopedContext( tmpContext );
+
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	IECore::CompoundObject::ObjectMap &resultMembers = result->members();
+	ScenePath path( scenePath );
+	while( path.size() )
+	{
+		tmpContext->set( scenePathContextName, path );
+		IECore::ConstCompoundObjectPtr a = attributesPlug()->getValue();
+		const IECore::CompoundObject::ObjectMap &aMembers = a->members();
+		for( IECore::CompoundObject::ObjectMap::const_iterator it = aMembers.begin(), eIt = aMembers.end(); it != eIt; it++ )
+		{
+			if( resultMembers.find( it->first ) == resultMembers.end() )
+			{
+				resultMembers.insert( *it );
+			}
+		}		
+		path.pop_back();
+	}
+	
+	return result;
+}
+
 IECore::ConstObjectPtr ScenePlug::object( const ScenePath &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );

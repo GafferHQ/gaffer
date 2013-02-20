@@ -95,7 +95,48 @@ class ScenePlugTest( unittest.TestCase ) :
 		self.assertEqual( m.translation(), IECore.V3f( 1 ) )
 		self.assertEqual( m.extractScaling(), IECore.V3f( 10 ) )
 		self.assertEqual( m, scaling * translation )
+		
+	def testFullAttributes( self ) :
+		
+		n = GafferSceneTest.CompoundObjectSource()
+		n["in"].setValue(
+			IECore.CompoundObject( {
+				"children" : {
+					"group" : {
+						"attributes" : {
+							"a" : IECore.StringData( "a" ),
+							"b" : IECore.StringData( "b" ),
+						},
+						"children" : {
+							"ball" : {
+								"attributes" : {
+									 "b" : IECore.StringData( "bOverride" ),
+									 "c" : IECore.StringData( "c" ),
+								 },
+							}
+						}
+					},
+				},
+			} )
+		)
+		
+		self.assertEqual(
+			n["out"].fullAttributes( "/group" ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "a" ),
+				"b" : IECore.StringData( "b" ),
+			} )
+		)
 	
+		self.assertEqual(
+			n["out"].fullAttributes( "/group/ball" ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "a" ),
+				"b" : IECore.StringData( "bOverride" ),
+				"c" : IECore.StringData( "c" ),
+			} )
+		)
+		
 	def testCreateCounterpart( self ) :
 	
 		s1 = GafferScene.ScenePlug( "a", Gaffer.Plug.Direction.Out )

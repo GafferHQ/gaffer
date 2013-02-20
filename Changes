@@ -110,6 +110,8 @@
 
 * Added TransformPlugValueWidget which provides a useful summary of the transform in the collapsible header.
 
+* Added ScenePlug::fullAttributes() method which returns the full set of inherited attributes at a particular scene path.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

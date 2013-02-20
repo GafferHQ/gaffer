@@ -127,6 +127,13 @@ static IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, objec
 	return copy ? a->copy() : IECore::constPointerCast<IECore::CompoundObject>( a );
 }
 
+static IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, object scenePath )
+{
+	ScenePlug::ScenePath p;
+	objectToScenePath( scenePath, p );
+	return plug.fullAttributes( p );
+}
+
 IECore::MurmurHash boundHashWrapper( const ScenePlug &plug, object scenePath )
 {
 	ScenePlug::ScenePath p;
@@ -181,6 +188,7 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "object", &objectWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "fullAttributes", &fullAttributesWrapper )
 		// hash accessors
 		.def( "boundHash", &boundHashWrapper )
 		.def( "transformHash", &transformHashWrapper )

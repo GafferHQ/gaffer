@@ -118,9 +118,14 @@ class ScenePlug : public Gaffer::CompoundPlug
 		////////////////////////////////////////////////////////////////////
 		//@{
 		Imath::Box3f bound( const ScenePath &scenePath ) const;
+		/// Returns the local transform at the specified scene path.
 		Imath::M44f transform( const ScenePath &scenePath ) const;
+		/// Returns the absolute (world) transform at the specified scene path.
 		Imath::M44f fullTransform( const ScenePath &scenePath ) const;
+		/// Returns just the attributes set at the specific scene path.
 		IECore::ConstCompoundObjectPtr attributes( const ScenePath &scenePath ) const;
+		/// Returns the full set of inherited attributes at the specified scene path.
+		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath ) const;
 		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
 		
