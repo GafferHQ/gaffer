@@ -200,6 +200,8 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
 	if( channelIt == spec->channelnames.end() )
 	{
+		/// \TODO: Do we want an alpha to be created if there isn't one? If we do then we should make sure that each tile
+		/// has the same hash so that we don't flood the cache.
 		if ( channelName == "A" )
 		{
 			return ImagePlug::whiteTile();
