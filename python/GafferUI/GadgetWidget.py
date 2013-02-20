@@ -204,11 +204,13 @@ class _EventFilter( QtCore.QObject ) :
 	def eventFilter( self, qObject, qEvent ) :
 	
 		if qEvent.type()==QtCore.QEvent.ToolTip :
-		
+			
+			qObject.makeCurrent()
+			
 			widget = GafferUI.Widget._owner( qObject )
 			
 			assert( isinstance( widget, GadgetWidget ) )
-		
+			
 			toolTip = widget.getViewportGadget().getToolTip( 
 				IECore.LineSegment3f(
 					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
