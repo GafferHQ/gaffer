@@ -76,9 +76,6 @@ class GLWidget( GafferUI.Widget ) :
 	# among the available formats. In particular it appears that a depth buffer is often present
 	# even when not requested.	
 	def __init__( self, bufferOptions = set(), **kw ) :
-	
-		if GLWidget.__sharingWidget is None :
-			GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
 		
 		format = QtOpenGL.QGLFormat()
 		format.setRgba( True )
@@ -89,8 +86,10 @@ class GLWidget( GafferUI.Widget ) :
 		
 		if hasattr( format, "setVersion" ) : # setVersion doesn't exist in qt prior to 4.7.		
 			format.setVersion( 2, 1 )
-					
-		GafferUI.Widget.__init__( self, QtOpenGL.QGLWidget( format, shareWidget = GLWidget.__sharingWidget ), **kw )
+		
+		glwidget = QtOpenGL.QGLWidget( format, shareWidget = GLWidget.__retrieveSharingWidget() )
+		
+		GafferUI.Widget.__init__( self, glwidget, **kw )
 		
 		self._qtWidget().resizeGL = Gaffer.WeakMethod( self.__resizeGL )
 		self._qtWidget().paintGL = Gaffer.WeakMethod( self.__paintGL )
@@ -129,3 +128,74 @@ class GLWidget( GafferUI.Widget ) :
 		IECoreGL.init( True )
 		
 		self._draw()
+	
+	## This retrieves a gl widget whose gl context all subsequent GafferUI.GLWidgets 
+	# will share. In maya this tries to grab one of the model panels, in case you're
+	# doing some IECoreGL drawing in maya as well as gaffer - this is because IECoreGL
+	# currently only works reliably in a single GL context.
+	@classmethod
+	def __retrieveSharingWidget( cls ) :
+		
+		if GLWidget.__sharingWidget is None :
+		
+			try:
+				QtOpenGL.QGLWidget
+				import maya.OpenMayaUI
+				import maya.cmds
+				import sip
+				
+				modelPanels = maya.cmds.getPanel( type="modelPanel" )
+				
+				modelPanels = maya.cmds.getPanel( type="modelPanel" )
+
+				glWidget = None
+
+				for panel in modelPanels:
+					ptr = maya.OpenMayaUI.MQtUtil.findLayout( panel )
+					widget = sip.wrapinstance(long(ptr), QtGui.QWidget)
+					glWidget = GLWidget.__findGLWidget( widget )
+					if glWidget:
+						break
+				
+				GLWidget.__sharingWidget = glWidget
+				
+			except Exception, e:
+				GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
+			
+			if GLWidget.__sharingWidget is None:
+				raise Exception, "GafferUI.GLWidget: couldn't get a QGLWidget for sharing!"
+			
+		return GLWidget.__sharingWidget
+
+	
+	## this method finds a gl widget somewhere in the hierarchy under the supplied
+	# widget. 
+	@staticmethod
+	def __findGLWidget( widget ) :
+		
+		# is this a gl widget? If so, we're laughing!
+		if isinstance( widget, QtOpenGL.QGLWidget ):
+			return widget
+
+		layout = widget.layout()
+		
+		# no layout = no children - this is not the widget you are looking for...
+		if layout is None:
+			return None
+		
+		# recurse through children:
+		i = 0
+		while 1:
+			childItem = layout.itemAt(i)
+
+			if childItem is None:
+				break
+
+			i = i + 1
+			ret = GLWidget.__findGLWidget( childItem.widget() )
+			if ret:
+				# woop - we've found a gl widget!
+				return ret
+
+		return None
+	
