@@ -139,15 +139,12 @@ class GLWidget( GafferUI.Widget ) :
 		if GLWidget.__sharingWidget is None :
 		
 			try:
-				QtOpenGL.QGLWidget
 				import maya.OpenMayaUI
 				import maya.cmds
 				import sip
 				
 				modelPanels = maya.cmds.getPanel( type="modelPanel" )
 				
-				modelPanels = maya.cmds.getPanel( type="modelPanel" )
-
 				glWidget = None
 
 				for panel in modelPanels:
@@ -159,11 +156,9 @@ class GLWidget( GafferUI.Widget ) :
 				
 				GLWidget.__sharingWidget = glWidget
 				
-			except Exception, e:
+			except ImportError, e:
+				
 				GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
-			
-			if GLWidget.__sharingWidget is None:
-				raise Exception, "GafferUI.GLWidget: couldn't get a QGLWidget for sharing!"
 			
 		return GLWidget.__sharingWidget
 
