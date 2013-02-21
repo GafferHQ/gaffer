@@ -69,6 +69,14 @@ class RenderManRender( GafferScene.Render ) :
 	
 		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )	
 		
+		# enable all visibility types - maybe this is something which'll
+		# get dealt with using attributes at the root level at some point.
+		renderer.setAttribute( "ri:visibility:camera", IECore.BoolData( True ) )
+		renderer.setAttribute( "ri:visibility:transmission", IECore.BoolData( True ) )
+		renderer.setAttribute( "ri:visibility:diffuse", IECore.BoolData( True ) )
+		renderer.setAttribute( "ri:visibility:specular", IECore.BoolData( True ) )
+		renderer.setAttribute( "ri:visibility:photon", IECore.BoolData( True ) )
+		
 		serialisedParameters = str( IECore.ParameterParser().serialise( procedural.parameters() ) )
 		pythonString = "IECoreRI.executeProcedural( 'gaffer/script', 1, %s )" % serialisedParameters
 		
