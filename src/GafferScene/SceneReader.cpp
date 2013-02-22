@@ -36,6 +36,8 @@
 
 #include "tbb/mutex.h"
 
+#include "boost/bind.hpp"
+
 #include "IECore/FileIndexedIO.h"
 #include "IECore/LRUCache.h"
 #include "IECore/SceneInterface.h"
@@ -107,6 +109,11 @@ class SceneReader::Cache
 			return result;
 		}
 		
+		void clear()
+		{
+			m_fileCache.clear();
+		}
+		
 	private :
 	
 		class FileAndMutex : public IECore::RefCounted
@@ -139,6 +146,7 @@ class SceneReader::Cache
 SceneReader::SceneReader( const std::string &name )
 	:	FileSource( name )
 {
+	plugSetSignal().connect( boost::bind( &SceneReader::plugSet, this, ::_1 ) );
 }
 
 SceneReader::~SceneReader()
@@ -216,4 +224,23 @@ SceneReader::Cache &SceneReader::cache()
 {
 	static Cache c;
 	return c;
+}
+
+void SceneReader::plugSet( Gaffer::Plug *plug )
+{
+	// this clears the cache every time the refresh count is updated, so you don't get entries
+	// from old files hanging around and screwing up the hierarchy.
+	// TODO: The fact that this clears the cache for all nodes, ever is a problem - find a better
+	// way of doing this!
+	if( plug == refreshCountPlug() )
+	{
+		cache().clear();
+	}
+}
+
+// TODO: this hash needs to be smarter - it should detect if the scene cache is animated or not
+void SceneReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FileSource::hash( output, context, h );
+	h.append( context->getFrame() );
 }

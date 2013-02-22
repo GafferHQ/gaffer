@@ -52,6 +52,8 @@ class SceneReader : public FileSource
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneReader, SceneReaderTypeId, FileSource )
 		
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
 	private :
 	
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -60,6 +62,8 @@ class SceneReader : public FileSource
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		
+		void plugSet( Gaffer::Plug *plug );
 		
 		class Cache;
 		static Cache &cache();
