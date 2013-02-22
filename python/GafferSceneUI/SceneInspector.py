@@ -151,9 +151,15 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		object = plug.object( path )
 		if object is not None :
+			
 			result["object:Type"] = object.typeName()
+			
 			if isinstance( object, IECore.Primitive ) :
 				result["object:Primitive Variables"] = " ".join( sorted( object.keys() ) )
+				for interpName, interpValue in IECore.PrimitiveVariable.Interpolation.names.items() :
+					if interpValue not in ( IECore.PrimitiveVariable.Interpolation.Invalid, IECore.PrimitiveVariable.Interpolation.Constant ) :
+						result["object:Num " + interpName] = object.variableSize( interpValue )
+						
 			elif isinstance( object, IECore.Camera ) :
 				parameters = object.parameters()
 				for key in sorted( parameters.keys() ) :
