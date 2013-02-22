@@ -230,7 +230,7 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 {
 	// this clears the cache every time the refresh count is updated, so you don't get entries
 	// from old files hanging around and screwing up the hierarchy.
-	// TODO: The fact that this clears the cache for all nodes, ever is a problem - find a better
+	/// \todo The fact that this clears the cache for all nodes, ever is a problem - find a better
 	// way of doing this!
 	if( plug == refreshCountPlug() )
 	{
@@ -238,7 +238,7 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 	}
 }
 
-// TODO: this hash needs to be smarter - it should detect if the scene cache is animated or not
+/// \todo this hash needs to be smarter - it should detect if the scene cache is animated or not
 void SceneReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FileSource::hash( output, context, h );
