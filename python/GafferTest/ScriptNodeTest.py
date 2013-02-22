@@ -39,6 +39,8 @@ import unittest
 import sys
 import weakref
 import gc
+import os
+import shutil
 
 import IECore
 
@@ -702,6 +704,31 @@ a = A()"""
 		self.assertTrue( cs[2][0].isSame( s ) )
 		self.assertTrue( cs[2][1].isSame( cs[0][1] ) )
 		self.assertEqual( cs[2][2], Gaffer.Action.Stage.Redo )
+	
+	def testLoadingMovedScriptDoesntKeepOldFileName( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		shutil.move( "/tmp/test.gfr", "/tmp/test2.gfr" )
+		
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test2.gfr" )
+		s.load()
+		
+		self.assertEqual( s["fileName"].getValue(), "/tmp/test2.gfr" )
+		
+	def tearDown( self ) :
+	
+		for f in (
+			"/tmp/test.gfr",
+			"/tmp/test2.gfr",
+		) :
+			if os.path.exists( f ) :
+				os.remove( f )
 		
 if __name__ == "__main__":
 	unittest.main()

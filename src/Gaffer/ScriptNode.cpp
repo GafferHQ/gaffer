@@ -63,7 +63,7 @@ IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 ScriptNode::ScriptNode( const std::string &name )
 	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() ), m_context( new Context )
 {
-	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "" );
+	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable );
 	addChild( m_fileNamePlug );
 	
 	CompoundPlugPtr frameRangePlug = new CompoundPlug( "frameRange", Plug::In );
