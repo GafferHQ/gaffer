@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,24 +43,27 @@ import IECoreArnold
 import GafferUI
 import GafferArnold
 
-def __shaderCreator( name ) :
+def __shaderCreator( name, nodeType ) :
 
-	shader = GafferArnold.ArnoldShader( name )
-	shader.setShader( name )
+	shader = nodeType( name )
+	shader.loadShader( name )
 	return shader
 
 with IECoreArnold.UniverseBlock() :
 
-	it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER )
+	it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
 	
 	while not arnold.AiNodeEntryIteratorFinished( it ) :
 		
 		nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
 		shaderName = arnold.AiNodeEntryGetName( nodeEntry )
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+		
+		if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
+			GafferUI.NodeMenu.append( "/Arnold/Shader/" + displayName, IECore.curry( __shaderCreator, shaderName, GafferArnold.ArnoldShader ) )
+		else :
+			GafferUI.NodeMenu.append( "/Arnold/Light/" + displayName, IECore.curry( __shaderCreator, shaderName, GafferArnold.ArnoldLight ) )
 			
-		GafferUI.NodeMenu.append( "/Arnold/Shader/" + displayName, IECore.curry( __shaderCreator, shaderName ) )
-	
 	arnold.AiNodeEntryIteratorDestroy( it )
 	
 	arnold.AiEnd()

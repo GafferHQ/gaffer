@@ -47,6 +47,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferArnold/ArnoldShader.h"
+#include "GafferArnold/ParameterHandler.h"
 
 using namespace std;
 using namespace boost;
@@ -68,7 +69,7 @@ ArnoldShader::~ArnoldShader()
 {
 }
 
-void ArnoldShader::setShader( const std::string &shaderName )
+void ArnoldShader::loadShader( const std::string &shaderName )
 {
 	IECoreArnold::UniverseBlock arnoldUniverse;
 	
@@ -80,164 +81,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 
 	getChild<StringPlug>( "__shaderName" )->setValue( AiNodeEntryGetName( shader ) );
 		
-	AtParamIterator *it = AiNodeEntryGetParamIterator( shader );  	
-	while( const AtParamEntry *param = AiParamIteratorGetNext( it ) )
-	{
-		std::string name = AiParamGetName( param );
-		if( name == "name" )
-		{
-			continue;
-		}
-		
-		PlugPtr plug = 0;
-		/// \todo Proper handler mechanism a bit like ParameterHandler? At least we need to deal with
-		/// reloading shaders and changing versions while using existing plugs.
-		switch( AiParamGetType( param ) )
-		{
-			case AI_TYPE_FLOAT :
-			
-				plug = new FloatPlug(
-					name,
-					Plug::In,
-					AiParamGetDefault( param )->FLT
-				);
-			
-				break;
-				
-			case AI_TYPE_INT :
-			
-				plug = new IntPlug(
-					name,
-					Plug::In,
-					AiParamGetDefault( param )->INT
-				);
-			
-				break;
-				
-			case AI_TYPE_BOOLEAN :
-			
-				plug = new BoolPlug(
-					name,
-					Plug::In,
-					AiParamGetDefault( param )->BOOL
-				);
-			
-				break;	
-				
-			case AI_TYPE_RGB :
-			
-				plug = new Color3fPlug(
-					name,
-					Plug::In,
-					Color3f(
-						AiParamGetDefault( param )->RGB.r,
-						AiParamGetDefault( param )->RGB.g,
-						AiParamGetDefault( param )->RGB.b
-					)
-				);
-			
-				break;
-				
-			case AI_TYPE_RGBA :
-			
-				plug = new Color4fPlug(
-					name,
-					Plug::In,
-					Color4f(
-						AiParamGetDefault( param )->RGBA.r,
-						AiParamGetDefault( param )->RGBA.g,
-						AiParamGetDefault( param )->RGBA.b,
-						AiParamGetDefault( param )->RGBA.a
-					)
-				);
-			
-				break;	
-				
-			case AI_TYPE_POINT2 :
-			
-				plug = new V2fPlug(
-					name,
-					Plug::In,
-					V2f(
-						AiParamGetDefault( param )->PNT2.x,
-						AiParamGetDefault( param )->PNT2.y
-					)
-				);
-			
-				break;
-				
-			case AI_TYPE_POINT :
-			
-				plug = new V3fPlug(
-					name,
-					Plug::In,
-					V3f(
-						AiParamGetDefault( param )->PNT.x,
-						AiParamGetDefault( param )->PNT.y,
-						AiParamGetDefault( param )->PNT.z
-					)
-				);
-			
-				break;	
-				
-			case AI_TYPE_VECTOR :
-			
-				plug = new V3fPlug(
-					name,
-					Plug::In,
-					V3f(
-						AiParamGetDefault( param )->VEC.x,
-						AiParamGetDefault( param )->VEC.y,
-						AiParamGetDefault( param )->VEC.z
-					)
-				);
-			
-				break;	
-				
-			case AI_TYPE_ENUM :
-			
-				{
-					AtEnum e = AiParamGetEnum( param );
-					plug = new StringPlug(
-						name,
-						Plug::In,
-						AiEnumGetString( e, AiParamGetDefault( param )->INT )
-					);
-				
-				}			
-				break;	
-		
-			case AI_TYPE_STRING :
-			
-				{
-					plug = new StringPlug(
-						name,
-						Plug::In,
-						AiParamGetDefault( param )->STR
-					);
-				
-				}
-		
-		}
-		
-		if( plug )
-		{
-			plug->setFlags( Plug::Dynamic, true );
-			parametersPlug()->addChild( plug );
-		}
-		else
-		{
-			msg(
-				Msg::Warning,
-				"ArnoldShader::setShader",
-				format( "Unsupported parameter \"%s\" of type \"%s\"" ) %
-					AiParamGetName( param ) %
-					AiParamGetTypeName( AiParamGetType( param ) )
-			);
-		}	
-		
-	}
-	AiParamIteratorDestroy( it );
+	ParameterHandler::setupPlugs( shader, parametersPlug() );
 			
 	PlugPtr outPlug = 0;
 	const int outputType = AiNodeEntryGetOutputType( shader );
@@ -292,7 +136,7 @@ void ArnoldShader::setShader( const std::string &shaderName )
 		{
 			msg(
 				Msg::Warning,
-				"ArnoldShader::setShader",
+				"ArnoldShader::loadShader",
 				format( "Unsupported output parameter of type \"%s\"" ) %
 					AiParamGetTypeName( AiNodeEntryGetOutputType( shader ) )
 			);

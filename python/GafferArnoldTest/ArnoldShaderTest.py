@@ -48,12 +48,12 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def test( self ) :
 	
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "noise" )
+		n.loadShader( "noise" )
 		
 	def testState( self ) :
 	
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "utility" )
+		n.loadShader( "utility" )
 		
 		s = n.state()
 		self.failUnless( isinstance( s, IECore.ObjectVector ) )
@@ -66,7 +66,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testParameterRepresentation( self ) :
 	
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "wireframe" )
+		n.loadShader( "wireframe" )
 		
 		self.failUnless( isinstance( n["parameters"]["line_width"], Gaffer.FloatPlug ) )
 		self.failUnless( isinstance( n["parameters"]["fill_color"], Gaffer.Color3fPlug ) )
@@ -78,7 +78,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testParameterUse( self ) :
 	
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "wireframe" )
+		n.loadShader( "wireframe" )
 		
 		n["parameters"]["line_width"].setValue( 10 )
 		n["parameters"]["fill_color"].setValue( IECore.Color3f( .25, .5, 1 ) )
@@ -96,7 +96,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferArnold.ArnoldShader()
-		s["n"].setShader( "wireframe" )
+		s["n"].loadShader( "wireframe" )
 		
 		ss = s.serialise()
 		
@@ -114,7 +114,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		n = GafferArnold.ArnoldShader()
 		h = n.stateHash()
 		
-		n.setShader( "noise" )
+		n.loadShader( "noise" )
 		h2 = n.stateHash()
 		
 		self.assertNotEqual( h, h2 )
@@ -127,10 +127,10 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testShaderNetwork( self ) :
 	
 		s = GafferArnold.ArnoldShader()
-		s.setShader( "standard" )
+		s.loadShader( "standard" )
 		
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "noise" )
+		n.loadShader( "noise" )
 		
 		s["parameters"]["Kd"].setInput( n["out"] )
 		s["parameters"]["Ks"].setInput( n["out"] )
@@ -159,11 +159,11 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testShaderNetworkRender( self ) :
 					
 		f = GafferArnold.ArnoldShader()
-		f.setShader( "flat" )
+		f.loadShader( "flat" )
 		f["parameters"]["color"].setValue( IECore.Color3f( 1, 1, 0 ) )
 		
 		s = GafferArnold.ArnoldShader()
-		s.setShader( "utility" )
+		s.loadShader( "utility" )
 		s["parameters"]["color"].setInput( f["parameters"]["color"] )
 		
 		r = IECoreArnold.Renderer()
@@ -191,12 +191,12 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testShaderNetworkHash( self ) :
 	
 		s = GafferArnold.ArnoldShader()
-		s.setShader( "standard" )
+		s.loadShader( "standard" )
 		
 		h1 = s.stateHash()
 
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "noise" )
+		n.loadShader( "noise" )
 		s["parameters"]["Kd"].setInput( n["out"] )
 		
 		h2 = s.stateHash()
@@ -211,10 +211,10 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testShaderNetworkHashWithNonShaderInputs( self ) :
 	
 		s = GafferArnold.ArnoldShader()
-		s.setShader( "standard" )
+		s.loadShader( "standard" )
 		
 		n = GafferArnold.ArnoldShader()
-		n.setShader( "noise" )
+		n.loadShader( "noise" )
 		s["parameters"]["Kd"].setInput( n["out"] )
 		
 		r = Gaffer.Random()
@@ -233,10 +233,10 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testStandardShaderAcceptsImageInputs( self ) :
 	
 		s = GafferArnold.ArnoldShader()
-		s.setShader( "standard" )
+		s.loadShader( "standard" )
 		
 		t = GafferArnold.ArnoldShader()
-		t.setShader( "image" )
+		t.loadShader( "image" )
 		
 		s["parameters"]["emission_color"].setInput( t["out"] )
 		

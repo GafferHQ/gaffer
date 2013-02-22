@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -71,7 +72,7 @@ __plugValueWidgetCreators = {}
 
 with IECoreArnold.UniverseBlock() :
 
-	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER )
+	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
 	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
 		
 		nodeEntry = arnold.AiNodeEntryIteratorGetNext( nodeIt )
@@ -108,3 +109,4 @@ def __plugValueWidgetCreator( plug ) :
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 	
 GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )

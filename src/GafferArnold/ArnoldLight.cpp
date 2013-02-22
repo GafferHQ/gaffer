@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,30 +34,64 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "boost/format.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "IECore/Exception.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
+#include "IECoreArnold/UniverseBlock.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/CompoundDataPlug.h"
+
 #include "GafferArnold/ArnoldLight.h"
+#include "GafferArnold/ArnoldShader.h"
+#include "GafferArnold/ParameterHandler.h"
 
-using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferArnold;
 
-BOOST_PYTHON_MODULE( _GafferArnold )
+IE_CORE_DEFINERUNTIMETYPED( ArnoldLight );
+
+size_t ArnoldLight::g_firstPlugIndex = 0;
+
+ArnoldLight::ArnoldLight( const std::string &name )
+	:	GafferScene::Light( name )
 {
-	
-	GafferBindings::NodeClass<ArnoldShader>()
-		.def( "loadShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::loadShader )
-	;
-	
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "__shaderName" ) );
+}
 
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
+ArnoldLight::~ArnoldLight()
+{
+}
 
+void ArnoldLight::loadShader( const std::string &shaderName )
+{
+	IECoreArnold::UniverseBlock arnoldUniverse;
+	
+	const AtNodeEntry *shader = AiNodeEntryLookUp( shaderName.c_str() );
+	if( !shader )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Shader \"%s\" not found" ) % shaderName ) );
+	}
+	
+	ParameterHandler::setupPlugs( shader, parametersPlug() );
+	
+	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
+}
+
+void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	parametersPlug()->hash( h );
+	getChild<StringPlug>( "__shaderName" )->hash( h );
+}
+
+IECore::LightPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
+{
+	IECore::LightPtr result = new IECore::Light( getChild<StringPlug>( "__shaderName" )->getValue() );
+	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	{
+		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( *it );
+	}
+	return result;
 }

@@ -55,7 +55,7 @@ class ArnoldShader : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
 		
-		void setShader( const std::string &shaderName );
+		void loadShader( const std::string &shaderName );
 
 	protected :
 	

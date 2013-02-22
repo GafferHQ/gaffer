@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,30 +34,26 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERARNOLD_PARAMETERHANDLER_H
+#define GAFFERARNOLD_PARAMETERHANDLER_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "ai.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
-#include "GafferArnold/ArnoldLight.h"
+#include "Gaffer/Plug.h"
 
-using namespace boost::python;
-using namespace GafferArnold;
-
-BOOST_PYTHON_MODULE( _GafferArnold )
+namespace GafferArnold
 {
-	
-	GafferBindings::NodeClass<ArnoldShader>()
-		.def( "loadShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::loadShader )
-	;
-	
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
 
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
+/// A helper class for mapping Arnold parameters to Gaffer Plugs.
+class ParameterHandler
+{
 
-}
+	public :
+
+		static Gaffer::Plug *setupPlug( const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+		static void setupPlugs( const AtNodeEntry *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+};
+
+} // namespace GafferArnold
+
+#endif // GAFFERARNOLD_PARAMETERHANDLER_H

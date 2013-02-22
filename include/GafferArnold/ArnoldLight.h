@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,30 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERARNOLD_ARNOLDLIGHT_H
+#define GAFFERARNOLD_ARNOLDLIGHT_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/Light.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
-#include "GafferArnold/ArnoldLight.h"
+#include "GafferArnold/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferArnold;
-
-BOOST_PYTHON_MODULE( _GafferArnold )
+namespace GafferArnold
 {
-	
-	GafferBindings::NodeClass<ArnoldShader>()
-		.def( "loadShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::loadShader )
-	;
-	
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
 
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
+class ArnoldLight : public GafferScene::Light
+{
 
-}
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
+
+		ArnoldLight( const std::string &name=staticTypeName() );
+		virtual ~ArnoldLight();
+
+		void loadShader( const std::string &shaderName );
+				
+	protected :
+
+		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::LightPtr computeLight( const Gaffer::Context *context ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
+};
+
+} // namespace GafferArnold
+
+#endif // GAFFERARNOLD_ARNOLDLIGHT_H
