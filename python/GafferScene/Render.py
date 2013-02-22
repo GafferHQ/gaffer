@@ -168,9 +168,15 @@ class Render( Gaffer.Node ) :
 				light = scenePlug.object( path )
 				light.handle = path
 				
-				with IECore.TransformBlock( renderer ) :
+				with IECore.AttributeBlock( renderer ) :
+					
+					for key, value in attributes.items() :
+						if isinstance( value, IECore.Data ) :
+							renderer.setAttribute( key, value )
 
 					renderer.concatTransform( transform )
 					light.render( renderer )
+				
+				renderer.illuminate( light.handle, True )
 				
 IECore.registerRunTimeTyped( Render )

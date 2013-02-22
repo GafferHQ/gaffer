@@ -118,6 +118,31 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
 		self.assertEqual( len( lights ), 0 )
+	
+	def testLightAttributes( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
 		
+		s["l"] = GafferSceneTest.TestLight()
+		
+		s["a"] = GafferScene.Attributes()
+		s["a"]["in"].setInput( s["l"]["out"] )
+		s["a"]["attributes"].addMember( "user:test", IECore.IntData( 10 ) )
+
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["a"]["out"] )
+		
+		# CapturingRenderer outputs some spurious errors which
+		# we suppress by capturing them.
+		with IECore.CapturingMessageHandler() :
+			s["r"].execute()
+			
+		w = s["r"].world()
+		l = w.children()[0].state()
+		self.assertTrue( isinstance( l[0], IECore.AttributeState ) )
+		self.assertEqual( l[0].attributes["user:test"], IECore.IntData( 10 ) )
+		self.assertTrue( isinstance( l[1], IECore.Light ) )
+				
 if __name__ == "__main__":
 	unittest.main()
