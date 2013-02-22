@@ -267,7 +267,7 @@ IECore::ConstFloatVectorDataPtr Grade::computeChannelData( const std::string &ch
 		{
 			float colour = *tilePtr++;
 			const float c = A * colour + B;
-			colour = ( c >= 0.f ? (float)pow( c, invGamma ) : c );
+			colour = ( c >= 0.f && invGamma != 1.f ? (float)pow( c, invGamma ) : c );
 
 			if ( blackClamp && colour < 0.f ) colour = 0.f;
 			if ( whiteClamp && colour > 1.f ) colour = 1.f;
