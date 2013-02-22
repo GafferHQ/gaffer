@@ -68,7 +68,7 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.ImageProcessor.staticTypeId(),
-	"in",
+	"in*",
 	None
 )
 
@@ -102,3 +102,5 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = mergeOperationLabelsAndValues
 )
+
+

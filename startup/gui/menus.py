@@ -98,6 +98,7 @@ try :
 
 	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
 	GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
+	GafferUI.NodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
 	GafferUI.NodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )
 	GafferUI.NodeMenu.append( "/Image/Filter/Merge", GafferImage.Merge )
 except ImportError :

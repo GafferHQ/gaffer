@@ -49,6 +49,7 @@
 #include "GafferImage/OpenColorIO.h"
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImage/Merge.h"
+#include "GafferImage/Grade.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -97,5 +98,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<OpenColorIO>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Merge>();
+	GafferBindings::DependencyNodeClass<Grade>();
 
 }

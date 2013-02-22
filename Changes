@@ -1,4 +1,6 @@
 
+* Added a Grade node to GafferImage
+
 * Added a Merge node to GafferImage
 
 * Added option to disable highlight in GafferUI.Button

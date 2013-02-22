@@ -38,7 +38,7 @@
 import unittest
 
 import IECore
-
+import Gaffer
 import GafferImage
 
 class ImagePlugTest( unittest.TestCase ) :
