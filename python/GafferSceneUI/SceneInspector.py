@@ -150,7 +150,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		# object
 		
 		object = plug.object( path )
-		if object is not None :
+		if not isinstance( object, IECore.NullObject ) :
 			
 			result["object:Type"] = object.typeName()
 			
