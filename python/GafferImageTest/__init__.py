@@ -39,6 +39,7 @@ from ImagePlugTest import ImagePlugTest
 from ImageReaderTest import ImageReaderTest
 from OpenColorIOTest import OpenColorIOTest
 from ObjectToImageTest import ObjectToImageTest
+from MergeTest import MergeTest
 
 if __name__ == "__main__":
 	import unittest
