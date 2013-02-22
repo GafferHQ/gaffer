@@ -165,9 +165,10 @@ const Gaffer::BoolPlug *Grade::whiteClampPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex+8 );
 }
 
-bool Grade::enabled() const
+bool Grade::channelEnabled( int channelIndex ) const
 {
-	return ChannelDataProcessor::enabled();
+	if ( gammaPlug()->getValue()[ channelIndex ] == 0. ) return false;
+	return true;
 }
 
 void Grade::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -225,58 +226,48 @@ void Grade::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaf
 	whiteClampPlug()->hash( h );
 }
 
-IECore::ConstFloatVectorDataPtr Grade::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, FloatVectorDataPtr outData ) const
 {
-	ConstFloatVectorDataPtr inData = inPlug()->channelData( channelName, tileOrigin );
-	
+	///\TODO Once the ChannelDataProcessor baseclass (implemented within enabled()) has a channel input mask feature,
+	// make this node mask only RGB and then remove the following lines that check to see if we are processing the alpha.
+	if ( channelIndex == 3 ) return;
+
 	// Calculate the valid data window that we are to merge.
-	const int tileSize = ImagePlug::tileSize();
-	const Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + tileSize - 1, tileOrigin.y + tileSize - 1 ) );
-	
-	// Allocate the new tile
-	FloatVectorDataPtr outDataPtr = new FloatVectorData;
-	std::vector<float> &outData = outDataPtr->writable();
-	outData.resize( tileSize * tileSize, 0.0f );
-		
-	// Check that the gamma value is not 0.
-	const int channelIdx = channelName == "R" ? 0 : channelName == "G" ? 1 : 2;
-	const float gamma = gammaPlug()->getValue()[channelIdx];
-	if ( gamma == 0. ) return inPlug()->channelDataPlug()->getValue();
-	
+	const int dataWidth = ImagePlug::tileSize()*ImagePlug::tileSize();
+
 	// Do some pre-processing.
+	const float gamma = gammaPlug()->getValue()[channelIndex];
 	const float invGamma = 1. / gamma;	
-	const float multiply = multiplyPlug()->getValue()[channelIdx];
-	const float gain = gainPlug()->getValue()[channelIdx];
-	const float lift = liftPlug()->getValue()[channelIdx];
-	const float whitePoint = whitePointPlug()->getValue()[channelIdx];
-	const float blackPoint = blackPointPlug()->getValue()[channelIdx];
-	const float offset = offsetPlug()->getValue()[channelIdx];
+	const float multiply = multiplyPlug()->getValue()[channelIndex];
+	const float gain = gainPlug()->getValue()[channelIndex];
+	const float lift = liftPlug()->getValue()[channelIndex];
+	const float whitePoint = whitePointPlug()->getValue()[channelIndex];
+	const float blackPoint = blackPointPlug()->getValue()[channelIndex];
+	const float offset = offsetPlug()->getValue()[channelIndex];
 	const bool whiteClamp = whiteClampPlug()->getValue();	
 	const bool blackClamp = blackClampPlug()->getValue();	
 
 	const float A = multiply * ( gain - lift ) / ( whitePoint - blackPoint );
 	const float B = offset + lift - A * blackPoint;
-	
-	// Grade the tile.
-	for( int y = tile.min.y; y<=tile.max.y; y++ )
+
+	// Get some useful pointers.	
+	float *outPtr = &(outData->writable()[0]);
+	const float *END = outPtr + dataWidth;
+
+	while (outPtr != END)
 	{
-		const float *tilePtr = &(inData->readable()[0]) + (y - tileOrigin.y) * tileSize + (tile.min.x - tileOrigin.x);
-		float *outPtr = &(outData[0]) + ( y - tileOrigin.y ) * tileSize + (tile.min.x - tileOrigin.x);
-		for( int x = tile.min.x; x <= tile.max.x; x++ )
-		{
-			float colour = *tilePtr++;
-			const float c = A * colour + B;
-			colour = ( c >= 0.f && invGamma != 1.f ? (float)pow( c, invGamma ) : c );
+		// Calculate the colour of the graded pixel.
+		float colour = *outPtr;	// As the input has been copied to outData, grab the input colour from there.
+		const float c = A * colour + B;
+		colour = ( c >= 0.f && invGamma != 1.f ? (float)pow( c, invGamma ) : c );
 
-			if ( blackClamp && colour < 0.f ) colour = 0.f;
-			if ( whiteClamp && colour > 1.f ) colour = 1.f;
+		// Clamp the white and blacks if necessary.
+		if ( blackClamp && colour < 0.f ) colour = 0.f;
+		if ( whiteClamp && colour > 1.f ) colour = 1.f;
 
-			*outPtr++ = colour;
-		}
+		// Write back the result.
+		*outPtr++ = colour;	
 	}
-
-	return outDataPtr;
 }
 
 } // namespace GafferImage

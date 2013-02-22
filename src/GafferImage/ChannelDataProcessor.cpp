@@ -34,6 +34,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
 #include "GafferImage/ChannelDataProcessor.h"
 
 using namespace Gaffer;
@@ -61,6 +62,24 @@ void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlug
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );	
 	}
+}
+
+bool ChannelDataProcessor::enabled() const
+{
+	///\TODO: Once an inputChannelMask plug (or something similar) is implemented, it should be queried here so that the channels that are not masked are not enabled.
+	try // Silently catch exceptions from the context query as if it fails we just call enabled() on the baseclass.
+	{
+		int idx = channelIndex( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
+		return channelEnabled( idx ) == true ? ImageProcessor::enabled() : false;
+	}catch(...){}
+	return ImageProcessor::enabled();
+}
+
+IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
+	processChannelData( context, parent, channelIndex( channelName ), outData );
+	return outData;
 }
 
 void ChannelDataProcessor::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

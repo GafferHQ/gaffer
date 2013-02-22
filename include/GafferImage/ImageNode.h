@@ -68,6 +68,15 @@ class ImageNode : public Gaffer::DependencyNode
 		const Gaffer::BoolPlug *enabledPlug() const;
 		
 		/// The default implementation returns the value of the enabled plug.
+		/// Derived classes should overide this method to if their plugs are in a state that
+		/// make the node produce no effect. This stops duplication of data in the cache and
+		/// improves performance and memory efficiency.
+		/// Any derived classes that do reimplement this method need to call enabled() on it's
+		/// inherited class in the case that it is enabled.
+		/// For example, a derived class should implement enabled() like this:
+		///
+		///	return someCondition == true ? BaseClass::enabled() : false;
+		///	
 		virtual bool enabled() const;
 		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;

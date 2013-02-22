@@ -71,6 +71,11 @@ class OpenColorIO : public ChannelDataProcessor
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
+		///\TODO: As there is no base class to handle image nodes that don't just operate on single channels yet we implement the processChannelData and channelEnabled method() so that they are no longer pure virtual.
+		/// When there is such a base class, derive from it and remove these lines!
+		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, IECore::FloatVectorDataPtr outData ) const {};
+		virtual bool channelEnabled( int channelIndex ) const { return true; };
 
 	private :
 	

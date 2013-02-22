@@ -37,58 +37,36 @@
 import unittest
 
 import IECore
+import Gaffer
 import GafferImage
 import os
 
-class MergeTest( unittest.TestCase ) :
+class GradeTest( unittest.TestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	radialFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/radial.exr" )
-	radialOverCheckerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/radialOverChecker.exr" )
-
-	# Create two read nodes and connect them with a merge node.
-	# Test that the "over" operation is what we expect.
-	def testOverOperation( self ) :
 	
-		background = GafferImage.ImageReader()
-		background["fileName"].setValue( self.checkerFile )		
-		
-		foreground = GafferImage.ImageReader()
-		foreground["fileName"].setValue( self.radialFile )		
-
-		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
-		merge["in"].setInput(foreground["out"])
-		merge["in1"].setInput(background["out"])
-			
-		image = merge["out"].image()
-		image2 = IECore.Reader.create( self.radialOverCheckerFile ).read()
-		
-		image.blindData().clear()
-		image2.blindData().clear()
-		
-		self.assertEqual( image, image2 )
-
-	# Test that the output hash changes when the inputs are switched.
-	def testHashChanged( self ) :
+	# Test that when gamma == 0 that the coresponding channel isn't modified.
+	def testChannelEnable( self ) :
 	
-		background = GafferImage.ImageReader()
-		background["fileName"].setValue( self.checkerFile )		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.checkerFile )		
 		
-		foreground = GafferImage.ImageReader()
-		foreground["fileName"].setValue( self.radialFile )		
-
-		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
-		merge["in"].setInput(foreground["out"])
-		merge["in1"].setInput(background["out"])
-		h1 = merge["out"].image().hash()
+		# Create a grade node and save the hash of a tile from each channel.
+		grade = GafferImage.Grade()
+		grade["in"].setInput(i["out"])
+		grade["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )	
+		hashRed = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		hashGreen = grade["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
+		hashBlue = grade["out"].channelData( "B", IECore.V2i( 0 ) ).hash()
 		
-		merge["in1"].setInput(foreground["out"])
-		merge["in"].setInput(background["out"])
-		h2 = merge["out"].image().hash()
+		# Now we set the gamma on the green channel to 0 which should disable it's output.
+		# The red and blue channels should still be graded as before.
+		grade["gamma"].setValue( IECore.Color3f( 1., 0., 1. ) )
+		hashRed2 = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		hashGreen2 = grade["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
+		hashBlue2 = grade["out"].channelData( "B", IECore.V2i( 0 ) ).hash()
+		
+		self.assertEqual( hashRed, hashRed2 )
+		self.assertNotEqual( hashGreen, hashGreen2 )
+		self.assertEqual( hashBlue, hashBlue2 )
 
-		self.assertNotEqual( h1, h2 )
-
-if __name__ == "__main__":
-	unittest.main()
