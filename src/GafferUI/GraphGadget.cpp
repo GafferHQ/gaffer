@@ -754,7 +754,7 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
 					ConnectionGadget *connection = findConnectionGadget( *oIt );
 					if( connection && !connection->srcNodule() )
 					{
-						assert( connection->dstNodule()->plug()->getInput<Plug>() == *pIt ); 
+						assert( connection->dstNodule()->plug()->getInput<Gaffer::Plug>() == *pIt ); 
 						connection->setNodules( srcNodule, connection->dstNodule() );
 					}
 				}
