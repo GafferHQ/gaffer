@@ -149,7 +149,23 @@ class UndoTest( unittest.TestCase ) :
 		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+	
+	def testDisable( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		
+		with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Disabled ) :
+			s["n"]["op1"].setValue( 10 )
 			
+		self.assertFalse( s.undoAvailable() )
+		
+		with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Enabled ) :
+			with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Disabled ) :
+				s["n"]["op1"].setValue( 20 )
+			
+		self.assertFalse( s.undoAvailable() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

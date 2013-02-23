@@ -60,7 +60,7 @@ void Action::enact( GraphComponentPtr subject, const Function &doFn, const Funct
 		s = subject->ancestor<ScriptNode>();
 	}
 	
-	if( s && s->m_actionAccumulator )
+	if( s && s->m_actionAccumulator && s->m_undoStateStack.top() == UndoContext::Enabled )
 	{
 		ActionPtr a = new Action( doFn, undoFn );
 		a->doAction();
