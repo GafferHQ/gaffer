@@ -180,6 +180,7 @@ from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueW
 import ExecuteUI
 import ScriptNodeUI
 from TransformPlugValueWidget import TransformPlugValueWidget
+from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 
 # then stuff specific to parameterised objects
 

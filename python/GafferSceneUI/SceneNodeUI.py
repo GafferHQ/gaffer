@@ -66,6 +66,18 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer.staticTypeId(), 
 
 GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene.staticTypeId(), "object", GafferUI.StandardNodule )
 
+# FileSource
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.FileSource.staticTypeId(),
+	"refreshCount",
+	GafferUI.IncrementingPlugValueWidget,
+	label = "Refresh",
+	undoable = False
+)
+
+## \todo Once it's possible to register Widgets to go on the right of a PlugWidget, place the refresh button there.
+
 # SceneReader
 
 GafferUI.PlugValueWidget.registerCreator(
