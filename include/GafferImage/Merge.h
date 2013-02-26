@@ -102,7 +102,10 @@ class Merge : public ChannelDataProcessor
 			kUnder = 10
 		};
 
+		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
@@ -115,7 +118,7 @@ class Merge : public ChannelDataProcessor
 		
 		/// A useful method which returns true if the StringVector contains the channel "A".
 		inline bool hasAlpha( IECore::ConstStringVectorDataPtr channelNamesData ) const;
-
+		
 		static size_t g_firstPlugIndex;
 		
 };
