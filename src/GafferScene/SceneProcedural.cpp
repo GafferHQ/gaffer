@@ -93,30 +93,31 @@ void SceneProcedural::render( RendererPtr renderer ) const
 {	
 	Context::Scope scopedContext( m_context );
 	
-	// get all the attributes, and early out if we're not visibile
-	
-	ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
-	const BoolData *visibilityData = attributes->member<BoolData>( "gaffer:visibility" );
-	if( visibilityData && !visibilityData->readable() )
-	{
-		return;
-	}
-
-	// if we are visible then make an attribute block to contain everything, set the name
-	// and get on with generating things.
-
-	AttributeBlock attributeBlock( renderer );
-	
-	std::string name = "";
-	for( ScenePlug::ScenePath::const_iterator it = m_scenePath.begin(), eIt = m_scenePath.end(); it != eIt; it++ )
-	{
-		name += "/" + it->string();
-	}
-	renderer->setAttribute( "name", new StringData( name ) );
-
 	/// \todo See above.
 	try
 	{
+	
+		// get all the attributes, and early out if we're not visibile
+	
+		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
+		const BoolData *visibilityData = attributes->member<BoolData>( "gaffer:visibility" );
+		if( visibilityData && !visibilityData->readable() )
+		{
+			return;
+		}
+
+		// if we are visible then make an attribute block to contain everything, set the name
+		// and get on with generating things.
+
+		AttributeBlock attributeBlock( renderer );
+
+		std::string name = "";
+		for( ScenePlug::ScenePath::const_iterator it = m_scenePath.begin(), eIt = m_scenePath.end(); it != eIt; it++ )
+		{
+			name += "/" + it->string();
+		}
+		renderer->setAttribute( "name", new StringData( name ) );
+
 		// transform
 		
 		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
