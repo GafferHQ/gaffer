@@ -69,6 +69,7 @@ class test( Gaffer.Application ) :
 		import GafferTest
 		import GafferUITest
 		import GafferSceneTest
+		import GafferImageTest
 		
 		testSuite = unittest.TestSuite()
 		if args["testCase"].value :
