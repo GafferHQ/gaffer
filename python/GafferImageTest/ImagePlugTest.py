@@ -79,5 +79,18 @@ class ImagePlugTest( unittest.TestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
 		self.assertEqual( p2.getFlags(), p.getFlags() )
 	
+	def testDynamicSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = GafferImage.ImagePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertTrue( isinstance( s["n"]["p"], GafferImage.ImagePlug ) )
+		self.assertEqual( s["n"]["p"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+	
 if __name__ == "__main__":
 	unittest.main()

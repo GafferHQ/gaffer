@@ -134,12 +134,18 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 	:	CompoundPlug( name, direction, flags )
 {
 	
+	// we don't want the children to be serialised in any way - we always create
+	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
+	// want to store their values because they are meaningless without an input
+	// connection, so they aren't Serialisable either.
+	unsigned childFlags = flags & ~(Dynamic | Serialisable);
+	
 	addChild(
 		new AtomicBox2iPlug(
 			"displayWindow",
 			direction,
 			Imath::Box2i(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -148,7 +154,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			"dataWindow",
 			direction,
 			Imath::Box2i(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -163,7 +169,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			"channelNames",
 			direction,
 			channelStrVectorData,
-			flags
+			childFlags
 		)
 	);
 	
@@ -172,7 +178,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			"channelData",
 			direction,
 			blackTile(),
-			flags
+			childFlags
 		)
 	);
 	
@@ -270,6 +276,19 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 	return channelDataPlug()->getValue();
 }
 
+IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile ) const
+{
+	if( direction()==In && !getInput<Plug>() )
+	{
+		throw IECore::Exception( "ImagePlug::channelData called on unconnected input plug" );
+	}
+	ContextPtr tmpContext = new Context( *Context::current() );
+	tmpContext->set( ImagePlug::channelNameContextName, channelName );
+	tmpContext->set( ImagePlug::tileOriginContextName, tile );
+	Context::Scope scopedContext( tmpContext );
+	return channelDataPlug()->hash();
+}
+
 IECore::ImagePrimitivePtr ImagePlug::image() const
 {
 	const Box2i displayWindow = displayWindowPlug()->getValue();
@@ -297,6 +316,43 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	
 	parallel_for( blocked_range2d<size_t>(dataWindow.min.x, dataWindow.max.x+1, tileSize(), dataWindow.min.y, dataWindow.max.y+1, tileSize() ),
 		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, tileSize()) );
+	
+	return result;
+}
+
+IECore::MurmurHash ImagePlug::imageHash() const
+{
+	MurmurHash result;
+	
+	const Box2i displayWindow = displayWindowPlug()->getValue();
+	const Box2i dataWindow = dataWindowPlug()->getValue();
+	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
+	const vector<string> &channelNames = channelNamesData->readable();
+		
+	result.append( displayWindow );
+	result.append( dataWindow );
+	result.append( &(channelNames[0]), channelNames.size() );
+
+	V2i minTileOrigin = ( dataWindow.min / tileSize() ) * tileSize();
+	V2i maxTileOrigin = ( dataWindow.max / tileSize() ) * tileSize();
+
+	ContextPtr context = new Context( *Context::current() );
+	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
+	{
+		for( int tileOriginY = minTileOrigin.y; tileOriginY<=maxTileOrigin.y; tileOriginY += tileSize() )
+		{
+			for( int tileOriginX = minTileOrigin.x; tileOriginX<=maxTileOrigin.x; tileOriginX += tileSize() )
+			{
+				for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
+				{
+					context->set( ImagePlug::channelNameContextName, *it );
+					context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
+					Context::Scope scope( context );
+					channelDataPlug()->hash( result );
+				}
+			}
+		}
+	}
 	
 	return result;
 }

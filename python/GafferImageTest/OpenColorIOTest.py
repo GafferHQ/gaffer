@@ -94,7 +94,20 @@ class OpenColorIOTest( unittest.TestCase ) :
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 		
+	def testImageHashPassThrough( self ) :
 		
-	
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.fileName )
+		
+		o = GafferImage.OpenColorIO()
+		o["in"].setInput( i["out"] )
+		
+		self.assertEqual( i["out"].imageHash(), o["out"].imageHash() )
+		
+		o["inputSpace"].setValue( "linear" )
+		o["outputSpace"].setValue( "sRGB" )
+
+		self.assertNotEqual( i["out"].imageHash(), o["out"].imageHash() )
+		
 if __name__ == "__main__":
 	unittest.main()
