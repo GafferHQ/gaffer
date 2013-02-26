@@ -49,7 +49,7 @@ IE_CORE_FORWARDDECLARE( DependencyNode )
 /// The Plug base class defines the concept of a connection
 /// point with direction. The ValuePlug class extends this concept
 /// to allow the connections to pass values between connection
-/// points, and for Node::compute() to be used to compute output
+/// points, and for DependencyNode::compute() to be used to compute output
 /// values.
 class ValuePlug : public Plug
 {
