@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,6 +46,7 @@ import GafferImage
 class ImageReaderTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/uvMapWithDataWindow.100x100.exr" )
 
 	def test( self ) :
 	
@@ -102,5 +104,18 @@ class ImageReaderTest( unittest.TestCase ) :
 		n["out"]["channelNames"].getValue()
 		n["out"].channelData( "R", IECore.V2i( 0 ) )
 		
+	def testOffsetDataWindowOrigin( self ) :
+	
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.offsetDataWindowFileName )
+		
+		image = n["out"].image()
+		image2 = IECore.Reader.create( self.offsetDataWindowFileName ).read()
+		
+		image.blindData().clear()
+		image2.blindData().clear()
+		
+		self.assertEqual( image, image2 )
+				
 if __name__ == "__main__":
 	unittest.main()
