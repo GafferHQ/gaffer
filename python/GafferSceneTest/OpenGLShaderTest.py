@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,20 +34,45 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import os
 
-from SceneEditor import SceneEditor
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import OpenGLShaderUI
+import IECore
+import IECoreGL
 
+import Gaffer
+import GafferImage
+import GafferScene
+import GafferSceneTest
+
+class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
+	
+	def test( self ) :
+				
+		s = GafferScene.OpenGLShader()
+		s.loadShader( "texture" )
+		
+		self.assertEqual( len( s["parameters"] ), 3 )
+		self.assertTrue( isinstance( s["parameters"]["mult"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( s["parameters"]["tint"], Gaffer.Color4fPlug ) )
+		self.assertTrue( isinstance( s["parameters"]["texture"], GafferImage.ImagePlug ) )
+		
+		s["parameters"]["mult"].setValue( 0.5 )
+		s["parameters"]["tint"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" ) )
+		s["parameters"]["texture"].setInput( i["out"] )
+		
+		ss = s.state()
+		self.assertEqual( len( ss ), 1 )
+		self.failUnless( isinstance( ss[0], IECore.Shader ) )
+		
+		self.assertEqual( ss[0].parameters["mult"], IECore.FloatData( 0.5 ) )
+		self.assertEqual( ss[0].parameters["tint"].value, IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		self.assertTrue( isinstance( ss[0].parameters["texture"], IECore.CompoundData ) )
+		self.failUnless( "displayWindow" in ss[0].parameters["texture"] )
+		self.failUnless( "dataWindow" in ss[0].parameters["texture"] )
+		self.failUnless( "channels" in ss[0].parameters["texture"] )
+		
+if __name__ == "__main__":
+	unittest.main()

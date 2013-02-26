@@ -70,6 +70,8 @@ from PathMatcherDataTest import PathMatcherDataTest
 from LightTest import LightTest
 from TestRender import TestRender
 from RenderTest import RenderTest
+from OpenGLShaderTest import OpenGLShaderTest
+from OpenGLRenderTest import OpenGLRenderTest
 
 if __name__ == "__main__":
 	import unittest

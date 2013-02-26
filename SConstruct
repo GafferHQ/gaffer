@@ -774,7 +774,7 @@ libraries = {
 	
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "IECoreAlembic$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene" ],
@@ -782,6 +782,7 @@ libraries = {
 		"classStubs" : [
 			( "ScriptProcedural", "procedurals/gaffer/script" ),
 		],
+		"additionalFiles" : glob.glob( "glsl/*.frag" ) + glob.glob( "glsl/*.vert" ),
 	},
 	
 	"GafferSceneTest" : {
@@ -1251,6 +1252,8 @@ manifest = [
 
 	"graphics/*.png",
 	"glsl/IECoreGL",
+	"glsl/*.frag",
+	"glsl/*.vert",
 	"doc/licenses",
 	"doc/gaffer/html",
 	"doc/cortex/html",

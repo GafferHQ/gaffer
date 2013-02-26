@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,20 +34,33 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import IECore
+import IECoreGL
 
-from SceneEditor import SceneEditor
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import OpenGLShaderUI
+import Gaffer
+import GafferScene
 
+class OpenGLRender( GafferScene.Render ) :
+
+	def __init__( self, name="OpenGLRender" ) :
+	
+		GafferScene.Render.__init__( self, name )
+							
+	def _createRenderer( self ) :
+	
+		IECoreGL.init( False )
+	
+		r = IECoreGL.Renderer()
+		r.setOption( "gl:mode", "immediate" )
+
+		return r
+		
+	def _outputProcedural( self, procedural, bound, renderer ) :
+	
+		procedural.render( renderer )
+		
+	def _commandAndArgs( self ) :
+	
+		return []
+
+IECore.registerRunTimeTyped( OpenGLRender )

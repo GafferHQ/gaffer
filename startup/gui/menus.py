@@ -81,7 +81,6 @@ GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Assignment", GafferScene.Assignment )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes )
-GafferUI.NodeMenu.append( "/Scene/Attributes/OpenGL Attributes", GafferScene.OpenGLAttributes )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes )
 GafferUI.NodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )
 GafferUI.NodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
@@ -91,6 +90,9 @@ GafferUI.NodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVa
 GafferUI.NodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )
 GafferUI.NodeMenu.append( "/Scene/Globals/Standard Options", GafferScene.StandardOptions )
 GafferUI.NodeMenu.append( "/Scene/Globals/Options", GafferScene.Options )
+GafferUI.NodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes )
+GafferUI.NodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
+GafferUI.NodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender )
 
 try :	
 	import GafferImage
