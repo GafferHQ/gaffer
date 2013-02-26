@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,6 +37,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferTest
@@ -61,6 +64,27 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		w.setContext( context )
 		self.failUnless( w.getContext().isSame( context ) )
 		self.assertEqual( w.numericWidget().getValue(), 20 )
+	
+	def testDisableCreationForSpecificTypes( self ) :
+	
+		class ValueWidgetTestPlug( Gaffer.CompoundPlug ) :
+		
+			def __init__( self, name="TestPlug", direction=Gaffer.Plug.Direction.In, flags=Gaffer.Plug.Flags.Default ) :
+			
+				Gaffer.CompoundPlug.__init__( self, name, direction, flags )
+		
+		IECore.registerRunTimeTyped( ValueWidgetTestPlug )
+		
+		n = Gaffer.Node()
+		n["p"] = ValueWidgetTestPlug()
+		
+		w = GafferUI.PlugValueWidget.create( n["p"] )
+		self.assertTrue( isinstance( w, GafferUI.CompoundPlugValueWidget ) )
+		
+		GafferUI.PlugValueWidget.registerType( ValueWidgetTestPlug.staticTypeId(), None )
+		
+		w = GafferUI.PlugValueWidget.create( n["p"] )
+		self.assertEqual( w, None )
 		
 if __name__ == "__main__":
 	unittest.main()

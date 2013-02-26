@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -52,7 +53,7 @@ def __noduleCreator( plug ) :
 
 GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
 
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug.staticTypeId(), None )
 
 # ImageReader
 
@@ -62,14 +63,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() )
 	)
-)
-
-# ImageProcessor
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageProcessor.staticTypeId(),
-	"in*",
-	None
 )
 
 # OpenColorIO

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -213,9 +213,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# if that failed, then just create something based on the type of the plug
 		typeId = plug.typeId()
 		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
-			creator = cls.__plugTypesToCreators.get( plugTypeId )
-			if creator is not None :
-				return creator( plug )
+			if plugTypeId in cls.__plugTypesToCreators :
+				creator = cls.__plugTypesToCreators[plugTypeId]
+				if creator is not None :
+					return creator( plug )
+				else :
+					return None
 		
 		return None
 	
