@@ -1,0 +1,110 @@
+//////////////////////////////////////////////////////////////////////////
+//  
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//  
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//  
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//  
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//  
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef GAFFERIMAGE_INPUTGENERATOR_H
+#define GAFFERIMAGE_INPUTGENERATOR_H
+
+#include <vector>
+#include "Gaffer/Plug.h"
+#include "Gaffer/PlugIterator.h"
+
+namespace Gaffer
+{
+
+/// InputGenerator creates and maintains a minimum and optional set of inputs.
+/// The InputGenerator creates and manages a set of input plugs based on a desired minimum and maximum number.
+/// It keeps a list of all of the inputs that are currently visible on the nodes UI's and will create optional inputs
+/// when the number of connections to the node is greater than the minumum but less than the maximum. The InputGenerator
+/// has a hard minimum limit of 1 input plug that it will create.
+/// To use the InputGenerator, create a static instance of it within your node and call createInputs within the
+/// node's constructor.
+template< class PlugClass >
+class InputGenerator
+{
+	public :
+
+		typedef Gaffer::FilteredChildIterator< Gaffer::PlugPredicate<Gaffer::Plug::In, PlugClass> > InputIterator;
+		typedef IECore::IntrusivePtr< PlugClass > PlugClassPtr;
+		typedef IECore::IntrusivePtr< const PlugClass > ConstPlugClassPtr;	
+
+		/// The constructor initializes the InputGenerator and creates the minimum number of inputs requested.
+		/// It connects up the parent's signals to internal slots that manage the list of inputs that it holds.
+		/// @param parent The parent node that the InputGenerator is a static member of.
+		/// @param plugPrototype The first of the input plugs to create. This is used as a template from which the other plugs are created.
+		/// @param min The minimum number of input plugs that the InputGenerator will create. There is a hard limit of 1.
+		/// @param max The maximum number of input plugs that the InputGenerator will create. This cannot fall below min however, if it is
+		///            greater than min a set of (max-min) optional inputs will be created and managed.
+		InputGenerator( Gaffer::Node *parent, PlugClassPtr plugPrototype, size_t min, size_t max  );
+
+		/// Returns the minimum number of inputs of type PlugClass that will appear on the node.
+		inline size_t minimumInputs() const { return m_minimumInputs; };
+
+		/// Returns the maximum number of inputs of type PlugClass that will appear on the node.
+		inline int maximumInputs() const { return m_maximumInputs; };
+
+		/// Returns a vector of the input plugs which are visible on the node.
+		inline const std::vector<PlugClassPtr> &inputs() const { return m_inputs; };
+		inline std::vector<PlugClassPtr> &inputs() { return m_inputs; };
+
+	protected:
+
+		void inputAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void inputChanged( Gaffer::Plug *plug );
+		void updateInputs();
+
+	private :
+		
+		/// Pointer to the parent node that inputs will be instantiated upon.
+		Gaffer::Node *m_parent;
+
+		/// Variables to hold the minimum and maximum number of inputs from which
+		/// the number of optional inputs are derived.
+		size_t m_minimumInputs;
+		size_t m_maximumInputs;
+
+		/// The vector which holds the inputs that are visible on the node.
+		/// This vector will always hold the minimum number of inputs defined
+		/// within the constructor. It can never exceed the maximum number of inputs.
+		std::vector<PlugClassPtr> m_inputs;
+
+};
+
+};
+
+#include "Gaffer/InputGenerator.inl"
+
+#endif // GAFFERIMAGE_INPUTGENERATOR_H
+
