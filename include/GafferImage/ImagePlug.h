@@ -98,8 +98,9 @@ class ImagePlug : public Gaffer::CompoundPlug
 		////////////////////////////////////////////////////////////////////
 		//@{
 		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
-		
+		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
 		IECore::ImagePrimitivePtr image() const;
+		IECore::MurmurHash imageHash() const;
 		//@}
 		
 		static int tileSize() { return 64; };
