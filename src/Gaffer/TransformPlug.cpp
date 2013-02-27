@@ -128,8 +128,8 @@ const V3fPlug *TransformPlug::scalePlug() const
 Imath::M44f TransformPlug::matrix() const
 {
 	M44f result;
-	result.scale( scalePlug()->getValue() );
-	result.rotate( IECore::degreesToRadians( rotatePlug()->getValue() ) );
 	result.translate( translatePlug()->getValue() );
+	result.rotate( IECore::degreesToRadians( rotatePlug()->getValue() ) );
+	result.scale( scalePlug()->getValue() );
 	return result;
 }

@@ -60,7 +60,7 @@ class TransformPlugTest( unittest.TestCase ) :
 			"s" : scale,
 		}
 		transform = IECore.M44f()
-		for m in ( "trs" ) :
+		for m in ( "s", "r", "t" ) :
 			transform = transform * transforms[m]
 
 		self.assertEqual( p.matrix(), transform )
