@@ -39,6 +39,7 @@
 #define GAFFERSCENE_SCENEELEMENTPROCESSOR_H
 
 #include "GafferScene/SceneProcessor.h"
+#include "GafferScene/Filter.h"
 
 namespace GafferScene
 {
@@ -50,7 +51,7 @@ class SceneElementProcessor : public SceneProcessor
 
 	public :
 
-		SceneElementProcessor( const std::string &name=staticTypeName() );
+		SceneElementProcessor( const std::string &name=staticTypeName(), Filter::Result filterDefault = Filter::Match );
 		virtual ~SceneElementProcessor();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, SceneProcessor );
@@ -88,7 +89,9 @@ class SceneElementProcessor : public SceneProcessor
 		/// appropriate based on the result of the filter applied to the node. To process a particular
 		/// aspect of the scene you must reimplement processesAspect() to return true, reimplement
 		/// hashAspect() to append to the hash appropriately (the path will already have been appended),
-		/// and finally reimplement the processAspect() function to perform the processing.
+		/// and finally reimplement the processAspect() function to perform the processing. Note that the implementation
+		/// of processesAspect() is expected to return a constant - returning different values for different scene paths
+		/// is currently not supported (this is because the bound computation may need to take into account child locations).
 		/////////////////////////////////////////////////////////////////////////////////////////////////	
 		//@{
 		virtual bool processesBound() const;
@@ -110,6 +113,15 @@ class SceneElementProcessor : public SceneProcessor
 
 	private :
 	
+		enum BoundMethod
+		{
+			PassThrough = 0,
+			Direct = 1,
+			Union = 2
+		};
+		
+		BoundMethod boundMethod() const;
+		
 		static size_t g_firstPlugIndex;
 	
 };

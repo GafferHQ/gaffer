@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,59 +34,59 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "GafferScene/Transform.h"
 
-namespace GafferScene
-{
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferScene;
 
-enum TypeId
+IE_CORE_DEFINERUNTIMETYPED( Transform );
+
+size_t Transform::g_firstPlugIndex = 0;
+
+Transform::Transform( const std::string &name )
+	:	SceneElementProcessor( name, Filter::NoMatch )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	OptionsTypeId = 110523,
-	ShaderTypeId = 110524,
-	AssignmentTypeId = 110525,
-	FilterTypeId = 110526,
-	PathFilterTypeId = 110527,
-	AttributesTypeId = 110528,
-	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
-	StandardOptionsTypeId = 110532,
-	SubTreeTypeId = 110533,
-	OpenGLAttributesTypeId = 110534,
-	SceneWriterTypeId = 110535,
-	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537,
-	LightTypeId = 110538,
-	StandardAttributesTypeId = 110539,
-	OpenGLShaderTypeId = 110540,
-	TransformTypeId = 110541,
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new TransformPlug( "transform" ) );
+}
+
+Transform::~Transform()
+{
+}
+
+Gaffer::TransformPlug *Transform::transformPlug()
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::TransformPlug *Transform::transformPlug() const
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+}
+
+void Transform::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	SceneElementProcessor::affects( input, outputs );
 	
-	LastTypeId = 110650
-};
+	if( transformPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
+	}
+}
 
-} // namespace GafferScene
+bool Transform::processesTransform() const
+{
+	return true;
+}
 
-#endif // GAFFERSCENE_TYPEIDS_H
+void Transform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	transformPlug()->hash( h );
+}
+
+Imath::M44f Transform::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
+{
+	return inputTransform * transformPlug()->matrix();
+}

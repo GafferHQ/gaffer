@@ -72,6 +72,7 @@ from TestRender import TestRender
 from RenderTest import RenderTest
 from OpenGLShaderTest import OpenGLShaderTest
 from OpenGLRenderTest import OpenGLRenderTest
+from TransformTest import TransformTest
 
 if __name__ == "__main__":
 	import unittest

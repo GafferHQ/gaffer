@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/Filter.h"
 
@@ -46,11 +48,11 @@ IE_CORE_DEFINERUNTIMETYPED( SceneElementProcessor );
 
 size_t SceneElementProcessor::g_firstPlugIndex = 0;
 
-SceneElementProcessor::SceneElementProcessor( const std::string &name )
+SceneElementProcessor::SceneElementProcessor( const std::string &name, Filter::Result filterDefault )
 	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "filter", Plug::In, Filter::Match, Filter::NoMatch, Filter::Match ) );
+	addChild( new IntPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::Match ) );
 }
 
 SceneElementProcessor::~SceneElementProcessor()
@@ -113,17 +115,19 @@ void SceneElementProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer:
 		}
 		else if( output == outPlug()->boundPlug() )
 		{
-			if( processesBound() || processesTransform() )
+			switch( boundMethod() )
 			{
-				SceneProcessor::hash( output, context, h );
-				inPlug()->boundPlug()->hash( h );
-				hashBound( context, h );
-				hashTransform( context, h );
-			}
-			else
-			{
-				// pass through
-				h = inPlug()->boundPlug()->hash();
+				case Direct :
+					SceneProcessor::hash( output, context, h );
+					inPlug()->boundPlug()->hash( h );
+					hashBound( context, h );
+					break;
+				case Union :
+					h = hashOfTransformedChildBounds( context->get<ScenePath>( ScenePlug::scenePathContextName ), outPlug() );
+					break;
+				case PassThrough :
+					h = inPlug()->boundPlug()->hash();
+					break;
 			}
 		}
 		else
@@ -171,20 +175,15 @@ void SceneElementProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer:
 
 Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( processesBound() )
+	switch( boundMethod() )
 	{
-		Filter::Result f = (Filter::Result)filterPlug()->getValue();
-		if( f == Filter::Match )
-		{
+		case Direct :
 			return processBound( path, context, inPlug()->boundPlug()->getValue() );
-		}
-		else if( f == Filter::DescendantMatch )
-		{
+		case Union :
 			return unionOfTransformedChildBounds( path, outPlug() );
-		}
+		default :
+			return inPlug()->boundPlug()->getValue();
 	}
-	
-	return inPlug()->boundPlug()->getValue();
 }
 
 Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -287,4 +286,33 @@ void SceneElementProcessor::hashObject( const Gaffer::Context *context, IECore::
 IECore::ConstObjectPtr SceneElementProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	return inputObject;
+}
+
+SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod() const
+{
+	const bool pBound = processesBound();
+	const bool pTransform = processesTransform();
+	
+	if( pBound || pTransform )
+	{
+		Filter::Result f = (Filter::Result)filterPlug()->getValue();
+		if( f == Filter::Match )
+		{
+			if( pBound )
+			{
+				return Direct;
+			}
+			else
+			{
+				// changing only the transform at a matched location has no effect
+				// on the bound of that location - fall through to default case.
+			}
+		}
+		else if( f == Filter::DescendantMatch )
+		{
+			return Union;
+		}
+	}
+	
+	return PassThrough;
 }

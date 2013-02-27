@@ -70,6 +70,7 @@
 #include "GafferScene/Light.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/OpenGLShader.h"
+#include "GafferScene/Transform.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -147,6 +148,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
 	GafferBindings::DependencyNodeClass<Light>();
 	GafferBindings::DependencyNodeClass<StandardAttributes>();
+	GafferBindings::DependencyNodeClass<Transform>();
 
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )

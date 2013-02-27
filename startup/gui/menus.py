@@ -85,6 +85,7 @@ GafferUI.NodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes
 GafferUI.NodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )
 GafferUI.NodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
 GafferUI.NodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree )
+GafferUI.NodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
 GafferUI.NodeMenu.append( "/Scene/Context/TimeWarp", GafferScene.SceneTimeWarp )
 GafferUI.NodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables )
 GafferUI.NodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )
