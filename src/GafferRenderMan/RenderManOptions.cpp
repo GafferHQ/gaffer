@@ -48,6 +48,12 @@ RenderManOptions::RenderManOptions( const std::string &name )
 	
 	options->addOptionalMember( "ri:pixelSamples", new IECore::V2iData( V2i( 3 ) ), "pixelSamples", Gaffer::Plug::Default, false );
 
+	// statistics parameters
+	
+	options->addOptionalMember( "ri:statistics:endofframe", new IECore::IntData( 0 ), "statisticsLevel", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:statistics:filename", new IECore::StringData( "" ), "statisticsFileName", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:statistics:progress", new IECore::BoolData( false ), "statisticsProgress", Gaffer::Plug::Default, false );
+
 	// searchpath parameters
 	
 	options->addOptionalMember( "ri:searchpath:shader", new IECore::StringData( "" ), "shaderSearchPath", Gaffer::Plug::Default, false );

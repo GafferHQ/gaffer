@@ -47,7 +47,19 @@ def __qualitySummary( plug ) :
 		info.append( "Pixel Samples %dx%d" % ( ps[0], ps[1] ) )
 		
 	return ", ".join( info )
-	
+
+def __statisticsSummary( plug ) :
+
+	info = []
+	if plug["statisticsLevel"]["enabled"].getValue() :
+		info.append( "Level %d" % plug["statisticsLevel"]["value"].getValue() )
+	if plug["statisticsFileName"]["enabled"].getValue() :
+		info.append( "File name" )
+	if plug["statisticsProgress"]["enabled"].getValue() :
+		info.append( "Progress " + ( "On" if plug["statisticsProgress"]["value"].getValue() else "Off" ) )
+
+	return ", ".join( info )
+		
 def __searchPathsSummary( plug ) :
 
 	info = []
@@ -80,6 +92,16 @@ GafferUI.PlugValueWidget.registerCreator(
 		},
 		
 		{
+			"label" : "Statistics",
+			"summary" : __statisticsSummary,
+			"namesAndLabels" : (
+				( "ri:statistics:endofframe", "Level" ),
+				( "ri:statistics:filename", "File Name" ),
+				( "ri:statistics:progress", "Progress" ),
+			),
+		},
+		
+		{
 			"label" : "Search Paths",
 			"summary" : __searchPathsSummary,
 			"namesAndLabels" : (
@@ -93,4 +115,24 @@ GafferUI.PlugValueWidget.registerCreator(
 		
 	),	
 	
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferRenderMan.RenderManOptions.staticTypeId(),
+	"options.statisticsLevel.value",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "0 (Off)", 0 ),
+		( "1", 1 ),
+		( "2", 2 ),
+		( "3 (Most Verbose)", 3 ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferRenderMan.RenderManOptions.staticTypeId(),
+	"options.statisticsFileName.value",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = ( "htm", "html", "txt", "stats" ) ) )
+	)
 )
