@@ -50,6 +50,7 @@
 #include "Gaffer/Preferences.h"
 
 #include "GafferBindings/ApplicationRootBinding.h"
+#include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
@@ -110,15 +111,35 @@ static IECore::ObjectPtr getClipboardContents( ApplicationRoot &a )
 	return 0;
 }
 
+struct ClipboardSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, ApplicationRootPtr a )
+	{
+		try
+		{
+			slot( a );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 void GafferBindings::bindApplicationRoot()
 {
-	IECorePython::RunTimeTypedClass<ApplicationRoot, ApplicationRootWrapperPtr>()
+	scope s = IECorePython::RunTimeTypedClass<ApplicationRoot, ApplicationRootWrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "getClipboardContents", &getClipboardContents )
 		.def( "setClipboardContents", &ApplicationRoot::setClipboardContents )
+		.def( "clipboardContentsChangedSignal", &ApplicationRoot::clipboardContentsChangedSignal, return_internal_reference<1>() )
 		.def( "savePreferences", (void (ApplicationRoot::*)()const)&ApplicationRoot::savePreferences )
 		.def( "savePreferences", (void (ApplicationRoot::*)( const std::string & )const)&ApplicationRoot::savePreferences )
 		.def( "preferencesLocation", &ApplicationRoot::preferencesLocation )
-	;	
+	;
+	
+	SignalBinder<ApplicationRoot::ClipboardSignal, DefaultSignalCaller<ApplicationRoot::ClipboardSignal>, ClipboardSlotCaller>::bind( "ClipboardSignal" );
+
 }

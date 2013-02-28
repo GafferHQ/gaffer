@@ -104,6 +104,33 @@ class ApplicationRootTest( unittest.TestCase ) :
 		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
 		self.failUnless( os.path.isdir( a.preferencesLocation() ) )
 	
+	def testClipboard( self ) :
+	
+		a = Gaffer.ApplicationRoot()
+		
+		d = []
+		def f( app ) :
+		
+			self.assertTrue( app.isSame( a ) )
+			d.append( app.getClipboardContents() )
+			
+		c = a.clipboardContentsChangedSignal().connect( f )
+		
+		self.assertEqual( len( d ), 0 )
+		self.assertEqual( a.getClipboardContents(), None )
+		
+		a.setClipboardContents( IECore.IntData( 10 ) )
+		self.assertEqual( len( d ), 1 )
+		self.assertEqual( a.getClipboardContents(), IECore.IntData( 10 ) )
+		
+		a.setClipboardContents( IECore.IntData( 20 ) )
+		self.assertEqual( len( d ), 2 )
+		self.assertEqual( a.getClipboardContents(), IECore.IntData( 20 ) )
+		
+		a.setClipboardContents( IECore.IntData( 20 ) )
+		self.assertEqual( len( d ), 2 )
+		self.assertEqual( a.getClipboardContents(), IECore.IntData( 20 ) )
+	
 	def tearDown( self ) :
 				
 		for f in [

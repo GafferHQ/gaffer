@@ -88,7 +88,16 @@ const IECore::Object *ApplicationRoot::getClipboardContents() const
 
 void ApplicationRoot::setClipboardContents( IECore::ConstObjectPtr clip )
 {
-	m_clipboardContents = clip->copy();
+	if( !m_clipboardContents || m_clipboardContents->isNotEqualTo( clip ) )
+	{
+		m_clipboardContents = clip->copy();
+		clipboardContentsChangedSignal()( this );
+	}
+}
+
+ApplicationRoot::ClipboardSignal &ApplicationRoot::clipboardContentsChangedSignal()
+{
+	return m_clipboardContentsChangedSignal;
 }
 
 Preferences *ApplicationRoot::preferences()

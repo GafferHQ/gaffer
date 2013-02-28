@@ -76,6 +76,9 @@ class ApplicationRoot : public GraphComponent
 		const IECore::Object *getClipboardContents() const;
 		/// Sets the clipboard contents - a copy of clip is taken.
 		void setClipboardContents( IECore::ConstObjectPtr clip );
+		/// A signal emitted when the clipboard contents have changed.
+		typedef boost::signal<void (ApplicationRoot *)> ClipboardSignal;
+		ClipboardSignal &clipboardContentsChangedSignal();
 		//@}
 		
 		//! @name Preferences
@@ -108,6 +111,7 @@ class ApplicationRoot : public GraphComponent
 		std::string defaultPreferencesFileName() const;
 	
 		IECore::ObjectPtr m_clipboardContents;
+		ClipboardSignal m_clipboardContentsChangedSignal;
 	
 };
 
