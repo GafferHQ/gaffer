@@ -300,12 +300,46 @@ IECore::MurmurHash ScenePlug::transformHash( const ScenePath &scenePath ) const
 	return transformPlug()->hash();
 }
 
+IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) const
+{
+	ContextPtr tmpContext = new Context( *Context::current() );
+	Context::Scope scopedContext( tmpContext );
+	
+	IECore::MurmurHash result;
+	ScenePath path( scenePath );
+	while( path.size() )
+	{
+		tmpContext->set( scenePathContextName, path );
+		transformPlug()->hash( result );
+		path.pop_back();
+	}
+	
+	return result;
+}
+
 IECore::MurmurHash ScenePlug::attributesHash( const ScenePath &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return attributesPlug()->hash();
+}
+
+IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) const
+{
+	ContextPtr tmpContext = new Context( *Context::current() );
+	Context::Scope scopedContext( tmpContext );
+	
+	IECore::MurmurHash result;
+	ScenePath path( scenePath );
+	while( path.size() )
+	{
+		tmpContext->set( scenePathContextName, path );
+		attributesPlug()->hash( result );
+		path.pop_back();
+	}
+	
+	return result;
 }
 
 IECore::MurmurHash ScenePlug::objectHash( const ScenePath &scenePath ) const

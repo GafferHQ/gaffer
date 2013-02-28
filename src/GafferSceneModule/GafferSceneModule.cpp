@@ -71,6 +71,7 @@
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Transform.h"
+#include "GafferScene/AimConstraint.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -149,6 +150,19 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Light>();
 	GafferBindings::DependencyNodeClass<StandardAttributes>();
 	GafferBindings::DependencyNodeClass<Transform>();
+	
+	{
+		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
+		
+		enum_<Constraint::TargetMode>( "TargetMode" )
+			.value( "Origin", Constraint::Origin )
+			.value( "BoundMin", Constraint::BoundMin )
+			.value( "BoundMax", Constraint::BoundMax )
+			.value( "BoundCenter", Constraint::BoundCenter )
+		;
+	}
+	
+	GafferBindings::DependencyNodeClass<AimConstraint>();
 
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )

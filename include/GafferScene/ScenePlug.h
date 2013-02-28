@@ -131,7 +131,9 @@ class ScenePlug : public Gaffer::CompoundPlug
 		
 		IECore::MurmurHash boundHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash transformHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash fullTransformHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash attributesHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;		
 		//@}
