@@ -64,6 +64,29 @@ class TransformPlugTest( unittest.TestCase ) :
 			transform = transform * transforms[m]
 
 		self.assertEqual( p.matrix(), transform )
+
+	def testTransformOrderExplicit( self ) :
+	
+		p = Gaffer.TransformPlug()
+	
+		t =	IECore.V3f( 100, 0, 0 )
+		r =	IECore.V3f( 0, 90, 0 )
+		s =	IECore.V3f( 2, 2, 2 )
+		p["translate"].setValue(  t )
+		p["rotate"].setValue( r )
+		p["scale"].setValue( s )
+	
+		# Test if this is equal to a simple hardcoded matrix, down to floating point error
+		# This verifies that translation is not being affected by rotation and scale,
+		# which is what users will expect
+		self.assertTrue( p.matrix().equalWithAbsError(
+			IECore.M44f(
+				0,   0,  -2,   0,
+				0,   2,   0,   0,
+				2,   0,   0,   0,
+				100, 0,   0,   1 ),
+			1e-6
+		) )
 	
 	def testCreateCounterpart( self ) :
 	
