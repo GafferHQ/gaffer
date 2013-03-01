@@ -117,6 +117,8 @@
 
 * Added ScenePlug::fullAttributes() method which returns the full set of inherited attributes at a particular scene path.
 
+* The Gaffer clipboard now synchronizes with the global system clipboard, allowing nodes to be cut and pasted between external applications.
+
 0.36.0
 ------
 * Improved bindings by removing macros and replacing them with proper wrapper classes.

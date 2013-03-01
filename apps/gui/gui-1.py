@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,10 +35,12 @@
 #  
 ##########################################################################
 
+import os
+
 import IECore
+
 import Gaffer
 import GafferUI
-import os
 
 class gui( Gaffer.Application ) :
 
@@ -73,6 +75,8 @@ class gui( Gaffer.Application ) :
 			}
 		)
 		
+		self.__setupClipboardSync()
+				
 	def _run( self, args ) :
 		
 		GafferUI.ScriptWindow.connect( self.root() )
@@ -94,6 +98,52 @@ class gui( Gaffer.Application ) :
 		GafferUI.EventLoop.mainEventLoop().start()		
 				
 		return 0
+
+	def __setupClipboardSync( self ) :
+	
+		## This function sets up two way syncing between the clipboard held in the Gaffer::ApplicationRoot
+		# and the global QtGui.QClipboard which is shared with external applications, and used by the cut and paste
+		# operations in GafferUI's underlying QWidgets. This is very useful, as it allows nodes to be copied from
+		# the graph and pasted into emails/chats etc, and then copied out of emails/chats and pasted into the node graph.
+		#
+		## \todo I don't think this is the ideal place for this functionality. Firstly, we need it in all apps
+		# rather than just the gui app. Secondly, we want a way of using the global clipboard using GafferUI
+		# public functions without needing an ApplicationRoot. Thirdly, it's questionable that ApplicationRoot should
+		# have a clipboard anyway - it seems like a violation of separation between the gui and non-gui libraries.
+		# Perhaps we should abolish the ApplicationRoot clipboard and the ScriptNode cut/copy/paste routines, relegating
+		# them all to GafferUI functionality?
+		
+		QtGui = GafferUI._qtImport( "QtGui" )
+		
+		self.__clipboardContentsChangedConnection = self.root().clipboardContentsChangedSignal().connect( Gaffer.WeakMethod( self.__clipboardContentsChanged ) )
+		QtGui.QApplication.clipboard().dataChanged.connect( Gaffer.WeakMethod( self.__qtClipboardContentsChanged ) )
+		self.__ignoreQtClipboardContentsChanged = False
+
+	def __clipboardContentsChanged( self, applicationRoot ) :
+	
+		assert( applicationRoot.isSame( self.root() ) )
+
+		data = applicationRoot.getClipboardContents()
+		if isinstance( data, IECore.StringData ) :
+			QtGui = GafferUI._qtImport( "QtGui" )
+			clipboard = QtGui.QApplication.clipboard()
+			try :
+				self.__ignoreQtClipboardContentsChanged = True # avoid triggering an unecessary copy back in __qtClipboardContentsChanged
+				clipboard.setText( data.value )
+			finally :
+				self.__ignoreQtClipboardContentsChanged = False
+				
+	def __qtClipboardContentsChanged( self ) :
+	
+		if self.__ignoreQtClipboardContentsChanged :
+			return
+	
+		QtGui = GafferUI._qtImport( "QtGui" )
+		
+		text = str( QtGui.QApplication.clipboard().text() )
+		if text :
+			with Gaffer.BlockedConnection( self.__clipboardContentsChangedConnection ) :
+				self.root().setClipboardContents( IECore.StringData( text ) )
 
 IECore.registerRunTimeTyped( gui )
 
