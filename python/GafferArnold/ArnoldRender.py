@@ -36,7 +36,6 @@
 ##########################################################################
 
 import os
-import arnold
 
 import IECore
 import IECoreArnold
@@ -80,6 +79,7 @@ class ArnoldRender( GafferScene.Render ) :
 		return renderer
 		
 	def _outputProcedural( self, procedural, bound, renderer ) :
+		import arnold
 	
 		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )
 	

@@ -1,3 +1,4 @@
+* Switched Arnold import in ArnoldRender.py to a deferred import, to allow 3delight renders of scenes containing Arnold nodes
 
 * Added a Grade node to GafferImage
 
