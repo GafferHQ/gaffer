@@ -1240,9 +1240,7 @@ manifest = [
 	"lib/QtGui.framework",
 	"lib/QtOpenGL.framework",
 	
-	"startup/gui/menus.py",
-	"startup/gui/layouts.py",
-	"startup/gui/graphs.py",
+	"startup/*/*.py",
 
 	"fonts",
 	"ops",
