@@ -48,6 +48,25 @@ def __qualitySummary( plug ) :
 		
 	return ", ".join( info )
 
+def __hiderSummary( plug ) :
+
+	info = []
+	
+	if plug["hider"]["enabled"].getValue() :
+		info.append( plug["hider"]["value"].getValue().capitalize() )
+	if plug["hiderDepthFilter"]["enabled"].getValue() :
+		info.append( "Depth Filter : " + plug["hiderDepthFilter"]["value"].getValue().capitalize() )
+	if plug["hiderJitter"]["enabled"].getValue() :
+		info.append( "Jitter " + ( "On" if plug["hiderJitter"]["value"].getValue() else "Off" ) )
+	if plug["hiderSampleMotion"]["enabled"].getValue() :
+		info.append( "Sample Motion " + ( "On" if plug["hiderSampleMotion"]["value"].getValue() else "Off" ) )
+	if plug["hiderExtremeMotionDOF"]["enabled"].getValue() :
+		info.append( "Extreme MDOF " + ( "On" if plug["hiderExtremeMotionDOF"]["value"].getValue() else "Off" ) )
+	if plug["hiderProgressive"]["enabled"].getValue() :
+		info.append( "Progressive " + ( "On" if plug["hiderProgressive"]["value"].getValue() else "Off" ) )
+				
+	return ", ".join( info )
+
 def __statisticsSummary( plug ) :
 
 	info = []
@@ -92,6 +111,19 @@ GafferUI.PlugValueWidget.registerCreator(
 		},
 		
 		{
+			"label" : "Hider",
+			"summary" : __hiderSummary,
+			"namesAndLabels" : (
+				( "ri:hider", "Hider" ),
+				( "ri:hider:depthfilter", "Depth Filter" ),
+				( "ri:hider:jitter", "Jitter" ),
+				( "ri:hider:samplemotion", "Sample Motion" ),
+				( "ri:hider:extrememotiondof", "Extreme Motion DOF" ),
+				( "ri:hider:progressive", "Progressive" ),
+			),
+		},
+		
+		{
 			"label" : "Statistics",
 			"summary" : __statisticsSummary,
 			"namesAndLabels" : (
@@ -115,6 +147,28 @@ GafferUI.PlugValueWidget.registerCreator(
 		
 	),	
 	
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferRenderMan.RenderManOptions.staticTypeId(),
+	"options.hider.value",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Hidden", "hidden" ),
+		( "Raytrace", "raytrace" ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferRenderMan.RenderManOptions.staticTypeId(),
+	"options.hiderDepthFilter.value",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Min", "min" ),
+		( "Max", "max" ),
+		( "Average", "average" ),
+		( "Midpoint", "midpoint" ),
+	),
 )
 
 GafferUI.PlugValueWidget.registerCreator(

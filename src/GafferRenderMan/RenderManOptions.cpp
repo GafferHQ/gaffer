@@ -48,6 +48,15 @@ RenderManOptions::RenderManOptions( const std::string &name )
 	
 	options->addOptionalMember( "ri:pixelSamples", new IECore::V2iData( V2i( 3 ) ), "pixelSamples", Gaffer::Plug::Default, false );
 
+	// hider parameters
+	
+	options->addOptionalMember( "ri:hider", new IECore::StringData( "hidden" ), "hider", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:hider:depthfilter", new IECore::StringData( "min" ), "hiderDepthFilter", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:hider:jitter", new IECore::BoolData( true ), "hiderJitter", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:hider:samplemotion", new IECore::BoolData( true ), "hiderSampleMotion", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:hider:extrememotiondof", new IECore::BoolData( false ), "hiderExtremeMotionDOF", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ri:hider:progressive", new IECore::BoolData( false ), "hiderProgressive", Gaffer::Plug::Default, false );
+
 	// statistics parameters
 	
 	options->addOptionalMember( "ri:statistics:endofframe", new IECore::IntData( 0 ), "statisticsLevel", Gaffer::Plug::Default, false );
