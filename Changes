@@ -1,3 +1,10 @@
+* The Gaffer clipboard now synchronizes with the global system clipboard, allowing nodes to be cut and pasted between external applications.
+
+* Fixed a bug which meant that the Viewer didn't update if a view became dirty while it wasn't the currently active view.
+
+0.51.0
+======
+
 * Switched Arnold import in ArnoldRender.py to a deferred import, to allow 3delight renders of scenes containing Arnold nodes
 
 * Added a Grade node to GafferImage
@@ -117,8 +124,6 @@
 * Added TransformPlugValueWidget which provides a useful summary of the transform in the collapsible header.
 
 * Added ScenePlug::fullAttributes() method which returns the full set of inherited attributes at a particular scene path.
-
-* The Gaffer clipboard now synchronizes with the global system clipboard, allowing nodes to be cut and pasted between external applications.
 
 0.36.0
 ------

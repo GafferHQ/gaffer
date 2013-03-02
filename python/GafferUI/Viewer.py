@@ -68,7 +68,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.__views = []
 		self.__currentView = None
-		self.__pendingUpdate = False
 
 		self._updateFromSet()
 	
@@ -81,8 +80,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		GafferUI.NodeSetEditor._updateFromSet( self )
 		
 		self.__currentView = None
-		self.__updateRequestConnection = None
-		needToUpdate = False
 		
 		node = self._lastAddedNode()
 		if node :	
@@ -94,15 +91,16 @@ class Viewer( GafferUI.NodeSetEditor ) :
 							self.__currentView = view
 							viewInput = self.__currentView["in"].getInput()
 							if not viewInput or not viewInput.isSame( plug ) :
+								self.__currentView.__pendingUpdate = True
 								self.__currentView["in"].setInput( plug )
-								needToUpdate = True
 							break # break out of view loop
 					# if that failed then try to make a new one
 					if self.__currentView is None :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
+							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
+							self.__currentView.__pendingUpdate = True
 							self.__views.append( self.__currentView )
-							needToUpdate = True
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
 					if self.__currentView is not None :
@@ -110,8 +108,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 										
 		if self.__currentView is not None :	
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
-			self.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
-			if needToUpdate :
+			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
@@ -121,21 +118,24 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
 
 	def __update( self ) :
-	
-		self.__pendingUpdate = False
-	
+		
 		if self.__currentView is None :
 			return
-			
+		
+		self.__currentView.__pendingUpdate = False
+		
 		if not self.__currentView.getContext().isSame( self.getContext() ) :
 			self.__currentView.setContext( self.getContext() )
-		
+				
 		self.__currentView._update()
 	
 	def __updateRequest( self, view ) :
-	
-		assert( view.isSame( self.__currentView ) )
 		
+		# due to problems with object identity in boost::python, the view we are passed might
+		# be a different python instance than the ones we stored in self.__views. find the original
+		# python instance so we can access view.__pendingUpdate on it.
+		view, = [ v for v in self.__views if v.isSame( view ) ]
+			
 		# Ideally we might want the view to be doing the update automatically whenever it
 		# wants, rather than using updateRequestSignal() to request a call back in to update().
 		# Currently we can't do that because the Views are implemented in C++ and might spawn
@@ -144,8 +144,9 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		# us to work around that problem - another solution might be to release the GIL in all
 		# bindings which might eventually trigger a viewer update, but that could
 		# be nearly anything.
-		if not self.__pendingUpdate :
-			self.__pendingUpdate = True
-			GafferUI.EventLoop.executeOnUIThread( self.__update )
+		if not view.__pendingUpdate :
+			view.__pendingUpdate = True
+			if view.isSame( self.__currentView ) :
+				GafferUI.EventLoop.executeOnUIThread( self.__update )
 			
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
