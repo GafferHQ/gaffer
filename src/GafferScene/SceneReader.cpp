@@ -187,7 +187,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		result->members()[ std::string( *it ) ] = entry->sceneInterface()->readAttribute( *it, context->getFrame() );
 	}
 	
-	return parent->attributesPlug()->defaultValue();
+	return result;
 }
 
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
