@@ -36,6 +36,7 @@
 
 #include "GafferScene/SceneWriter.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECore/SceneInterface.h"
 #include "IECore/Transform.h"
@@ -85,26 +86,40 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 {
 	ContextPtr context = new Context;
 	
+	ScriptNodePtr script = ancestor<ScriptNode>();
+	
+	if( !script )
+	{
+		throw Exception( "SceneWrite::writeLocation: couldn't find parent script node!" );
+	}
+	
 	context->set( ScenePlug::scenePathContextName, scenePath );
+	context->setFrame( script->context()->getFrame() );
 	
 	Context::Scope scopedContext( context );
 	
 	ConstCompoundObjectPtr attributes = scenePlug->attributesPlug()->getValue();
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 	{
-		output->writeAttribute( it->first, it->second.get(), 0 );
+		output->writeAttribute( it->first, it->second.get(), script->context()->getFrame() );
+	}
+	
+	if( scenePath.empty() )
+	{
+		ConstCompoundObjectPtr globals = scenePlug->globalsPlug()->getValue();
+		output->writeAttribute( "gaffer:globals", globals, script->context()->getFrame() );
 	}
 	
 	ConstObjectPtr object = scenePlug->objectPlug()->getValue();
 	
 	if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 	{
-		output->writeObject( object, 0 );
+		output->writeObject( object, script->context()->getFrame() );
 	}
 	
 	Imath::Box3f b = scenePlug->boundPlug()->getValue();
 	
-	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), 0.0 );
+	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), script->context()->getFrame() );
 	
 	if( scenePath.size() )
 	{
@@ -116,7 +131,7 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 			t[3][0], t[3][1], t[3][2], t[3][3]
 		);
 
-		output->writeTransform( new IECore::M44dData( transform ), 0.0 );
+		output->writeTransform( new IECore::M44dData( transform ), script->context()->getFrame() );
 	}
 	
 	ConstInternedStringVectorDataPtr childNames = scenePlug->childNamesPlug()->getValue();
