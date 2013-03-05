@@ -139,10 +139,11 @@ class GLWidget( GafferUI.Widget ) :
 		if GLWidget.__sharingWidget is None :
 		
 			try:
+				
 				import maya.OpenMayaUI
+				import maya.OpenMaya
 				import maya.cmds
 				import sip
-				
 				modelPanels = maya.cmds.getPanel( type="modelPanel" )
 				
 				glWidget = None
@@ -155,6 +156,16 @@ class GLWidget( GafferUI.Widget ) :
 						break
 				
 				GLWidget.__sharingWidget = glWidget
+				
+				def newScene( clientData ):
+					import GafferUI
+					import maya.OpenMaya
+					GafferUI.GLWidget.__sharingWidget = None
+					maya.OpenMaya.MMessage.removeCallback( GafferUI.GLWidget.__beforeNewCallbackId )
+					maya.OpenMaya.MMessage.removeCallback( GafferUI.GLWidget.__beforeOpenCallbackId )
+				
+				cls.__beforeNewCallbackId = maya.OpenMaya.MSceneMessage.addCallback( maya.OpenMaya.MSceneMessage.kBeforeNew, newScene )
+				cls.__beforeOpenCallbackId = maya.OpenMaya.MSceneMessage.addCallback( maya.OpenMaya.MSceneMessage.kBeforeOpen, newScene )
 				
 			except ImportError, e:
 				
