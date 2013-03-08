@@ -46,7 +46,7 @@ import GafferImage
 class ImageReaderTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/uvMapWithDataWindow.100x100.exr" )
+	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
 
 	def test( self ) :
 	
