@@ -40,6 +40,7 @@
 #include <vector>
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugIterator.h"
+#include "boost/regex.hpp"
 
 namespace Gaffer
 {
@@ -73,20 +74,27 @@ class InputGenerator
 		inline size_t minimumInputs() const { return m_minimumInputs; };
 
 		/// Returns the maximum number of inputs of type PlugClass that will appear on the node.
-		inline int maximumInputs() const { return m_maximumInputs; };
+		inline size_t maximumInputs() const { return m_maximumInputs; };
 
+		/// Returns the number of inputs that are connected.
+		inline unsigned int nConnectedInputs() const { return m_nConnectedInputs; };
+		
 		/// Returns a vector of the input plugs which are visible on the node.
 		inline const std::vector<PlugClassPtr> &inputs() const { return m_inputs; };
 		inline std::vector<PlugClassPtr> &inputs() { return m_inputs; };
 
-	protected:
-
+		// Returns a past-the-end iterator to mark the end of the last input plug that could be in use in the node graph.
+		// This is implemented because in the the case of optional inputs being present on the parent node, the last input is
+		// never connected as it's only purpose is to exist in waiting for a connection.
+		typename std::vector<PlugClassPtr>::const_iterator endIterator() const;
+		
+	private :
+		
+		inline bool validateName( const std::string &name ) { return regex_match( name.c_str(), m_nameValidator ); }
 		void inputAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void inputChanged( Gaffer::Plug *plug );
 		void updateInputs();
 
-	private :
-		
 		/// Pointer to the parent node that inputs will be instantiated upon.
 		Gaffer::Node *m_parent;
 
@@ -95,10 +103,24 @@ class InputGenerator
 		size_t m_minimumInputs;
 		size_t m_maximumInputs;
 
+		/// The index of the last input that is connected to node. This is particularly
+		/// useful when wanting to iterate over the inputs on the node that have connections.
+		unsigned short m_lastConnected;
+	
+		/// The number of inputs that are connected.
+		unsigned short m_nConnectedInputs;
+		
 		/// The vector which holds the inputs that are visible on the node.
 		/// This vector will always hold the minimum number of inputs defined
 		/// within the constructor. It can never exceed the maximum number of inputs.
 		std::vector<PlugClassPtr> m_inputs;
+
+		/// A regular expression which is used to test whether inputs of the parent node are instances
+		/// of the plugPrototype which is passed into the constructor.
+		boost::regex m_nameValidator;
+
+		/// A pointer to the plug that we will use as our prototype for creating more.
+		PlugClassPtr m_prototype;
 
 };
 

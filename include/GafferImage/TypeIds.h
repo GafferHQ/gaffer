@@ -55,6 +55,7 @@ enum TypeId
 	ObjectToImageTypeId = 110759,
 	MergeTypeId = 110760,
 	GradeTypeId = 110761,
+	FilterProcessorTypeId = 110762,
 	
 	LastTypeId = 110849
 };

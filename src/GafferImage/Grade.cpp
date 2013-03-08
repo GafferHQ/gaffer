@@ -228,7 +228,7 @@ void Grade::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaf
 
 void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, FloatVectorDataPtr outData ) const
 {
-	///\TODO Once the ChannelDataProcessor baseclass (implemented within enabled()) has a channel input mask feature,
+	///\todo Once the ChannelDataProcessor baseclass (implemented within enabled()) has a channel input mask feature,
 	// make this node mask only RGB and then remove the following lines that check to see if we are processing the alpha.
 	if ( channelIndex == 3 ) return;
 

@@ -37,14 +37,14 @@
 #ifndef GAFFERIMAGE_MERGE_H
 #define GAFFERIMAGE_MERGE_H
 
-#include "GafferImage/ChannelDataProcessor.h"
+#include "GafferImage/FilterProcessor.h"
 #include "GafferImage/ImagePlug.h"
 #include "Gaffer/PlugType.h"
 
 namespace GafferImage
 {
 
-class Merge : public ChannelDataProcessor
+class Merge : public FilterProcessor
 {
 
 	public :
@@ -52,15 +52,12 @@ class Merge : public ChannelDataProcessor
 		Merge( const std::string &name=staticTypeName() );
 		virtual ~Merge();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Merge, MergeTypeId, ChannelDataProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Merge, MergeTypeId, FilterProcessor );
 		
         //! @name Plug Accessors
         /// Returns a pointer to the node's plugs.
         //////////////////////////////////////////////////////////////
         //@{	
-		/// Returns a pointer to the second image plug.
-		GafferImage::ImagePlug *inPlug1();
-		const GafferImage::ImagePlug *inPlug1() const;
 		/// Returns a pointer to the int plug which dictates the operation to perform.
 		/// The available operations are:
 		///
@@ -81,9 +78,6 @@ class Merge : public ChannelDataProcessor
 		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
-		// Node is enabled when all inputs are connected.
-		virtual bool enabled() const;
-		
 	protected :
 
 		/// The different types of operation that are available.		
@@ -102,26 +96,26 @@ class Merge : public ChannelDataProcessor
 			kUnder = 10
 		};
 
-		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// This implementation checks that each of the inputs is connected and if not, returns false.
+		virtual bool enabled() const;
+
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		///\TODO: As there is no base class to handle image nodes that don't just operate on single channels yet we implement the processChannelData and channelEnabled method() so that they are no longer pure virtual.
-		/// When there is such a base class, derive from it and remove these lines!
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, IECore::FloatVectorDataPtr outData ) const {};
-		virtual bool channelEnabled( int channelIndex ) const { return true; };
-
+	
 	private :
 		
+		/// Performs the merge operation using the functor 'F'.
+		template< typename F >
+		IECore::ConstFloatVectorDataPtr doMergeOperation( F f, std::vector< IECore::ConstFloatVectorDataPtr > &inData, std::vector< IECore::ConstFloatVectorDataPtr > &inAlpha, const Imath::V2i &tileOrigin ) const;
+
 		/// A useful method which returns true if the StringVector contains the channel "A".
 		inline bool hasAlpha( IECore::ConstStringVectorDataPtr channelNamesData ) const;
 		
 		static size_t g_firstPlugIndex;
-		
+
 };
+
+#include "Merge.inl"
 
 } // namespace GafferImage
 

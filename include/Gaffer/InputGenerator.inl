@@ -42,23 +42,19 @@ namespace Gaffer
 template< typename PlugClass >
 void InputGenerator<PlugClass>::inputAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	if( child->isInstanceOf( PlugClass::staticTypeId() ) )
+	if( child->isInstanceOf( PlugClass::staticTypeId() ) && validateName( child->getName() ) )
 	{
-		// Remove all inputs apart from the minimum number of plugs.
-		m_inputs.resize( m_minimumInputs );
+		// Rebuild our list of input plugs.
+		m_inputs.clear();
 
-		// Create an iterator to loop over the inputs. Skip the first element
-		// as we know that it is the input prototype.	
-		InputIterator it( m_parent );
-		if ( it != it.end() ) it++;
-
-		// Now iterate over all of the other inputs on the parent and add them to our array.
-		while( it != it.end() )
+		// Iterate over all of the inputs on the parent and add them to our array
+		// if their name is valid.
+		for( InputIterator it( m_parent ); it != it.end(); it++ )
 		{
-			///\TODO: Check here whether the plug that (*it) has the same name as our prototype.
-			// This will allow each InputGenerator to only manage the plugs which are copies of the
-			// origonal prototype.
-			m_inputs.push_back( (*it++).get() );
+			if ( validateName( (*it)->getName() ) )
+			{
+				m_inputs.push_back( (*it).get() );
+			}
 		}
 	}
 }
@@ -66,7 +62,7 @@ void InputGenerator<PlugClass>::inputAdded( Gaffer::GraphComponent *parent, Gaff
 template< typename PlugClass >
 void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 {
-	if( plug->isInstanceOf( PlugClass::staticTypeId() ) )
+	if( plug->isInstanceOf( PlugClass::staticTypeId() ) && validateName( plug->getName() ) )
 	{
 		updateInputs();
 	}
@@ -75,29 +71,35 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 template< typename PlugClass >
 void InputGenerator<PlugClass>::updateInputs()
 {
-	int lastConnected = -1;
+	m_lastConnected = -1;
+	m_nConnectedInputs = 0;
 	std::vector<PlugClass *> inputs;
 	for( InputIterator it( m_parent ); it != it.end(); ++it )
 	{
-		if( (*it)->template getInput<Plug>() )
+		if ( validateName( (*it)->getName() ) )
 		{
-			lastConnected = inputs.size();
+			if( (*it)->template getInput<Plug>() )
+			{
+				m_lastConnected = inputs.size();
+				++m_nConnectedInputs;
+			}
+			inputs.push_back( it->get() );
 		}
-		inputs.push_back( it->get() );
 	}
 
 	int numInputs = (int)inputs.size();
 
-	if( lastConnected == numInputs - 1)
+	if( m_lastConnected == numInputs - 1)
 	{
 		if ( numInputs < (int)m_maximumInputs )
 		{
-			m_parent->addChild( m_inputs[0]->createCounterpart( m_inputs[0]->getName(), Plug::In ) );
+			PlugClassPtr p = IECore::runTimeCast<PlugClass>( m_prototype->createCounterpart( m_prototype->getName(), Plug::In ) );
+			m_parent->addChild( p );
 		}
 	}
 	else
 	{
-		for( int i = std::max( lastConnected + 2, (int)m_minimumInputs ); i < numInputs; i++ )
+		for( int i = std::max( m_lastConnected + 2, (int)m_minimumInputs ); i < numInputs; i++ )
 		{
 			m_parent->removeChild( inputs[i] );
 			m_inputs.erase( m_inputs.begin()+i );
@@ -106,15 +108,33 @@ void InputGenerator<PlugClass>::updateInputs()
 }
 
 template< typename PlugClass >
+typename std::vector< IECore::IntrusivePtr< PlugClass > >::const_iterator InputGenerator<PlugClass>::endIterator() const
+{
+	if ( m_inputs.size() > m_minimumInputs )
+	{
+		return m_inputs.begin()+m_lastConnected+1;
+	}
+	return m_inputs.begin()+m_minimumInputs;
+}
+
+template< typename PlugClass >
 InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr plugPrototype, size_t min, size_t max ):
 	m_parent( parent ),
 	m_minimumInputs( min ),
-	m_maximumInputs( max )
+	m_maximumInputs( max ),
+	m_lastConnected( 0 ),
+	m_nameValidator( std::string("^") + plugPrototype->getName() + std::string("[_0-9]*") ),
+	m_prototype( plugPrototype )
 {
 	// The first of our inputs is always the prototype plug.
 	m_inputs.clear();
 	m_inputs.push_back( plugPrototype );
-	m_parent->addChild( plugPrototype );
+
+	// Check whether the parent already has an instance of the plugPrototype and if not, add it to the parent node.
+	if ( !m_parent->isAncestorOf( plugPrototype ) )
+	{
+		m_parent->addChild( plugPrototype );
+	}
 
 	m_minimumInputs = std::max( min, size_t(1) );
 	m_maximumInputs = std::max( max, m_minimumInputs );
@@ -125,7 +145,7 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr pl
 		m_parent->addChild( p );
 		m_inputs.push_back( p );
 	}
-
+	
 	// Connect up the signals of the parent to our slots.
 	m_parent->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
 	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputAdded, this, ::_1, ::_2 ) );

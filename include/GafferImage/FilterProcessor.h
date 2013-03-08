@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,56 +34,68 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CHANNELDATAPROCESSOR_H
-#define GAFFERIMAGE_CHANNELDATAPROCESSOR_H
+#ifndef GAFFERIMAGE_FILTERPROCESSOR_H
+#define GAFFERIMAGE_FILTERPROCESSOR_H
 
 #include "GafferImage/ImageProcessor.h"
+#include "Gaffer/InputGenerator.h"
 
 namespace GafferImage
 {
 
-/// The ChannelDataProcessor provides a useful base class for nodes that manipulate individual channels
-/// of an image and leave their image dimensions and channel names unchanged.
-class ChannelDataProcessor : public ImageProcessor
+/// The FilterProcessor provides a useful base class for nodes that require multiple inputs in order to process and output.
+/// It allows derived classes to provide minimum and maximum number of inputs to it's constructor. It creates a minimum number
+/// and will manage an optional number of inputs (if minimumInputs < maximumInputs).
+/// By default this node will:
+/// Be disabled if all inputs aren't connected.
+/// Only hash connected inputs (if it is enabled).
+/// Expand the data window to by merging all of the connect input's data windows.
+/// Use the first display window encountered on a connected input.
+class FilterProcessor : public ImageProcessor
 {
 
 	public :
 
-		ChannelDataProcessor( const std::string &name=staticTypeName() );
-		virtual ~ChannelDataProcessor();
+		typedef std::vector<Gaffer::InputGenerator<GafferImage::ImagePlug>::PlugClassPtr> ImagePlugList;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
+		FilterProcessor( const std::string &name=staticTypeName(), int minimumInputs = 2, int maximumInputs = 2 );
+		virtual ~FilterProcessor();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( FilterProcessor, FilterProcessorTypeId, ImageProcessor );
 
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
-		/// Should be implemented by derived classes to query the state of the node's plugs and return true if the channel should be operated on.
-		virtual bool channelEnabled( int channelIndex ) const = 0;
-	
+		/// Useful accessors for getting an input image plug of a certain index.	
+		const ImagePlug *inPlug( int index ) const;
+		ImagePlug *inPlug( int index );
+		using ImageProcessor::inPlug;
+
 	protected :
 	
-		/// This implementation queries the context for the channel that is being modified and subsequently calls channelEnabled( channelIndex ) which should be implemented by derived classed.
+		/// This implementation checks that all of the inputs are connected and if not, returns false.
+		/// This method needs to be overidden if a derived node can operate on any number of connected plugs
+		/// and doesn't neccessarily need a minimum number to be connected.
 		virtual bool enabled() const;
 
-		/// Reimplemented to pass through the hashes from the input plug as they don't change.
+		/// Reimplemented to hash the input plugs. We only hash those that are connected so that nodes which don't require a minimum number to
+		/// be connected such as the "Merge" node only have to overide enabled() (which requires ALL inputs to be connected by default).
+		/// This therefore caters for both nodes which require all inputs to be connected and nodes that do not (providing they overload enabled()).
 		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
-		/// Implemented to pass through the input values. Derived classes need only implement computeChannelData().
+		/// Sets the output display window to the first connected input found.
 		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		/// Sets the data window to the union of all of the data windows.
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
+		/// Creates a union of all of the connected inputs channelNames.
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Implemented to initialize the output tile and then call processChannelData() 
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Should be implemented by derived classes to processes each channel's data.
-		/// @param context The context that the channel data is being requested for.
-		/// @param parent The parent image plug that the output is being processed for.
-		/// @param channelIndex An index in the range of 0-3 which indicates whether the channel to be processed is R, G, B or A. 
-		///                     It is useful for querying Color4f plugs for the value that coresponds to the channel being processed. 
-		/// @param outData The tile where the result of the operation should be written. It is initialized with the coresponding tile data from inPlug() which should be used as the input data.
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, IECore::FloatVectorDataPtr outData ) const = 0;
+	
+		/// A helper class that manages our ImagePlug inputs.
+		Gaffer::InputGenerator<ImagePlug> m_inputs;
 
 	private :
 		
@@ -95,4 +106,4 @@ class ChannelDataProcessor : public ImageProcessor
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H
+#endif // GAFFERIMAGE_FILTERPROCESSOR_H

@@ -36,13 +36,12 @@
 
 #include "Gaffer/Context.h"
 #include "GafferImage/Merge.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
 
 // Create a set of functions to perform the different operations.
+typedef float (*Op)( float A, float B, float a, float b );
 float opAdd( float A, float B, float a, float b){ return A + B; }
 float opAtop( float A, float B, float a, float b){ return A*b + B*(1.-a); }
 float opDivide( float A, float B, float a, float b){ return A / B; }
@@ -63,10 +62,9 @@ IE_CORE_DEFINERUNTIMETYPED( Merge );
 size_t Merge::g_firstPlugIndex = 0;
 
 Merge::Merge( const std::string &name )
-	:	ChannelDataProcessor( name )
+	:	FilterProcessor( name, 2, 50 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ImagePlug( "in1", Gaffer::Plug::In ) );
 	addChild( new IntPlug( "operation" ) );
 }
 
@@ -74,70 +72,74 @@ Merge::~Merge()
 {
 }
 
-GafferImage::ImagePlug *Merge::inPlug1()
-{
-	return getChild<ImagePlug>( g_firstPlugIndex );
-}
-
-const GafferImage::ImagePlug *Merge::inPlug1() const
-{
-	return getChild<ImagePlug>( g_firstPlugIndex );
-}
-
 Gaffer::IntPlug *Merge::operationPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex+1 );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::IntPlug *Merge::operationPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex+1 );
-}
-
-bool Merge::enabled() const
-{
-	return !inPlug1()->getInput<ValuePlug>() ? false : ChannelDataProcessor::enabled();
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 void Merge::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	ChannelDataProcessor::affects( input, outputs );
-	
-	if( input == inPlug()->channelDataPlug() ||
-		input == inPlug1()->channelDataPlug() ||
-		input == operationPlug()
-	)
+	if( input == operationPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );	
 	}
+	else FilterProcessor::affects( input, outputs );
+}
+
+bool Merge::enabled() const
+{
+	if ( m_inputs.nConnectedInputs() < 2 ) return false;
+
+	// Call enabled() on the image node as we don't care whether the first input is connected or not.
+	return ImageNode::enabled();
 }
 
 void Merge::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	inPlug()->channelDataPlug()->hash( h );
-	inPlug1()->channelDataPlug()->hash( h );
 	operationPlug()->hash( h );
+	FilterProcessor::hashChannelDataPlug( output, context, h );
 }
 
-void Merge::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	inPlug()->displayWindowPlug()->hash( h );
-	inPlug1()->displayWindowPlug()->hash( h );
-}
+	std::vector< ConstFloatVectorDataPtr > inData;
+	std::vector< ConstFloatVectorDataPtr > inAlpha;
+	
+	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
+	for( ImagePlugList::const_iterator it( m_inputs.inputs().begin() ); it != end; it++ )
+	{
+		if ( (*it)->getInput<ValuePlug>() )
+		{
+			inData.push_back( (*it)->channelData( channelName, tileOrigin ) );
+			inAlpha.push_back( (*it)->channelData( "A", tileOrigin ) );
+		}
+	}
 
-void Merge::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	inPlug()->dataWindowPlug()->hash( h );
-	inPlug1()->dataWindowPlug()->hash( h );
-}
+	// Get a pointer to the operation that we wish to perform.
+	int operation = operationPlug()->getValue();
+	switch( operation )
+	{
+		default:
+		case( kAdd ): return doMergeOperation( opAdd, inData, inAlpha, tileOrigin ); break;
+		case( kAtop ): return doMergeOperation( opAtop, inData, inAlpha, tileOrigin ); break;
+		case( kDivide ): return doMergeOperation( opDivide, inData, inAlpha, tileOrigin ); break;
+		case( kIn ): return doMergeOperation( opIn, inData, inAlpha, tileOrigin ); break;
+		case( kOut ): return doMergeOperation( opOut, inData, inAlpha, tileOrigin ); break;
+		case( kMask ): return doMergeOperation( opMask, inData, inAlpha, tileOrigin ); break;
+		case( kMatte ): return doMergeOperation( opMatte, inData, inAlpha, tileOrigin ); break;
+		case( kMultiply ): return doMergeOperation( opMultiply, inData, inAlpha, tileOrigin ); break;
+		case( kOver ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
+		case( kSubtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
+		case( kUnder ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
+	}
 
-Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	// Calculate the valid data window that we are to merge.
-	const Imath::Box2i dataWindow1 = inPlug()->dataWindowPlug()->getValue();
-	const Imath::Box2i dataWindow2 = inPlug1()->dataWindowPlug()->getValue();
-	const Imath::Box2i validDataWindow = boxIntersection( dataWindow1, dataWindow2 );
-	return validDataWindow;
+	// We should never get here...
+	return doMergeOperation( opAdd, inData, inAlpha, tileOrigin );
 }
 
 bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const
@@ -145,58 +147,6 @@ bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const
 	const std::vector<std::string> &channelNames = channelNamesData->readable();
 	std::vector<std::string>::const_iterator channelIt = std::find( channelNames.begin(), channelNames.end(), "A" );
 	return channelIt != channelNames.end();
-}
-
-IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	ConstFloatVectorDataPtr inData1 = inPlug()->channelData( channelName, tileOrigin );
-	ConstFloatVectorDataPtr inData2 = inPlug1()->channelData( channelName, tileOrigin );
-
-	// Check whether the inputs have alpha channels.
-	ConstFloatVectorDataPtr inAlpha1 = inPlug()->channelData( "A", tileOrigin );
-	ConstFloatVectorDataPtr inAlpha2 = inPlug1()->channelData( "A", tileOrigin );
-
-	// Allocate the new tile
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
-	FloatVectorDataPtr outDataPtr = new FloatVectorData;
-	std::vector<float> &outData = outDataPtr->writable();
-	outData.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-
-	// Get a pointer to the operation that we wish to perform.
-	float (*op)( float A, float B, float a, float b );
-	int operation = operationPlug()->getValue();
-	switch( operation )
-	{
-		default:
-		case( kAdd ): op = opAdd; break;
-		case( kAtop ): op = opAtop; break;
-		case( kDivide ): op = opDivide; break;
-		case( kIn ): op = opIn; break;
-		case( kOut ): op = opOut; break;
-		case( kMask ): op = opMask; break;
-		case( kMatte ): op = opMatte; break;
-		case( kMultiply ): op = opMultiply; break;
-		case( kOver ): op = opOver; break;
-		case( kSubtract ): op = opSubtract; break;
-		case( kUnder ): op = opUnder; break;
-	}
-	
-	// Perform the operation.
-	for( int y = tile.min.y; y<=tile.max.y; y++ )
-	{
-		const float *tile1Ptr = &(inData1->readable()[0]) + (y - tileOrigin.y) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-		const float *tile2Ptr = &(inData2->readable()[0]) + (y - tileOrigin.y) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-		const float *tile1AlphaPtr = &(inAlpha1->readable()[0]) + (y - tileOrigin.y) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-		const float *tile2AlphaPtr = &(inAlpha2->readable()[0]) + (y - tileOrigin.y) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-		float *outPtr = &(outData[0]) + ( y - tileOrigin.y ) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-		for( int x = tile.min.x; x <= tile.max.x; x++ )
-		{
-			*outPtr++ = op( *tile1Ptr++, *tile2Ptr++, *tile1AlphaPtr++, *tile2AlphaPtr++ );
-		}
-	}
-	
-	return outDataPtr;
-
 }
 
 } // namespace GafferImage

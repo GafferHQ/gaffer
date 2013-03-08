@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -66,7 +67,7 @@ void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlug
 
 bool ChannelDataProcessor::enabled() const
 {
-	///\TODO: Once an inputChannelMask plug (or something similar) is implemented, it should be queried here so that the channels that are not masked are not enabled.
+	///\todo: Once an inputChannelMask plug (or something similar) is implemented, it should be queried here so that the channels that are not masked are not enabled.
 	try // Silently catch exceptions from the context query as if it fails we just call enabled() on the baseclass.
 	{
 		int idx = channelIndex( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
