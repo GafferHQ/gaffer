@@ -80,11 +80,8 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	PlugMap plugMap;
 
 	for( size_t i = 0, e = verifiedChildNodes->size(); i < e; i++ )
-	{
-		// reparent the child under the Box
+	{		
 		Node *childNode = static_cast<Node *>( verifiedChildNodes->member( i ) );
-		result->addChild( childNode );
-				
 		// reroute any connections to external nodes
 		for( PlugIterator plugIt( childNode ); plugIt != plugIt.end(); plugIt++ )
 		{
@@ -132,6 +129,11 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 				}
 			}
 		}
+		// reparent the child under the Box. it's important that we do this after adding the intermediate
+		// input plugs, so that when they are serialised and reloaded, the inputs to the box are set before
+		// the inputs to the nodes inside the box - see GafferSceneTest.AssignmentTest.testAssignShaderFromOutsideBox
+		// for a test case highlighting this necessity.
+		result->addChild( childNode );
 	}
 
 	return result;

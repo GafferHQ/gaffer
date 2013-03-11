@@ -1,3 +1,8 @@
+* Fixed a bug which prevented Assignment nodes from being connected to Shaders outside the Box containing the Assignment.
+
+0.52.0
+======
+
 * The Gaffer clipboard now synchronizes with the global system clipboard, allowing nodes to be cut and pasted between external applications.
 
 * Fixed a bug which meant that the Viewer didn't update if a view became dirty while it wasn't the currently active view.
