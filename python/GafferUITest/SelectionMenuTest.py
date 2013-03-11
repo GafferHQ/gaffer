@@ -60,6 +60,20 @@ class SelectionMenuTest( GafferUITest.TestCase ) :
 		s.removeIndex( 0 )
 		self.assertEqual ( s.getTotal(), 2 )
 		
+	def testInsert( self ) :
+		
+		s = GafferUI.SelectionMenu()
+		
+		# adding new items
+		s.addItem( "Test1" )
+		s.addItem( "Test2" )
+		s.addItem( "Test3" )
+		self.assertEqual( s.getTotal(), 3 )
+		
+		# insert an item and check it
+		s.insertItem( 1, "Test4")
+		self.assertEqual( s.getItem(1), "Test4" )
+		
 	def testCurrentIndexChangedSignal( self ):
 	
 		s = GafferUI.SelectionMenu()

@@ -85,12 +85,18 @@ class SelectionMenu( GafferUI.Widget ) :
 	def __selected( self, index ):
 		self.selectedSignal()( self )
 		
-	def addItem( self, itemName, imageOrImageFileName=None ):		
+	def addItem( self, itemName, imageOrImageFileName=None ):
 		self._qtWidget().addItem(itemName)
 		
 		if not imageOrImageFileName is None:
 			self.setIcon( self.getTotal()-1, imageOrImageFileName )
 			
+	def insertItem( self, index, itemName, imageOrImageFileName=None ):
+		self._qtWidget().insertItem( index, itemName )
+		
+		if not imageOrImageFileName is None:
+			self.setIcon( index, imageOrImageFileName )
+		
 	def setIcon( self, index, imageOrImageFileName ):
 		icon = None
 		
