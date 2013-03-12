@@ -164,7 +164,27 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		self.assertEqual( m2.getFlags(), m1.getFlags() )
 		self.assertEqual( m2.direction(), Gaffer.Plug.Direction.Out )
 		self.assertEqual( m2.keys(), m1.keys() )
-					
+	
+	def testCreateWithValuePlug( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		
+		v = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, minValue = -10, maxValue = 10 )
+		m1 = p.addMember( "a", v )
+		self.assertTrue( v.parent().isSame( m1 ) )
+		self.assertEqual( v.getName(), "value" )
+		self.assertEqual( m1.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		self.assertEqual( p.memberDataAndName( m1 ), ( IECore.IntData( 0 ), "a" ) )
+		
+		v2 = Gaffer.IntPlug( defaultValue = 5, minValue = -10, maxValue = 10 )
+		m2 = p.addOptionalMember( "b", v2, plugName = "blah", enabled = True )
+		self.assertTrue( v2.parent().isSame( m2 ) )
+		self.assertEqual( v2.getName(), "value" )
+		self.assertEqual( m2.getFlags(), Gaffer.Plug.Flags.Default )
+		
+		self.assertEqual( p.memberDataAndName( m2 ), ( IECore.IntData( 5 ), "b" ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

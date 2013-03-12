@@ -78,22 +78,36 @@ PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction 
 
 Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags )
 {	
-	CompoundPlugPtr plug = new CompoundPlug( plugName, direction(), plugFlags );
+	return addMember( name, createPlugFromData( "value", direction(), plugFlags, value ), plugName );
+}
+
+Gaffer::CompoundPlug *CompoundDataPlug::addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
+{
+	CompoundPlugPtr plug = new CompoundPlug( plugName, direction(), valuePlug->getFlags() );
 	
-	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", plugFlags );
+	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", valuePlug->getFlags() );
 	namePlug->setValue( name );
 	plug->addChild( namePlug );
 	
-	plug->addChild( createPlugFromData( "value", direction(), plugFlags, value ) );
+	plug->setChild( "value", valuePlug );
 	
 	addChild( plug );
 	return plug;
+
 }
 		
 Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags, bool enabled )
 {
 	CompoundPlug *plug = addMember( name, value, plugName, plugFlags );
 	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, plugFlags );
+	plug->addChild( e );
+	return plug;
+}
+
+Gaffer::CompoundPlug *CompoundDataPlug::addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
+{
+	CompoundPlug *plug = addMember( name, valuePlug, plugName );
+	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, valuePlug->getFlags() );
 	plug->addChild( e );
 	return plug;
 }

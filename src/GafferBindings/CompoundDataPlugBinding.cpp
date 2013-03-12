@@ -59,14 +59,24 @@ static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::
 	return result;
 }
 
-static Gaffer::CompoundPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName, unsigned plugFlags )
+static Gaffer::CompoundPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string &plugName, unsigned plugFlags )
 {
 	return p.addMember( name, value, plugName, plugFlags );
 }
 
-static Gaffer::CompoundPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, std::string plugName, unsigned plugFlags, bool enabled )
+static Gaffer::CompoundPlugPtr addMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
+{
+	return p.addMember( name, valuePlug, plugName );
+}
+
+static Gaffer::CompoundPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string plugName, unsigned plugFlags, bool enabled )
 {
 	return p.addOptionalMember( name, value, plugName, plugFlags, enabled );
+}
+
+static Gaffer::CompoundPlugPtr addOptionalMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
+{
+	return p.addOptionalMember( name, valuePlug, plugName, enabled );
 }
 
 static tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundPlug *member )
@@ -90,7 +100,9 @@ void GafferBindings::bindCompoundDataPlug()
 			)	
 		)
 		.def( "addMember", &addMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic ) )
+		.def( "addMember", &addMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1" ) )
 		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "value" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic, arg_( "enabled" ) = false ) )
+		.def( "addOptionalMember", &addOptionalMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1", arg_( "enabled" ) = false ) )
 		.def( "addMembers", &CompoundDataPlug::addMembers )
 		.def( "memberDataAndName", &memberDataAndNameWrapper )
 	;

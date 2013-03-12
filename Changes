@@ -6,6 +6,8 @@
 
 * Fixed bug where editing a numeric plug value using cursor up/down didn't immediately update.
 
+* Added CompoundDataPlug::addMember() and CompoundDataPlug::addOptionalMember() overloads which take a ValuePlug instead of Data to provide the value for the member.
+
 0.52.0
 ======
 
