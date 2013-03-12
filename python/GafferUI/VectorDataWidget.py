@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -731,10 +731,14 @@ class _DataAccessor() :
 
 	__typesToCreators = {}
 
-_DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
-_DataAccessor.registerType( IECore.IntVectorData.staticTypeId(), _DataAccessor )
-_DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
 _DataAccessor.registerType( IECore.BoolVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.HalfVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.FloatVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.DoubleVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.IntVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.UIntVectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.Int64VectorData.staticTypeId(), _DataAccessor )
+_DataAccessor.registerType( IECore.UInt64VectorData.staticTypeId(), _DataAccessor )
 
 class _CompoundDataAccessor( _DataAccessor ) :
 
@@ -814,8 +818,13 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 
 	__typesToCreators = {}
 	
+_Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.DoubleVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.IntVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.UIntVectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.Int64VectorData.staticTypeId(), _Delegate )
+_Delegate.registerType( IECore.UInt64VectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _Delegate )
 _Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _Delegate )

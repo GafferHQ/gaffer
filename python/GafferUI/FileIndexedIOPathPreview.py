@@ -73,7 +73,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 		if not isinstance( self.getPath(), Gaffer.FileSystemPath ) or not self.getPath().isLeaf() :
 			return False
 			
-		if os.path.splitext( self.getPath()[-1] )[1] not in ( ".cob", ".fio" ) :
+		if os.path.splitext( self.getPath()[-1] )[1] not in ( ".cob", ".fio", ".scc" ) :
 			return False
 			
 		return True
