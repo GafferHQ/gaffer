@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -55,7 +55,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( self.__numericWidget )
 
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
-		self.__editingFinishedConnection = self.__numericWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
+		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 						
 		self._updateFromPlug()
 		
@@ -93,8 +93,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		return False
 		
-	def _textChanged( self, widget ) :
-		
+	def __valueChanged( self, widget ) :
+				
 		if self._editable() :
 			self.__setPlugValue()
 			

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,16 +45,17 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 	def __init__( self, value, **kw ) :
 	
-		GafferUI.TextWidget.__init__( self, str( value ), **kw )
-		
 		assert( isinstance( value, int ) or isinstance( value, float ) )
-		
 		self.__numericType = type( value )
+		
+		GafferUI.TextWidget.__init__( self, self.__valueToText( value ), **kw )
 		
 		if self.__numericType is int :
 			validator = QtGui.QIntValidator( self._qtWidget() )
 		else :
 			validator = QtGui.QDoubleValidator( self._qtWidget() )
+			validator.setDecimals( 4 )
+			validator.setNotation( QtGui.QDoubleValidator.StandardNotation )
 		
 		self._qtWidget().setValidator( validator )
 		
@@ -62,11 +63,36 @@ class NumericWidget( GafferUI.TextWidget ) :
 	
 	def setValue( self, value ) :
 	
-		self.setText( str( self.__numericType( value ) ) )
+		text = self.__valueToText( value )
+		if text == self.getText() :
+			return
+			
+		self.setText( text )
+		self.__emitValueChanged()
 		
 	def getValue( self ) :
 	
 		return self.__numericType( self.getText() )
+	
+	## A signal emitted whenever the value has been changed and the user would expect
+	# to see that change reflected in whatever the field controls.
+	def valueChangedSignal( self ) :
+	
+		try :
+			return self.__valueChangedSignal
+		except AttributeError :
+			self.__valueChangedSignal = GafferUI.WidgetSignal()
+			self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
+			
+		return self.__valueChangedSignal
+	
+	def __valueToText( self, value ) :
+	
+		value = self.__numericType( value )
+		if self.__numericType is int :
+			return str( value )
+		else :
+			return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
 		
 	def __keyPress( self, widget, event ) :
 	
@@ -114,3 +140,19 @@ class NumericWidget( GafferUI.TextWidget ) :
 			newIndex = 0
 			
 		self.setCursorPosition( newIndex )
+
+	def __editingFinished( self, widget ) :
+	
+		assert( widget is self )
+		
+		self.__emitValueChanged()		
+		
+	def __emitValueChanged( self ) :
+	
+		try :
+			signal = self.__valueChangedSignal
+		except AttributeError :
+			return
+			
+		signal( self )
+

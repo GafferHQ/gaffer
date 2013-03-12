@@ -1,5 +1,11 @@
 * Fixed a bug which prevented Assignment nodes from being connected to Shaders outside the Box containing the Assignment.
 
+* Improved formatting in NumericWidgets.
+
+* Added NumericWidget.valueChangedSignal().
+
+* Fixed bug where editing a numeric plug value using cursor up/down didn't immediately update.
+
 0.52.0
 ======
 
