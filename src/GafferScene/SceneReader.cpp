@@ -157,6 +157,12 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 {
 	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
 	Box3d b = entry->sceneInterface()->readBound( context->getFrame() );
+	
+	if( b.isEmpty() )
+	{
+		return Box3f();
+	}
+	
 	return Box3f( b.min, b.max );
 }
 
