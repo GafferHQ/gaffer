@@ -51,6 +51,7 @@
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
+#include "GafferImage/Select.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -103,5 +104,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Merge>();
 	GafferBindings::DependencyNodeClass<Grade>();
+	GafferBindings::DependencyNodeClass<Select>();
 
 }

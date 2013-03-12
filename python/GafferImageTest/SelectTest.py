@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,14 +34,51 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from SelectTest import SelectTest
+import unittest
+import os
+import IECore
+import GafferImage
+
+class SelectTest( unittest.TestCase ) :
+
+	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/redWithDataWindow.100x100.exr" )
+	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/greenWithDataWindow.100x100.exr" )
+	bPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/blueWithDataWindow.100x100.exr" )
+
+	# Do several tests to check the cache is working correctly:
+	def testHashPassThrough( self ) :
+		
+		r1 = GafferImage.ImageReader()
+		r1["fileName"].setValue( self.rPath )
+		
+		r2 = GafferImage.ImageReader()
+		r2["fileName"].setValue( self.gPath )
+		
+		r3 = GafferImage.ImageReader()
+		r3["fileName"].setValue( self.bPath )
+		
+		##########################################
+		# Test to see if the hash changes when we set the select plug.
+		##########################################
+		s = GafferImage.Select()
+		s["select"].setValue(1)		
+		s["in"].setInput(r1["out"])
+		s["in1"].setInput(r2["out"])
+		s["in2"].setInput(r3["out"])
+		
+		h1 = s["out"].image().hash()
+		h2 = r2["out"].image().hash()
+		self.assertEqual( h1, h2 )
+		
+		s["select"].setValue(0)		
+		h1 = s["out"].image().hash()
+		h2 = r1["out"].image().hash()
+		self.assertEqual( h1, h2 )
+		
+		s["select"].setValue(2)		
+		h1 = s["out"].image().hash()
+		h2 = r3["out"].image().hash()
+		self.assertEqual( h1, h2 )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

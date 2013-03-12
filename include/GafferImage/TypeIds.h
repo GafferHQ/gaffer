@@ -56,6 +56,7 @@ enum TypeId
 	MergeTypeId = 110760,
 	GradeTypeId = 110761,
 	FilterProcessorTypeId = 110762,
+	SelectTypeId = 110763,
 	
 	LastTypeId = 110849
 };
