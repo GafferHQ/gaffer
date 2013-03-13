@@ -1,3 +1,6 @@
+0.53.0
+======
+
 * Fixed a bug which prevented Assignment nodes from being connected to Shaders outside the Box containing the Assignment.
 
 * Improved formatting in NumericWidgets.
