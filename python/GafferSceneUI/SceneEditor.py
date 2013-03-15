@@ -126,8 +126,12 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 	
 	def __transferExpansionFromContext( self ) :
 	
+		expandedPaths = self.getContext().get( "ui:scene:expandedPaths", None )
+		if expandedPaths is None :
+			return
+			
 		p = self.__pathListing.getPath()
-		expandedPaths = [ p.copy().setFromString( s ) for s in self.getContext()["ui:scene:expandedPaths"].value.paths() ]
+		expandedPaths = [ p.copy().setFromString( s ) for s in expandedPaths.value.paths() ]
 		with Gaffer.BlockedConnection( self.__expansionChangedConnection ) :
 			self.__pathListing.setExpandedPaths( expandedPaths )
 	
