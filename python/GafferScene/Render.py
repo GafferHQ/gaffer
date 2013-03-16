@@ -57,6 +57,8 @@ class Render( Gaffer.Node ) :
 	def execute( self ) :
 	
 		renderer = self._createRenderer()
+	
+		# output globals
 				
 		scenePlug = self["in"].getInput()
 		globals = scenePlug["globals"].getValue()
@@ -67,7 +69,28 @@ class Render( Gaffer.Node ) :
 			elif isinstance( value, IECore.Data ) :
 				renderer.setOption( name, value )
 		
-		self.__outputCamera( scenePlug, globals, renderer )
+		# figure out the shutter
+		
+		cameraBlur = globals.get( "render:cameraBlur", None )
+		cameraBlur = cameraBlur.value if cameraBlur else False
+		transformBlur = globals.get( "render:transformBlur", None )
+		transformBlur = transformBlur.value if transformBlur else False
+		deformationBlur = globals.get( "render:deformationBlur", None )
+		deformationBlur = deformationBlur.value if deformationBlur else False
+		
+		frame = Gaffer.Context.current().getFrame()
+		if cameraBlur or transformBlur or deformationBlur :
+			shutter = globals.get( "render:shutter", None )
+			shutter = shutter.value if shutter else IECore.V2f( -0.25, 0.25 )
+			shutter = IECore.V2f( frame ) + shutter
+		else :
+			shutter = IECore.V2f( frame, frame )	
+			
+		# output the camera
+			
+		self.__outputCamera( scenePlug, globals, shutter, cameraBlur, renderer )
+		
+		# output the world
 										
 		with IECore.WorldBlock( renderer ) :
 		
@@ -79,9 +102,13 @@ class Render( Gaffer.Node ) :
 			procedural = GafferScene.ScriptProcedural()
 			procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )
 			procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
+			procedural["frame"].setNumericValue( frame )
 			
-			bound = scenePlug.bound( "/" )
-			bound = bound.transform( scenePlug.transform( "/" ) )
+			# avoid having to compute an accurate bound taking into account motion
+			# blur by just having a huge bound - we know we want to render the
+			# contents of the procedural (it's all we have to render), and the procedural
+			# will accurately bound itself once it's called by the renderer anyway.
+			bound = IECore.Box3f( IECore.V3f( -10e34 ), IECore.V3f( 10e34 ) )
 			
 			with IECore.AttributeBlock( renderer ) :
 			
@@ -126,30 +153,39 @@ class Render( Gaffer.Node ) :
 		if applicationRoot is None or applicationRoot.getName() != "gui" :
 			p.wait()
 	
-	def __outputCamera( self, scenePlug, globals, renderer ) :
+	def __outputCamera( self, scenePlug, globals, shutter, blur, renderer ) :
+
+		# get the camera
 		
 		cameraPath = globals.get( "render:camera", None )
 		
 		camera = None
-		cameraTransform = IECore.M44f()
 		if cameraPath is not None :
-			o = scenePlug.object( cameraPath.value )
-			if isinstance( o, IECore.Camera ) :
-				camera = o
-			cameraTransform = scenePlug.fullTransform( cameraPath.value )
+			
+			cameraObject = scenePlug.object( cameraPath.value )
+			if isinstance( cameraObject, IECore.Camera ) :
+				camera = cameraObject
+			
+			camera.setTransform( self.__transform( scenePlug, cameraPath.value, shutter, blur ) )
 			
 		if camera is None :
 			camera = IECore.Camera()
+		
+		# apply the resolution
 			
 		resolution = globals.get( "render:resolution", None )
 		if resolution is not None :
 			camera.parameters()["resolution"] = resolution
-
-		camera.addStandardParameters()		
-
-		with IECore.TransformBlock( renderer ) :
-			renderer.concatTransform( cameraTransform )
-			camera.render( renderer )
+			
+		camera.addStandardParameters()
+		
+		# apply the shutter
+				
+		camera.parameters()["shutter"] = shutter
+	
+		# actually output the camera to the renderer
+			
+		camera.render( renderer )
 	
 	def __outputLights( self, scenePlug, globals, renderer ) :
 	
@@ -178,5 +214,25 @@ class Render( Gaffer.Node ) :
 					light.render( renderer )
 				
 				renderer.illuminate( light.handle, True )
-				
+	
+	def __transform( self, scenePlug, path, shutter, blur = False ) :
+		
+		numSamples = 1
+		if blur :
+			attributes = scenePlug.fullAttributes( path )
+			transformBlurSegments = attributes.get( "gaffer:transformBlurSegments", None )
+			numSamples = transformBlurSegments.value + 1 if transformBlurSegments else 2
+			transformBlur = attributes.get( "gaffer:transformBlur", None )
+			if transformBlur is not None and not transformBlur.value :
+				numSamples = 1
+			
+		result = IECore.MatrixMotionTransform()
+		with Gaffer.Context( Gaffer.Context.current() ) as transformContext :
+			for i in range( 0, numSamples ) :
+				frame = shutter[0] + ( shutter[1] - shutter[0] ) * float( i ) / max( 1, numSamples - 1 )
+				transformContext.setFrame( frame )
+				result[frame] = scenePlug.fullTransform( path )
+		
+		return result
+			
 IECore.registerRunTimeTyped( Render )

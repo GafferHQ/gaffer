@@ -46,6 +46,22 @@ def __attributesSummary( plug ) :
 		
 	return ", ".join( info )
 
+def __motionBlurSummary( plug ) :
+
+	info = []
+	for motionType in "transform", "deformation" :
+		onOffEnabled = plug[motionType+"Blur"]["enabled"].getValue()
+		segmentsEnabled = plug[motionType+"BlurSegments"]["enabled"].getValue()
+		if onOffEnabled or segmentsEnabled :
+			items = []
+			if onOffEnabled :
+				items.append( "On" if plug[motionType+"Blur"]["value"].getValue() else "Off" )
+			if segmentsEnabled :
+				items.append( "%d Segments" % plug[motionType+"BlurSegments"]["value"].getValue() )
+			info.append( motionType.capitalize() + " : " + "/".join( items ) )
+		
+	return ", ".join( info )
+	
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferScene.StandardAttributes.staticTypeId(),
@@ -58,6 +74,17 @@ GafferUI.PlugValueWidget.registerCreator(
 			"summary" : __attributesSummary,
 			"namesAndLabels" : (
 				( "gaffer:visibility", "Visibility" ),
+			),
+		},
+		
+		{
+			"label" : "Motion Blur",
+			"summary" : __motionBlurSummary,
+			"namesAndLabels" : (
+				( "gaffer:transformBlur", "Transform" ),
+				( "gaffer:transformBlurSegments", "Transform Segments" ),
+				( "gaffer:deformationBlur", "Deformation" ),
+				( "gaffer:deformationBlurSegments", "Deformation Segments" ),
 			),
 		},
 		

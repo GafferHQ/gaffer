@@ -48,6 +48,20 @@ def __cameraSummary( plug ) :
 		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
 
 	return ", ".join( info )
+	
+def __motionBlurSummary( plug ) :
+
+	info = []
+	if plug["cameraBlur"]["enabled"].getValue() :
+		info.append( "Camera " + ( "On" if plug["cameraBlur"]["value"].getValue() else "Off" ) )
+	if plug["transformBlur"]["enabled"].getValue() :
+		info.append( "Transform " + ( "On" if plug["transformBlur"]["value"].getValue() else "Off" ) )
+	if plug["deformationBlur"]["enabled"].getValue() :
+		info.append( "Deformation " + ( "On" if plug["deformationBlur"]["value"].getValue() else "Off" ) )
+	if plug["shutter"]["enabled"].getValue() :
+		info.append( "Shutter " + str( plug["shutter"]["value"].getValue() ) )
+		
+	return ", ".join( info )	
 
 GafferUI.PlugValueWidget.registerCreator(
 	
@@ -62,6 +76,17 @@ GafferUI.PlugValueWidget.registerCreator(
 			"namesAndLabels" : (
 				( "render:camera", "Camera" ),
 				( "render:resolution", "Resolution" ),
+			),
+		},
+		
+		{
+			"label" : "Motion Blur",
+			"summary" : __motionBlurSummary,
+			"namesAndLabels" : (
+				( "render:cameraBlur", "Camera" ),
+				( "render:transformBlur", "Transform" ),
+				( "render:deformationBlur", "Deformation" ),
+				( "render:shutter", "Shutter" ),
 			),
 		},
 		

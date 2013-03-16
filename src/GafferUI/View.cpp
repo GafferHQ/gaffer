@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -97,6 +98,13 @@ View::UnarySignal &View::updateRequestSignal()
 	return m_updateRequestSignal;
 }
 
+void View::setPreprocessor( Gaffer::NodePtr preprocessor )
+{
+	setChild( "__preprocessor", preprocessor );
+	preprocessor->getChild<Plug>( "in" )->setInput( inPlug<Plug>() );
+	m_preprocessorPlugDirtiedConnection = preprocessor->plugDirtiedSignal().connect( boost::bind( &View::plugDirtied, this, ::_1 ) );
+}
+
 void View::contextChanged( const IECore::InternedString &name )
 {
 	updateRequestSignal()( this );
@@ -109,7 +117,7 @@ boost::signals::connection &View::contextChangedConnection()
 
 void View::plugDirtied( const Gaffer::Plug *plug )
 {
-	if( plug == inPlug<Gaffer::Plug>() )
+	if( plug == preprocessedInPlug<Gaffer::Plug>() )
 	{
 		updateRequestSignal()( this );
 	}

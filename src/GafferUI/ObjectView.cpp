@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -61,7 +62,7 @@ void ObjectView::update()
 	ConstVisibleRenderablePtr renderable = 0;
 	{
 		Context::Scope context( getContext() );
-		renderable = runTimeCast<const VisibleRenderable>( View3D::inPlug<ObjectPlug>()->getValue() );
+		renderable = runTimeCast<const VisibleRenderable>( View3D::preprocessedInPlug<ObjectPlug>()->getValue() );
 	}
 
 	bool hadRenderable = m_renderableGadget->getRenderable();

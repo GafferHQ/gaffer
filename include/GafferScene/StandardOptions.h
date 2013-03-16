@@ -55,6 +55,8 @@ class StandardOptions : public Options
 				
 };
 
+IE_CORE_DECLAREPTR( StandardOptions );
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_STANDARDOPTIONS_H

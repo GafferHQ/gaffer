@@ -47,8 +47,18 @@ StandardOptions::StandardOptions( const std::string &name )
 {
 	CompoundDataPlug *options = optionsPlug();
 	
+	// camera
+	
 	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, true );	
-	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, true );	
+	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, true );
+	
+	// motion blur
+	
+	options->addOptionalMember( "render:cameraBlur", new IECore::BoolData( false ), "cameraBlur", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "render:transformBlur", new IECore::BoolData( false ), "transformBlur", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "render:deformationBlur", new IECore::BoolData( false ), "deformationBlur", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), "shutter", Gaffer::Plug::Default, false );
+
 }
 
 StandardOptions::~StandardOptions()

@@ -35,12 +35,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "OpenEXR/ImathBoxAlgo.h"
+#include "OpenEXR/ImathFun.h"
 
 #include "IECore/AttributeBlock.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/CurvesPrimitive.h"
 #include "IECore/StateRenderable.h"
 #include "IECore/AngleConversion.h"
+#include "IECore/MotionBlock.h"
 
 #include "Gaffer/Context.h"
 
@@ -57,12 +59,40 @@ SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context 
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 )
 {
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
+
+	// options
+	
+	Context::Scope scopedContext( m_context );
+	ConstCompoundObjectPtr globals = m_scenePlug->globalsPlug()->getValue();
+	
+	const BoolData *transformBlurData = globals->member<BoolData>( "render:transformBlur" );
+	m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
+	
+	const BoolData *deformationBlurData = globals->member<BoolData>( "render:deformationBlur" );
+	m_options.deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
+	
+	const V2fData *shutterData = globals->member<V2fData>( "render:shutter" );
+	m_options.shutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
+	m_options.shutter += V2f( m_context->getFrame() );
+	
+	// attributes
+	
+	m_attributes.transformBlur = true;
+	m_attributes.transformBlurSegments = 1;
+	m_attributes.deformationBlur = true;
+	m_attributes.deformationBlurSegments = 1;
+	
+	updateAttributes( true );
+	
 }
 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
-	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ), m_pathsToExpand( other.m_pathsToExpand )
+	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ),
+		m_pathsToExpand( other.m_pathsToExpand ), m_options( other.m_options ), m_attributes( other.m_attributes )
 {
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
+
+	updateAttributes( false );
 }
 
 SceneProcedural::~SceneProcedural()
@@ -71,16 +101,56 @@ SceneProcedural::~SceneProcedural()
 
 Imath::Box3f SceneProcedural::bound() const
 {
-	Context::Scope scopedContext( m_context );
 	/// \todo I think we should be able to remove this exception handling in the future.
 	/// Either when we do better error handling in ValuePlug computations, or when 
 	/// the bug in IECoreGL that caused the crashes in SceneProceduralTest.testComputationErrors
 	/// is fixed.
 	try
 	{
-		Box3f b = m_scenePlug->boundPlug()->getValue();
-		M44f t = m_scenePlug->transformPlug()->getValue();
-		return transform( b, t );
+		ContextPtr timeContext = new Context( *m_context );
+		Context::Scope scopedTimeContext( timeContext );
+		
+		/// \todo This doesn't take account of the unfortunate fact that our children may have differing
+		/// numbers of segments than ourselves. To get an accurate bound we would need to know the different sample
+		/// times the children may be using and evaluate a bound at those times as well. We don't want to visit
+		/// the children to find the sample times out though, because that defeats the entire point of deferred loading.
+		///
+		/// Here are some possible approaches :
+		///
+		/// 1) Add a new attribute called boundSegments, which defines the number of segments used to calculate
+		///    the bounding box. It would be the responsibility of the user to set this to an appropriate value
+		///    at the parent levels, so that the parents calculate bounds appropriate for the children.
+		///    This seems like a bit too much burden on the user.
+		///
+		/// 2) Add a global option called "maxSegments" - this will clamp the number of segments used on anything
+		///    and will be set to 1 by default. The user will need to increase it to allow the leaf level attributes
+		///    to take effect, and all bounding boxes everywhere will be calculated using that number of segments
+		///    (actually I think it'll be that number of segments and all nondivisible smaller numbers). This should
+		///    be accurate but potentially slower, because we'll be doing the extra work everywhere rather than only
+		///    where needed. It still places a burden on the user (increasing the global clamp appropriately),
+		///    but not quite such a bad one as they don't have to figure anything out and only have one number to set.
+		///
+		/// 3) Have the StandardOptions node secretly compute a global "maxSegments" behind the scenes. This would
+		///    work as for 2) but remove the burden from the user. However, it would mean preventing any expressions
+		///    or connections being used on the segments attributes, because they could be used to cheat the system.
+		///    It could potentially be faster than 2) because it wouldn't have to do all nondivisible numbers - it
+		///    could know exactly which numbers of segments were in existence. It still suffers from the
+		///    "pay the price everywhere" problem.	
+				
+		std::set<float> times;
+		motionTimes( ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, times );
+		motionTimes( ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, times );
+				
+		Box3f result;
+		for( std::set<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; it++ )
+		{
+			timeContext->setFrame( *it );
+			Box3f b = m_scenePlug->boundPlug()->getValue();
+			M44f t = m_scenePlug->transformPlug()->getValue();
+			result.extendBy( transform( b, t ) );
+		}
+		
+		return result;
 	}
 	catch( const std::exception &e )
 	{
@@ -120,7 +190,20 @@ void SceneProcedural::render( RendererPtr renderer ) const
 
 		// transform
 		
-		renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
+		std::set<float> transformTimes;
+		motionTimes( ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, transformTimes );
+		{
+			ContextPtr timeContext = new Context( *m_context );
+			Context::Scope scopedTimeContext( timeContext );
+			
+			MotionBlock motionBlock( renderer, transformTimes, transformTimes.size() > 1 );
+			
+			for( std::set<float>::const_iterator it = transformTimes.begin(), eIt = transformTimes.end(); it != eIt; it++ )
+			{
+				timeContext->setFrame( *it );
+				renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
+			}
+		}
 		
 		// attributes
 		
@@ -149,27 +232,52 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		
 		// object
 		
-		ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
-		if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
+		std::set<float> deformationTimes;
+		motionTimes( ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, deformationTimes );
 		{
-			primitive->render( renderer );
-		}
-		else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
-		{
-			/// \todo This absolutely does not belong here, but until we have
-			/// a mechanism for drawing manipulators, we don't have any other
-			/// means of visualising the cameras.
-			if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+			ContextPtr timeContext = new Context( *m_context );
+			Context::Scope scopedTimeContext( timeContext );
+		
+			unsigned timeIndex = 0;
+			for( std::set<float>::const_iterator it = deformationTimes.begin(), eIt = deformationTimes.end(); it != eIt; it++, timeIndex++ )
 			{
-				drawCamera( camera, renderer.get() );
-			}
-		}
-		else if( const Light *light = runTimeCast<const Light>( object.get() ) )
-		{
-			/// \todo This doesn't belong here.
-			if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
-			{
-				drawLight( light, renderer.get() );
+				timeContext->setFrame( *it );
+				ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
+				if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
+				{
+					if( deformationTimes.size() > 1 && timeIndex == 0 )
+					{
+						renderer->motionBegin( deformationTimes );
+					}
+						
+						primitive->render( renderer );
+					
+					if( deformationTimes.size() > 1 && timeIndex == deformationTimes.size() - 1 )
+					{
+						renderer->motionEnd();
+					}
+				}
+				else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
+				{
+					/// \todo This absolutely does not belong here, but until we have
+					/// a mechanism for drawing manipulators, we don't have any other
+					/// means of visualising the cameras.
+					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+					{
+						drawCamera( camera, renderer.get() );
+					}
+					break; // no motion blur for these chappies.
+				}
+				else if( const Light *light = runTimeCast<const Light>( object.get() ) )
+				{
+					/// \todo This doesn't belong here.
+					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+					{
+						drawLight( light, renderer.get() );
+					}
+					break; // no motion blur for these chappies.
+				}
+			
 			}
 		}
 	
@@ -199,6 +307,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 				{
 					childScenePath[m_scenePath.size()] = *it;
+					renderer->setAttribute( "name", new StringData( *it ) );
 					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
 				}
 			}	
@@ -208,6 +317,55 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	{
 		IECore::msg( IECore::Msg::Error, "SceneProcedural::render()", e.what() );
 	}	
+}
+
+void SceneProcedural::updateAttributes( bool full )
+{
+	Context::Scope scopedContext( m_context );
+	ConstCompoundObjectPtr attributes;
+	if( full )
+	{
+		attributes = m_scenePlug->fullAttributes( m_scenePath );
+	}
+	else
+	{
+		attributes = m_scenePlug->attributesPlug()->getValue();	
+	}
+	
+	if( const BoolData *transformBlurData = attributes->member<BoolData>( "gaffer:transformBlur" ) )
+	{
+		m_attributes.transformBlur = transformBlurData->readable();
+	}
+	
+	if( const IntData *transformBlurSegmentsData = attributes->member<IntData>( "gaffer:transformBlurSegments" ) )
+	{
+		m_attributes.transformBlurSegments = transformBlurSegmentsData->readable();
+	}
+	
+	if( const BoolData *deformationBlurData = attributes->member<BoolData>( "gaffer:deformationBlur" ) )
+	{
+		m_attributes.deformationBlur = deformationBlurData->readable();
+	}
+	
+	if( const IntData *deformationBlurSegmentsData = attributes->member<IntData>( "gaffer:deformationBlurSegments" ) )
+	{
+		m_attributes.deformationBlurSegments = deformationBlurSegmentsData->readable();
+	}
+}
+
+void SceneProcedural::motionTimes( unsigned segments, std::set<float> &times ) const
+{
+	if( !segments )
+	{
+		times.insert( m_context->getFrame() );
+	}
+	else
+	{
+		for( unsigned i = 0; i<segments + 1; i++ )
+		{
+			times.insert( lerp( m_options.shutter[0], m_options.shutter[1], (float)i / (float)segments ) );
+		}
+	}
 }
 
 void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const

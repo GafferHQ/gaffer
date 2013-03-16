@@ -44,8 +44,16 @@ StandardAttributes::StandardAttributes( const std::string &name )
 	:	Attributes( name )
 {
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
-		
+	
 	attributes->addOptionalMember( "gaffer:visibility", new IECore::BoolData( true ), "visibility", Gaffer::Plug::Default, false );
+	
+	// motion blur
+	
+	attributes->addOptionalMember( "gaffer:transformBlur", new IECore::BoolData( true ), "transformBlur", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gaffer:transformBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), "transformBlurSegments", false );
+	
+	attributes->addOptionalMember( "gaffer:deformationBlur", new IECore::BoolData( true ), "deformationBlur", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "gaffer:deformationBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), "deformationBlurSegments", false );
 	
 }
 

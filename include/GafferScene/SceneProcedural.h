@@ -83,7 +83,29 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		IECore::PathMatcherDataPtr m_pathsToExpand;
 		
+		struct Options
+		{
+			bool transformBlur;
+			bool deformationBlur;
+			Imath::V2f shutter;
+		};
+		
+		Options m_options;
+		
+		struct Attributes
+		{
+			bool transformBlur;
+			unsigned transformBlurSegments;
+			bool deformationBlur;
+			unsigned deformationBlurSegments;
+		};
+		
+		Attributes m_attributes;
+		
 	private :
+	
+		void updateAttributes( bool full );	
+		void motionTimes( unsigned segments, std::set<float> &times ) const;
 	
 		void drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const;
 		void drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const;

@@ -98,6 +98,48 @@ class SceneProceduralTest( unittest.TestCase ) :
 		
 			procedural = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
 			self.__WrappingProcedural( procedural ).render( renderer )
+	
+	def testMotionBlurredBounds( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["plane"] = GafferScene.Plane()
+		
+		script["expression1"] = Gaffer.Expression()
+		script["expression1"]["engine"].setValue( "python" )
+		script["expression1"]["expression"].setValue( 'parent["plane"]["transform"]["translate"]["x"] = context.getFrame()' )
+		
+		script["expression2"] = Gaffer.Expression()
+		script["expression2"]["engine"].setValue( "python" )
+		script["expression2"]["expression"].setValue( 'parent["plane"]["dimensions"]["x"] = 1 + context.getFrame()' )
+				
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["plane"]["out"] )
+		
+		for path, frame, bound in [
+			( "/plane", 1, IECore.Box3f( IECore.V3f( 0, -.5, 0 ), IECore.V3f( 2, .5, 0 ) ) ),
+			( "/plane", 2, IECore.Box3f( IECore.V3f( 0.5, -.5, 0 ), IECore.V3f( 3.5, .5, 0 ) ) ),
+		] :
+			context = Gaffer.Context()
+			context.setFrame( frame )
+			procedural = GafferScene.SceneProcedural( script["options"]["out"], context, path )
+			self.assertEqual( procedural.bound(), bound )
+
+		script["options"]["options"]["transformBlur"]["enabled"].setValue( True )
+		script["options"]["options"]["transformBlur"]["value"].setValue( True )
+		script["options"]["options"]["deformationBlur"]["enabled"].setValue( True )
+		script["options"]["options"]["deformationBlur"]["value"].setValue( True )
+		script["options"]["options"]["shutter"]["enabled"].setValue( True )
+		script["options"]["options"]["shutter"]["value"].setValue( IECore.V2f( 0, 1 ) )
+						
+		for path, frame, bound in [
+			( "/plane", 1, IECore.Box3f( IECore.V3f( 0, -.5, 0 ), IECore.V3f( 3.5, .5, 0 ) ) ),
+			( "/plane", 2, IECore.Box3f( IECore.V3f( 0.5, -.5, 0 ), IECore.V3f( 5, .5, 0 ) ) ),
+		] :
+			context = Gaffer.Context()
+			context.setFrame( frame )
+			procedural = GafferScene.SceneProcedural( script["options"]["out"], context, path )
+			self.assertEqual( procedural.bound(), bound )
 		
 if __name__ == "__main__":
 	unittest.main()

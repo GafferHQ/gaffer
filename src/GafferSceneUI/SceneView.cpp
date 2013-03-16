@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -46,6 +47,7 @@
 
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/StandardOptions.h"
 
 #include "GafferSceneUI/SceneView.h"
 
@@ -110,6 +112,17 @@ SceneView::SceneView( GafferScene::ScenePlugPtr inPlug )
 
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
+	
+	// add a preprocessor which removes motion blur, because the opengl
+	// renderer doesn't support it.
+	
+	StandardOptionsPtr standardOptions = new StandardOptions();
+	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
+	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
+	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
+	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
+	
+	setPreprocessor( standardOptions );
 }
 
 SceneView::~SceneView()
@@ -148,7 +161,7 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 
 void SceneView::update()
 {
-	SceneProceduralPtr p = new SceneProcedural( inPlug<ScenePlug>(), getContext(), ScenePlug::ScenePath(), expandedPaths() );
+	SceneProceduralPtr p = new SceneProcedural( preprocessedInPlug<ScenePlug>(), getContext(), ScenePlug::ScenePath(), expandedPaths() );
 	WrappingProceduralPtr wp = new WrappingProcedural( p );
 	
 	bool hadRenderable = m_renderableGadget->getRenderable();
@@ -218,7 +231,7 @@ void SceneView::expandSelection()
 				path.push_back( *pIt );
 			}
 			
-			ConstInternedStringVectorDataPtr childNamesData = inPlug<ScenePlug>()->childNames( path );
+			ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( path );
 			const vector<InternedString> &childNames = childNamesData->readable();
 			if( childNames.size() )
 			{

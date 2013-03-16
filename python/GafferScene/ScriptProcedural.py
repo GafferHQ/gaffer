@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+from __future__ import with_statement
+
 import IECore
 
 import Gaffer
@@ -63,6 +65,12 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 					defaultValue = "",
 				),
 				
+				IECore.FloatParameter(
+					name = "frame",
+					description = "The frame to generate geometry at.",
+					defaultValue = 1,
+				),
+				
 			]
 			
 		)
@@ -71,25 +79,23 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 	
 	def doBound( self, args ) :
 	
-		plug = self.__plug( args )
+		plug, context = self.__plugAndContext( args )
 		if plug is  None :
 			return IECore.Box3f()
 	
-		result = plug.bound( "/" )
-		result = result.transform( plug.transform( "/" ) )
-		
-		return result
-		
+		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/" )
+		return sceneProcedural.bound()
+
 	def doRender( self, renderer, args ) :
 	
-		plug = self.__plug( args )
+		plug, context = self.__plugAndContext( args )
 		if plug is None :
 			return
 			
-		sceneProcedural = GafferScene.SceneProcedural( plug, Gaffer.Context(), "/" )
+		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/" )
 		renderer.procedural( sceneProcedural )
 		
-	def __plug( self, args ) :
+	def __plugAndContext( self, args ) :
 	
 		if args["fileName"].value != self.__currentFileName :
 		
@@ -102,12 +108,16 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 				self.__currentFileName = args["fileName"].value
 			
 		if self.__scriptNode is None :
-			return None
+			return None, None
 		
 		if not args["node"].value :
-			return None
+			return None, None
 		
 		node = self.__scriptNode.getChild( args["node"].value )
-		return node["out"]
+		
+		context = Gaffer.Context( self.__scriptNode.context() )
+		context.setFrame( args["frame"].value )
+		
+		return node["out"], context
 
 IECore.registerRunTimeTyped( ScriptProcedural )

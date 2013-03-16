@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -52,6 +53,26 @@ template<typename T>
 const T *View::inPlug() const
 {
 	return getChild<T>( g_firstPlugIndex );
+}
+
+template<typename T>
+T *View::getPreprocessor()
+{
+	return getChild<T>( "__preprocessor" );
+}
+
+template<typename T>
+T *View::preprocessedInPlug()
+{
+	Node *p = getPreprocessor<Node>();
+	if( p )
+	{
+		return p->getChild<T>( "out" );
+	}
+	else
+	{
+		return inPlug<T>();
+	}
 }
 
 template<typename T>

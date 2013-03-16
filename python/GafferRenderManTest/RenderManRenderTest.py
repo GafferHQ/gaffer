@@ -90,7 +90,96 @@ class RenderManRenderTest( unittest.TestCase ) :
 		self.failIf( "exceeded its bounds" in "".join( p.stderr.readlines() ) )
 		
 		self.assertTrue( os.path.exists( "/tmp/test.tif" ) )
-						
+	
+	def testCameraMotionBlur( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["camera"] = GafferScene.Camera()
+		
+		s["attributes"] = GafferScene.StandardAttributes()
+		s["attributes"]["in"].setInput( s["camera"]["out"] )
+		
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["attributes"]["out"] )
+		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["mode"].setValue( "generate" )
+		
+		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s["render"].execute()
+		
+		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
+		
+		# camera motion off, we should have no motion statements
+		
+		r = "".join( file( "/tmp/test.rib" ).readlines() )
+		self.failIf( "MotionBegin" in r )
+		
+		# camera motion on, we should have no motion statements
+
+		s["options"]["options"]["cameraBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["cameraBlur"]["value"].setValue( True )
+
+		s["render"].execute()
+		
+		r = "".join( file( "/tmp/test.rib" ).readlines() )
+		self.failUnless( "MotionBegin" in r )
+		
+		# motion disabled on camera object, we should have no motion statements
+		# even though motion blur is enabled in the globals.
+		
+		s["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( False )
+	
+		s["render"].execute()
+		
+		r = "".join( file( "/tmp/test.rib" ).readlines() )
+		self.failIf( "MotionBegin" in r )	
+		
+		# motion enabled on camera object, with extra samples specified. we should
+		# have a motion statement with multiple segments
+		
+		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( True )
+		s["attributes"]["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["transformBlurSegments"]["value"].setValue( 5 )
+		
+		s["render"].execute()
+		
+		def motionTimes( ribFileName ) :
+		
+			for line in file( ribFileName ).readlines() :
+				if "MotionBegin" in line :
+					times = line.partition( "[" )[2].partition( "]" )[0]
+					times = times.strip().split()
+					return [ float( t ) for t in times ]
+			
+			return []
+				
+		self.assertEqual( len( motionTimes( "/tmp/test.rib" ) ), 6 )
+		
+		# different shutter times
+		
+		s["attributes"]["attributes"]["transformBlurSegments"]["enabled"].setValue( False )
+		s["options"]["options"]["shutter"]["enabled"].setValue( True )
+		
+		s["render"].execute()
+		
+		self.assertEqual( motionTimes( "/tmp/test.rib" ), [ 0.75, 1.25 ] )
+		
+		s["options"]["options"]["shutter"]["value"].setValue( IECore.V2f( -0.1, 0.3 ) )
+		
+		s["render"].execute()
+		
+		self.assertEqual( motionTimes( "/tmp/test.rib" ), [ 0.9, 1.3 ] )
+		
 	def setUp( self ) :
 	
 		for f in (

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,7 +65,8 @@ class View : public Gaffer::Node
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( View, ViewTypeId, Gaffer::Node );
 
 		/// The contents for the view are provided by the input to this plug.
-		/// The view can be switched by connecting a new input.
+		/// The view can be switched by connecting a new input - this is how
+		/// the Viewer controls what will be displayed by the view.
 		template<typename T>
 		T *inPlug();
 		template<typename T>
@@ -98,6 +100,23 @@ class View : public Gaffer::Node
 
 		View( const std::string &name, Gaffer::PlugPtr input );
 		
+		/// The View may want to perform preprocessing of the input before
+		/// displaying it, for instance by applying a LUT to an image. This
+		/// can be achieved by setting a preprocess node which is connected
+		/// internally to the view. A preprocessor must have an "in" plug
+		/// which will get it's input from inPlug(), and an "out" plug
+		/// which will be returned by preprocessedInPlug().
+		void setPreprocessor( Gaffer::NodePtr preprocessor );
+		/// Returns the node used for preprocessing, or 0 if no such
+		/// node has been specified (or if it is not of type T).
+		template<typename T>
+		T *getPreprocessor();
+		/// Returns the "out" plug of the preprocessor, or inPlug() if
+		/// no preprocessor has been specified. This is the plug which
+		/// should be used when computing the contents to display.
+		template<typename T>
+		T *preprocessedInPlug();
+		
 		/// Called when the context changes. The default implementation triggers
 		/// updateRequestSignal(), but derived classes may reimplement the method
 		/// to perform more specific actions.
@@ -106,11 +125,12 @@ class View : public Gaffer::Node
 		/// classes may block this temporarily if they want to prevent the triggering - 
 		/// this can be useful when modifying the context.
 		boost::signals::connection &contextChangedConnection();
-		/// Called when a plug on this node is dirtied. The default implementation
-		/// triggers updateRequestSignal() when the plug is inPlug(), but derived
-		/// classes may reimplement the method to perform more specific actions.
+		/// Called when a plug on this node or on the preprocessor is dirtied. The
+		/// default implementation triggers updateRequestSignal() when the plug is
+		/// preprocessedInPlug() but derived classes may reimplement the method to
+		/// perform more specific actions.
 		virtual void plugDirtied( const Gaffer::Plug *plug );
-		/// Must be implemented by derived classes to update the view from inPlug()
+		/// Must be implemented by derived classes to update the view from preprocessedInPlug()
 		/// using the context provided by getContext(). This method will be called
 		/// by the Viewer following a triggering of the updateRequestSignal().
 		/// See notes in Viewer.__updateRequest explaining why it's necessary for the
@@ -136,6 +156,7 @@ class View : public Gaffer::Node
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_updateRequestSignal;
 		boost::signals::scoped_connection m_contextChangedConnection;
+		boost::signals::scoped_connection m_preprocessorPlugDirtiedConnection;
 
 		bool keyPress( GadgetPtr gadget, const KeyEvent &keyEvent );
 		
