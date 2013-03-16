@@ -45,6 +45,7 @@
 #include "Gaffer/TypedPlug.h"
 
 #include "GafferImage/TypeIds.h"
+#include "GafferImage/FormatPlug.h"
 
 namespace GafferImage
 {
@@ -71,8 +72,8 @@ class ImagePlug : public Gaffer::CompoundPlug
 		/// child plugs.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		Gaffer::AtomicBox2iPlug *displayWindowPlug();
-		const Gaffer::AtomicBox2iPlug *displayWindowPlug() const;
+		GafferImage::FormatPlug *formatPlug();
+		const GafferImage::FormatPlug *formatPlug() const;
 		Gaffer::AtomicBox2iPlug *dataWindowPlug();
 		const Gaffer::AtomicBox2iPlug *dataWindowPlug() const;
 		Gaffer::StringVectorDataPlug *channelNamesPlug();

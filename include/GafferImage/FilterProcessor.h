@@ -80,13 +80,13 @@ class FilterProcessor : public ImageProcessor
 		/// Reimplemented to hash the input plugs. We only hash those that are connected so that nodes which don't require a minimum number to
 		/// be connected such as the "Merge" node only have to overide enabled() (which requires ALL inputs to be connected by default).
 		/// This therefore caters for both nodes which require all inputs to be connected and nodes that do not (providing they overload enabled()).
-		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
 		/// Sets the output display window to the first connected input found.
-		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// Sets the data window to the union of all of the data windows.
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;

@@ -39,8 +39,11 @@ from ImagePlugTest import ImagePlugTest
 from ImageReaderTest import ImageReaderTest
 from OpenColorIOTest import OpenColorIOTest
 from ObjectToImageTest import ObjectToImageTest
+from FormatTest import FormatTest
+from FormatPlugTest import FormatPlugTest
 from MergeTest import MergeTest
 from GradeTest import GradeTest
+from ConstantTest import ConstantTest
 from SelectTest import SelectTest
 
 if __name__ == "__main__":

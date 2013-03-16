@@ -56,7 +56,7 @@ void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlug
 {
 	ImageProcessor::affects( input, outputs );
 	
-	if( input == inPlug()->displayWindowPlug() ||
+	if( input == inPlug()->formatPlug() ||
 		input == inPlug()->dataWindowPlug() ||
 		input == inPlug()->channelNamesPlug()
 	)
@@ -83,9 +83,9 @@ IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const 
 	return outData;
 }
 
-void ChannelDataProcessor::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ChannelDataProcessor::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->displayWindowPlug()->hash();
+	h = inPlug()->formatPlug()->hash();
 }
 
 void ChannelDataProcessor::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -98,9 +98,9 @@ void ChannelDataProcessor::hashChannelNamesPlug( const GafferImage::ImagePlug *o
 	h = inPlug()->channelNamesPlug()->hash();
 }
 
-Imath::Box2i ChannelDataProcessor::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format ChannelDataProcessor::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return inPlug()->displayWindowPlug()->getValue();
+	return inPlug()->formatPlug()->getValue();
 }
 
 Imath::Box2i ChannelDataProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const

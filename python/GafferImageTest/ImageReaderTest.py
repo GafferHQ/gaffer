@@ -53,8 +53,9 @@ class ImageReaderTest( unittest.TestCase ) :
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )		
 	
+		print n["out"]["format"].getValue().getDisplayWindow()
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
-		self.assertEqual( n["out"]["displayWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
+		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 	
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
@@ -103,6 +104,25 @@ class ImageReaderTest( unittest.TestCase ) :
 		n = GafferImage.ImageReader()
 		n["out"]["channelNames"].getValue()
 		n["out"].channelData( "R", IECore.V2i( 0 ) )
+		
+	def testChannelDataHashes( self ) :
+		# Test that two tiles within the same image have different hashes.
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.fileName )
+		h1 = n["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = n["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		
+		self.assertNotEqual( h1, h2 )
+		
+	def testDisabledChannelDataHashes( self ) :
+		# Test that two tiles within the same image have the same hash when disabled.
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.fileName )
+		n["enabled"].setValue( False )
+		h1 = n["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = n["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		
+		self.assertEqual( h1, h2 )
 		
 	def testOffsetDataWindowOrigin( self ) :
 	

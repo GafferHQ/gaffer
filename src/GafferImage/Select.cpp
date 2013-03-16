@@ -94,9 +94,9 @@ void Select::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Ga
 	inPlug( selectIndex() )->channelDataPlug()->hash(h);
 }
 
-void Select::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Select::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	inPlug( selectIndex() )->displayWindowPlug()->hash(h);
+	inPlug( selectIndex() )->formatPlug()->hash(h);
 }
 
 void Select::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -124,9 +124,9 @@ Imath::Box2i Select::computeDataWindow( const Gaffer::Context *context, const Im
 	return inPlug( selectIndex() )->dataWindowPlug()->getValue();
 }
 
-Imath::Box2i Select::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format Select::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return inPlug( selectIndex() )->displayWindowPlug()->getValue();
+	return inPlug( selectIndex() )->formatPlug()->getValue();
 }
 
 } // namespace GafferImage

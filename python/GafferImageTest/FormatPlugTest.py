@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,60 +34,49 @@
 #  
 ##########################################################################
 
+import unittest
+
 import IECore
 import Gaffer
 
-class test( Gaffer.Application ) :
+import GafferImage
 
-	def __init__( self ) :
+class FormatPlugTest( unittest.TestCase ) :
 	
-		Gaffer.Application.__init__( self )
+	def testInputPlug( self ) :
+		n = Gaffer.Node()
+		f = GafferImage.FormatPlug("f", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default )
+		n.addChild( f )
+		s = Gaffer.ScriptNode()
+		s.addChild( n )
 		
-		self.parameters().addParameters(
+		with s.context() :
+			f1 = n["f"].getValue()
 		
-			[
-				IECore.StringParameter(
-					name = "testCase",
-					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
-					defaultValue = "",
-				)
-			]
+		# The default value of any input plug should be it's real value regardless of whether it is empty or not.
+		self.assertEqual( f1, GafferImage.Format() )
 		
-		)
+	def testDefaultFormatOutput( self ) :
+		n = GafferImage.Constant()
+		s = Gaffer.ScriptNode()
+		s.addChild( n )
 		
-		self.parameters().userData()["parser"] = IECore.CompoundObject(
-			{
-				"flagless" : IECore.StringVectorData( [ "testCase" ] )
-			}
-		)
-				
-	def _run( self, args ) :
-	
-		import sys
-		import unittest
-		import GafferTest
-		import GafferUITest
-		import GafferSceneTest
-		import GafferImageTest
-		import GafferImageUITest
+		# Get the default format
+		defaultFormat = GafferImage.Format.getDefaultFormat( s )
 		
-		testSuite = unittest.TestSuite()
-		if args["testCase"].value :
-		
-			testCase = unittest.defaultTestLoader.loadTestsFromName( args["testCase"].value )
-			testSuite.addTest( testCase )
+		with s.context() :
+			f1 = n["out"]["format"].getValue()
 			
-		else :
+		# Check that the output of the constant node matches the default format...
+		self.assertEqual( defaultFormat, f1 )
 		
-			for module in ( GafferTest, GafferUITest, GafferSceneTest ) :
+		# Now change the default format and check it again!
+		GafferImage.Format.setDefaultFormat( s, GafferImage.Format( 100, 102, 1.3 ) )
+		with s.context() :
+			f1 = n["out"]["format"].getValue()
 		
-				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
-				testSuite.addTest( moduleTestSuite )
-			
-
-		testRunner = unittest.TextTestRunner( verbosity=2 )
-		testResult = testRunner.run( testSuite )
+		# Check that the output of the constant node matches the default format...
+		self.assertEqual( GafferImage.Format( 100, 102, 1.3 ), f1 )
 		
-		return 0 if testResult.wasSuccessful() else 1
-
-IECore.registerRunTimeTyped( test )
+if __name__ == "__main__":
+	unittest.main()

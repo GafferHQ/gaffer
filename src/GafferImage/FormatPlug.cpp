@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,35 +34,60 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/TypedPlug.inl"
+#include "Gaffer/Context.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/ScriptNode.h"
 
-namespace GafferImage
+#include "GafferImage/FormatData.h"
+#include "GafferImage/FormatPlug.h"
+
+using namespace Gaffer;
+using namespace GafferImage;
+
+namespace Gaffer
 {
 
-enum TypeId
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatPlug, FormatPlugTypeId )
+
+template<>
+Format FormatPlug::getValue() const
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
+	IECore::ConstObjectPtr o = getObjectValue();
+	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
+	if( !d )
+	{
+		throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
+	}
+	Format result = d->readable();
+	if( result.getDisplayWindow().isEmpty() && inCompute() )
+	{
+		return Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+	}
+	return result;
+}
+
+template<>
+IECore::MurmurHash FormatPlug::hash() const
+{
+	IECore::MurmurHash result;
 	
-	LastTypeId = 110849
-};
+	if( direction()==Plug::In && !getInput<ValuePlug>() )
+	{
+		Format v = getValue();
+		result.append( v.getDisplayWindow().min );
+		result.append( v.getDisplayWindow().max );
+		result.append( v.getPixelAspect() );
+	}
+	else
+	{
+		result = ValuePlug::hash();
+	}
+	
+	return result;
+} // namespace Gaffer
 
-} // namespace GafferImage
+template class TypedPlug<GafferImage::Format>;
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+}

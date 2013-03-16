@@ -47,9 +47,8 @@ class GradeTest( unittest.TestCase ) :
 	
 	# Test that when gamma == 0 that the coresponding channel isn't modified.
 	def testChannelEnable( self ) :
-	
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.checkerFile )		
+		i["fileName"].setValue( self.checkerFile )
 		
 		# Create a grade node and save the hash of a tile from each channel.
 		grade = GafferImage.Grade()
@@ -70,3 +69,22 @@ class GradeTest( unittest.TestCase ) :
 		self.assertNotEqual( hashGreen, hashGreen2 )
 		self.assertEqual( hashBlue, hashBlue2 )
 
+	def testChannelDataHashes( self ) :
+		# Create a grade node and save the hash of a tile from each channel.
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.checkerFile )
+		
+		grade = GafferImage.Grade()
+		grade["in"].setInput(i["out"])
+		grade["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )
+		
+		h1 = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = grade["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		self.assertNotEqual( h1, h2 )
+		
+		# Test that two tiles within the same image have the same hash when disabled.
+		grade["enabled"].setValue(False)
+		h1 = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = grade["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		self.assertNotEqual( h1, h2 )
+		

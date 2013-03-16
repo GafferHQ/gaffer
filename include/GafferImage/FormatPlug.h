@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,35 +34,25 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFER_FORMATPLUG_H
+#define GAFFER_FORMATPLUG_H
+
+#include "IECore/BoxTraits.h"
+#include "GafferImage/TypeIds.h"
+#include "Gaffer/TypedPlug.h"
+#include "GafferImage/FormatData.h"
 
 namespace GafferImage
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	
-	LastTypeId = 110849
-};
+typedef Gaffer::TypedPlug<GafferImage::Format> FormatPlug;
+
+IE_CORE_DECLAREPTR( FormatPlug );
+
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug> > FormatPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug> > InputFormatPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug> > OutputFormatPlugIterator;
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFER_FORMATPLUG_H

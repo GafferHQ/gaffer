@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,60 +34,9 @@
 #  
 ##########################################################################
 
-import IECore
-import Gaffer
+import GafferImage
 
-class test( Gaffer.Application ) :
-
-	def __init__( self ) :
-	
-		Gaffer.Application.__init__( self )
-		
-		self.parameters().addParameters(
-		
-			[
-				IECore.StringParameter(
-					name = "testCase",
-					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
-					defaultValue = "",
-				)
-			]
-		
-		)
-		
-		self.parameters().userData()["parser"] = IECore.CompoundObject(
-			{
-				"flagless" : IECore.StringVectorData( [ "testCase" ] )
-			}
-		)
-				
-	def _run( self, args ) :
-	
-		import sys
-		import unittest
-		import GafferTest
-		import GafferUITest
-		import GafferSceneTest
-		import GafferImageTest
-		import GafferImageUITest
-		
-		testSuite = unittest.TestSuite()
-		if args["testCase"].value :
-		
-			testCase = unittest.defaultTestLoader.loadTestsFromName( args["testCase"].value )
-			testSuite.addTest( testCase )
-			
-		else :
-		
-			for module in ( GafferTest, GafferUITest, GafferSceneTest ) :
-		
-				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
-				testSuite.addTest( moduleTestSuite )
-			
-
-		testRunner = unittest.TextTestRunner( verbosity=2 )
-		testResult = testRunner.run( testSuite )
-		
-		return 0 if testResult.wasSuccessful() else 1
-
-IECore.registerRunTimeTyped( test )
+GafferImage.Format.registerFormat( GafferImage.Format( 640, 480, 1. ), "PC Video (640x480) 640x480 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( 1024, 778, 1. ), "1K Super 35 (full-ap) 1024x778 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( 2048, 1556, 1. ), "2K Super 35 (full-ap) 2048x1556 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( 4096, 3112, 1. ), "4K Super 35 (full-ap) 4096x3112 1" )

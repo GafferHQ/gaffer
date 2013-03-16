@@ -49,8 +49,11 @@
 #include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/OpenColorIO.h"
 #include "GafferImage/ObjectToImage.h"
+#include "GafferImageBindings/FormatBinding.h"
+#include "GafferImageBindings/FormatPlugBinding.h"
 #include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
+#include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
 
 using namespace boost::python;
@@ -104,6 +107,8 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Merge>();
 	GafferBindings::DependencyNodeClass<Grade>();
+	GafferBindings::DependencyNodeClass<Constant>();
 	GafferBindings::DependencyNodeClass<Select>();
-
+	GafferImageBindings::bindFormat();
+	GafferImageBindings::bindFormatPlug();
 }

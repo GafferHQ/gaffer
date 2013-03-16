@@ -43,6 +43,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace std;
 using namespace Imath;
@@ -141,10 +142,10 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 	unsigned childFlags = flags & ~(Dynamic | Serialisable);
 	
 	addChild(
-		new AtomicBox2iPlug(
-			"displayWindow",
+		new FormatPlug(
+			"format",
 			direction,
-			Imath::Box2i(),
+			Format(),
 			childFlags
 		)
 	);
@@ -223,14 +224,14 @@ Gaffer::PlugPtr ImagePlug::createCounterpart( const std::string &name, Direction
 	return new ImagePlug( name, direction, getFlags() );
 }
 
-Gaffer::AtomicBox2iPlug *ImagePlug::displayWindowPlug()
+GafferImage::FormatPlug *ImagePlug::formatPlug()
 {
-	return getChild<AtomicBox2iPlug>( "displayWindow" );
+	return getChild<FormatPlug>( "format" );
 }
 
-const Gaffer::AtomicBox2iPlug *ImagePlug::displayWindowPlug() const
+const GafferImage::FormatPlug *ImagePlug::formatPlug() const
 {
-	return getChild<AtomicBox2iPlug>( "displayWindow" );
+	return getChild<FormatPlug>( "format" );
 }
 
 Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug()
@@ -267,12 +268,14 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 {
 	if( direction()==In && !getInput<Plug>() )
 	{
-		throw IECore::Exception( "ImagePlug::channelData called on unconnected input plug" );
+		return channelDataPlug()->defaultValue();
 	}
+	
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
 	Context::Scope scopedContext( tmpContext );
+	
 	return channelDataPlug()->getValue();
 }
 
@@ -291,15 +294,15 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 
 IECore::ImagePrimitivePtr ImagePlug::image() const
 {
-	const Box2i displayWindow = displayWindowPlug()->getValue();
-	if( displayWindow.isEmpty() )
+	Box2i format = formatPlug()->getValue().getDisplayWindow();
+	Box2i dataWindow = dataWindowPlug()->getValue();
+	
+	if( dataWindow.isEmpty() )
 	{
-		return 0;
+		dataWindow = Box2i( Imath::V2i(0) );
 	}
-
-	const Box2i dataWindow = dataWindowPlug()->getValue();
-
-	ImagePrimitivePtr result = new ImagePrimitive( dataWindow, displayWindow );
+	
+	ImagePrimitivePtr result = new ImagePrimitive( dataWindow, format );
 	
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
@@ -322,16 +325,13 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 
 IECore::MurmurHash ImagePlug::imageHash() const
 {
-	MurmurHash result;
-	
-	const Box2i displayWindow = displayWindowPlug()->getValue();
 	const Box2i dataWindow = dataWindowPlug()->getValue();
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
-		
-	result.append( displayWindow );
-	result.append( dataWindow );
-	result.append( &(channelNames[0]), channelNames.size() );
+	
+	MurmurHash result = formatPlug()->hash();
+	result.append( dataWindowPlug()->hash() );
+	result.append( channelNamesPlug()->hash() );
 
 	V2i minTileOrigin = ( dataWindow.min / tileSize() ) * tileSize();
 	V2i maxTileOrigin = ( dataWindow.max / tileSize() ) * tileSize();

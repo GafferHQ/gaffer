@@ -34,65 +34,50 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SELECT_H
-#define GAFFERIMAGE_SELECT_H
+#ifndef GAFFERIMAGE_CONSTANT_H
+#define GAFFERIMAGE_CONSTANT_H
 
-#include "GafferImage/FilterProcessor.h"
-#include "GafferImage/ImagePlug.h"
 #include "Gaffer/PlugType.h"
+#include "GafferImage/ImageNode.h"
 
 namespace GafferImage
 {
 
-/// Select
-/// A simple node that allows multiple input image streams to be multiplexed to one output.
-class Select : public FilterProcessor
+class Constant : public ImageNode
 {
 
 	public :
-		
-		Select( const std::string &name=staticTypeName() );
-		virtual ~Select();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Select, SelectTypeId, FilterProcessor );
+		Constant( const std::string &name=staticTypeName() );
+		virtual ~Constant();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Constant, ConstantTypeId, ImageNode );
 		
-		Gaffer::IntPlug *selectPlug();
-		const Gaffer::IntPlug *selectPlug() const;
+		GafferImage::FormatPlug *formatPlug();
+		const GafferImage::FormatPlug *formatPlug() const;
+		Gaffer::Color4fPlug *colorPlug();
+		const Gaffer::Color4fPlug *colorPlug() const;
 		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
-
-		/// Does nothing other than overide the FilterProcessor's implementation.
-		virtual bool enabled() const;
 		
-		/// Reimplemented to hash only the selected input plugs.
 		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		/// Sets the output format to the selected input.
+		
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the data window to the selected input.
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the channel names to those of the selected input.
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the image data to that of the selected input.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
-
-		/// Returns a valid input index.	
-		int selectIndex() const;
-
+	
 		static size_t g_firstPlugIndex;
-
+		
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_SELECT_H
+#endif // GAFFERIMAGE_CONSTANT_H

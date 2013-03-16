@@ -35,73 +35,62 @@
 #  
 ##########################################################################
 
-import fnmatch
+import os
+import unittest
+
+import IECore
 
 import Gaffer
-import GafferUI
-import GafferImageUI
 import GafferImage
+import sys
 
-# ImageNode
-
-def __noduleCreator( plug ) :
-
-	if isinstance( plug, GafferImage.ImagePlug ) :
-		return GafferUI.StandardNodule( plug )
+class ConstantTest( unittest.TestCase ) :
+	
+	def testDefaultFormatHash( self ) :
+		s = Gaffer.ScriptNode()
+		n = GafferImage.Constant()
+		s.addChild( n )
 		
-	return None
-
-GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
-
-GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug.staticTypeId(), None )
-
-# ImageReader
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageReader.staticTypeId(),
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() )
-	)
-)
-
-# Constant
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.Constant.staticTypeId(),
-	"format",
-	GafferImageUI.FormatPlugValueWidget
-)
-
-# OpenColorIO
-
-ocioColorSpaceLabelsAndValues = [ ( "None", "" ) ]
-import PyOpenColorIO as OCIO
-config = OCIO.GetCurrentConfig()
-for cs in config.getColorSpaces() :
-	ocioColorSpaceLabelsAndValues.append( ( cs.getName(), cs.getName() ) )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.OpenColorIO.staticTypeId(),
-	"inputSpace",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = ocioColorSpaceLabelsAndValues
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.OpenColorIO.staticTypeId(),
-	"outputSpace",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = ocioColorSpaceLabelsAndValues
-)
-
-# Merge
-mergeOperationLabelsAndValues = [ ( "Add", 0 ), ( "Atop", 1 ), ( "Divide", 2 ), ( "In", 3 ), ( "Out", 4 ), ( "Mask", 5 ), ( "Matte", 6 ), ( "Multiply", 7 ), ( "Over", 8 ), ( "Subtract", 9 ), ( "Under", 10 ) ]
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.Merge.staticTypeId(),
-	"operation",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = mergeOperationLabelsAndValues
-)
-
-
+		with s.context():
+			h = n["out"].image().hash()
+			n["color"][0].setValue( .5 )
+			n["color"][1].setValue( .1 )
+			n["color"][2].setValue( .8 )
+			h2 = n["out"].image().hash()
+			self.assertNotEqual( h, h2 )
+		
+	def testColourHash( self ) :
+		# Check that the hash changes when the colour does.
+		s = Gaffer.ScriptNode()
+		n = GafferImage.Constant()
+		s.addChild( n )
+		
+		with s.context():
+			h = n["out"].image().hash()
+			n["color"][0].setValue( .5 )
+			n["color"][1].setValue( .1 )
+			n["color"][2].setValue( .8 )
+			h2 = n["out"].image().hash()
+			self.assertNotEqual( h, h2 )
+		
+	def testFormatHash( self ) :
+		# Check that the data hash doesn't change when the format does.
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
+		h1 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		c["format"].setValue( GafferImage.Format( 1920, 1080, 1. ) )
+		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		self.assertEqual( h1, h2 )
+		
+	def testTileHashes( self ) :
+		# Test that two tiles within the image have the same hash.
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
+		c["color"][0].setValue( .5 )
+		h1 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		self.assertEqual( h1, h2 )
+		
+		
+if __name__ == "__main__":
+	unittest.main()

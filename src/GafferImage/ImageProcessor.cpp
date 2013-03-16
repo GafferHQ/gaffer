@@ -80,9 +80,9 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 			h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 			h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
 		}
-		else if ( output == imagePlug->displayWindowPlug() )
+		else if ( output == imagePlug->formatPlug() )
 		{
-			hashDisplayWindowPlug( imagePlug, context, h );
+			hashFormatPlug( imagePlug, context, h );
 		}
 		else if ( output == imagePlug->dataWindowPlug() )
 		{
@@ -99,9 +99,9 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 		{
 			h = inPlug()->channelDataPlug()->hash();
 		}
-		else if ( output == imagePlug->displayWindowPlug() )
+		else if ( output == imagePlug->formatPlug() )
 		{
-			h = inPlug()->displayWindowPlug()->hash();
+			h = inPlug()->formatPlug()->hash();
 		}
 		else if ( output == imagePlug->dataWindowPlug() )
 		{
@@ -125,10 +125,10 @@ void ImageProcessor::compute( ValuePlug *output, const Context *context ) const
 		}
 		else
 		{
-			if( output == imagePlug->displayWindowPlug() )
+			if( output == imagePlug->formatPlug() )
 			{
-				static_cast<AtomicBox2iPlug *>( output )->setValue(
-					inPlug()->displayWindowPlug()->getValue()
+				static_cast<FormatPlug *>( output )->setValue(
+					inPlug()->formatPlug()->getValue()
 				);
 			}
 			else if( output == imagePlug->dataWindowPlug() )

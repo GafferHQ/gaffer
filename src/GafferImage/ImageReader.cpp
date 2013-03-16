@@ -39,6 +39,7 @@
 OIIO_NAMESPACE_USING
 
 #include "GafferImage/ImageReader.h"
+#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace tbb;
@@ -122,7 +123,7 @@ void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContaine
 	}
 }
 
-void ImageReader::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 }
@@ -139,32 +140,27 @@ void ImageReader::hashDataWindowPlug( const GafferImage::ImagePlug *output, cons
 
 void ImageReader::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	// Hash the XY coordinates of the tile that we are drawing...
+	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
+	
+	// ... along with the file name.
 	fileNamePlug()->hash( h );
 }
-		
-Imath::Box2i ImageReader::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+
+GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	if( !spec )
-	{
-		return Box2i();
-	}
 	
-	return Box2i(
-		V2i( spec->full_x, spec->full_y ),
-		V2i( spec->full_x + spec->full_width - 1, spec->full_x + spec->full_height - 1 )
-	);
+	GafferImage::Format format( spec->full_width, spec->full_height );
+	
+	return GafferImage::Format::registerFormat( format );
 }
 
 Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	if( !spec )
-	{
-		return Box2i();
-	}
 	
 	return Box2i(
 		V2i( spec->x, spec->y ),
@@ -176,11 +172,6 @@ IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer:
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	if( !spec )
-	{
-		return parent->channelNamesPlug()->defaultValue();
-	}
-	
 	StringVectorDataPtr result = new StringVectorData();
 	result->writable() = spec->channelnames;
 	return result;
@@ -190,12 +181,7 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 {
 	std::string fileName = fileNamePlug()->getValue();
 	ustring uFileName( fileName.c_str() );
-	
 	const ImageSpec *spec = imageCache()->imagespec( uFileName );
-	if( !spec )
-	{
-		return parent->channelDataPlug()->defaultValue();
-	}
 	
 	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
 	if( channelIt == spec->channelnames.end() )

@@ -816,6 +816,8 @@ libraries = {
 	
 	"GafferImageTest" : {},
 	
+	"GafferImageUITest" : {},
+	
 	"GafferImageUI" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferImage", "GafferUI" ],

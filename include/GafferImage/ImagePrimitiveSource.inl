@@ -91,7 +91,7 @@ void ImagePrimitiveSource<BaseType>::hash( const Gaffer::ValuePlug *output, cons
 }
 
 template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImagePrimitiveSource<BaseType>::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inputImagePrimitivePlug()->hash( h );
 }
@@ -153,7 +153,7 @@ void ImagePrimitiveSource<BaseType>::compute( Gaffer::ValuePlug *output, const G
 }
 
 template<typename BaseType>
-Imath::Box2i ImagePrimitiveSource<BaseType>::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format ImagePrimitiveSource<BaseType>::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i result;
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
@@ -161,7 +161,7 @@ Imath::Box2i ImagePrimitiveSource<BaseType>::computeDisplayWindow( const Gaffer:
 	{
 		result = image->getDisplayWindow();
 	}
-	return result;
+	return GafferImage::Format( result.max[0]-result.min[0]+1, result.max[1]-result.min[1]+1 );
 }
 
 template<typename BaseType>
@@ -192,6 +192,7 @@ IECore::ConstStringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelN
 		channelStrVector.push_back("G");
 		channelStrVector.push_back("B");
 	}
+	
 	return result;
 }
 

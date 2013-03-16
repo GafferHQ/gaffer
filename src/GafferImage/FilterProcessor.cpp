@@ -69,7 +69,7 @@ void FilterProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsCont
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it < inputs.end(); it++ )
 	{
-		if( input == (*it)->displayWindowPlug() ||
+		if( input == (*it)->formatPlug() ||
 				input == (*it)->dataWindowPlug() ||
 				input == (*it)->channelNamesPlug() )
 		{
@@ -93,13 +93,13 @@ bool FilterProcessor::enabled() const
 	return ImageProcessor::enabled();
 }
 
-void FilterProcessor::hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void FilterProcessor::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it != end; it++ )
 	{
-		if ( (*it)->getInput<ValuePlug>() )	(*it)->displayWindowPlug()->hash( h );
+		if ( (*it)->getInput<ValuePlug>() )	(*it)->formatPlug()->hash( h );
 	}
 }
 
@@ -146,15 +146,15 @@ Imath::Box2i FilterProcessor::computeDataWindow( const Gaffer::Context *context,
 	return dataWindow;
 }
 
-Imath::Box2i FilterProcessor::computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format FilterProcessor::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it != end; it++ )
 	{
-		if ( (*it)->getInput<ValuePlug>() )	return (*it)->displayWindowPlug()->getValue();
+		if ( (*it)->getInput<ValuePlug>() )	return (*it)->formatPlug()->getValue();
 	}
-	return inPlug()->displayWindowPlug()->defaultValue();
+	return inPlug()->formatPlug()->defaultValue();
 }
 
 IECore::ConstStringVectorDataPtr FilterProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const

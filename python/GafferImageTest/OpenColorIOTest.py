@@ -81,7 +81,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["enabled"].setValue( False )
 		
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		self.assertEqual( n["out"]['displayWindow'].hash(), o["out"]['displayWindow'].hash() )
+		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 		
@@ -90,7 +90,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "linear" )
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		self.assertEqual( n["out"]['displayWindow'].hash(), o["out"]['displayWindow'].hash() )
+		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 		

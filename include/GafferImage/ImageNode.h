@@ -87,7 +87,7 @@ class ImageNode : public Gaffer::DependencyNode
 		/// and then call the hash*() methods below whenever output is part of an ImagePlug. Derived classes should reimplement
 		/// the specific hash*() methods rather than hash() itself.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDisplayWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
@@ -95,12 +95,15 @@ class ImageNode : public Gaffer::DependencyNode
 		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug and the node is enabled.
 		/// Derived classes should reimplement the specific compute*() methods rather than compute() itself.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		virtual Imath::Box2i computeDisplayWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		
 		void computeImagePlugs( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+		/// Implemented to initialize the default format settings if they don't exist already.
+		void parentChanging( Gaffer::GraphComponent *newParent );
 		
 	private :
 		

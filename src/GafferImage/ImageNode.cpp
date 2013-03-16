@@ -95,18 +95,17 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	{
 		/// \todo Perhaps we don't need to hash enabledPlug() because enabled() will
 		/// compute its value anyway?
-		h.append( enabledPlug()->hash() ); 
+		h.append( enabledPlug()->hash() );
 		if( enabled() )
 		{
 			if( output == imagePlug->channelDataPlug() )
 			{
 				h.append( context->get<string>( ImagePlug::channelNameContextName ) );
-				h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 				hashChannelDataPlug( imagePlug, context, h );
 			}
-			else if( output == imagePlug->displayWindowPlug() )
+			else if( output == imagePlug->formatPlug() )
 			{
-				hashDisplayWindowPlug( imagePlug, context, h );
+				hashFormatPlug( imagePlug, context, h );
 			}
 			else if( output == imagePlug->dataWindowPlug() )
 			{
@@ -120,13 +119,28 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	}
 }
 
+void ImageNode::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	// Initialise the default format and setup any format knobs that are on this node.
+	if( newParent )
+	{
+		if ( static_cast<Gaffer::TypeId>(newParent->typeId()) == ScriptNodeTypeId )
+		{
+			ScriptNode *scriptNode =  static_cast<Gaffer::ScriptNode*>( newParent );
+			Format::addDefaultFormatPlug( scriptNode );
+		}
+	}
+	
+	Node::parentChanging( newParent );
+}
+
 void ImageNode::computeImagePlugs( ValuePlug *output, const Context *context ) const
 {
 	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
-	if( output == imagePlug->displayWindowPlug() )
+	if( output == imagePlug->formatPlug() )
 	{
-		static_cast<AtomicBox2iPlug *>( output )->setValue(
-			computeDisplayWindow( context, imagePlug )
+		static_cast<FormatPlug *>( output )->setValue(
+			computeFormat( context, imagePlug )
 		);
 	}
 	else if( output == imagePlug->dataWindowPlug() )
@@ -166,10 +180,10 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 		}
 		else
 		{
-			if( output == imagePlug->displayWindowPlug() )
+			if( output == imagePlug->formatPlug() )
 			{
-				static_cast<AtomicBox2iPlug *>( output )->setValue(
-					imagePlug->displayWindowPlug()->defaultValue()
+				static_cast<FormatPlug *>( output )->setValue(
+					imagePlug->formatPlug()->defaultValue()
 				);
 			}
 			else if( output == imagePlug->dataWindowPlug() )
