@@ -1,6 +1,12 @@
 0.53.0
 ======
 
+* Added the concept of a global format for disconnected nodes along with a format plug.
+
+* Added the Constant node for GafferImage.
+
+* Added the Select node for GafferImage.
+
 * Fixed a bug which prevented Assignment nodes from being connected to Shaders outside the Box containing the Assignment.
 
 * Improved formatting in NumericWidgets.
