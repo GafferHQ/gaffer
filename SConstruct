@@ -749,7 +749,9 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 
 libraries = {
 
-	"Gaffer" : {},
+	"Gaffer" : {
+		"additionalFiles" : glob.glob( "include/GafferBindings/*" ),
+	},
 	
 	"GafferTest" : {
 		"envAppends" : {
