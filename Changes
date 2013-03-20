@@ -1,3 +1,9 @@
+* Added an enabled/disabled plug to all SceneNodes. Nodes with no inputs output an empty scene when disabled, and SceneProcessors output the first input unchanged.
+
+* Added SceneNode::hash*() methods to match the GafferScene::compute*() methods. This was necessary for the enabled plug to be implemented, and also makes the implementation of derived classes more readable. Matching pairs of hash*() and compute*() methods should be reused as a pattern throughout Gaffer where appropriate in the future.
+
+* Renamed SceneElementProcessor::process*() methods to SceneElementProcessor::computeProcessed*() and SceneElementProcessor::hash*() methods to SceneElementProcessor::hashProcessed*(). This was necessary to resolve conflicts with the name hash*() methods at the SceneNode level.
+
 0.53.0
 ======
 

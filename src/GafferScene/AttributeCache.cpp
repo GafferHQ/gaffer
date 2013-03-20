@@ -101,13 +101,13 @@ bool AttributeCache::processesBound() const
 	return true;
 }
 
-void AttributeCache::hashBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AttributeCache::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 	h.append( context->getFrame() );
 }
 
-Imath::Box3f AttributeCache::processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
+Imath::Box3f AttributeCache::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
 {
 	IECore::InterpolatedCachePtr cache = g_interpolatedCacheCache.get( fileNamePlug()->getValue() );
 	try
@@ -133,13 +133,13 @@ bool AttributeCache::processesTransform() const
 	return true;
 }
 
-void AttributeCache::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AttributeCache::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 	h.append( context->getFrame() );
 }
 
-Imath::M44f AttributeCache::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
+Imath::M44f AttributeCache::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	IECore::InterpolatedCachePtr cache = g_interpolatedCacheCache.get( fileNamePlug()->getValue() );
 	try
@@ -164,13 +164,13 @@ bool AttributeCache::processesObject() const
 	return true;
 }
 
-void AttributeCache::hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AttributeCache::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 	h.append( context->getFrame() );
 }
 
-IECore::ConstObjectPtr AttributeCache::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr AttributeCache::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {	
 	IECore::ConstPrimitivePtr inputGeometry = IECore::runTimeCast<const IECore::Primitive>( inputObject );
 	if( !inputGeometry )

@@ -54,6 +54,8 @@ class SceneReader : public FileSource
 				
 	protected :
 	
+		/// \todo Move this implementation into the FileSource::hash*() methods, when we come with a decent mechanism
+		/// for specifying whether or not the file contains animation.
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 	
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;

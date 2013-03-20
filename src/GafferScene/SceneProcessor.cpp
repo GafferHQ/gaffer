@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,4 +63,36 @@ ScenePlug *SceneProcessor::inPlug()
 const ScenePlug *SceneProcessor::inPlug() const
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
+void SceneProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	const ScenePlug *scenePlug = output->parent<ScenePlug>();
+	if( scenePlug && !enabledPlug()->getValue() )
+	{
+		// if we're hashing the output scene, and we're disabled, we need to
+		// pass through the hash from the inPlug().
+		h = inPlug()->getChild<ValuePlug>( output->getName() )->hash();
+	}
+	else
+	{
+		// if not, we can let the base class take care of everything.
+		SceneNode::hash( output, context, h );
+	}
+}
+
+void SceneProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	const ScenePlug *scenePlug = output->parent<ScenePlug>();
+	if( scenePlug && !enabledPlug()->getValue() )
+	{
+		// if we're computing the output scene, and we're disabled, we need to
+		// pass through the scene from inPlug().
+		output->setFrom( inPlug()->getChild<ValuePlug>( output->getName() ) );
+	}
+	else
+	{
+		// otherwise, we can let the base class take care of everything.
+		SceneNode::compute( output, context );
+	}
 }

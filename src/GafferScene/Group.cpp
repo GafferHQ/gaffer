@@ -144,89 +144,120 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 			(*it)->childNamesPlug()->hash( h );
 		}
 	}
-	else if( output->parent<ScenePlug>() == outPlug() )
+}
+
+void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( path.size() == 0 ) // "/"
 	{
-		if( output == outPlug()->globalsPlug() )
+		SceneProcessor::hashBound( path, context, parent, h );
+		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 		{
-			// all input globals affect the output, as does the mapping, because we use it to compute the forwardDeclarations
-			for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
-			{
-				(*it)->globalsPlug()->hash( h );
-			}
-			inputMappingPlug()->hash( h );
+			(*it)->boundPlug()->hash( h );
 		}
-		else
+		transformPlug()->hash( h );
+	}
+	else if( path.size() == 1 ) // "/group"
+	{
+		SceneProcessor::hashBound( path, context, parent, h );
+		ContextPtr tmpContext = new Context( *Context::current() );
+		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
+		Context::Scope scopedContext( tmpContext );
+		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
 		{
-			std::string groupName = namePlug()->getValue();
-			// one of the plugs which varies with scene:path.
-			ScenePath path = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			if( path.size() == 0 )
-			{
-				// root. we only compute bound and childNames.
-				if( output == outPlug()->boundPlug() )
-				{
-					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
-					{
-						(*it)->boundPlug()->hash( h );
-					}
-					transformPlug()->hash( h );
-				}
-				else if( output == outPlug()->childNamesPlug() )
-				{
-					namePlug()->hash( h );
-				}
-			}
-			else if( path.size() == 1 )
-			{
-				// /groupName
-				if( output == outPlug()->boundPlug() )
-				{
-					ContextPtr tmpContext = new Context( *Context::current() );
-					tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
-					Context::Scope scopedContext( tmpContext );
-					for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
-					{
-						(*it)->boundPlug()->hash( h );
-					}
-				}
-				else if( output == outPlug()->transformPlug() )
-				{
-					transformPlug()->hash( h );
-				}
-				else if( output == outPlug()->childNamesPlug() )
-				{
-					inputMappingPlug()->hash( h );
-				}
-			}
-			else
-			{
-				// /groupName/something
-				// we're just a pass through of one of our inputs.
-				ScenePlug *sourcePlug = 0;
-				ScenePath source = sourcePath( path, groupName, &sourcePlug );
-				if( output == outPlug()->boundPlug() )
-				{
-					h = sourcePlug->boundHash( source );
-				}
-				else if( output == outPlug()->transformPlug() )
-				{
-					h = sourcePlug->transformHash( source );
-				}
-				else if( output == outPlug()->attributesPlug() )
-				{
-					h = sourcePlug->attributesHash( source );
-				}
-				else if( output == outPlug()->objectPlug() )
-				{
-					h = sourcePlug->objectHash( source );
-				}
-				else if( output == outPlug()->childNamesPlug() )
-				{
-					h = sourcePlug->childNamesHash( source );
-				}
-			}
+			(*it)->boundPlug()->hash( h );
 		}
 	}
+	else // "/group/..."
+	{
+		// pass through
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		h = sourcePlug->boundHash( source );
+	}
+}
+
+void Group::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{	
+	if( path.size() == 0 ) // "/"
+	{
+		SceneProcessor::hashTransform( path, context, parent, h );	
+	}
+	else if( path.size() == 1 ) // "/group"
+	{
+		SceneProcessor::hashTransform( path, context, parent, h );
+		transformPlug()->hash( h );
+	}
+	else if( path.size() > 1 ) // "/group/..."
+	{
+		// pass through
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		h = sourcePlug->transformHash( source );
+	}
+}
+
+void Group::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( path.size() <= 1 ) // "/" or "/group"
+	{
+		SceneProcessor::hashAttributes( path, context, parent, h );
+	}
+	else // "/group/..."
+	{
+		// pass through
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		h = sourcePlug->attributesHash( source );
+	}
+}
+
+void Group::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( path.size() <= 1 ) // "/" or "/group"
+	{
+		SceneProcessor::hashObject( path, context, parent, h );
+	}
+	else // "/group/..."
+	{
+		// pass through
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		h = sourcePlug->objectHash( source );
+	}
+}
+
+void Group::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( path.size() == 0 ) // "/"
+	{
+		SceneProcessor::hashChildNames( path, context, parent, h );
+		namePlug()->hash( h );
+	}
+	else if( path.size() == 1 ) // "/group"
+	{
+		SceneProcessor::hashChildNames( path, context, parent, h );
+		inputMappingPlug()->hash( h );
+	}
+	else // "/group/..."
+	{
+		// pass through
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		h = sourcePlug->childNamesHash( source );
+	}
+}
+
+void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashGlobals( context, parent, h );
+		
+	// all input globals affect the output, as does the mapping, because we use it to compute the forwardDeclarations
+	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+	{
+		(*it)->globalsPlug()->hash( h );
+	}
+	inputMappingPlug()->hash( h );
 }
 
 void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const

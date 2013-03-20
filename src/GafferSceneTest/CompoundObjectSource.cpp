@@ -74,15 +74,42 @@ void CompoundObjectSource::affects( const ValuePlug *input, AffectedPlugsContain
 	}
 }
 
-void CompoundObjectSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void CompoundObjectSource::hashBound( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hash( output, context, h );
-	if( output->parent<GafferScene::ScenePlug>() == outPlug() )
-	{
-		inPlug()->hash( h );
-	}
+	Source::hashBound( path, context, parent, h );
+	inPlug()->hash( h );
 }
 
+void CompoundObjectSource::hashTransform( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashTransform( path, context, parent, h );
+	inPlug()->hash( h );
+}
+
+void CompoundObjectSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashAttributes( path, context, parent, h );
+	inPlug()->hash( h );
+}
+
+void CompoundObjectSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashObject( path, context, parent, h );
+	inPlug()->hash( h );
+}
+
+void CompoundObjectSource::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashChildNames( path, context, parent, h );
+	inPlug()->hash( h );
+}
+
+void CompoundObjectSource::hashGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashGlobals( context, parent, h );
+	inPlug()->hash( h );
+}
+		
 Imath::Box3f CompoundObjectSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	return entryForPath( path )->member<Box3fData>( "bound", true /* throw exceptions */ )->readable();

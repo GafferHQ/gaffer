@@ -81,12 +81,12 @@ bool Transform::processesTransform() const
 	return true;
 }
 
-void Transform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	transformPlug()->hash( h );
 }
 
-Imath::M44f Transform::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
+Imath::M44f Transform::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	return inputTransform * transformPlug()->matrix();
 }

@@ -76,14 +76,10 @@ void Light::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &out
 	}
 }
 
-void Light::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Light::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ObjectSource::hash( output, context, h );
-	
-	if( output == outPlug()->globalsPlug() )
-	{
-		namePlug()->hash( h );
-	}
+	ObjectSource::hashGlobals( context, parent, h );
+	namePlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr Light::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const

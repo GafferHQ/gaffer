@@ -81,7 +81,9 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
-				self.assertHashesValid( p )	
+				# we ignore the enabled plug because it isn't hashed (instead it's value
+				# is used to decide how the hash should be computed).
+				self.assertHashesValid( p, inputsToIgnore = [ p["enabled"] ] )	
 	
 	def testBound( self ) :
 	

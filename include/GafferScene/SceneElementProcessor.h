@@ -67,17 +67,26 @@ class SceneElementProcessor : public SceneProcessor
 		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
-		/// Implemented to call hash*() where appropriate - derived classes should implement those methods
-		/// rather than this one.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// Implemented to call hashProcessedBound() where appropriate.
+		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		/// Implemented to call hashProcessedTransform() where appropriate.
+		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		/// Implemented to call hashProcessedAttributes() where appropriate.
+		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		/// Implemented to call hashProcessedObject() where appropriate.
+		virtual void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		/// Implemented as a pass-through.
+		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		/// Implemented as a pass-through.
+		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		
-		/// Implemented to call processBound() where appropriate.
+		/// Implemented to call computeProcessedBound() where appropriate.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processTransform() where appropriate.
+		/// Implemented to call computeProcessedTransform() where appropriate.
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processAttributes() where appropriate.
+		/// Implemented to call computeProcessedAttributes() where appropriate.
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented to call processObject() where appropriate.
+		/// Implemented to call computeProcessedObject() where appropriate.
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented as a pass-through.
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -95,20 +104,20 @@ class SceneElementProcessor : public SceneProcessor
 		/////////////////////////////////////////////////////////////////////////////////////////////////	
 		//@{
 		virtual bool processesBound() const;
-		virtual void hashBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box3f processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+		virtual void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box3f computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
 		
 		virtual bool processesTransform() const;
-		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+		virtual void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 
 		virtual bool processesAttributes() const;
-		virtual void hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
+		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 		
 		virtual bool processesObject() const;
-		virtual void hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 		//@}
 
 	private :

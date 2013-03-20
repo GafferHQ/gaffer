@@ -61,14 +61,42 @@ class SceneNode : public Gaffer::DependencyNode
 		/// may be added by derived classes if necessary.
 		ScenePlug *outPlug();
 		const ScenePlug *outPlug() const;
+		
+		/// The enabled plug provides a mechanism for turning the effect of the node on and off.
+		Gaffer::BoolPlug *enabledPlug();
+		const Gaffer::BoolPlug *enabledPlug() const;
+
+		/// Implemented so that enabledPlug() affects outPlug().
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		
 		typedef ScenePlug::ScenePath ScenePath;
 				
-		/// Implemented to call the compute*() methods below whenever output is part of a ScenePlug.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		/// Implemented to call the hash*() methods below whenever output is part of a ScenePlug and the node is enabled.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
+		/// Hash methods for the individual children of outPlug() - these must be implemented by derived classes. An implementation
+		/// must either :
+		///
+		///		* Call the base class implementation and then append to the hash.
+		///
+		/// or :
+		///
+		///		* Assign directly to the hash from some input hash to signify that an input will be passed through unchanged by the
+		///		  corresponding compute*() method.
+		///
+		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const = 0;
+		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const = 0;
+		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const = 0;
+		virtual void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const = 0;
+		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const = 0;
+		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const = 0;
+		
+		/// Implemented to call the compute*() methods below whenever output is part of a ScenePlug and the node is enabled.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
+		/// Compute methods for the individual children of outPlug() - these must be implemented by derived classes.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const = 0;

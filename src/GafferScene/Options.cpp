@@ -78,12 +78,12 @@ void Options::affects( const ValuePlug *input, AffectedPlugsContainer &outputs )
 	}
 }
 
-void Options::hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Options::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	optionsPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Options::processGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
 	IECore::CompoundObjectPtr result = inputGlobals->copy();
 	optionsPlug()->fillCompoundObject( result->members() );

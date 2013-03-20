@@ -96,6 +96,21 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		s["name"].setValue( "seeds" )
 		
 		self.assertSceneValid( s["out"] )
+	
+	def testDisabled( self ) :
+	
+		p = GafferScene.Plane()
+		s = GafferScene.Seeds()
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "seeds" )
+		
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds" ] ) )
+		
+		s["enabled"].setValue( False )
+		
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
+		self.assertScenesEqual( s["out"], p["out"] )
 		 		
 if __name__ == "__main__":
 	unittest.main()

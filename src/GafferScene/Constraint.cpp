@@ -97,9 +97,8 @@ bool Constraint::processesTransform() const
 	return true;
 }
 
-void Constraint::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
 	ScenePath parentPath = path;
 	parentPath.pop_back();
 	h.append( inPlug()->fullTransformHash( parentPath ) );
@@ -118,7 +117,7 @@ void Constraint::hashTransform( const Gaffer::Context *context, IECore::MurmurHa
 	hashConstraint( context, h );
 }
 
-Imath::M44f Constraint::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
+Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	ScenePath parentPath = path;
 	parentPath.pop_back();

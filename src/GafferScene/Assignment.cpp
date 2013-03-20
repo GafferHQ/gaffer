@@ -86,7 +86,7 @@ bool Assignment::processesAttributes() const
 	return true;
 }
 
-void Assignment::hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Assignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
 	if( shader )
@@ -95,7 +95,7 @@ void Assignment::hashAttributes( const Gaffer::Context *context, IECore::MurmurH
 	}
 }
 		
-IECore::ConstCompoundObjectPtr Assignment::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr Assignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	CompoundObjectPtr result = inputAttributes->copy();
 	

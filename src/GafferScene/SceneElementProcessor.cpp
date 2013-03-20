@@ -102,75 +102,95 @@ bool SceneElementProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer
 	return true;
 }
 
-void SceneElementProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( output->parent<ScenePlug>() == outPlug() )
+	switch( boundMethod() )
 	{
-		if( output == outPlug()->globalsPlug() ||
-			output == outPlug()->childNamesPlug()
-		)
-		{
-			// pass through
-			h = inPlug()->getChild<ValuePlug>( output->getName() )->hash();
-		}
-		else if( output == outPlug()->boundPlug() )
-		{
-			switch( boundMethod() )
-			{
-				case Direct :
-					SceneProcessor::hash( output, context, h );
-					inPlug()->boundPlug()->hash( h );
-					hashBound( context, h );
-					break;
-				case Union :
-					h = hashOfTransformedChildBounds( context->get<ScenePath>( ScenePlug::scenePathContextName ), outPlug() );
-					break;
-				case PassThrough :
-					h = inPlug()->boundPlug()->hash();
-					break;
-			}
-		}
-		else
-		{
-			// transform, attributes or object
-			Filter::Result match = Filter::NoMatch;
-			if( ( output == outPlug()->transformPlug() && processesTransform() ) ||
-				( output == outPlug()->attributesPlug() && processesAttributes() ) ||
-				( output == outPlug()->objectPlug() && processesObject() )
-			)
-			{
-				match = (Filter::Result)filterPlug()->getValue();
-			}
-			
-			if( match == Filter::Match )
-			{
-				SceneProcessor::hash( output, context, h );
-				inPlug()->getChild<ValuePlug>( output->getName() )->hash( h );
-				if( output == outPlug()->transformPlug() )
-				{
-					hashTransform( context, h );
-				}
-				else if( output == outPlug()->attributesPlug() )
-				{
-					hashAttributes( context, h );
-				}
-				else
-				{
-					// object plug
-					hashObject( context, h );
-				}
-			}
-			else
-			{
-				// pass through
-				h = inPlug()->getChild<ValuePlug>( output->getName() )->hash();
-			}
-		}
+		case Direct :
+			SceneProcessor::hashBound( path, context, parent, h );
+			inPlug()->boundPlug()->hash( h );
+			hashProcessedBound( path, context, h );
+			break;
+		case Union :
+			h = hashOfTransformedChildBounds( path, outPlug() );
+			break;
+		case PassThrough :
+			h = inPlug()->boundPlug()->hash();
+			break;
+	}
+}
+
+void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Filter::Result match = Filter::NoMatch;
+	if( processesTransform() )
+	{
+		match = (Filter::Result)filterPlug()->getValue();
+	}
+
+	if( match == Filter::Match )
+	{
+		SceneProcessor::hashTransform( path, context, parent, h );
+		inPlug()->transformPlug()->hash( h );
+		hashProcessedTransform( path, context, h );
 	}
 	else
 	{
-		SceneProcessor::hash( output, context, h );
+		// pass through
+		h = inPlug()->transformPlug()->hash();
 	}
+}
+
+void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Filter::Result match = Filter::NoMatch;
+	if( processesAttributes() )
+	{
+		match = (Filter::Result)filterPlug()->getValue();
+	}
+
+	if( match == Filter::Match )
+	{
+		SceneProcessor::hashAttributes( path, context, parent, h );
+		inPlug()->attributesPlug()->hash( h );
+		hashProcessedAttributes( path, context, h );
+	}
+	else
+	{
+		// pass through
+		h = inPlug()->attributesPlug()->hash();
+	}
+}
+
+void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Filter::Result match = Filter::NoMatch;
+	if( processesObject() )
+	{
+		match = (Filter::Result)filterPlug()->getValue();
+	}
+
+	if( match == Filter::Match )
+	{
+		SceneProcessor::hashObject( path, context, parent, h );
+		inPlug()->objectPlug()->hash( h );
+		hashProcessedObject( path, context, h );
+	}
+	else
+	{
+		// pass through
+		h = inPlug()->objectPlug()->hash();
+	}
+}
+
+void SceneElementProcessor::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->childNamesPlug()->hash();
+}
+
+void SceneElementProcessor::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->globalsPlug()->hash();
 }
 
 Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -178,7 +198,7 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 	switch( boundMethod() )
 	{
 		case Direct :
-			return processBound( path, context, inPlug()->boundPlug()->getValue() );
+			return computeProcessedBound( path, context, inPlug()->boundPlug()->getValue() );
 		case Union :
 			return unionOfTransformedChildBounds( path, outPlug() );
 		default :
@@ -190,7 +210,7 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 {
 	if( filterPlug()->getValue() == Filter::Match )
 	{
-		return processTransform( path, context, inPlug()->transformPlug()->getValue() );
+		return computeProcessedTransform( path, context, inPlug()->transformPlug()->getValue() );
 	}
 	else
 	{
@@ -202,7 +222,7 @@ IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const S
 {
 	if( filterPlug()->getValue() == Filter::Match )
 	{
-		return processAttributes( path, context, inPlug()->attributesPlug()->getValue() );
+		return computeProcessedAttributes( path, context, inPlug()->attributesPlug()->getValue() );
 	}
 	else
 	{
@@ -214,7 +234,7 @@ IECore::ConstObjectPtr SceneElementProcessor::computeObject( const ScenePath &pa
 {
 	if( filterPlug()->getValue() == Filter::Match )
 	{
-		return processObject( path, context, inPlug()->objectPlug()->getValue() );
+		return computeProcessedObject( path, context, inPlug()->objectPlug()->getValue() );
 	}
 	else
 	{
@@ -237,11 +257,11 @@ bool SceneElementProcessor::processesBound() const
 	return false;
 }
 
-void SceneElementProcessor::hashBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void SceneElementProcessor::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
 
-Imath::Box3f SceneElementProcessor::processBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
+Imath::Box3f SceneElementProcessor::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
 {
 	return inputBound;
 }
@@ -251,11 +271,11 @@ bool SceneElementProcessor::processesTransform() const
 	return false;
 }
 
-void SceneElementProcessor::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void SceneElementProcessor::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
 
-Imath::M44f SceneElementProcessor::processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
+Imath::M44f SceneElementProcessor::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	return inputTransform;
 }
@@ -265,11 +285,11 @@ bool SceneElementProcessor::processesAttributes() const
 	return false;
 }
 
-void SceneElementProcessor::hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void SceneElementProcessor::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
 
-IECore::ConstCompoundObjectPtr SceneElementProcessor::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr SceneElementProcessor::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	return inputAttributes;
 }
@@ -279,11 +299,11 @@ bool SceneElementProcessor::processesObject() const
 	return false;
 }
 
-void SceneElementProcessor::hashObject( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void SceneElementProcessor::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
 
-IECore::ConstObjectPtr SceneElementProcessor::processObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr SceneElementProcessor::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	return inputObject;
 }

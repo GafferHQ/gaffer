@@ -99,8 +99,24 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 		options = GafferScene.Options()
 		options["in"].setInput( p["out"] )
+		options["options"].addMember( "test", IECore.IntData( 10 ) )
 		
 		self.assertSceneHashesEqual( p["out"], options["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
 	
+	def testDisabled( self ) :
+	
+		p = GafferScene.Plane()
+		options = GafferScene.Options()
+		options["in"].setInput( p["out"] )
+		options["options"].addMember( "test", IECore.IntData( 10 ) )
+	
+		self.assertSceneHashesEqual( p["out"], options["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
+		self.assertNotEqual( options["out"]["globals"].hash(), p["out"]["globals"].hash() )
+		
+		options["enabled"].setValue( False )
+		
+		self.assertSceneHashesEqual( p["out"], options["out"] )
+		self.assertScenesEqual( p["out"], options["out"] )
+		
 if __name__ == "__main__":
 	unittest.main()

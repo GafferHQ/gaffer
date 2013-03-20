@@ -56,21 +56,37 @@ Source::~Source()
 {
 }
 
-void Source::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Source::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hash( output, context, h );
+	SceneNode::hashBound( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+}
 
-	const ScenePlug *scenePlug = output->ancestor<ScenePlug>();
-	if( scenePlug && (
-			output == scenePlug->boundPlug() ||
-			output == scenePlug->transformPlug() ||
-			output == scenePlug->attributesPlug() ||
-			output == scenePlug->objectPlug() ||
-			output == scenePlug->childNamesPlug()
-		)
-	)
-	{
-		const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
-		h.append( &(path[0]), path.size() );
-	}
+void Source::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashTransform( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+}
+
+void Source::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashAttributes( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+}
+
+void Source::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashObject( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+}
+
+void Source::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashChildNames( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+}
+
+void Source::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashGlobals( context, parent, h );
 }

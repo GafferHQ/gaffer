@@ -62,8 +62,8 @@ class Transform : public SceneElementProcessor
 	protected :
 					
 		virtual bool processesTransform() const;
-		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+		virtual void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 
 	private :
 	

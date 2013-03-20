@@ -88,12 +88,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertForwardDeclarationsValid( s["out"] )
 
-	@GafferTest.expectedFailure
 	def testRootHashesEqual( self ) :
-	
-		# this can be fixed by introducing hash*() methods in SceneNode, and making sure
-		# they're not called for / when compute*() won't be called.
-	
+		
 		a = GafferScene.AlembicSource()
 		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
 		
@@ -102,6 +98,21 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertSceneValid( s["out"] )
 		self.assertPathHashesEqual( a["out"], "/", s["out"], "/" )
+	
+	def testDisabled( self ) :
+	
+		p = GafferScene.Plane()
+		g = GafferScene.Group()
+		g["in"].setInput( p["out"] )
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "/group" )
+		s["enabled"].setValue( False )
+		
+		self.assertSceneValid( s["out"] )
+		self.assertScenesEqual( s["out"], g["out"] )
+		self.assertSceneHashesEqual( s["out"], g["out"] )
 		
 if __name__ == "__main__":
 	unittest.main()

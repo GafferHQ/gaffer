@@ -120,31 +120,10 @@ void ObjectSourceBase<BaseType>::hash( const Gaffer::ValuePlug *output, const Ga
 {
 	BaseType::hash( output, context, h );
 	
-	if( output == BaseType::outPlug()->transformPlug() )
-	{
-		transformPlug()->Gaffer::ValuePlug::hash( h );
-	}
-	else if( output == BaseType::outPlug()->childNamesPlug() )
-	{
-		namePlug()->hash( h );
-	}
-	else if( output == BaseType::outPlug()->objectPlug() )
-	{
-		inputSourcePlug()->hash( h );	
-	}
-	else if( output == BaseType::outPlug()->boundPlug() )
-	{
-		inputSourcePlug()->hash( h );	
-		if( context->get<SceneNode::ScenePath>( ScenePlug::scenePathContextName ).size() == 0 )
-		{
-			transformPlug()->hash( h );
-		}
-	}
-	else if( output == sourcePlug() )
+	if( output == sourcePlug() )
 	{
 		hashSource( context, h );
 	}
-	
 }
 
 template<typename BaseType>
@@ -170,7 +149,39 @@ const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::inputSourcePlug() const
 {
 	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
-		
+
+template<typename BaseType>
+void ObjectSourceBase<BaseType>::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	BaseType::hashBound( path, context, parent, h );
+	inputSourcePlug()->hash( h );	
+	if( path.size() == 0 )
+	{
+		transformPlug()->hash( h );
+	}
+}
+
+template<typename BaseType>
+void ObjectSourceBase<BaseType>::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	BaseType::hashTransform( path, context, parent, h );
+	transformPlug()->hash( h );
+}
+
+template<typename BaseType>
+void ObjectSourceBase<BaseType>::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	BaseType::hashObject( path, context, parent, h );
+	inputSourcePlug()->hash( h );	
+}
+
+template<typename BaseType>
+void ObjectSourceBase<BaseType>::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	BaseType::hashChildNames( path, context, parent, h );
+	namePlug()->hash( h );
+}
+				
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {

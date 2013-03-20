@@ -62,7 +62,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( self.__testFile )
-		reader["refreshCount"].setValue( 0 )
+		reader["refreshCount"].setValue( 1 )
 		
 		scene = reader["out"]
 		self.assertEqual( scene.childNames( "/" ), IECore.InternedStringVectorData( [ "1" ] ) )
@@ -83,7 +83,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		# it thinks it's reading an old file...
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( self.__testFile )
-		reader["refreshCount"].setValue( 1 )
+		reader["refreshCount"].setValue( 2 )
 		
 		scene = reader["out"]
 		self.assertEqual( scene.childNames( "/" ), IECore.InternedStringVectorData( [ "transform" ] ) )
@@ -105,7 +105,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		# we have to remember to set the refresh counts to different values in different tests, otherwise
 		# it thinks it's reading an old file...
-		reader["refreshCount"].setValue( 2 )
+		reader["refreshCount"].setValue( 3 )
 		
 		scene = reader["out"]
 		self.assertSceneValid( scene )
@@ -225,15 +225,13 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 			matrix = IECore.M44d.createTranslated( IECore.V3d( 3, time, 0 ) )
 			sc3.writeTransform( IECore.M44dData( matrix ), time )
 		
-	
-	
 	def testAnimatedScene( self ) :
 		
 		self.writeAnimatedSCC()
 		
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( SceneReadWriteTest.__testFile )
-		reader["refreshCount"].setValue( 3 )
+		reader["refreshCount"].setValue( 4 )
 		
 		scene = reader["out"]
 		
@@ -257,6 +255,33 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 				mesh = scene.object( "/1/2" )
 				self.assertEqual( mesh["Cd"].data, IECore.V3fVectorData( [ IECore.V3f( time, 1, 0 ) ] * 6 ) )
 	
+	def testEnabled( self ) :
+		
+		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+		
+		t = sc.createChild( "transform" )
+		t.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		
+		s = t.createChild( "shape" )
+		s.writeObject( IECore.SpherePrimitive( 10 ), 0.0 )
+		
+		del sc, t, s
+		
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( self.__testFile )
+		
+		# we have to remember to set the refresh counts to different values in different tests, otherwise
+		# it thinks it's reading an old file...
+		reader["refreshCount"].setValue( 5 )
+		
+		self.assertSceneValid( reader["out"] )
+		self.assertEqual( reader["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "transform" ] ) )
+		
+		reader["enabled"].setValue( False )
+		self.assertSceneValid( reader["out"] )
+		self.assertTrue( reader["out"].bound( "/" ).isEmpty() )
+		self.assertEqual( reader["out"].childNames( "/" ), IECore.InternedStringVectorData() )
+		
 	def tearDown( self ) :
 		
 		if os.path.exists( self.__testFile ) :

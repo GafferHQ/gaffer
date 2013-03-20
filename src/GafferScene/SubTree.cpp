@@ -82,57 +82,43 @@ void SubTree::affects( const ValuePlug *input, AffectedPlugsContainer &outputs )
 	}
 }
 
-void SubTree::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{	
-	SceneProcessor::hash( output, context, h );
-
-	if( output->parent<ScenePlug>() == outPlug() )
-	{
-		if( output == outPlug()->globalsPlug() )
-		{
-			inPlug()->globalsPlug()->hash( h );
-			rootPlug()->hash( h );
-		}
-		else
-		{
-			const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			ScenePath source = sourcePath( path );
-			
-			if( output == outPlug()->boundPlug() )
-			{
-				h = inPlug()->boundHash( source );
-			}
-			else if( output == outPlug()->transformPlug() )
-			{
-				/// \todo If there were virtual hash*() methods in SceneNode
-				/// then we wouldn't need to do this check.
-				if( path.size() )
-				{
-					h = inPlug()->transformHash( source );
-				}
-			}
-			else if( output == outPlug()->attributesPlug() )
-			{
-				if( path.size() )
-				{
-					h = inPlug()->attributesHash( source );
-				}
-			}
-			else if( output == outPlug()->objectPlug() )
-			{
-				if( path.size() )
-				{
-					h = inPlug()->objectHash( source );
-				}
-			}
-			else if( output == outPlug()->childNamesPlug() )
-			{
-				h = inPlug()->childNamesHash( source );
-			}
-		}
-	}
+void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ScenePath source = sourcePath( path );
+	h = inPlug()->boundHash( source );
 }
 
+void SubTree::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ScenePath source = sourcePath( path );
+	h = inPlug()->transformHash( source );
+}
+
+void SubTree::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ScenePath source = sourcePath( path );
+	h = inPlug()->attributesHash( source );
+}
+
+void SubTree::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ScenePath source = sourcePath( path );
+	h = inPlug()->objectHash( source );
+}
+
+void SubTree::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ScenePath source = sourcePath( path );
+	h = inPlug()->childNamesHash( source );
+}
+
+void SubTree::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashGlobals( context, parent, h );
+	inPlug()->globalsPlug()->hash( h );
+	rootPlug()->hash( h );
+}
+		
 Imath::Box3f SubTree::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->bound( sourcePath( path ) );

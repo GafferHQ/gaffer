@@ -97,95 +97,104 @@ void BranchCreator::affects( const ValuePlug *input, AffectedPlugsContainer &out
 	}
 }
 
-void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{	
-	if( output->parent<ScenePlug>() == outPlug() )
+void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	/// \todo We could avoid calling the base class method when we know we're going to overwrite the hash anyway.
+	/// This could make sense in all the hash*() methods.
+	SceneProcessor::hashBound( path, context, parent, h );
+
+	ScenePath parentPath, branchPath;
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	
+	if( onBranch )
 	{
-		if( output == outPlug()->globalsPlug() )
-		{
-			h = inPlug()->globalsPlug()->hash();
-		}
-		else
-		{	
-			ScenePath path = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			ScenePath parentPath, branchPath;
-			bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
-			
-			if( output == outPlug()->boundPlug() )
-			{
-				if( onBranch )
-				{
-					SceneProcessor::hash( output, context, h );
-					hashBranchBound( parentPath, branchPath, context, h );
-				}
-				else if( parentPath.size() )
-				{
-					h = hashOfTransformedChildBounds( path, outPlug() );
-				}
-				else
-				{
-					h = inPlug()->boundPlug()->hash();
-				}
-			}
-			else if( output == outPlug()->transformPlug() )
-			{
-				if( onBranch )
-				{
-					SceneProcessor::hash( output, context, h );
-					hashBranchTransform( parentPath, branchPath, context, h );				
-				}
-				else
-				{
-					h = inPlug()->transformPlug()->hash();
-				}
-			}
-			else if( output == outPlug()->attributesPlug() )
-			{
-				if( onBranch )
-				{
-					SceneProcessor::hash( output, context, h );
-					hashBranchAttributes( parentPath, branchPath, context, h );
-				}
-				else
-				{
-					h = inPlug()->attributesPlug()->hash();
-				}		
-			}
-			else if( output == outPlug()->objectPlug() )
-			{
-				if( onBranch )
-				{
-					SceneProcessor::hash( output, context, h );
-					hashBranchObject( parentPath, branchPath, context, h );
-				}
-				else
-				{
-					h = inPlug()->objectPlug()->hash();
-				}
-			}
-			else if( output == outPlug()->childNamesPlug() )
-			{
-				if( onBranch )
-				{
-					SceneProcessor::hash( output, context, h );
-					hashBranchChildNames( parentPath, branchPath, context, h );
-				}
-				else if( path == parentPath )
-				{
-					SceneProcessor::hash( output, context, h );
-					namePlug()->hash( h );
-				}
-				else
-				{
-					h = inPlug()->childNamesPlug()->hash();
-				}
-			}
-		}
+		hashBranchBound( parentPath, branchPath, context, h );
+	}
+	else if( parentPath.size() )
+	{
+		h = hashOfTransformedChildBounds( path, outPlug() );
 	}
 	else
 	{
-		SceneProcessor::hash( output, context, h );
+		h = inPlug()->boundPlug()->hash();
 	}
+}
+
+void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashTransform( path, context, parent, h );
+
+	ScenePath parentPath, branchPath;
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	
+	if( onBranch )
+	{
+		hashBranchTransform( parentPath, branchPath, context, h );				
+	}
+	else
+	{
+		h = inPlug()->transformPlug()->hash();
+	}
+}
+
+void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashAttributes( path, context, parent, h );
+
+	ScenePath parentPath, branchPath;
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	
+	if( onBranch )
+	{
+		hashBranchAttributes( parentPath, branchPath, context, h );
+	}
+	else
+	{
+		h = inPlug()->attributesPlug()->hash();
+	}
+}
+
+void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashObject( path, context, parent, h );
+
+	ScenePath parentPath, branchPath;
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	
+	if( onBranch )
+	{
+		hashBranchObject( parentPath, branchPath, context, h );
+	}
+	else
+	{
+		h = inPlug()->objectPlug()->hash();
+	}
+}
+
+void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashChildNames( path, context, parent, h );
+
+	ScenePath parentPath, branchPath;
+	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	
+	if( onBranch )
+	{
+		hashBranchChildNames( parentPath, branchPath, context, h );
+	}
+	else if( path == parentPath )
+	{
+		namePlug()->hash( h );
+	}
+	else
+	{
+		h = inPlug()->childNamesPlug()->hash();
+	}
+}
+
+void BranchCreator::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->globalsPlug()->hash();
 }
 
 Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const

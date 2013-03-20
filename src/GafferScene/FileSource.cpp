@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -85,13 +86,51 @@ void FileSource::affects( const ValuePlug *input, AffectedPlugsContainer &output
 	}
 }
 
-void FileSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void FileSource::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hash( output, context, h );
-	
-	if( output->parent<ScenePlug>() == outPlug() )
-	{
-		fileNamePlug()->hash( h );
-		refreshCountPlug()->hash( h );
-	}
+	Source::hashBound( path, context, parent, h );
+
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 }
+
+void FileSource::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashTransform( path, context, parent, h );
+
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
+void FileSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashAttributes( path, context, parent, h );
+	
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
+void FileSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashObject( path, context, parent, h );
+	
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
+void FileSource::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashChildNames( path, context, parent, h );
+	
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
+void FileSource::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	Source::hashGlobals( context, parent, h );
+	
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+		

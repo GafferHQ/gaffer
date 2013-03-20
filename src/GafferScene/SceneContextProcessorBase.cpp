@@ -54,6 +54,36 @@ SceneContextProcessorBase::~SceneContextProcessorBase()
 {
 }
 
+void SceneContextProcessorBase::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to SceneContextProcessorBase::hashBound" );
+}
+
+void SceneContextProcessorBase::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to SceneContextProcessorBase::hashTransform" );
+}
+
+void SceneContextProcessorBase::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to SceneContextProcessorBase::hashAttributes" );
+}
+
+void SceneContextProcessorBase::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to SceneContextProcessorBase::hashObject" );
+}
+
+void SceneContextProcessorBase::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to SceneContextProcessorBase::hashChildNames" );
+}
+
+void SceneContextProcessorBase::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to SceneContextProcessorBase::hashGlobals" );
+}
+		
 Imath::Box3f SceneContextProcessorBase::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	throw Exception( "Unexpected call to SceneContextProcessorBase::computeBound" );

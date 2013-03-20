@@ -54,6 +54,7 @@ SceneNode::SceneNode( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "out", Gaffer::Plug::Out ) );
+	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 }
 
 SceneNode::~SceneNode()
@@ -69,67 +70,171 @@ const ScenePlug *SceneNode::outPlug() const
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
-			
-void SceneNode::compute( ValuePlug *output, const Context *context ) const
+
+BoolPlug *SceneNode::enabledPlug()
 {
-	ScenePlug *scenePlug = output->ancestor<ScenePlug>();
-	if( scenePlug )
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const BoolPlug *SceneNode::enabledPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+void SceneNode::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+	
+	if( input == enabledPlug() )
 	{
+		outputs.push_back( outPlug() );
+	}
+}
+
+void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{	
+	const ScenePlug *scenePlug = output->parent<ScenePlug>();
+	if( scenePlug && enabledPlug()->getValue() )
+	{
+		// We don't call DependencyNode::hash() immediately here, because for subclasses which
+		// want to pass through a specific hash in the hash*() methods it's a waste of time (the
+		// hash will get overwritten anyway). Instead we call DependencyNode::hash() in our
+		// hash*() implementations, and allow subclass implementations to not call the base class
+		// if they intend to overwrite the hash.
 		if( output == scenePlug->boundPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			static_cast<AtomicBox3fPlug *>( output )->setValue(
-				computeBound( scenePath, context, scenePlug )
-			);
+			hashBound( scenePath, context, scenePlug, h );
 		}
 		else if( output == scenePlug->transformPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			M44f transform;
-			if( scenePath.size() ) // scene root must have identity transform
-			{
-				transform = computeTransform( scenePath, context, scenePlug );
-			}
-			static_cast<M44fPlug *>( output )->setValue( transform );
+			hashTransform( scenePath, context, scenePlug, h );
 		}
 		else if( output == scenePlug->attributesPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			CompoundObjectPlug *attributesPlug = static_cast<CompoundObjectPlug *>( output );
-			if( scenePath.size() ) // scene root must have no attributes
-			{
-				attributesPlug->setValue( computeAttributes( scenePath, context, scenePlug ) );
-			}
-			else
-			{
-				attributesPlug->setValue( attributesPlug->defaultValue() );
-			}
+			hashAttributes( scenePath, context, scenePlug, h );
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			ObjectPlug *objectPlug = static_cast<ObjectPlug *>( output );
-			if( scenePath.size() ) // scene root must have no object
-			{
-				objectPlug->setValue( computeObject( scenePath, context, scenePlug ) );
-			}
-			else
-			{
-				objectPlug->setValue( objectPlug->defaultValue() );
-			}
+			hashObject( scenePath, context, scenePlug, h );
 		}
 		else if( output == scenePlug->childNamesPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			static_cast<InternedStringVectorDataPlug *>( output )->setValue(
-				computeChildNames( scenePath, context, scenePlug )
-			);
+			hashChildNames( scenePath, context, scenePlug, h );
 		}
 		else if( output == scenePlug->globalsPlug() )
 		{
-			static_cast<CompoundObjectPlug *>( output )->setValue(
-				computeGlobals( context, scenePlug )
-			);
+			hashGlobals( context, scenePlug, h );
+		}
+	}
+	else
+	{
+		DependencyNode::hash( output, context, h );
+	}
+}
+
+void SceneNode::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( parent->boundPlug(), context, h );
+}
+
+void SceneNode::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( parent->transformPlug(), context, h );
+}
+
+void SceneNode::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( parent->attributesPlug(), context, h );
+}
+
+void SceneNode::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( parent->objectPlug(), context, h );
+}
+
+void SceneNode::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( parent->childNamesPlug(), context, h );
+}
+
+void SceneNode::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	DependencyNode::hash( parent->globalsPlug(), context, h );
+}
+		
+void SceneNode::compute( ValuePlug *output, const Context *context ) const
+{
+	ScenePlug *scenePlug = output->parent<ScenePlug>();
+	if( scenePlug )
+	{
+		if( enabledPlug()->getValue() )
+		{
+			if( output == scenePlug->boundPlug() )
+			{
+				const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+				static_cast<AtomicBox3fPlug *>( output )->setValue(
+					computeBound( scenePath, context, scenePlug )
+				);
+			}
+			else if( output == scenePlug->transformPlug() )
+			{
+				const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+				M44f transform;
+				if( scenePath.size() ) // scene root must have identity transform
+				{
+					transform = computeTransform( scenePath, context, scenePlug );
+				}
+				static_cast<M44fPlug *>( output )->setValue( transform );
+			}
+			else if( output == scenePlug->attributesPlug() )
+			{
+				const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+				CompoundObjectPlug *attributesPlug = static_cast<CompoundObjectPlug *>( output );
+				if( scenePath.size() ) // scene root must have no attributes
+				{
+					attributesPlug->setValue( computeAttributes( scenePath, context, scenePlug ) );
+				}
+				else
+				{
+					attributesPlug->setValue( attributesPlug->defaultValue() );
+				}
+			}
+			else if( output == scenePlug->objectPlug() )
+			{
+				const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+				ObjectPlug *objectPlug = static_cast<ObjectPlug *>( output );
+				if( scenePath.size() ) // scene root must have no object
+				{
+					objectPlug->setValue( computeObject( scenePath, context, scenePlug ) );
+				}
+				else
+				{
+					objectPlug->setValue( objectPlug->defaultValue() );
+				}
+			}
+			else if( output == scenePlug->childNamesPlug() )
+			{
+				const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+				static_cast<InternedStringVectorDataPlug *>( output )->setValue(
+					computeChildNames( scenePath, context, scenePlug )
+				);
+			}
+			else if( output == scenePlug->globalsPlug() )
+			{
+				static_cast<CompoundObjectPlug *>( output )->setValue(
+					computeGlobals( context, scenePlug )
+				);
+			}
+		}
+		else
+		{
+			// node is disabled.
+			output->setToDefault();
 		}
 	}
 }

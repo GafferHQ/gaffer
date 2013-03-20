@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -55,9 +56,18 @@ class SceneProcessor : public SceneNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneProcessor, SceneProcessorTypeId, SceneNode );
 		
-		/// Scene elements enter the node through inPlug() and are output in processed form on SceneNode::outPlug()
+		/// Scene elements enter the node through inPlug() and are output in processed form on SceneNode::outPlug().
+		/// If the node is disabled via enabledPlug(), then the inPlug() is automatically passed through directly
+		/// to the outPlug().
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
+
+	protected :
+
+		/// Reimplemented from SceneNode to pass through the inPlug() hashes when the node is disabled.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// Reimplemented from SceneNode to pass through the inPlug() computations when the node is disabled.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 	
 	private :
 	

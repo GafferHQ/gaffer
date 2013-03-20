@@ -62,26 +62,36 @@ void GlobalsProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &
 	}
 }
 
-void GlobalsProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void GlobalsProcessor::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( output->parent<ScenePlug>() == outPlug() )
-	{
-		if( output == outPlug()->globalsPlug() )
-		{
-			SceneProcessor::hash( output, context, h );
-			inPlug()->globalsPlug()->hash( h );
-			hashGlobals( context, h );
-		}
-		else
-		{
-			// pass through
-			h = inPlug()->getChild<ValuePlug>( output->getName() )->hash();
-		}
-	}
-	else
-	{
-		SceneProcessor::hash( output, context, h );
-	}
+	h = inPlug()->boundPlug()->hash();
+}
+
+void GlobalsProcessor::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->transformPlug()->hash();
+}
+
+void GlobalsProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->attributesPlug()->hash();
+}
+
+void GlobalsProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->objectPlug()->hash();
+}
+
+void GlobalsProcessor::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->childNamesPlug()->hash();
+}
+
+void GlobalsProcessor::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashGlobals( context, parent, h );
+	inPlug()->globalsPlug()->hash( h );
+	hashProcessedGlobals( context, h );
 }
 
 Imath::Box3f GlobalsProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -112,5 +122,5 @@ IECore::ConstInternedStringVectorDataPtr GlobalsProcessor::computeChildNames( co
 IECore::ConstCompoundObjectPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	return processGlobals( context, globals );
+	return computeProcessedGlobals( context, globals );
 }

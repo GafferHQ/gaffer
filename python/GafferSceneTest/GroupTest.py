@@ -445,7 +445,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 	
 		self.assertPathHashesEqual( g["out"], "/group/plane", p["out"], "/plane" )
 	
- 	def testTransformHash( self ) :
+	def testTransformHash( self ) :
 
 		p = GafferScene.Plane()
 		
@@ -570,6 +570,24 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( forwardDeclarations ), 2 )		
 		self.assertTrue( "/group/group/light" in forwardDeclarations )
 		self.assertTrue( "/group/group/light1" in forwardDeclarations )
+	
+	def testDisabled( self ) :
+	
+		p1 = GafferScene.Plane()
+		p2 = GafferScene.Plane()
+		
+		g = GafferScene.Group()
+		g["in"].setInput( p1["out"] )
+		g["in1"].setInput( p2["out"] )
+				
+		self.assertSceneValid( g["out"] )
+		self.assertEqual( g["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group" ] ) )
+		
+		g["enabled"].setValue( False )
+		
+		self.assertSceneValid( g["out"] )
+		self.assertEqual( g["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertScenesEqual( g["out"], p1["out"] )		
 		
 	def setUp( self ) :
 	

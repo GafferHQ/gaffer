@@ -81,12 +81,12 @@ bool Attributes::processesAttributes() const
 	return attributesPlug()->children().size();
 }
 
-void Attributes::hashAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Attributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	attributesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Attributes::processAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
 	const CompoundDataPlug *ap = attributesPlug();
 	if( !ap->children().size() )

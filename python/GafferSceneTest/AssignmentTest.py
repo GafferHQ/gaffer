@@ -118,6 +118,22 @@ class AssignmentTest( unittest.TestCase ) :
 		s.execute( ss )
 		
 		self.assertTrue( s["Box"]["a"]["shader"].getInput().isSame( s["Box"]["in"] ) )
+	
+	def testDisabled( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+		s["s"] = GafferSceneTest.TestShader()
+		s["a"] = GafferScene.Assignment()
+		s["a"]["in"].setInput( s["p"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		
+		self.assertTrue( "shader" in s["a"]["out"].attributes( "/plane" ) )		
+		
+		s["a"]["enabled"].setValue( False )
+		
+		self.assertTrue( "shader" not in s["a"]["out"].attributes( "/plane" ) )		
 		
 if __name__ == "__main__":
 	unittest.main()

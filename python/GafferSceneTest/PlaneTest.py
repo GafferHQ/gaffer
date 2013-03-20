@@ -44,7 +44,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class PlaneTest( unittest.TestCase ) :
+class PlaneTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstruct( self ) :
 	
@@ -95,6 +95,19 @@ class PlaneTest( unittest.TestCase ) :
 		
 		self.assertEqual( p["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0.5, -0.5, 0 ), IECore.V3f( 1.5, 0.5, 0 ) ) )
 		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+
+	def testEnabled( self ) :
+	
+		p = GafferScene.Plane()
+		p["enabled"].setValue( False )
+		
+		self.assertSceneValid( p["out"] )
+		self.assertTrue( p["out"].bound( "/" ).isEmpty() )
+		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData() )
+
+		p["enabled"].setValue( True )
+		self.assertSceneValid( p["out"] )
+		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )	
 
 	def testSerialise( self ) :
 	

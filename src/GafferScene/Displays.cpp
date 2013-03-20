@@ -162,12 +162,12 @@ void Displays::affects( const ValuePlug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-void Displays::hashGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Displays::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	displaysPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Displays::processGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
 	const CompoundPlug *dsp = displaysPlug(); 
 	if( !dsp->children().size() )

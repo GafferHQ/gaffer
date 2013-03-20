@@ -72,8 +72,8 @@ class Constraint : public SceneElementProcessor
 		
 		/// Reimplemented from SceneElementProcessor to call the constraint functions below.			
 		virtual bool processesTransform() const;
-		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::M44f processTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+		virtual void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 
 		/// Must be implemented to return true if the specified plug affects the computation of the constraint.
 		virtual bool affectsConstraint( const Gaffer::ValuePlug *input ) const = 0;
