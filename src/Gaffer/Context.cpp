@@ -108,12 +108,12 @@ IECore::MurmurHash Context::hash() const
 	return ((Object *)( m_data.get() ))->hash();
 }
 
-bool Context::operator == ( const Context &other )
+bool Context::operator == ( const Context &other ) const
 {
 	return m_data->isEqualTo( other.m_data.get() );
 }
 
-bool Context::operator != ( const Context &other )
+bool Context::operator != ( const Context &other ) const
 {
 	return m_data->isNotEqualTo( other.m_data.get() );
 }

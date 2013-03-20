@@ -96,8 +96,8 @@ class Context : public IECore::RefCounted
 		
 		IECore::MurmurHash hash() const;
 		
-		bool operator == ( const Context &other );
-		bool operator != ( const Context &other );
+		bool operator == ( const Context &other ) const;
+		bool operator != ( const Context &other ) const;
 		
 		/// Performs variable substitution of $name, ${name} and ###
 		/// keys in input, using values from the context.
