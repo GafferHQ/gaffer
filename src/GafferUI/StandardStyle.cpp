@@ -61,7 +61,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardStyle );
 StandardStyle::StandardStyle()
 {
 	setFont( LabelText, FontLoader::defaultFontLoader()->load( "Vera.ttf" ) );
-	setColor( BackgroundColor, Color3f( 0.2 ) );
+	setColor( BackgroundColor, Color3f( 0.1 ) );
 	setColor( SunkenColor, Color3f( 0.1 ) );
 	setColor( RaisedColor, Color3f( 0.5 ) );
 	setColor( ForegroundColor, Color3f( 0.9 ) );
@@ -264,6 +264,25 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 		glVertex2f( box.min.x, box.min.y );
 		
 	glEnd();
+}
+
+void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
+{
+	glUniform1i( g_bezierParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	
+	glColor( getColor( BackgroundColor ) );
+		
+	V3f d = line.direction() / 3.0f;
+
+	glUniform3fv( g_v0Parameter, 1, line.p0.getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( line.p0 + d ).getValue() ); 
+	glUniform3fv( g_v2Parameter, 1, ( line.p1 - d ).getValue() ); 
+	glUniform3fv( g_v3Parameter, 1, line.p1.getValue() ); 
+
+	glCallList( connectionDisplayList() );
 }
 
 void StandardStyle::setColor( Color c, Imath::Color3f v )

@@ -37,6 +37,8 @@
 
 #include "boost/bind.hpp"
 
+#include "IECoreGL/Selector.h"
+
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
@@ -60,9 +62,10 @@ NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_
 static const float g_borderWidth = 0.5f;
 static const float g_minWidth = 10.0f;
 static const float g_spacing = 0.5f;
+static const IECore::InternedString g_enabledPlugName( "enabled" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-	:	NodeGadget( node )
+	:	NodeGadget( node ), m_nodeEnabled( true )
 {
 	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
@@ -104,6 +107,14 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	for( Gaffer::PlugIterator it( node ); it!=it.end(); it++ )
 	{
 		addNodule( *it );
+	}
+	
+	const Gaffer::BoolPlug *enabledPlug = node->getChild<BoolPlug>( g_enabledPlugName );
+	if( enabledPlug )
+	{
+		m_nodeEnabled = enabledPlug->getValue();
+		node->plugSetSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
+		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
 	}
 }
 
@@ -215,6 +226,11 @@ void StandardNodeGadget::doRender( const Style *style ) const
 	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ), g_borderWidth, state );
 	
 	NodeGadget::doRender( style );
+	
+	if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
+	{
+		style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );	
+	}
 }
 
 Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
@@ -363,3 +379,20 @@ const Gadget *StandardNodeGadget::getContents() const
 	return contentsContainer()->getChild<Gadget>();
 }
 
+void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
+{
+	if( plug->isInstanceOf( Gaffer::BoolPlug::staticTypeId() ) && plug->parent<Node>() == node() && plug->getName() == g_enabledPlugName )
+	{
+		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
+		renderRequestSignal()( this );
+	}
+}
+
+void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
+{
+	if( plug->isInstanceOf( Gaffer::BoolPlug::staticTypeId() ) && plug->parent<Node>() == node() && plug->getName() == g_enabledPlugName )
+	{
+		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
+		renderRequestSignal()( this );
+	}
+}

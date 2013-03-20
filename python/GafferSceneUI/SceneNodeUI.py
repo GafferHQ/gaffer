@@ -57,6 +57,7 @@ def __noduleCreator( plug ) :
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "in", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "enabled", None )
 
 # Instancer
 

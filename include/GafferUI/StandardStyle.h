@@ -75,6 +75,7 @@ class StandardStyle : public Style
 		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const;
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const;
+		virtual void renderLine( const IECore::LineSegment3f &line ) const;
 		
 		enum Color
 		{

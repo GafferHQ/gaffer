@@ -69,6 +69,8 @@ using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
+static const IECore::InternedString g_enabledPlugName( "enabled" );
+
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None )
 {
@@ -290,6 +292,27 @@ void GraphGadget::doRender( const Style *style ) const
 
 bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 {
+	if( event.key == "D" )
+	{
+		/// \todo This functionality would be better provided by a config file,
+		/// rather than being hardcoded in here. For that to be done easily we
+		/// need a static keyPressSignal() in Widget, which needs figuring out
+		/// some more before we commit to it. In the meantime, this will do.
+		Gaffer::UndoContext undoContext( m_scriptNode );
+		Gaffer::Set *selection = m_scriptNode->selection();
+		for( size_t i = 0, s = selection->size(); i != s; i++ )
+		{
+			Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( selection->member( i ) );
+			if( node && findNodeGadget( node ) )
+			{
+				Gaffer::BoolPlug *enabledPlug = node->getChild<Gaffer::BoolPlug>( g_enabledPlugName );
+				if( enabledPlug && enabledPlug->settable() )
+				{
+					enabledPlug->setValue( !enabledPlug->getValue() );
+				}
+			}
+		}
+	}
 	return false;
 }
 

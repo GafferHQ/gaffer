@@ -92,7 +92,12 @@ class StandardNodeGadget : public NodeGadget
 		void selectionChanged( Gaffer::Set *selection, IECore::RunTimeTyped *node );
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-					
+		
+		void plugSet( const Gaffer::Plug *plug );
+		void plugDirtied( const Gaffer::Plug *plug );
+		
+		bool m_nodeEnabled;
+		
 };
 
 } // namespace GafferUI

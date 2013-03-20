@@ -46,10 +46,23 @@ def __nodeDoubleClick( graphEditor, node ) :
 
 __nodeDoubleClickConnection = GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
+def __toggleEnabled( node ) :
+
+	with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		node["enabled"].setValue( not node["enabled"].getValue() )
+
 def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
 
+	enabledPlug = None
+	with IECore.IgnoredExceptions( KeyError ) :
+		enabledPlug = node["enabled"]
+	
+	if enabledPlug is not None and isinstance( enabledPlug, Gaffer.BoolPlug ) and enabledPlug.settable() :
+		menuDefinition.append( "/EnabledDivider", { "divider" : True } )
+		menuDefinition.append( "/Disable" if enabledPlug.getValue() else "/Enable", { "command" : IECore.curry( __toggleEnabled, node ) } )
+		
 	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.BoxUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 

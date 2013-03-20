@@ -599,7 +599,7 @@ bool ViewportGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
 {
 	if( Gadget *child = getChild<Gadget>() )
 	{
-		return child->keyPressSignal()( child, event );
+		return child->keyReleaseSignal()( child, event );
 	}
 	
 	return false;

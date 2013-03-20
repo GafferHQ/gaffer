@@ -1,4 +1,4 @@
-* Added an enabled/disabled plug to all SceneNodes. Nodes with no inputs output an empty scene when disabled, and SceneProcessors output the first input unchanged.
+* Added an enabled/disabled plug to all SceneNodes. Nodes with no inputs output an empty scene when disabled, and SceneProcessors output the first input unchanged. The enabled/disabled state can be toggled using the node right click menu or the "d" hotkey in the Graph Editor.
 
 * Added SceneNode::hash*() methods to match the GafferScene::compute*() methods. This was necessary for the enabled plug to be implemented, and also makes the implementation of derived classes more readable. Matching pairs of hash*() and compute*() methods should be reused as a pattern throughout Gaffer where appropriate in the future.
 
@@ -7,6 +7,10 @@
 * Removed the ability to return distant descendants from the GraphComponent::getChild() function. Also modified GraphComponent method signatures to use InternedString where appropriate. This change alone gives a 10-15% speedup in evaluating a benchmark GafferScene network.
 
 * Added GraphComponent::descendant() method to replace the lost functionality in GraphComponent::getChild().
+
+* Fixed bug whereby ViewportGadget sent keyReleaseSignal() to the keyPressSignal() of child Gadgets.
+
+* Added Style::renderLine() method.
 
 0.53.0
 ======

@@ -41,6 +41,7 @@
 #include "OpenEXR/ImathBox.h"
 
 #include "IECore/RunTimeTyped.h"
+#include "IECore/LineSegment.h"
 
 #include "GafferUI/TypeIds.h"
 
@@ -94,6 +95,7 @@ class Style : public IECore::RunTimeTyped
 		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const = 0;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const = 0;
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const = 0;
+		virtual void renderLine( const IECore::LineSegment3f &line ) const = 0;
 				
 		//! @name Default style
 		/// There always exists a default style which is
