@@ -110,7 +110,7 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent,
 	std::vector<PlugPtr> toRemove;
 	for( PlugIterator pIt( m_plug->children().begin(), m_plug->children().end() ); pIt!=pIt.end(); pIt++ )
 	{
-		if( (*pIt)->getName().compare( 0, 2, "__" ) == 0 )
+		if( (*pIt)->getName().string().compare( 0, 2, "__" ) == 0 )
 		{
 			// we leave any plugs prefixed with __ alone, on the assumption
 			// that they don't represent child parameters but instead are 

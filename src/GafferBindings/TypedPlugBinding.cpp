@@ -53,7 +53,7 @@ using namespace Gaffer;
 template<typename T>
 static std::string typedPlugRepr( const T *plug )
 {
-	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName() + "\", ";
+	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName().string() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{

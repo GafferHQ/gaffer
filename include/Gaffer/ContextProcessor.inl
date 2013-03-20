@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -74,7 +75,7 @@ void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPl
 	for( OutputPlugIterator it( n ); it != it.end(); it++ )
 	{
 		const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
-		if( 0 == valuePlug->getName().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
+		if( 0 == valuePlug->getName().string().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
 		{
 			outputs.push_back( valuePlug );
 		}
@@ -130,7 +131,7 @@ const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug
 		
 	if( oppositePath.size() )
 	{
-		return BaseType::template getChild<ValuePlug>( oppositePath );
+		return BaseType::template descendant<ValuePlug>( oppositePath );
 	}
 	return 0;
 }

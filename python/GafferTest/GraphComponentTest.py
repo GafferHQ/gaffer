@@ -314,7 +314,7 @@ class GraphComponentTest( unittest.TestCase ) :
 		c.setName( "c" )
 		p.removeChild( c )
 		
-	def testGetChildWithPath( self ) :
+	def testDescendant( self ) :
 	
 		p1 = Gaffer.GraphComponent()
 		p2 = Gaffer.GraphComponent()
@@ -323,7 +323,8 @@ class GraphComponentTest( unittest.TestCase ) :
 		p1["p2"] = p2
 		p2["p3"] = p3
 		
-		self.failUnless( p1.getChild( "p2.p3" ).isSame( p3 ) )
+		self.failUnless( p1.descendant( "p2" ).isSame( p2 ) )
+		self.failUnless( p1.descendant( "p2.p3" ).isSame( p3 ) )
 	
 	def testNameConstraints( self ) :
 	

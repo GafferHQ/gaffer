@@ -71,13 +71,13 @@ GraphComponent::~GraphComponent()
 	}	
 }
 
-const std::string &GraphComponent::setName( const std::string &name )
+const IECore::InternedString &GraphComponent::setName( const IECore::InternedString &name )
 {
 	// make sure the name is valid
 	static boost::regex validator( "^[A-Za-z_]+[A-Za-z_0-9]*" );
 	if( !regex_match( name.c_str(), validator ) )
 	{
-		std::string what = boost::str( boost::format( "Invalid name \"%s\"" ) % name );
+		std::string what = boost::str( boost::format( "Invalid name \"%s\"" ) % name.string() );
 		throw IECore::Exception( what );
 	}
 	
@@ -134,9 +134,9 @@ const std::string &GraphComponent::setName( const std::string &name )
 	}
 	
 	// set the new name if it's different to the old
-	if( newName==m_name.value() )
+	if( newName==m_name )
 	{
-		return m_name.value();
+		return m_name;
 	}
 	
 	Action::enact(
@@ -145,7 +145,7 @@ const std::string &GraphComponent::setName( const std::string &name )
 		boost::bind( &GraphComponent::setNameInternal, GraphComponentPtr( this ), m_name )		
 	);
 	
-	return m_name.value();
+	return m_name;
 }
 
 void GraphComponent::setNameInternal( const IECore::InternedString &name )
@@ -154,9 +154,9 @@ void GraphComponent::setNameInternal( const IECore::InternedString &name )
 	nameChangedSignal()( this );
 }
 
-const std::string &GraphComponent::getName() const
+const IECore::InternedString &GraphComponent::getName() const
 {
-	return m_name.value();
+	return m_name;
 }
 
 std::string GraphComponent::fullName() const
@@ -235,7 +235,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 	}
 }
 
-void GraphComponent::setChild( const std::string &name, GraphComponentPtr child )
+void GraphComponent::setChild( const IECore::InternedString &name, GraphComponentPtr child )
 {
 	GraphComponentPtr existingChild = getChild<GraphComponent>( name );
 	if( existingChild && existingChild == child )

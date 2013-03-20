@@ -123,7 +123,7 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr pl
 	m_minimumInputs( min ),
 	m_maximumInputs( max ),
 	m_lastConnected( 0 ),
-	m_nameValidator( std::string("^") + plugPrototype->getName() + std::string("[_0-9]*") ),
+	m_nameValidator( std::string("^") + plugPrototype->getName().string() + std::string("[_0-9]*") ),
 	m_prototype( plugPrototype )
 {
 	// The first of our inputs is always the prototype plug.

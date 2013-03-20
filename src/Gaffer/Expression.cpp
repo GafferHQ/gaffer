@@ -261,7 +261,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 	
 	// otherwise try to create connections to the plugs the expression wants
 	
-	ValuePlug *dstPlug = p->getChild<ValuePlug>( dstPlugPath );
+	ValuePlug *dstPlug = p->descendant<ValuePlug>( dstPlugPath );
 	if( !dstPlug )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Destination plug \"%s\" does not exist" ) % dstPlugPath ) );
@@ -271,7 +271,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 	setChild( "in", inPlugs );
 	for( std::vector<std::string>::const_iterator it = srcPlugPaths.begin(); it!=srcPlugPaths.end(); it++ )
 	{
-		ValuePlug *srcPlug = p->getChild<ValuePlug>( *it );
+		ValuePlug *srcPlug = p->descendant<ValuePlug>( *it );
 		if( !srcPlug )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Source plug \"%s\" does not exist" ) % *it ) );

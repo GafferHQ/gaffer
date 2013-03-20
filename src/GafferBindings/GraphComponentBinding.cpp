@@ -51,6 +51,16 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
+static const char *setName( GraphComponent &c, const char *name )
+{
+	return c.setName( name ).c_str();
+}
+
+static const char *getName( GraphComponent &c )
+{
+	return c.getName().c_str();
+}
+
 static boost::python::list items( GraphComponent &c )
 {
 	const GraphComponent::ChildContainer &ch = c.children();
@@ -68,7 +78,7 @@ static boost::python::list keys( GraphComponent &c )
 	boost::python::list l;
 	for( GraphComponent::ChildContainer::const_iterator it=ch.begin(); it!=ch.end(); it++ )
 	{
-		l.append( (*it)->getName() );
+		l.append( (*it)->getName().c_str() );
 	}
 	return l;
 }
@@ -101,6 +111,11 @@ static boost::python::tuple children( GraphComponent &c, IECore::TypeId typeId )
 static GraphComponentPtr getChild( GraphComponent &g, const char *n )
 {
 	return g.getChild<GraphComponent>( n );
+}
+
+static GraphComponentPtr descendant( GraphComponent &g, const char *n )
+{
+	return g.descendant<GraphComponent>( n );
 }
 
 static GraphComponentPtr getItem( GraphComponent &g, const char *n )
@@ -179,7 +194,7 @@ static GraphComponentPtr commonAncestor( GraphComponent &g, const GraphComponent
 
 static std::string repr( const GraphComponent *g )
 {
-	return Serialisation::modulePath( g ) + "." + g->typeName() + "( \"" + g->getName() + "\" )";
+	return Serialisation::modulePath( g ) + "." + g->typeName() + "( \"" + g->getName().string() + "\" )";
 }
 
 struct UnarySlotCaller
@@ -223,8 +238,8 @@ void GafferBindings::bindGraphComponent()
 	scope s = IECorePython::RunTimeTypedClass<GraphComponent, WrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
-		.def( "setName", &GraphComponent::setName, return_value_policy<copy_const_reference>() )
-		.def( "getName", &GraphComponent::getName, return_value_policy<copy_const_reference>() )
+		.def( "setName", &setName )
+		.def( "getName", &getName )
 		.def( "fullName", &GraphComponent::fullName )
 		.def( "relativeName", &GraphComponent::relativeName )
 		.def( "nameChangedSignal", &GraphComponent::nameChangedSignal, return_internal_reference<1>() )
@@ -233,6 +248,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "removeChild", &GraphComponent::removeChild )
 		.def( "setChild", &GraphComponent::setChild )
 		.def( "getChild", &getChild )
+		.def( "descendant", &descendant )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const char * ))&getItem )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, long ))&getItem )
 		.def( "__setitem__", &GraphComponent::setChild )

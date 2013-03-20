@@ -326,7 +326,7 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return static_cast<const StringVectorDataPlug *>( plug )->getValue()->copy();
 		default :
 			throw IECore::Exception(
-				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName() % plug->typeName() )
+				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
 			);
 	}		
 

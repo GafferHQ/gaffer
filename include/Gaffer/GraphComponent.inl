@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -44,29 +44,61 @@ namespace Gaffer
 {
 
 template<typename T>
-T *GraphComponent::getChild( const std::string &name )
+T *GraphComponent::getChild( const IECore::InternedString &name )
 {
 	// preferring the nasty casts over maintaining two nearly identical implementations for getChild.
 	return const_cast<T *>( const_cast<const GraphComponent *>( this )->getChild<T>( name ) );
 }
 
 template<typename T>
-const T *GraphComponent::getChild( const std::string &name ) const
+const T *GraphComponent::getChild( const IECore::InternedString &name ) const
 {
-	if( !name.size() )
+	for( ChildContainer::const_iterator it=m_children.begin(), eIt=m_children.end(); it!=eIt; it++ )
+	{
+		if( (*it)->m_name==name )
+		{
+			return IECore::runTimeCast<const T>( it->get() );
+		}
+	}
+	return 0;
+}
+
+template<typename T>
+inline T *GraphComponent::getChild( size_t index )
+{
+	return IECore::runTimeCast<T>( m_children[index].get() );
+}
+
+template<typename T>
+inline const T *GraphComponent::getChild( size_t index ) const
+{
+	return IECore::runTimeCast<const T>( m_children[index].get() );
+}
+
+template<typename T>
+T *GraphComponent::descendant( const std::string &relativePath )
+{
+	// preferring the nasty casts over maintaining two nearly identical implementations for getChild.
+	return const_cast<T *>( const_cast<const GraphComponent *>( this )->descendant<T>( relativePath ) );
+}
+
+template<typename T>
+const T *GraphComponent::descendant( const std::string &relativePath ) const
+{
+	if( !relativePath.size() )
 	{
 		return 0;
 	}
 	
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 
-	Tokenizer t( name, boost::char_separator<char>( "." ) );
+	Tokenizer t( relativePath, boost::char_separator<char>( "." ) );
 	const GraphComponent *result = this;
 	for( Tokenizer::iterator tIt=t.begin(); tIt!=t.end(); tIt++ )
 	{
 		const GraphComponent *child = 0;
 		IECore::InternedString internedName( *tIt );
-		for( ChildContainer::const_iterator it=result->m_children.begin(); it!=result->m_children.end(); it++ )
+		for( ChildContainer::const_iterator it=result->m_children.begin(), eIt=result->m_children.end(); it!=eIt; it++ )
 		{
 			if( (*it)->m_name==internedName )
 			{
@@ -84,18 +116,6 @@ const T *GraphComponent::getChild( const std::string &name ) const
 	return IECore::runTimeCast<const T>( result );
 }
 
-template<typename T>
-inline T *GraphComponent::getChild( size_t index )
-{
-	return IECore::runTimeCast<T>( m_children[index].get() );
-}
-
-template<typename T>
-inline const T *GraphComponent::getChild( size_t index ) const
-{
-	return IECore::runTimeCast<const T>( m_children[index].get() );
-}
-		
 template<typename T>
 T *GraphComponent::parent()
 {

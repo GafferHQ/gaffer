@@ -261,7 +261,7 @@ Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
 
 NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 {
-	if( plug->getName().compare( 0, 2, "__" )==0 )
+	if( plug->getName().string().compare( 0, 2, "__" )==0 )
 	{
 		return 0;
 	}

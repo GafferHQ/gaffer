@@ -69,13 +69,13 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 		if( parentSerialiser->childNeedsConstruction( child ) )
 		{
 			const Serialiser *childSerialiser = serialiser( child );
-			childIdentifier = "__children[\"" + child->getName() + "\"]";
+			childIdentifier = "__children[\"" + child->getName().string() + "\"]";
 			m_hierarchyScript += childIdentifier + " = " + childSerialiser->constructor( child ) + "\n";
 			m_hierarchyScript += parentName + ".addChild( " + childIdentifier + " )\n";
 		}
 		else
 		{
-			childIdentifier = parentName + "[\"" + child->getName() + "\"]";
+			childIdentifier = parentName + "[\"" + child->getName().string() + "\"]";
 		}
 		walk( child, childIdentifier );
 	}
@@ -160,7 +160,7 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 			const Serialiser *childSerialiser = serialiser( child );
 			m_hierarchyScript += parentIdentifier + ".addChild( " + childSerialiser->constructor( child ) + " )\n";
 		}
-		std::string childIdentifier = parentIdentifier + "[\"" + child->getName() + "\"]";
+		std::string childIdentifier = parentIdentifier + "[\"" + child->getName().string() + "\"]";
 		walk( child, childIdentifier );
 	}
 }
@@ -180,14 +180,14 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 			const Serialiser *parentSerialiser = serialiser( parent );
 			if( parentSerialiser->childNeedsConstruction( graphComponent ) )
 			{
-				return "__children[\"" + graphComponent->getName() + "\"]" + result;
+				return "__children[\"" + graphComponent->getName().string() + "\"]" + result;
 			}
 			else
 			{
-				return m_parentName + "[\"" + graphComponent->getName() + "\"]" + result;
+				return m_parentName + "[\"" + graphComponent->getName().string() + "\"]" + result;
 			}
 		}
-		result = "[\"" + graphComponent->getName() + "\"]" + result;
+		result = "[\"" + graphComponent->getName().string() + "\"]" + result;
 		graphComponent = parent;
 	}
 

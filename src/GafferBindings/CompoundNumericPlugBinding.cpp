@@ -52,7 +52,7 @@ using namespace Gaffer;
 template<typename T>
 static std::string compoundNumericPlugRepr( const T *plug )
 {
-	std::string result = std::string( "Gaffer." ) + plug->typeName() + "( \"" + plug->getName() + "\", ";
+	std::string result = std::string( "Gaffer." ) + plug->typeName() + "( \"" + plug->getName().string() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{

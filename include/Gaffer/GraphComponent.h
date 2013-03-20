@@ -80,9 +80,9 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// parent(), and illegal characters may be replaced - for this reason
 		/// the new name is returned.
 		/// \undoable
-		const std::string &setName( const std::string &name );
+		const IECore::InternedString &setName( const IECore::InternedString &name );
 		/// Returns the name for this component.
-		const std::string &getName() const;
+		const IECore::InternedString &getName() const;
 		/// Returns the full path name from the topmost parent to this component.
 		std::string fullName() const;
 		/// Returns the relative path name from the specified ancestor to this component.
@@ -122,20 +122,18 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// child already has a parent then it is first removed from it. An exception is
 		/// thrown if the child or parent doesn't accept the new relationship.
 		/// \undoable
-		void setChild( const std::string &name, GraphComponentPtr child );
+		void setChild( const IECore::InternedString &name, GraphComponentPtr child );
 		/// Removes a child. Throws an Exception if the passed component is
 		/// not a child of this component.
 		/// \todo Do we need acceptsRemoval()?
 		/// \undoable
 		void removeChild( GraphComponentPtr child );
-		/// Get a child by name, performing a runTimeCast to T. The name
-		/// may consist of "." delimited names to get a distant child-of-a-child.
+		/// Get an immediate child by name, performing a runTimeCast to T.
 		template<typename T>
-		T *getChild( const std::string &name );
-		/// Get a child by name, performing a runTimeCast to T. The name
-		/// may consist of "." delimited names to get a distant child-of-a-child.
+		T *getChild( const IECore::InternedString &name );
+		/// Get an immediate child by name, performing a runTimeCast to T.
 		template<typename T>
-		const T *getChild( const std::string &name ) const;
+		const T *getChild( const IECore::InternedString &name ) const;
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
 		template<typename T>
@@ -147,6 +145,14 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
+		/// Returns a descendant of this node specified by a "." separated
+		/// relative path, performing a runTimeCast to T.
+		template<typename T>
+		inline T *descendant( const std::string &relativePath );
+		/// Returns a descendant of this node specified by a "." separated
+		/// relative path, performing a runTimeCast to T.
+		template<typename T>
+		inline const T *descendant( const std::string &relativePath ) const;
 		/// Returns the parent for this component, performing a runTimeCast to T.
 		template<typename T>
 		T *parent();
