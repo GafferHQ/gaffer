@@ -16,6 +16,8 @@
 
 * VectorDataWidget now supports InternedStringVectorData. This makes it possible to view InternedStringVectorData in the browser app.
 
+* Fixed errors caused by trying to view a SceneReader with an empty filename.
+
 0.53.0
 ======
 

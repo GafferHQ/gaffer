@@ -281,7 +281,18 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( reader["out"] )
 		self.assertTrue( reader["out"].bound( "/" ).isEmpty() )
 		self.assertEqual( reader["out"].childNames( "/" ), IECore.InternedStringVectorData() )
+	
+	def testEmptyFileName( self ) :
+	
+		s = GafferScene.SceneReader()
 		
+		self.assertSceneValid( s["out"] )
+		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData() )
+		self.assertEqual( s["out"].bound( "/" ), IECore.Box3f() )
+		self.assertEqual( s["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( s["out"].attributes( "/" ), IECore.CompoundObject() )
+		self.assertEqual( s["out"].object( "/" ), IECore.NullObject() )
+
 	def tearDown( self ) :
 		
 		if os.path.exists( self.__testFile ) :

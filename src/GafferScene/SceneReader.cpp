@@ -155,7 +155,13 @@ SceneReader::~SceneReader()
 
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return Box3f();
+	}
+	
+	Cache::EntryPtr entry = cache().entry( fileName, path );
 	Box3d b = entry->sceneInterface()->readBound( context->getFrame() );
 	
 	if( b.isEmpty() )
@@ -168,7 +174,13 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 
 Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return M44f();
+	}
+	
+	Cache::EntryPtr entry = cache().entry( fileName, path );
 	M44d t = entry->sceneInterface()->readTransformAsMatrix( context->getFrame() );
 	
 	return M44f(
@@ -181,7 +193,13 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 
 IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return parent->attributesPlug()->defaultValue();
+	}
+	
+	Cache::EntryPtr entry = cache().entry( fileName, path );
 	
 	SceneInterface::NameList nameList;
 	entry->sceneInterface()->readAttributeNames( nameList );
@@ -198,7 +216,13 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return parent->objectPlug()->defaultValue();
+	}
+	
+	Cache::EntryPtr entry = cache().entry( fileName, path );
 	ObjectPtr o;
 	
 	if( entry->sceneInterface()->hasObject() )
@@ -213,7 +237,13 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Cache::EntryPtr entry = cache().entry( fileNamePlug()->getValue(), path );
+	std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return parent->childNamesPlug()->defaultValue();
+	}
+	
+	Cache::EntryPtr entry = cache().entry( fileName, path );
 
 	InternedStringVectorDataPtr result = new InternedStringVectorData;
 	entry->sceneInterface()->childNames( result->writable() );
