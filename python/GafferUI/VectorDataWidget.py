@@ -784,6 +784,18 @@ class _StringDataAccessor( _DataAccessor ) :
 	
 _DataAccessor.registerType( IECore.StringVectorData.staticTypeId(), _StringDataAccessor )
 
+class _InternedStringDataAccessor( _StringDataAccessor ) :
+
+	def __init__( self, data ) :
+		
+		_DataAccessor.__init__( self, data )
+	
+	def getElement( self, rowIndex, columnIndex ) :
+	
+		return GafferUI._Variant.toVariant( self.data()[rowIndex].value() )
+		
+_DataAccessor.registerType( IECore.InternedStringVectorData.staticTypeId(), _InternedStringDataAccessor )
+
 # The _Delegate classes are used to decide how the different types of data are
 # displayed. They derive from QStyledItemDelegate for drawing and event handling,
 # but also have additional methods to specify sizing.
@@ -904,3 +916,4 @@ class _StringDelegate( _Delegate ) :
 		return True
 
 _Delegate.registerType( IECore.StringVectorData.staticTypeId(), _StringDelegate )
+_Delegate.registerType( IECore.InternedStringVectorData.staticTypeId(), _StringDelegate )

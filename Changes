@@ -14,6 +14,8 @@
 
 * Added Style::renderLine() method.
 
+* VectorDataWidget now supports InternedStringVectorData. This makes it possible to view InternedStringVectorData in the browser app.
+
 0.53.0
 ======
 
