@@ -147,6 +147,27 @@ class ExecutableNodeTest( unittest.TestCase ) :
 
 		self.assertEqual( Gaffer.Despatcher._uniqueTasks( [ Gaffer.ExecutableNode.Task( n2, c1 ) ] ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] ) ] )
 
+	def testExecute( self ):
+
+		n = ExecutableNodeTest.MyNode(False)
+
+		n2 = ExecutableNodeTest.MyNode(False)
+
+		# make n3 requiring n
+		r1 = Gaffer.Plug( name = "r1" )
+		n2['requirements'].addChild( r1 )
+		r1.setInput( n['requirement'] )
+
+		despatcher = Gaffer.Despatcher.despatcher("local")
+
+		self.assertEqual( n2.executionCount, 0 )
+		self.assertEqual( n.executionCount, 0 )
+
+		despatcher.despatch( [ n2 ] )
+
+		self.assertEqual( n2.executionCount, 1 )
+		self.assertEqual( n.executionCount, 1 )
+
 	def testTaskConstructors( self ) :
 	
 		c = Gaffer.Context()

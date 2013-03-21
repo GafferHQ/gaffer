@@ -99,6 +99,17 @@ class DespatcherTest( unittest.TestCase ) :
 
 		self.assertEqual( op1.counter, 1 )
 
+	def testLocalDespatcher( self ) :
+
+		log = list()
+		op1 = TestOp("1", log)
+		n1 = Gaffer.ExecutableOpHolder()
+		n1.setParameterised( op1 )
+
+		Gaffer.Despatcher.despatcher('local').despatch( [ n1 ] )
+
+		self.assertEqual( op1.counter, 1 )
+
 	def testDespatcherRegistration( self ) :
 
 		self.failUnless( "testDespatcher" in Gaffer.Despatcher.despatcherNames() )

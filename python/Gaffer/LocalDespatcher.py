@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,36 +34,42 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
-from SphereNode import SphereNode
-from GroupNode import GroupNode
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
-from LocalDespatcher import LocalDespatcher
+import Gaffer
+import IECore
 
+class LocalDespatcher( Gaffer.Despatcher ) :
+
+	__despatcher = None
+
+	def __init__( self ) :
+
+		Gaffer.Despatcher.__init__( self )
+
+	def despatch( self, nodes ) :
+
+		c = Gaffer.Context()
+
+		taskList = map( lambda n: Gaffer.ExecutableNode.Task(n,c), nodes )
+
+		allTasksAndRequirements = Gaffer.Despatcher._uniqueTasks( taskList )
+
+		for (task,requirements) in allTasksAndRequirements :
+
+			task.node.execute( [ task.context ] )
+
+	def addPlugs( self, despatcherPlug ) :
+
+		pass
+
+	@staticmethod
+	def _singleton():
+
+		if LocalDespatcher.__despatcher is None :
+
+			LocalDespatcher.__despatcher = LocalDespatcher()
+
+		return LocalDespatcher.__despatcher
+
+IECore.registerRunTimeTyped( LocalDespatcher )
+
+Gaffer.Despatcher._registerDespatcher( "local", LocalDespatcher._singleton() )
