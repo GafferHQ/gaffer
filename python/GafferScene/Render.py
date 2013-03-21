@@ -108,7 +108,7 @@ class Render( Gaffer.Node ) :
 			# blur by just having a huge bound - we know we want to render the
 			# contents of the procedural (it's all we have to render), and the procedural
 			# will accurately bound itself once it's called by the renderer anyway.
-			bound = IECore.Box3f( IECore.V3f( -10e34 ), IECore.V3f( 10e34 ) )
+			bound = IECore.Box3f( IECore.V3f( -1e30 ), IECore.V3f( 1e30 ) )
 			
 			with IECore.AttributeBlock( renderer ) :
 			
