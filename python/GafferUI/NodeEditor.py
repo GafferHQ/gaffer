@@ -72,6 +72,9 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		
 		for editor in scriptWindow.getLayout().editors( type = GafferUI.NodeEditor ) :
 			if node.isSame( editor._lastAddedNode() ) :
+				tabbedContainer = editor.ancestor( GafferUI.TabbedContainer )
+				if tabbedContainer is not None :
+					tabbedContainer.setCurrent( editor )
 				return editor
 		
 		childWindows = scriptWindow.childWindows()

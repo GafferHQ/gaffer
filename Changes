@@ -26,6 +26,8 @@
 
 * EditMenu now uses both backspace and delete as shortcuts for the delete action.
 
+* Double-clicking a node in the Node Graph now makes any Node Editor tabs editing that node visible by making them the current tab.
+
 0.53.0
 ======
 
