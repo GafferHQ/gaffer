@@ -750,7 +750,6 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 libraries = {
 
 	"Gaffer" : {
-		"additionalFiles" : glob.glob( "include/GafferBindings/*" ),
 	},
 	
 	"GafferTest" : {
@@ -990,6 +989,15 @@ for libraryName, libraryDef in libraries.items() :
 		
 		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
+				
+		# header install
+		bindingsHeaderInstall = pythonEnv.Install(
+			"$BUILD_DIR/" + "include/" + libraryName + "Bindings",
+			glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
+			glob.glob( "include/" + libraryName + "Bindings/*.inl" )
+		)
+		pythonEnv.Alias( "build", bindingsHeaderInstall )
+
 	
 	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )
 	if pythonModuleSource :
