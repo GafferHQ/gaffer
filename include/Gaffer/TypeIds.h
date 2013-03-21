@@ -99,7 +99,9 @@ enum TypeId
 	ParameterisedHolderDependencyNodeTypeId = 110052,
 	BoxTypeId = 110053,
 	InternedStringVectorDataPlugTypeId = 110054,
-	
+	ExecutableNodeTypeId = 110055,
+	ExecutableOpHolderTypeId = 110056,
+	DespatcherTypeId = 110057,
 	LastTypeId = 110200,
 	
 };

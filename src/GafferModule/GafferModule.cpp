@@ -71,6 +71,9 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/BoxBinding.h"
 #include "GafferBindings/ActionBinding.h"
+#include "GafferBindings/ExecutableOpHolderBinding.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferBindings/DespatcherBinding.h"
 
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -111,6 +114,9 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindRandom();
 	bindBox();
 	bindAction();
+	bindExecutableNode();
+	bindDespatcher();
+	bindExecutableOpHolder();
 			
 	DependencyNodeClass<ContextProcessorDependencyNode>();
 	DependencyNodeClass<TimeWarpDependencyNode>();

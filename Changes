@@ -1,3 +1,5 @@
+* Added base classes Executable and Despatcher and two derived Node classes: ExecutableNode and ExecutableOpHolder.
+
 * Added an enabled/disabled plug to all SceneNodes. Nodes with no inputs output an empty scene when disabled, and SceneProcessors output the first input unchanged. The enabled/disabled state can be toggled using the node right click menu or the "d" hotkey in the Graph Editor.
 
 * Added SceneNode::hash*() methods to match the GafferScene::compute*() methods. This was necessary for the enabled plug to be implemented, and also makes the implementation of derived classes more readable. Matching pairs of hash*() and compute*() methods should be reused as a pattern throughout Gaffer where appropriate in the future.

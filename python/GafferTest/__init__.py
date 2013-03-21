@@ -114,6 +114,9 @@ from DependencyNodeTest import DependencyNodeTest
 from BoxPlugTest import BoxPlugTest
 from BoxTest import BoxTest
 from OutputRedirectionTest import OutputRedirectionTest
+from ExecutableNodeTest import ExecutableNodeTest
+from ExecutableOpHolderTest import ExecutableOpHolderTest
+from DespatcherTest import DespatcherTest
 
 if __name__ == "__main__":
 	import unittest
