@@ -56,7 +56,7 @@ class NestedPlugTestNode( Gaffer.Node ) :
 IECore.registerRunTimeTyped( NestedPlugTestNode )
 GafferUI.Nodule.registerNodule( NestedPlugTestNode.staticTypeId(), "c", GafferUI.CompoundNodule )
 
-class GraphEditorTest( GafferUITest.TestCase ) :
+class NodeGraphTest( GafferUITest.TestCase ) :
 
 	def testCreateWithExistingGraph( self ) :
 	
@@ -67,7 +67,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		s["add1"]["op1"].setInput( s["add2"]["sum"] )
 		
-		g = GafferUI.GraphEditor( s )
+		g = GafferUI.NodeGraph( s )
 		
 		self.failUnless( g.graphGadget().nodeGadget( s["add1"] ).node() is s["add1"] )
 		self.failUnless( g.graphGadget().nodeGadget( s["add2"] ).node() is s["add2"] )
@@ -77,7 +77,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 	def testGraphGadgetAccess( self ) :
 	
 		s = Gaffer.ScriptNode()
-		ge = GafferUI.GraphEditor( s )
+		ge = GafferUI.NodeGraph( s )
 		
 		g = ge.graphGadget()
 		
@@ -107,7 +107,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		
 		s["add1"]["op1"].setInput( s["add2"]["sum"] )
 		
-		g = GafferUI.GraphEditor( s )
+		g = GafferUI.NodeGraph( s )
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["add1"] ] ) )
 		
@@ -614,7 +614,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
 		
-		e = GafferUI.GraphEditor( s )
+		e = GafferUI.NodeGraph( s )
 		
 		we = weakref.ref( e )
 		del e

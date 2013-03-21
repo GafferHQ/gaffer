@@ -52,21 +52,21 @@ def nodeMenuCreateCommand( menu ) :
 	
 	return Gaffer.Box.create( script, script.selection() )
 
-## A callback suitable for use with GraphEditor.nodeContextMenuSignal - it provides
+## A callback suitable for use with NodeGraph.nodeContextMenuSignal - it provides
 # menu options specific to Boxes. We don't actually register it automatically,
 # but instead let the startup files for particular applications register
 # it if it suits their purposes.
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 	
 	if not isinstance( node, Gaffer.Box ) :
 		return
 			
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Show Contents...", { "command" : IECore.curry( __showContents, graphEditor, node ) } )
+	menuDefinition.append( "/Show Contents...", { "command" : IECore.curry( __showContents, nodeGraph, node ) } )
 
-def __showContents( graphEditor, box ) :
+def __showContents( nodeGraph, box ) :
 
-	GafferUI.GraphEditor.acquire( box )
+	GafferUI.NodeGraph.acquire( box )
 
 # PlugValueWidget registrations
 ##########################################################################

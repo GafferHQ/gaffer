@@ -149,7 +149,7 @@ from PlugWidget import PlugWidget
 from EditorWidget import EditorWidget
 from ScriptEditor import ScriptEditor
 from GadgetWidget import GadgetWidget
-from GraphEditor import GraphEditor
+from NodeGraph import NodeGraph
 from ScriptWindow import ScriptWindow
 from CompoundEditor import CompoundEditor
 from NameWidget import NameWidget

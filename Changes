@@ -18,7 +18,9 @@
 
 * Fixed errors caused by trying to view a SceneReader with an empty filename.
 
-* The currently active tab for each panel is now saved with each layout.
+* The currently active tab for each panel is now saved with each layout.NodeGraphTest
+
+* Renamed GraphEditor to NodeGraph - the previous name was confusing to users. Renaming all the classes rather than just changing the label, because we want a fairly straightforward mapping from UI->API to help users make the transition into scripting.
 
 0.53.0
 ======

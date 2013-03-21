@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,6 +37,6 @@
 
 import GafferUI
 
-GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.5, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.GraphEditor( scriptNode ),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.NodeEditor( scriptNode ),), (GafferUI.ScriptEditor( scriptNode ),) ) ) ) ) )" )
-GafferUI.Layouts.add( "Scene", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.772664, ( ( GafferUI.SplitContainer.Orientation.Horizontal, 0.255898, ( (GafferSceneUI.SceneEditor( scriptNode ),), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( ( GafferUI.SplitContainer.Orientation.Vertical, 1.000000, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.TimeEditor( scriptNode ),) ) ), (GafferUI.GraphEditor( scriptNode ),) ) ) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( (GafferUI.NodeEditor( scriptNode ),), (GafferSceneUI.SceneInspector( scriptNode ),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Default", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.5, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.NodeGraph( scriptNode ),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.NodeEditor( scriptNode ),), (GafferUI.ScriptEditor( scriptNode ),) ) ) ) ) )" )
+GafferUI.Layouts.add( "Scene", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.772664, ( ( GafferUI.SplitContainer.Orientation.Horizontal, 0.255898, ( (GafferSceneUI.SceneEditor( scriptNode ),), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( ( GafferUI.SplitContainer.Orientation.Vertical, 1.000000, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.TimeEditor( scriptNode ),) ) ), (GafferUI.NodeGraph( scriptNode ),) ) ) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( (GafferUI.NodeEditor( scriptNode ),), (GafferSceneUI.SceneInspector( scriptNode ),) ) ) ) ) )" )
 GafferUI.Layouts.add( "Empty", "GafferUI.CompoundEditor( scriptNode )" )

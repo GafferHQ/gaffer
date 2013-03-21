@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-class GraphEditor( GafferUI.EditorWidget ) :
+class NodeGraph( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode, **kw ) :
 				
@@ -90,7 +90,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
-	# ( graphEditor, node, menuDefinition ) and the menu definition should just be
+	# ( nodeGraph, node, menuDefinition ) and the menu definition should just be
 	# edited in place. Typically you would add slots to this signal
 	# as part of a startup script.
 	@classmethod
@@ -100,13 +100,13 @@ class GraphEditor( GafferUI.EditorWidget ) :
 	
 	__nodeDoubleClickSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted whenever a node is double clicked.
-	# Slots should have the signature ( graphEditor, node ).
+	# Slots should have the signature ( nodeGraph, node ).
 	@classmethod
 	def nodeDoubleClickSignal( cls ) :
 	
 		return cls.__nodeDoubleClickSignal
 	
-	## Ensures that the specified node has a visible GraphEditor viewing
+	## Ensures that the specified node has a visible NodeGraph viewing
 	# it, and returns that editor.
 	## \todo Consider how this relates to the todo items in NodeEditor.acquire().
 	@classmethod
@@ -119,12 +119,12 @@ class GraphEditor( GafferUI.EditorWidget ) :
 			
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 		tabbedContainer = None
-		for editor in scriptWindow.getLayout().editors( type = GafferUI.GraphEditor ) :
+		for editor in scriptWindow.getLayout().editors( type = GafferUI.NodeGraph ) :
 			if rootNode.isSame( editor.graphGadget().getRoot() ) :
 				editor.parent().setCurrent( editor )
 				return editor
 					
-		editor = GraphEditor( script )
+		editor = NodeGraph( script )
 		editor.graphGadget().setRoot( rootNode )
 		scriptWindow.getLayout().addEditor( editor )
 		
@@ -132,7 +132,7 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		
 	def __repr__( self ) :
 
-		return "GafferUI.GraphEditor( scriptNode )"	
+		return "GafferUI.NodeGraph( scriptNode )"	
 
 	def __buttonPress( self, widget, event ) :
 				
@@ -256,4 +256,4 @@ class GraphEditor( GafferUI.EditorWidget ) :
 		# remove us? Consider how this relates to NodeEditor.__deleteWindow() too.
 		self.parent().removeChild( self )
 	
-GafferUI.EditorWidget.registerType( "GraphEditor", GraphEditor )
+GafferUI.EditorWidget.registerType( "NodeGraph", NodeGraph )

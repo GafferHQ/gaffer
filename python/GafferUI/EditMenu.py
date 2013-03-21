@@ -207,12 +207,12 @@ def __scriptAndParent( menu ) :
 	
 	## \todo Does this belong as a Window.focussedChild() method?
 	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
-	graphEditor = None
+	nodeGraph = None
 	if focusWidget is not None :
-		graphEditor = focusWidget.ancestor( GafferUI.GraphEditor )
+		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
 	
-	if graphEditor is not None :
-		parent = graphEditor.graphGadget().getRoot()
+	if nodeGraph is not None :
+		parent = nodeGraph.graphGadget().getRoot()
 	else :
 		parent = script
 	

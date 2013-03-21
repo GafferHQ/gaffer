@@ -40,18 +40,18 @@ import IECore
 import GafferUI
 
 ## \todo Make this behaviour a part of the preferences.
-def __nodeDoubleClick( graphEditor, node ) :
+def __nodeDoubleClick( nodeGraph, node ) :
 
 	GafferUI.NodeEditor.acquire( node )
 
-__nodeDoubleClickConnection = GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
+__nodeDoubleClickConnection = GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
 def __toggleEnabled( node ) :
 
 	with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 		node["enabled"].setValue( not node["enabled"].getValue() )
 
-def __nodeContextMenu( graphEditor, node, menuDefinition ) :
+def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
 
@@ -63,7 +63,7 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 		menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 		menuDefinition.append( "/Disable" if enabledPlug.getValue() else "/Enable", { "command" : IECore.curry( __toggleEnabled, node ) } )
 		
-	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.BoxUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
+	GafferUI.BoxUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 
-__nodeContextMenuConnection = GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )
+__nodeContextMenuConnection = GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeContextMenu )

@@ -65,12 +65,12 @@ def nodeCreatorWrapper( nodeCreator ) :
 
 	def f( menu ) :
 				
-		graphEditor = menu.ancestor( GafferUI.GraphEditor )
-		assert( graphEditor is not None )
-		gadgetWidget = graphEditor.graphGadgetWidget()
+		nodeGraph = menu.ancestor( GafferUI.NodeGraph )
+		assert( nodeGraph is not None )
+		gadgetWidget = nodeGraph.graphGadgetWidget()
 		graphGadget = gadgetWidget.getViewportGadget().getChild()
 		
-		script = graphEditor.scriptNode()
+		script = nodeGraph.scriptNode()
 
 		commandArgs = []
 		with IECore.IgnoredExceptions( TypeError ) :
