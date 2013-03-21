@@ -121,8 +121,12 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, __serialise( w[0] ), __serialise( w[1] ) )		
 			else :
 				# not split
-				return repr( tuple( w[0][:] ) )
-			
+				tabbedContainer = w[0]
+				tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
+				if tabbedContainer.getCurrent() is not None :
+					tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
+				return repr( tabDict )
+		
 		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % __serialise( self.__splitContainer )
 
 	def __buttonPress( self, splitContainer, event ) :
@@ -239,7 +243,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	def __addChildren( self, splitContainer, children ) :
 		
-		if len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
+		if isinstance( children, tuple ) and len( children ) and isinstance( children[0], GafferUI.SplitContainer.Orientation ) :
 		
 			self.__split( splitContainer, children[0], 0 )
 			self.__addChildren( splitContainer[0], children[2][0] )
@@ -247,9 +251,16 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			splitContainer.setSizes( [ children[1], 1.0 - children[1] ] )
 			
 		else :
-		
-			for c in children :
-				self.__addChild( splitContainer, c )		
+			if isinstance( children, tuple ) :
+				# backwards compatibility - tabs provided as a tuple
+				for c in children :
+					self.__addChild( splitContainer, c )		
+			else :
+				# new format - various fields provided by a dictionary
+				for c in children["tabs"] :
+					self.__addChild( splitContainer, c )
+				splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )	
+					
 			
 	def __addChild( self, splitContainer, nameOrEditor ) :
 	

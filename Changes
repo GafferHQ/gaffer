@@ -18,6 +18,8 @@
 
 * Fixed errors caused by trying to view a SceneReader with an empty filename.
 
+* The currently active tab for each panel is now saved with each layout.
+
 0.53.0
 ======
 
