@@ -58,7 +58,7 @@ class PythonExecutableNode : public ExecutableNode
 {
 	public :
 
-		static list defaultRequirements( const Node *node, const Context *context )
+		static list defaultRequirements( ExecutableNode *node, const Context *context )
 		{
 			Executable::Tasks tasks;
 			Executable::defaultRequirements( node, context, tasks );
@@ -100,7 +100,7 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 		{
 		}
 
-		void execute( const Executable::Contexts &contexts ) const
+		virtual void execute( const Executable::Contexts &contexts ) const
 		{
 			ScopedGILLock gilLock;
 			list contextList;
@@ -119,7 +119,7 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 			}
 		}
 
-		void executionRequirements( const Context *context, Executable::Tasks &requirements ) const
+		virtual void executionRequirements( const Context *context, Executable::Tasks &requirements ) const
 		{
 			ScopedGILLock gilLock;
 			override req = this->get_override( "executionRequirements" );
@@ -128,7 +128,7 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 				throw Exception( "executionRequirements() python method not defined" );
 			}
 
-			list requirementList = req( context );
+			list requirementList = req( ContextPtr(const_cast<Context*>(context)) );
 			
 			Executable::Tasks tasks;
 			
@@ -140,13 +140,13 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 			}
 		}
 
-		IECore::MurmurHash executionHash( const Context *context ) const
+		virtual IECore::MurmurHash executionHash( const Context *context ) const
 		{
 			ScopedGILLock gilLock;
 			override h = this->get_override( "executionHash" );
 			if( h )
 			{
-				return h( context );
+				return h( ContextPtr(const_cast<Context*>(context)) );
 			}
 			else
 			{
@@ -156,7 +156,6 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 		
 };
 
-//typedef NodeWrapper< ExecutableNode > ExecutableNodeWrapper;
 IE_CORE_DECLAREPTR( ExecutableNodeWrapper );
 
 static unsigned long taskHash( const Executable::Task &t )
@@ -198,7 +197,7 @@ void GafferBindings::bindExecutableNode()
 	typedef NodeClass<ExecutableNode, ExecutableNodeWrapperPtr> PythonType;
 	PythonType executable;
 	executable
-		.def( "_defaultRequirements", &PythonExecutableNode::defaultRequirements ).staticmethod( "_defaultRequirements" )
+		.def( "_defaultRequirements", &PythonExecutableNode::defaultRequirements )
 		.def( "_acceptsRequirementsInput", &PythonExecutableNode::acceptsRequirementsInput ).staticmethod( "_acceptsRequirementsInput" )
 
 		// static function introduced in python because we don't have a way to detect multiple inheritance in python.

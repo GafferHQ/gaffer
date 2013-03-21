@@ -43,16 +43,109 @@ import GafferTest
 
 class ExecutableNodeTest( unittest.TestCase ) :
 
+	class MyNode( Gaffer.ExecutableNode ) :
+
+		def __init__( self, withHash ) :
+
+			Gaffer.ExecutableNode.__init__( self )
+			self.__withHash = withHash
+			self.executionCount = 0
+
+		def execute( self, contexts ):
+			
+			self.executionCount += 1
+
+		def executionRequirements( self, context ) :
+
+			return self._defaultRequirements( context )
+
+		def executionHash( self, context ) :
+
+			h = IECore.MurmurHash()
+
+			if self.__withHash :
+
+				h.append( context['time'] )
+
+			return h
+
+		def acceptsInput( self, plug, inputPlug ) :
+
+			return Gaffer.ExecutableNode._acceptsRequirementsInput( plug, inputPlug )
+
 	def testIsExecutable( self ) :
 
-		# \todo test class and instance tests (also with non-executable objects)
-		pass
+		c = Gaffer.Context()
+		self.assertFalse( Gaffer.ExecutableNode.isExecutable( Gaffer.Despatcher ) )
+		self.assertFalse( Gaffer.ExecutableNode.isExecutable( Gaffer.Node ) )
+		self.assertFalse( Gaffer.ExecutableNode.isExecutable( c ) )
 
-	def testDerivedClass( self ) :
+		self.assertTrue( Gaffer.ExecutableNode.isExecutable( Gaffer.ExecutableNode ) )
+		n = Gaffer.ExecutableNode()
+		self.assertTrue( Gaffer.ExecutableNode.isExecutable( n ) )
 
-		# \todo use default accepts and requirements and isExecutable (instance and class)
-		# \todo test calls to hash, execute and requirements defined in python
-		pass
+		n = ExecutableNodeTest.MyNode(False)
+
+		self.assertTrue( Gaffer.ExecutableNode.isExecutable( ExecutableNodeTest.MyNode ) )
+		self.assertTrue( Gaffer.ExecutableNode.isExecutable( n ) )
+
+	def testExecutionHash( self ) :
+
+		c1 = Gaffer.Context()
+		c1['time'] = 1.0
+		c2 = Gaffer.Context()
+		c2['time'] = 2.0
+		c3 = Gaffer.Context()
+		c3['time'] = 3.0
+
+		n = ExecutableNodeTest.MyNode(False)
+
+		taskList = list()
+		taskList.append( Gaffer.ExecutableNode.Task( n, c1 ) )
+		taskList.append( Gaffer.ExecutableNode.Task( n, c2 ) )
+		taskList.append( Gaffer.ExecutableNode.Task( n, c3 ) )
+
+		# since the hash is the same, no matter the context, it should return one single task
+		self.assertEqual( Gaffer.Despatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ) ] )
+
+		n2 = ExecutableNodeTest.MyNode(True)
+
+		taskList = list()
+		taskList.append( Gaffer.ExecutableNode.Task( n2, c1 ) )
+		taskList.append( Gaffer.ExecutableNode.Task( n2, c2 ) )
+		taskList.append( Gaffer.ExecutableNode.Task( n2, c3 ) )
+
+		# since the hash includes the 'time' each Task is considered diferent
+		self.assertEqual( Gaffer.Despatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n2, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c2 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c3 ), [] ) ] )
+
+	def testExecutionRequirements( self ) :
+		"""Test the function executionRequirements and Executable::defaultRequirements """
+
+		c1 = Gaffer.Context()
+		c1['time'] = 1.0
+		c2 = Gaffer.Context()
+		c2['time'] = 2.0
+
+		n = ExecutableNodeTest.MyNode(True)
+		n2 = ExecutableNodeTest.MyNode(True)
+
+		# make n3 requiring n
+		r1 = Gaffer.Plug( name = "r1" )
+		n2['requirements'].addChild( r1 )
+		r1.setInput( n['requirement'] )
+
+		self.assertEqual( n.executionRequirements(c1), [] )
+		self.assertEqual( n2.executionRequirements(c1), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
+		self.assertEqual( n2.executionRequirements(c2), [ Gaffer.ExecutableNode.Task( n, c2 ) ] )
+
+		# if we ask for executing n2 we should get n followed by n2
+		l = list()
+		l.append( Gaffer.ExecutableNode.Task( n2, c1 ) )
+		Gaffer.Despatcher._uniqueTasks( l )
+		( Gaffer.ExecutableNode.Task( n, c1 ), [] )
+		( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
+
+		self.assertEqual( Gaffer.Despatcher._uniqueTasks( [ Gaffer.ExecutableNode.Task( n2, c1 ) ] ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] ) ] )
 
 	def testTaskConstructors( self ) :
 	
