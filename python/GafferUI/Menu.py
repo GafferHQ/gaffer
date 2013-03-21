@@ -214,7 +214,7 @@ class Menu( GafferUI.Widget ) :
 						
 						shortCut = getattr( item, "shortCut", None )
 						if shortCut is not None :
-							qtAction.setShortcut( QtGui.QKeySequence( shortCut ) ) 
+							qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
 						
 						qtMenu.addAction( qtAction )
 

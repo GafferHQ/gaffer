@@ -51,7 +51,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
-	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )

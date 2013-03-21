@@ -22,6 +22,10 @@
 
 * Renamed GraphEditor to NodeGraph - the previous name was confusing to users. Renaming all the classes rather than just changing the label, because we want a fairly straightforward mapping from UI->API to help users make the transition into scripting.
 
+* Multiple shortcuts may now be specified for each menu item by passing a comma separated list of shortcuts in the "shortCut" field of the menu item.
+
+* EditMenu now uses both backspace and delete as shortcuts for the delete action.
+
 0.53.0
 ======
 
