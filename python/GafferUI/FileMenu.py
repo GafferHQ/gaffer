@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -129,8 +129,12 @@ def saveAs( menu ) :
 
 	if not path :
 		return
+	
+	path = str( path )
+	if not path.endswith( ".gfr" ) :
+		path += ".gfr"
 
-	script["fileName"].setValue( str( path ) )
+	script["fileName"].setValue( path )
 	script.save()
 
 ## A function suitable as the command for a File/Revert To Saved menu item. It must be invoked from a menu which

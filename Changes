@@ -34,6 +34,8 @@
 
 * Renamed TimeEditor to a more user friendly Timeline.
 
+* The File->SaveAs... menu item now ensures that the file saved always has a ".gfr" extension.
+
 0.53.0
 ======
 
