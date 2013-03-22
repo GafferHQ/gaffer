@@ -28,6 +28,8 @@
 
 * Double-clicking a node in the Node Graph now makes any Node Editor tabs editing that node visible by making them the current tab.
 
+* The ` key (left of the 1 on the keyboard) may now be used to toggle in and out of fullscreen mode.
+
 0.53.0
 ======
 
