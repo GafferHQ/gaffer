@@ -38,6 +38,8 @@
 
 * Added Scene->Object->Modifiers->MeshType node for converting meshes between polygons and subdivs, and optionally adding normals when converting to polygons.
 
+* The Scene Inspector now displays mesh interpolation.
+
 0.53.0
 ======
 
