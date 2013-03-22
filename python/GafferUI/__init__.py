@@ -169,7 +169,7 @@ from ColorPlugValueWidget import ColorPlugValueWidget
 from AboutWindow import AboutWindow
 import ApplicationMenu
 from BrowserEditor import BrowserEditor
-from TimeEditor import TimeEditor
+from Timeline import Timeline
 from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget

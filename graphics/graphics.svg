@@ -95,11 +95,11 @@
        x="369"
        height="17"
        width="9.5"
-       id="forExport:timeEditorEnd"
+       id="forExport:timelineEnd"
        style="fill:#ff0000;fill-opacity:0;stroke:none" />
     <rect
        style="fill:none;stroke:none"
-       id="forExport:timeEditorPlay"
+       id="forExport:timelinePlay"
        width="13"
        height="17"
        x="354.5"
@@ -962,7 +962,7 @@
          inkscape:label="#rect3931" />
     </g>
     <g
-       id="forExport:timeEditor3"
+       id="forExport:timeline3"
        inkscape:label="#g3968"
        transform="translate(20,0)">
       <g
@@ -1007,7 +1007,7 @@
          style="fill:none;stroke:none" />
     </g>
     <g
-       id="forExport:timeEditor2"
+       id="forExport:timeline2"
        inkscape:label="#g3975"
        transform="translate(20,0)">
       <g
@@ -1043,7 +1043,7 @@
          y="61.362183" />
     </g>
     <g
-       id="forExport:timeEditor1"
+       id="forExport:timeline1"
        transform="translate(20,0)">
       <path
          transform="matrix(1.6,0,0,1.6,-123.4,49.162183)"
@@ -1103,11 +1103,11 @@
        x="354.5"
        height="17"
        width="13"
-       id="forExport:timeEditorPause"
+       id="forExport:timelinePause"
        style="fill:none;stroke:none" />
     <rect
        style="fill:none;stroke:none"
-       id="forExport:timeEditorStart"
+       id="forExport:timelineStart"
        width="9.5"
        height="17"
        x="344"

@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,9 +40,9 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 
-## The TimeEditor presents a time slider which edits the frame
+## The Timeline presents a time slider which edits the frame
 # entry of a context.
-class TimeEditor( GafferUI.EditorWidget ) :
+class Timeline( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode, **kw ) :
 	
@@ -54,7 +55,7 @@ class TimeEditor( GafferUI.EditorWidget ) :
 							
 		with self.__row :
 			
-			self.__visibilityButton = GafferUI.Button( image="timeEditor3.png", hasFrame=False )
+			self.__visibilityButton = GafferUI.Button( image="timeline3.png", hasFrame=False )
 			self.__visibilityButtonClickedConnection = self.__visibilityButton.clickedSignal().connect( Gaffer.WeakMethod( self.__visibilityButtonClicked ) )
 			
 			self.__scriptRangeStart = GafferUI.NumericPlugValueWidget( scriptNode["frameRange"]["start"] )
@@ -74,13 +75,13 @@ class TimeEditor( GafferUI.EditorWidget ) :
 			)
 			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) )
 
-			self.__startButton = GafferUI.Button( image = "timeEditorStart.png", hasFrame=False )
+			self.__startButton = GafferUI.Button( image = "timelineStart.png", hasFrame=False )
 			self.__startButtonClickedConnection = self.__startButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ) )
 			
-			self.__playPause = GafferUI.Button( image = "timeEditorPlay.png", hasFrame=False )
+			self.__playPause = GafferUI.Button( image = "timelinePlay.png", hasFrame=False )
 			self.__playPauseClickedConnection = self.__playPause.clickedSignal().connect( Gaffer.WeakMethod( self.__playPauseClicked ) )
 
-			self.__endButton = GafferUI.Button( image = "timeEditorEnd.png", hasFrame=False )
+			self.__endButton = GafferUI.Button( image = "timelineEnd.png", hasFrame=False )
 			self.__endButtonClickedConnection = self.__endButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ) )
 			
 			self.__frame = GafferUI.NumericWidget( self.getContext().getFrame() )
@@ -174,17 +175,17 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		if self.__scriptRangeStart.getVisible() :
 			self.__scriptRangeStart.setVisible( False )
 			self.__scriptRangeEnd.setVisible( False )
-			self.__visibilityButton.setImage( "timeEditor2.png" )
+			self.__visibilityButton.setImage( "timeline2.png" )
 		elif self.__sliderRangeStart.getVisible() :
 			self.__sliderRangeStart.setVisible( False )
 			self.__sliderRangeEnd.setVisible( False )
-			self.__visibilityButton.setImage( "timeEditor1.png" )
+			self.__visibilityButton.setImage( "timeline1.png" )
 		else :
 			self.__scriptRangeStart.setVisible( True )
 			self.__scriptRangeEnd.setVisible( True )
 			self.__sliderRangeStart.setVisible( True )
 			self.__sliderRangeEnd.setVisible( True )
-			self.__visibilityButton.setImage( "timeEditor3.png" )
+			self.__visibilityButton.setImage( "timeline3.png" )
 	
 	def __playPauseClicked( self, button ) :
 	
@@ -193,15 +194,15 @@ class TimeEditor( GafferUI.EditorWidget ) :
 		if self.__playTimer.isActive() :
 			# we want to pause
 			self.__playTimer.stop()
-			button.setImage( "timeEditorPlay.png" )
+			button.setImage( "timelinePlay.png" )
 		else :
 			self.__playTimer.start()
-			button.setImage( "timeEditorPause.png" )
+			button.setImage( "timelinePause.png" )
 			
 	def __startOrEndButtonClicked( self, button ) :
 		
 		self.__playTimer.stop()
-		self.__playPause.setImage( "timeEditorPlay.png" )
+		self.__playPause.setImage( "timelinePlay.png" )
 		
 		if button is self.__startButton :
 			self.getContext().setFrame( self.__sliderRangeStart.getValue() )
@@ -219,6 +220,6 @@ class TimeEditor( GafferUI.EditorWidget ) :
 	
 	def __repr__( self ) :
 
-		return "GafferUI.TimeEditor( scriptNode )"
+		return "GafferUI.Timeline( scriptNode )"
 	
-GafferUI.EditorWidget.registerType( "TimeEditor", TimeEditor )
+GafferUI.EditorWidget.registerType( "Timeline", Timeline )
