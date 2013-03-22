@@ -116,7 +116,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 			
 		def walkScene( scenePath1, scenePath2 ) :
 
-			if scenePath1 not in pathsToIgnore :
+			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
 				self.assertPathsEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, childPlugNames, childPlugNamesToIgnore )
 			childNames = scenePlug1.childNames( scenePath1 )
 			for childName in childNames :

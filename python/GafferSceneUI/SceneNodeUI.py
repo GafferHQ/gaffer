@@ -205,3 +205,16 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter ),	
 	)
 )
+
+# MeshType
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.MeshType.staticTypeId(),
+	"meshType",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Unchanged", "" ),
+		( "Poly", "linear" ),
+		( "Subdiv", "catmullClark" ),
+	),
+)

@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,62 +34,48 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_MESHTYPE_H
+#define GAFFERSCENE_MESHTYPE_H
+
+#include "GafferScene/SceneElementProcessor.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+/// The MeshType node changes the mesh interpolation type.
+class MeshType : public SceneElementProcessor
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	OptionsTypeId = 110523,
-	ShaderTypeId = 110524,
-	AssignmentTypeId = 110525,
-	FilterTypeId = 110526,
-	PathFilterTypeId = 110527,
-	AttributesTypeId = 110528,
-	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
-	StandardOptionsTypeId = 110532,
-	SubTreeTypeId = 110533,
-	OpenGLAttributesTypeId = 110534,
-	SceneWriterTypeId = 110535,
-	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537,
-	LightTypeId = 110538,
-	StandardAttributesTypeId = 110539,
-	OpenGLShaderTypeId = 110540,
-	TransformTypeId = 110541,
-	ConstraintTypeId = 110542,
-	AimConstraintTypeId = 110543,
-	MeshTypeTypeId = 110544,
+
+	public :
+
+		MeshType( const std::string &name=staticTypeName() );
+		virtual ~MeshType();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MeshType, MeshTypeTypeId, SceneElementProcessor );
+		
+		Gaffer::StringPlug *meshTypePlug();
+		const Gaffer::StringPlug *meshTypePlug() const;
+
+		Gaffer::BoolPlug *calculatePolygonNormalsPlug();
+		const Gaffer::BoolPlug *calculatePolygonNormalsPlug() const;
+		
+		Gaffer::BoolPlug *overwriteExistingNormalsPlug();
+		const Gaffer::BoolPlug *overwriteExistingNormalsPlug() const;
+
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+		
+		virtual bool processesObject() const;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		
+	private :
 	
-	LastTypeId = 110650
+		static size_t g_firstPlugIndex;
+	
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_MESHTYPE_H

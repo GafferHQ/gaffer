@@ -46,6 +46,7 @@
 #include "GafferScene/AttributeCache.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
+#include "GafferScene/MeshType.h"
 #include "GafferScene/Group.h"
 #include "GafferScene/SceneTimeWarp.h"
 #include "GafferScene/Plane.h"
@@ -97,6 +98,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<AttributeCache>();
 	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
 	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<Group>();
 	GafferBindings::DependencyNodeClass<SceneContextProcessorBase>();
 	GafferBindings::DependencyNodeClass<SceneContextProcessor>();

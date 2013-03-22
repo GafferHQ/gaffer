@@ -36,6 +36,8 @@
 
 * The File->SaveAs... menu item now ensures that the file saved always has a ".gfr" extension.
 
+* Added Scene->Object->Modifiers->MeshType node for converting meshes between polygons and subdivs, and optionally adding normals when converting to polygons.
+
 0.53.0
 ======
 
