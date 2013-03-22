@@ -30,6 +30,8 @@
 
 * The ` key (left of the 1 on the keyboard) may now be used to toggle in and out of fullscreen mode.
 
+* Renamed SceneEditor to SceneHierarchy to be more explicit that it visualises the scene graph and doesn't really provide much in the way of editing.
+
 0.53.0
 ======
 

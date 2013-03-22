@@ -41,7 +41,7 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-class SceneEditor( GafferUI.NodeSetEditor ) :
+class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 	
@@ -66,7 +66,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				
 	def __repr__( self ) :
 
-		return "GafferSceneUI.SceneEditor( scriptNode )"
+		return "GafferSceneUI.SceneHierarchy( scriptNode )"
 
 	def _updateFromSet( self ) :
 
@@ -151,4 +151,4 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 			else :
 				self.__pathListing.setSelectedPaths( [] )
 		
-GafferUI.EditorWidget.registerType( "SceneEditor", SceneEditor )
+GafferUI.EditorWidget.registerType( "SceneHierarchy", SceneHierarchy )

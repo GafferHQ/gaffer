@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,7 +51,7 @@ class SceneNodeTest( unittest.TestCase ) :
 		# or attributes. if we did, then there wouldn't be a sensible way of merging
 		# them (particularly transforms) when a Group node has multiple inputs.
 		# it's also pretty confusing to have stuff go on at the root level,
-		# particularly as the root isn't well represented in the SceneEditor,
+		# particularly as the root isn't well represented in the SceneHierarchy editor,
 		# and applications like maya don't have stuff happening at the root
 		# level either. we achieve this by having the SceneNode simply not
 		# call the various processing functions for the root.

@@ -37,7 +37,7 @@
 
 from _GafferSceneUI import *
 
-from SceneEditor import SceneEditor
+from SceneHierarchy import SceneHierarchy
 from SceneInspector import SceneInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
 import SceneNodeUI
