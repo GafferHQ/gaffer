@@ -41,6 +41,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "boost/signals.hpp"
 #include "IECore/RunTimeTyped.h"
 #include "Gaffer/TypeIds.h"
 #include "Gaffer/Executable.h"
@@ -66,8 +67,20 @@ class Despatcher : public IECore::RunTimeTyped
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Despatcher, DespatcherTypeId, IECore::RunTimeTyped );
 
-		/// Despatches the execution of the given array of Executable nodes (and possibly their requirements).
-		virtual void despatch( const std::vector< NodePtr > &nodes ) const = 0;
+		typedef boost::signal<void (const Despatcher *, const std::vector< NodePtr > &)> DespatchSignal;
+
+		/// @name Despatch signals
+		/// These signals are emitted on despatch events for any registered
+		/// Despatcher instance.
+		//////////////////////////////////////////////////////////////
+		//@{
+		/// Called when any despatcher is about to despatch nodes.
+		static DespatchSignal &preDespatchSignal();
+		/// Called after any despatcher has finished despatching nodes.
+		static DespatchSignal &postDespatchSignal();
+
+		/// Triggers the preDespatch signal and calls doDespatch() function.
+		void despatch( const std::vector< NodePtr > &nodes ) const;
 
 		/// Registration function for despatchers.
 		static void registerDespatcher( std::string name, DespatcherPtr despatcher );
@@ -81,6 +94,9 @@ class Despatcher : public IECore::RunTimeTyped
 	protected :
 
 		friend class Executable;
+
+		/// Despatches the execution of the given array of Executable nodes (and possibly their requirements).
+		virtual void doDespatch( const std::vector< NodePtr > &nodes ) const = 0;
 
 		/// This function is called to add custom Despatcher plugs during Executable node construction.
 		static void addAllPlugs( CompoundPlug *despatcherPlug );
@@ -110,6 +126,9 @@ class Despatcher : public IECore::RunTimeTyped
 
 		typedef std::map< IECore::MurmurHash, std::vector< size_t > > TaskSet;
 		static const Executable::Task &uniqueTask( const Executable::Task &task, std::vector< Despatcher::TaskDescription > &uniqueTasks, TaskSet &seenTasks );
+
+		static DespatchSignal g_preDespatchSignal;
+		static DespatchSignal g_postDespatchSignal;
 };
 
 } // namespace Gaffer

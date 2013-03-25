@@ -44,6 +44,9 @@ using namespace IECore;
 using namespace Gaffer;
 
 Despatcher::DespatcherMap Despatcher::g_despatchers;
+Despatcher::DespatchSignal Despatcher::g_preDespatchSignal;
+Despatcher::DespatchSignal Despatcher::g_postDespatchSignal;
+
 
 Despatcher::Despatcher()
 {
@@ -53,9 +56,28 @@ Despatcher::~Despatcher()
 {
 }
 
+void Despatcher::despatch( const std::vector< NodePtr > &nodes ) const
+{
+	preDespatchSignal()( this, nodes );
+
+	doDespatch( nodes );
+
+	postDespatchSignal()( this, nodes );
+}
+
 /*
  * Static functions
  */
+
+Despatcher::DespatchSignal &Despatcher::preDespatchSignal()
+{
+	return g_preDespatchSignal;	
+}
+
+Despatcher::DespatchSignal &Despatcher::postDespatchSignal()
+{
+	return g_postDespatchSignal;	
+}
 
 void Despatcher::addAllPlugs( CompoundPlug *despatcherPlug )
 {

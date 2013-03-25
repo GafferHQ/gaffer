@@ -45,9 +45,16 @@ class LocalDespatcher( Gaffer.Despatcher ) :
 
 		Gaffer.Despatcher.__init__( self )
 
-	def despatch( self, nodes ) :
+	def _doDespatch( self, nodes ) :
 
-		c = Gaffer.Context()
+		if not nodes :
+			return
+
+		script = nodes[0].scriptNode()
+		if script is None :
+			c = Gaffer.Context()
+		else :
+			c = script.context()
 
 		taskList = map( lambda n: Gaffer.ExecutableNode.Task(n,c), nodes )
 
@@ -57,7 +64,7 @@ class LocalDespatcher( Gaffer.Despatcher ) :
 
 			task.node.execute( [ task.context ] )
 
-	def addPlugs( self, despatcherPlug ) :
+	def _addPlugs( self, despatcherPlug ) :
 
 		pass
 

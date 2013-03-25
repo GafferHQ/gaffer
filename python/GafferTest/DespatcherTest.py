@@ -65,7 +65,7 @@ class DespatcherTest( unittest.TestCase ) :
 			Gaffer.Despatcher.__init__( self )
 			self.log = list()
 
-		def despatch( self, nodes ) :
+		def _doDespatch( self, nodes ) :
 
 			c = Gaffer.Context()
 			c['time'] = 1.0
@@ -75,7 +75,7 @@ class DespatcherTest( unittest.TestCase ) :
 			for (task,requirements) in allTasksAndRequirements :
 				task.node.execute( [ task.context ] )
 
-		def addPlugs( self, despatcherPlug ) :
+		def _addPlugs( self, despatcherPlug ) :
 			testPlug = Gaffer.IntPlug( "testDespatcherPlug", Gaffer.Plug.Direction.In )
 			despatcherPlug.addChild( testPlug )
 			despatcherPlug["testDespatcherPlug"]
@@ -114,6 +114,39 @@ class DespatcherTest( unittest.TestCase ) :
 
 		self.failUnless( "testDespatcher" in Gaffer.Despatcher.despatcherNames() )
 		self.failUnless( Gaffer.Despatcher.despatcher( 'testDespatcher' ).isInstanceOf( DespatcherTest.MyDespatcher.staticTypeId() ) )
+
+	def testDespatcherSignals( self ) :
+
+		class CapturingSlot2( list ) :
+	
+			def __init__( self, *signals ) :
+		
+				self.__connections = []
+				for s in signals :
+					self.__connections.append( s.connect( Gaffer.WeakMethod( self.__slot ) ) )
+		
+			def __slot( self, d, nodes ) :
+				self.append( (d,nodes) )
+	
+		preCs = CapturingSlot2( Gaffer.Despatcher.preDespatchSignal() )
+		self.assertEqual( len( preCs ), 0 )
+		postCs = GafferTest.CapturingSlot( Gaffer.Despatcher.postDespatchSignal() )
+		self.assertEqual( len( postCs ), 0 )
+
+		log = list()
+		op1 = TestOp("1", log)
+		n1 = Gaffer.ExecutableOpHolder()
+		n1.setParameterised( op1 )
+		despatcher = Gaffer.Despatcher.despatcher('local')
+		despatcher.despatch( [ n1 ] )
+		
+		self.assertEqual( len( preCs ), 1 )
+		self.failUnless( preCs[0][0].isSame( despatcher ) )
+		self.assertEqual( preCs[0][1], [ n1 ] )
+
+		self.assertEqual( len( postCs ), 1 )
+		self.failUnless( postCs[0][0].isSame( despatcher ) )
+		self.assertEqual( postCs[0][1], [ n1 ] )
 
 	def testPlugs( self ) :
 

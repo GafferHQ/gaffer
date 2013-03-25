@@ -38,6 +38,7 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/Wrapper.h"
 #include "GafferBindings/DespatcherBinding.h"
+#include "GafferBindings/SignalBinding.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Despatcher.h"
@@ -57,7 +58,20 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 		{
 		}
 
-		void despatch( const std::vector< NodePtr > &nodes ) const
+		void despatch( list nodeList ) const
+		{
+			ScopedGILLock gilLock;
+			size_t len = boost::python::len( nodeList );
+			std::vector< NodePtr > nodes;
+			nodes.reserve( len );
+			for ( size_t i = 0; i < len; i++ )
+			{
+				nodes.push_back( extract< NodePtr >( nodeList[i] ) );
+			}
+			Despatcher::despatch(nodes);
+		}
+
+		void doDespatch( const std::vector< NodePtr > &nodes ) const
 		{
 			ScopedGILLock gilLock;
 			list nodeList;
@@ -65,21 +79,21 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 			{
 				nodeList.append( *nIt );
 			}
-			override d = this->get_override( "despatch" );
+			override d = this->get_override( "_doDespatch" );
 			if( d )
 			{
 				d( nodeList );
 			}
 			else
 			{
-				throw Exception( "despatch() python method not defined" );
+				throw Exception( "doDespatch() python method not defined" );
 			}
 		}
 
 		void addPlugs( CompoundPlug *despatcherPlug ) const
 		{
 			ScopedGILLock gilLock;
-			override b = this->get_override( "addPlugs" );
+			override b = this->get_override( "_addPlugs" );
 			if( b )
 			{
 				CompoundPlugPtr tmpPointer = despatcherPlug;
@@ -140,15 +154,42 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Despatcher );
 };
 
+struct DespatchSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Despatcher *d, const std::vector< NodePtr > &nodes )
+	{
+		try
+		{
+			list nodeList;
+			for ( std::vector< NodePtr >::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			{
+				nodeList.append( *nIt );
+			}
+			DespatcherPtr dd = const_cast<Despatcher*>(d);
+			slot( dd, nodeList );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 IE_CORE_DECLAREPTR( DespatcherWrap );
 
 void GafferBindings::bindDespatcher()
 {
 	IECorePython::RunTimeTypedClass<Despatcher, DespatcherWrapPtr>()
 		.def( init<>() )
+		.def( "despatch", &DespatcherWrap::despatch )
 		.def( "despatcher", &DespatcherWrap::despatcher ).staticmethod( "despatcher" )
 		.def( "despatcherNames", &DespatcherWrap::despatcherNames ).staticmethod( "despatcherNames" )
 		.def( "_registerDespatcher", &DespatcherWrap::registerDespatcher ).staticmethod( "_registerDespatcher" )
 		.def( "_uniqueTasks", &DespatcherWrap::uniqueTasks ).staticmethod( "_uniqueTasks" )
+		.def( "preDespatchSignal", &Despatcher::preDespatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDespatchSignal" )
+		.def( "postDespatchSignal", &Despatcher::postDespatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDespatchSignal" )
 	;
+
+	SignalBinder<Despatcher::DespatchSignal, DefaultSignalCaller<Despatcher::DespatchSignal>, DespatchSlotCaller >::bind( "DespatchSignal" );
 }
