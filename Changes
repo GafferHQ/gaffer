@@ -40,6 +40,10 @@
 
 * The Scene Inspector now displays mesh interpolation.
 
+* Fixed bugs which could prevent the UI updating appropriately when plug values were changed.
+
+* Optimised redundant updates in the SceneHierarchy editor.
+
 0.53.0
 ======
 
