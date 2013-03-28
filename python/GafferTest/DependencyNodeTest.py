@@ -398,6 +398,95 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		
 		self.assertEqual( n["out"].getValue(), a["sum"].getValue() )
 		self.assertEqual( n["out"].hash(), a["sum"].hash() )
+	
+	def testDirtyPropagationForCompoundPlugs( self ) :
+	
+		class CompoundOut( Gaffer.DependencyNode ) :
+		
+			def __init__( self, name="CompoundOut" ) :
+			
+				Gaffer.DependencyNode.__init__( self, name )
+			
+				self["in"] = Gaffer.IntPlug()
+				self["out"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+				self["out"]["one"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+				self["out"]["two"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+				
+				self["behaveBadly"] = Gaffer.BoolPlug( defaultValue = False )
+				
+			def affects( self, input ) :
+			
+				outputs = Gaffer.DependencyNode.affects( self, input )
+			
+				if input.isSame( self["in"] ) :
+					if self["behaveBadly"].getValue() :
+						# we're not allowed to return a CompoundPlug in affects() - we're
+						# just doing it here to make sure we can see that the error is detected.
+						outputs.append( self["out"] )
+					else :
+						# to behave well we must list all leaf level children explicitly.
+						outputs.extend( self["out"].children() )						
+					
+				return outputs
+					
+		class CompoundIn( Gaffer.DependencyNode ) :
+		
+			def __init__( self, name="CompoundIn" ) :
+			
+				Gaffer.DependencyNode.__init__( self, name )
+
+				self["in"] = Gaffer.CompoundPlug()
+				self["in"]["one"] = Gaffer.IntPlug()
+				self["in"]["two"] = Gaffer.IntPlug()
+				
+				self["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+				
+			def affects( self, input ) :
+			
+				# affects should never be called with a CompoundPlug - only
+				# leaf level plugs.
+				assert( not input.isSame( self["in"] ) )
+			
+				if self["in"].isAncestorOf( input ) :
+					return [ self["out"] ]
+					
+				return []
+		
+		src = CompoundOut()
+		dst = CompoundIn()
+		
+		dst["in"].setInput( src["out"] )		
+		
+		srcDirtied = GafferTest.CapturingSlot( src.plugDirtiedSignal() )
+		dstDirtied = GafferTest.CapturingSlot( dst.plugDirtiedSignal() )
+		
+		src["behaveBadly"].setValue( True )
+		self.assertRaises( RuntimeError, src["in"].setValue, 10 )
+		
+		src["behaveBadly"].setValue( False )		
+		src["in"].setValue( 20 )
+				
+		srcDirtiedNames = set( [ x[0].fullName() for x in srcDirtied ] )
+		
+		self.assertEqual( len( srcDirtiedNames ), 3 )
+		
+		self.assertTrue( "CompoundOut.out.one" in srcDirtiedNames )
+		self.assertTrue( "CompoundOut.out.two" in srcDirtiedNames )
+		self.assertTrue( "CompoundOut.out" in srcDirtiedNames )
+		
+		dstDirtiedNames = set( [ x[0].fullName() for x in dstDirtied ] )
+
+		self.assertEqual( len( dstDirtiedNames ), 4 )
+		self.assertTrue( "CompoundIn.in.one" in dstDirtiedNames )
+		self.assertTrue( "CompoundIn.in.two" in dstDirtiedNames )
+		self.assertTrue( "CompoundIn.in" in dstDirtiedNames )
+		self.assertTrue( "CompoundIn.out" in dstDirtiedNames )
+	
+	def testAffectsRejectsCompoundPlugs( self ) :
+	
+		n = GafferTest.CompoundPlugNode()
+		
+		self.assertRaises( RuntimeError, n.affects, n["p"] )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -77,7 +77,17 @@ void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPl
 		const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
 		if( 0 == valuePlug->getName().string().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
 		{
-			outputs.push_back( valuePlug );
+			if( valuePlug->children().size() )
+			{
+				for( ValuePlugIterator cIt( valuePlug ); cIt != cIt.end(); cIt++ )
+				{
+					outputs.push_back( cIt->get() );				
+				}
+			}
+			else
+			{
+				outputs.push_back( valuePlug );
+			}
 		}
 	}
 }
