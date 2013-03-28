@@ -80,7 +80,10 @@ void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContai
 	}
 	else if( input == filterPlug() )
 	{
-		outputs.push_back( outPlug() );
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 }
 

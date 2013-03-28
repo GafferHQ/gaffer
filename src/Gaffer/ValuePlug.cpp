@@ -444,6 +444,14 @@ void ValuePlug::emitDirtiness( Node *n )
 
 void ValuePlug::propagateDirtiness()
 {
+	if( children().size() ) /// \todo This would be isInstanceOf( CompoundPlugTypeId ) if it didn't cause crashes somehow
+	{
+		// we only propagate dirtiness along leaf level plugs, because
+		// they are the only plugs which can be the target of the affects(),
+		// and compute() methods.
+		return;
+	}
+
 	DependencyNode *n = ancestor<DependencyNode>();
 	if( n )
 	{
@@ -453,6 +461,12 @@ void ValuePlug::propagateDirtiness()
 			n->affects( this, affected );
 			for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
 			{
+				if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
+				{
+					// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
+					// so we helpfully report any mistakes.
+					throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
+				}
 				const_cast<ValuePlug *>( *it )->emitDirtiness( n );
 				const_cast<ValuePlug *>( *it )->propagateDirtiness();
 			}

@@ -106,7 +106,10 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	
 	if( input == namePlug() )
 	{
-		outputs.push_back( outPlug() );
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 	else if( transformPlug()->isAncestorOf( input ) )
 	{
@@ -115,7 +118,10 @@ void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) c
 	}
 	else if( input == inputMappingPlug() )
 	{
-		outputs.push_back( outPlug() );	
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 	else if( const ScenePlug *s = input->parent<ScenePlug>() )
 	{

@@ -75,7 +75,10 @@ void ImagePrimitiveSource<BaseType>::affects( const Gaffer::ValuePlug *input, Ga
 	
 	if( input == inputImagePrimitivePlug() )
 	{
-		outputs.push_back( BaseType::outPlug() );
+		for( Gaffer::ValuePlugIterator it( BaseType::outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 }
 
