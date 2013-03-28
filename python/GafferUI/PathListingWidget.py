@@ -382,6 +382,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__pathChangedUpdatePending = False
 		self.__update()
 		
+		return False # cause this idle callback to run once only
+		
 	def __indexForPath( self, path ) :
 	
 		indexToSelect = self.__sortProxyModel.sourceModel().indexForPath( path )
