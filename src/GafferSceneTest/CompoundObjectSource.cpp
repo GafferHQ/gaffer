@@ -70,7 +70,10 @@ void CompoundObjectSource::affects( const ValuePlug *input, AffectedPlugsContain
 	Source::affects( input, outputs );
 	if( input == inPlug() )
 	{
-		outputs.push_back( outPlug() );
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 }
 

@@ -65,7 +65,8 @@ class CompoundPlugNode( Gaffer.DependencyNode ) :
 				
 	def affects( self, inputPlug ) :
 	
-		outputs = []
+		outputs = Gaffer.DependencyNode.affects( self, inputPlug )
+		
 		if inputPlug.parent().isSame( self["p"] ) :
 			outputs.append( self["o"][inputPlug.getName()] )
 			

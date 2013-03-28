@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -117,6 +118,27 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertSceneHashesEqual( p["out"], options["out"] )
 		self.assertScenesEqual( p["out"], options["out"] )
+	
+	def testDirtyPropagation( self ) :
+	
+		p = GafferScene.Plane()
+		o = GafferScene.Options()
+		
+		o["in"].setInput( p["out"] )
+		
+		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
+		
+		p["dimensions"]["x"].setValue( 100.1 )
+		
+		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
+		
+		self.assertEqual( len( dirtiedPlugs ), 6 )
+		self.assertTrue( "in.bound" in dirtiedPlugs )
+		self.assertTrue( "in.object" in dirtiedPlugs )
+		self.assertTrue( "in" in dirtiedPlugs )
+		self.assertTrue( "out.bound" in dirtiedPlugs )
+		self.assertTrue( "out.object" in dirtiedPlugs )
+		self.assertTrue( "out" in dirtiedPlugs )
 		
 if __name__ == "__main__":
 	unittest.main()
