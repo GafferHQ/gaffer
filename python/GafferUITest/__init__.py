@@ -81,6 +81,7 @@ from NodeEditorTest import NodeEditorTest
 from ScriptWindowTest import ScriptWindowTest
 from CompoundPlugValueWidgetTest import CompoundPlugValueWidgetTest
 from CompoundEditorTest import CompoundEditorTest
+from MultiSelectionMenuTest import MultiSelectionMenuTest
 
 if __name__ == "__main__":
 	unittest.main()
