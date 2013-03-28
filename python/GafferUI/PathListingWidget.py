@@ -155,6 +155,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		self.__path = path
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		self.__pathChangedUpdatePending = False
 		self.__currentDir = None
 		self.__currentPath = ""
 		self.__update()
@@ -372,6 +373,13 @@ class PathListingWidget( GafferUI.Widget ) :
 			
 	def __pathChanged( self, path ) :
 		
+		if not self.__pathChangedUpdatePending :
+			self.__pathChangedUpdatePending = True
+			GafferUI.EventLoop.addIdleCallback( self.__pathChangedUpdate )
+			
+	def __pathChangedUpdate( self ) :
+	
+		self.__pathChangedUpdatePending = False
 		self.__update()
 		
 	def __indexForPath( self, path ) :
