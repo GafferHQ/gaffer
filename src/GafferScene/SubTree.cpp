@@ -78,7 +78,10 @@ void SubTree::affects( const ValuePlug *input, AffectedPlugsContainer &outputs )
 	
 	if( input == rootPlug() )
 	{
-		outputs.push_back( outPlug() );
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 }
 

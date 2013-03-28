@@ -119,7 +119,10 @@ void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContaine
 
 	if( input==fileNamePlug() )
 	{
-		outputs.push_back( outPlug() );
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 }
 

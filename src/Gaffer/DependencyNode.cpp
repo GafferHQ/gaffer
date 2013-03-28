@@ -37,6 +37,7 @@
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/ValuePlug.h"
+#include "Gaffer/CompoundPlug.h"
 
 using namespace Gaffer;
 
@@ -53,6 +54,10 @@ DependencyNode::~DependencyNode()
 		
 void DependencyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
+	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
+	{
+		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
+	}
 }
 
 void DependencyNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const

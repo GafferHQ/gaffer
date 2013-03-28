@@ -92,7 +92,10 @@ void AttributeCache::affects( const Gaffer::ValuePlug *input, AffectedPlugsConta
 {
 	if( input == fileNamePlug() )
 	{
-		outputs.push_back( outPlug() );
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 }
 
