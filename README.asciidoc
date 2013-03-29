@@ -1,4 +1,4 @@
-= Gaffer =
+== Gaffer ==
 
 Gaffer is an open source application framework designed specifically for creating tools for use in visual effects production. It builds on top of the Cortex libraries, adding a flexible node-based computation framework and a user interface framework for editing and viewing node graphs. Gaffer ships with a number of sample modules and applications, not least of which is a module for the on-demand generation of procedural scenes for rendering.
 
