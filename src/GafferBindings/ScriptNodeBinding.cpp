@@ -127,6 +127,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			
 			deleteNodes();			
 			execute( s );
+			
+			UndoContext undoDisabled( this, UndoContext::Disabled );
+			unsavedChangesPlug()->setValue( false );
 		}
 		
 		virtual void save() const
@@ -146,6 +149,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			{
 				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
 			}
+			
+			UndoContext undoDisabled( const_cast<ScriptNodeWrapper *>( this ), UndoContext::Disabled );
+			const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 		}
 				
 	private :

@@ -247,13 +247,13 @@ class ScriptNode : public Node
 			
 		ScriptExecutedSignal m_scriptExecutedSignal;
 		ScriptEvaluatedSignal m_scriptEvaluatedSignal;
-	
-		StringPlugPtr m_fileNamePlug;
-		
+			
 		ContextPtr m_context;
 		
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 		void plugSet( Plug *plug );
+
+		static size_t g_firstPlugIndex;
 	
 };
 

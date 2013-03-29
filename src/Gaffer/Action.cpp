@@ -65,11 +65,19 @@ void Action::enact( GraphComponentPtr subject, const Function &doFn, const Funct
 		ActionPtr a = new Action( doFn, undoFn );
 		a->doAction();
 		s->m_actionAccumulator->push_back( a );
+		{
+			UndoContext undoDisabled( s, UndoContext::Disabled );
+			s->unsavedChangesPlug()->setValue( true );
+		}
 		s->actionSignal()( s, a.get(), Do );
 	}
 	else
 	{
 		doFn();
+		if( s && subject != s->unsavedChangesPlug() )
+		{
+			s->unsavedChangesPlug()->setValue( true );
+		}
 	}
 	
 }
