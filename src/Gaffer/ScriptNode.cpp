@@ -60,11 +60,15 @@ GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
 
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 
+size_t ScriptNode::g_firstPlugIndex = 0;
+
 ScriptNode::ScriptNode( const std::string &name )
 	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() ), m_context( new Context )
 {
-	m_fileNamePlug = new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable );
-	addChild( m_fileNamePlug );
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );	
+	addChild( new BoolPlug( "unsavedChanges", Plug::In, false, Plug::Default & ~Plug::Serialisable ) );
 	
 	CompoundPlugPtr frameRangePlug = new CompoundPlug( "frameRange", Plug::In );
 	IntPlugPtr frameStartPlug = new IntPlug( "start", Plug::In, 1 );
@@ -133,6 +137,10 @@ void ScriptNode::undo()
 	for( ActionVector::reverse_iterator it=(*m_undoIterator)->rbegin(); it!=(*m_undoIterator)->rend(); it++ )
 	{
 		(*it)->undoAction();
+		{
+			UndoContext undoDisabled( this, UndoContext::Disabled );
+			unsavedChangesPlug()->setValue( true );
+		}
 		actionSignal()( this, it->get(), Action::Undo );
 	}
 }
@@ -151,6 +159,10 @@ void ScriptNode::redo()
 	for( ActionVector::iterator it=(*m_undoIterator)->begin(); it!=(*m_undoIterator)->end(); it++ )
 	{
 		(*it)->doAction();
+		{
+			UndoContext undoDisabled( this, UndoContext::Disabled );
+			unsavedChangesPlug()->setValue( true );
+		}
 		actionSignal()( this, it->get(), Action::Redo );
 	}
 	m_undoIterator++;
@@ -227,14 +239,24 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter )
 
 StringPlug *ScriptNode::fileNamePlug()
 {
-	return m_fileNamePlug;
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const StringPlug *ScriptNode::fileNamePlug() const
 {
-	return m_fileNamePlug;
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+BoolPlug *ScriptNode::unsavedChangesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const BoolPlug *ScriptNode::unsavedChangesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+		
 void ScriptNode::execute( const std::string &pythonScript, Node *parent )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
@@ -282,22 +304,22 @@ const Context *ScriptNode::context() const
 
 IntPlug *ScriptNode::frameStartPlug()
 {
-	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "start" );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
 }
 
 const IntPlug *ScriptNode::frameStartPlug() const
 {
-	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "start" );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
 }
 
 IntPlug *ScriptNode::frameEndPlug()
 {
-	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "end" );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
 const IntPlug *ScriptNode::frameEndPlug() const
 {
-	return getChild<CompoundPlug>( "frameRange" )->getChild<IntPlug>( "end" );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
 void ScriptNode::childRemoved( GraphComponent *parent, GraphComponent *child )

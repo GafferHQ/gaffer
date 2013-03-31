@@ -87,6 +87,21 @@ class ScriptWindow( GafferUI.Window ) :
 	
 		return self.__listContainer[1] 
 
+	def _acceptsClose( self ) :
+	
+		if not self.__script["unsavedChanges"].getValue() :
+			return True
+		
+		f = self.__script["fileName"].getValue()
+		f = f.rpartition( "/" )[2] if f else "untitled"
+					
+		dialogue = GafferUI.ConfirmationDialogue(
+			"Discard Unsaved Changes?",
+			"The file %s has unsaved changes. Do you want to discard them?" % f,
+			confirmLabel = "Discard"
+		)
+		return dialogue.waitForConfirmation()
+
 	def __closed( self, widget ) :
 		
 		scriptParent = self.__script.parent()
@@ -95,7 +110,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 	def __scriptPlugChanged( self, plug ) :
 	
-		if plug.isSame( self.__script["fileName"] ) :
+		if plug.isSame( self.__script["fileName"] ) or plug.isSame( self.__script["unsavedChanges"] ) :
 			self.__updateTitle()
 	
 	def __updateTitle( self ) :
@@ -107,8 +122,10 @@ class ScriptWindow( GafferUI.Window ) :
 		else :
 			d, n, f = f.rpartition( "/" )
 			d = " - " + d
-			
-		self.setTitle( "Gaffer : %s %s" % ( f, d ) )
+		
+		u = " *" if self.__script["unsavedChanges"].getValue() else ""
+		
+		self.setTitle( "Gaffer : %s%s%s" % ( f, u, d ) )
 
 	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one
