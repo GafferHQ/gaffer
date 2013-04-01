@@ -64,11 +64,11 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 				for labelAndValue in self.__labelsAndValues :
 					if labelAndValue[1] == plugValue :
 						with Gaffer.BlockedConnection( self.__currentChangedConnection ) :
-							self.__selectionMenu.setSelected( labelAndValue[0] )
+							self.__selectionMenu.setSelection( labelAndValue[0] )
 	
 	def __currentChanged( self, selectionMenu ) :
 	
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			name = selectionMenu.getSelected()[0]
+			name = selectionMenu.getSelection()[0]
 			self.getPlug().setValue( self.__labelsAndValues[ selectionMenu.index(name) ][1] )
 		

@@ -90,7 +90,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# Check to see if the format is the default instance. If so then it means we are tracking
 				# the default format and therefore do not need to change the UI.
 				if self.getPlug().getValue().getDisplayWindow().isEmpty() and not self.__isDefaultFormatPlug :
-					self.__multiSelectionMenu.setSelected( "Default Format" )
+					self.__multiSelectionMenu.setSelection( "Default Format" )
 					return
 			
 				# Otherwise update the UI from the plug.	
@@ -99,17 +99,17 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 					format = self.__formats[name]
 					if format == plugValue :
 						with Gaffer.BlockedConnection( self.__currentChangedConnection ) :
-							self.__multiSelectionMenu.setSelected( name )
+							self.__multiSelectionMenu.setSelection( name )
 							
 						return
 				
 				# The format is new so we should add it to our menu...
 				GafferImage.Format.registerFormat( plugValue )
 				with Gaffer.BlockedConnection( self.__currentChangedConnection ) :
-					self.__multiSelectionMenu.setSelected( self.__multiSelectionMenu[-1] )
+					self.__multiSelectionMenu.setSelection( self.__multiSelectionMenu[-1] )
 	
 	def __currentChanged( self, multiSelectionMenu ) :
-		selected = self.__multiSelectionMenu.getSelected()
+		selected = self.__multiSelectionMenu.getSelection()
 		format = self.__formats[ selected[0] ]
 		
 		if self.__isDefaultFormatPlug :

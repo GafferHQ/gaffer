@@ -48,7 +48,7 @@ class MultiSelectionMenuTest( unittest.TestCase ) :
 		w = GafferUI.MultiSelectionMenu( allowMultipleSelection = True )
 		w.append("A")
 		w.append("B")
-		w.setSelected( [ "A" ] )
+		w.setSelection( [ "A" ] )
 	
 		# Test that if we replace the data but choose to keep the status of any
 		# duplicate entries that their status doesn't change.
@@ -60,7 +60,7 @@ class MultiSelectionMenuTest( unittest.TestCase ) :
 		self.assertEqual( "E", w[1] )
 		self.assertEqual( "A", w[2] )
 		self.assertEqual( len(w), 3 )	
-		self.assertEqual( w.getSelected(), ["A"] )
+		self.assertEqual( w.getSelection(), ["A"] )
 	
 	def testDelAndInOperators( self ) :
 		
@@ -126,26 +126,36 @@ class MultiSelectionMenuTest( unittest.TestCase ) :
 		w.append("D")
 
 		# Check the return type	
-		self.assertTrue( isinstance( w.getSelected(), list ) )
+		self.assertTrue( isinstance( w.getSelection(), list ) )
 				
-		w.setSelected( ["A"] )
-		self.assertEqual( w.getSelected(), ["A"] )
+		w.setSelection( ["A"] )
+		self.assertEqual( w.getSelection(), ["A"] )
 
 		# Test an item which doesn't exist. We expect an exception to be raised.
 		try :
-			w.setSelected( "C" )
+			w.setSelection( "C" )
 			self.assertTrue( False )
 		except :
 			self.assertTrue( True )
 
 		# Test the setting of a single variable.
-		w.setSelected( "D" )
-		self.assertEqual( w.getSelected(), ["A", "D"] )
+		w.setSelection( "D" )
+		self.assertEqual( w.getSelection(), ["D"] )		
+		
+		# Test the appending of a single variable.
+		w.appendToSelection( "A" )
+		self.assertEqual( w.getSelection(), ["A", "D"] )
+		
+		# Test the appending of a multiple variables.
+		w.setSelection( [] )
+		self.assertEqual( w.getSelection(), [] )
+		w.appendToSelection( ["A", "D"] )
+		self.assertEqual( w.getSelection(), ["A", "D"] )
 		
 		# Test the setting of multiple variables.
-		w.setSelected( ["A", "B"] )
-		self.assertTrue( "A" in w.getSelected() )
-		self.assertTrue( "B" in w.getSelected() )
+		w.setSelection( ["A", "B"] )
+		self.assertTrue( "A" in w.getSelection() )
+		self.assertTrue( "B" in w.getSelection() )
 	
 		# Now test single item selection
 		w = GafferUI.MultiSelectionMenu( allowMultipleSelection = False )
@@ -156,10 +166,10 @@ class MultiSelectionMenuTest( unittest.TestCase ) :
 		# Test that we can use both arrays and single variables.
 		# Also make sure that only one item can be selected because we are
 		# not using multiple selection mode.
-		w.setSelected( ["B"] )
-		self.assertEqual( w.getSelected(), ["B"] )
-		w.setSelected( "A" )
-		self.assertEqual( w.getSelected(), ["A"] )
+		w.setSelection( ["B"] )
+		self.assertEqual( w.getSelection(), ["B"] )
+		w.setSelection( "A" )
+		self.assertEqual( w.getSelection(), ["A"] )
 			
 	def testEnabled( self ) :
 		w = GafferUI.MultiSelectionMenu()

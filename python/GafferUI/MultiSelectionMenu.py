@@ -84,9 +84,26 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	
 		self.__enabledLabels[:] = input	
 
+	## Adds a list of items to the current selection.
+	def appendToSelection( self, labels ) :
+
+		# Remove items that are not in the menu and returns a list.
+		input = self._validateInput( labels )
+		
+		if self.__allowMultipleSelection :
+			for label in labels :
+				if not label in self.__selectedLabels :
+					self.__selectedLabels.append( label )
+			self._selectionChanged()
+		else :
+			if len( labels ) > 1 :
+				raise RuntimeError("Parameter must be single item or a list with one element.")
+	
+		# Remove all selected labels that are not in the menu, emit signals if necessary and update the button.
+		self._validateState()
 	
 	## Returns a list of the selected labels.	
-	def getSelected( self ) :
+	def getSelection( self ) :
 		self._cleanUpList( self.__selectedLabels, self.__menuLabels ) # Ensure that the selected list is ordered properly.
 		return self.__selectedLabels
 
@@ -94,27 +111,21 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	# If a list is provided then the current selection is replaced with the valid elements within the list.
 	# If a single element is proveded then it is appended to the current selection unless multiple selections
 	# are not enabled in which case the selection is replaced.
-	def setSelected( self, labels ) :
+	def setSelection( self, labels ) :
 		
 		input = self._validateInput( labels )
-		if len( input ) == 0 :
+		if len( input ) == 0 and self.__alwaysHaveASelection :
 			raise RuntimeError("No valid selections were specified.")
 		
 		if self.__allowMultipleSelection :
-			if len( input ) > 1 :
-				self.__selectedLabels[:] = labels
-				self._selectionChanged()
-			else :
-				if not input[0] in self.__selectedLabels :
-					self.__selectedLabels.append(labels[0])
-					self._selectionChanged()
+			self.__selectedLabels[:] = input
+			self._selectionChanged()
 		else :
 			if len( input ) > 1 :
 				raise RuntimeError("Parameter must be single item or a list with one element.")
 			else :
-				if not input[0] in self.__selectedLabels :
-					self.__selectedLabels[:] = input
-					self._selectionChanged()
+				self.__selectedLabels[:] = input
+				self._selectionChanged()
 
 		# Remove all selected labels that are not in the menu, emit signals if necessary and update the button.
 		self._validateState()
@@ -122,10 +133,17 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	def index( self, item ) :
 		return self.__menuLabels.index( item )
 
-	def append( self, label ) :
-		if not label in self.__menuLabels :
-			self.__menuLabels.append( label )
-			self.__enabledLabels.append( label )
+	# Append a new item or list of items to the menu.
+	def append( self, labels ) :
+		if isinstance( labels, list ) :
+			for label in labels :
+				if not label in self.__menuLabels :
+					self.__menuLabels.append( label )
+					self.__enabledLabels.append( label )
+		else :
+			if not labels in self.__menuLabels :
+				self.__menuLabels.append( labels )
+				self.__enabledLabels.append( labels )
 
 	def remove( self, label ) :
 		if label in self.__menuLabels :
@@ -146,13 +164,14 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	##############################################
 	# Private Methods
 	#############################################
-
 	def _validateInput( self, labels ) :
 		if isinstance( labels, list ) :
 			validInput = labels
-		else :
+		elif isinstance( labels, str) :
 			validInput = [ labels ]
-		
+		else :
+			validInput = list( labels )
+				
 		self._cleanUpList( validInput, self.__menuLabels )
 		return validInput
 
@@ -160,7 +179,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	def _selectClicked( self, label, selected=None ) :
 		if self.__allowMultipleSelection :
 			if selected == True :
-				self.setSelected( label )
+				self.setSelection( label )
 			else :
 				self.__selectedLabels.remove( label )
 				self._selectionChanged()
@@ -172,7 +191,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 				self._validateState()
 				self._selectionChanged()
 			else :
-				self.setSelected( label )
+				self.setSelection( label )
 		
 	## Updates the button's text and emits the selectionChangedSignal.
 	def _selectionChanged( self ) :
@@ -208,7 +227,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		# found or their entry does not exist within self.__menuLabels then they are removed and the relevant signals emitted.
 		if self._cleanUpList( self.__selectedLabels, self.__menuLabels ) :
 			self._selectionChanged()
-		self._cleanUpList( self.__enabledLabels , self.__menuLabels) 
+		self._cleanUpList( self.__enabledLabels , self.__menuLabels ) 
 		
 		# If we don't allow multiple selection then make sure that at least one item is selected!
 		if self.__alwaysHaveASelection and len( self.__selectedLabels ) == 0 and len( self.__enabledLabels ) > 0 :
@@ -270,6 +289,6 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		elif nSelected == 0 :
 			name = "none"
 		elif nSelected == 1 :
-			name = self.getSelected()[0]
+			name = self.getSelection()[0]
 		self._qtWidget().setText(name)
 
