@@ -1,3 +1,5 @@
+* SceneProcedural now renders general VisibleRenderables too...
+
 * Added base classes Executable and Despatcher and two derived Node classes: ExecutableNode and ExecutableOpHolder.
 
 * Added an enabled/disabled plug to all SceneNodes. Nodes with no inputs output an empty scene when disabled, and SceneProcessors output the first input unchanged. The enabled/disabled state can be toggled using the node right click menu or the "d" hotkey in the Graph Editor.
