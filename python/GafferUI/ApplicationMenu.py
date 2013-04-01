@@ -54,7 +54,26 @@ def quit( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 
-	## \todo Check scripts aren't modified
+	unsavedNames = []
+	for script in application["scripts"].children() :
+		if script["unsavedChanges"].getValue() :
+			f = script["fileName"].getValue()
+			f = f.rpartition( "/" )[2] if f else "untitled"
+			unsavedNames.append( f )
+
+	if unsavedNames :
+	
+		dialogue = GafferUI.ConfirmationDialogue(
+			"Discard Unsaved Changes?",
+			"The following files have unsaved changes : \n\n" +
+			"\n".join( [ " - " + n for n in unsavedNames ] ) +
+			"\n\nDo you want to discard the changes and quit?",
+			confirmLabel = "Discard and Quit"
+		)
+		
+		if not dialogue.waitForConfirmation() :
+			return
+	
 	for script in application["scripts"].children() :
 		application["scripts"].removeChild( script )
 
