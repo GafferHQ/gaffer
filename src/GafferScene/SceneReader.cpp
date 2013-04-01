@@ -60,7 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneReader );
 //////////////////////////////////////////////////////////////////////////
 
 /// \todo hard coded framerate should be replaced with a getTime() method on Gaffer::Context or something
-const double SceneReader::s_frameRate( 24 );
+const double SceneReader::g_frameRate( 24 );
 
 SceneReader::SceneReader( const std::string &name )
 	:	FileSource( name )
@@ -83,7 +83,7 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
 	s = s->scene( path );
 	
-	Box3d b = s->readBound( context->getFrame() / s_frameRate );
+	Box3d b = s->readBound( context->getFrame() / g_frameRate );
 	
 	if( b.isEmpty() )
 	{
@@ -104,7 +104,7 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
 	s = s->scene( path );
 	
-	M44d t = s->readTransformAsMatrix( context->getFrame() / s_frameRate );
+	M44d t = s->readTransformAsMatrix( context->getFrame() / g_frameRate );
 	
 	return M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
@@ -143,7 +143,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 			continue;
 		}
 		
-		result->members()[ std::string( *it ) ] = s->readAttribute( *it, context->getFrame() / s_frameRate );
+		result->members()[ std::string( *it ) ] = s->readAttribute( *it, context->getFrame() / g_frameRate );
 	}
 	
 	return result;
@@ -164,7 +164,7 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 	
 	if( s->hasObject() )
 	{
-		ObjectPtr o = s->readObject( context->getFrame() / s_frameRate );
+		ObjectPtr o = s->readObject( context->getFrame() / g_frameRate );
 		
 		return o? o : parent->objectPlug()->defaultValue();
 	}
@@ -210,5 +210,5 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 void SceneReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FileSource::hash( output, context, h );
-	h.append( context->getFrame() / s_frameRate );
+	h.append( context->getFrame() / g_frameRate );
 }
