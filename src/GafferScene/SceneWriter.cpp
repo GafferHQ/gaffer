@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/SceneWriter.h"
+#include "GafferScene/SceneReader.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -101,25 +102,25 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 	ConstCompoundObjectPtr attributes = scenePlug->attributesPlug()->getValue();
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 	{
-		output->writeAttribute( it->first, it->second.get(), script->context()->getFrame() );
+		output->writeAttribute( it->first, it->second.get(), script->context()->getFrame() / SceneReader::s_frameRate );
 	}
 	
 	if( scenePath.empty() )
 	{
 		ConstCompoundObjectPtr globals = scenePlug->globalsPlug()->getValue();
-		output->writeAttribute( "gaffer:globals", globals, script->context()->getFrame() );
+		output->writeAttribute( "gaffer:globals", globals, script->context()->getFrame() / SceneReader::s_frameRate );
 	}
 	
 	ConstObjectPtr object = scenePlug->objectPlug()->getValue();
 	
 	if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 	{
-		output->writeObject( object, script->context()->getFrame() );
+		output->writeObject( object, script->context()->getFrame() / SceneReader::s_frameRate );
 	}
 	
 	Imath::Box3f b = scenePlug->boundPlug()->getValue();
 	
-	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), script->context()->getFrame() );
+	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), script->context()->getFrame() / SceneReader::s_frameRate );
 	
 	if( scenePath.size() )
 	{
@@ -131,7 +132,7 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 			t[3][0], t[3][1], t[3][2], t[3][3]
 		);
 
-		output->writeTransform( new IECore::M44dData( transform ), script->context()->getFrame() );
+		output->writeTransform( new IECore::M44dData( transform ), script->context()->getFrame() / SceneReader::s_frameRate );
 	}
 	
 	ConstInternedStringVectorDataPtr childNames = scenePlug->childNamesPlug()->getValue();

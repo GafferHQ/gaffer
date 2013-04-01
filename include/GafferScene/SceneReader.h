@@ -51,6 +51,8 @@ class SceneReader : public FileSource
 		virtual ~SceneReader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneReader, SceneReaderTypeId, FileSource )
+		
+		static const double s_frameRate;
 				
 	protected :
 	

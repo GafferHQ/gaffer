@@ -41,7 +41,9 @@
 #include "IECore/FileIndexedIO.h"
 #include "IECore/LRUCache.h"
 #include "IECore/SceneInterface.h"
+#include "IECore/SharedSceneInterfaces.h"
 #include "IECore/InternedString.h"
+#include "IECore/SceneCache.h"
 
 #include "Gaffer/Context.h"
 #include "GafferScene/SceneReader.h"
@@ -54,94 +56,11 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( SceneReader );
 
 //////////////////////////////////////////////////////////////////////////
-// SceneReader::Cache Implementation
-//////////////////////////////////////////////////////////////////////////
-
-class SceneReader::Cache
-{
-	
-	private :
-	
-		IE_CORE_FORWARDDECLARE( FileAndMutex )
-
-	public :
-				
-		Cache()
-			:	m_fileCache( fileCacheGetter, 200 )
-		{
-		};
-		
-		/// This class provides access to a particular location within
-		/// the SceneInterface, and ensures that access is threadsafe by holding
-		/// a mutex on the file.
-		class Entry : public IECore::RefCounted
-		{
-		
-			public :
-			
-				SceneInterface *sceneInterface()
-				{
-					return m_entry;
-				}
-		
-			private :
-			
-				Entry( FileAndMutexPtr fileAndMutex )
-					:	m_fileAndMutex( fileAndMutex ), m_lock( m_fileAndMutex->mutex )
-				{
-				}
-			
-				FileAndMutexPtr m_fileAndMutex;
-				tbb::mutex::scoped_lock m_lock;
-				SceneInterfacePtr m_entry;
-				
-				friend class Cache;
-				
-		};
-
-		IE_CORE_DECLAREPTR( Entry )
-		
-		EntryPtr entry( const std::string &fileName, const ScenePath &scenePath )
-		{
-			FileAndMutexPtr f = m_fileCache.get( fileName );
-			EntryPtr result = new Entry( f ); // this locks the mutex for us
-			result->m_entry = result->m_fileAndMutex->file->scene( scenePath );
-			return result;
-		}
-		
-		void clear()
-		{
-			m_fileCache.clear();
-		}
-		
-	private :
-	
-		class FileAndMutex : public IECore::RefCounted
-		{
-			public :
-				
-				typedef tbb::mutex Mutex;
-				Mutex mutex;
-				SceneInterfacePtr file;
-				
-		};
-				
-		static FileAndMutexPtr fileCacheGetter( const std::string &fileName, size_t &cost )
-		{
-			FileAndMutexPtr result = new FileAndMutex;
-			result->file = SceneInterface::create( fileName, IndexedIO::Read );
-			cost = 1;
-			return result;
-		}
-		
-		typedef LRUCache<std::string, FileAndMutexPtr> FileCache;
-		FileCache m_fileCache;
-
-};
-
-//////////////////////////////////////////////////////////////////////////
 // SceneReader implementation
 //////////////////////////////////////////////////////////////////////////
+
+/// \todo hard coded framerate should be replaced with a getTime() method on Gaffer::Context or something
+const double SceneReader::s_frameRate( 24 );
 
 SceneReader::SceneReader( const std::string &name )
 	:	FileSource( name )
@@ -161,8 +80,10 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 		return Box3f();
 	}
 	
-	Cache::EntryPtr entry = cache().entry( fileName, path );
-	Box3d b = entry->sceneInterface()->readBound( context->getFrame() );
+	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
+	s = s->scene( path );
+	
+	Box3d b = s->readBound( context->getFrame() / s_frameRate );
 	
 	if( b.isEmpty() )
 	{
@@ -180,8 +101,10 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 		return M44f();
 	}
 	
-	Cache::EntryPtr entry = cache().entry( fileName, path );
-	M44d t = entry->sceneInterface()->readTransformAsMatrix( context->getFrame() );
+	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
+	s = s->scene( path );
+	
+	M44d t = s->readTransformAsMatrix( context->getFrame() / s_frameRate );
 	
 	return M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
@@ -199,16 +122,28 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		return parent->attributesPlug()->defaultValue();
 	}
 	
-	Cache::EntryPtr entry = cache().entry( fileName, path );
+
+	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
+	s = s->scene( path );
 	
 	SceneInterface::NameList nameList;
-	entry->sceneInterface()->readAttributeNames( nameList );
+	s->readAttributeNames( nameList );
 	
 	CompoundObjectPtr result = new CompoundObject;
 	
 	for( SceneInterface::NameList::iterator it = nameList.begin(); it != nameList.end(); ++it )
 	{
-		result->members()[ std::string( *it ) ] = entry->sceneInterface()->readAttribute( *it, context->getFrame() );
+		// these internal attributes should be ignored:
+		if( *it == SceneCache::animatedObjectTopologyAttribute )
+		{
+			continue;
+		}
+		if( *it == SceneCache::animatedObjectPrimVarsAttribute )
+		{
+			continue;
+		}
+		
+		result->members()[ std::string( *it ) ] = s->readAttribute( *it, context->getFrame() / s_frameRate );
 	}
 	
 	return result;
@@ -222,12 +157,14 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 		return parent->objectPlug()->defaultValue();
 	}
 	
-	Cache::EntryPtr entry = cache().entry( fileName, path );
+	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
+	s = s->scene( path );
+	
 	ObjectPtr o;
 	
-	if( entry->sceneInterface()->hasObject() )
+	if( s->hasObject() )
 	{
-		ObjectPtr o = entry->sceneInterface()->readObject( context->getFrame() );
+		ObjectPtr o = s->readObject( context->getFrame() / s_frameRate );
 		
 		return o? o : parent->objectPlug()->defaultValue();
 	}
@@ -243,10 +180,11 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 		return parent->childNamesPlug()->defaultValue();
 	}
 	
-	Cache::EntryPtr entry = cache().entry( fileName, path );
+	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
+	s = s->scene( path );
 
 	InternedStringVectorDataPtr result = new InternedStringVectorData;
-	entry->sceneInterface()->childNames( result->writable() );
+	s->childNames( result->writable() );
 	
 	return result;
 }
@@ -254,12 +192,6 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
-}
-
-SceneReader::Cache &SceneReader::cache()
-{
-	static Cache c;
-	return c;
 }
 
 void SceneReader::plugSet( Gaffer::Plug *plug )
@@ -270,7 +202,7 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 	// way of doing this!
 	if( plug == refreshCountPlug() )
 	{
-		cache().clear();
+		SharedSceneInterfaces::clear();
 	}
 }
 
@@ -278,5 +210,5 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 void SceneReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FileSource::hash( output, context, h );
-	h.append( context->getFrame() );
+	h.append( context->getFrame() / s_frameRate );
 }
