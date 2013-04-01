@@ -179,7 +179,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	def _selectClicked( self, label, selected=None ) :
 		if self.__allowMultipleSelection :
 			if selected == True :
-				self.setSelection( label )
+				self.appendToSelection( label )
 			else :
 				self.__selectedLabels.remove( label )
 				self._selectionChanged()
