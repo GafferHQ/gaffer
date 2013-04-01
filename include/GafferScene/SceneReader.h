@@ -51,6 +51,7 @@ class SceneReader : public FileSource
 		virtual ~SceneReader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneReader, SceneReaderTypeId, FileSource )
+		
 				
 	protected :
 	
@@ -72,6 +73,7 @@ class SceneReader : public FileSource
 		class Cache;
 		static Cache &cache();
 		
+		static const double g_frameRate;
 };
 
 } // namespace GafferScene
