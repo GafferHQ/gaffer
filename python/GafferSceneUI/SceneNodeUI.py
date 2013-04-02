@@ -139,11 +139,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-# Shader
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
-
 # SceneElementProcessor
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneElementProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
