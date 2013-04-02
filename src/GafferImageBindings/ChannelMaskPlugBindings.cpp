@@ -96,6 +96,7 @@ namespace GafferImageBindings
 			)
 		)
 		.def( "maskChannels", &maskChannelList )
+		.def( "channelIndex", &ChannelMaskPlug::channelIndex ).staticmethod("channelIndex")
 	;
 }
 

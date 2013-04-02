@@ -62,9 +62,7 @@ class ChannelMaskPlug : public Gaffer::StringVectorDataPlug
 		void maskChannels( std::vector<std::string> &inChannels ) const;
 
 		/// Returns the index of a channel within it's layer.
-		/// TODO: This method needs to strip any layers off the channel name and look up the index of the channel within
-		/// a set of channel mappings. E.G, R=0, B=2, U=0. 
-		void channelIndex( std::string& channel ) const {};
+		static int channelIndex( std::string channel );
 };
 
 IE_CORE_DECLAREPTR( ChannelMaskPlug );
