@@ -2,6 +2,10 @@
 
 * SceneProcedural now renders general VisibleRenderables too.
 
+* Fixed SceneReader to read animation at the correct speed (issue #68).
+
+* File->Quit and the window close icon now prompt the user to confirm before closing if there are unsaved changes (issue #19).
+
 0.54.0
 ======
 
