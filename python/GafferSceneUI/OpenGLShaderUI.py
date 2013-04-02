@@ -49,8 +49,6 @@ import GafferUI
 # Nodules
 ##########################################################################
 
-GafferUI.Nodule.registerNodule( GafferScene.OpenGLShader.staticTypeId(), "parameters", GafferUI.CompoundNodule )
-
 def __parameterNoduleCreator( plug ) :
 
 	if isinstance( plug, ( GafferImage.ImagePlug ) ) :

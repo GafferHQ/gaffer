@@ -857,7 +857,9 @@ libraries = {
 
 	"GafferRenderManUI" : {},
 
-	"GafferRenderManTest" : {},
+	"GafferRenderManTest" : {
+		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
+	},
 		
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),

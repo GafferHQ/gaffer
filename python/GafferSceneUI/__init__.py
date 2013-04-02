@@ -50,5 +50,5 @@ import SceneContextVariablesUI
 import SceneWriterUI
 import StandardOptionsUI
 import StandardAttributesUI
+import ShaderUI
 import OpenGLShaderUI
-
