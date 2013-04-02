@@ -69,8 +69,6 @@ class SelectionMenu( GafferUI.Widget ) :
 
 		self._qtWidget().setPalette( SelectionMenu.__palette )
 
-		# removing the annoying checkbox and setting a nice selection menu popup behavior
-		self._qtWidget().setStyle( QtGui.QStyleFactory.create("plastique") )
 		self._qtWidget().setView( QtGui.QListView() )
 		
 	def selectedSignal( self ):	 

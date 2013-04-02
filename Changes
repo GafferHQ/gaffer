@@ -1,4 +1,9 @@
-* SceneProcedural now renders general VisibleRenderables too...
+* Fixed graphical glitches caused by icons overlapping the edge of the editors on the Gnome desktop.
+
+* SceneProcedural now renders general VisibleRenderables too.
+
+0.54.0
+======
 
 * Added base classes Executable and Despatcher and two derived Node classes: ExecutableNode and ExecutableOpHolder.
 
