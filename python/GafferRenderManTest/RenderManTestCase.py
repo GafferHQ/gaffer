@@ -34,13 +34,33 @@
 #  
 ##########################################################################
 
-from RenderManTestCase import RenderManTestCase
-from RenderManShaderTest import RenderManShaderTest
-from RenderManAttributesTest import RenderManAttributesTest
-from RenderManOptionsTest import RenderManOptionsTest
-from RenderManRenderTest import RenderManRenderTest
-from RenderManLightTest import RenderManLightTest
+import os
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import GafferSceneTest
+
+class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
+
+	def setUp( self ) :
+	
+		self.__compiledShaders = set()
+
+	def compileShader( self, sourceFileName ) :
+	
+		# perhaps one day we'll need to implement this for other renderman
+		# renderers, in which case we'll be glad we put all the calls in one
+		# place.
+		
+		shaderName = os.path.splitext( os.path.basename( sourceFileName ) )[0]
+		outputFileName = "/tmp/" + shaderName + ".sdl"
+	
+		os.system( "shaderdl -o %s %s" % ( outputFileName, sourceFileName ) )
+
+		self.__compiledShaders.add( outputFileName )
+
+		return os.path.splitext( outputFileName )[0]
+
+	def tearDown( self ) :
+	
+		for f in self.__compiledShaders :
+			if os.path.exists( f ) :
+				os.remove( f )

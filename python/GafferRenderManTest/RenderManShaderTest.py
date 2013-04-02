@@ -34,14 +34,16 @@
 #  
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
 
 import Gaffer
 import GafferRenderMan
+import GafferRenderManTest
 
-class RenderManShaderTest( unittest.TestCase ) :
+class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 	def test( self ) :
 	
@@ -127,6 +129,51 @@ class RenderManShaderTest( unittest.TestCase ) :
 		
 		self.assertEqual( n["parameters"][0].getName(), "Ka" )
 		self.assertEqual( n["parameters"][1].getName(), "Kd" )
+	
+	def testCoshader( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+	
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertTrue( "coshaderParameter" in shaderNode["parameters"] )
+		self.assertEqual( shaderNode["parameters"]["coshaderParameter"].typeId(), Gaffer.Plug.staticTypeId() )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
+		
+		s = shaderNode.state()
+		self.assertEqual( len( s ), 2 )
+		
+		self.assertEqual( s[0].name, coshader )
+		self.assertEqual( s[1].name, shader )
+		self.assertEqual( s[0].parameters["__handle"], s[1].parameters["coshaderParameter"] )
+	
+	def testInputAcceptance( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		random = Gaffer.Random()
+		
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( coshaderNode["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderParameter"].acceptsInput( random["outFloat"] ) )
+		
+		self.assertTrue( shaderNode["parameters"]["floatParameter"].acceptsInput( random["outFloat"] ) )
+		self.assertFalse( shaderNode["parameters"]["floatParameter"].acceptsInput( coshaderNode["out"] ) )
+		
+		self.assertTrue( coshaderNode["parameters"]["colorParameter"].acceptsInput( random["outColor"] ) )
+		self.assertFalse( coshaderNode["parameters"]["colorParameter"].acceptsInput( coshaderNode["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
