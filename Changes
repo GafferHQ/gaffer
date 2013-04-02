@@ -1,3 +1,6 @@
+0.55.0
+======
+
 * Fixed graphical glitches caused by icons overlapping the edge of the editors on the Gnome desktop.
 
 * SceneProcedural now renders general VisibleRenderables too.
