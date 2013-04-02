@@ -46,7 +46,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, inputImagePlug, **kw ) :
 	
-		self.__multiSelectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = True, alwaysHaveASelection=True )
+		self.__multiSelectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = True, alwaysHaveASelection=False )
 		GafferUI.PlugValueWidget.__init__( self, self.__multiSelectionMenu, plug, **kw )
 		self.__selectionChangedConnection = self.__multiSelectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self._updateFromSelection ) )
 		self.__inputPlug = None
