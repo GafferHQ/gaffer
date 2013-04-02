@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,36 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_CHANNELMASKPLUG_H
+#define GAFFERIMAGE_CHANNELMASKPLUG_H
+
+#include "GafferImage/TypeIds.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class ChannelMaskPlug : public Gaffer::StringVectorDataPlug
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	
-	LastTypeId = 110849
+	public:
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelMaskPlug, ChannelMaskPlugTypeId, Gaffer::StringVectorDataPlug );
+		
+		/// A copy of defaultValue is taken - it must not be null.
+		ChannelMaskPlug(
+			const std::string &name,
+			Direction direction,
+			IECore::ConstStringVectorDataPtr defaultValue,
+			unsigned flags = Default
+		);
+		virtual ~ChannelMaskPlug();
+
+		/// Performs an in-place intersection of inChannels and the channels held within the StringVectorDataPlug.
+		void maskChannels( std::vector<std::string> &inChannels ) const;
+
+		/// Returns the index of a channel within it's layer.
+		/// TODO: This method needs to strip any layers off the channel name and look up the index of the channel within
+		/// a set of channel mappings. E.G, R=0, B=2, U=0. 
+		void channelIndex( std::string& channel ) const {};
 };
+
+IE_CORE_DECLAREPTR( ChannelMaskPlug );
+
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ChannelMaskPlug> > ChannelMaskPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ChannelMaskPlug> > InputChannelMaskPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ChannelMaskPlug> > OutputChannelMaskPlugIterator;
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_CHANNELMASKPLUG_H

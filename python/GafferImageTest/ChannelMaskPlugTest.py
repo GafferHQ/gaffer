@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,18 +34,35 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
+import os
+import unittest
+import IECore
+import Gaffer
+import GafferImage
+import sys
+
+class ChannelMaskPlugTest( unittest.TestCase ) :
+	
+	def testChannelMask( self ) :
+		n = Gaffer.Node()
+
+		maskChannels = IECore.StringVectorData( [ "R", "B" ] )
+		p = GafferImage.ChannelMaskPlug("p", defaultValue = maskChannels, direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default )
+		n.addChild( p )
+		s = Gaffer.ScriptNode()
+		s.addChild( n )
+		
+		testChannels = [ "R", "G", "B", "A" ]
+		maskedChannels = p.maskChannels( testChannels )
+
+		# Test that the channels that were masked remain and that those which weren't are removed.
+		# Also assert that the order of the new list is correct.
+		self.assertTrue( "R" in maskedChannels ) 
+		self.assertFalse( "G" in maskedChannels ) 
+		self.assertTrue( "B" in maskedChannels ) 
+		self.assertFalse( "A" in maskedChannels ) 
+		self.assertTrue( maskedChannels[1] == "B" )
+		self.assertTrue( maskedChannels[0] == "R" )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
