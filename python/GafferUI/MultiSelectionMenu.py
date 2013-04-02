@@ -79,9 +79,6 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	def setEnabledItems( self, labels ) :
 		
 		input = self._validateInput( labels )
-		if len( input ) == 0 :
-			raise RuntimeError("No valid items to be enabled were specified.")
-	
 		self.__enabledLabels[:] = input	
 
 	## Adds a list of items to the current selection.
@@ -115,8 +112,8 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		
 		input = self._validateInput( labels )
 		if len( input ) == 0 and self.__alwaysHaveASelection :
-			raise RuntimeError("No valid selections were specified.")
-		
+			return
+				
 		if self.__allowMultipleSelection :
 			self.__selectedLabels[:] = input
 			self._selectionChanged()
@@ -181,8 +178,13 @@ class MultiSelectionMenu( GafferUI.Button ) :
 			if selected == True :
 				self.appendToSelection( label )
 			else :
-				self.__selectedLabels.remove( label )
-				self._selectionChanged()
+				if self.__alwaysHaveASelection :
+					if len( self.__selectedLabels ) > 1 :
+						self.__selectedLabels.remove( label )
+						self._selectionChanged()
+				else :
+					self.__selectedLabels.remove( label )
+					self._selectionChanged()
 		else :
 			# Check the mode that we are in. If we are not required to have a selection
 			# then if we already have the label selected we can remove it.
@@ -230,8 +232,11 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self._cleanUpList( self.__enabledLabels , self.__menuLabels ) 
 		
 		# If we don't allow multiple selection then make sure that at least one item is selected!
-		if self.__alwaysHaveASelection and len( self.__selectedLabels ) == 0 and len( self.__enabledLabels ) > 0 :
-			self.__selectedLabels.append( self.__enabledLabels[0] )
+		if self.__alwaysHaveASelection and len( self.__selectedLabels ) == 0 :
+			if len( self.__enabledLabels ) > 0 :
+				self.__selectedLabels.append( self.__enabledLabels[0] )
+			elif len( self.__menuLabels ) > 0 :
+				self.__selectedLabels.append( self.__menuLabels[0] )
 			self._selectionChanged()
 
 	## A simple method to make sure that the passed list only holds
