@@ -34,8 +34,33 @@
 #  
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import RenderManShaderUI
-import Menus
+import os
+
+import GafferSceneTest
+
+class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
+
+	def setUp( self ) :
+	
+		self.__compiledShaders = set()
+
+	def compileShader( self, sourceFileName ) :
+	
+		# perhaps one day we'll need to implement this for other renderman
+		# renderers, in which case we'll be glad we put all the calls in one
+		# place.
+		
+		shaderName = os.path.splitext( os.path.basename( sourceFileName ) )[0]
+		outputFileName = "/tmp/" + shaderName + ".sdl"
+	
+		os.system( "shaderdl -o %s %s" % ( outputFileName, sourceFileName ) )
+
+		self.__compiledShaders.add( outputFileName )
+
+		return os.path.splitext( outputFileName )[0]
+
+	def tearDown( self ) :
+	
+		for f in self.__compiledShaders :
+			if os.path.exists( f ) :
+				os.remove( f )

@@ -34,8 +34,31 @@
 #  
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import RenderManShaderUI
-import Menus
+import GafferUI
+import GafferScene
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
+
+##########################################################################
+# NodeGadgets and Nodules
+##########################################################################
+
+def __nodeGadgetCreator( node ) :
+
+	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
+
+GafferUI.NodeGadget.registerNodeGadget( GafferScene.Shader.staticTypeId(), __nodeGadgetCreator )
+
+def __parametersNoduleCreator( plug ) :
+
+	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y )
+
+GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "parameters", __parametersNoduleCreator )
+
+# we leave it to the derived class uis to register creators for the parameters.* plugs, because only the derived classes know whether
+# or not networkability makes sense in each case.

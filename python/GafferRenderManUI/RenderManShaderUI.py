@@ -34,8 +34,24 @@
 #  
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import RenderManShaderUI
-import Menus
+import fnmatch
+
+import Gaffer
+import GafferUI
+
+import GafferRenderMan
+
+##########################################################################
+# Nodules
+##########################################################################
+
+def __parameterNoduleCreator( plug ) :
+
+	# only coshader parameters should be connectable in the node
+	# graph.
+	if plug.typeId() == Gaffer.Plug.staticTypeId() :
+		return GafferUI.StandardNodule( plug )
+
+	return None
+
+GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )

@@ -6,6 +6,8 @@
 
 * File->Quit and the window close icon now prompt the user to confirm before closing if there are unsaved changes (issue #19).
 
+* Added support for shader parameters of type "shader" in the RenderManShader node - these are mapped to plugs which accept connections to other RenderManShaders, allowing the creation of networks of coshaders.
+
 0.54.0
 ======
 

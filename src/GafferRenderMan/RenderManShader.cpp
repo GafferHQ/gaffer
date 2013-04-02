@@ -67,6 +67,34 @@ void RenderManShader::loadShader( const std::string &shaderName )
 	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
 }
 
+bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Shader::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+	
+	if( plug->parent<Plug>() == parametersPlug() )
+	{
+		if( plug->typeId() == Plug::staticTypeId() )
+		{
+			// coshader parameter - input must be another
+			// renderman shader.
+			const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
+			return inputShader && inputPlug->getName() == "out";
+		}
+		else
+		{
+			// standard parameter - input must not be another
+			// shader.
+			const Shader *inputShader = inputPlug->parent<Shader>();
+			return !inputShader;
+		}
+	}
+	
+	return true;
+}
+
 void RenderManShader::shaderHash( IECore::MurmurHash &h ) const
 {
 	Shader::shaderHash( h );
@@ -76,9 +104,26 @@ void RenderManShader::shaderHash( IECore::MurmurHash &h ) const
 IECore::ShaderPtr RenderManShader::shader( NetworkBuilder &network ) const
 {
 	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue(), "ri:surface" );
-	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	for( InputPlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
-		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( *it );
+		if( (*it)->typeId() == Plug::staticTypeId() )
+		{
+			// coshader parameter
+			const Plug *inputPlug = (*it)->source<Plug>();
+			if( inputPlug && inputPlug != *it )
+			{
+				const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
+				if( inputShader )
+				{
+					result->parameters()[(*it)->getName()] = new StringData( network.shaderHandle( inputShader ) );
+				}
+			}
+		}
+		else
+		{
+			// standard shader parameter
+			result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( static_cast<const ValuePlug *>( it->get() ) );
+		}
 	}
 	return result;
 }
@@ -99,18 +144,28 @@ void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffe
 {
 	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
 	
+	const CompoundData *typeHints = shader->blindData()->member<CompoundData>( "ri:parameterTypeHints", true );
+	
 	const StringVectorData *orderedParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:orderedParameterNames", true );
 	const vector<string> &orderedParameterNames = orderedParameterNamesData->readable();
 	
 	for( vector<string>::const_iterator it = orderedParameterNames.begin(), eIt = orderedParameterNames.end(); it != eIt; it++ )
 	{
-		CompoundDataMap::const_iterator vIt = shader->parameters().find( *it );
-		ValuePlugPtr valuePlug = CompoundDataPlug::createPlugFromData(
-			*it,
-			Plug::In,
-			Plug::Default | Plug::Dynamic,
-			vIt->second
-		);
-		parametersPlug->addChild( valuePlug );
+		const StringData *typeHint = typeHints->member<StringData>( *it, false );
+		if( typeHint && typeHint->readable() == "shader" )
+		{
+			parametersPlug->addChild( new Plug( *it, Plug::In, Plug::Default | Plug::Dynamic ) );
+		}
+		else
+		{
+			CompoundDataMap::const_iterator vIt = shader->parameters().find( *it );
+			ValuePlugPtr valuePlug = CompoundDataPlug::createPlugFromData(
+				*it,
+				Plug::In,
+				Plug::Default | Plug::Dynamic,
+				vIt->second
+			);
+			parametersPlug->addChild( valuePlug );
+		}
 	}
 }
