@@ -78,9 +78,17 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 	{
 		if( output == imagePlug->channelDataPlug() )
 		{
-			hashChannelDataPlug( imagePlug, context, h );
-			h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-			h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
+			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+			if ( channelEnabled( channel ) )
+			{
+				hashChannelDataPlug( imagePlug, context, h );
+				h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
+				h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
+			}
+			else
+			{
+				h = inPlug()->channelDataPlug()->hash();
+			}
 		}
 		else if ( output == imagePlug->formatPlug() )
 		{
@@ -125,7 +133,24 @@ void ImageProcessor::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( enabled() )
 		{
-			computeImagePlugs( output, context );
+			if( output == imagePlug->channelDataPlug() )
+			{
+				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+				if ( channelEnabled( channel ) )
+				{
+					computeImagePlugs( output, context );
+				}
+				else
+				{
+					static_cast<FloatVectorDataPlug *>( output )->setValue(
+						inPlug()->channelDataPlug()->getValue()
+					);
+				}
+			}
+			else
+			{
+				computeImagePlugs( output, context );
+			}
 		}
 		else
 		{

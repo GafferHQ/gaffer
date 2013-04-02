@@ -54,7 +54,7 @@ IE_CORE_DEFINERUNTIMETYPED( OpenColorIO );
 size_t OpenColorIO::g_firstPlugIndex = 0;
 
 OpenColorIO::OpenColorIO( const std::string &name )
-	:	ChannelDataProcessor( name )
+	:	FilterProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "inputSpace" ) );
@@ -93,12 +93,12 @@ bool OpenColorIO::enabled() const
 	return outSpaceString != inSpaceString &&
 		outSpaceString.size() &&
 		inSpaceString.size()
-		? ChannelDataProcessor::enabled() : false;
+		? FilterProcessor::enabled() : false;
 }
 
 void OpenColorIO::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	ChannelDataProcessor::affects( input, outputs );
+	FilterProcessor::affects( input, outputs );
 	
 	if( input == inPlug()->channelDataPlug() ||
 		input == inputSpacePlug() ||

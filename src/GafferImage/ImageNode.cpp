@@ -96,12 +96,17 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		/// \todo Perhaps we don't need to hash enabledPlug() because enabled() will
 		/// compute its value anyway?
 		h.append( enabledPlug()->hash() );
+		
 		if( enabled() )
 		{
 			if( output == imagePlug->channelDataPlug() )
 			{
-				h.append( context->get<string>( ImagePlug::channelNameContextName ) );
-				hashChannelDataPlug( imagePlug, context, h );
+				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+				if ( channelEnabled( channel ) )
+				{
+					h.append( context->get<string>( ImagePlug::channelNameContextName ) );
+					hashChannelDataPlug( imagePlug, context, h );
+				}
 			}
 			else if( output == imagePlug->formatPlug() )
 			{
@@ -176,7 +181,24 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( enabled() )
 		{
-			computeImagePlugs( output, context );
+			if( output == imagePlug->channelDataPlug() )
+			{
+				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+				if ( channelEnabled( channel ) )
+				{
+					computeImagePlugs( output, context );
+				}
+				else
+				{
+					static_cast<FloatVectorDataPlug *>( output )->setValue(
+						imagePlug->channelDataPlug()->defaultValue()
+					);
+				}
+			}
+			else
+			{
+				computeImagePlugs( output, context );
+			}
 		}
 		else
 		{

@@ -52,11 +52,11 @@ def __noduleCreator( plug ) :
 	return None
 
 GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
-
 GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug.staticTypeId(), None )
-
-# ImageNode
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "enabled", None )
+
+# ChannelDataProcessor
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
 
 # ImageReader
 

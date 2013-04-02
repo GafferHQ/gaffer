@@ -43,13 +43,36 @@ using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( ChannelDataProcessor );
 
+size_t ChannelDataProcessor::g_firstPlugIndex = 0;
+
 ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
 	:	ImageProcessor( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	
+	addChild(
+		new ChannelMaskPlug(
+			"channels",
+			Gaffer::Plug::In,
+			inPlug()->channelNamesPlug()->defaultValue(),
+			~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
+		)
+	);
+	
 }
 
 ChannelDataProcessor::~ChannelDataProcessor()
 {
+}
+
+GafferImage::ChannelMaskPlug *ChannelDataProcessor::channelMaskPlug()
+{
+	return getChild<ChannelMaskPlug>( g_firstPlugIndex );
+}
+
+const GafferImage::ChannelMaskPlug *ChannelDataProcessor::channelMaskPlug() const
+{
+	return getChild<ChannelMaskPlug>( g_firstPlugIndex );
 }
 
 void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -63,23 +86,33 @@ void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlug
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );	
 	}
+
+	if( input == channelMaskPlug() )
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );		
+	}
 }
 
-bool ChannelDataProcessor::enabled() const
+bool ChannelDataProcessor::channelEnabled( const std::string &channel ) const
 {
-	///\todo: Once an inputChannelMask plug (or something similar) is implemented, it should be queried here so that the channels that are not masked are not enabled.
-	try // Silently catch exceptions from the context query as if it fails we just call enabled() on the baseclass.
+	if ( !ImageProcessor::channelEnabled( channel ) )
 	{
-		int idx = channelIndex( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
-		return channelEnabled( idx ) == true ? ImageProcessor::enabled() : false;
-	}catch(...){}
-	return ImageProcessor::enabled();
+		return false;
+	}
+
+	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to operate on.
+	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	std::vector<std::string> maskChannels = channelNamesData->readable();
+	channelMaskPlug()->maskChannels( maskChannels );
+
+	// Check to see if the channel that we wish to process is masked.
+	return ( std::find( maskChannels.begin(), maskChannels.end(), channel ) != maskChannels.end() );
 }
 
 IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
-	processChannelData( context, parent, channelIndex( channelName ), outData );
+	processChannelData( context, parent, channelName, outData );
 	return outData;
 }
 

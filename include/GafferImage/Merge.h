@@ -96,11 +96,13 @@ class Merge : public FilterProcessor
 			kUnder = 10
 		};
 
-		/// This implementation checks that each of the inputs is connected and if not, returns false.
-		virtual bool enabled() const;
-
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+	
+	protected:	
+	
+		/// This implementation checks that each of the inputs is connected and if not, returns false.
+		virtual bool enabled() const;
 	
 	private :
 		
