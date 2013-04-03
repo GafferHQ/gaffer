@@ -83,7 +83,7 @@ class Metadata :
 	# The description may either be a string or a callable which will compute
 	# a description when passed a node instance.
 	@classmethod
-	def registerPlugDescription( cls, nodeType, plugPath, stringOrCallable ) :
+	def registerPlugDescription( cls, nodeType, plugPath, description ) :
 	
 		if isinstance( nodeType, IECore.TypeId ) :
 			nodeTypeId = nodeType
@@ -100,7 +100,7 @@ class Metadata :
 			0,
 			IECore.Struct(
 				plugPathMatcher = plugPath,
-				description = stringOrCallable
+				description = description
 			)
 		)
 	
