@@ -46,10 +46,10 @@ class ChannelMaskPlugTest( unittest.TestCase ) :
 	def testChannelIndex( self ) :
 		# Check that the channelIndex method returns the correct index of a range of channels.
 		tests = [
-			("test/rgba/R",0),
-			("test/rgba/G",1),
-			("test/rgba/B",2),
-			("test/rgba/A",3),
+			("test.rgba.R",0),
+			("test.rgba.G",1),
+			("test.rgba.B",2),
+			("test.rgba.A",3),
 		]
 
 		for channel, expectedIdx in tests :

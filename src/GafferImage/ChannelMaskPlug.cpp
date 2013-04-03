@@ -79,7 +79,7 @@ void ChannelMaskPlug::maskChannels( std::vector<std::string> &inChannels ) const
 int ChannelMaskPlug::channelIndex( std::string channel )
 {
 	// Strip from the channel string any layer information...
-	size_t pos = channel.find_last_of("/\\");
+	size_t pos = channel.find_last_of(".");
 	if ( pos != std::string::npos )
 	{
 		channel.erase( channel.begin(), channel.begin()+pos+1 );
