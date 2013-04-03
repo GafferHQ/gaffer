@@ -76,6 +76,16 @@ class ChannelMaskPlugTest( unittest.TestCase ) :
 		self.assertFalse( "A" in maskedChannels ) 
 		self.assertTrue( maskedChannels[1] == "B" )
 		self.assertTrue( maskedChannels[0] == "R" )
+	
+		# Do the test again but using a StringVectorData 	
+		testChannels = IECore.StringVectorData( [ "R", "G", "B", "A" ] )
+		maskedChannels = p.maskChannels( testChannels )
+		self.assertTrue( "R" in maskedChannels ) 
+		self.assertFalse( "G" in maskedChannels ) 
+		self.assertTrue( "B" in maskedChannels ) 
+		self.assertFalse( "A" in maskedChannels ) 
+		self.assertTrue( maskedChannels[1] == "B" )
+		self.assertTrue( maskedChannels[0] == "R" )
 
 if __name__ == "__main__":
 	unittest.main()
