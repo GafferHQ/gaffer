@@ -43,14 +43,14 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, labelsAndValues, **kw ) :
 	
-		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, alwaysHaveASelection = True)
+		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
 
 		self.__labelsAndValues = labelsAndValues
 		for label, value in self.__labelsAndValues :
 			self.__selectionMenu.append( label )
 	
-		self.__currentChangedConnection = self.__selectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__currentChanged ) )
+		self.__selectionChangedConnection = self.__selectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		
 		self._updateFromPlug()
 	
@@ -63,10 +63,10 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 				plugValue = self.getPlug().getValue()
 				for labelAndValue in self.__labelsAndValues :
 					if labelAndValue[1] == plugValue :
-						with Gaffer.BlockedConnection( self.__currentChangedConnection ) :
+						with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
 							self.__selectionMenu.setSelection( labelAndValue[0] )
 	
-	def __currentChanged( self, selectionMenu ) :
+	def __selectionChanged( self, selectionMenu ) :
 	
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			name = selectionMenu.getSelection()[0]

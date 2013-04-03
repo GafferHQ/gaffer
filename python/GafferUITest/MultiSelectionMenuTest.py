@@ -143,13 +143,13 @@ class MultiSelectionMenuTest( unittest.TestCase ) :
 		self.assertEqual( w.getSelection(), ["D"] )		
 		
 		# Test the appending of a single variable.
-		w.appendToSelection( "A" )
+		w.addSelection( "A" )
 		self.assertEqual( w.getSelection(), ["A", "D"] )
 		
 		# Test the appending of a multiple variables.
 		w.setSelection( [] )
 		self.assertEqual( w.getSelection(), [] )
-		w.appendToSelection( ["A", "D"] )
+		w.addSelection( ["A", "D"] )
 		self.assertEqual( w.getSelection(), ["A", "D"] )
 		
 		# Test the setting of multiple variables.
