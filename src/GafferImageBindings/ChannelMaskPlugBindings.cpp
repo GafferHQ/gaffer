@@ -33,6 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/suite/indexing/container_utils.hpp>
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 #include "IECorePython/RunTimeTypedBinding.h"
@@ -58,16 +59,13 @@ static ChannelMaskPlugPtr constructChannelMask(
 	return new ChannelMaskPlug( name, direction, defaultValue, flags );
 }
 
-static boost::python::list maskChannelList( GafferImage::ChannelMaskPlug &plug, boost::python::list channelList )
+static boost::python::list maskChannelList( GafferImage::ChannelMaskPlug &plug, boost::python::object channelList )
 {
 	boost::python::ssize_t len = boost::python::len( channelList );
 	
 	std::vector<std::string> channels( len );
 	
-	for( int i = 0; i < len; ++i )
-	{
-		channels[i] = boost::python::extract<std::string>( channelList[i] );
-	}
+	container_utils::extend_container< std::vector<std::string> >( channels, channelList );
 
 	plug.maskChannels( channels );
 	
