@@ -243,3 +243,16 @@ def __plugValueWidgetCreator( plug ) :
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+
+##########################################################################
+# Metadata registrations
+##########################################################################
+
+def __plugDescription( plug ) :
+
+	annotations = __shaderAnnotations( plug.node() )
+	d = annotations.get( plug.getName() + ".help", None )	
+
+	return d.value if d is not None else ""
+
+GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )

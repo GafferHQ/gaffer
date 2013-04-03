@@ -75,6 +75,8 @@ class PlugWidget( GafferUI.Widget ) :
 		if label is not None :
 			self.__label.setText( label )
 			
+		self.__label.setToolTip( GafferUI.Metadata.plugDescription( plug ) )
+			
 		## \todo Decide how we allow this sort of tweak using the public
 		# interface. Perhaps we should have a SizeableContainer or something?
 		self.__label._qtWidget().setMinimumWidth( self.labelWidth() )
