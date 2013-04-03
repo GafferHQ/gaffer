@@ -1,3 +1,5 @@
+* RenderManShader node now supports the use of annotations within the shader to define the node UI. Annotations follow the OSL specification for shader metadata.
+
 0.55.0
 ======
 
