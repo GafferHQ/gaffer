@@ -44,6 +44,26 @@ import GafferUI
 import GafferRenderMan
 
 ##########################################################################
+# Access to a little cache of annotations loaded from shaders
+##########################################################################
+
+__cachedShaderAnnotations = {}
+def __shaderAnnotations( shaderNode ) :
+
+	global __cachedShaderAnnotations
+
+	shaderName = shaderNode["__shaderName"].getValue()
+	if shaderName not in __cachedShaderAnnotations :
+		try :
+			shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
+		except Exception, e :
+			shader = None
+		annotations = shader.blindData().get( "ri:annotations", None ) if shader is not None else {}
+		__cachedShaderAnnotations[shaderName] = annotations
+
+	return __cachedShaderAnnotations[shaderName]
+
+##########################################################################
 # Nodules
 ##########################################################################
 
@@ -59,14 +79,53 @@ def __parameterNoduleCreator( plug ) :
 GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
-# PlugValueWidgets. We use annotations stored in the shader to provide
-# hints as to how we should build the UI. We use the OSL specification
-# for shader metadata in the hope that one day we'll get to use OSL in
-# Gaffer and then we'll have a consistent metadata convention across
-# both shader types.
+# PlugValueWidget for the "parameters" compound. This is defined in order
+# to group shader parameters into sections according to the "page" metadata.
 ##########################################################################
 
-__shaderAnnotations = {}
+def __parametersPlugValueWidgetCreator( plug ) :
+
+	annotations = __shaderAnnotations( plug.node() )
+	parameterNames = [ c.getName() for c in plug.children() ]
+	
+	sections = []
+	namesToSections = {}
+	for name in parameterNames :
+		sectionName = annotations.get( name + ".page", None )
+		sectionName = sectionName.value if sectionName is not None else ""
+		if sectionName not in namesToSections :
+			
+			if sectionName == "" :
+				collapsed = None
+			else :
+				collapsed = annotations.get( "page." + sectionName + ".collapsed", None )
+				if collapsed is not None :
+					collapsed = collapsed.value in ( "True", "true", "1" )
+				else :
+					collapsed = True
+				
+			section = {
+				"label" : sectionName,
+				"collapsed" : collapsed,
+				"names" : [],
+			}
+			sections.append( section )
+			namesToSections[sectionName] = section
+		
+		section = namesToSections[sectionName]
+		section["names"].append( name )
+
+	return GafferUI.SectionedCompoundPlugValueWidget( plug, sections )
+
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
+
+##########################################################################
+# PlugValueWidgets for the individual parameter plugs. We use annotations
+# stored in the shader to provide hints as to how we should build the UI.
+# We use the OSL specification for shader metadata in the hope that one day
+# we'll get to use OSL in Gaffer and then we'll have a consistent metadata
+# convention across both shader types.
+##########################################################################
 
 def __optionValue( plug, stringValue ) :
 
@@ -153,19 +212,9 @@ __creators = {
 
 def __plugValueWidgetCreator( plug ) :
 
-	global __shaderAnnotations
 	global __creators
 
-	shaderName = plug.node()["__shaderName"].getValue()
-	if shaderName not in __shaderAnnotations :
-		try :
-			shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
-		except Exception, e :
-			shader = None
-		annotations = shader.blindData().get( "ri:annotations", None ) if shader is not None else {}
-		__shaderAnnotations[shaderName] = annotations
-
-	annotations = __shaderAnnotations[shaderName]
+	annotations = __shaderAnnotations( plug.node() )
 	parameterName = plug.getName()
 		
 	widgetType = annotations.get( parameterName + ".widget", None )

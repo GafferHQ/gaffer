@@ -181,6 +181,7 @@ import ExecuteUI
 import ScriptNodeUI
 from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
+from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 
 # then stuff specific to parameterised objects
 
