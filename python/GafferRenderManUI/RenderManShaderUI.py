@@ -36,10 +36,32 @@
 
 import fnmatch
 
+import IECore
+
 import Gaffer
 import GafferUI
 
 import GafferRenderMan
+
+##########################################################################
+# Access to a little cache of annotations loaded from shaders
+##########################################################################
+
+__cachedShaderAnnotations = {}
+def __shaderAnnotations( shaderNode ) :
+
+	global __cachedShaderAnnotations
+
+	shaderName = shaderNode["__shaderName"].getValue()
+	if shaderName not in __cachedShaderAnnotations :
+		try :
+			shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
+		except Exception, e :
+			shader = None
+		annotations = shader.blindData().get( "ri:annotations", None ) if shader is not None else {}
+		__cachedShaderAnnotations[shaderName] = annotations
+
+	return __cachedShaderAnnotations[shaderName]
 
 ##########################################################################
 # Nodules
@@ -55,3 +77,182 @@ def __parameterNoduleCreator( plug ) :
 	return None
 
 GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+
+##########################################################################
+# PlugValueWidget for the "parameters" compound. This is defined in order
+# to group shader parameters into sections according to the "page" metadata.
+##########################################################################
+
+def __parametersPlugValueWidgetCreator( plug ) :
+
+	annotations = __shaderAnnotations( plug.node() )
+	parameterNames = [ c.getName() for c in plug.children() ]
+	
+	sections = []
+	namesToSections = {}
+	for name in parameterNames :
+		sectionName = annotations.get( name + ".page", None )
+		sectionName = sectionName.value if sectionName is not None else ""
+		if sectionName not in namesToSections :
+			
+			if sectionName == "" :
+				collapsed = None
+			else :
+				collapsed = annotations.get( "page." + sectionName + ".collapsed", None )
+				if collapsed is not None :
+					collapsed = collapsed.value in ( "True", "true", "1" )
+				else :
+					collapsed = True
+				
+			section = {
+				"label" : sectionName,
+				"collapsed" : collapsed,
+				"names" : [],
+			}
+			sections.append( section )
+			namesToSections[sectionName] = section
+		
+		section = namesToSections[sectionName]
+		section["names"].append( name )
+
+	return GafferUI.SectionedCompoundPlugValueWidget( plug, sections )
+
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
+
+##########################################################################
+# PlugValueWidgets for the individual parameter plugs. We use annotations
+# stored in the shader to provide hints as to how we should build the UI.
+# We use the OSL specification for shader metadata in the hope that one day
+# we'll get to use OSL in Gaffer and then we'll have a consistent metadata
+# convention across both shader types.
+##########################################################################
+
+def __optionValue( plug, stringValue ) :
+
+	if isinstance( plug, Gaffer.StringPlug ) :
+		return stringValue
+	elif isinstance( plug, Gaffer.IntPlug ) :
+		return int( stringValue )
+	elif isinstance( plug, Gaffer.FloatPlug ) :
+		return float( stringValue )
+	else :
+		raise Exception( "Unsupported parameter type." )
+
+def __numberCreator( plug, annotations ) :
+
+	return GafferUI.NumericPlugValueWidget( plug )
+	
+def __stringCreator( plug, annotations ) :
+
+	return GafferUI.StringPlugValueWidget( plug )
+	
+def __booleanCreator( plug, annotations ) :
+
+	return GafferUI.BoolPlugValueWidget( plug )
+
+def __popupCreator( plug, annotations ) :
+
+	options = annotations.get( plug.getName() + ".options", None )
+	if options is None :
+		raise Exception( "No \"options\" annotation." )
+	
+	options = options.value.split( "|" )
+	labelsAndValues = [ ( x, __optionValue( plug, x ) ) for x in options ]
+	return GafferUI.EnumPlugValueWidget( plug, labelsAndValues )
+
+def __mapperCreator( plug, annotations ) :
+
+	options = annotations.get( plug.getName() + ".options", None )
+	if options is None :
+		raise Exception( "No \"options\" annotation." )
+	
+	options = options.value.split( "|" )
+	labelsAndValues = []
+	for option in options :
+		tokens = option.split( ":" )
+		if len( tokens ) != 2 :
+			raise Exception( "Option \"%s\" is not of form name:value" % option )
+		labelsAndValues.append( ( tokens[0], __optionValue( plug, tokens[1] ) ) )
+	
+	return GafferUI.EnumPlugValueWidget( plug, labelsAndValues )
+
+def __fileNameCreator( plug, annotations ) :
+
+	extensions = annotations.get( plug.getName() + ".extensions", None )
+	if extensions is not None :
+		extensions = extensions.value.split( "|" )
+	else :
+		extensions = []
+			
+	return GafferUI.PathPlugValueWidget(
+		plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = extensions,
+				extensionsLabel = "Show only supported files",
+			),
+		)
+	)
+
+def __nullCreator( plug, annotations ) :
+
+	return None
+
+__creators = {
+	"number" : __numberCreator,
+	"string" : __stringCreator,
+	"boolean" : __booleanCreator,
+	"checkBox" : __booleanCreator,
+	"popup" : __popupCreator,
+	"mapper" : __mapperCreator,
+	"filename" : __fileNameCreator,
+	"null" : __nullCreator,
+}
+
+def __plugValueWidgetCreator( plug ) :
+
+	global __creators
+
+	annotations = __shaderAnnotations( plug.node() )
+	parameterName = plug.getName()
+		
+	widgetType = annotations.get( parameterName + ".widget", None )
+	widgetCreator = None
+	if widgetType is not None :
+		widgetCreator = __creators.get( widgetType.value, None )
+		if widgetCreator is None :
+			IECore.msg(
+				IECore.Msg.Level.Warning,
+				"RenderManShaderUI",
+				"Shader parameter \"%s.%s\" has unsupported widget type \"%s\"" %
+					( shaderName, parameterName, widgetType )
+			)
+			
+	if widgetCreator is not None :
+		try :
+			return widgetCreator( plug, annotations )
+		except Exception, e :
+			IECore.msg(
+				IECore.Msg.Level.Warning,
+				"RenderManShaderUI",
+				"Error creating UI for parameter \"%s.%s\" : \"%s\"" %
+					( shaderName, parameterName, str( e ) )
+			)
+	
+	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+
+##########################################################################
+# Metadata registrations
+##########################################################################
+
+def __plugDescription( plug ) :
+
+	annotations = __shaderAnnotations( plug.node() )
+	d = annotations.get( plug.getName() + ".help", None )	
+
+	return d.value if d is not None else ""
+
+GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )

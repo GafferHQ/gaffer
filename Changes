@@ -1,3 +1,7 @@
+* RenderManShader node now supports the use of annotations within the shader to define the node UI. Annotations follow the OSL specification for shader metadata.
+
+* Added the GafferUI.Metadata class, which will be used to provide things such as node and plug descriptions for the generation of tooltips and reference documentation.
+
 0.55.0
 ======
 
