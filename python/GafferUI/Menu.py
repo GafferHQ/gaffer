@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -100,6 +100,15 @@ class Menu( GafferUI.Widget ) :
 				return p
 			
 		return GafferUI.Widget.parent( self )
+	
+	def __argNames( self, function ) :
+	
+		if isinstance( function, types.FunctionType ) :
+			return inspect.getargspec( function )[0]
+		elif isinstance( function, Gaffer.WeakMethod ) :
+			return inspect.getargspec( function.method() )[0][1:]
+		
+		return []
 		
 	def __commandWrapper( self, qtAction, command, active, toggled ) :
 	
@@ -109,12 +118,8 @@ class Menu( GafferUI.Widget ) :
 		args = []
 		kw = {}
 		
-		commandArgs = []
-		if isinstance( command, types.FunctionType ) :
-			commandArgs = inspect.getargspec( command )[0]
-		elif isinstance( command, Gaffer.WeakMethod ) :
-			commandArgs = inspect.getargspec( command.method() )[0][1:]
-
+		commandArgs = self.__argNames( command )
+		
 		if "menu" in commandArgs :
 			kw["menu"] = self
 		
@@ -148,7 +153,10 @@ class Menu( GafferUI.Widget ) :
 	def __build( self, qtMenu, definition, activeOverride=None, recurse=False ) :
 		
 		if callable( definition ) :
-			definition = definition()
+			if "menu" in self.__argNames( definition ) :
+				definition = definition( self )
+			else :
+				definition = definition()
 			
 		qtMenu.clear()
 			
@@ -166,7 +174,9 @@ class Menu( GafferUI.Widget ) :
 					# it's an intermediate submenu we need to make
 					# to construct the path to something else
 										
-					subMenu = qtMenu.addMenu( name )
+					subMenu = _Menu( qtMenu, name )
+					qtMenu.addMenu( subMenu )
+					
 					subMenuDefinition = definition.reRooted( "/" + name + "/" )					
 					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, subMenuDefinition ) )
 					if recurse :
@@ -180,7 +190,9 @@ class Menu( GafferUI.Widget ) :
 					
 					if item.subMenu is not None :
 										
-						subMenu = qtMenu.addMenu( label )
+						subMenu = _Menu( qtMenu, name )
+						qtMenu.addMenu( subMenu )
+					
 						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, item.subMenu ) )
 						if recurse :
 							self.__build( subMenu, item.subMenu, activeOverride, recurse )
@@ -216,6 +228,9 @@ class Menu( GafferUI.Widget ) :
 						if shortCut is not None :
 							qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
 						
+						if item.description :
+							qtAction.setStatusTip( item.description )
+						
 						qtMenu.addAction( qtAction )
 
 				done.add( name )
@@ -232,12 +247,25 @@ class Menu( GafferUI.Widget ) :
 
 class _Menu( QtGui.QMenu ) :
 
-	def __init__( self, parent ) :
+	def __init__( self, parent, title=None ) :
 	
 		QtGui.QMenu.__init__( self, parent )
 
+		if title is not None :
+			self.setTitle( title )
+
 		self.grabFocus = True
-			
+	
+	def event( self, qEvent ) :
+	
+		if qEvent.type() == QtCore.QEvent.ToolTip :
+			action = self.actionAt( qEvent.pos() )
+			if action and action.statusTip() :
+				QtGui.QToolTip.showText( qEvent.globalPos(), action.statusTip(), self )
+				return True
+	
+		return QtGui.QMenu.event( self, qEvent )
+	
 	def keyPressEvent( self, qEvent ) :
 	
 		if not self.grabFocus :
