@@ -1,0 +1,1408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>Gaffer User Guide</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+  padding: 0;
+  margin: 0;
+}
+
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+
+
+@media screen {
+  body {
+    max-width: 50em; /* approximately 80 characters wide */
+    margin-left: 16em;
+  }
+
+  #toc {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 13em;
+    padding: 0.5em;
+    padding-bottom: 1.5em;
+    margin: 0;
+    overflow: auto;
+    border-right: 3px solid #f8f8f8;
+    background-color: white;
+  }
+
+  #toc .toclevel1 {
+    margin-top: 0.5em;
+  }
+
+  #toc .toclevel2 {
+    margin-top: 0.25em;
+    display: list-item;
+    color: #aaaaaa;
+  }
+
+  #toctitle {
+    margin-top: 0.5em;
+  }
+}
+
+
+
+
+/*ben hacks*/
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13.5px;
+  color: #000000;
+  line-height: 1.5em;
+  letter-spacing: 0px;
+  padding-left: 10em;
+  padding-right: 10em;
+  padding-top: 1.5em;
+}
+#toc {
+  color: #444444;
+  line-height: 1.5;
+  padding-top: 1.5em;
+  padding-left: 2em;
+  padding-right: 4em;
+  /*background: #F9F9F9;
+  width: 10em;*/
+}
+#toctitle {
+  font-size: 16px;
+}
+#toc a {
+    border-bottom: 1px dotted #999999;
+    color: #444444 !important;
+    text-decoration: none !important;
+}
+#toc a:hover {
+    border-bottom: 1px solid #6D4100;
+    color: #6D4100 !important;
+    text-decoration: none !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Garmond, Georgia, serif;
+  font-weight: normal;
+  color: #3E4349;
+}
+
+div.title, caption.title { color: #596673; font-weight: bold; font-size:110%; }
+h1 { font-size: 240%; }
+h2 { font-size: 180%; }
+h3 { font-size: 130%; }
+#header h1 { margin-top: 0; }
+/*
+div.toclevel1 { margin-top: 0.2em; font-size: 16px; }
+div.toclevel2 { margin-top: 0.15em; font-size: 14px; }
+*/
+
+em, dt, td.hdlist1 { color: black; }
+strong { color: #3E4349; }
+a { color: #004B6B; text-decoration: none; border-bottom: 1px dotted #004B6B; }
+a:visited { color: #615FA0; border-bottom: 1px dotted #615FA0; }
+a:hover { color: #6D4100; border-bottom: 1px solid #6D4100; }
+div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
+th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
+ul > li > * { color: #3E4349; }
+pre, tt, .monospaced { font-family: Consolas,Menlo,'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace; font-size:90%; color: #000000;}
+tt, .monospaced { font-size: 0.9em; color: black;}
+div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock > div.content { border-width: 0 0 0 6px; border-color: #D0D0D0; background: #EEEEEE; }
+div.verseblock { border-left-width: 0; margin-left: 3em; }
+div.quoteblock { border-left-width: 3px; margin-left: 0; margin-right: 0;}
+div.admonitionblock td.content { border-left: 3px solid #E8E8E8; }
+
+
+
+
+
+
+</style>
+<script type="text/javascript">
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install(2);
+/*]]>*/
+</script>
+</head>
+<body class="book" style="max-width:80em">
+<div id="header">
+<h1>Gaffer User Guide</h1>
+<span id="author">image engine</span><br />
+<span id="revnumber">version 0.1,</span>
+<span id="revdate">2013</span>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_introduction_to_gaffer">Introduction To Gaffer</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>This would be some text introducing people to Gaffer and it&#8217;s capabilities</p></div>
+<div class="sect2">
+<h3 id="_design_overview">Design Overview</h3>
+<div class="paragraph"><p>What is the core design philosophy of Gaffer and how should users approach it?</p></div>
+</div>
+<div class="sect2">
+<h3 id="_fuctionality">Fuctionality</h3>
+<div class="paragraph"><p>What can Gaffer do?</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_chapter_one">Chapter One</h2>
+<div class="sectionbody">
+</div>
+</div>
+<div class="sect1">
+<h2 id="_chapter_two">Chapter Two</h2>
+<div class="sectionbody">
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mini_tutorials">Mini Tutorials</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_configuration_files_example_a_id_configurationfilesexample_a">Configuration Files Example <a id="configurationFilesExample"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p>Gaffer applications are intended to be easily extensible and customisable, and to this end provide many scripting hooks for registering new behaviours and customising the user interface. At application startup, a series of configuration files are executed, providing an opportunity for the intrepid TD to make his or her mark.</p></div>
+<div class="paragraph"><div class="title">Startup file locations</div><p>The location of Gaffer&#8217;s configuration files are specified using the GAFFER_STARTUP_PATHS environment variable. This is a colon separated list of paths to directories where the startup files reside. Config directories at the end of the list are executed first, allowing them to be overridden by config directories earlier in the list.</p></div>
+<div class="paragraph"><p>Gaffer automatically adds the ~/gaffer/startup config directory to the GAFFER_STARTUP_PATHS to allow users to create their own config files without having to faff around with the environment. This user level config is run last, allowing it to take precedence over all other configuration files.</p></div>
+<div class="paragraph"><p>Within a startup directory, config files are stored in subdirectories by application name - each application only executes the files in the appropriate directory. So for instance, the browser app executes files from the ~/gaffer/startup/browser directory.</p></div>
+<div class="paragraph"><div class="title">Creating a simple startup file</div><p>We can add a startup script for the main gaffer application by creating a file in the "gui" subdirectory of the user startup location :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>~/gaffer/startup/gui/startupTest.py</code></pre>
+</div></div>
+<div class="paragraph"><p>For now, let&#8217;s just create a really simple script to provide a nice little distraction from work.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import urllib2
+import datetime
+
+day = datetime.date.today()
+factInfoURL = urllib2.urlopen( "http://numbersapi.com/%d/%d/date?json" % ( day.month, day.day ) )
+factURL = urllib2.urlopen( "http://numbersapi.com/%d/%d/date" % ( day.month, day.day ) )
+print "".join( factURL.readlines() )</code></pre>
+</div></div>
+<div class="paragraph"><p>Hopefully now when we run gaffer, we&#8217;ll receive an edifying fact, and know that the config mechanism is working as expected.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>&gt;gaffer
+July 13th is the day in 1919 that the British airship R34 lands in Norfolk, England,
+completing the first airship return journey across the Atlantic in 182 hours of flight.</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Next steps</div><p>Naturally, we might want to do something slightly more useful at startup. Taking a look at Gaffer&#8217;s internal <a href="https://github.com/ImageEngine/gaffer">config files</a> might provide some good starting points for more useful customisations.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_profiling_with_google_perf_tools_a_id_profilingwithgoogleperftools_a">Profiling With Google Perf Tools <a id="profilingWithGooglePerfTools"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p>When developing stuff it&#8217;s often beneficial to easily profile your running code to find performance bottlenecks before optimising the code.</p></div>
+<div class="paragraph"><p>The <a href="http://code.google.com/p/gperftools">Google Performance</a> Tools provide a library called libprofiler which generates profiles rather easily. This page describes a simple configuration file to enable the use of the google profiler from menu items within gaffer.</p></div>
+<div class="paragraph"><div class="title">Details</div><p>Simply place the following in a file called ~/gaffer/startup/gui/profiler.py :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import os
+import sys
+import ctypes
+import tempfile
+import uuid
+
+__currentProfile = None
+
+def start( fileName=None ) :
+
+        global __currentProfile
+
+        if __currentProfile is not None :
+                raise RuntimeError( "Profiling already in progress" )
+
+        if fileName is None :
+                fileName = os.path.join( tempfile.gettempdir(), "gafferProfile" + str( uuid.uuid4() ) + ".prof" )
+
+        lib = ctypes.CDLL( "libprofiler.so" )
+        lib.ProfilerStart( fileName )
+
+        __currentProfile = fileName
+
+def stop( view=False ) :
+
+        global __currentProfile
+
+        if __currentProfile is None :
+                raise RuntimeError( "Profiling not in progress" )
+
+        lib = ctypes.CDLL( "libprofiler.so" )
+        lib.ProfilerStop()
+
+        if view :
+                pdf = os.path.splitext( __currentProfile )[0] + ".pdf"
+                os.system( "pprof --pdf '%s' '%s' &gt; '%s'" % ( sys.executable, __currentProfile, pdf )  )
+                os.system( "evince '%s'&amp;" % pdf )
+
+        __currentProfile = None
+
+def running() :
+
+        return __currentProfile is not None
+
+import GafferUI
+GafferUI.ScriptWindow.menuDefinition().append( "/Tools/Profiler/Start", { "command" : start, "active" : lambda : not running() } )
+GafferUI.ScriptWindow.menuDefinition().append( "/Tools/Profiler/Stop", { "command" : IECore.curry( stop, view=True ), "active" : running } )</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_command_history_and_completion_for_cli_a_id_commandhistoryandcompletionforcli_a">Command History And Completion For CLI <a id="commandHistoryAndCompletionForCLI"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p>Out of the box, the gaffer command line app "gaffer cli" isn&#8217;t particularly useable - there&#8217;s no tab-to-complete or history or line editing. This is because the python module responsible for such things isn&#8217;t compatible with the BSD license, and therefore can&#8217;t be distributed with Gaffer. This short how-to provides a workaround for that.</p></div>
+<div class="paragraph"><div class="title">Enabling readline and command completion</div><p>Chances are you already have a system install of python, and it has the readline module. If so, the following startup script will locate it and set it up, along with some nice tab-based completion. Just cut and paste the text into a ~/gaffer/startup/cli/completion.py file.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import imp
+import sys
+
+# import readline. first try a normal import, and if that fails then
+# attempt to locate and import readline from a system level install.
+try :
+        import readline
+except ImportError :
+        pythonVersion = ".".join( [ str( x ) for x in sys.version_info[:2] ] )
+        f = imp.find_module( "readline", [ "/usr/lib/python%s/lib-dynload" % pythonVersion ] )
+        readline = imp.load_module( "readline", *f )
+
+# bind tab as a completion trigger
+if "libedit" in readline.__doc__ :
+        readline.parse_and_bind( "bind ^I rl_complete" )
+else :
+        readline.parse_and_bind( "tab: complete" )
+
+# register a custom completer that allows tab to work for indentation
+# as well as completion.
+
+import rlcompleter
+class __IndentingCompleter( rlcompleter.Completer ) :
+
+        def complete( self, text, state ) :
+
+                if not text or text.isspace() :
+                        return "\t" if not state else None
+                else :
+                        return rlcompleter.Completer.complete( self, text, state )
+
+readline.set_completer( __IndentingCompleter().complete )</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_creating_nodes_coding_example_a_id_creatingnodescodingexample_a">Creating Nodes Coding Example <a id="creatingNodesCodingExample"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p>Rumour has it some other application has a feature for creating equestrian playthings on demand. Here we&#8217;ll address this deficiency in Gaffer while taking the opportunity to learn about the scripted creation of nodes.</p></div>
+<div class="paragraph"><div class="title">Creating our script</div><p>If you&#8217;ve already read the <a href="#configurationFilesExample">Configuration Files Example</a>, then you&#8217;ll know we can add features to Gaffer by creating files it runs automatically on startup. We&#8217;ll create our script in the following file, and gaffer will load it each time it runs :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>~/gaffer/startup/gui/iWantAPony.py</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Creating a menu item</div><p>We want our new feature to be easily accessible to the user, so we&#8217;ll put it in the main menu for the application, which is hosted in the script window.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )</code></pre>
+</div></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png" alt="images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png" />
+</div>
+</div>
+<div class="paragraph"><p>You&#8217;ll find that most user interfaces in Gaffer can be extended with similar ease. In this case we&#8217;ve simply specified the path to the menu item, and specified that it should run a python function called iWantAPony - we&#8217;ll define that in the next section.</p></div>
+<div class="paragraph"><div class="title">Creating some nodes</div><p>We want to get on with the business of creating some nodes, but first we have to know where to create them. Gaffer can have multiple scenes (scripts) open at once, so we need to determine which one to operate on right now. We&#8217;ll do that based on which window our menu was invoked from. Fortunately that turns out to be quite easy :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>def __iWantAPony( menu ) :
+
+        scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+        script = scriptWindow.scriptNode()</code></pre>
+</div></div>
+<div class="paragraph"><p>Now we can create a read node to load a model, set the values of its plugs, and add it to the script.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>read = Gaffer.ReadNode()
+read["fileName"].setValue( "/Users/john/Documents/cortexData/cow.cob" )
+script.addChild( read )</code></pre>
+</div></div>
+<div class="paragraph"><p>The astute reader may have noticed that the model looks suspiciously bovine, and may not quite fulfil the user&#8217;s request, but it will on the other hand provide a valuable lesson : you can&#8217;t always get what you want.</p></div>
+<div class="paragraph"><p>The ReadNode loads in single objects, but is unaware of Gaffer&#8217;s framework for on demand processing of entire scenes. We can create another node to promote our poor heifer to scene status, and connect this node up to the first.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>objectToScene = GafferScene.ObjectToScene()
+objectToScene["name"].setValue( "daisy" )
+objectToScene["object"].setInput( read["output"] )
+script.addChild( objectToScene )</code></pre>
+</div></div>
+<div class="paragraph"><p>Finally, we can select the newly created nodes so the user is plainly aware of their gift.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>script.selection().clear()
+script.selection().add( read )
+script.selection().add( objectToScene )</code></pre>
+</div></div>
+<div class="paragraph"><p>And there we have it. Perhaps not quite suitable for show jumping but nevertheless a valuable source of milk, cheese and finally meat.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/creatingNodesCodingExample/iWantAPonyResult.png" alt="images/tutorials/creatingNodesCodingExample/iWantAPonyResult.png" />
+</div>
+</div>
+<div class="paragraph"><div class="title">The whole script</div><p>Here&#8217;s the whole script in all its glory.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import Gaffer
+import GafferScene
+import GafferUI
+
+def __iWantAPony( menu ) :
+
+        scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+        script = scriptWindow.scriptNode()
+
+        read = Gaffer.ReadNode()
+        read["fileName"].setValue( "/Users/john/Documents/cortexData/cow.cob" )
+        script.addChild( read )
+
+        objectToScene = GafferScene.ObjectToScene()
+        objectToScene["name"].setValue( "daisy" )
+        objectToScene["object"].setInput( read["output"] )
+        script.addChild( objectToScene )
+
+        script.selection().clear()
+        script.selection().add( read )
+        script.selection().add( objectToScene )
+
+GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_scripting_architecture_a_id_scriptingarchitecture_a">Scripting Architecture <a id="scriptingArchitecture"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p>All of Gaffer&#8217;s core functionality is available to be scripted using Python - in fact much of the GUI application itself is written in Python, Gaffer plugins are just Python modules, and the file format itself is simply a Python script with a .gfr extension.</p></div>
+<div class="paragraph"><p>There is a direct one to one correspondence between the C++ and Python APIs for Gaffer, so if you start out using one, you can easily transfer to the other. This makes it relatively straightforward to prototype in Python, but convert to C++ if performance becomes an issue, or to spend most of your time hacking away in C\++ but still be comfortable writing some GUI code in Python.</p></div>
+<div class="paragraph"><div class="title">GraphComponents</div><p>The most central classes in the Gaffer API are the GraphComponents - the nodes and plugs which are connected to make up a dependency graph. These are parented together in a hierarchical set of relationships, which nicely map to python&#8217;s dictionary and list syntax. Plugs may be added to nodes using the familiar dictionary notation :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>node = Gaffer.Node()
+node["firstPlug"] = Gaffer.IntPlug()
+node["secondPlug"] = Gaffer.FloatPlug()</code></pre>
+</div></div>
+<div class="paragraph"><p>Existing plugs can be accessed by name like a dictionary, or by insertion order like a list :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>node["firstPlug"].setValue( 10 )
+node[1].setValue( 20.5 )</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Undo</div><p>Undo is a fundamental part of both the C++ and Python APIs for Gaffer. Rather than have a set of non-undoable APIs and layer undo on top of them using some sort of separate command architecture, Gaffer builds undo right into the core APIs. Naturally sometimes you won&#8217;t want an operation you perform to be undoable, and other times you will, but in both cases you use the exact same calls. To enable undo just make sure to wrap everything in an UndoContext.</p></div>
+<div class="paragraph"><p>So, if you were to set the values of some plugs like this :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>node["plugName"].setValue( 10 )
+node["someOtherPlugName"].setValue( 20 )</code></pre>
+</div></div>
+<div class="paragraph"><p>and you wanted to do the same, but generate an entry in the undo list, then you&#8217;d simply do this :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+        node["plugName"].setValue( 10 )
+        node["someOtherPlugName"].setValue( 20 )</code></pre>
+</div></div>
+<div class="paragraph"><p>Everything which is performed within the indented UndoContext block will be concatenated into a single entry in the undo list. To make a different entry for each operation, just wrap each one in its own UndoContext :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>scriptNode = node.ancestor( Gaffer.ScriptNode.staticTypeId() )
+with Gaffer.UndoContext( scriptNode ) :
+        node["plugName"].setValue( 10 )
+
+with Gaffer.UndoContext( scriptNode ) :
+        node["someOtherPlugName"].setValue( 20 )</code></pre>
+</div></div>
+<div class="paragraph"><p>The ScriptNode passed to the UndoContext is the root node that holds all other nodes forming a graph, so it&#8217;s responsible for storing the undo list (when Gaffer opens multiple files simultaneously, each file has its own ScriptNode and therefore its own undo list). Undo and redo of previously recorded operations are provided as methods on the ScriptNode itself :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code># ooops
+scriptNode.undo()
+# let's see that again
+scriptNode.redo()</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_hello_world_coding_example_a_id_helloworldcodingexample_a">Hello World Coding Example <a id="helloWorldCodingExample"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p>In this tutorial we&#8217;ll get our first taste of the GafferUI module, and write our first Gaffer based script. So without further ado, here&#8217;s some familiar looking code&#8230;</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import GafferUI
+
+window = GafferUI.Window()
+text = GafferUI.TextWidget( "Hello World!" )
+window.setWidget( text )
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()</code></pre>
+</div></div>
+<div class="paragraph"><p>Save this in a file helloWorld.py, and we can run it from the command line as follows :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>gaffer python helloWorld.py</code></pre>
+</div></div>
+<div class="paragraph"><p>Behold our magnificent window!</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/helloWorldCodingExample/helloWorld1.png" alt="images/tutorials/helloWorldCodingExample/helloWorld1.png" />
+</div>
+</div>
+<div class="paragraph"><p>Here we&#8217;re using the built in "python" application to run our script in an environment where all the Gaffer modules are available. Shortly we&#8217;ll turn our simple script into an application of its own, so we can handle command line arguments in a nice straightforward way. Before we do that though, we can simplify things a little&#8230;</p></div>
+<div class="paragraph"><div class="title">Declaring Widget Layouts</div><p>GafferUI allows hierarchical layouts of Widgets to be described in a nice declarative style using Python&#8217;s "with" statement. Using it we can remove a whole line of code from our script.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import GafferUI
+
+with GafferUI.Window() as window :
+        GafferUI.TextWidget( "Hello World!" )
+
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()</code></pre>
+</div></div>
+<div class="paragraph"><p>When we use the "with" syntax above, Gaffer automatically keeps a track of the current parent (the widget following the "with") and automatically parents any new widgets underneath it. This cuts down on typing, and pleasingly results in code where the structure of the UI is represented in the indentation of the code.</p></div>
+<div class="paragraph"><p>Let&#8217;s make our example slightly more complex by introducing a layout consisting of columns and rows using the ListContainer&#8230;</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
+        with GafferUI.ListContainer( spacing = 5 ) :
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greeting" )
+                        greeting = GafferUI.TextWidget( "Hello" )
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greetee" )
+                        greetee = GafferUI.TextWidget( "World" )
+                message = GafferUI.TextWidget( "", editable=False )
+
+                button = GafferUI.Button( "Greet" )</code></pre>
+</div></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/helloWorldCodingExample/helloWorld2.png" alt="images/tutorials/helloWorldCodingExample/helloWorld2.png" />
+</div>
+</div>
+<div class="paragraph"><p>That&#8217;s all well and good, but now we have no greeting - hardly friendly. We&#8217;ll need to provide some interactivity&#8230;</p></div>
+<div class="paragraph"><div class="title">Signals</div><p>The GafferUI module uses a system of signals and slots to allow code to be triggered by events such as button presses. We&#8217;ll connect to the clicked signal for the button to allow us to trigger the greeting.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>def greet( button ) :
+
+        message.setText( greeting.getText() + " " + greetee.getText() )
+
+# we must store the connection in a variable to keep it alive. to remove the connection
+# we can simply delete the variable.
+clickedConnection = button.clickedSignal().connect( greet )</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Putting it together</div><p>Here&#8217;s our final script in all its glory&#8230;</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import GafferUI
+
+with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
+        with GafferUI.ListContainer( spacing = 5 ) :
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greeting" )
+                        greeting = GafferUI.TextWidget( "Hello" )
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greetee" )
+                        greetee = GafferUI.TextWidget( "World" )
+                message = GafferUI.TextWidget( "", editable=False )
+
+                button = GafferUI.Button( "Greet" )
+
+def greet( button ) :
+
+        message.setText( greeting.getText() + " " + greetee.getText() )
+
+# we must store the connection in a variable to keep it alive. to remove the connection
+# we can simply delete the variable.
+clickedConnection = button.clickedSignal().connect( greet )
+
+window.setVisible( True )
+GafferUI.EventLoop.mainEventLoop().start()</code></pre>
+</div></div>
+<div class="paragraph"><p>And here&#8217;s the final ui, showing a suitable salutation :</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/helloWorldCodingExample/helloWorld3.png" alt="images/tutorials/helloWorldCodingExample/helloWorld3.png" />
+</div>
+</div>
+<div class="paragraph"><p>Next we&#8217;ll take a look at <a href="#applicationCodingExample">creating an application based on our script</a>, where Gaffer will help us to define command line arguments and perform our parsing and input validation for us.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_application_coding_example_a_id_applicationcodingexample_a">Application Coding Example <a id="applicationCodingExample"></a></h3>
+<div class="paragraph"><div class="title">Introduction</div><p><a href="#helloWorldCodingExample">Previously</a> we created a simple hello world script using the GafferUI module. In this example we&#8217;ll see how to turn that into a command line application using a few niceties that Gaffer provides.</p></div>
+<div class="paragraph"><p>You may recall from the hello world example that we ran our script as follows :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>gaffer python helloWorld.py</code></pre>
+</div></div>
+<div class="paragraph"><p>The main "gaffer" command in this case is just a small script which launches applications - in this case the application was called "python" and it took the arguments "helloWorld.py". The gaffer command can run many such applications, and you can create custom applications of your own. Taking a look inside the gaffer package, you&#8217;ll see all the standard applications layed out like so :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>apps/gui
+apps/gui/gui-1.py
+apps/op
+apps/op/op-1.py
+apps/python/python-1.py</code></pre>
+</div></div>
+<div class="paragraph"><p>We can create a new application by creating a similar structure, and adding the top level "apps" directory we created to the GAFFER_APP_PATHS environment variable before running gaffer.</p></div>
+<div class="paragraph"><p>So without further ado, we can create the following structure and then edit "helloWorld-1.py" :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>apps/helloWorld
+apps/helloWorld-1.py</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Writing our application</div><p>In helloWorld-1.py, we start by defining a class called helloWorld (the name must match the name in the filename), and deriving it from Gaffer.Application :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>import IECore
+import Gaffer
+
+class helloWorld( Gaffer.Application ) :</code></pre>
+</div></div>
+<div class="paragraph"><p>We then define our command line arguments in our constructor, specifying them using Cortex parameters. If you&#8217;re familiar with writing procedurals or ops in Cortex then these will be familiar to you. We&#8217;ll define some parameters to form the default values for our ui :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>        def __init__( self ) :
+
+                Gaffer.Application.__init__( self, "A manufacturer of friendly greetings." )
+
+                self.parameters().addParameters(
+
+                        [
+
+                                IECore.StringParameter(
+                                        name = "greeting",
+                                        description = "The default greeting",
+                                        defaultValue = "Hello",
+                                ),
+
+                                IECore.StringParameter(
+                                        name = "greetee",
+                                        description = "The default recipient of the greeting",
+                                        defaultValue = "World",
+                                ),
+
+                        ]
+
+                )</code></pre>
+</div></div>
+<div class="paragraph"><p>Finally, we just need to define the method _run(), which gaffer will use when it wants to run our application. Gaffer will already have parsed the command line arguments for us, and placed the results in a dictionary called args. Our _run() simply contains the "hello world" script, modified ever so slightly to populate the ui with the values provided in args. We also return a status code to provide the exit status for the application - in this case 0 to indicate general happiness.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>        def _run( self, args ) :
+
+                import GafferUI
+
+                with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
+                                with GafferUI.ListContainer( spacing = 5 ) :
+                                                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                                                                GafferUI.Label( "Greeting" )
+                                                                greeting = GafferUI.TextWidget( args["greeting"].value )
+                                                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                                                                GafferUI.Label( "Greetee" )
+                                                                greetee = GafferUI.TextWidget( args["greetee"].value )
+                                                message = GafferUI.TextWidget( "", editable=False )
+
+                                                button = GafferUI.Button( "Greet" )
+
+                def greet( button ) :
+
+                                message.setText( greeting.getText() + " " + greetee.getText() )
+
+                clickedConnection = button.clickedSignal().connect( greet )
+
+                window.setVisible( True )
+                GafferUI.EventLoop.mainEventLoop().start()
+                return 0</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Running our application</div><p>We can now run our application as follows :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>gaffer helloWorld</code></pre>
+</div></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/applicationCodingExample/helloWorld2.png" alt="images/tutorials/applicationCodingExample/helloWorld2.png" />
+</div>
+</div>
+<div class="paragraph"><p>Or provide some command line arguments :</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>gaffer helloWorld -greeting "Wotcha" -greetee "Billy"</code></pre>
+</div></div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorials/applicationCodingExample/helloWorld4.png" alt="images/tutorials/applicationCodingExample/helloWorld4.png" />
+</div>
+</div>
+<div class="paragraph"><p>Or print command line help, automatically generated from the parameters :</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>gaffer -help helloWorld
+
+Name : helloWorld
+
+A manufacturer of friendly greetings
+
+Parameters
+----------
+
+    profileFileName (FileName)
+    --------------------------
+
+    If this is specified, then the application is run using the cProfile profiling
+    module, and the results saved to the file for later examination.
+
+        Default :
+
+    greeting (String)
+    -----------------
+
+    The default greeting
+
+        Default : hello
+
+    greetee (String)
+    ----------------
+
+    The default recipient of the greeting
+
+        Default : world</code></pre>
+</div></div>
+<div class="paragraph"><div class="title">Summary</div><p>This rather contrived example illustrates the basics of application creation, but really only scratches the surface of the Gaffer libraries - all we&#8217;ve really done is use them as a nice convenient way of defining command line arguments and having them parsed for us.</p></div>
+<div class="paragraph"><p>Take a look at the contents of the apps directory in the gaffer distribution to see more examples, and the other tutorials on this wiki (as and when they appear) to see what&#8217;s available for producing a slightly more useful (but hopefully not less cheerful) application.</p></div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Version 0.1<br />
+Last updated 2013-03-27 09:06:09 PDT
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+
+
+
+
+/*ben hacks*/
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13.5px;
+  color: #000000;
+  line-height: 1.5em;
+  letter-spacing: 0px;
+  padding-left: 10em;
+  padding-right: 10em;
+  padding-top: 1.5em;
+}
+#toc {
+  color: #444444;
+  line-height: 1.5;
+  padding-top: 1.5em;
+  padding-left: 2em;
+  padding-right: 4em;
+  /*background: #F9F9F9;
+  width: 10em;*/
+}
+#toctitle {
+  font-size: 16px;
+}
+#toc a {
+    border-bottom: 1px dotted #999999;
+    color: #444444 !important;
+    text-decoration: none !important;
+}
+#toc a:hover {
+    border-bottom: 1px solid #6D4100;
+    color: #6D4100 !important;
+    text-decoration: none !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Garmond, Georgia, serif;
+  font-weight: normal;
+  color: #3E4349;
+}
+
+div.title, caption.title { color: #596673; font-weight: bold; font-size:110%; }
+h1 { font-size: 240%; }
+h2 { font-size: 180%; }
+h3 { font-size: 130%; }
+#header h1 { margin-top: 0; }
+/*
+div.toclevel1 { margin-top: 0.2em; font-size: 16px; }
+div.toclevel2 { margin-top: 0.15em; font-size: 14px; }
+*/
+
+em, dt, td.hdlist1 { color: black; }
+strong { color: #3E4349; }
+a { color: #004B6B; text-decoration: none; border-bottom: 1px dotted #004B6B; }
+a:visited { color: #615FA0; border-bottom: 1px dotted #615FA0; }
+a:hover { color: #6D4100; border-bottom: 1px solid #6D4100; }
+div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
+th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
+ul > li > * { color: #3E4349; }
+pre, tt, .monospaced { font-family: Consolas,Menlo,'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace; font-size:90%; color: #000000;}
+tt, .monospaced { font-size: 0.9em; color: black;}
+div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock > div.content { border-width: 0 0 0 6px; border-color: #D0D0D0; background: #EEEEEE; }
+div.verseblock { border-left-width: 0; margin-left: 3em; }
+div.quoteblock { border-left-width: 3px; margin-left: 0; margin-right: 0;}
+div.admonitionblock td.content { border-left: 3px solid #E8E8E8; }
+
+
+
+
+
+
