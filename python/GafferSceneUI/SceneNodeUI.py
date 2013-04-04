@@ -109,13 +109,15 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-# SceneElementProcessor
+# FilteredSceneProcessor
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneElementProcessor.staticTypeId(),
+	GafferScene.FilteredSceneProcessor.staticTypeId(),
 	"filter",
 	GafferSceneUI.FilterPlugValueWidget,
 )
+
+GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
 
 # AttributeCache
 
@@ -138,10 +140,6 @@ GafferUI.PlugValueWidget.registerCreator(
 		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
 	),
 )
-
-# SceneElementProcessor
-
-GafferUI.Nodule.registerNodule( GafferScene.SceneElementProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
 
 # Assignment
 

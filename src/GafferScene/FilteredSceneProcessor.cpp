@@ -35,80 +35,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "GafferScene/FilteredSceneProcessor.h"
 
-#include "Gaffer/Context.h"
-
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathFilter.h"
-
-using namespace GafferScene;
-using namespace Gaffer;
 using namespace IECore;
-using namespace std;
+using namespace Gaffer;
+using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( PathFilter );
+IE_CORE_DEFINERUNTIMETYPED( FilteredSceneProcessor );
 
-size_t PathFilter::g_firstPlugIndex = 0;
+size_t FilteredSceneProcessor::g_firstPlugIndex = 0;
 
-PathFilter::PathFilter( const std::string &name )
-	:	Filter( name )
+FilteredSceneProcessor::FilteredSceneProcessor( const std::string &name, Filter::Result filterDefault )
+	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	// we don't allow inputs to the paths plug, because then the paths could vary
-	// from computation to computation - resulting in nonsense as far as descendant
-	// matches go.
-	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData(), Plug::Default & ~Plug::AcceptsInputs ) );
-
-	plugSetSignal().connect( boost::bind( &PathFilter::plugSet, this, ::_1 ) );
+	addChild( new IntPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::Match ) );
 }
 
-PathFilter::~PathFilter()
+FilteredSceneProcessor::~FilteredSceneProcessor()
 {
 }
 
-Gaffer::StringVectorDataPlug *PathFilter::pathsPlug()
+Gaffer::IntPlug *FilteredSceneProcessor::filterPlug()
 {
-	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
+const Gaffer::IntPlug *FilteredSceneProcessor::filterPlug() const
 {
-	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
-	if( input == pathsPlug() )
+	if( !SceneProcessor::acceptsInput( plug, inputPlug ) )
 	{
-		outputs.push_back( matchPlug() );
+		return false;
 	}
-}
-
-void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
-	if( pathData )
+	
+	if( plug == filterPlug() )
 	{
-		const ScenePlug::ScenePath &path = pathData->readable();
-		h.append( &(path[0]), path.size() );
+		const Node *n = inputPlug->source<Plug>()->node();	
+		if( !n || !n->isInstanceOf( Filter::staticTypeId() ) )
+		{
+			return false;
+		}
 	}
-	pathsPlug()->hash( h );
+	return true;
 }
-
-Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
-{
-	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	return m_matcher.match( path );
-}
-
-void PathFilter::plugSet( Gaffer::Plug *plug )
-{
-	if( plug == pathsPlug() )
-	{
-		ConstStringVectorDataPtr paths = pathsPlug()->getValue();
-		m_matcher.init( paths->readable().begin(), paths->readable().end() );
-	}
-}
-

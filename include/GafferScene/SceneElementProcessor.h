@@ -38,15 +38,14 @@
 #ifndef GAFFERSCENE_SCENEELEMENTPROCESSOR_H
 #define GAFFERSCENE_SCENEELEMENTPROCESSOR_H
 
-#include "GafferScene/SceneProcessor.h"
-#include "GafferScene/Filter.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
 namespace GafferScene
 {
 
 /// The SceneElementProcessor class provides a base class for modifying elements of an input
 /// scene while leaving the scene hierarchy unchanged.
-class SceneElementProcessor : public SceneProcessor
+class SceneElementProcessor : public FilteredSceneProcessor
 {
 
 	public :
@@ -54,18 +53,12 @@ class SceneElementProcessor : public SceneProcessor
 		SceneElementProcessor( const std::string &name=staticTypeName(), Filter::Result filterDefault = Filter::Match );
 		virtual ~SceneElementProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, SceneProcessor );
-		
-		Gaffer::IntPlug *filterPlug();
-		const Gaffer::IntPlug *filterPlug() const;
-		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );
+				
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
-
-		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
 		/// Implemented to call hashProcessedBound() where appropriate.
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
