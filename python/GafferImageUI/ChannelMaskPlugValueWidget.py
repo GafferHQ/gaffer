@@ -94,8 +94,8 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :		
 				selection = StringVectorData( self.__multiSelectionMenu.getSelection() ) 
 				self.__multiSelectionMenu.setText( self._displayText() )
-				selection = [ channel.replace( ".", "/" ) for channel in selection ]
-				plug.setValue( selection )
+				selection = [ channel.replace( "/", "." ) for channel in selection ]
+				plug.setValue( StringVectorData( selection ) )
 			
 	def _updateFromPlug( self ) :
 		
