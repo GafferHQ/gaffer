@@ -73,6 +73,7 @@
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Transform.h"
 #include "GafferScene/AimConstraint.h"
+#include "GafferScene/Prune.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -94,6 +95,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<FileSource>();
 	GafferBindings::DependencyNodeClass<ModelCacheSource>();
 	GafferBindings::DependencyNodeClass<SceneProcessor>();
+	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
 	GafferBindings::DependencyNodeClass<AttributeCache>();
 	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
@@ -152,6 +154,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Light>();
 	GafferBindings::DependencyNodeClass<StandardAttributes>();
 	GafferBindings::DependencyNodeClass<Transform>();
+	GafferBindings::DependencyNodeClass<Prune>();
 	
 	{
 		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
