@@ -2,6 +2,8 @@
 
 * Added the GafferUI.Metadata class, which will be used to provide things such as node and plug descriptions for the generation of tooltips and reference documentation.
 
+* Added a Prune node, for removing whole branches from a Scene (issue #70).
+
 0.55.0
 ======
 
