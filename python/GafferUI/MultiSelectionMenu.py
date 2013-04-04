@@ -53,7 +53,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	) :
 		self.__allowMultipleSelection = allowMultipleSelection
 		self.__allowEmptySelection = allowEmptySelection
-		self.___selectionChangedSignal = None
+		self.__selectionChangedSignal = None
 			
 		GafferUI.Button.__init__( self, **kw )
 		self._menu = GafferUI.Menu( self.__addMenuDefinition, self._qtWidget() )
@@ -66,9 +66,9 @@ class MultiSelectionMenu( GafferUI.Button ) :
 
 	## A signal emitted whenever the selection changes.
 	def selectionChangedSignal( self ) :
-		if self.___selectionChangedSignal is None :
-			self.___selectionChangedSignal = GafferUI.WidgetSignal()
-		return self.___selectionChangedSignal
+		if self.__selectionChangedSignal is None :
+			self.__selectionChangedSignal = GafferUI.WidgetSignal()
+		return self.__selectionChangedSignal
 
 	## Returns a list of the enabled labels.	
 	def getEnabledItems( self ) :
