@@ -4,6 +4,12 @@
 
 * Added a Prune node, for removing whole branches from a Scene (issue #70).
 
+* The Menu class now supports the description field of menu items, displaying descriptions as tooltips.
+
+* The Menu class now supports the passing of the menu to callables registered as subMenus.
+
+* Added a "File/Open Recent" menu item (issue #118).
+
 0.55.0
 ======
 
