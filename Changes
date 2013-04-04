@@ -8,6 +8,8 @@
 
 * The Menu class now supports the passing of the menu to callables registered as subMenus.
 
+* Added a "File/Open Recent" menu item (issue #118).
+
 0.55.0
 ======
 
