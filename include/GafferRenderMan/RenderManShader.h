@@ -59,7 +59,8 @@ class RenderManShader : public GafferScene::Shader
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
 		
 		/// \undoable.
-		void loadShader( const std::string &shaderName );
+		/// \todo Make this method virtual and define it on the Shader base class.
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
 		/// The loader used by loadShader() - this is exposed so that the ui
 		/// can use it too.
@@ -77,7 +78,7 @@ class RenderManShader : public GafferScene::Shader
 		/// \todo Perhaps some other code sharing mechanism makes more sense?
 		friend class RenderManLight;
 		
-		static void loadShaderParameters( const std::string &shaderName, Gaffer::CompoundPlug *parametersPlug );
+		static void loadShaderParameters( const std::string &shaderName, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues=false );
 					
 };
 
