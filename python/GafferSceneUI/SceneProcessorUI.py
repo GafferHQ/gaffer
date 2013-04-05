@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,24 +34,26 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
+import GafferScene
+import GafferSceneUI
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.SceneProcessor,
+
+"""The base type for all nodes which take an input scene and process it in some way.""",
+
+"in",
+"""The input scene.""",
+
+"out",
+"""The processed output scene.""",
+
+"enabled",
+"""The on/off state of the node. When it is off, the node outputs the input scene unchanged.""",
+
+)
+

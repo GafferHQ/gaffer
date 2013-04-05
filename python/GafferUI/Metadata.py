@@ -48,9 +48,12 @@ class Metadata :
 
 	## Registers a textual description for nodes of the specified type.
 	# The description may either be a string or a callable which will compute
-	# a description when passed a node instance.
+	# a description when passed a node instance. As a convenience all additional
+	# arguments are paired up and passed to calls to registerPlugDescription().
 	@classmethod
-	def registerNodeDescription( cls, nodeType, description ) :
+	def registerNodeDescription( cls, nodeType, description, *args ) :
+				
+		assert( ( len( args ) % 2 ) == 0 )
 		
 		if isinstance( nodeType, IECore.TypeId ) :
 			nodeTypeId = nodeType
@@ -58,6 +61,12 @@ class Metadata :
 			nodeTypeId = nodeType.staticTypeId()
 			
 		cls.__nodeDescriptions[nodeTypeId] = description
+	
+		for i in range( 0, len( args ), 2 ) :
+		
+			plugPath = args[i]
+			assert( " " not in plugPath )
+			cls.registerPlugDescription( nodeTypeId, plugPath, args[i+1] )
 	
 	## Returns a description for the specified node instance.
 	@classmethod
