@@ -43,6 +43,7 @@
 
 #include "Gaffer/Node.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 #include "GafferScene/TypeIds.h"
 
@@ -58,6 +59,9 @@ class Shader : public Gaffer::Node
 		virtual ~Shader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Shader, ShaderTypeId, Gaffer::Node );
+		
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
 		
 		Gaffer::CompoundPlug *parametersPlug();
 		const Gaffer::CompoundPlug *parametersPlug() const;

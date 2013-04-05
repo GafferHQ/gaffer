@@ -53,7 +53,6 @@ IE_CORE_DEFINERUNTIMETYPED( RenderManShader );
 RenderManShader::RenderManShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
-	addChild( new StringPlug( "__shaderName" ) );
 	addChild( new Plug( "out", Plug::Out ) );
 }
 
@@ -64,7 +63,7 @@ RenderManShader::~RenderManShader()
 void RenderManShader::loadShader( const std::string &shaderName )
 {
 	loadShaderParameters( shaderName, parametersPlug() );
-	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
+	namePlug()->setValue( shaderName );
 }
 
 bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
@@ -93,12 +92,6 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	}
 	
 	return true;
-}
-
-void RenderManShader::shaderHash( IECore::MurmurHash &h ) const
-{
-	Shader::shaderHash( h );
-	getChild<StringPlug>( "__shaderName" )->hash( h );
 }
 
 IECore::ShaderPtr RenderManShader::shader( NetworkBuilder &network ) const

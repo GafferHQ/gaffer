@@ -58,6 +58,7 @@ class RenderManShader : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
 		
+		/// \undoable.
 		void loadShader( const std::string &shaderName );
 
 		/// The loader used by loadShader() - this is exposed so that the ui
@@ -68,7 +69,6 @@ class RenderManShader : public GafferScene::Shader
 	
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
 		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
 	
 	private :
