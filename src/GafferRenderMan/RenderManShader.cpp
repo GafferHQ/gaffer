@@ -96,7 +96,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 
 IECore::ShaderPtr RenderManShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue(), "ri:surface" );
+	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), "ri:surface" );
 	for( InputPlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		if( (*it)->typeId() == Plug::staticTypeId() )

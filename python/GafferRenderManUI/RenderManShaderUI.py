@@ -52,7 +52,7 @@ def __shaderAnnotations( shaderNode ) :
 
 	global __cachedShaderAnnotations
 
-	shaderName = shaderNode["__shaderName"].getValue()
+	shaderName = shaderNode["name"].getValue()
 	if shaderName not in __cachedShaderAnnotations :
 		try :
 			shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
