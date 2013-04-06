@@ -1,16 +1,16 @@
 /* 
-  pygmentize filter
+  pygmentize filter - colour customisation 
 */
 .highlight .hll { background-color: #ffffcc }
 .highlight  { background: #f4f4f4; }
-.highlight .c { color: #008800; font-style: italic } /* Comment */
+.highlight .c { color: #008888; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
 .highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
-.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
-.highlight .cp { color: #008800 } /* Comment.Preproc */
-.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
-.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
+.highlight .cm { color: #008888; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #008888 } /* Comment.Preproc */
+.highlight .c1 { color: #008888; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #008888; font-weight: bold } /* Comment.Special */
 .highlight .gd { color: #A00000 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #FF0000 } /* Generic.Error */
