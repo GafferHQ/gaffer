@@ -257,6 +257,9 @@ void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffe
 	const StringVectorData *orderedParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:orderedParameterNames", true );
 	const vector<string> &orderedParameterNames = orderedParameterNamesData->readable();
 	
+	const StringVectorData *outputParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:outputParameterNames", true );
+	const vector<string> &outputParameterNames = outputParameterNamesData->readable();
+	
 	const CompoundData *annotations = shader->blindData()->member<CompoundData>( "ri:annotations", true );
 	
 	// remove plugs we don't need - either because we're not preserving existing values or because
@@ -280,6 +283,11 @@ void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffe
 	
 	for( vector<string>::const_iterator it = orderedParameterNames.begin(), eIt = orderedParameterNames.end(); it != eIt; it++ )
 	{
+		if( std::find( outputParameterNames.begin(), outputParameterNames.end(), *it ) != outputParameterNames.end() )
+		{
+			continue;
+		}
+	
 		const StringData *typeHint = typeHints->member<StringData>( *it, false );
 		const Data *defaultValue = shader->parametersData()->member<Data>( *it );
 		switch( defaultValue->typeId() )

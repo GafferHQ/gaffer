@@ -358,6 +358,14 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( n["parameters"]["float1"].getValue(), 0.25 )
 		self.assertEqual( n["parameters"]["string1"].getValue(), "dog" )
 		self.assertEqual( n["parameters"]["color1"].getValue(), IECore.Color3f( 0.1, 0.25, 0.5 ) )
+	
+	def testOutputParameters( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version3.sl" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader )
+		
+		self.failIf( "outputFloat" in n["parameters"].keys() )
 		
 if __name__ == "__main__":
 	unittest.main()

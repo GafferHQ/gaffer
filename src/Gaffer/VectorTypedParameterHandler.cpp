@@ -125,4 +125,4 @@ template class VectorTypedParameterHandler<bool>;
 template class VectorTypedParameterHandler<int>;
 template class VectorTypedParameterHandler<float>;
 template class VectorTypedParameterHandler<std::string>;
-template class VectorTypedParameterHandler<Imath::V3f>;
+//template class VectorTypedParameterHandler<Imath::V3f>;
