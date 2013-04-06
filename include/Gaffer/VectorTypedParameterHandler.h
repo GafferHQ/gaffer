@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -44,17 +44,16 @@
 namespace Gaffer
 {
 
-template<typename T>
+template<typename ParameterType>
 class VectorTypedParameterHandler : public ParameterHandler
 {
 
 	public :
 
-		IE_CORE_DECLAREMEMBERPTR( VectorTypedParameterHandler<T> );
+		IE_CORE_DECLAREMEMBERPTR( VectorTypedParameterHandler<ParameterType> );
 
-		typedef IECore::TypedParameter<std::vector<T> > ParameterType;
-		typedef IECore::TypedData<std::vector<T> > DataType;
-		typedef TypedObjectPlug<IECore::TypedData<std::vector<T> > > PlugType;
+		typedef typename ParameterType::ObjectType DataType;
+		typedef TypedObjectPlug<DataType> PlugType;
 
 		VectorTypedParameterHandler( typename ParameterType::Ptr parameter );
 		virtual ~VectorTypedParameterHandler();
@@ -73,7 +72,7 @@ class VectorTypedParameterHandler : public ParameterHandler
 		typename ParameterType::Ptr m_parameter;
 		typename PlugType::Ptr m_plug;
 	
-		static ParameterHandlerDescription<VectorTypedParameterHandler<T>, ParameterType> g_description;
+		static ParameterHandlerDescription<VectorTypedParameterHandler<ParameterType>, ParameterType> g_description;
 
 };
 
