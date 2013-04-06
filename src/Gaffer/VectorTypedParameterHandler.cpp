@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -41,39 +41,39 @@
 
 using namespace Gaffer;
 
-template<typename T>
-ParameterHandler::ParameterHandlerDescription<VectorTypedParameterHandler<T>, IECore::TypedParameter<std::vector<T> > > VectorTypedParameterHandler<T>::g_description;
+template<typename ParameterType>
+ParameterHandler::ParameterHandlerDescription<VectorTypedParameterHandler<ParameterType>, ParameterType> VectorTypedParameterHandler<ParameterType>::g_description;
 
-template<typename T>
-VectorTypedParameterHandler<T>::VectorTypedParameterHandler( typename ParameterType::Ptr parameter )
+template<typename ParameterType>
+VectorTypedParameterHandler<ParameterType>::VectorTypedParameterHandler( typename ParameterType::Ptr parameter )
 	:	m_parameter( parameter )
 {
 }
 
-template<typename T>
-VectorTypedParameterHandler<T>::~VectorTypedParameterHandler()
+template<typename ParameterType>
+VectorTypedParameterHandler<ParameterType>::~VectorTypedParameterHandler()
 {
 }
 
-template<typename T>
-IECore::ParameterPtr VectorTypedParameterHandler<T>::parameter()
-{
-	return m_parameter;
-}
-
-template<typename T>
-IECore::ConstParameterPtr VectorTypedParameterHandler<T>::parameter() const
+template<typename ParameterType>
+IECore::ParameterPtr VectorTypedParameterHandler<ParameterType>::parameter()
 {
 	return m_parameter;
 }
 
-template<typename T>
-void VectorTypedParameterHandler<T>::restore( GraphComponent *plugParent )
+template<typename ParameterType>
+IECore::ConstParameterPtr VectorTypedParameterHandler<ParameterType>::parameter() const
+{
+	return m_parameter;
+}
+
+template<typename ParameterType>
+void VectorTypedParameterHandler<ParameterType>::restore( GraphComponent *plugParent )
 {
 }
 
-template<typename T>
-Gaffer::PlugPtr VectorTypedParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+template<typename ParameterType>
+Gaffer::PlugPtr VectorTypedParameterHandler<ParameterType>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -87,20 +87,20 @@ Gaffer::PlugPtr VectorTypedParameterHandler<T>::setupPlug( GraphComponent *plugP
 	return m_plug;
 }
 
-template<typename T>
-Gaffer::PlugPtr VectorTypedParameterHandler<T>::plug()
+template<typename ParameterType>
+Gaffer::PlugPtr VectorTypedParameterHandler<ParameterType>::plug()
 {
 	return m_plug;
 }
 
-template<typename T>
-Gaffer::ConstPlugPtr VectorTypedParameterHandler<T>::plug() const
+template<typename ParameterType>
+Gaffer::ConstPlugPtr VectorTypedParameterHandler<ParameterType>::plug() const
 {
 	return m_plug;
 }
 		
-template<typename T>
-void VectorTypedParameterHandler<T>::setParameterValue()
+template<typename ParameterType>
+void VectorTypedParameterHandler<ParameterType>::setParameterValue()
 {
 	IECore::ConstObjectPtr o = m_plug->getValue();
 	if( o )
@@ -113,16 +113,16 @@ void VectorTypedParameterHandler<T>::setParameterValue()
 	}
 }
 
-template<typename T>
-void VectorTypedParameterHandler<T>::setPlugValue()
+template<typename ParameterType>
+void VectorTypedParameterHandler<ParameterType>::setPlugValue()
 {
 	m_plug->setValue( static_cast<const DataType *>( m_parameter->getValue() ) );
 }
 		
 // explicit instantiations
 
-template class VectorTypedParameterHandler<bool>;
-template class VectorTypedParameterHandler<int>;
-template class VectorTypedParameterHandler<float>;
-template class VectorTypedParameterHandler<std::string>;
-//template class VectorTypedParameterHandler<Imath::V3f>;
+template class VectorTypedParameterHandler<IECore::BoolVectorParameter>;
+template class VectorTypedParameterHandler<IECore::IntVectorParameter>;
+template class VectorTypedParameterHandler<IECore::FloatVectorParameter>;
+template class VectorTypedParameterHandler<IECore::StringVectorParameter>;
+template class VectorTypedParameterHandler<IECore::V3fVectorParameter>;
