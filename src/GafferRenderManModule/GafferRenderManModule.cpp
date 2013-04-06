@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/NodeBinding.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 #include "GafferRenderMan/RenderManAttributes.h"
@@ -44,17 +45,39 @@
 #include "GafferRenderMan/RenderManLight.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 using namespace GafferRenderMan;
+
+/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
+/// and implemented it so reloading works in ArnoldShader and OpenGLShader.
+class RenderManShaderSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		const RenderManShader *shader = static_cast<const RenderManShader *>( graphComponent );
+		std::string shaderName = shader->namePlug()->getValue();
+		if( shaderName.size() )
+		{
+			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+		}
+
+		return "";
+	}
+
+};
 
 BOOST_PYTHON_MODULE( _GafferRenderMan )
 {
 	
 	GafferBindings::NodeClass<RenderManShader>()
-		.def( "loadShader", &RenderManShader::loadShader )
+		.def( "loadShader", &RenderManShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "shaderLoader", &RenderManShader::shaderLoader, return_value_policy<reference_existing_object>() )
 		.staticmethod( "shaderLoader" )
 	;
 	
+	Serialisation::registerSerialiser( RenderManShader::staticTypeId(), new RenderManShaderSerialiser() );
+
 	GafferBindings::NodeClass<RenderManLight>()
 		.def( "loadShader", &RenderManLight::loadShader )
 	;

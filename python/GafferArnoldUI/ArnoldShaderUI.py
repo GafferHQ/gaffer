@@ -87,7 +87,7 @@ with IECoreArnold.UniverseBlock() :
 			
 def __plugValueWidgetCreator( plug ) :
 
-	paramPath = plug.node()["__shaderName"].getValue() + "." + plug.getName()
+	paramPath = plug.node()["name"].getValue() + "." + plug.getName()
 	customCreator = __plugValueWidgetCreators.get( paramPath, None )
 	if customCreator is not None :
 		return customCreator[0]( plug, *customCreator[1:] )

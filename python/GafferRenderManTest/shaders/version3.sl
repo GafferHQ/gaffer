@@ -34,12 +34,13 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-surface coshaderParameter(
-	float floatParameter = 1;
-#pragma annotation "floatParameter.min" "-1"
-#pragma annotation "floatParameter.max" "10"
-	string stringParameter = "";
-	shader coshaderParameter = null;
+surface version(
+	float float1 = 1;
+	string string1 = "";
+	color color1 = ( 1, 1, 1 );
+	float float2 = 1;
+	
+	output float outputFloat = 0;
 )
 {
 	Ci = 1;

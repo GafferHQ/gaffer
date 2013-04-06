@@ -44,13 +44,14 @@ class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
 	
 		self.__compiledShaders = set()
 
-	def compileShader( self, sourceFileName ) :
+	def compileShader( self, sourceFileName, shaderName=None ) :
 	
 		# perhaps one day we'll need to implement this for other renderman
 		# renderers, in which case we'll be glad we put all the calls in one
 		# place.
 		
-		shaderName = os.path.splitext( os.path.basename( sourceFileName ) )[0]
+		if shaderName is None :
+			shaderName = os.path.splitext( os.path.basename( sourceFileName ) )[0]
 		outputFileName = "/tmp/" + shaderName + ".sdl"
 	
 		os.system( "shaderdl -o %s %s" % ( outputFileName, sourceFileName ) )
