@@ -34,12 +34,74 @@
 #  
 ##########################################################################
 
+import IECore
+
+import Gaffer
 import GafferUI
 import GafferScene
 
 ##########################################################################
+# Metadata
+##########################################################################
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.Shader,
+
+"""The base type for all nodes which create shaders. Use the Assignment node to assign them to objects in the scene.""",
+
+"name",
+"""The name of the shader being represented. This should be considered read-only. Use the Shader.loadShader() method to load a shader.""",
+
+"parameters",
+"""Where the parameters for the shader are represented.""",
+
+)
+
+##########################################################################
 # PlugValueWidgets
 ##########################################################################
+
+class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+	
+		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		
+		with row :
+		
+			self.__label = GafferUI.Label( "" )
+					
+			GafferUI.Spacer( IECore.V2i( 1 ), expand=True )
+			
+			self.__button = GafferUI.Button( "Reload" )
+			self.__buttonClickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+			
+		self._updateFromPlug()
+	
+	def hasLabel( self ) :
+	
+		return True
+		
+	def _updateFromPlug( self ) :
+	
+		with self.getContext() :
+			shaderName = self.getPlug().getValue()
+			self.__label.setText( "<h3>Shader : " + shaderName + "</h3>" )
+			## \todo Disable the RenderMan check once we've got all the shader types implementing reloading properly.
+			self.__button.setEnabled( shaderName and "RenderMan" in self.getPlug().node().typeName() )
+			
+	def __buttonClicked( self, button ) :
+	
+		node = self.getPlug().node()
+		node.shaderLoader().clear()
+		
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			node.loadShader( node["name"].getValue(), keepExistingValues = True )
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "name", __ShaderNamePlugValueWidget )
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )

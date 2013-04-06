@@ -59,7 +59,6 @@ class ArnoldShader : public GafferScene::Shader
 
 	protected :
 	
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
 		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
 		
 	private :

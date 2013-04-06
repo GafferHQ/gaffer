@@ -54,6 +54,7 @@ Shader::Shader( const std::string &name )
 	:	Node( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "name" ) );
 	addChild( new CompoundPlug( "parameters" ) );
 }
 
@@ -61,14 +62,24 @@ Shader::~Shader()
 {
 }
 
+Gaffer::StringPlug *Shader::namePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *Shader::namePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+		
 Gaffer::CompoundPlug *Shader::parametersPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::CompoundPlug *Shader::parametersPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
 }
 		
 IECore::MurmurHash Shader::stateHash() const
@@ -93,6 +104,7 @@ IECore::ObjectVectorPtr Shader::state() const
 void Shader::shaderHash( IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
+	namePlug()->hash( h );
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		const Plug *inputPlug = (*it)->getInput<Plug>();

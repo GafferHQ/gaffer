@@ -45,6 +45,12 @@ import GafferRenderManTest
 
 class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
+	def setUp( self ) :
+
+		GafferRenderManTest.RenderManTestCase.setUp( self )
+		
+		GafferRenderMan.RenderManShader.shaderLoader().clear()
+
 	def test( self ) :
 	
 		n = GafferRenderMan.RenderManShader()
@@ -174,6 +180,192 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		self.assertTrue( coshaderNode["parameters"]["colorParameter"].acceptsInput( random["outColor"] ) )
 		self.assertFalse( coshaderNode["parameters"]["colorParameter"].acceptsInput( coshaderNode["out"] ) )
+	
+	def testParameterDefaultValue( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertEqual( shaderNode["parameters"]["floatParameter"].defaultValue(), 1 )
+	
+	def testParameterMinMax( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertEqual( shaderNode["parameters"]["floatParameter"].minValue(), -1 )
+		self.assertEqual( shaderNode["parameters"]["floatParameter"].maxValue(), 10 )
+	
+	def testReload( self ) :
+	
+		shader1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version1.sl" )
+		
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader1 )
+		shaderNode["parameters"]["float1"].setValue( 0.1 )
+		shaderNode["parameters"]["string1"].setValue( "test" )
+		shaderNode["parameters"]["color1"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		self.assertAlmostEqual( shaderNode["parameters"]["float1"].getValue(), 0.1 )
+		self.assertEqual( shaderNode["parameters"]["string1"].getValue(), "test" )
+		self.assertEqual( shaderNode["parameters"]["color1"].getValue(), IECore.Color3f( 1, 2, 3 ) )
+		
+		shader2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.sl" )
+		shaderNode.loadShader( shader2, keepExistingValues=True )
+		
+		self.assertEqual( shaderNode["parameters"].keys(), [ "float1", "string1", "color1", "float2", "string2", "color2" ] )
+		self.assertAlmostEqual( shaderNode["parameters"]["float1"].getValue(), 0.1 )
+		self.assertEqual( shaderNode["parameters"]["string1"].getValue(), "test" )
+		self.assertEqual( shaderNode["parameters"]["color1"].getValue(), IECore.Color3f( 1, 2, 3 ) )
+		
+		shaderNode.loadShader( shader1, keepExistingValues=True )
+		
+		self.assertEqual( shaderNode["parameters"].keys(), [ "float1", "string1", "color1" ] )
+		self.assertAlmostEqual( shaderNode["parameters"]["float1"].getValue(), 0.1 )
+		self.assertEqual( shaderNode["parameters"]["string1"].getValue(), "test" )
+		self.assertEqual( shaderNode["parameters"]["color1"].getValue(), IECore.Color3f( 1, 2, 3 ) )
+
+		shaderNode.loadShader( shader1, keepExistingValues=False )
+		
+		self.assertEqual( shaderNode["parameters"].keys(), [ "float1", "string1", "color1" ] )
+		self.assertEqual( shaderNode["parameters"]["float1"].getValue(), 1 )
+		self.assertEqual( shaderNode["parameters"]["string1"].getValue(), "" )
+		self.assertEqual( shaderNode["parameters"]["color1"].getValue(), IECore.Color3f( 1, 1, 1 ) )
+	
+	def testReloadRemovesOldParameters( self ) :
+		
+		shader2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.sl" )
+		
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader2 )
+		
+		self.assertEqual( shaderNode["parameters"].keys(), [ "float1", "string1", "color1", "float2", "string2", "color2" ] )
+
+		shader3 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version3.sl" )
+		shaderNode.loadShader( shader3 )
+		
+		self.assertEqual( shaderNode["parameters"].keys(), [ "float1", "string1", "color1", "float2" ] )		
+			
+	def testAutomaticReloadOnScriptLoad( self ) :
+	
+		shader1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version1.sl", shaderName = "unversioned" )
+
+		s = Gaffer.ScriptNode()
+		s["shader"] = GafferRenderMan.RenderManShader()
+		s["shader"].loadShader( shader1 )
+		s["shader"]["parameters"]["float1"].setValue( 0.1 )
+		s["shader"]["parameters"]["string1"].setValue( "test" )
+		s["shader"]["parameters"]["color1"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		
+		ss = s.serialise()
+		
+		self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.sl", shaderName = "unversioned" )
+		
+		GafferRenderMan.RenderManShader.shaderLoader().clear()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertEqual( s["shader"]["parameters"].keys(), [ "float1", "string1", "color1", "float2", "string2", "color2" ] )
+		self.assertAlmostEqual( s["shader"]["parameters"]["float1"].getValue(), 0.1 )
+		self.assertEqual( s["shader"]["parameters"]["string1"].getValue(), "test" )
+		self.assertEqual( s["shader"]["parameters"]["color1"].getValue(), IECore.Color3f( 1, 2, 3 ) )
+	
+	def testReloadPreservesConnections( self ) :
+	
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( "plastic" )
+	
+		random = Gaffer.Random()
+		
+		n["parameters"]["Ks"].setInput( random["outFloat"] )
+		n["parameters"]["specularcolor"].setInput( random["outColor"] )
+	
+		n.loadShader( "plastic", keepExistingValues = True )
+		
+		self.assertTrue( n["parameters"]["Ks"].getInput().isSame( random["outFloat"] ) )
+		self.assertTrue( n["parameters"]["specularcolor"].getInput().isSame( random["outColor"] ) )
+	
+	def testReloadPreservesConnectionsWhenMinMaxOrDefaultChanges( self ) :
+	
+		shader1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version1.sl", shaderName = "unversioned" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader1 )
+		
+		self.assertFalse( n["parameters"]["float1"].hasMinValue() )
+		self.assertFalse( n["parameters"]["float1"].hasMaxValue() )
+		self.assertEqual( n["parameters"]["string1"].defaultValue(), "" )
+		
+		nn = Gaffer.Node()
+		nn["outFloat"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out )
+		nn["outString"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		n["parameters"]["float1"].setInput( nn["outFloat"] )
+		n["parameters"]["string1"].setInput( nn["outString"] )
+		
+		shader2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.sl", shaderName = "unversioned" )
+				
+		GafferRenderMan.RenderManShader.shaderLoader().clear()
+		n.loadShader( shader1, keepExistingValues=True )
+		
+		self.assertTrue( n["parameters"]["float1"].hasMinValue() )
+		self.assertTrue( n["parameters"]["float1"].hasMaxValue() )
+		self.assertEqual( n["parameters"]["float1"].minValue(), -1 )
+		self.assertEqual( n["parameters"]["float1"].maxValue(), 2 )
+		self.assertEqual( n["parameters"]["string1"].defaultValue(), "newDefaultValue" )
+		
+		self.assertTrue( n["parameters"]["float1"].getInput().isSame( nn["outFloat"] ) )
+		self.assertTrue( n["parameters"]["string1"].getInput().isSame( nn["outString"] ) )
+
+	def testReloadPreservesPartialConnectionsWhenMinMaxOrDefaultChanges( self ) :
+	
+		shader1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version1.sl", shaderName = "unversioned" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader1 )
+		
+		nn = Gaffer.Node()
+		nn["outFloat"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		n["parameters"]["color1"][0].setInput( nn["outFloat"] )
+		n["parameters"]["color1"][1].setInput( nn["outFloat"] )
+		n["parameters"]["color1"][2].setValue( 0.75 )
+		
+		shader2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.sl", shaderName = "unversioned" )
+						
+		GafferRenderMan.RenderManShader.shaderLoader().clear()
+		n.loadShader( shader1, keepExistingValues=True )
+	
+		self.assertTrue( n["parameters"]["color1"][0].getInput().isSame( nn["outFloat"] ) )
+		self.assertTrue( n["parameters"]["color1"][1].getInput().isSame( nn["outFloat"] ) )
+		self.assertEqual( n["parameters"]["color1"][2].getValue(), 0.75 )
+	
+	def testReloadPreservesValuesWhenMinMaxOrDefaultChanges( self ) :
+	
+		shader1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version1.sl", shaderName = "unversioned" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader1 )
+		
+		n["parameters"]["float1"].setValue( 0.25 )
+		n["parameters"]["string1"].setValue( "dog" )
+		n["parameters"]["color1"].setValue( IECore.Color3f( 0.1, 0.25, 0.5 ) )
+		
+		shader2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.sl", shaderName = "unversioned" )
+				
+		GafferRenderMan.RenderManShader.shaderLoader().clear()
+		n.loadShader( shader1, keepExistingValues=True )
+		
+		self.assertEqual( n["parameters"]["float1"].getValue(), 0.25 )
+		self.assertEqual( n["parameters"]["string1"].getValue(), "dog" )
+		self.assertEqual( n["parameters"]["color1"].getValue(), IECore.Color3f( 0.1, 0.25, 0.5 ) )
+	
+	def testOutputParameters( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version3.sl" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader )
+		
+		self.failIf( "outputFloat" in n["parameters"].keys() )
 		
 if __name__ == "__main__":
 	unittest.main()
