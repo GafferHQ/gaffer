@@ -3,29 +3,12 @@ image engine
 v0.1, 2013
 :doctype: book
 
-[preface]
-== Introduction To Gaffer
-This would be some text introducing people to Gaffer and it's capabilities
 
-=== Design Overview
-What is the core design philosophy of Gaffer and how should users approach it?
+include::chapters/introduction.txt[]
 
+include::chapters/quickstart.txt[]
 
-=== Fuctionality
-What can Gaffer do?
-
-
-
-
-
-
-
-
-== Chapter One
-
-== Chapter Two
-
-
+include::chapters/installation.txt[]
 
 
 == Mini Tutorials

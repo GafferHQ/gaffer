@@ -18,9 +18,8 @@ GafferUI.EventLoop.mainEventLoop().start()
 
 Save this in a file helloWorld.py, and we can run it from the command line as follows :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
 ------------------------------------
-gaffer python helloWorld.py
+> gaffer python helloWorld.py
 ------------------------------------
 
 Behold our magnificent window!
