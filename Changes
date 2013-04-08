@@ -1,3 +1,5 @@
+* Renamed ColorPlug child names to rgba rather than xyzw.
+
 0.56.0
 ======
 
