@@ -56,8 +56,8 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self.__selectionChangedSignal = None
 			
 		GafferUI.Button.__init__( self, **kw )
-		self._menu = GafferUI.Menu( self.__addMenuDefinition, self._qtWidget() )
-		self._qtWidget().setMenu( self._menu._qtWidget() )
+		self._menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ), self._qtWidget() )
+		self._qtWidget().setMenu( self._menu._qtWidget() ) # Ownership of the menu is NOT transferred to the button
 		
 		self.__menuLabels = []
 		self.__selectedLabels = [] 
