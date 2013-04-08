@@ -131,17 +131,17 @@ class RandomTest( GafferTest.TestCase ) :
 		o = [ x.relativeName( r ) for x in r.affects( r["seed"] ) ]
 
 		self.assertEqual( len( o ), 4 )
-		self.assertTrue( "outColor.x" in o )
-		self.assertTrue( "outColor.y" in o )
-		self.assertTrue( "outColor.z" in o )
+		self.assertTrue( "outColor.r" in o )
+		self.assertTrue( "outColor.g" in o )
+		self.assertTrue( "outColor.b" in o )
 		self.assertTrue( "outFloat" in o )
 		
 		o = [ x.relativeName( r ) for x in r.affects( r["saturation"] ) ]
 		
 		self.assertEqual( len( o ), 3 )
-		self.assertTrue( "outColor.x" in o )
-		self.assertTrue( "outColor.y" in o )
-		self.assertTrue( "outColor.z" in o )
+		self.assertTrue( "outColor.r" in o )
+		self.assertTrue( "outColor.g" in o )
+		self.assertTrue( "outColor.b" in o )
 		
 if __name__ == "__main__":
 	unittest.main()
