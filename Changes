@@ -2,6 +2,8 @@
 
 * File->SaveAs... menu item now adds the file to the recent files list.
 
+* Fixed unwanted vertical expansion of color plug widgets.
+
 0.56.0
 ======
 

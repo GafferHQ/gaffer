@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,6 +49,9 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plug, **kw )
 
 		self.__swatch = GafferUI.ColorSwatch()
+		## \todo How do set maximum height with a public API?
+		self.__swatch._qtWidget().setMaximumHeight( 20 )
+		
 		self._row().append( self.__swatch, expand=True )
 						
 		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
