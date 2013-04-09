@@ -121,6 +121,7 @@ def __parametersNoduleCreator( plug ) :
 	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y )
 
 GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "parameters", __parametersNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "name", lambda plug : None )
 
 # we leave it to the derived class uis to register creators for the parameters.* plugs, because only the derived classes know whether
 # or not networkability makes sense in each case.

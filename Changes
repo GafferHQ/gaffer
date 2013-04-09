@@ -4,6 +4,8 @@
 
 * Fixed unwanted vertical expansion of color plug widgets.
 
+* Removed the unwanted visualisation of the "name" plug on shaders in the Node Graph.
+
 0.56.0
 ======
 
