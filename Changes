@@ -1,5 +1,7 @@
 * Renamed ColorPlug child names to rgba rather than xyzw.
 
+* File->SaveAs... menu item now adds the file to the recent files list.
+
 0.56.0
 ======
 

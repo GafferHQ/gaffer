@@ -194,6 +194,9 @@ def saveAs( menu ) :
 
 	script["fileName"].setValue( path )
 	script.save()
+	
+	application = script.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	addRecentFile( application, path )
 
 ## A function suitable as the command for a File/Revert To Saved menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.
