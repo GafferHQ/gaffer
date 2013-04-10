@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,6 +40,25 @@ import fnmatch
 import Gaffer
 import GafferScene
 import GafferUI
+
+##########################################################################
+# Metadata
+##########################################################################
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.Render,
+
+"""A base class for nodes which can render scenes.""",
+
+"in",
+"The scene to be rendered.",
+
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Render.staticTypeId(), "in", None )
 
