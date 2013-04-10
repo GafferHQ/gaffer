@@ -85,6 +85,28 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			result += " : " + root.relativeName( self.scriptNode() )
 		
 		return result
+	
+	__plugContextMenuSignal = Gaffer.Signal3()
+	## Returns a signal which is emitted to create a context menu for a 
+	# plug in the graph. Slots may connect to this signal to edit the
+	# menu definition on the fly - the signature for the signal is
+	# ( nodeGraph, plug, menuDefinition ) and the menu definition should just be
+	# edited in place.
+	@classmethod
+	def plugContextMenuSignal( cls ) :
+	
+		return cls.__plugContextMenuSignal
+	
+	__connectionContextMenuSignal = Gaffer.Signal3()
+	## Returns a signal which is emitted to create a context menu for a 
+	# connection in the graph. Slots may connect to this signal to edit the
+	# menu definition on the fly - the signature for the signal is
+	# ( nodeGraph, destinationPlug, menuDefinition ) and the menu definition
+	# should just be edited in place.
+	@classmethod
+	def connectionContextMenuSignal( cls ) :
+	
+		return cls.__connectionContextMenuSignal
 		
 	__nodeContextMenuSignal = Gaffer.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
@@ -139,16 +161,30 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Right :
 						
 			# right click - display either the node creation popup menu
-			# or a menu specific to the node under the mouse if possible.
+			# or a menu specific to the node/plug/connection under the
+			# mouse if possible.
 			
 			menuDefinition = GafferUI.NodeMenu.definition()
 			
-			nodeGadget = self.__nodeGadgetAt( event.line.p1 )				
-			if nodeGadget :
-				nodeMenuDefinition = IECore.MenuDefinition()
-				self.nodeContextMenuSignal()( self, nodeGadget.node(), nodeMenuDefinition )
-				if len( nodeMenuDefinition.items() ) :
-					menuDefinition = nodeMenuDefinition
+			viewport = self.__gadgetWidget.getViewportGadget()
+			gadgets = viewport.gadgetsAt( IECore.V2f( event.line.p1.x, event.line.p1.y ) )
+			if len( gadgets ) :
+			
+				overrideMenuDefinition = IECore.MenuDefinition()
+				
+				if isinstance( gadgets[0], GafferUI.Nodule ) :
+					self.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
+				elif isinstance( gadgets[0], GafferUI.ConnectionGadget ) :
+					self.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
+				else :
+					nodeGadget = gadgets[0]
+					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
+						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget.staticTypeId() )
+					if nodeGadget is not None :
+						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
+			
+				if len( overrideMenuDefinition.items() ) :
+					menuDefinition = overrideMenuDefinition	
 		
 			self.__m = GafferUI.Menu( menuDefinition )
 			self.__m.popup( self )

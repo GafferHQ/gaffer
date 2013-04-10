@@ -1,10 +1,12 @@
-* Renamed ColorPlug child names to rgba rather than xyzw.
+* Renamed ColorPlug child names to rgba rather than xyzw (issue #133).
 
 * File->SaveAs... menu item now adds the file to the recent files list.
 
 * Fixed unwanted vertical expansion of color plug widgets.
 
 * Removed the unwanted visualisation of the "name" plug on shaders in the Node Graph.
+
+* Added NodeGraph plugContextMenuSignal() and connectionContextMenuSignal() to allow customisable right click menus for plugs and connections (issue #122).
 
 0.56.0
 ======
