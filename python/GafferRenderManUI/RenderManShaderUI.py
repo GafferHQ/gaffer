@@ -44,24 +44,18 @@ import GafferUI
 import GafferRenderMan
 
 ##########################################################################
-# Access to a little cache of annotations loaded from shaders
+# Access to annotations from the shader cache
 ##########################################################################
 
-__cachedShaderAnnotations = {}
 def __shaderAnnotations( shaderNode ) :
 
-	global __cachedShaderAnnotations
-
 	shaderName = shaderNode["name"].getValue()
-	if shaderName not in __cachedShaderAnnotations :
-		try :
-			shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
-		except Exception, e :
-			shader = None
-		annotations = shader.blindData().get( "ri:annotations", None ) if shader is not None else {}
-		__cachedShaderAnnotations[shaderName] = annotations
-
-	return __cachedShaderAnnotations[shaderName]
+	try :
+		shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
+	except Exception, e :
+		shader = None
+	
+	return shader.blindData().get( "ri:annotations", {} ) if shader is not None else {}
 
 ##########################################################################
 # Nodules
@@ -226,7 +220,7 @@ def __plugValueWidgetCreator( plug ) :
 				IECore.Msg.Level.Warning,
 				"RenderManShaderUI",
 				"Shader parameter \"%s.%s\" has unsupported widget type \"%s\"" %
-					( shaderName, parameterName, widgetType )
+					( plug.node()["name"].getValue(), parameterName, widgetType )
 			)
 			
 	if widgetCreator is not None :
@@ -237,7 +231,7 @@ def __plugValueWidgetCreator( plug ) :
 				IECore.Msg.Level.Warning,
 				"RenderManShaderUI",
 				"Error creating UI for parameter \"%s.%s\" : \"%s\"" %
-					( shaderName, parameterName, str( e ) )
+					( plug.node()["name"].getValue(), parameterName, str( e ) )
 			)
 	
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )

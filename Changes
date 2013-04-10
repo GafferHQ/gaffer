@@ -8,6 +8,10 @@
 
 * Added NodeGraph plugContextMenuSignal() and connectionContextMenuSignal() to allow customisable right click menus for plugs and connections (issue #122).
 
+* RenderManShader annotations are now correctly reloaded when the shader itself is reloaded.
+
+* RenderManShader UI produces more sensible errors when bad annotations are discovered.
+
 0.56.0
 ======
 
