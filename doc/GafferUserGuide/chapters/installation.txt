@@ -1,0 +1,15 @@
+== Installation anchor:installation_installation[]
+Something about how Gaffer should be unpacked and any required + optional env vars.
+
+=== Launching Gaffer anchor:installation_launchingGaffer[]
+Once Gaffer is properly installed, simply launch it from the commandline as follows
+
+------------------------------------
+> gaffer
+------------------------------------
+
+Or to load an existing '.gfr' script, specify the path to the file after the gaffer command
+
+------------------------------------
+> gaffer /path/to/script.gfr
+------------------------------------
