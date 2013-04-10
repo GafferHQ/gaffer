@@ -1,3 +1,5 @@
+* Fixed creation of nodes within Boxes - previously they were added below the root of the script rather than inside the box.
+
 0.57.0
 ======
 
