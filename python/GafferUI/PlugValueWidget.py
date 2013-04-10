@@ -116,10 +116,19 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return False
 			
 	## Must be implemented by subclasses so that the widget reflects the current
-	# status of the plug.	
+	# status of the plug. To temporarily suspend calls to this function, use
+	# Gaffer.BlockedConnection( self._plugConnections() ).
 	def _updateFromPlug( self ) :
 	
 		raise NotImplementedError
+		
+	def _plugConnections( self ) :
+	
+		return [ self.__plugSetConnection,
+			self.__plugDirtiedConnection,
+			self.__plugInputChangedConnection,
+			self.__plugFlagsChangedConnection
+		]
 
 	## Returns True if the plug value is editable as far as this ui is concerned
 	# - that plug.settable() is True and self.getReadOnly() is False.

@@ -14,6 +14,8 @@
 
 * Fixed parameter ordering in RenderManShader UI (issue #136).
 
+* Fixed bug which prevented numeric plug entry fields from showing the correct value when values outside the allowable range were entered.
+
 0.56.0
 ======
 
