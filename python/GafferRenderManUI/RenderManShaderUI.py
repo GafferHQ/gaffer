@@ -44,17 +44,20 @@ import GafferUI
 import GafferRenderMan
 
 ##########################################################################
-# Access to annotations from the shader cache
+# Access to shaders and annotations from the shader cache
 ##########################################################################
 
-def __shaderAnnotations( shaderNode ) :
+def __shader( shaderNode ) :
 
 	shaderName = shaderNode["name"].getValue()
 	try :
-		shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
+		return GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
 	except Exception, e :
-		shader = None
-	
+		return None
+
+def __shaderAnnotations( shaderNode ) :
+
+	shader = __shader( shaderNode )
 	return shader.blindData().get( "ri:annotations", {} ) if shader is not None else {}
 
 ##########################################################################
@@ -79,8 +82,22 @@ GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), 
 
 def __parametersPlugValueWidgetCreator( plug ) :
 
+	shader = __shader( plug.node() )
 	annotations = __shaderAnnotations( plug.node() )
-	parameterNames = [ c.getName() for c in plug.children() ]
+
+	if shader is not None :
+		# when shaders are reloaded after having new parameters added,
+		# the order of the plugs and the parameters don't match, so we
+		# use the parameter ordering to define the ui order.
+		## \todo Ideally we'd get the plug ordering to match in
+		# RenderManShader::loadShader(), and then the ordering of
+		# connections in the node graph would be correct too.
+		parameterNames = shader.blindData()["ri:orderedParameterNames"]
+		parameterNames = [ p for p in parameterNames if p in plug ]
+	else :
+		# we still want to present some sort of ui, even if we couldn't
+		# load the shader for some reason.
+		parameterNames = [ c.getName() for c in plug.children() ]
 	
 	sections = []
 	namesToSections = {}

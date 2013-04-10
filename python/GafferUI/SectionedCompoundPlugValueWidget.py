@@ -42,11 +42,11 @@ class _Section( GafferUI.CompoundPlugValueWidget ) :
 	
 		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, summary, **kw )
 		
-		self.__names = set( names )
+		self.__names = names
 				
 	def _childPlugs( self ) :
 	
-		return [ p for p in self.getPlug().children() if p.getName() in self.__names ]
+		return [ self.getPlug()[name] for name in self.__names ]
 
 class SectionedCompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 

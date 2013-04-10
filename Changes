@@ -12,6 +12,8 @@
 
 * RenderManShader UI produces more sensible errors when bad annotations are discovered.
 
+* Fixed parameter ordering in RenderManShader UI (issue #136).
+
 0.56.0
 ======
 
