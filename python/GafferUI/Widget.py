@@ -979,12 +979,12 @@ class Widget( object ) :
 			top: -1px;
 		}
 
-		QTabWidget[gafferHighlighted=\"true\"] QTabBar::tab:selected {
+		QTabWidget[gafferHighlighted=\"true\"] > QTabBar::tab:selected {
 			border: 1px solid $brightColor;
 			border-bottom-color: $backgroundMid; /* blend into frame below */
 		}
 		
-		QTabWidget[gafferHighlighted=\"true\"] QTabBar::tab:!selected {
+		QTabWidget[gafferHighlighted=\"true\"] > QTabBar::tab:!selected {
 			border-bottom-color: $brightColor;
 		}
 		
@@ -1332,14 +1332,14 @@ class Widget( object ) :
 		
 		/* highlighted state for VectorDataWidget */
 		
-		QWidget[gafferHighlighted=\"true\"] QTableView#vectorDataWidget,
-		QWidget[gafferHighlighted=\"true\"] QTableView#vectorDataWidgetEditable {
+		QTableView[gafferHighlighted=\"true\"]#vectorDataWidget,
+		QTableView[gafferHighlighted=\"true\"]#vectorDataWidgetEditable {
 
 			gridline-color: $brightColor;
 			
 		}
 		
-		QWidget[gafferHighlighted=\"true\"] QHeaderView::section#vectorDataWidgetVerticalHeader {
+		QTableView[gafferHighlighted=\"true\"] QHeaderView::section#vectorDataWidgetVerticalHeader {
 		
 			border-color: $brightColor;
 			
