@@ -1,0 +1,32 @@
+= Gaffer User Guide
+image engine
+v0.1, 2013
+:doctype: book
+
+
+
+//example of straight html include
+pass::[<a href="https://www.google.com">googles</a>]
+
+include::chapters/introduction.txt[]
+
+include::chapters/quickstart.txt[]
+
+include::chapters/installation.txt[]
+
+
+== Mini Tutorials
+
+include::tutorials/configurationFilesExample.txt[]
+
+include::tutorials/profilingWithGooglePerfTools.txt[]
+
+include::tutorials/commandHistoryAndCompletionForCLI.txt[]
+
+include::tutorials/creatingNodesCodingExample.txt[]
+
+include::tutorials/scriptingArchitecture.txt[]
+
+include::tutorials/helloWorldCodingExample.txt[]
+
+include::tutorials/applicationCodingExample.txt[]

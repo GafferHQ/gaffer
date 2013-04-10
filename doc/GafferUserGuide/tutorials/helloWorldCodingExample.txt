@@ -1,0 +1,118 @@
+=== Hello World Coding Example anchor:helloWorldCodingExample[]
+
+
+.Introduction
+In this tutorial we'll get our first taste of the GafferUI module, and write our first Gaffer based script. So without further ado, here's some familiar looking code...
+
+//[source,python] ------- source highlighting needs some extra stuff installed
+------------------------------------
+import GafferUI
+
+window = GafferUI.Window()
+text = GafferUI.TextWidget( "Hello World!" )
+window.setWidget( text )
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()
+------------------------------------
+
+Save this in a file helloWorld.py, and we can run it from the command line as follows :
+
+------------------------------------
+> gaffer python helloWorld.py
+------------------------------------
+
+Behold our magnificent window!
+
+image::images/tutorials/helloWorldCodingExample/helloWorld1.png[]
+
+Here we're using the built in "python" application to run our script in an environment where all the Gaffer modules are available. Shortly we'll turn our simple script into an application of its own, so we can handle command line arguments in a nice straightforward way. Before we do that though, we can simplify things a little...
+
+.Declaring Widget Layouts
+GafferUI allows hierarchical layouts of Widgets to be described in a nice declarative style using Python's "with" statement. Using it we can remove a whole line of code from our script.
+
+//[source,python] ------- source highlighting needs some extra stuff installed
+------------------------------------
+import GafferUI
+
+with GafferUI.Window() as window :
+        GafferUI.TextWidget( "Hello World!" )
+
+window.setVisible( True )
+
+GafferUI.EventLoop.mainEventLoop().start()
+------------------------------------
+
+When we use the "with" syntax above, Gaffer automatically keeps a track of the current parent (the widget following the "with") and automatically parents any new widgets underneath it. This cuts down on typing, and pleasingly results in code where the structure of the UI is represented in the indentation of the code.
+
+Let's make our example slightly more complex by introducing a layout consisting of columns and rows using the ListContainer...
+
+//[source,python] ------- source highlighting needs some extra stuff installed
+------------------------------------
+with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
+        with GafferUI.ListContainer( spacing = 5 ) :
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greeting" )
+                        greeting = GafferUI.TextWidget( "Hello" )
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greetee" )
+                        greetee = GafferUI.TextWidget( "World" )
+                message = GafferUI.TextWidget( "", editable=False )
+                        
+                button = GafferUI.Button( "Greet" )
+------------------------------------
+
+image::images/tutorials/helloWorldCodingExample/helloWorld2.png[]
+
+That's all well and good, but now we have no greeting - hardly friendly. We'll need to provide some interactivity...
+
+.Signals
+The GafferUI module uses a system of signals and slots to allow code to be triggered by events such as button presses. We'll connect to the clicked signal for the button to allow us to trigger the greeting.
+
+//[source,python] ------- source highlighting needs some extra stuff installed
+------------------------------------
+def greet( button ) :
+
+        message.setText( greeting.getText() + " " + greetee.getText() ) 
+
+# we must store the connection in a variable to keep it alive. to remove the connection
+# we can simply delete the variable.
+clickedConnection = button.clickedSignal().connect( greet )
+------------------------------------
+
+.Putting it together
+Here's our final script in all its glory...
+
+//[source,python] ------- source highlighting needs some extra stuff installed
+------------------------------------
+import GafferUI
+
+with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
+        with GafferUI.ListContainer( spacing = 5 ) :
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greeting" )
+                        greeting = GafferUI.TextWidget( "Hello" )
+                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                        GafferUI.Label( "Greetee" )
+                        greetee = GafferUI.TextWidget( "World" )
+                message = GafferUI.TextWidget( "", editable=False )
+                        
+                button = GafferUI.Button( "Greet" )
+
+def greet( button ) :
+
+        message.setText( greeting.getText() + " " + greetee.getText() ) 
+
+# we must store the connection in a variable to keep it alive. to remove the connection
+# we can simply delete the variable.
+clickedConnection = button.clickedSignal().connect( greet )
+
+window.setVisible( True )
+GafferUI.EventLoop.mainEventLoop().start()
+------------------------------------
+
+And here's the final ui, showing a suitable salutation :
+
+image::images/tutorials/helloWorldCodingExample/helloWorld3.png[]
+
+Next we'll take a look at xref:applicationCodingExample[creating an application based on our script], where Gaffer will help us to define command line arguments and perform our parsing and input validation for us. 

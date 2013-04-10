@@ -1,0 +1,13 @@
+== Introduction to Gaffer anchor:introduction_introductionToGaffer[]
+Welcome. This would be some text introducing people to Gaffer and its capabilities.
+
+=== Design Overview anchor:introduction_designOverview[]
+What is the core design philosophy of Gaffer and how should users approach it?
+
+=== Functionality anchor:introduction_functionality[]
+What can Gaffer do?
+
+=== Using this guide anchor:introduction_usingThisGuide[]
+The user guide is structured thusly. Some simple tutorials are included, but extra in depth tutorials are available HERE. Nodes also have tooltips that contain useful information, and that information is collated in the GafferNodeReference document.
+
+
