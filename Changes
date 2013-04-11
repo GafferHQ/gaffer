@@ -2,6 +2,8 @@
 
 * Fixed PathPlugValueWidget bug where it would attempt to change the value of a read only plug.
 
+* Fixed PathWidget bug where it would still do autocompletion and popup menus even when non-editable.
+
 0.57.0
 ======
 
