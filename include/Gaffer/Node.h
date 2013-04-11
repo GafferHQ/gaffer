@@ -46,6 +46,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( ValuePlug )
+IE_CORE_FORWARDDECLARE( CompoundPlug )
 IE_CORE_FORWARDDECLARE( ScriptNode )
 
 class Node : public GraphComponent
@@ -80,6 +81,16 @@ class Node : public GraphComponent
 		UnaryPlugSignal &plugDirtiedSignal();
 		//@}
 		
+		/// It's common for users to want to create their own plugs on
+		/// nodes for the purposes of driving expressions and suchlike.
+		/// So that there is no danger of name clashes between such plugs
+		/// and plugs Gaffer itself might add in the future, this CompoundPlug
+		/// is provided, under which users may add any plugs they want. Plugs
+		/// added to the user plug will need the Plug::Dynamic flag to be set
+		/// so that they can be saved and loaded successfully.
+		Gaffer::CompoundPlug *userPlug();
+		const Gaffer::CompoundPlug *userPlug() const;
+
 		/// Convenience function which simply returns ancestor<ScriptNode>()
 		ScriptNode *scriptNode();
 		/// Convenience function which simply returns ancestor<ScriptNode>()
@@ -112,6 +123,8 @@ class Node : public GraphComponent
 		
 	private :
 		
+		static size_t g_firstPlugIndex;
+
 		friend class Plug;
 	
 		UnaryPlugSignal m_plugSetSignal;

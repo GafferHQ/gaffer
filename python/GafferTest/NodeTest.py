@@ -221,5 +221,17 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.failUnless( cs[1][0].isSame( n["p"] ) )
 
+	def testUserPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["test"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["test"].setValue( 10 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["user"]["test"].getValue(), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
