@@ -1,5 +1,7 @@
 * Fixed highlighting bugs whereby widgets inside a highlighted tab would incorrectly display an inherited highlight state. This could be seen when dragging a node into the node editor with either nested tabs or a nested VectorDataWidget.
 
+* Fixed PathPlugValueWidget bug where it would attempt to change the value of a read only plug.
+
 0.57.0
 ======
 

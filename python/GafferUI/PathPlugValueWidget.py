@@ -84,6 +84,9 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row[1].setEnabled( self._editable() ) # button
 		
 	def __setPlugValue( self, *args ) :
+		
+		if not self._editable() :
+			return
 								
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( str( self.__path ) )
