@@ -64,12 +64,13 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__numericWidget
 		
 	def _updateFromPlug( self ) :
-		
+
 		plug = self.getPlug()
 		if plug is not None :
 			
 			with self.getContext() :
-				self.__numericWidget.setValue( plug.getValue() )
+				with Gaffer.BlockedConnection( self.__valueChangedConnection ) :
+					self.__numericWidget.setValue( plug.getValue() )
 
 			charWidth = None
 			if isinstance( plug, Gaffer.IntPlug ) :
@@ -103,11 +104,19 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setPlugValue( self ) :
 			
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-						
-			try :	
-				self.getPlug().setValue( self.__numericWidget.getValue() )
-			except :
-				self._updateFromPlug()	
+
+			with Gaffer.BlockedConnection( self._plugConnections() ) :
+				try :
+					self.getPlug().setValue( self.__numericWidget.getValue() )
+				except :
+					pass
+
+			# we always need to update the ui from the plug after trying to set it,
+			# because the plug might clamp the value to something else. furthermore
+			# it might not even emit plugSetSignal if it happens to clamp to the same
+			# value as it had before. we block calls to _updateFromPlug() while setting
+			# the value to avoid having to do the work twice if plugSetSignal is emitted.
+			self._updateFromPlug()
 	
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug.staticTypeId(), NumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug.staticTypeId(), NumericPlugValueWidget )

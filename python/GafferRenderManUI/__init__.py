@@ -37,4 +37,5 @@
 import RenderManRenderUI
 import RenderManAttributesUI
 import RenderManOptionsUI
+import RenderManShaderUI
 import Menus

@@ -70,7 +70,8 @@ class SceneWriter : public Gaffer::Node
 		void writeLocation( GafferScene::ScenePlug *scenePlug, const ScenePlug::ScenePath &scenePath, IECore::SceneInterface *output );
 		
 		static size_t g_firstPlugIndex;
-	
+		
+		static const double g_frameRate;
 };
 
 } // namespace GafferScene

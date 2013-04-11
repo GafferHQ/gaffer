@@ -47,6 +47,20 @@ import GafferSceneUI
 
 # SceneNode
 
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.SceneNode,
+
+"""The base type for all nodes which are capable of generating a hierarchical scene.""",
+
+"out",
+"""The output scene.""",
+
+"enabled",
+"""The on/off state of the node. When it is off, the node outputs an empty scene.""",
+
+)
+
 def __noduleCreator( plug ) :
 
 	if isinstance( plug, GafferScene.ScenePlug ) :
@@ -109,14 +123,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-# SceneElementProcessor
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneElementProcessor.staticTypeId(),
-	"filter",
-	GafferSceneUI.FilterPlugValueWidget,
-)
-
 # AttributeCache
 
 GafferUI.PlugValueWidget.registerCreator(
@@ -139,15 +145,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-# Shader
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
-
-# SceneElementProcessor
-
-GafferUI.Nodule.registerNodule( GafferScene.SceneElementProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
-
 # Assignment
 
 GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader", GafferUI.StandardNodule )
@@ -169,17 +166,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	labelsAndValues = (
 		( "Perspective", "perspective" ),
 		( "Orthographic", "orthographic" ),
-	),
-)
-
-# SubTree
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SubTree.staticTypeId(),
-	"root",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
 	),
 )
 

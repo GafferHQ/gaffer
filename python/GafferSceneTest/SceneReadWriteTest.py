@@ -212,18 +212,18 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		sc3.writeObject( mesh, time )
 		sc3.writeTransform( IECore.M44dData(), time )
 		
-		for time in [ 0.5, 1, 1.5, 2, 5, 10 ] :
+		for frame in [ 0.5, 1, 1.5, 2, 5, 10 ] :
 			
-			matrix = IECore.M44d.createTranslated( IECore.V3d( 1, time, 0 ) )
-			sc1.writeTransform( IECore.M44dData( matrix ), time )
+			matrix = IECore.M44d.createTranslated( IECore.V3d( 1, frame, 0 ) )
+			sc1.writeTransform( IECore.M44dData( matrix ), float( frame ) / 24 )
 			
-			mesh["Cd"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ IECore.V3f( time, 1, 0 ) ] * 6 ) )
-			sc2.writeObject( mesh, time )
-			matrix = IECore.M44d.createTranslated( IECore.V3d( 2, time, 0 ) )
-			sc2.writeTransform( IECore.M44dData( matrix ), time )
+			mesh["Cd"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ IECore.V3f( frame, 1, 0 ) ] * 6 ) )
+			sc2.writeObject( mesh, float( frame ) / 24 )
+			matrix = IECore.M44d.createTranslated( IECore.V3d( 2, frame, 0 ) )
+			sc2.writeTransform( IECore.M44dData( matrix ), float( frame ) / 24 )
 			
-			matrix = IECore.M44d.createTranslated( IECore.V3d( 3, time, 0 ) )
-			sc3.writeTransform( IECore.M44dData( matrix ), time )
+			matrix = IECore.M44d.createTranslated( IECore.V3d( 3, frame, 0 ) )
+			sc3.writeTransform( IECore.M44dData( matrix ), float( frame ) / 24 )
 		
 	def testAnimatedScene( self ) :
 		

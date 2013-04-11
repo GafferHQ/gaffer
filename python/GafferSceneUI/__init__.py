@@ -41,6 +41,10 @@ from SceneHierarchy import SceneHierarchy
 from SceneInspector import SceneInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
 import SceneNodeUI
+import SceneProcessorUI
+import FilteredSceneProcessorUI
+import PruneUI
+import SubTreeUI
 import RenderUI
 import DisplaysUI
 import OptionsUI
@@ -50,5 +54,5 @@ import SceneContextVariablesUI
 import SceneWriterUI
 import StandardOptionsUI
 import StandardAttributesUI
+import ShaderUI
 import OpenGLShaderUI
-

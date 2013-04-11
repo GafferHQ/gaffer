@@ -146,7 +146,15 @@ class EventLoop() :
 	
 	# if we're running embedded in an application which already uses qt (like maya 2011 or later)
 	# then there'll already be an application, which we'll share. if not we'll make our own.
-	__qtApplication = QtGui.QApplication.instance() if QtGui.QApplication.instance() else QtGui.QApplication( [] )	
+	if QtGui.QApplication.instance() :
+		__qtApplication = QtGui.QApplication.instance()
+	else :
+		# set the style explicitly so we don't inherit one from the desktop
+		# environment, which could mess with our own style (on gnome for instance,
+		# our icons can come out the wrong size).
+		QtGui.QApplication.setStyle( "plastique" )
+	  	__qtApplication = QtGui.QApplication( [] )
+		
 	__mainEventLoop = None
 	## Returns the main event loop for the application. This should always
 	# be started before running any other nested event loops. In the standalone

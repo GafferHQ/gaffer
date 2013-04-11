@@ -62,7 +62,6 @@ IE_CORE_DEFINERUNTIMETYPED( ArnoldShader );
 ArnoldShader::ArnoldShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
-	addChild( new StringPlug( "__shaderName" ) );
 }
 
 ArnoldShader::~ArnoldShader()
@@ -79,7 +78,7 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
 	}
 
-	getChild<StringPlug>( "__shaderName" )->setValue( AiNodeEntryGetName( shader ) );
+	namePlug()->setValue( AiNodeEntryGetName( shader ) );
 		
 	ParameterHandler::setupPlugs( shader, parametersPlug() );
 			
@@ -145,15 +144,9 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 	
 }
 
-void ArnoldShader::shaderHash( IECore::MurmurHash &h ) const
-{
-	Shader::shaderHash( h );
-	getChild<StringPlug>( "__shaderName" )->hash( h );
-}
-
 IECore::ShaderPtr ArnoldShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue(), "ai:surface" );
+	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), "ai:surface" );
 	
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{

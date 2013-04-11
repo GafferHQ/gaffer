@@ -288,7 +288,20 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
 		self.assertEqual( p2.minValue(), p1.minValue() )
 		self.assertEqual( p2.maxValue(), p1.maxValue() )		
-				
+	
+	def testComponentNames( self ) :
+	
+		for plugType, childNames in [
+			( Gaffer.V2fPlug, [ "x", "y" ] ),
+			( Gaffer.V3fPlug, [ "x", "y", "z" ] ),
+			( Gaffer.V2iPlug, [ "x", "y" ] ),
+			( Gaffer.V3iPlug, [ "x", "y", "z" ] ),
+			( Gaffer.Color3fPlug, [ "r", "g", "b" ] ),
+			( Gaffer.Color4fPlug, [ "r", "g", "b", "a" ] ),
+		] :
+			plug = plugType()
+			self.assertEqual( plug.keys(), childNames )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

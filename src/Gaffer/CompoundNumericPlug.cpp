@@ -173,7 +173,6 @@ T CompoundNumericPlug<T>::getValue() const
 template<typename T>
 const char **CompoundNumericPlug<T>::childNames()
 {
-	/// \todo rgba for colours please
 	static const char *names[] = { "x", "y", "z", "w" };
 	return names;
 }
@@ -182,6 +181,20 @@ const char **CompoundNumericPlug<T>::childNames()
 
 namespace Gaffer
 {
+
+template<>
+const char **Color3fPlug::childNames()
+{
+	static const char *names[] = { "r", "g", "b" };
+	return names;
+}
+
+template<>
+const char **Color4fPlug::childNames()
+{
+	static const char *names[] = { "r", "g", "b", "a" };
+	return names;
+}
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V2fPlug, V2fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fPlug, V3fPlugTypeId )

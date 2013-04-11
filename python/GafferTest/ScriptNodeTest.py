@@ -720,6 +720,59 @@ a = A()"""
 		s.load()
 		
 		self.assertEqual( s["fileName"].getValue(), "/tmp/test2.gfr" )
+	
+	def testUnsavedChanges( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s["node"] = GafferTest.AddNode()
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s["node"]["op1"].setValue( 10 )
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+		
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		with Gaffer.UndoContext( s ) :
+			s["node"]["op1"].setValue( 20 )
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+			
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s.undo()
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+		
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s.redo()
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+		
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s["node2"] = GafferTest.AddNode()
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+		
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s["node2"]["op1"].setInput( s["node"]["sum"] )
+		self.assertEqual( s["unsavedChanges"].getValue(), True )
+		
+		s.save()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
+		
+		s.load()
+		self.assertEqual( s["unsavedChanges"].getValue(), False )
 		
 	def tearDown( self ) :
 	

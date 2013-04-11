@@ -86,6 +86,7 @@ GafferUI.NodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes
 GafferUI.NodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )
 GafferUI.NodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
 GafferUI.NodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree )
+GafferUI.NodeMenu.append( "/Scene/Scene/Prune", GafferScene.Prune )
 GafferUI.NodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
 GafferUI.NodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint )
 GafferUI.NodeMenu.append( "/Scene/Context/TimeWarp", GafferScene.SceneTimeWarp )

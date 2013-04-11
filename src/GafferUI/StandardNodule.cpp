@@ -122,8 +122,14 @@ void StandardNodule::leave( GadgetPtr gadget, const ButtonEvent &event )
 
 bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 {
-	// we handle the button press so we can get the dragBegin event.
-	return true;
+	// we handle the button press so we can get the dragBegin event,
+	// ignoring right clicks so that they can be used for context sensitive
+	// menus in NodeGraph.py.
+	if( event.buttons & ( ButtonEvent::LeftMiddle ) )
+	{
+		return true;
+	}
+	return false;
 }
 
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )

@@ -473,7 +473,7 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "53",
+	GAFFER_MINOR_VERSION = "57",
 	GAFFER_PATCH_VERSION = "0",
 
 )
@@ -857,7 +857,9 @@ libraries = {
 
 	"GafferRenderManUI" : {},
 
-	"GafferRenderManTest" : {},
+	"GafferRenderManTest" : {
+		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
+	},
 		
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),

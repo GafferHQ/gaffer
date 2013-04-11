@@ -277,6 +277,11 @@ void SceneProcedural::render( RendererPtr renderer ) const
 					}
 					break; // no motion blur for these chappies.
 				}
+				else if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
+				{
+					renderable->render( renderer );
+					break; // no motion blur for these chappies.
+				}
 			
 			}
 		}

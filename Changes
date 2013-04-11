@@ -1,3 +1,57 @@
+0.57.0
+======
+
+* Renamed ColorPlug child names to rgba rather than xyzw (issue #133).
+
+* File->SaveAs... menu item now adds the file to the recent files list.
+
+* Fixed unwanted vertical expansion of color plug widgets.
+
+* Removed the unwanted visualisation of the "name" plug on shaders in the Node Graph.
+
+* Added NodeGraph plugContextMenuSignal() and connectionContextMenuSignal() to allow customisable right click menus for plugs and connections (issue #122).
+
+* RenderManShader annotations are now correctly reloaded when the shader itself is reloaded.
+
+* RenderManShader UI produces more sensible errors when bad annotations are discovered.
+
+* Fixed parameter ordering in RenderManShader UI (issue #136).
+
+* Fixed bug which prevented numeric plug entry fields from showing the correct value when values outside the allowable range were entered.
+
+0.56.0
+======
+
+* RenderManShader node now supports the use of annotations within the shader to define the node UI. Annotations follow the OSL specification for shader metadata.
+
+* Added the GafferUI.Metadata class, which will be used to provide things such as node and plug descriptions for the generation of tooltips and reference documentation.
+
+* Added a Prune node, for removing whole branches from a Scene (issue #70).
+
+* The Menu class now supports the description field of menu items, displaying descriptions as tooltips.
+
+* The Menu class now supports the passing of the menu to callables registered as subMenus.
+
+* Added a "File/Open Recent" menu item (issue #118).
+
+* Added the ability to reload RenderManShader nodes, updating them to reflect any changes to the shader on disk. This is done automatically on file load and can be performed manually at any time using the new button in the node editor.
+
+0.55.0
+======
+
+* Fixed graphical glitches caused by icons overlapping the edge of the editors on the Gnome desktop.
+
+* SceneProcedural now renders general VisibleRenderables too.
+
+* Fixed SceneReader to read animation at the correct speed (issue #68).
+
+* File->Quit and the window close icon now prompt the user to confirm before closing if there are unsaved changes (issue #19).
+
+* Added support for shader parameters of type "shader" in the RenderManShader node - these are mapped to plugs which accept connections to other RenderManShaders, allowing the creation of networks of coshaders.
+
+0.54.0
+======
+
 * Added base classes Executable and Despatcher and two derived Node classes: ExecutableNode and ExecutableOpHolder.
 
 * Added an enabled/disabled plug to all SceneNodes. Nodes with no inputs output an empty scene when disabled, and SceneProcessors output the first input unchanged. The enabled/disabled state can be toggled using the node right click menu or the "d" hotkey in the Graph Editor.
@@ -39,6 +93,10 @@
 * Added Scene->Object->Modifiers->MeshType node for converting meshes between polygons and subdivs, and optionally adding normals when converting to polygons.
 
 * The Scene Inspector now displays mesh interpolation.
+
+* Fixed bugs which could prevent the UI updating appropriately when plug values were changed.
+
+* Optimised redundant updates in the SceneHierarchy editor.
 
 0.53.0
 ======

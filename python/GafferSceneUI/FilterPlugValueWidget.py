@@ -51,11 +51,12 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		
 		## \todo Consider todo in PlugWidget, whereby we wouldn't have to duplicate the label code here
-		label = GafferUI.Label(
-			IECore.CamelCase.toSpaced( plug.getName() ),
+		label = GafferUI.NameLabel(
+			plug,
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
+		label.setToolTip( GafferUI.Metadata.plugDescription( plug ) )
 		label._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
 		row.append( label )
 				

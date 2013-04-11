@@ -49,29 +49,18 @@ IE_CORE_DEFINERUNTIMETYPED( SceneElementProcessor );
 size_t SceneElementProcessor::g_firstPlugIndex = 0;
 
 SceneElementProcessor::SceneElementProcessor( const std::string &name, Filter::Result filterDefault )
-	:	SceneProcessor( name )
+	:	FilteredSceneProcessor( name, filterDefault )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::Match ) );
 }
 
 SceneElementProcessor::~SceneElementProcessor()
 {
 }
-
-Gaffer::IntPlug *SceneElementProcessor::filterPlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::IntPlug *SceneElementProcessor::filterPlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
 		
 void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneProcessor::affects( input, outputs );
+	FilteredSceneProcessor::affects( input, outputs );
 	
 	const ScenePlug *in = inPlug();
 	if( input->parent<ScenePlug>() == in )
@@ -80,26 +69,11 @@ void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContai
 	}
 	else if( input == filterPlug() )
 	{
-		outputs.push_back( outPlug() );
-	}
-}
-
-bool SceneElementProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !SceneProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-	
-	if( plug == filterPlug() )
-	{
-		const Node *n = inputPlug->source<Plug>()->node();	
-		if( !n || !n->isInstanceOf( Filter::staticTypeId() ) )
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
-			return false;
+			outputs.push_back( it->get() );
 		}
 	}
-	return true;
 }
 
 void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -107,7 +81,7 @@ void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Cont
 	switch( boundMethod() )
 	{
 		case Direct :
-			SceneProcessor::hashBound( path, context, parent, h );
+			FilteredSceneProcessor::hashBound( path, context, parent, h );
 			inPlug()->boundPlug()->hash( h );
 			hashProcessedBound( path, context, h );
 			break;
@@ -130,7 +104,7 @@ void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::
 
 	if( match == Filter::Match )
 	{
-		SceneProcessor::hashTransform( path, context, parent, h );
+		FilteredSceneProcessor::hashTransform( path, context, parent, h );
 		inPlug()->transformPlug()->hash( h );
 		hashProcessedTransform( path, context, h );
 	}
@@ -151,7 +125,7 @@ void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer:
 
 	if( match == Filter::Match )
 	{
-		SceneProcessor::hashAttributes( path, context, parent, h );
+		FilteredSceneProcessor::hashAttributes( path, context, parent, h );
 		inPlug()->attributesPlug()->hash( h );
 		hashProcessedAttributes( path, context, h );
 	}
@@ -172,7 +146,7 @@ void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Con
 
 	if( match == Filter::Match )
 	{
-		SceneProcessor::hashObject( path, context, parent, h );
+		FilteredSceneProcessor::hashObject( path, context, parent, h );
 		inPlug()->objectPlug()->hash( h );
 		hashProcessedObject( path, context, h );
 	}

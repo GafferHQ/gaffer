@@ -60,7 +60,6 @@ IE_CORE_DEFINERUNTIMETYPED( OpenGLShader );
 OpenGLShader::OpenGLShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
-	addChild( new StringPlug( "__shaderName" ) );
 	addChild( new Plug( "out", Plug::Out ) );
 }
 
@@ -140,7 +139,7 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 		}
 	}
 	
-	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
+	namePlug()->setValue( shaderName );
 }
 
 void OpenGLShader::shaderHash( IECore::MurmurHash &h ) const
@@ -159,12 +158,12 @@ void OpenGLShader::shaderHash( IECore::MurmurHash &h ) const
 			(*it)->hash( h );
 		}
 	}
-	getChild<StringPlug>( "__shaderName" )->hash( h );
+	namePlug()->hash( h );
 }
 
 IECore::ShaderPtr OpenGLShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( getChild<StringPlug>( "__shaderName" )->getValue(), "gl:surface" );
+	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), "gl:surface" );
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		if( GafferImage::ImagePlug *imagePlug = runTimeCast<GafferImage::ImagePlug>( it->get() ) )

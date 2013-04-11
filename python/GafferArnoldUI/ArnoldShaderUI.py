@@ -45,20 +45,6 @@ import Gaffer
 import GafferUI
 import GafferArnold
 
-## \todo This will belong with a Shader base class node at some point, probably in
-# GafferScene.
-def __nodeGadgetCreator( node ) :
-
-	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
-
-GafferUI.NodeGadget.registerNodeGadget( GafferArnold.ArnoldShader.staticTypeId(), __nodeGadgetCreator )
-
-def __parametersNoduleCreator( plug ) :
-
-	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y )
-
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader.staticTypeId(), "parameters", __parametersNoduleCreator )
-
 def __parameterNoduleCreator( plug ) :
 
 	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
@@ -101,7 +87,7 @@ with IECoreArnold.UniverseBlock() :
 			
 def __plugValueWidgetCreator( plug ) :
 
-	paramPath = plug.node()["__shaderName"].getValue() + "." + plug.getName()
+	paramPath = plug.node()["name"].getValue() + "." + plug.getName()
 	customCreator = __plugValueWidgetCreators.get( paramPath, None )
 	if customCreator is not None :
 		return customCreator[0]( plug, *customCreator[1:] )

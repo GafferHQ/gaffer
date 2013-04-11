@@ -87,6 +87,8 @@ enum TypeId
 	ConstraintTypeId = 110542,
 	AimConstraintTypeId = 110543,
 	MeshTypeTypeId = 110544,
+	FilteredSceneProcessorTypeId = 110545,
+	PruneTypeId = 110546,
 	
 	LastTypeId = 110650
 };

@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+from RenderManTestCase import RenderManTestCase
 from RenderManShaderTest import RenderManShaderTest
 from RenderManAttributesTest import RenderManAttributesTest
 from RenderManOptionsTest import RenderManOptionsTest
