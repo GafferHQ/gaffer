@@ -4,6 +4,8 @@
 
 * Fixed PathWidget bug where it would still do autocompletion and popup menus even when non-editable.
 
+* Added TabbedContainer.insert() method.
+
 0.57.0
 ======
 

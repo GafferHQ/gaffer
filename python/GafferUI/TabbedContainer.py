@@ -74,7 +74,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def append( self, child, label="" ) :
 	
 		oldParent = child.parent()
-		if oldParent :
+		if oldParent is not None :
 			oldParent.removeChild( child )
 	
 		self.__widgets.append( child )
@@ -88,6 +88,19 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def remove( self,  child ) :
 	
 		self.removeChild( child )
+
+	def insert( self, index, child, label="" ) :
+
+		l = len( self.__widgets )
+		if index > l :
+			index = l
+
+		oldParent = child.parent()
+		if oldParent is not None :
+			oldParent.removeChild( child )
+
+		self.__widgets.insert( index, child )
+		self._qtWidget().insertTab( index, child._qtWidget(), label )
 		
 	def setLabel( self, child, labelText ) :
 	
