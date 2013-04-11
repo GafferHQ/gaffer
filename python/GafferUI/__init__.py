@@ -183,6 +183,7 @@ from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 from Metadata import Metadata
+from UserPlugValueWidget import UserPlugValueWidget
 
 # then stuff specific to parameterised objects
 
