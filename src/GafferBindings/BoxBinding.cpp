@@ -37,6 +37,7 @@
 #include "boost/python.hpp" // must be the first include
 
 #include "Gaffer/Box.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/BoxBinding.h"
@@ -61,9 +62,17 @@ class BoxSerialiser : public NodeSerialiser
 	
 };
 
+static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
+{
+	return b.promotePlug( descendantPlug );
+}
+
 void bindBox()
 {
 	NodeClass<Box>()
+		.def( "canPromotePlug", &Box::canPromotePlug )
+		.def( "promotePlug", &promotePlug )
+		.def( "plugIsPromoted", &Box::plugIsPromoted )
 		.def( "create", &Box::create )
 		.staticmethod( "create" )
 	;

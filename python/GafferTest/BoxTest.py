@@ -286,6 +286,32 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( s["n"] in s.selection() )
 		self.assertTrue( s["b"]["n"] in s.selection() )
 		
+	def testPromote( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["n1"]["op1"].setValue( -10 )
+		s["n2"] = GafferTest.AddNode()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+
+		self.assertTrue( b.canPromotePlug( b["n1"]["op1"] ) )
+		self.assertFalse( b.canPromotePlug( b["n1"]["sum"] ) )
+		self.assertFalse( b.canPromotePlug( s["n2"]["op1"] ) )
+
+		self.assertFalse( b.plugIsPromoted( b["n1"]["op1"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n1"]["op2"] ) )
+		self.assertFalse( b.plugIsPromoted( s["n2"]["op1"] ) )
+
+		p = b.promotePlug( b["n1"]["op1"] )
+		self.assertEqual( p.getName(), "n1_op1" )
+		self.assertTrue( p.parent().isSame( b["user"] ) )
+		self.assertTrue( b["n1"]["op1"].getInput().isSame( p ) )
+		self.assertTrue( b.plugIsPromoted( b["n1"]["op1"] ) )
+		self.assertFalse( b.canPromotePlug( b["n1"]["op1"] ) )
+		self.assertEqual( p.getValue(), -10 )
+
 if __name__ == "__main__":
 	unittest.main()
 	
