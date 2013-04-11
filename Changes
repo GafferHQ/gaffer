@@ -6,6 +6,8 @@
 
 * Added TabbedContainer.insert() method.
 
+* Generalised the Metadata system to store arbitrary values rather than just descriptions.
+
 0.57.0
 ======
 
