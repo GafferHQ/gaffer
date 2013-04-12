@@ -55,6 +55,7 @@
 #include "GafferImage/Grade.h"
 #include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
+#include "GafferImageBindings/ChannelMaskPlugBindings.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -111,4 +112,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<Select>();
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();
+	GafferImageBindings::bindChannelMaskPlug();
 }
+

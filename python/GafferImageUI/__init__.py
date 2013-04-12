@@ -39,5 +39,6 @@ from _GafferImageUI import *
 
 import DisplayUI
 from FormatPlugValueWidget import FormatPlugValueWidget
+from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 
 import NodeUIs # Put this at the bottom or we get ordering issues!

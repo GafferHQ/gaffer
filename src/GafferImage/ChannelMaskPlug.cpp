@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,36 +34,63 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "GafferImage/ChannelMaskPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-namespace GafferImage
-{
+using namespace GafferImage;
+using namespace IECore;
 
-enum TypeId
+IE_CORE_DEFINERUNTIMETYPED( ChannelMaskPlug );
+
+ChannelMaskPlug::ChannelMaskPlug(
+	const std::string &name,
+	Direction direction,
+	IECore::ConstStringVectorDataPtr defaultValue,
+	unsigned flags
+)
+	:	Gaffer::StringVectorDataPlug( name, direction, defaultValue, flags )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
+}
+
+ChannelMaskPlug::~ChannelMaskPlug()
+{
+}
+
+void ChannelMaskPlug::maskChannels( std::vector<std::string> &inChannels ) const
+{
+	ConstStringVectorDataPtr channelNamesData = getValue();
+	const std::vector<std::string> &maskChannels = channelNamesData->readable();
+
+	// Itersect the inChannels and the maskChannels in place.
+	std::vector<std::string>::iterator cIt( inChannels.begin() );
+	while ( cIt != inChannels.end() )
+	{
+		if ( std::find( maskChannels.begin(), maskChannels.end(), (*cIt) ) == maskChannels.end() )
+		{
+			cIt = inChannels.erase( cIt );
+		}
+		else
+		{
+			++cIt;
+		}
+	}
+}
+
+int ChannelMaskPlug::channelIndex( std::string channel )
+{
+	// Strip from the channel string any layer information...
+	size_t pos = channel.find_last_of(".");
+	if ( pos != std::string::npos )
+	{
+		channel.erase( channel.begin(), channel.begin()+pos+1 );
+	}
+
+	///\todo: Replace this temporary code below with a lookup into a table of channels and their indexes
+	if ( channel == "R") return 0;
+	if ( channel == "G") return 1;
+	if ( channel == "B") return 2;
+	if ( channel == "A") return 3;
 	
-	LastTypeId = 110849
-};
+	return 0;
+}
 
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
