@@ -67,22 +67,25 @@ class ImageNode : public Gaffer::DependencyNode
 		Gaffer::BoolPlug *enabledPlug();
 		const Gaffer::BoolPlug *enabledPlug() const;
 		
-		/// The default implementation returns the value of the enabled plug.
-		/// Derived classes should overide this method to if their plugs are in a state that
-		/// make the node produce no effect. This stops duplication of data in the cache and
-		/// improves performance and memory efficiency.
-		/// Any derived classes that do reimplement this method need to call enabled() on it's
-		/// inherited class in the case that it is enabled.
-		/// For example, a derived class should implement enabled() like this:
-		///
-		///	return someCondition == true ? BaseClass::enabled() : false;
-		///	
-		virtual bool enabled() const;
-		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
-				
+		
+		/// The enabled() and channelEnabled( channel ) methods provide a means to disable the node
+		/// under particular circumstances such as when the input plugs produce no effect.
+		/// enabled() is called to query the nodes state when hashing and computing the image plug.
+		/// When computing or hashing the channelData plug channelEnabled( channel ) is also called
+		/// to query if the particular channel is enabled or not.
+		/// The default implementation of enabled returns the value of the enabled plug.
+		///
+		/// Derived classes can overide one or both methods to return false if their plugs are in
+		/// a state that makes the node produce no effect. This stops duplication of data in the
+		/// cache and improves performance and memory efficiency.
+		/// Any derived classes that do reimplement these methods need to call the respective method
+		/// on the base class before then computing whether or not it is in fact enabled.
+		virtual bool channelEnabled( const std::string &channel ) const { return true; };
+		virtual bool enabled() const;
+			
 		/// Implemented to append the image:channelName and image:tileOrigin context entries to the hash where appropriate,
 		/// and then call the hash*() methods below whenever output is part of an ImagePlug. Derived classes should reimplement
 		/// the specific hash*() methods rather than hash() itself.
