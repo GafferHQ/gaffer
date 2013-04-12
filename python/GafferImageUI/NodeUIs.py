@@ -55,6 +55,9 @@ GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.tr
 
 GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug.staticTypeId(), None )
 
+# ImageNode
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "enabled", None )
+
 # ImageReader
 
 GafferUI.PlugValueWidget.registerCreator(
