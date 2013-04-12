@@ -312,6 +312,25 @@ class BoxTest( unittest.TestCase ) :
 		self.assertFalse( b.canPromotePlug( b["n1"]["op1"] ) )
 		self.assertEqual( p.getValue(), -10 )
 
+	def testPromoteColor( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.Color3fPlug()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+
+		self.assertTrue( b.canPromotePlug( b["n"]["c"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"] ) )
+
+		p = b.promotePlug( b["n"]["c"] )
+
+		self.assertTrue( isinstance( p, Gaffer.Color3fPlug ) )
+		self.assertTrue( b["n"]["c"].getInput().isSame( p ) )
+		self.assertTrue( b["n"]["c"]["r"].getInput().isSame( p["r"] ) )
+		self.assertTrue( b["n"]["c"]["g"].getInput().isSame( p["g"] ) )
+		self.assertTrue( b["n"]["c"]["b"].getInput().isSame( p["b"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
 	
