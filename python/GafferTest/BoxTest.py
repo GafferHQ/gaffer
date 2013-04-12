@@ -317,6 +317,7 @@ class BoxTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["c"] = Gaffer.Color3fPlug()
+		s["n"]["c"].setValue( IECore.Color3f( 1, 0, 1 ) )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
 
@@ -330,6 +331,7 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( b["n"]["c"]["r"].getInput().isSame( p["r"] ) )
 		self.assertTrue( b["n"]["c"]["g"].getInput().isSame( p["g"] ) )
 		self.assertTrue( b["n"]["c"]["b"].getInput().isSame( p["b"] ) )
+		self.assertEqual( p.getValue(), IECore.Color3f( 1, 0, 1 ) )
 
 if __name__ == "__main__":
 	unittest.main()
