@@ -10,6 +10,8 @@
 
 * Fixed CompoundPlugValueWidget bug whereby it would error if a summary was provided on a non-collapsible UI.
 
+* Added right-click context menus to enum and checkbox plug uis.
+
 0.57.0
 ======
 

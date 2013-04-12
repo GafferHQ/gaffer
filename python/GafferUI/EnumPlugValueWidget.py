@@ -50,6 +50,8 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for label, value in self.__labelsAndValues :
 			self.__selectionMenu.addItem( label )
 	
+		self._addPopupMenu( self.__selectionMenu )
+
 		self.__currentChangedConnection = self.__selectionMenu.currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		
 		self._updateFromPlug()
