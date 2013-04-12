@@ -53,7 +53,6 @@ class ImageReaderTest( unittest.TestCase ) :
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )		
 	
-		print n["out"]["format"].getValue().getDisplayWindow()
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 	

@@ -82,6 +82,11 @@ void FilterProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsCont
 
 bool FilterProcessor::enabled() const
 {
+	if ( !ImageProcessor::enabled() )
+	{
+		return false;
+	}
+
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
 	for( ImagePlugList::const_iterator it( m_inputs.inputs().begin() ); it != end; it++ )
 	{
@@ -90,7 +95,7 @@ bool FilterProcessor::enabled() const
 			return false;
 		}
 	}
-	return ImageProcessor::enabled();
+	return true;
 }
 
 void FilterProcessor::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

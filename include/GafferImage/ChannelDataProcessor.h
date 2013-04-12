@@ -39,6 +39,7 @@
 #define GAFFERIMAGE_CHANNELDATAPROCESSOR_H
 
 #include "GafferImage/ImageProcessor.h"
+#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
@@ -57,14 +58,19 @@ class ChannelDataProcessor : public ImageProcessor
 
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		
-		/// Should be implemented by derived classes to query the state of the node's plugs and return true if the channel should be operated on.
-		virtual bool channelEnabled( int channelIndex ) const = 0;
-	
+		//! @name Plug Accessors
+		/// Returns a pointer to the node's plugs.
+		//////////////////////////////////////////////////////////////
+		//@{
+			GafferImage::ChannelMaskPlug *channelMaskPlug();
+			const GafferImage::ChannelMaskPlug *channelMaskPlug() const;
+		//@}
+		
 	protected :
 	
-		/// This implementation queries the context for the channel that is being modified and subsequently calls channelEnabled( channelIndex ) which should be implemented by derived classed.
-		virtual bool enabled() const;
-
+		/// This implementation queries whether or not the requested channel is masked by the channelMaskPlug().
+		virtual bool channelEnabled( const std::string &channel ) const;
+	
 		/// Reimplemented to pass through the hashes from the input plug as they don't change.
 		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -84,12 +90,11 @@ class ChannelDataProcessor : public ImageProcessor
 		/// @param channelIndex An index in the range of 0-3 which indicates whether the channel to be processed is R, G, B or A. 
 		///                     It is useful for querying Color4f plugs for the value that coresponds to the channel being processed. 
 		/// @param outData The tile where the result of the operation should be written. It is initialized with the coresponding tile data from inPlug() which should be used as the input data.
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, IECore::FloatVectorDataPtr outData ) const = 0;
+		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, IECore::FloatVectorDataPtr outData ) const = 0;
 
 	private :
 		
-		/// A convenience method to return an index for a channel that can be used to address Color4f plugs.
-		inline int channelIndex( const std::string &channelName ) const { return channelName == "R" ? 0 : channelName == "G" ? 1 : channelName == "B" ? 2 : 3; };
+		static size_t g_firstPlugIndex;
 
 };
 

@@ -58,7 +58,7 @@ class FilterProcessor : public ImageProcessor
 
 		typedef std::vector<Gaffer::InputGenerator<GafferImage::ImagePlug>::PlugClassPtr> ImagePlugList;
 
-		FilterProcessor( const std::string &name=staticTypeName(), int minimumInputs = 2, int maximumInputs = 2 );
+		FilterProcessor( const std::string &name=staticTypeName(), int minimumInputs = 1, int maximumInputs = 1 );
 		virtual ~FilterProcessor();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( FilterProcessor, FilterProcessorTypeId, ImageProcessor );

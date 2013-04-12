@@ -165,10 +165,23 @@ const Gaffer::BoolPlug *Grade::whiteClampPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex+8 );
 }
 
-bool Grade::channelEnabled( int channelIndex ) const
+bool Grade::channelEnabled( const std::string &channel ) const 
 {
-	if ( gammaPlug()->getValue()[ channelIndex ] == 0. ) return false;
-	return true;
+	if ( !ChannelDataProcessor::channelEnabled( channel ) )
+	{
+		return false;
+	}
+	
+	int channelIndex = GafferImage::ChannelMaskPlug::channelIndex( channel );
+	
+	// Never bother to process the alpha channel.
+	if ( channelIndex == 3 ) return false;
+
+	return (
+		gammaPlug()->getValue()[ channelIndex ] != 0.
+		//|| blackPointPlug()->getValue()[ channelIndex ] != 0.
+		//|| whitePointPlug()->getValue()[ channelIndex ] != 1.
+	);
 }
 
 void Grade::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -226,16 +239,13 @@ void Grade::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaf
 	whiteClampPlug()->hash( h );
 }
 
-void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const int channelIndex, FloatVectorDataPtr outData ) const
+void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	///\todo Once the ChannelDataProcessor baseclass (implemented within enabled()) has a channel input mask feature,
-	// make this node mask only RGB and then remove the following lines that check to see if we are processing the alpha.
-	if ( channelIndex == 3 ) return;
-
 	// Calculate the valid data window that we are to merge.
 	const int dataWidth = ImagePlug::tileSize()*ImagePlug::tileSize();
 
 	// Do some pre-processing.
+	int channelIndex = ChannelMaskPlug::channelIndex( channel );
 	const float gamma = gammaPlug()->getValue()[channelIndex];
 	const float invGamma = 1. / gamma;	
 	const float multiply = multiplyPlug()->getValue()[channelIndex];

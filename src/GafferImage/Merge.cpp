@@ -93,10 +93,13 @@ void Merge::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &out
 
 bool Merge::enabled() const
 {
-	if ( m_inputs.nConnectedInputs() < 2 ) return false;
-
 	// Call enabled() on the image node as we don't care whether the first input is connected or not.
-	return ImageNode::enabled();
+	if ( !ImageNode::enabled() )
+	{
+		return false;
+	}
+
+	return ( m_inputs.nConnectedInputs() >= 2 );
 }
 
 void Merge::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
