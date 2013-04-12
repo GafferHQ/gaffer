@@ -12,6 +12,8 @@
 
 * Added right-click context menus to enum and checkbox plug uis.
 
+* Add Box plug-promotion feature (#142).
+
 0.57.0
 ======
 
