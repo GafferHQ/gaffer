@@ -8,6 +8,8 @@
 
 * Generalised the Metadata system to store arbitrary values rather than just descriptions.
 
+* Fixed CompoundPlugValueWidget bug whereby it would error if a summary was provided on a non-collapsible UI.
+
 0.57.0
 ======
 

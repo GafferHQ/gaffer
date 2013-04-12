@@ -140,7 +140,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 				
-		if self.__summary is not None :
+		if self.__summary is not None and self.__collapsible is not None :
 			with self.getContext() :
 				s = self.__summary( self.getPlug() )
 				if s :
