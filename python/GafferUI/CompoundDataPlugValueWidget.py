@@ -102,17 +102,17 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
 				
 		if label is not None :
-			nameWidget = GafferUI.NameLabel( 
+			nameWidget = GafferUI.LabelPlugValueWidget( 
 				childPlug,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 			)
-			nameWidget.setText( label )
+			nameWidget.label().setText( label )
 		else :
 			nameWidget = GafferUI.PlugValueWidget.create( childPlug["name"] )
 			
 		## \todo This isn't working - maybe we need a FixedSizeContainer?
-		nameWidget._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
+		nameWidget.label()._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append( nameWidget )
 		
 		if "enabled" in childPlug :

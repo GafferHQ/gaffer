@@ -42,11 +42,14 @@ import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
+## The PlugWidget combines a PlugLabelValueWidget with a second PlugValueWidget
+## suitable for editing the plug.
 ## \todo This could provide functionality for arbitrary Widgets to be placed
 ## on the right, which combined with the ability to find a 
-## PlugWidget given a Plug could be quite useful for many things. Perhaps
-## it should also be derived from PlugValueWidget - this could make it very
-## easy to add a popup menu to the label.
+## PlugWidget given a Plug could be quite useful for many things.
+## \todo Remove label and description capabilities - label should /always/
+## be the plug name and description should always be supplied via the
+## Metadata mechanism.
 class PlugWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugOrWidget, label=None, description=None, **kw ) :
@@ -67,23 +70,22 @@ class PlugWidget( GafferUI.Widget ) :
 			self.__valueWidget = plugOrWidget
 			plug = self.plugValueWidget().getPlug()
 			
-		self.__label = GafferUI.NameLabel(
+		self.__label = GafferUI.LabelPlugValueWidget(
 			plug,
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
-		if label is not None :
-			self.__label.setText( label )
-			
-		self.__label.setToolTip( GafferUI.Metadata.plugDescription( plug ) )
-			
+
 		## \todo Decide how we allow this sort of tweak using the public
 		# interface. Perhaps we should have a SizeableContainer or something?
-		self.__label._qtWidget().setMinimumWidth( self.labelWidth() )
-		
+		self.__label.label()._qtWidget().setFixedWidth( self.labelWidth() )
+
+		if label is not None :
+			self.__label.label().setText( label )
+
 		if description is not None :
-			self.__label.setToolTip( description )
-		
+			self.__label.label().setToolTip( description )
+
 		layout.addWidget( self.__label._qtWidget() )
 		layout.addWidget( self.__valueWidget._qtWidget() )
 

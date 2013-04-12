@@ -177,6 +177,7 @@ from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
 from ToolPlugValueWidget import ToolPlugValueWidget
+from LabelPlugValueWidget import LabelPlugValueWidget
 from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
 import ExecuteUI
