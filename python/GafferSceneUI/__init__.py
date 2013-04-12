@@ -56,3 +56,4 @@ import StandardOptionsUI
 import StandardAttributesUI
 import ShaderUI
 import OpenGLShaderUI
+import ObjectSourceUI

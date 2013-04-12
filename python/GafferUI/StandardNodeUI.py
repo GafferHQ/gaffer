@@ -53,6 +53,8 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 	DisplayMode = IECore.Enum.create( "Tabbed", "Simplified" )
 
+	__defaultSectionName = "Settings"
+
 	def __init__( self, node, displayMode = None, **kw ) :
 
 		self.__mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
@@ -64,7 +66,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		self.__sectionColumns = {}
 		if self.__displayMode == self.DisplayMode.Tabbed :
 
-			headerColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+			headerColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4 )
 			self.__sectionColumns["header"] = headerColumn
 			self.__mainColumn.append( headerColumn )
 
@@ -76,9 +78,9 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		# ScriptNode has an execute method but that is for something else.
 		## \todo We need to base this on the new Executable class.
 		if hasattr( node, "execute" ) and not isinstance( node, Gaffer.ScriptNode ) :
-			settingsColumn = self.__sectionColumn( "Settings" )
-			settingsColumn.append( GafferUI.ExecuteUI.ExecuteButton( self.node() ) )
-			settingsColumn.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
+			defaultColumn = self.__sectionColumn( self.__defaultSectionName )
+			defaultColumn.append( GafferUI.ExecuteUI.ExecuteButton( self.node() ) )
+			defaultColumn.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
 
 		if self.__displayMode == self.DisplayMode.Tabbed :
 			self.__tabbedContainer.setCurrent( self.__tabbedContainer[0] )
@@ -91,7 +93,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 	def __sectionColumn( self, sectionName ) :
 
-		if self.__displayMode == self.DisplayMode.Simplified and sectionName != "Settings" :
+		if self.__displayMode == self.DisplayMode.Simplified and sectionName != self.__defaultSectionName :
 			return None
 
 		sectionColumn = self.__sectionColumns.get( sectionName, None )
@@ -102,7 +104,11 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			scrolledContainer.setChild( sectionColumn )
 
 			if self.__displayMode == self.DisplayMode.Tabbed :
-				self.__tabbedContainer.insert( 0, scrolledContainer, label = sectionName )
+				newTabIndex = 0
+				if len( self.__tabbedContainer ) and self.__tabbedContainer.getLabel( self.__tabbedContainer[0] )==self.__defaultSectionName :
+					# make sure the default tab always comes first
+					newTabIndex = 1
+				self.__tabbedContainer.insert( newTabIndex, scrolledContainer, label = sectionName )
 			else :
 				self.__mainColumn.append( scrolledContainer, expand = True )
 
@@ -123,7 +129,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :
 				widget = GafferUI.PlugWidget( widget )
 
-			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or "Settings"
+			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
 			sectionColumn = self.__sectionColumn( sectionName )
 			if sectionColumn is not None :
 				sectionColumn.append( widget )

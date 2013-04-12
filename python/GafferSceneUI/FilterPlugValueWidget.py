@@ -100,7 +100,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if len( self.__column ) > 1 :
 				filterNodeUI = self.__column[1]
 			if filterNodeUI is None or not filterNodeUI.node().isSame( filterNode ) :
-				filterNodeUI = GafferUI.NodeUI.create( filterNode )
+				filterNodeUI = GafferUI.StandardNodeUI( filterNode, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified )
 			if len( self.__column ) > 1 :
 				self.__column[1] = filterNodeUI
 			else :

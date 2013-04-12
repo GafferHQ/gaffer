@@ -185,6 +185,7 @@ from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 from UserPlugValueWidget import UserPlugValueWidget
+import PreferencesUI
 
 # then stuff specific to parameterised objects
 

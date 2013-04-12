@@ -75,11 +75,11 @@ class NodeUI( GafferUI.Widget ) :
 	__nodeUIs = {}
 	## Registers a subclass of NodeUI to be used with a specific node type.
 	@classmethod
-	def registerNodeUI( cls, nodeTypeId, nodeUIType ) :
+	def registerNodeUI( cls, nodeTypeId, nodeUICreator ) :
 	
-		assert( issubclass( nodeUIType, NodeUI ) )
+		assert( callable( nodeUICreator ) )
 	
-		cls.__nodeUIs[nodeTypeId] = nodeUIType
+		cls.__nodeUIs[nodeTypeId] = nodeUICreator
 
 GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "user", lambda plug : None )
 
