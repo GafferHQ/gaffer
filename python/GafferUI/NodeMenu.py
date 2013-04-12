@@ -84,7 +84,7 @@ def nodeCreatorWrapper( nodeCreator ) :
 				node = nodeCreator()
 
 			if node.parent() is None :
-				script.addChild( node )
+				graphGadget.getRoot().addChild( node )
 			
 			graphGadget.getLayout().connectNode( graphGadget, node, script.selection() )
 

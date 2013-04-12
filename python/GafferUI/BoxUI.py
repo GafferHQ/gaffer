@@ -47,10 +47,13 @@ import GafferUI
 # for particular applications append it if it suits their purposes.
 def nodeMenuCreateCommand( menu ) :
 
-	editor = menu.ancestor( GafferUI.EditorWidget )
-	script = editor.scriptNode()
+	nodeGraph = menu.ancestor( GafferUI.NodeGraph )
+	assert( nodeGraph is not None )
 	
-	return Gaffer.Box.create( script, script.selection() )
+	script = nodeGraph.scriptNode()
+	graphGadget = nodeGraph.graphGadgetWidget().getViewportGadget().getChild()
+	
+	return Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
 
 ## A callback suitable for use with NodeGraph.nodeContextMenuSignal - it provides
 # menu options specific to Boxes. We don't actually register it automatically,
