@@ -220,7 +220,7 @@ class BoxTest( unittest.TestCase ) :
 		s.selection().add( s["n2"] )
 		b = Gaffer.Box.create( s, s.selection() )
 		
-		self.assertEqual( len( b ), 3 ) # one child node, an in plug and an out plug
+		self.assertEqual( len( b ), 4 ) # the user plug, one child node, an in plug and an out plug
 		
 		self.assertTrue( b["n2"]["in"].getInput().isSame( b["in"] ) )
 		self.assertTrue( b["in"].getInput().isSame( s["n1"]["sum"] ) )

@@ -100,9 +100,10 @@ class NodeTest( GafferTest.TestCase ) :
 		n["p1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p3"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.assertEqual( n.children()[0].getName(), "p1" )
-		self.assertEqual( n.children()[1].getName(), "p2" )
-		self.assertEqual( n.children()[2].getName(), "p3" )
+		self.assertEqual( n.children()[0].getName(), "user" )
+		self.assertEqual( n.children()[1].getName(), "p1" )
+		self.assertEqual( n.children()[2].getName(), "p2" )
+		self.assertEqual( n.children()[3].getName(), "p3" )
 		
 		s = Gaffer.ScriptNode()
 		s["n"] = n
@@ -112,9 +113,10 @@ class NodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 		
-		self.assertEqual( s["n"].children()[0].getName(), "p1" )
-		self.assertEqual( s["n"].children()[1].getName(), "p2" )
-		self.assertEqual( s["n"].children()[2].getName(), "p3" )
+		self.assertEqual( s["n"].children()[0].getName(), "user" )
+		self.assertEqual( s["n"].children()[1].getName(), "p1" )
+		self.assertEqual( s["n"].children()[2].getName(), "p2" )
+		self.assertEqual( s["n"].children()[3].getName(), "p3" )
 	
 	def testSerialiseDynamicStringPlugs( self ) :
 	

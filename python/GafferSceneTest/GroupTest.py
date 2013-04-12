@@ -530,7 +530,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s.selection().add( s["g1"] )
 		b = Gaffer.Box.create( s, s.selection() )
 		
-		self.assertEqual( len( b ), 3 ) # one for the child, one for the input and one for the output
+		self.assertEqual( len( b ), 4 ) # one for the user plug, one for the child, one for the input and one for the output
 		
 		self.assertTrue( b["g1"]["in"].getInput().isSame( b["in"] ) )
 		self.assertTrue( b["in"].getInput().isSame( s["p"]["out"] ) )
