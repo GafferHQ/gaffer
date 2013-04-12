@@ -1,3 +1,5 @@
+*.tmp
+*.swp
 *.os
 *.so
 *.dylib

@@ -43,35 +43,32 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, labelsAndValues, **kw ) :
 	
-		self.__selectionMenu = GafferUI.SelectionMenu()
+		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
-	
+
 		self.__labelsAndValues = labelsAndValues
 		for label, value in self.__labelsAndValues :
-			self.__selectionMenu.addItem( label )
+			self.__selectionMenu.append( label )
 	
-		self.__currentChangedConnection = self.__selectionMenu.currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__currentChanged ) )
+		self.__selectionChangedConnection = self.__selectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		
 		self._updateFromPlug()
 	
 	def _updateFromPlug( self ) :
 	
+		self.__selectionMenu.setEnabled( self._editable() )
+		
 		if self.getPlug() is not None :
 			with self.getContext() :
 				plugValue = self.getPlug().getValue()
-				matchingIndex = None
-				for index, labelAndValue in enumerate( self.__labelsAndValues ) :
+				for labelAndValue in self.__labelsAndValues :
 					if labelAndValue[1] == plugValue :
-						matchingIndex = index
-						break
-				if matchingIndex is not None :
-					with Gaffer.BlockedConnection( self.__currentChangedConnection ) :
-						self.__selectionMenu.setCurrentIndex( matchingIndex )
-							
-		self.__selectionMenu.setEnabled( self._editable() )
+						with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+							self.__selectionMenu.setSelection( labelAndValue[0] )
 	
-	def __currentChanged( self, selectionMenu ) :
+	def __selectionChanged( self, selectionMenu ) :
 	
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			self.getPlug().setValue( self.__labelsAndValues[selectionMenu.getCurrentIndex()][1] )
+			name = selectionMenu.getSelection()[0]
+			self.getPlug().setValue( self.__labelsAndValues[ selectionMenu.index(name) ][1] )
 		
