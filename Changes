@@ -1,5 +1,7 @@
 * Fixed creation of nodes within Boxes - previously they were added below the root of the script rather than inside the box.
 
+* Fixed unstable scene hierarchy expansion (issue #120).
+
 0.57.0
 ======
 
