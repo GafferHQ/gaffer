@@ -117,7 +117,7 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 		{
 			throw IECore::Exception(
 				boost::str(
-					boost::format( "Cannot promote plug \"%s\" as it's node is does not accept inputs." ) % descendantPlug->fullName()
+					boost::format( "Cannot promote plug \"%s\" as it does not accept inputs." ) % descendantPlug->fullName()
 				)
 			);
 		}
