@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -132,7 +133,41 @@ class PathListingWidgetTest( unittest.TestCase ) :
 		self.assertEqual( set( [ str( p ) for p in w.getSelectedPaths() ] ), set( [ "/a", "/b" ] ) )
 		
 		self.assertEqual( len( c ), 1 )
-		
+
+	def testExpandedPathsWhenPathChanges( self ) :
+
+		d = {
+			"a" : {
+				"e" : 10,
+			},
+			"b" : {
+				"f" : "g",
+			},
+		}
+
+		p = Gaffer.DictPath( d, "/" )
+		p1 = Gaffer.DictPath( d, "/a" )
+		w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+
+		self.assertEqual( w.getPathExpanded( p1 ), False )
+		w.setPathExpanded( p1, True )
+		self.assertEqual( w.getPathExpanded( p1 ), True )
+
+		# fake a change to the path
+		p.pathChangedSignal()( p )
+
+		# because the PathListingWidget only updates on idle events, we have
+		# to run the event loop to get it to process the path changed signal.
+		def stop() :
+			GafferUI.EventLoop.mainEventLoop().stop()
+			return False
+
+		GafferUI.EventLoop.addIdleCallback( stop )
+		GafferUI.EventLoop.mainEventLoop().start()
+
+		# once it has processed things, the expansion should be exactly as it was.
+		self.assertEqual( w.getPathExpanded( p1 ), True )
+
 if __name__ == "__main__":
 	unittest.main()
 	

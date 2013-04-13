@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -112,6 +113,9 @@ class ScenePath( Gaffer.Path ) :
 		
 	def __plugDirtied( self, plug ) :
 	
-		if plug.isSame( self.__scenePlug ) :
+		# only the childNames plug actually affects us right now,
+		# but if in the future we start using the other plugs in
+		# info() we'll need to take that into account here.
+		if plug.isSame( self.__scenePlug["childNames"] ) :
 			self.pathChangedSignal()( self )
 			
