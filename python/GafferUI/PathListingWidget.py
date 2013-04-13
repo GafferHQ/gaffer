@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -315,7 +315,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		if self.__currentDir!=dirPath or str( self.__path )==self.__currentPath :
 
 			selectedPaths = self.getSelectedPaths()
-						
+			expandedPaths = None
+			if str( self.__path ) == self.__currentPath :
+				# the path location itself hasn't changed so we are assuming that just the filter has.
+				# if we're in the tree view mode, the user would probably be very happy
+				# if we didn't forget what was expanded.
+				if self.getDisplayMode() == self.DisplayMode.Tree :
+					expandedPaths = self.getExpandedPaths()
+
 			self.__sortProxyModel.setSourceModel(
 				_PathModel(
 					dirPath,
@@ -323,6 +330,9 @@ class PathListingWidget( GafferUI.Widget ) :
 					recurse = self.__displayMode != self.DisplayMode.List,
 				)
 			)
+
+			if expandedPaths is not None :
+				self.setExpandedPaths( expandedPaths )
 
 			self.setSelectedPaths( selectedPaths, scrollToFirst = False )
 	
