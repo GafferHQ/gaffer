@@ -36,15 +36,20 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Node.h"
+#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 
 using namespace Gaffer;
+
+size_t Node::g_firstPlugIndex;
 
 IE_CORE_DEFINERUNTIMETYPED( Node );
 
 Node::Node( const std::string &name )
 	:	GraphComponent( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new CompoundPlug( "user" ) );
 }
 
 Node::~Node()
@@ -69,6 +74,16 @@ Node::UnaryPlugSignal &Node::plugFlagsChangedSignal()
 Node::UnaryPlugSignal &Node::plugDirtiedSignal()
 {
 	return m_plugDirtiedSignal;
+}
+
+Gaffer::CompoundPlug *Node::userPlug()
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::CompoundPlug *Node::userPlug() const
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
 ScriptNode *Node::scriptNode()

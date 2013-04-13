@@ -554,9 +554,9 @@ class GraphComponentTest( unittest.TestCase ) :
 		g["b"] = Gaffer.Plug()
 		g["c"] = Gaffer.Node()
 		
-		self.assertEqual( len( g.children() ), 3 )
-		self.assertEqual( len( g.children( Gaffer.GraphComponent.staticTypeId() ) ), 3 )
-		self.assertEqual( len( g.children( Gaffer.Plug.staticTypeId() ) ), 2 )
+		self.assertEqual( len( g.children() ), 4 )
+		self.assertEqual( len( g.children( Gaffer.GraphComponent.staticTypeId() ) ), 4 )
+		self.assertEqual( len( g.children( Gaffer.Plug.staticTypeId() ) ), 3 )
 		self.assertEqual( len( g.children( Gaffer.Node.staticTypeId() ) ), 1 )
 		self.assertEqual( len( g.children( Gaffer.IntPlug.staticTypeId() ) ), 1 )
 	

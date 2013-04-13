@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,8 +35,6 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
-
 import re
 import fnmatch
 
@@ -51,55 +49,16 @@ class NodeUI( GafferUI.Widget ) :
 	## Derived classes may override the default ui by passing
 	# their own top level widget - otherwise a standard ui is built
 	# using the result of _plugsWidget().
-	def __init__( self, node, topLevelWidget=None, **kw ) :
-		
-		buildUI = False
-		if topLevelWidget is None :
-			topLevelWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
-			buildUI = True
-			
+	def __init__( self, node, topLevelWidget, **kw ) :
+
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
 		self.__node = node
-		self.__plugsWidget = None
-		
-		if buildUI :
-			topLevelWidget.append( self._plugsWidget() )
-			# ScriptNode has an execute method but that is for something else.
-			## \todo Perhaps we need a more formalised way of defining which nodes
-			# are executable? Perhaps an interface class on the C++ side?
-			if hasattr( node, "execute" ) and not isinstance( node, Gaffer.ScriptNode ) :
-				topLevelWidget.append( GafferUI.ExecuteUI.ExecuteButton( self.__node ) )
-		
-			topLevelWidget.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
 			
 	## Returns the node the ui represents.
 	def node( self ) :
 	
 		return self.__node
-
-	## Returns a Widget representing the plugs for the node.
-	def _plugsWidget( self ) :
-	
-		if self.__plugsWidget is not None :
-			return self.__plugsWidget
-	
-		self.__plugsWidget = GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 )
-
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
-		self.__plugsWidget.setChild( column )
-				
-		for plug in self.node().children( Gaffer.Plug.staticTypeId() ) :
-			if plug.getName().startswith( "__" ) :
-				continue
-			plugValueWidget = GafferUI.PlugValueWidget.create( plug )
-			if plugValueWidget is not None :
-				if isinstance( plugValueWidget, GafferUI.PlugValueWidget ) and not plugValueWidget.hasLabel() :
-					column.append( GafferUI.PlugWidget( plugValueWidget ) )
-				else :
-					column.append( plugValueWidget )
-
-		return self.__plugsWidget
 
 	## Creates a NodeUI instance for the specified node.
 	@classmethod
@@ -116,10 +75,12 @@ class NodeUI( GafferUI.Widget ) :
 	__nodeUIs = {}
 	## Registers a subclass of NodeUI to be used with a specific node type.
 	@classmethod
-	def registerNodeUI( cls, nodeTypeId, nodeUIType ) :
+	def registerNodeUI( cls, nodeTypeId, nodeUICreator ) :
 	
-		assert( issubclass( nodeUIType, NodeUI ) )
+		assert( callable( nodeUICreator ) )
 	
-		cls.__nodeUIs[nodeTypeId] = nodeUIType
-		
-NodeUI.registerNodeUI( Gaffer.Node.staticTypeId(), NodeUI )
+		cls.__nodeUIs[nodeTypeId] = nodeUICreator
+
+GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "user", lambda plug : None )
+
+GafferUI.Metadata.registerPlugValue( Gaffer.Node, "user", "nodeUI:section", "User" )

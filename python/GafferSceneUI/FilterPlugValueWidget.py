@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,14 +51,12 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		
-		## \todo Consider todo in PlugWidget, whereby we wouldn't have to duplicate the label code here
-		label = GafferUI.NameLabel(
+		label = GafferUI.LabelPlugValueWidget(
 			plug,
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
-		label.setToolTip( GafferUI.Metadata.plugDescription( plug ) )
-		label._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
+		label.label()._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
 		row.append( label )
 				
 		self.__menuButton = GafferUI.MenuButton()
@@ -100,7 +99,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if len( self.__column ) > 1 :
 				filterNodeUI = self.__column[1]
 			if filterNodeUI is None or not filterNodeUI.node().isSame( filterNode ) :
-				filterNodeUI = GafferUI.NodeUI.create( filterNode )
+				filterNodeUI = GafferUI.StandardNodeUI( filterNode, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified )
 			if len( self.__column ) > 1 :
 				self.__column[1] = filterNodeUI
 			else :

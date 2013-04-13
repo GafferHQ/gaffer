@@ -34,10 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/format.hpp"
+#include "boost/algorithm/string/replace.hpp"
+
 #include "Gaffer/Box.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/PlugIterator.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/CompoundPlug.h"
 
 using namespace Gaffer;
 
@@ -50,6 +54,109 @@ Box::Box( const std::string &name )
 
 Box::~Box()
 {
+}
+
+bool Box::canPromotePlug( const Plug *descendantPlug ) const
+{
+	return validatePromotability( descendantPlug, false );
+}
+
+Plug *Box::promotePlug( Plug *descendantPlug )
+{
+	validatePromotability( descendantPlug, true );
+
+	std::string externalPlugName = descendantPlug->relativeName( this );
+	boost::replace_all( externalPlugName, ".", "_" );
+
+	PlugPtr externalPlug = descendantPlug->createCounterpart( externalPlugName, Plug::In );
+	externalPlug->setFlags( Plug::Dynamic, true );
+
+	ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug );
+	if( externalValuePlug )
+	{
+		externalValuePlug->setFrom( static_cast<ValuePlug *>( descendantPlug ) );
+	}
+
+	userPlug()->addChild( externalPlug );
+	descendantPlug->setInput( externalPlug );
+
+	return externalPlug.get();
+}
+
+bool Box::plugIsPromoted( const Plug *descendantPlug ) const
+{
+	const Plug *input = descendantPlug->getInput<Plug>();
+	return input && input->node() == this;
+}
+
+bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const
+{
+	if( descendantPlug->direction() != Plug::In )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it is not an input plug." ) % descendantPlug->fullName()
+				)
+			);
+		}
+	}
+
+	if( !descendantPlug->getFlags( Plug::AcceptsInputs ) )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it does not accept inputs." ) % descendantPlug->fullName()
+				)
+			);
+		}
+	}
+
+	if( descendantPlug->getInput<Plug>() )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it already has an input." ) % descendantPlug->fullName()
+				)
+			);
+		}
+	}
+
+	const Node *descendantNode = descendantPlug->node();
+	if( !descendantNode || descendantNode->parent<Node>() != this )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it's node is not a child of \"%s\"." ) % descendantPlug->fullName() % fullName()
+				)
+			);
+		}
+	}
+
+	return true;
 }
 
 BoxPtr Box::create( Node *parent, const Set *childNodes )

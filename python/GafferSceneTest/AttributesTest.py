@@ -238,6 +238,30 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertEqual( len( s2["a"]["attributes"] ), 1 )
 		self.assertTrue( "attributes1" not in s2["a"] )
-	
+
+	def testBoxPromotion( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = GafferScene.StandardAttributes()
+		s["a"]["attributes"]["deformationBlur"]["enabled"].setValue( True )
+		s["a"]["attributes"]["deformationBlur"]["value"].setValue( False )
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
+
+		self.assertTrue( b.canPromotePlug( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertFalse( b.plugIsPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+
+		p = b.promotePlug( b["a"]["attributes"]["deformationBlur"] )
+
+		self.assertTrue( b.plugIsPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+
+		self.assertTrue( b["a"]["attributes"]["deformationBlur"].getInput().isSame( p ) )
+		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["name"].getInput().isSame( p["name"] ) )
+		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["enabled"].getInput().isSame( p["enabled"] ) )
+		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["value"].getInput().isSame( p["value"] ) )
+		self.assertEqual( p["enabled"].getValue(), True )
+		self.assertEqual( p["value"].getValue(), False )
+
 if __name__ == "__main__":
 	unittest.main()

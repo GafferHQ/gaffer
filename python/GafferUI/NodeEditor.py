@@ -117,7 +117,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				GafferUI.Label( node.typeName() )
 				GafferUI.NameWidget( node )
 						
-		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None )
+		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 		self.__column.append( frame, expand=True )
 		frame.setChild( GafferUI.NodeUI.create( node ) )
 

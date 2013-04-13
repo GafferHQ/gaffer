@@ -51,7 +51,11 @@ GafferScene.Shader,
 """The base type for all nodes which create shaders. Use the Assignment node to assign them to objects in the scene.""",
 
 "name",
-"""The name of the shader being represented. This should be considered read-only. Use the Shader.loadShader() method to load a shader.""",
+{
+	"description" :
+	"""The name of the shader being represented. This should be considered read-only. Use the Shader.loadShader() method to load a shader.""",
+	"nodeUI:section" : "header",
+},
 
 "parameters",
 """Where the parameters for the shader are represented.""",

@@ -94,6 +94,19 @@ class MetadataTest( GafferUITest.TestCase ) :
 		self.assertEqual( GafferUI.Metadata.plugDescription( add["op1"] ), "op1 description" )
 		self.assertEqual( GafferUI.Metadata.plugDescription( add["op2"] ), "" )
 	
+	def testArbitraryValues( self ) :
+
+		add = GafferTest.AddNode()
+
+		self.assertEqual( GafferUI.Metadata.nodeValue( add["op1"], "aKey" ), None )
+		self.assertEqual( GafferUI.Metadata.plugValue( add["op1"], "aKey" ), None )
+
+		GafferUI.Metadata.registerNodeValue( GafferTest.AddNode, "aKey", "something" )
+		GafferUI.Metadata.registerPlugValue( GafferTest.AddNode, "op*", "aKey", "somethingElse" )
+
+		self.assertEqual( GafferUI.Metadata.nodeValue( add, "aKey" ), "something" )
+		self.assertEqual( GafferUI.Metadata.plugValue( add["op1"], "aKey" ), "somethingElse" )
+
 if __name__ == "__main__":
 	unittest.main()
 

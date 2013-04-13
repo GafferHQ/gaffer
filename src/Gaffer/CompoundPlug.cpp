@@ -178,7 +178,23 @@ void CompoundPlug::setToDefault()
 
 void CompoundPlug::setFrom( const ValuePlug *other )
 {
-	/// \todo Probably need to propagate the call to children, but not sure yet.
+	const CompoundPlug *typedOther = IECore::runTimeCast<const CompoundPlug>( other );
+	if( !typedOther )
+	{
+		throw IECore::Exception( "Unsupported plug type" );
+	}
+
+	ChildContainer::const_iterator it, otherIt;
+	for( it = children().begin(), otherIt = typedOther->children().begin(); it!=children().end() && otherIt!=typedOther->children().end(); it++, otherIt++ )
+	{
+		ValuePlug *child = IECore::runTimeCast<ValuePlug>( it->get() );
+		const ValuePlug *otherChild = IECore::runTimeCast<ValuePlug>( otherIt->get() );
+		if( !child || !otherChild )
+		{
+			throw IECore::Exception( "Children are not ValuePlugs" );
+		}
+		child->setFrom( otherChild );
+	}
 }
 
 IECore::MurmurHash CompoundPlug::hash() const

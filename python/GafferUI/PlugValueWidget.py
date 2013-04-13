@@ -153,9 +153,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		if widget is None :
 			widget = self
-			
+
+		# it's unclear under what circumstances we get given a right-click vs a context menu event,
+		# but we try to cover all our bases by connecting to both.
+
 		self.__popupMenuConnections.append(
-			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons & ~GafferUI.ButtonEvent.Buttons.Right ) )
+			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
 		)
 
 		if buttons & GafferUI.ButtonEvent.Buttons.Right :

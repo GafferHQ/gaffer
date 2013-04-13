@@ -220,7 +220,7 @@ class BoxTest( unittest.TestCase ) :
 		s.selection().add( s["n2"] )
 		b = Gaffer.Box.create( s, s.selection() )
 		
-		self.assertEqual( len( b ), 3 ) # one child node, an in plug and an out plug
+		self.assertEqual( len( b ), 4 ) # the user plug, one child node, an in plug and an out plug
 		
 		self.assertTrue( b["n2"]["in"].getInput().isSame( b["in"] ) )
 		self.assertTrue( b["in"].getInput().isSame( s["n1"]["sum"] ) )
@@ -286,6 +286,53 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( s["n"] in s.selection() )
 		self.assertTrue( s["b"]["n"] in s.selection() )
 		
+	def testPromote( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["n1"]["op1"].setValue( -10 )
+		s["n2"] = GafferTest.AddNode()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+
+		self.assertTrue( b.canPromotePlug( b["n1"]["op1"] ) )
+		self.assertFalse( b.canPromotePlug( b["n1"]["sum"] ) )
+		self.assertFalse( b.canPromotePlug( s["n2"]["op1"] ) )
+
+		self.assertFalse( b.plugIsPromoted( b["n1"]["op1"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n1"]["op2"] ) )
+		self.assertFalse( b.plugIsPromoted( s["n2"]["op1"] ) )
+
+		p = b.promotePlug( b["n1"]["op1"] )
+		self.assertEqual( p.getName(), "n1_op1" )
+		self.assertTrue( p.parent().isSame( b["user"] ) )
+		self.assertTrue( b["n1"]["op1"].getInput().isSame( p ) )
+		self.assertTrue( b.plugIsPromoted( b["n1"]["op1"] ) )
+		self.assertFalse( b.canPromotePlug( b["n1"]["op1"] ) )
+		self.assertEqual( p.getValue(), -10 )
+
+	def testPromoteColor( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.Color3fPlug()
+		s["n"]["c"].setValue( IECore.Color3f( 1, 0, 1 ) )
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+
+		self.assertTrue( b.canPromotePlug( b["n"]["c"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"] ) )
+
+		p = b.promotePlug( b["n"]["c"] )
+
+		self.assertTrue( isinstance( p, Gaffer.Color3fPlug ) )
+		self.assertTrue( b["n"]["c"].getInput().isSame( p ) )
+		self.assertTrue( b["n"]["c"]["r"].getInput().isSame( p["r"] ) )
+		self.assertTrue( b["n"]["c"]["g"].getInput().isSame( p["g"] ) )
+		self.assertTrue( b["n"]["c"]["b"].getInput().isSame( p["b"] ) )
+		self.assertEqual( p.getValue(), IECore.Color3f( 1, 0, 1 ) )
+
 if __name__ == "__main__":
 	unittest.main()
 	

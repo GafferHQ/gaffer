@@ -77,3 +77,29 @@ def __showContents( nodeGraph, box ) :
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "out[0-9]*" ), None )
 
+# Plug promotion
+##########################################################################
+
+def __promoteToBox( box, plug ) :
+
+	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		box.promotePlug( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if node is None :
+		return
+
+	box = node.ancestor( Gaffer.Box.staticTypeId() )
+	if box is None :
+		return
+
+	if not box.canPromotePlug( plug ) :
+		return
+
+	menuDefinition.append( "/BoxDivider", { "divider" : True } )
+	menuDefinition.append( "/Promote to %s" % box.getName(), { "command" : IECore.curry( __promoteToBox, box, plug ) } )
+
+__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

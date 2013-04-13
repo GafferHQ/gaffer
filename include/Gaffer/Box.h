@@ -62,10 +62,26 @@ class Box : public Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Box, BoxTypeId, Node );
 		
+		/// Returns true if promotePlug() can be used with the
+		/// specified descendant.
+		bool canPromotePlug( const Plug *descendantPlug ) const;
+		/// Creates a user plug on the Box and connects it as the
+		/// input of the specified descendantPlug, which should belong
+		/// to one of the Nodes contained in the Box. Returns the
+		/// newly created plug.
+		/// \undoable
+		Plug *promotePlug( Plug *descendantPlug );
+		/// Returns true if the descendantPlug has been promoted.
+		bool plugIsPromoted( const Plug *descendantPlug ) const;
+
 		/// Creates a Box by containing a set of child nodes which
 		/// were previously held by a different parent.
 		/// \undoable
 		static BoxPtr create( Node *parent, const Set *childNodes );
+
+	private :
+
+		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const;
 							
 };
 

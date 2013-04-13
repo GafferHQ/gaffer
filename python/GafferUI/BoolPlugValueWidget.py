@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,9 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__checkBox = GafferUI.CheckBox()
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug, **kw )
- 
+
+		self._addPopupMenu( self.__checkBox )
+
 		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 						
 		self._updateFromPlug()

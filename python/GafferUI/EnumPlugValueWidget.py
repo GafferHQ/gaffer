@@ -45,12 +45,14 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
-
+	
 		self.__labelsAndValues = labelsAndValues
 		for label, value in self.__labelsAndValues :
 			self.__selectionMenu.append( label )
 	
 		self.__selectionChangedConnection = self.__selectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+
+		self._addPopupMenu( self.__selectionMenu )
 		
 		self._updateFromPlug()
 	

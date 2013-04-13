@@ -2,6 +2,22 @@
 
 * Fixed unstable scene hierarchy expansion (issue #120).
 
+* Fixed highlighting bugs whereby widgets inside a highlighted tab would incorrectly display an inherited highlight state. This could be seen when dragging a node into the node editor with either nested tabs or a nested VectorDataWidget.
+
+* Fixed PathPlugValueWidget bug where it would attempt to change the value of a read only plug.
+
+* Fixed PathWidget bug where it would still do autocompletion and popup menus even when non-editable.
+
+* Added TabbedContainer.insert() method.
+
+* Generalised the Metadata system to store arbitrary values rather than just descriptions.
+
+* Fixed CompoundPlugValueWidget bug whereby it would error if a summary was provided on a non-collapsible UI.
+
+* Added right-click context menus to enum and checkbox plug uis.
+
+* Added Box plug-promotion feature (#142).
+
 0.57.0
 ======
 

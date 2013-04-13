@@ -139,6 +139,7 @@ from DisplayTransform import DisplayTransform
 
 # then stuff specific to graph uis
 
+from Metadata import Metadata
 from PlugValueWidget import PlugValueWidget
 from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget
@@ -166,6 +167,7 @@ from Viewer import Viewer
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from NodeUI import NodeUI
+from StandardNodeUI import StandardNodeUI
 from ColorPlugValueWidget import ColorPlugValueWidget
 from AboutWindow import AboutWindow
 import ApplicationMenu
@@ -176,6 +178,7 @@ from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
 from ToolPlugValueWidget import ToolPlugValueWidget
+from LabelPlugValueWidget import LabelPlugValueWidget
 from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
 import ExecuteUI
@@ -183,7 +186,8 @@ import ScriptNodeUI
 from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
-from Metadata import Metadata
+from UserPlugValueWidget import UserPlugValueWidget
+import PreferencesUI
 
 # then stuff specific to parameterised objects
 

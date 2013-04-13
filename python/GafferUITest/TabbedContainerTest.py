@@ -194,6 +194,38 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( l ), 0 )
 		self.assertEqual( b.parent(), t )
 	
+	def testInsert( self ) :
+
+		t = GafferUI.TabbedContainer()
+
+		b1 = GafferUI.Button()
+		b2 = GafferUI.Button()
+		b3 = GafferUI.Button()
+
+		t.insert( 0, b1, "B1" )
+		self.assertTrue( t[0] is b1 )
+		self.assertEqual( t.index( b1 ), 0 )
+		self.assertEqual( t.getLabel( b1 ), "B1" )
+
+		t.insert( 1, b2, "B2" )
+		self.assertTrue( t[0] is b1 )
+		self.assertTrue( t[1] is b2 )
+		self.assertEqual( t.index( b1 ), 0 )
+		self.assertEqual( t.index( b2 ), 1 )
+		self.assertEqual( t.getLabel( b1 ), "B1" )
+		self.assertEqual( t.getLabel( b2 ), "B2" )
+
+		t.insert( 1, b3, "B3" )
+		self.assertTrue( t[0] is b1 )
+		self.assertTrue( t[1] is b3 )
+		self.assertTrue( t[2] is b2 )
+		self.assertEqual( t.index( b1 ), 0 )
+		self.assertEqual( t.index( b2 ), 2 )
+		self.assertEqual( t.index( b3 ), 1 )
+		self.assertEqual( t.getLabel( b1 ), "B1" )
+		self.assertEqual( t.getLabel( b2 ), "B2" )
+		self.assertEqual( t.getLabel( b3 ), "B3" )
+
 	def tearDown( self ) :
 	
 		self.__current = None

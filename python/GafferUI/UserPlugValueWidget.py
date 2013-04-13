@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,41 +31,59 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
+
+from __future__ import with_statement
+
+import IECore
 
 import Gaffer
 import GafferUI
 
-import GafferScene
-import GafferSceneUI
+class UserPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-##########################################################################
-# Metadata
-##########################################################################
+	def __init__( self, plug, collapsed=None, label=None, **kw ) :
 
-GafferUI.Metadata.registerNodeDescription(
+		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, **kw )
 
-GafferScene.FilteredSceneProcessor,
+		self.__footerWidget = None
 
-"""The base type for scene processors which use a Filter node to control which part of the scene is affected.""",
+	def _footerWidget( self ) :
 
-"filter",
-{
-	"description" : """The filter used to control which parts of the scene are processed. A Filter node should be connected here.""",
-	"nodeUI:section" : "Filter",
-}
+		if self.__footerWidget is not None :
+			return self.__footerWidget
 
-)
+		self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) ) )
+		self.__footerWidget.append(
+			GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
+		)
+		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
 
-##########################################################################
-# Widgets and Gadgets
-##########################################################################
+		return self.__footerWidget
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.FilteredSceneProcessor.staticTypeId(),
-	"filter",
-	GafferSceneUI.FilterPlugValueWidget,
-)
+	def __addMenuDefinition( self ) :
 
-GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
+		result = IECore.MenuDefinition()
+
+		result.append( "/Add/Float", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FloatPlug ) } )
+		result.append( "/Add/Int", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.IntPlug ) } )
+		result.append( "/Add/String", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
+
+		return result
+
+	def __addPlug( self, plugType ) :
+
+		d = GafferUI.TextInputDialogue( initialText = "unnamed", title = "Enter name", confirmLabel = "Create" )
+		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
+		d.setVisible( False )
+
+		if not name :
+			return
+
+		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
+			plug = plugType( name )
+			self.getPlug().addChild( plug )
+
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", UserPlugValueWidget )

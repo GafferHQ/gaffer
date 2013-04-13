@@ -79,6 +79,9 @@ class PathWidget( GafferUI.TextWidget ) :
 		return self.__path
 	
 	def __keyPress( self, widget, event ) :
+		
+		if not self.getEditable() :
+			return False
 								
 		if event.key=="Tab" :
 
@@ -136,7 +139,8 @@ class PathWidget( GafferUI.TextWidget ) :
 	
 		assert( widget is self )
 		
-		self.__popupMenuForSelection()
+		if self.getEditable() :
+			self.__popupMenuForSelection()
 
 	def __popupMenuForSelection( self ) :
 					

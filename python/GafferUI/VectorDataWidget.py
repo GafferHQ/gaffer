@@ -157,6 +157,15 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.setData( data )
 		self.setEditable( editable )
 	
+	def setHighlighted( self, highlighted ) :
+		
+		if highlighted == self.getHighlighted() :
+			return
+			
+		self.__tableView.setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
+		
+		GafferUI.Widget.setHighlighted( self, highlighted )
+				
 	def setData( self, data ) :
 		
 		# it could be argued that we should early out here if data is self.getData(),
