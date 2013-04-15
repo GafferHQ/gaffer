@@ -83,7 +83,7 @@ class UserPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 			return
 
 		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
-			plug = plugType( name )
+			plug = plugType( name, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			self.getPlug().addChild( plug )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", UserPlugValueWidget )

@@ -1,3 +1,5 @@
+* Fixed save/load of user plugs created via the UI (#174).
+
 0.58.0
 ======
 
