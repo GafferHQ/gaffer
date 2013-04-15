@@ -1,3 +1,6 @@
+0.58.0
+======
+
 * Fixed creation of nodes within Boxes - previously they were added below the root of the script rather than inside the box.
 
 * Fixed unstable scene hierarchy expansion (issue #120).
@@ -17,6 +20,14 @@
 * Added right-click context menus to enum and checkbox plug uis.
 
 * Added Box plug-promotion feature (#142).
+
+* Removed Gaffer.GroupNode (#164).
+
+* Fixed ordering of parameters in RenderManShader UI (#136).
+
+* Fixed banding and dark edges evident in 2D viewer (#74).
+
+* Fixed awkward zooming of Viewers and NodeGraph (#46).
 
 0.57.0
 ======
