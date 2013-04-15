@@ -56,6 +56,10 @@ class IncrementingPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		pass
 	
+	def hasLabel( self ) :
+	
+		return True
+	
 	def __clicked( self, widget ) :
 	
 		assert( widget is self.__button )
