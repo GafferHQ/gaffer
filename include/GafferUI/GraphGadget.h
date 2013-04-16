@@ -150,7 +150,7 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadgets( const Gaffer::GraphComponent *plugParent );
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
-		ConnectionGadget *connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect = false ) const;
+		ConnectionGadget *connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const;
 		void updateDragReconnectCandidate( const DragDropEvent &event );
 		
 		Gaffer::NodePtr m_root;

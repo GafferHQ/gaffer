@@ -256,10 +256,10 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 
 ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
 {
-	return connectionGadgetAtOrBelow( lineInGadgetSpace, false );
+	return connectionGadgetAt( lineInGadgetSpace, false );
 }
 
-ConnectionGadget *GraphGadget::connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const
+ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const
 {
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	
@@ -693,7 +693,7 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		return;
 	}
 	
-	m_dragReconnectCandidate = connectionGadgetAtOrBelow( event.line, true );
+	m_dragReconnectCandidate = connectionGadgetAt( event.line, true );
 	if ( !m_dragReconnectCandidate )
 	{
 		return;
