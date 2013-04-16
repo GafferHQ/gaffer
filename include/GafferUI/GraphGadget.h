@@ -151,7 +151,8 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
 		ConnectionGadget *connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect = false ) const;
-	
+		void updateDragReconnectCandidate( const DragDropEvent &event );
+		
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
 		GraphGadgetSignal m_rootChangedSignal;

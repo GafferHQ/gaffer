@@ -666,66 +666,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		V2f pos = V2f( i.x, i.y );
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
-		
-		m_dragReconnectCandidate = 0;
-		m_dragReconnectSrcNodule = 0;
-		m_dragReconnectDstNodule = 0;
-		
-		if ( m_scriptNode->selection()->size() == 1 )
-		{
-			m_dragReconnectCandidate = connectionGadgetAtOrBelow( event.line, true );
-			if ( m_dragReconnectCandidate )
-			{
-				// make sure the connection applies to this node.
-				Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_scriptNode->selection()->member( 0 ) );
-				NodeGadget *selNodeGadget = nodeGadget( node );
-				if ( node && selNodeGadget )
-				{
-					Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
-					Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
-					
-					if ( srcPlug->node() != node && dstPlug->node() != node )
-					{
-						/// \todo Use InputPlugIterator when it provides non-const access to the Plug
-						GraphComponent::ChildIterator cIt = node->children().begin();
-						GraphComponent::ChildIterator cEnd = node->children().end();
-						for ( ; cIt != cEnd; ++cIt )
-						{
-							Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
-							if ( p && p->direction() == Gaffer::Plug::In && !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
-							{
-								m_dragReconnectDstNodule = selNodeGadget->nodule( p );
-								if ( m_dragReconnectDstNodule )
-								{
-									break;
-								}
-							}
-						}
-
-						/// \todo Use OutputPlugIterator when it provides non-const access to the Plug
-						cIt = node->children().begin();
-						for ( ; cIt != cEnd; ++cIt )
-						{
-							Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
-							if ( p && p->direction() == Gaffer::Plug::Out && dstPlug->acceptsInput( p ) )
-							{
-								m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
-								if ( m_dragReconnectSrcNodule )
-								{
-									break;
-								}
-							}
-						}
-					}
-				}
-				
-				if ( !m_dragReconnectSrcNodule && !m_dragReconnectDstNodule )
-				{
-					m_dragReconnectCandidate = 0;
-				}
-			}
-		}
-		
+		updateDragReconnectCandidate( event );
 		renderRequestSignal()( this );
 		return true;
 	}
@@ -739,6 +680,78 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		
 	assert( 0 ); // shouldn't get here
 	return false;
+}
+
+void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
+{
+	m_dragReconnectCandidate = 0;
+	m_dragReconnectSrcNodule = 0;
+	m_dragReconnectDstNodule = 0;
+	
+	if ( m_scriptNode->selection()->size() != 1 )
+	{
+		return;
+	}
+	
+	m_dragReconnectCandidate = connectionGadgetAtOrBelow( event.line, true );
+	if ( !m_dragReconnectCandidate )
+	{
+		return;
+	}
+	
+	// make sure the connection applies to this node.
+	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_scriptNode->selection()->member( 0 ) );
+	NodeGadget *selNodeGadget = nodeGadget( node );
+	if ( !node || !selNodeGadget )
+	{
+		m_dragReconnectCandidate = 0;
+		return;
+	}
+	
+	// we don't want to reconnect the selected node to itself
+	Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+	Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
+	if ( srcPlug->node() == node || dstPlug->node() == node )
+	{
+		m_dragReconnectCandidate = 0;
+		return;
+	}
+	
+	/// \todo Use InputPlugIterator when it provides non-const access to the Plug
+	GraphComponent::ChildIterator cIt = node->children().begin();
+	GraphComponent::ChildIterator cEnd = node->children().end();
+	for ( ; cIt != cEnd; ++cIt )
+	{
+		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
+		if ( p && p->direction() == Gaffer::Plug::In && !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
+		{
+			m_dragReconnectDstNodule = selNodeGadget->nodule( p );
+			if ( m_dragReconnectDstNodule )
+			{
+				break;
+			}
+		}
+	}
+
+	/// \todo Use OutputPlugIterator when it provides non-const access to the Plug
+	cIt = node->children().begin();
+	for ( ; cIt != cEnd; ++cIt )
+	{
+		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
+		if ( p && p->direction() == Gaffer::Plug::Out && dstPlug->acceptsInput( p ) )
+		{
+			m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
+			if ( m_dragReconnectSrcNodule )
+			{
+				break;
+			}
+		}
+	}
+		
+	if ( !m_dragReconnectSrcNodule && !m_dragReconnectDstNodule )
+	{
+		m_dragReconnectCandidate = 0;
+	}
 }
 
 bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
