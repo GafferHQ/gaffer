@@ -10,6 +10,8 @@
 
 * Fixed MeshType::affects() (#175).
 
+* Added drag and drop node connection re-wiring (#78).
+
 0.58.0
 ======
 
