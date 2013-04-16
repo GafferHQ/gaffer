@@ -2,6 +2,12 @@
 
 * Fixed UI for generic Options and Attributes nodes.
 
+* Removed collapsibility of Transform node's transform plug as it just cluttered up the UI.
+
+* Removed collapsibility of Attribute node's attributes plug as it just cluttered up the UI.
+
+* Removed collapsibility of Lights node's parameters plug as it just cluttered up the UI.
+
 0.58.0
 ======
 
