@@ -16,6 +16,8 @@
 
 * Improved SceneInspector numeric formatting (#88).
 
+* Added drag and drop node connection re-wiring (#78).
+
 0.58.0
 ======
 

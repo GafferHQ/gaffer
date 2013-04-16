@@ -99,6 +99,11 @@ static NodeGadgetPtr nodeGadgetAt( GraphGadget &g, const IECore::LineSegment3f l
 	return g.nodeGadgetAt( lineSegmentInGadgetSpace );
 }
 
+static ConnectionGadgetPtr connectionGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
+{
+	return g.connectionGadgetAt( lineSegmentInGadgetSpace );
+}
+
 void GafferUIBindings::bindGraphGadget()
 {
 	scope s = IECorePython::RunTimeTypedClass<GraphGadget>()
@@ -116,6 +121,7 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "setLayout", &setLayout )
 		.def( "getLayout", &getLayout )
 		.def( "nodeGadgetAt", &nodeGadgetAt )
+		.def( "connectionGadgetAt", &connectionGadgetAt )
 	;
 
 	GafferBindings::SignalBinder<GraphGadget::GraphGadgetSignal, GafferBindings::DefaultSignalCaller<GraphGadget::GraphGadgetSignal>, GraphGadgetSlotCaller>::bind( "GraphGadgetSignal" );	
