@@ -10,6 +10,12 @@
 
 * Fixed MeshType::affects() (#175).
 
+* Fixed SceneInspector update (#176).
+
+* Improved SceneInspector shader representation (#147).
+
+* Improved SceneInspector numeric formatting (#88).
+
 0.58.0
 ======
 

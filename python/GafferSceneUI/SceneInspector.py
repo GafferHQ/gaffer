@@ -41,8 +41,6 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-## \todo Need to update when plugs are dirtied.
-## \todo Decent representation of shaders.
 ## \todo Make the label column fixed width.
 ## \todo Have links to show you where in the hierarchy an attribute was set
 ## and to take you to the node that set it.
@@ -56,8 +54,9 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		with column :
 			with GafferUI.ScrolledContainer() :
-				self.__textWidget = GafferUI.Label()#MultiLineTextWidget( editable = False )
+				self.__textWidget = GafferUI.Label()
 		
+		self.__pendingUpdate = False
 		self._updateFromSet()
 				
 	def __repr__( self ) :
@@ -67,6 +66,14 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	def _updateFromSet( self ) :
 		
 		GafferUI.NodeSetEditor._updateFromSet( self )
+
+		self.__scenePlugs = []
+		self.__plugDirtiedConnections = []
+		for node in self.getNodeSet()[-2:] :
+			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ]
+			if len( outputScenePlugs ) :
+				self.__scenePlugs.append( outputScenePlugs[0] )
+				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
 
 		self.__update()
 				
@@ -78,23 +85,30 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 2, _reverseNodes = True, _ellipsis = False )
 	
-	def __update( self ) :
+	def __plugDirtied( self, plug ) :
+
+		if self.__pendingUpdate :
+			return
 			
-		scenePlugs = []
-		for node in self.getNodeSet()[-2:] :
-			scenePlugs.extend( [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ] )
+		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
+			self.__pendingUpdate = True
+			GafferUI.EventLoop.addIdleCallback( self.__update )
+
+	def __update( self ) :
+
+		self.__pendingUpdate = False
 
 		selectedPaths = self.getContext().get( "ui:scene:selectedPaths", [] )
 
 		self.__textWidget.setText( "" )
 		
-		numCombinations = len( scenePlugs ) * len( selectedPaths )
+		numCombinations = len( self.__scenePlugs ) * len( selectedPaths )
 		if numCombinations == 0 or numCombinations > 2 :
 			return
 		
 		inspections = []
 		with self.getContext() :
-			for scenePlug in scenePlugs :
+			for scenePlug in self.__scenePlugs :
 				for path in selectedPaths :
 					inspections.append( self.__inspect( scenePlug, path ) )
 				
@@ -122,6 +136,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 						
 		self.__textWidget.setText( html )
 	
+		return False # remove idle callback
+
 	def __inspect( self, plug, path ) :
 	
 		# basic info
@@ -187,33 +203,36 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 							
 		if len( inspections ) == 1 :
 			if key in inspections[0] :
-				self.__appendRow( rows, label, self.__formatValue( inspections[0][key] ) )
+				self.__appendRow( rows, label, self.__formatValue( inspections[0][key], key ) )
 		elif key in inspections[0] and key in inspections[1] and inspections[0][key] == inspections[1][key] :
-			self.__appendRow( rows, label, self.__formatValue( inspections[0][key] ) )
+			self.__appendRow( rows, label, self.__formatValue( inspections[0][key], key ) )
 		else :
 	
 			diff = "<table>"
 			
 			if key in inspections[0] :
 				diff += "<tr>"
-				diff += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][key] )
+				diff += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][key], key )
 				diff += "</tr>"
 				
 			if key in inspections[1] :
 				diff += "<tr>"
-				diff += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][key] )
+				diff += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][key], key )
 				diff += "</tr>"
 				
 			diff += "</table>"
 
 			self.__appendRow( rows, label, diff )
 	
-	def __formatValue( self, value ) :
+	# key is used as a formatting hint, it is not actually output in the format.
+	def __formatValue( self, value, key = "" ) :
 	
 		if isinstance( value, ( IECore.M44f, IECore.M44d ) ) :
 			return self.__formatMatrix( value )
 		elif isinstance( value, ( IECore.Box3f, IECore.Box3d ) ) :
 			return self.__formatBox( value )
+		elif isinstance( value, IECore.ObjectVector ) and key.startswith( "attr:" ) and key.endswith( ":shader" ) :
+			return value[-1].name
 		else :
 			return str( value )
 	
@@ -223,7 +242,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		for i in range( 0, 4 ) :
 			result += "<tr>"
 			for j in range( 0, 4 ) :
-				result += "<td>" + str( matrix[i,j] ) + "</td>"
+				result += "<td>" + self.__formatFloat( matrix[i,j] ) + "</td>"
 			result += "</tr>"
 		result += "</table>"
 		
@@ -238,10 +257,14 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		for v in ( box.min, box.max ) :
 			result += "<tr>"
 			for i in range( 0, 3 ) :
-				result += "<td>" + str( v[i] ) + "</td>"
+				result += "<td>" + self.__formatFloat( v[i] ) + "</td>"
 			result += "</tr>"
 		result += "</table>"
 		
 		return result
+
+	def __formatFloat( self, value ) :
+
+		return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
