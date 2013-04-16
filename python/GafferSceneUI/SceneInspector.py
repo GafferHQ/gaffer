@@ -41,7 +41,6 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-## \todo Need to update when plugs are dirtied.
 ## \todo Decent representation of shaders.
 ## \todo Make the label column fixed width.
 ## \todo Have links to show you where in the hierarchy an attribute was set
@@ -56,8 +55,9 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		with column :
 			with GafferUI.ScrolledContainer() :
-				self.__textWidget = GafferUI.Label()#MultiLineTextWidget( editable = False )
+				self.__textWidget = GafferUI.Label()
 		
+		self.__pendingUpdate = False
 		self._updateFromSet()
 				
 	def __repr__( self ) :
@@ -67,6 +67,14 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	def _updateFromSet( self ) :
 		
 		GafferUI.NodeSetEditor._updateFromSet( self )
+
+		self.__scenePlugs = []
+		self.__plugDirtiedConnections = []
+		for node in self.getNodeSet()[-2:] :
+			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ]
+			if len( outputScenePlugs ) :
+				self.__scenePlugs.append( outputScenePlugs[0] )
+				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
 
 		self.__update()
 				
@@ -78,23 +86,30 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 2, _reverseNodes = True, _ellipsis = False )
 	
-	def __update( self ) :
+	def __plugDirtied( self, plug ) :
+
+		if self.__pendingUpdate :
+			return
 			
-		scenePlugs = []
-		for node in self.getNodeSet()[-2:] :
-			scenePlugs.extend( [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ] )
+		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
+			self.__pendingUpdate = True
+			GafferUI.EventLoop.addIdleCallback( self.__update )
+
+	def __update( self ) :
+
+		self.__pendingUpdate = False
 
 		selectedPaths = self.getContext().get( "ui:scene:selectedPaths", [] )
 
 		self.__textWidget.setText( "" )
 		
-		numCombinations = len( scenePlugs ) * len( selectedPaths )
+		numCombinations = len( self.__scenePlugs ) * len( selectedPaths )
 		if numCombinations == 0 or numCombinations > 2 :
 			return
 		
 		inspections = []
 		with self.getContext() :
-			for scenePlug in scenePlugs :
+			for scenePlug in self.__scenePlugs :
 				for path in selectedPaths :
 					inspections.append( self.__inspect( scenePlug, path ) )
 				
@@ -122,6 +137,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 						
 		self.__textWidget.setText( html )
 	
+		return False # remove idle callback
+
 	def __inspect( self, plug, path ) :
 	
 		# basic info

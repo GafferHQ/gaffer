@@ -10,6 +10,8 @@
 
 * Fixed MeshType::affects() (#175).
 
+* Fixed SceneInspector update (#176).
+
 0.58.0
 ======
 
