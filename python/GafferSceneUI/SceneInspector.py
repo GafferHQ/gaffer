@@ -242,7 +242,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		for i in range( 0, 4 ) :
 			result += "<tr>"
 			for j in range( 0, 4 ) :
-				result += "<td>" + str( matrix[i,j] ) + "</td>"
+				result += "<td>" + self.__formatFloat( matrix[i,j] ) + "</td>"
 			result += "</tr>"
 		result += "</table>"
 		
@@ -257,10 +257,14 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		for v in ( box.min, box.max ) :
 			result += "<tr>"
 			for i in range( 0, 3 ) :
-				result += "<td>" + str( v[i] ) + "</td>"
+				result += "<td>" + self.__formatFloat( v[i] ) + "</td>"
 			result += "</tr>"
 		result += "</table>"
 		
 		return result
+
+	def __formatFloat( self, value ) :
+
+		return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
