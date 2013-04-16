@@ -72,7 +72,7 @@ IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 static const IECore::InternedString g_enabledPlugName( "enabled" );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragCoveredConnection( 0 ), m_dragConnectSrcNodule( 0 ), m_dragConnectDstNodule( 0 )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( 0 ), m_dragReconnectSrcNodule( 0 ), m_dragReconnectDstNodule( 0 )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -259,13 +259,13 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 	return connectionGadgetAtOrBelow( lineInGadgetSpace, false );
 }
 
-ConnectionGadget *GraphGadget::connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool xray ) const
+ConnectionGadget *GraphGadget::connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const
 {
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	
 	std::vector<GadgetPtr> gadgetsUnderMouse;
 	
-	if ( xray )
+	if ( forReconnect )
 	{
 		std::vector<IECoreGL::HitRecord> selection;
 		{
@@ -331,33 +331,33 @@ void GraphGadget::doRender( const Style *style ) const
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
 		ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() );
-		if ( c && c != m_dragCoveredConnection )
+		if ( c && c != m_dragReconnectCandidate )
 		{
 			c->render( style );
 		}
 	}
 
 	// render the new drag connections if they exist
-	if ( m_dragCoveredConnection )
+	if ( m_dragReconnectCandidate )
 	{
-		if ( m_dragConnectDstNodule )
+		if ( m_dragReconnectDstNodule )
 		{
-			const Nodule *srcNodule = m_dragCoveredConnection->srcNodule();
+			const Nodule *srcNodule = m_dragReconnectCandidate->srcNodule();
 			const NodeGadget *srcNodeGadget = nodeGadget( srcNodule->plug()->node() );
 			const Imath::V3f srcP = srcNodule->fullTransform( this ).translation();
-			const Imath::V3f dstP = m_dragConnectDstNodule->fullTransform( this ).translation();
-			const Imath::V3f dstTangent = nodeGadget( m_dragConnectDstNodule->plug()->node() )->noduleTangent( m_dragConnectDstNodule );
+			const Imath::V3f dstP = m_dragReconnectDstNodule->fullTransform( this ).translation();
+			const Imath::V3f dstTangent = nodeGadget( m_dragReconnectDstNodule->plug()->node() )->noduleTangent( m_dragReconnectDstNodule );
 			/// \todo: can there be a highlighted/dashed state?
 			style->renderConnection( srcP, srcNodeGadget->noduleTangent( srcNodule ), dstP, dstTangent, Style::HighlightedState );
 		}
 		
-		if ( m_dragConnectSrcNodule )
+		if ( m_dragReconnectSrcNodule )
 		{
-			const Nodule *dstNodule = m_dragCoveredConnection->dstNodule();
+			const Nodule *dstNodule = m_dragReconnectCandidate->dstNodule();
 			const NodeGadget *dstNodeGadget = nodeGadget( dstNodule->plug()->node() );
-			const Imath::V3f srcP = m_dragConnectSrcNodule->fullTransform( this ).translation();
+			const Imath::V3f srcP = m_dragReconnectSrcNodule->fullTransform( this ).translation();
 			const Imath::V3f dstP = dstNodule->fullTransform( this ).translation();
-			const Imath::V3f srcTangent = nodeGadget( m_dragConnectSrcNodule->plug()->node() )->noduleTangent( m_dragConnectSrcNodule );
+			const Imath::V3f srcTangent = nodeGadget( m_dragReconnectSrcNodule->plug()->node() )->noduleTangent( m_dragReconnectSrcNodule );
 			/// \todo: can there be a highlighted/dashed state?
 			style->renderConnection( srcP, srcTangent, dstP, dstNodeGadget->noduleTangent( dstNodule ), Style::HighlightedState );
 		}
@@ -667,22 +667,22 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
 		
-		m_dragCoveredConnection = 0;
-		m_dragConnectSrcNodule = 0;
-		m_dragConnectDstNodule = 0;
+		m_dragReconnectCandidate = 0;
+		m_dragReconnectSrcNodule = 0;
+		m_dragReconnectDstNodule = 0;
 		
 		if ( m_scriptNode->selection()->size() == 1 )
 		{
-			m_dragCoveredConnection = connectionGadgetAtOrBelow( event.line, true );
-			if ( m_dragCoveredConnection )
+			m_dragReconnectCandidate = connectionGadgetAtOrBelow( event.line, true );
+			if ( m_dragReconnectCandidate )
 			{
 				// make sure the connection applies to this node.
 				Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_scriptNode->selection()->member( 0 ) );
 				NodeGadget *selNodeGadget = nodeGadget( node );
 				if ( node && selNodeGadget )
 				{
-					Gaffer::Plug *srcPlug = m_dragCoveredConnection->srcNodule()->plug();
-					Gaffer::Plug *dstPlug = m_dragCoveredConnection->dstNodule()->plug();
+					Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+					Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
 					
 					if ( srcPlug->node() != node && dstPlug->node() != node )
 					{
@@ -694,8 +694,8 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 							Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
 							if ( p && p->direction() == Gaffer::Plug::In && !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
 							{
-								m_dragConnectDstNodule = selNodeGadget->nodule( p );
-								if ( m_dragConnectDstNodule )
+								m_dragReconnectDstNodule = selNodeGadget->nodule( p );
+								if ( m_dragReconnectDstNodule )
 								{
 									break;
 								}
@@ -709,8 +709,8 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 							Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
 							if ( p && p->direction() == Gaffer::Plug::Out && dstPlug->acceptsInput( p ) )
 							{
-								m_dragConnectSrcNodule = selNodeGadget->nodule( p );
-								if ( m_dragConnectSrcNodule )
+								m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
+								if ( m_dragReconnectSrcNodule )
 								{
 									break;
 								}
@@ -719,9 +719,9 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 					}
 				}
 				
-				if ( !m_dragConnectSrcNodule && !m_dragConnectDstNodule )
+				if ( !m_dragReconnectSrcNodule && !m_dragReconnectDstNodule )
 				{
-					m_dragCoveredConnection = 0;
+					m_dragReconnectCandidate = 0;
 				}
 			}
 		}
@@ -759,29 +759,29 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	
 	if( dragMode == Moving )
 	{
-		if ( m_dragCoveredConnection )
+		if ( m_dragReconnectCandidate )
 		{
-			if ( m_dragConnectDstNodule || m_dragConnectSrcNodule )
+			if ( m_dragReconnectDstNodule || m_dragReconnectSrcNodule )
 			{
-				Gaffer::Plug *srcPlug = m_dragCoveredConnection->srcNodule()->plug();
-				Gaffer::Plug *dstPlug = m_dragCoveredConnection->dstNodule()->plug();
+				Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+				Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
 				
 				Gaffer::UndoContext undoContext( m_scriptNode );
 				
-				if ( m_dragConnectDstNodule )
+				if ( m_dragReconnectDstNodule )
 				{
-					m_dragConnectDstNodule->plug()->setInput( srcPlug );
+					m_dragReconnectDstNodule->plug()->setInput( srcPlug );
 					dstPlug->setInput( 0 );
 				}
 
-				if ( m_dragConnectSrcNodule )
+				if ( m_dragReconnectSrcNodule )
 				{
-					dstPlug->setInput( m_dragConnectSrcNodule->plug() );
+					dstPlug->setInput( m_dragReconnectSrcNodule->plug() );
 				}
 			}
 		}
 		
-		m_dragCoveredConnection = 0;
+		m_dragReconnectCandidate = 0;
 		renderRequestSignal()( this );
 	}
 	else if( dragMode == Selecting )

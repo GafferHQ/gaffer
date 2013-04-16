@@ -150,7 +150,7 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadgets( const Gaffer::GraphComponent *plugParent );
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
-		ConnectionGadget *connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool xray = false ) const;
+		ConnectionGadget *connectionGadgetAtOrBelow( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect = false ) const;
 	
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
@@ -185,9 +185,9 @@ class GraphGadget : public ContainerGadget
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
 		DragMode m_dragMode;
-		ConnectionGadget *m_dragCoveredConnection;
-		Nodule *m_dragConnectSrcNodule;
-		Nodule *m_dragConnectDstNodule;
+		ConnectionGadget *m_dragReconnectCandidate;
+		Nodule *m_dragReconnectSrcNodule;
+		Nodule *m_dragReconnectDstNodule;
 		
 		GraphLayoutPtr m_layout;
 		
