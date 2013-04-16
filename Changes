@@ -12,6 +12,8 @@
 
 * Fixed SceneInspector update (#176).
 
+* Improved SceneInspector shader representation (#147).
+
 0.58.0
 ======
 

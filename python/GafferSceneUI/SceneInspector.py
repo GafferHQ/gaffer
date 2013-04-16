@@ -204,33 +204,36 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 							
 		if len( inspections ) == 1 :
 			if key in inspections[0] :
-				self.__appendRow( rows, label, self.__formatValue( inspections[0][key] ) )
+				self.__appendRow( rows, label, self.__formatValue( inspections[0][key], key ) )
 		elif key in inspections[0] and key in inspections[1] and inspections[0][key] == inspections[1][key] :
-			self.__appendRow( rows, label, self.__formatValue( inspections[0][key] ) )
+			self.__appendRow( rows, label, self.__formatValue( inspections[0][key], key ) )
 		else :
 	
 			diff = "<table>"
 			
 			if key in inspections[0] :
 				diff += "<tr>"
-				diff += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][key] )
+				diff += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][key], key )
 				diff += "</tr>"
 				
 			if key in inspections[1] :
 				diff += "<tr>"
-				diff += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][key] )
+				diff += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][key], key )
 				diff += "</tr>"
 				
 			diff += "</table>"
 
 			self.__appendRow( rows, label, diff )
 	
-	def __formatValue( self, value ) :
+	# key is used as a formatting hint, it is not actually output in the format.
+	def __formatValue( self, value, key = "" ) :
 	
 		if isinstance( value, ( IECore.M44f, IECore.M44d ) ) :
 			return self.__formatMatrix( value )
 		elif isinstance( value, ( IECore.Box3f, IECore.Box3d ) ) :
 			return self.__formatBox( value )
+		elif isinstance( value, IECore.ObjectVector ) and key.startswith( "attr:" ) and key.endswith( ":shader" ) :
+			return value[-1].name
 		else :
 			return str( value )
 	
