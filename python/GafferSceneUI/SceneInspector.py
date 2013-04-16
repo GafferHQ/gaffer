@@ -41,7 +41,6 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-## \todo Decent representation of shaders.
 ## \todo Make the label column fixed width.
 ## \todo Have links to show you where in the hierarchy an attribute was set
 ## and to take you to the node that set it.
