@@ -289,11 +289,11 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		nSelected = len( self.__selectedLabels )
 		if nEntries == 0 :
 			name = "none"
-		elif nSelected == nEntries :
-			name = "all"
 		elif nSelected == 0 :
 			name = "none"
 		elif nSelected == 1 :
 			name = self.getSelection()[0]
+		elif nSelected == nEntries :
+			name = "all"
 		self._qtWidget().setText(name)
 
