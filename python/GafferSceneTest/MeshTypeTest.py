@@ -40,6 +40,8 @@ import os
 import IECore
 
 import Gaffer
+import GafferTest
+
 import GafferScene
 import GafferSceneTest
 
@@ -111,6 +113,15 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( d["out"] )
 		self.failUnless( isinstance( d["out"].object( "/camera" ), IECore.Camera ) )
 		self.assertEqual( d["out"].object( "/camera" ), c["out"].object( "/camera" ) )
+
+	def testEnabledPlugAffects( self ) :
+
+		n = GafferScene.MeshType()
+		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
+
+		n["enabled"].setValue( False )
+		self.assertTrue( len( cs ) )
+		self.assertTrue( cs[1][0].isSame( n["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

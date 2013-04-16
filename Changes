@@ -8,6 +8,8 @@
 
 * Removed collapsibility of Lights node's parameters plug as it just cluttered up the UI.
 
+* Fixed MeshType::affects() (#175).
+
 0.58.0
 ======
 

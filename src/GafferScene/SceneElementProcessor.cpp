@@ -60,6 +60,8 @@ SceneElementProcessor::~SceneElementProcessor()
 		
 void SceneElementProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
+	/// \todo Our base classes will say that enabledPlug() affects all children of outPlug() - perhaps
+	/// we can do better by affecting only the plugs we know we're going to process?
 	FilteredSceneProcessor::affects( input, outputs );
 	
 	const ScenePlug *in = inPlug();
