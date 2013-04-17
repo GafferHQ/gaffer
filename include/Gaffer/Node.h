@@ -40,12 +40,11 @@
 
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/FilteredChildIterator.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Plug )
-IE_CORE_FORWARDDECLARE( ValuePlug )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 IE_CORE_FORWARDDECLARE( ScriptNode )
 
@@ -100,7 +99,24 @@ class Node : public GraphComponent
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-						
+		
+		/// @name Enable/Disable Behaviour
+		/// Nodes can optionally define a means of being enabled and disabled.
+		/// If they do, then they can also specify an input plug corresponding
+		/// to each output plug. By providing a corresponding plug, the node
+		/// is promising that the input will pass-through to the output in some
+		/// meaningful way when the node is disabled.
+		//////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the enable plug, or 0 if this node is not disable-able.
+		virtual BoolPlug *enabledPlug();
+		virtual const BoolPlug *enabledPlug() const;
+		/// Returns the input plug corresponding to the given output plug. Note that each
+		/// node is responsible for ensuring that this correspondence is respected.
+		virtual Plug *correspondingInput( const Plug *output );
+		virtual const Plug *correspondingInput( const Plug *output ) const;
+		//@}
+	
 	protected :
 
 		/// May be overridden to restrict the inputs that plugs on this node will

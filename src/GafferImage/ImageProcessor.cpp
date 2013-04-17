@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,6 +64,26 @@ ImagePlug *ImageProcessor::inPlug()
 const ImagePlug *ImageProcessor::inPlug() const
 {
 	return getChild<ImagePlug>( g_firstPlugIndex );
+}
+
+Plug *ImageProcessor::correspondingInput( const Plug *output )
+{
+	if ( output == outPlug() )
+	{
+		return inPlug();
+	}
+	
+	return ImageNode::correspondingInput( output );
+}
+
+const Plug *ImageProcessor::correspondingInput( const Plug *output ) const
+{
+	if ( output == outPlug() )
+	{
+		return inPlug();
+	}
+	
+	return ImageNode::correspondingInput( output );
 }
 
 void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

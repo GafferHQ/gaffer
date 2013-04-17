@@ -90,7 +90,14 @@ class ConstantTest( unittest.TestCase ) :
 		h1 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 		h2 = c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
 		self.assertEqual( h1, h2 )
+	
+	def testEnableBehaviour( self ) :
 		
+		c = GafferImage.Constant()
+		self.assertTrue( c.enabledPlug().isSame( c["enabled"] ) )
+		self.assertEqual( c.correspondingInput( c["out"] ), None )
+		self.assertEqual( c.correspondingInput( c["color"] ), None )
+		self.assertEqual( c.correspondingInput( c["format"] ), None )
 		
 if __name__ == "__main__":
 	unittest.main()
