@@ -93,16 +93,6 @@ static ScriptNodePtr scriptNode( Node &node )
 	return node.scriptNode();
 }
 
-static BoolPlugPtr enabledPlug( Node &node )
-{
-	return node.enabledPlug();
-}
-
-static PlugPtr correspondingInput( Node &node, const Plug *output )
-{
-	return node.correspondingInput( output );
-}
-
 bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 {
 	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
@@ -123,8 +113,6 @@ void GafferBindings::bindNode()
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
 		.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
 		.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
-		.def( "enabledPlug", &enabledPlug )
-		.def( "correspondingInput", &correspondingInput )
 	;
 	
 	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >::bind( "UnaryPlugSignal" );
