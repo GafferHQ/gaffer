@@ -2,6 +2,8 @@
 
 * Fixed UI for generic Options and Attributes nodes.
 
+* Fixed dirty propagation for Light nodes.
+
 0.58.0
 ======
 
