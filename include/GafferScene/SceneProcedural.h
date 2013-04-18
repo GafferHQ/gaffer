@@ -78,8 +78,8 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath );
 		
-		/// This class must hold a reference to the script node, to prevent it from being destroyed by the python
-		/// garbage collector in certain situations...
+		/// This class must hold a reference to the script node, to prevent it from being destroyed mid render
+		/// in certain situations...
 		Gaffer::ScriptNodePtr m_scriptNode;
 		
 		ScenePlugPtr m_scenePlug;

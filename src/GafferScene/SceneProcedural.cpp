@@ -59,7 +59,7 @@ using namespace GafferScene;
 SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::PathMatcherData *pathsToExpand )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 )
 {
-	// get a reference to the script node to prevent it being destroyed by the python garbage collector:
+	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
 	
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
@@ -94,7 +94,7 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ),
 		m_pathsToExpand( other.m_pathsToExpand ), m_options( other.m_options ), m_attributes( other.m_attributes )
 {
-	// get a reference to the script node to prevent it being destroyed by the python garbage collector:
+	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
 	
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
