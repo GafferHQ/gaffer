@@ -145,7 +145,7 @@ class ScriptNode : public Node
 		/// and unselected - this function is just a convenience method
 		/// for efficiently deleting many nodes at once.
 		/// \undoable
-		void deleteNodes( Node *parent = 0, const Set *filter = 0 );
+		void deleteNodes( Node *parent = 0, const Set *filter = 0, bool reconnect = true );
 		//@}
 		
 		//! @name Script evaluation

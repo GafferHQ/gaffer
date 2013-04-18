@@ -18,6 +18,8 @@
 
 * Added drag and drop node connection re-wiring (#78).
 
+* Deleting nodes attempts to rebuild the network to act as if the deleted nodes had been disabled (#95).
+
 0.58.0
 ======
 

@@ -46,18 +46,31 @@ class AddNode( Gaffer.DependencyNode ) :
 
 		p1 = Gaffer.IntPlug( "op1", Gaffer.Plug.Direction.In )
 		p2 = Gaffer.IntPlug( "op2", Gaffer.Plug.Direction.In )
-
+		
+		self.addChild( Gaffer.BoolPlug( "enabled", defaultValue = True ) )
 		self.addChild( p1 )
 		self.addChild( p2 )
 
 		p3 = Gaffer.IntPlug( "sum", Gaffer.Plug.Direction.Out )
 
 		self.addChild( p3 )
+	
+	def enabledPlug( self ) :
 		
+		return self["enabled"]
+	
+	def correspondingInput( self, output ) :
+		
+		if output.isSame( self["sum"] ) :
+			
+			return self["op1"]
+		
+		return Gaffer.DependencyNode.correspondingInput( self, output )
+	
 	def affects( self, input ) :
 		
 		outputs = []
-		if input.getName() in ( "op1", "op2" ) :
+		if input.getName() in ( "enabled", "op1", "op2" ) :
 			outputs.append( self.getChild( "sum" ) )
 
 		return outputs
@@ -65,7 +78,8 @@ class AddNode( Gaffer.DependencyNode ) :
 	def hash( self, output, context, h ) :
 	
 		assert( output.isSame( self.getChild( "sum" ) ) or plug.getFlags() & plug.Flags.Dynamic )
-
+		
+		self.getChild("enabled").hash( h )
 		self.getChild("op1").hash( h )
 		self.getChild("op2").hash( h )	
 
@@ -78,7 +92,10 @@ class AddNode( Gaffer.DependencyNode ) :
 		assert( plug.settable() )
 		assert( not self["op1"].settable() )
 		assert( not self["op2"].settable() )
-
-		plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
+		
+		if self["enabled"].getValue() :
+			plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
+		else :
+			plug.setValue( self.getChild("op1").getValue() )
 
 IECore.registerRunTimeTyped( AddNode )
