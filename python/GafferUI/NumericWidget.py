@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import math
+
 import Gaffer
 import GafferUI
 
@@ -59,7 +61,15 @@ class NumericWidget( GafferUI.TextWidget ) :
 		
 		self._qtWidget().setValidator( validator )
 		
+		self.__slideValue = None
+		self.__slideStart = None
+		
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 	
 	def setValue( self, value ) :
 	
@@ -140,7 +150,56 @@ class NumericWidget( GafferUI.TextWidget ) :
 			newIndex = 0
 			
 		self.setCursorPosition( newIndex )
-
+	
+	def __buttonPress( self, widget, event ) :
+		
+		if not self.getEditable() :
+			return False
+		
+		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
+			return False
+		
+		if event.modifiers != GafferUI.ModifiableEvent.Modifiers.Control and event.modifiers != GafferUI.ModifiableEvent.Modifiers.ShiftControl :
+			return False
+		
+		self.__slideValue = self.getValue()
+		return True
+	
+	def __dragBegin( self, widget, event ) :
+		
+		if self.__slideValue is None :
+			return False
+		
+		self.__slideStart = event.line.p0.x
+		return True
+	
+	def __dragEnter( self, widget, event ) :
+		
+		if widget is self and self.__slideStart is not None :
+			return True
+		
+		return False
+	
+	def __dragMove( self, widget, event ) : 
+		
+		move = event.line.p0.x - self.__slideStart
+		
+		offset = 0
+		## \todo: come up with an official scheme after some user testing
+		if event.modifiers == GafferUI.ModifiableEvent.Modifiers.Control :
+			offset = 0.01 * move
+		elif event.modifiers == GafferUI.ModifiableEvent.Modifiers.ShiftControl :
+			offset = 0.00001 * math.pow( move, 3 )
+		
+		self.setValue( self.__slideValue + offset )
+		return True
+	
+	def __dragEnd( self, widget, event ) :
+		
+		self.__slideValue = None
+		self.__slideStart = None
+		return True
+	
 	def __editingFinished( self, widget ) :
 	
 		assert( widget is self )
@@ -155,4 +214,3 @@ class NumericWidget( GafferUI.TextWidget ) :
 			return
 			
 		signal( self )
-
