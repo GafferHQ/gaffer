@@ -49,6 +49,7 @@ namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( Context )
+IE_CORE_FORWARDDECLARE( ScriptNode )
 
 } // namespace Gaffer
 
@@ -76,6 +77,10 @@ class SceneProcedural : public IECore::Renderer::Procedural
 	protected :
 		
 		SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath );
+		
+		/// This class must hold a reference to the script node, to prevent it from being destroyed mid render
+		/// in certain situations...
+		Gaffer::ScriptNodePtr m_scriptNode;
 		
 		ScenePlugPtr m_scenePlug;
 		Gaffer::ContextPtr m_context;
