@@ -219,12 +219,12 @@ class EventLoop() :
 
 		if resultCondition is not None :
 			resultCondition.acquire()
-			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( _UIThreadExecutor.executeEventType ) )
+			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( QtCore.QEvent.Type( _UIThreadExecutor.executeEventType ) ) )
 			resultCondition.wait()
 			resultCondition.release()
 			return resultCondition.resultValue
 		else :
-			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( _UIThreadExecutor.executeEventType ) )
+			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( QtCore.QEvent.Type( _UIThreadExecutor.executeEventType ) ) )
 			return None
 			
 	# This is a staticmethod rather than a classmethod because PySide 1.0.5
