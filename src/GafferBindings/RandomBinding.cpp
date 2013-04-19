@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -44,11 +45,16 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
+static Imath::Color3f randomColor( Random &r, int seed )
+{
+	return r.randomColor( (unsigned long int)seed );
+}
+
 void GafferBindings::bindRandom()
 {
 	
 	DependencyNodeClass<Random>()
-		.def( "randomColor", &Random::randomColor )
+		.def( "randomColor", &randomColor )
 	;
 
 }

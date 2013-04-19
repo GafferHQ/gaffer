@@ -142,6 +142,23 @@ class RandomTest( GafferTest.TestCase ) :
 		self.assertTrue( "outColor.r" in o )
 		self.assertTrue( "outColor.g" in o )
 		self.assertTrue( "outColor.b" in o )
+	
+	def testNegativeSeeds( self ) :	
 		
+		r = Gaffer.Random()
+		r["seed"].setValue( -1 )
+		r["baseColor"].setValue( IECore.Color3f( 0.25, 0.5, 0 ) )
+		c1 = r["outColor"].getValue()
+		c2 = r.randomColor( -1 )
+		
+		self.assertEqual( c1, c2 )
+		
+		r["seed"].setValue( -5 )
+		c3 = r["outColor"].getValue()
+		c4 = r.randomColor( -5 )
+		
+		self.assertEqual( c3, c4 )
+		self.assertNotEqual( c3, c1 )
+
 if __name__ == "__main__":
 	unittest.main()
