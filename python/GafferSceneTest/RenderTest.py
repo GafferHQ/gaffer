@@ -73,7 +73,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"].execute( [ Gaffer.Context.current() ] )
 		
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
@@ -103,7 +103,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"].execute( [ Gaffer.Context.current() ] )
 		
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
@@ -113,7 +113,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		
 		s["v"]["attributes"]["visibility"]["value"].setValue( False )
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"].execute( [ Gaffer.Context.current() ] )
 		
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
@@ -136,7 +136,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"].execute( [ Gaffer.Context.current() ] )
 			
 		w = s["r"].world()
 		l = w.children()[0].state()

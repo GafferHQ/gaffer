@@ -43,11 +43,11 @@ import IECoreArnold
 import Gaffer
 import GafferScene
 
-class ArnoldRender( GafferScene.Render ) :
+class ArnoldRender( GafferScene.ExecutableRender ) :
 
 	def __init__( self, name="ArnoldRender" ) :
 	
-		GafferScene.Render.__init__( self, name )
+		GafferScene.ExecutableRender.__init__( self, name )
 	
 		self.addChild(
 			Gaffer.StringPlug(
@@ -78,16 +78,15 @@ class ArnoldRender( GafferScene.Render ) :
 		
 		return renderer
 		
-	def _outputProcedural( self, procedural, bound, renderer ) :
-		import arnold
-	
-		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )
-	
-		node = arnold.AiNode( "procedural" )
-		arnold.AiNodeSetStr( node, "dso", os.path.expandvars( "ieProcedural.so" ) )
+	def _outputWorldProcedural( self, scenePlug, renderer ) :
 		
-		arnold.AiNodeSetPnt( node, "min", bound.min.x, bound.min.y, bound.min.z );
-		arnold.AiNodeSetPnt( node, "max", bound.max.x, bound.max.y, bound.max.z );
+		import arnold
+		
+		node = arnold.AiNode( "procedural" )
+		arnold.AiNodeSetStr( node, "dso", "ieProcedural.so" )
+		
+		arnold.AiNodeSetPnt( node, "min", -1e30, -1e30, -1e30 )
+		arnold.AiNodeSetPnt( node, "max", 1e30, 1e30, 1e30 )
 			
 		arnold.AiNodeDeclare( node, "className", "constant STRING" )
 		arnold.AiNodeDeclare( node, "classVersion", "constant INT" )
@@ -96,21 +95,26 @@ class ArnoldRender( GafferScene.Render ) :
 		arnold.AiNodeSetStr( node, "className", "gaffer/script" )
 		arnold.AiNodeSetInt( node, "classVersion", 1 )
 		
-		serialised = IECore.ParameterParser().serialise( procedural.parameters() )
-		stringArray = arnold.AiArrayAllocate( len( serialised ), 1, arnold.AI_TYPE_STRING )
-		for i in range( 0, len( serialised ) ) :
-			arnold.AiArraySetStr( stringArray, i, serialised[i] )
+		scriptNode = scenePlug.node().scriptNode()
+		parameterValues = [
+			"-fileName", scriptNode["fileName"].getValue(),
+			"-node", scenePlug.node().relativeName( scriptNode ),
+			"-frame", str( Gaffer.Context.current().getFrame() ),
+		]
+		stringArray = arnold.AiArrayAllocate( len( parameterValues ), 1, arnold.AI_TYPE_STRING )
+		for i in range( 0, len( parameterValues ) ) :
+			arnold.AiArraySetStr( stringArray, i, parameterValues[i] )
 		arnold.AiNodeSetArray( node, "parameterValues", stringArray )
 	
-	def _commandAndArgs( self ) :
+	def _command( self ) :
 		
 		mode = self["mode"].getValue()
 		if mode == "render" :
-			return [ "kick", "-dp",  "-dw", "-v", str( self["verbosity"].getValue() ), self.__fileName() ]
+			return "kick -dp -dw -v %d '%s'" % ( self["verbosity"].getValue(), self.__fileName() )
 		elif mode == "expand" :
-			return [ "kick", "-v", str( self["verbosity"].getValue() ), "-resaveop", self.__fileName(), self.__fileName() ]
+			return "kick -v %d -resaveop '%s' '%s'" % ( self["verbosity"].getValue(), self.__fileName(), self.__fileName() )
 		
-		return []
+		return ""
 		
 	def __fileName( self ) : 
 	

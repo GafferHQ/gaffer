@@ -41,11 +41,11 @@ import GafferScene
 
 ## This class is used by the RenderTest unit test - it
 # is not a unittest itself, it is a Node.
-class TestRender( GafferScene.Render ) :
+class TestRender( GafferScene.ExecutableRender ) :
 
 	def __init__( self, name="TestRender" ) :
 	
-		GafferScene.Render.__init__( self, name )
+		GafferScene.ExecutableRender.__init__( self, name )
 		
 		self.__renderer = None
 	
@@ -57,13 +57,5 @@ class TestRender( GafferScene.Render ) :
 	
 		self.__renderer = IECore.CapturingRenderer()
 		return self.__renderer
-		
-	def _outputProcedural( self, procedural, bound, renderer ) :
-	
-		procedural.render( renderer )
-		
-	def _commandAndArgs( self ) :
-	
-		return []
 
 IECore.registerRunTimeTyped( TestRender )

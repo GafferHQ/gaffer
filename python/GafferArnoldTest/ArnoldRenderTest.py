@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -101,7 +102,7 @@ class ArnoldRenderTest( unittest.TestCase ) :
 
 		s["fileName"].setValue( self.__scriptFileName )
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 			
 		self.failUnless( os.path.exists( "/tmp/test.tif" ) )		
 	
@@ -160,7 +161,7 @@ class ArnoldRenderTest( unittest.TestCase ) :
 		for i in range( 1, 4 ) :
 			c.setFrame( i )
 			with c :
-				s["render"].execute()
+				s["render"].execute( [ Gaffer.Context.current() ] )
 			
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( "/tmp/test.%04d.tif" % i ) )		

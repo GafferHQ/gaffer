@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,67 +34,31 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "IECore/SimpleTypedData.h"
 
-namespace GafferScene
+#include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/Renderer.h"
+
+#include "GafferScene/OpenGLRender.h"
+
+using namespace Gaffer;
+using namespace GafferScene;
+
+IE_CORE_DEFINERUNTIMETYPED( OpenGLRender );
+
+OpenGLRender::OpenGLRender( const std::string &name )
+	:	ExecutableRender( name )
 {
+}
 
-enum TypeId
+OpenGLRender::~OpenGLRender()
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	OptionsTypeId = 110523,
-	ShaderTypeId = 110524,
-	AssignmentTypeId = 110525,
-	FilterTypeId = 110526,
-	PathFilterTypeId = 110527,
-	AttributesTypeId = 110528,
-	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
-	StandardOptionsTypeId = 110532,
-	SubTreeTypeId = 110533,
-	OpenGLAttributesTypeId = 110534,
-	SceneWriterTypeId = 110535,
-	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537,
-	LightTypeId = 110538,
-	StandardAttributesTypeId = 110539,
-	OpenGLShaderTypeId = 110540,
-	TransformTypeId = 110541,
-	ConstraintTypeId = 110542,
-	AimConstraintTypeId = 110543,
-	MeshTypeTypeId = 110544,
-	FilteredSceneProcessorTypeId = 110545,
-	PruneTypeId = 110546,
-	RenderTypeId = 110547,
-	ExecutableRenderTypeId = 110548,
-	OpenGLRenderTypeId = 110549,
-	
-	LastTypeId = 110650
-};
+}
 
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H
+IECore::RendererPtr OpenGLRender::createRenderer() const
+{
+	IECoreGL::init( false );
+	IECore::RendererPtr result = new IECoreGL::Renderer();
+	result->setOption( "gl:mode", new IECore::StringData( "immediate" ) );
+	return result;
+}
