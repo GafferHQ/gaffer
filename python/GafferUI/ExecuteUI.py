@@ -85,10 +85,9 @@ def _execute( nodes ) :
 	script = nodes[0].scriptNode()
 	script._executeUILastExecuted = []
 	
-	with script.context() :
-		for node in nodes :
-			node.execute()
-			script._executeUILastExecuted.append( weakref.ref( node ) )
+	for node in nodes :
+		node.execute( [ script.context() ] )
+		script._executeUILastExecuted.append( weakref.ref( node ) )
 
 def __selectedNodes( script ) :
 
