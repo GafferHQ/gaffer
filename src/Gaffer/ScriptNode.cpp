@@ -219,7 +219,7 @@ void ScriptNode::paste( Node *parent )
 	}
 }
 
-void ScriptNode::deleteNodes( Node *parent, const Set *filter )
+void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 {
 	parent = parent ? parent : this;
 	// because children are stored as a vector, it's
@@ -231,6 +231,36 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter )
 		Node *node = parent->getChild<Node>( i );
 		if( node && ( !filter || filter->contains( node ) ) )
 		{
+			// reconnect the inputs and outputs as though the node was disabled
+			if ( reconnect && node->enabledPlug() )
+			{
+				for ( OutputPlugIterator it( node ); it != it.end(); ++it )
+				{
+					Plug *inPlug = node->correspondingInput( *it );
+					if ( !inPlug )
+					{
+						continue;
+					}
+					
+					Plug *srcPlug = inPlug->getInput<Plug>();
+					if ( !srcPlug )
+					{
+						continue;
+					}
+					
+					const Plug::OutputContainer &outputs = (*it)->outputs();
+					for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); )
+					{
+						Plug *dstPlug = *oIt;
+						if ( dstPlug && dstPlug->acceptsInput( srcPlug ) )
+						{
+							oIt++;
+							dstPlug->setInput( srcPlug );
+						}
+					}
+				}
+			}
+			
 			parent->removeChild( node );
 		}
 		i--;

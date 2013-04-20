@@ -103,6 +103,15 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		p["clippingPlanes"].setValue( IECore.V2f( 1, 10 ) )
 		o = p["out"].object( "/camera" )
 		self.assertEqual( o.parameters()["clippingPlanes"].value, IECore.V2f( 1, 10 ) )
+	
+	def testEnableBehaviour( self ) :
 		
+		c = GafferScene.Camera()
+		self.assertTrue( c.enabledPlug().isSame( c["enabled"] ) )
+		self.assertEqual( c.correspondingInput( c["out"] ), None )
+		self.assertEqual( c.correspondingInput( c["enabled"] ), None )
+		self.assertEqual( c.correspondingInput( c["projection"] ), None )
+		self.assertEqual( c.correspondingInput( c["fieldOfView"] ), None )
+
 if __name__ == "__main__":
 	unittest.main()
