@@ -1,3 +1,6 @@
+0.59.0
+======
+
 * Fixed save/load of user plugs created via the UI (#174).
 
 * Fixed UI for generic Options and Attributes nodes.
