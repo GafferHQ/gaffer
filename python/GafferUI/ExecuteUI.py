@@ -85,10 +85,9 @@ def _execute( nodes ) :
 	script = nodes[0].scriptNode()
 	script._executeUILastExecuted = []
 	
-	with script.context() :
-		for node in nodes :
-			node.execute()
-			script._executeUILastExecuted.append( weakref.ref( node ) )
+	for node in nodes :
+		node.execute( [ script.context() ] )
+		script._executeUILastExecuted.append( weakref.ref( node ) )
 
 def __selectedNodes( script ) :
 
@@ -125,3 +124,11 @@ def __previousAvailable( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	return bool( __previous( script ) )
+
+##########################################################################
+# Metadata and PlugValueWidgets
+##########################################################################
+
+GafferUI.Metadata.registerPlugValue( Gaffer.Node, "despatcherParameters", "nodeUI:section", "Despatcher" )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "requirements", None )

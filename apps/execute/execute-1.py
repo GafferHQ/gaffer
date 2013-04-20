@@ -108,12 +108,11 @@ class execute( Gaffer.Application ) :
 				IECore.msg( IECore.Msg.Level.Error, "gaffer execute", "Script has no executable nodes" )
 				return 1
 		
-		context = Gaffer.Context()
+		context = Gaffer.Context( scriptNode.context() )
 		for frame in self.parameters()["frames"].getFrameListValue().asList() :
 			context.setFrame( frame )
-			with context :
-				for node in nodes :
-					node.execute()
+			for node in nodes :
+				node.execute( [ context ] )
 		
 		return 0
 

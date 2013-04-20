@@ -103,3 +103,4 @@ GafferUI.NodeMenu.definition().append( "/RenderMan/Shader", { "subMenu" : __shad
 GafferUI.NodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes )
 GafferUI.NodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions )
 GafferUI.NodeMenu.append( "/RenderMan/Render", GafferRenderMan.RenderManRender )
+GafferUI.NodeMenu.append( "/RenderMan/Interactive Render", GafferRenderMan.InteractiveRenderManRender )

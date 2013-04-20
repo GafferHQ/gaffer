@@ -34,33 +34,35 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#ifndef GAFFERSCENE_INTERACTIVERENDERMANRENDER_H
+#define GAFFERSCENE_INTERACTIVERENDERMANRENDER_H
 
-#include "Gaffer/Executable.h"
-#include "Gaffer/Node.h"
+#include "GafferScene/InteractiveRender.h"
 
-namespace Gaffer
+#include "GafferRenderMan/TypeIds.h"
+
+namespace GafferRenderMan
 {
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+class InteractiveRenderManRender : public GafferScene::InteractiveRender
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
-
-		ExecutableNode( const std::string &name=staticTypeName() );
+		InteractiveRenderManRender( const std::string &name=staticTypeName() );
+		virtual ~InteractiveRenderManRender();
+		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( InteractiveRenderManRender, InteractiveRenderManRenderTypeId, GafferScene::InteractiveRender );
+		
+	protected :
 	
-		virtual ~ExecutableNode();
+		/// Must be implemented by derived classes to return the renderer that will be used.
+		virtual IECore::RendererPtr createRenderer() const;
+		
 };
 
-IE_CORE_DECLAREPTR( ExecutableNode )
+IE_CORE_DECLAREPTR( InteractiveRenderManRender );
 
-} // namespace Gaffer
+} // namespace GafferRenderMan
 
-#endif // GAFFER_EXECUTABLENODE_H
+#endif // GAFFERSCENE_INTERACTIVERENDERMANRENDER_H

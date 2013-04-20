@@ -34,33 +34,31 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/Executable.h"
-#include "Gaffer/Node.h"
+#include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/Renderer.h"
 
-namespace Gaffer
+#include "GafferScene/OpenGLRender.h"
+
+using namespace Gaffer;
+using namespace GafferScene;
+
+IE_CORE_DEFINERUNTIMETYPED( OpenGLRender );
+
+OpenGLRender::OpenGLRender( const std::string &name )
+	:	ExecutableRender( name )
 {
+}
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+OpenGLRender::~OpenGLRender()
 {
+}
 
-	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
-
-		ExecutableNode( const std::string &name=staticTypeName() );
-	
-		virtual ~ExecutableNode();
-};
-
-IE_CORE_DECLAREPTR( ExecutableNode )
-
-} // namespace Gaffer
-
-#endif // GAFFER_EXECUTABLENODE_H
+IECore::RendererPtr OpenGLRender::createRenderer() const
+{
+	IECoreGL::init( false );
+	IECore::RendererPtr result = new IECoreGL::Renderer();
+	result->setOption( "gl:mode", new IECore::StringData( "immediate" ) );
+	return result;
+}

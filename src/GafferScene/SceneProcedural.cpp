@@ -55,7 +55,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-SceneProcedural::SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::PathMatcherData *pathsToExpand )
+SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::PathMatcherData *pathsToExpand )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 )
 {
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );

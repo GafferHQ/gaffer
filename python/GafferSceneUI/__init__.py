@@ -60,3 +60,4 @@ import ObjectSourceUI
 import TransformUI
 import AttributesUI
 import LightUI
+import InteractiveRenderUI

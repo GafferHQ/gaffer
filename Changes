@@ -18,6 +18,10 @@
 
 * Added drag and drop node connection re-wiring (#78).
 
+* Fixed dirty propagation for Light nodes.
+
+* Added first implementation of interactive rerendering in the InteractiveRenderManRender node. (#141)
+
 0.58.0
 ======
 
