@@ -61,6 +61,9 @@ class SceneProcessor : public SceneNode
 		/// to the outPlug().
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
+		
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
 
 	protected :
 

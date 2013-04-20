@@ -99,6 +99,14 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( transform["out"].bound( "/group/sphere" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( transform["out"].bound( "/group" ), IECore.Box3f( IECore.V3f( 0, 1, 2 ), IECore.V3f( 2, 3, 4 ) ) )
 		self.assertEqual( transform["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0, 1, 2 ), IECore.V3f( 2, 3, 4 ) ) )
+	
+	def testEnableBehaviour( self ) :
 		
+		t = GafferScene.Transform()
+		self.assertTrue( t.enabledPlug().isSame( t["enabled"] ) )
+		self.assertTrue( t.correspondingInput( t["out"] ).isSame( t["in"] ) )
+		self.assertEqual( t.correspondingInput( t["in"] ), None )
+		self.assertEqual( t.correspondingInput( t["enabled"] ), None )
+
 if __name__ == "__main__":
 	unittest.main()

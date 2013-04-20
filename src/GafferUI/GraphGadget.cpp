@@ -69,8 +69,6 @@ using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
-static const IECore::InternedString g_enabledPlugName( "enabled" );
-
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( 0 ), m_dragReconnectSrcNodule( 0 ), m_dragReconnectDstNodule( 0 )
 {
@@ -401,7 +399,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 			Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( selection->member( i ) );
 			if( node && findNodeGadget( node ) )
 			{
-				Gaffer::BoolPlug *enabledPlug = node->getChild<Gaffer::BoolPlug>( g_enabledPlugName );
+				Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
 				if( enabledPlug && enabledPlug->settable() )
 				{
 					enabledPlug->setValue( !enabledPlug->getValue() );

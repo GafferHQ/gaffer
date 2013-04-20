@@ -62,7 +62,6 @@ NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_
 static const float g_borderWidth = 0.5f;
 static const float g_minWidth = 10.0f;
 static const float g_spacing = 0.5f;
-static const IECore::InternedString g_enabledPlugName( "enabled" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
 	:	NodeGadget( node ), m_nodeEnabled( true )
@@ -109,7 +108,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		addNodule( *it );
 	}
 	
-	const Gaffer::BoolPlug *enabledPlug = node->getChild<BoolPlug>( g_enabledPlugName );
+	const Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
 	if( enabledPlug )
 	{
 		m_nodeEnabled = enabledPlug->getValue();
@@ -381,7 +380,7 @@ const Gadget *StandardNodeGadget::getContents() const
 
 void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
 {
-	if( plug->isInstanceOf( Gaffer::BoolPlug::staticTypeId() ) && plug->parent<Node>() == node() && plug->getName() == g_enabledPlugName )
+	if ( plug == node()->enabledPlug() )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );
@@ -390,7 +389,7 @@ void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
 
 void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
-	if( plug->isInstanceOf( Gaffer::BoolPlug::staticTypeId() ) && plug->parent<Node>() == node() && plug->getName() == g_enabledPlugName )
+	if ( plug == node()->enabledPlug() )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );

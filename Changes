@@ -24,6 +24,10 @@
 
 * Added first implementation of interactive rerendering in the InteractiveRenderManRender node. (#141)
 
+* Deleting nodes attempts to rebuild the network to act as if the deleted nodes had been disabled (#95).
+
+* Viewports can be panned/tracked using middle mouse with no modifier key (#28).
+
 0.58.0
 ======
 
