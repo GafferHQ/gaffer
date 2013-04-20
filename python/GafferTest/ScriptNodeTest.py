@@ -485,6 +485,93 @@ a = A()"""
 		self.failUnless( "n1" not in s )
 		self.failUnless( "n2" in s )
 	
+	def testDeleteNodesMaintainsConnections( self ) :
+		
+		s = Gaffer.ScriptNode()
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.MultiplyNode()
+		n3 = GafferTest.AddNode()
+		n4 = GafferTest.AddNode()
+		
+		s.addChild( n1 )
+		s.addChild( n2 )
+		s.addChild( n3 )
+		s.addChild( n4 )
+		
+		n2["op1"].setInput( n1["sum"] )
+		n2["op2"].setInput( n1["sum"] )
+		n3["op1"].setInput( n1["sum"] )
+		n3["op2"].setInput( n1["sum"] )
+		n4["op1"].setInput( n2["product"] )
+		n4["op2"].setInput( n3["sum"] )
+		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n3["op1"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n3["op2"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n4["op1"].getInput().isSame( n2["product"] ) )
+		self.assert_( n4["op2"].getInput().isSame( n3["sum"] ) )
+		
+		s.deleteNodes( filter = Gaffer.StandardSet( [ n2, n3 ] ) )
+		
+		self.assertEqual( n2["op1"].getInput(), None )
+		self.assertEqual( n2["op2"].getInput(), None )
+		self.assertEqual( n3["op1"].getInput(), None )
+		self.assertEqual( n3["op2"].getInput(), None )
+		# None because MultiplyOp does not define enabledPlug()
+		self.assertEqual( n4["op1"].getInput(), None )
+		self.assert_( n4["op2"].getInput().isSame( n1["sum"] ) )
+		
+		n2["op1"].setInput( n1["sum"] )
+		n2["op2"].setInput( n1["sum"] )
+		n3["op1"].setInput( n1["sum"] )
+		n3["op2"].setInput( n1["sum"] )
+		n4["op1"].setInput( n2["product"] )
+		n4["op2"].setInput( n3["sum"] )
+		s.addChild( n2 )
+		s.addChild( n3 )
+		
+		s.deleteNodes( filter = Gaffer.StandardSet( [ n2, n3 ] ), reconnect = False )
+		
+		self.assertEqual( n2["op1"].getInput(), None )
+		self.assertEqual( n2["op2"].getInput(), None )
+		self.assertEqual( n3["op1"].getInput(), None )
+		self.assertEqual( n3["op2"].getInput(), None )
+		self.assertEqual( n4["op1"].getInput(), None )
+		self.assertEqual( n4["op2"].getInput(), None )
+		
+	def testDeleteNodesWithEnabledPlugsWithoutCorrespondingInput( self ) :
+		
+		class MyAddNode( GafferTest.AddNode ) :
+			
+			def correspondingInput( self, output ) :
+				
+				return None 
+		
+		s = Gaffer.ScriptNode()
+		n1 = GafferTest.AddNode()
+		n2 = MyAddNode()
+		n3 = GafferTest.AddNode()
+		
+		s.addChild( n1 )
+		s.addChild( n2 )
+		s.addChild( n3 )
+		
+		n2["op1"].setInput( n1["sum"] )
+		n2["op2"].setInput( n1["sum"] )
+		n3["op1"].setInput( n2["sum"] )
+		n3["op2"].setInput( n2["sum"] )
+		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		
+		s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
+		
+		self.assertEqual( n2["op1"].getInput(), None )
+		self.assertEqual( n2["op2"].getInput(), None )
+		self.assertEqual( n3["op1"].getInput(), None )
+		self.assertEqual( n3["op2"].getInput(), None )
+	
 	def testScriptAccessor( self ) :
 	
 		s = Gaffer.ScriptNode()

@@ -20,6 +20,8 @@
 
 * Added virtual slider for NumericWidgets, engaged using LeftClick + Control or ShiftControl (#79).
 
+* Deleting nodes attempts to rebuild the network to act as if the deleted nodes had been disabled (#95).
+
 0.58.0
 ======
 

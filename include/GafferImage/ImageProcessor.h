@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,7 +58,10 @@ class ImageProcessor : public ImageNode
 		/// Images enter the node through inPlug() and are output in processed form on ImageNode::outPlug()
 		ImagePlug *inPlug();
 		const ImagePlug *inPlug() const;
-			
+		
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+
 	protected :
 	
 		/// Reimplemented to pass through the hashes of the first input when the node is disabled. When it is not

@@ -63,8 +63,8 @@ class SceneNode : public Gaffer::DependencyNode
 		const ScenePlug *outPlug() const;
 		
 		/// The enabled plug provides a mechanism for turning the effect of the node on and off.
-		Gaffer::BoolPlug *enabledPlug();
-		const Gaffer::BoolPlug *enabledPlug() const;
+		virtual Gaffer::BoolPlug *enabledPlug();
+		virtual const Gaffer::BoolPlug *enabledPlug() const;
 
 		/// Implemented so that enabledPlug() affects outPlug().
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
