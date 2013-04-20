@@ -44,6 +44,8 @@
 namespace GafferScene
 {
 
+/// Base class for Executable nodes which perform a render of some sort
+/// in the execute() method.
 class ExecutableRender : public Render, public Gaffer::Executable
 {
 

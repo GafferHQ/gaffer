@@ -42,6 +42,8 @@
 namespace GafferScene
 {
 
+/// Base class for nodes which perform renders embedded in the main gaffer process,
+/// and which can be updated automatically and rerendered as the user tweaks the scene.
 class InteractiveRender : public Render
 {
 
