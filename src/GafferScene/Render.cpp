@@ -88,8 +88,11 @@ void Render::outputScene( const ScenePlug *scene, IECore::Renderer *renderer ) c
 		WorldBlock world( renderer );
 		
 		outputLights( scene, globals, renderer ); 
-				
-		renderer->procedural( new SceneProcedural( scene, Context::current() ) );
+
+		SceneProceduralPtr proc = new SceneProcedural( scene, Context::current() );
+		// we have to render the procedural directly rather than give it to the renderer
+		// as a procedural, because otherwise the 3delight rerendering loses all its shaders.
+		proc->render( renderer );
 	}
 }
 

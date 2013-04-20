@@ -40,6 +40,7 @@ from RenderManAttributesTest import RenderManAttributesTest
 from RenderManOptionsTest import RenderManOptionsTest
 from RenderManRenderTest import RenderManRenderTest
 from RenderManLightTest import RenderManLightTest
+from InteractiveRenderManRenderTest import InteractiveRenderManRenderTest
 
 if __name__ == "__main__":
 	import unittest

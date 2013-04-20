@@ -46,6 +46,7 @@ enum TypeId
 	RenderManOptionsTypeId = 110951,
 	RenderManAttributesTypeId = 110952,
 	RenderManLightTypeId = 110953,
+	InteractiveRenderManRenderTypeId = 110954,
 	
 	LastTypeId = 110999
 };

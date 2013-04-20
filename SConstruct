@@ -848,7 +848,7 @@ libraries = {
 
 	"GafferRenderMan" : {
 		"envAppends" : {
-			"LIBS" : [ "GafferScene" ],
+			"LIBS" : [ "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],

@@ -41,6 +41,7 @@
 
 #include "GafferScene/Render.h"
 #include "GafferScene/OpenGLRender.h"
+#include "GafferScene/InteractiveRender.h"
 
 #include "GafferSceneBindings/RenderBinding.h"
 
@@ -113,9 +114,16 @@ void GafferSceneBindings::bindRender()
 	NodeClass<Render>();
 	
 	NodeClass<ExecutableRender, ExecutableRenderWrapperPtr> executableRender;
-	
 	ExecutableBinding<NodeClass<ExecutableRender, ExecutableRenderWrapperPtr>, ExecutableRender>::bind( executableRender );
 	
 	GafferBindings::NodeClass<OpenGLRender>();
+	
+	scope s = GafferBindings::NodeClass<InteractiveRender>();
+	
+	enum_<InteractiveRender::State>( "State" )
+		.value( "Stopped", InteractiveRender::Stopped )
+		.value( "Running", InteractiveRender::Running )
+		.value( "Paused", InteractiveRender::Paused )
+	;
 	
 }
