@@ -18,6 +18,8 @@
 
 * Added drag and drop node connection re-wiring (#78).
 
+* Viewports can be panned/tracked using middle mouse with no modifier key (#28).
+
 0.58.0
 ======
 
