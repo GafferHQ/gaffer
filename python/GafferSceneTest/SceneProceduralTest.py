@@ -37,6 +37,8 @@
 
 import unittest
 
+import gc
+
 import IECore
 import IECoreGL
 
@@ -140,6 +142,42 @@ class SceneProceduralTest( unittest.TestCase ) :
 			context.setFrame( frame )
 			procedural = GafferScene.SceneProcedural( script["options"]["out"], context, path )
 			self.assertEqual( procedural.bound(), bound )
+
+	def testScriptNodeDeletion( self ) :
+	
+		# In certain circumstances, there may be no external references to the script node during a render,
+		# meaning the scene procedural must hold a reference to it. Lets check this works...
 		
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+				
+		renderer = IECore.CapturingRenderer()
+		
+		with IECore.WorldBlock( renderer ) :
+		
+			procedural = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+			
+			del script
+			
+			while gc.collect() :
+				pass
+			IECore.RefCounted.collectGarbage()
+			
+			self.__WrappingProcedural( procedural ).render( renderer )
+		
+		# if all is well, the capturing renderer should have generated a plane innit.
+		# lets check this:
+		
+		def findMesh( g ):
+			if isinstance( g, IECore.MeshPrimitive ):
+				return g
+			elif isinstance( g, IECore.Group ):
+				if len( g.children() ) == 0:
+					return None
+				return findMesh( g.children()[0] )
+			return None
+		
+		self.assertNotEqual( findMesh( renderer.world() ), None )
+			
 if __name__ == "__main__":
 	unittest.main()
