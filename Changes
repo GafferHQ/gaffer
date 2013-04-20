@@ -18,6 +18,8 @@
 
 * Added drag and drop node connection re-wiring (#78).
 
+* Added virtual slider for NumericWidgets, engaged using LeftClick + Control or ShiftControl (#79).
+
 0.58.0
 ======
 
