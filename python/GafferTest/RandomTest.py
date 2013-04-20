@@ -158,7 +158,7 @@ class RandomTest( GafferTest.TestCase ) :
 		c3 = r["outColor"].getValue()
 		c4 = r.randomColor( -5 )
 		
-		self.assertNotEqual( c3, c4 )
+		self.assertEqual( c3, c4 )
 		self.assertEqual( c3, c2 )
 
 if __name__ == "__main__":

@@ -47,7 +47,7 @@ using namespace Gaffer;
 
 static Imath::Color3f randomColor( Random &r, int seed )
 {
-	return r.randomColor( (unsigned long int)seed );
+	return r.randomColor( std::max( seed, 0 ) );
 }
 
 void GafferBindings::bindRandom()
