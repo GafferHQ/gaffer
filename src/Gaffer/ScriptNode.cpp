@@ -257,6 +257,10 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 							oIt++;
 							dstPlug->setInput( srcPlug );
 						}
+						else
+						{
+							oIt++;
+						}
 					}
 				}
 			}
