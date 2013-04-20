@@ -68,7 +68,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0 );
+		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0 );
 		virtual ~SceneProcedural();
 		
 		virtual Imath::Box3f bound() const;
@@ -78,11 +78,10 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath );
 		
-		/// This class must hold a reference to the script node, to prevent it from being destroyed mid render
-		/// in certain situations...
-		Gaffer::ScriptNodePtr m_scriptNode;
-		
-		ScenePlugPtr m_scenePlug;
+		// This class must hold a reference to the script node, to prevent it from being
+		// destroyed mid-render.
+		Gaffer::ConstScriptNodePtr m_scriptNode;
+		ConstScenePlugPtr m_scenePlug;
 		Gaffer::ContextPtr m_context;
 		ScenePlug::ScenePath m_scenePath;
 		

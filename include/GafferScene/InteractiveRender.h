@@ -34,33 +34,61 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#ifndef GAFFERSCENE_INTERACTIVERENDER_H
+#define GAFFERSCENE_INTERACTIVERENDER_H
 
-#include "Gaffer/Executable.h"
-#include "Gaffer/Node.h"
+#include "GafferScene/Render.h"
 
-namespace Gaffer
+namespace GafferScene
 {
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+/// Base class for nodes which perform renders embedded in the main gaffer process,
+/// and which can be updated automatically and rerendered as the user tweaks the scene.
+class InteractiveRender : public Render
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
-
-		ExecutableNode( const std::string &name=staticTypeName() );
+		InteractiveRender( const std::string &name=staticTypeName() );
+		virtual ~InteractiveRender();
+		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( InteractiveRender, InteractiveRenderTypeId, Render );
+		
+		enum State
+		{
+			Stopped,
+			Running,
+			Paused
+		};
+		
+		Gaffer::IntPlug *statePlug();
+		const Gaffer::IntPlug *statePlug() const;
+		
+		Gaffer::BoolPlug *updateLightsPlug();
+		const Gaffer::BoolPlug *updateLightsPlug() const;
+		
+	protected :
 	
-		virtual ~ExecutableNode();
+		/// Must be implemented by derived classes to return the renderer that will be used.
+		virtual IECore::RendererPtr createRenderer() const = 0;
+
+	private :
+
+		void plugInputChanged( const Gaffer::Plug *plug );
+		void plugSetOrDirtied( const Gaffer::Plug *plug );
+
+		void start();
+		void update();
+		void updateLights();
+	
+		IECore::RendererPtr m_renderer;
+
+		static size_t g_firstPlugIndex;
+		
 };
 
-IE_CORE_DECLAREPTR( ExecutableNode )
+IE_CORE_DECLAREPTR( InteractiveRender );
 
-} // namespace Gaffer
+} // namespace GafferScene
 
-#endif // GAFFER_EXECUTABLENODE_H
+#endif // GAFFERSCENE_INTERACTIVERENDER_H

@@ -34,33 +34,52 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#ifndef GAFFERSCENE_EXECUTABLERENDER_H
+#define GAFFERSCENE_EXECUTABLERENDER_H
 
 #include "Gaffer/Executable.h"
-#include "Gaffer/Node.h"
 
-namespace Gaffer
+#include "GafferScene/Render.h"
+
+namespace GafferScene
 {
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+/// Base class for Executable nodes which perform a render of some sort
+/// in the execute() method.
+class ExecutableRender : public Render, public Gaffer::Executable
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
+		ExecutableRender( const std::string &name=staticTypeName() );
+		virtual ~ExecutableRender();
+		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableRender, ExecutableRenderTypeId, Render );
+		
+		virtual void executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const;
+		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
+		/// Implemented to perform the render.
+		virtual void execute( const Contexts &contexts ) const;
 
-		ExecutableNode( const std::string &name=staticTypeName() );
+	protected :
 	
-		virtual ~ExecutableNode();
+		/// Must be implemented by derived classes to return the renderer that will
+		/// be used by execute.
+		virtual IECore::RendererPtr createRenderer() const = 0;
+		/// May be implemented by derived classes to change the way the procedural that
+		/// generates the world is output. We need this method because Cortex has no mechanism for getting
+		/// a delayed load procedural into a rib or ass file, and derived classes may want to be
+		/// generating just such a file. The default implementation just outputs a SceneProcedural
+		/// which is suitable for immediate mode rendering.
+		virtual void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const;
+		/// May be implemented to return a shell command which should be run after doing the "render".
+		/// This can be useful for nodes which wish to render in two stages by creating a scene file
+		/// with the createRenderer() and then rendering it with a command.
+		virtual std::string command() const; 
 };
 
-IE_CORE_DECLAREPTR( ExecutableNode )
+IE_CORE_DECLAREPTR( ExecutableRender );
 
-} // namespace Gaffer
+} // namespace GafferScene
 
-#endif // GAFFER_EXECUTABLENODE_H
+#endif // GAFFERSCENE_EXECUTABLERENDER_H

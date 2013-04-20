@@ -20,6 +20,10 @@
 
 * Added virtual slider for NumericWidgets, engaged using LeftClick + Control or ShiftControl (#79).
 
+* Fixed dirty propagation for Light nodes.
+
+* Added first implementation of interactive rerendering in the InteractiveRenderManRender node. (#141)
+
 0.58.0
 ======
 

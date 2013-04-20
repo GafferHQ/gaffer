@@ -34,33 +34,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#ifndef GAFFERSCENE_OPENGLRENDER_H
+#define GAFFERSCENE_OPENGLRENDER_H
 
-#include "Gaffer/Executable.h"
-#include "Gaffer/Node.h"
+#include "GafferScene/ExecutableRender.h"
 
-namespace Gaffer
+namespace GafferScene
 {
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+class OpenGLRender : public ExecutableRender
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
-
-		ExecutableNode( const std::string &name=staticTypeName() );
+		OpenGLRender( const std::string &name=staticTypeName() );
+		virtual ~OpenGLRender();
+		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenGLRender, OpenGLRenderTypeId, ExecutableRender );
 	
-		virtual ~ExecutableNode();
+	protected :
+	
+		virtual IECore::RendererPtr createRenderer() const;		
+		
 };
 
-IE_CORE_DECLAREPTR( ExecutableNode )
+IE_CORE_DECLAREPTR( OpenGLRender );
 
-} // namespace Gaffer
+} // namespace GafferScene
 
-#endif // GAFFER_EXECUTABLENODE_H
+#endif // GAFFERSCENE_OPENGLRENDER_H
