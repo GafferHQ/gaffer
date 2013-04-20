@@ -76,6 +76,22 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferImageUI.FormatPlugValueWidget
 )
 
+# Reformat
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.Reformat.staticTypeId(),
+	"format",
+	GafferImageUI.FormatPlugValueWidget
+)
+
+filterLabelsAndValues = [ ( "Impulse", 0 ), ( "Bilinear", 1 ), ( "Sine", 2 ) ]
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.Reformat.staticTypeId(),
+	"filter",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = filterLabelsAndValues
+)
+
 # OpenColorIO
 
 ocioColorSpaceLabelsAndValues = [ ( "None", "" ) ]

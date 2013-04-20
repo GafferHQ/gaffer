@@ -51,10 +51,12 @@
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
+#include "GafferImageBindings/SamplerBinding.h"
 #include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
+#include "GafferImage/Reformat.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 
 using namespace boost::python;
@@ -110,8 +112,10 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Constant>();
 	GafferBindings::DependencyNodeClass<Select>();
+	GafferBindings::DependencyNodeClass<Reformat>();
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();
 	GafferImageBindings::bindChannelMaskPlug();
+	GafferImageBindings::bindSampler();
 }
 

@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,37 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "GafferImage/Sampler.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+template< typename F >
+void Reformat::reformat( const std::string &channelName, const Imath::V2i &tileOrigin, std::vector<float> &out ) const
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
+	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+	Format inFormat( inPlug()->formatPlug()->getValue() );
+	Format outFormat( formatPlug()->getValue() );
+	Imath::V2i inWH = Imath::V2i( inFormat.getDisplayWindow().max ) + Imath::V2i(1);
+	Imath::V2i outWH = Imath::V2i( outFormat.getDisplayWindow().max ) + Imath::V2i(1);
+	Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
 	
-	LastTypeId = 110849
-};
+	Imath::Box2d inputBoxd(
+		Imath::V2d( double( tile.min.x ) / scale.x, double( tile.min.y ) / scale.y ),
+		Imath::V2d( double( tile.max.x ) / scale.x, double( tile.max.y ) / scale.y )
+	);
+	
+	Sampler sampler( inPlug(), channelName );
+	
+	F filter( scale.x < 1. ? 1./scale.x : 1. );
+	
+	// Filter in the x direction first.
+	double stepX = 1./scale.x;
+	double stepY = 1./scale.y;
+	double ty = inputBoxd.min.y+.5;
+	for( int y = tile.min.y; y <= tile.max.y; y++, ty += stepY )
+	{
+		float *dOut = &(out[0]) + ( y - tileOrigin.y ) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
+		double tx = inputBoxd.min.x+.5;
+		for ( int x = tile.min.x; x <= tile.max.x; x++, tx += stepX )
+		{
+			*dOut++ = sampler.sample( filter, float(tx), float(ty) );
+		}	
+	}
+}
 
-} // namespace GafferImage
+}; // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H

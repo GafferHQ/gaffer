@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,37 +34,55 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "Gaffer/Context.h"
+#include "GafferImage/Sampler.h"
+#include "GafferImage/Filter.h"
+#include "IECore/BoxAlgo.h"
+#include "IECore/BoxOps.h"
 
-namespace GafferImage
-{
+using namespace Gaffer;
+using namespace IECore;
+using namespace GafferImage;
 
-enum TypeId
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName )
+	: m_plug( plug ),
+	m_dataWindow( plug->formatPlug()->getValue().getDisplayWindow() ),
+	m_channelName( channelName ),
+	m_cacheSize( m_dataWindow.max / ImagePlug::tileSize() )
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
+	///\todo: Find out why sometimes Sampler can be called from computeChannelData() that has a negative data window
+	/// which results in the sampler (created within computeChannelData ) being called.
+	/// If we can work that out then maybe we don't need the m_valid bool!.
+	m_valid = !m_dataWindow.isEmpty();
 	
-	LastTypeId = 110849
-};
+	if ( m_valid )
+	{
+		m_cacheSize.x = std::max( m_cacheSize.x, 0 );
+		m_cacheSize.y = std::max( m_cacheSize.y, 0 );
+		m_dataCache.resize( ( m_cacheSize.x + 1 ) * ( m_cacheSize.y + 1 ), NULL );
+	}
+}
 
-} // namespace GafferImage
+float Sampler::sample( int x, int y )
+{
+	if ( !m_valid ) return 1.;
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+	x = std::max( m_dataWindow.min.x, std::min( m_dataWindow.max.x, x ) );
+	y = std::max( m_dataWindow.min.y, std::min( m_dataWindow.max.y, y ) );
+
+	int cacheIndexX = x / ImagePlug::tileSize();
+	int cacheIndexY = y / ImagePlug::tileSize();
+
+	Imath::V2i tileOrigin( cacheIndexX * ImagePlug::tileSize(), cacheIndexY * ImagePlug::tileSize() );
+	ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheIndexX + cacheIndexY * ( m_cacheSize.y + 1 ) ];
+	if ( cacheTilePtr == NULL ) cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
+
+	x -= tileOrigin.x;
+	y -= tileOrigin.y;
+
+	return *((&cacheTilePtr->readable()[0]) + y * ImagePlug::tileSize() + x);
+}	
+
+
+
+
