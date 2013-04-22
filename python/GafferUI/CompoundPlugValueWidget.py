@@ -48,27 +48,33 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## Possible values for collapsed are :
 	#
-	#	True  : use CollapsibleContainer which starts off collapsed
-	#	False : use CollapsibleContainer which starts off opened
-	#	None  : don't use CollapsibleContainer
+	#	True  : use Collapsible container which starts off collapsed
+	#	False : use Collapsible container which starts off opened
+	#	None  : don't use Collapsible container 
+	#
+	# Note that the True/False values for collapsible just set the initial state -
+	# after this the current state is stored for the session on a per-node basis
+	# for user convenience.
 	#
 	# If summary is specified it will be called each time a child plug changes value,
 	# and the result used to provide a summary in the collapsible header.
 	def __init__( self, plug, collapsed=True, label=None, summary=None, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
+		self.__label = label if label else IECore.CamelCase.toSpaced( plug.getName() )
 		
 		self.__collapsible = None
 		if collapsed is not None :
 			self.__collapsible = GafferUI.Collapsible(
-				label if label else IECore.CamelCase.toSpaced( plug.getName() ),
-				collapsed = collapsed,
+				self.__label,
+				collapsed = self.__getStoredCollapseState( plug, collapsed ),
 			)
 			self.__collapsible.setChild( self.__column )
 			self.__collapsible.setCornerWidget( GafferUI.Label(), True )
 			## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
 			# way of controlling size behaviours for all widgets in the public API.
 			self.__collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+			self.__collapseStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapseStateChanged ) )
 				
 		GafferUI.PlugValueWidget.__init__(
 			self,
@@ -257,5 +263,44 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__childrenChangedPending = False
 		
 		return False # removes the callback
+
+	def __collapseStateChanged( self, widget ) :
+
+		assert( widget is self.__collapsible )
+		self.__setStoredCollapseState( self.getPlug(), widget.getCollapsed() )
+
+	def __setStoredCollapseState( self, plug, collapsed ) :
+
+		node = plug.node()
+		if "__uiCollapsed" in node :
+			storagePlug = node["__uiCollapsed"]
+		else :
+			storagePlug = Gaffer.ObjectPlug(
+				defaultValue = IECore.CompoundData(),
+				flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable,
+			)
+			node["__uiCollapsed"] = storagePlug
+
+		storage = storagePlug.getValue()
+		# we use the label in the key so that SectionedPlugValueWidgets and the like
+		# store a state per section.
+		key = plug.relativeName( node ) + "|" + self.__label
+		storage[key] = IECore.BoolData( collapsed )
+		storagePlug.setValue( storage )
+
+	def __getStoredCollapseState( self, plug, default ) :
+
+		node = plug.node()
+		if "__uiCollapsed" not in node :
+			return default
+
+		storagePlug = node["__uiCollapsed"]
+		storage = storagePlug.getValue()
+		key = plug.relativeName( node ) + "|" + self.__label
+		value = storage.get( key )
+		if value is None :
+			return default
+
+		return value.value
 
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundPlug.staticTypeId(), CompoundPlugValueWidget )

@@ -1,3 +1,5 @@
+* Expansion state of collapsible plug grouping is now remembered for the duration of a session (#87).
+
 0.59.0
 ======
 
