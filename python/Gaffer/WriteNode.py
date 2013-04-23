@@ -35,17 +35,19 @@
 #  
 ##########################################################################
 
+from __future__ import with_statement
+
 import os
 
 import IECore
 
 import Gaffer
 
-class WriteNode( Gaffer.Node ) :
+class WriteNode( Gaffer.ExecutableNode ) :
 
 	def __init__( self, name="Write" ) :
 	
-		Gaffer.Node.__init__( self, name )
+		Gaffer.ExecutableNode.__init__( self, name )
 		
 		inPlug = Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject.defaultNullObject() )
 		self.addChild( inPlug )
@@ -67,15 +69,18 @@ class WriteNode( Gaffer.Node ) :
 	
 		return self.__parameterHandler
 		
-	def execute( self ) :
+	def execute( self, contexts ) :
 	
-		self.__ensureWriter()
-	
-		if self.__writer is None :
-			raise RuntimeError( "No Writer" )
-				
-		self.__writer["object"].setValue( self["in"].getValue() )
-		self.__writer.write()
+		for context in contexts :
+			with context :
+			
+				self.__ensureWriter()
+
+				if self.__writer is None :
+					raise RuntimeError( "No Writer" )
+
+				self.__writer["object"].setValue( self["in"].getValue() )
+				self.__writer.write()
 		
 	def __plugSet( self, plug ) :
 

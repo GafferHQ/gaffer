@@ -76,7 +76,7 @@ class RenderManRenderTest( unittest.TestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
 		
@@ -114,7 +114,7 @@ class RenderManRenderTest( unittest.TestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
 		
@@ -128,7 +128,7 @@ class RenderManRenderTest( unittest.TestCase ) :
 		s["options"]["options"]["cameraBlur"]["enabled"].setValue( True )
 		s["options"]["options"]["cameraBlur"]["value"].setValue( True )
 
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		r = "".join( file( "/tmp/test.rib" ).readlines() )
 		self.failUnless( "MotionBegin" in r )
@@ -139,7 +139,7 @@ class RenderManRenderTest( unittest.TestCase ) :
 		s["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
 		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( False )
 	
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		r = "".join( file( "/tmp/test.rib" ).readlines() )
 		self.failIf( "MotionBegin" in r )	
@@ -151,7 +151,7 @@ class RenderManRenderTest( unittest.TestCase ) :
 		s["attributes"]["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
 		s["attributes"]["attributes"]["transformBlurSegments"]["value"].setValue( 5 )
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		def motionTimes( ribFileName ) :
 		
@@ -170,15 +170,38 @@ class RenderManRenderTest( unittest.TestCase ) :
 		s["attributes"]["attributes"]["transformBlurSegments"]["enabled"].setValue( False )
 		s["options"]["options"]["shutter"]["enabled"].setValue( True )
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		self.assertEqual( motionTimes( "/tmp/test.rib" ), [ 0.75, 1.25 ] )
 		
 		s["options"]["options"]["shutter"]["value"].setValue( IECore.V2f( -0.1, 0.3 ) )
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		self.assertEqual( motionTimes( "/tmp/test.rib" ), [ 0.9, 1.3 ] )
+	
+	def testDynamicLoadProcedural( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+				
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["in"].setInput( s["plane"]["out"] )
+		s["render"]["mode"].setValue( "generate" )
+		
+		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s["render"].execute( [ Gaffer.Context.current() ] )
+		
+		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
+		
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "DynamicLoad" in rib )
+		self.assertFalse( "Polygon" in rib )
 		
 	def setUp( self ) :
 	

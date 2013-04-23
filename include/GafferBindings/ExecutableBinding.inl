@@ -36,6 +36,8 @@
 
 #include "boost/python/list.hpp"
 
+#include "Gaffer/Executable.h"
+
 namespace GafferBindings
 {
 
@@ -68,7 +70,7 @@ void ExecutableBinding<PythonClass,NodeClass>::execute( NodeClass &n, const boos
 	contexts.reserve( len );
 	for ( size_t i = 0; i < len; i++ )
 	{
-		contexts.push_back( boost::python::extract< Gaffer::ContextPtr >( contextList[i] ) );
+		contexts.push_back( boost::python::extract<Gaffer::ConstContextPtr>( contextList[i] ) );
 	}
 	n.execute( contexts );
 }

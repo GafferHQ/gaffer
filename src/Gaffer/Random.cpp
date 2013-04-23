@@ -56,7 +56,7 @@ Random::Random( const std::string &name )
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "seed" ) );
+	addChild( new IntPlug( "seed", Plug::In, 0, 0 ) );
 	addChild( new StringPlug( "contextEntry" ) );
 	
 	addChild( new V2fPlug( "floatRange", Plug::In, V2f( 0, 1 ) ) );

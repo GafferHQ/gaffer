@@ -88,3 +88,11 @@ class GradeTest( unittest.TestCase ) :
 		h2 = grade["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
 		self.assertNotEqual( h1, h2 )
 		
+	def testEnableBehaviour( self ) :
+		
+		g = GafferImage.Grade()
+		self.assertTrue( g.enabledPlug().isSame( g["enabled"] ) )
+		self.assertTrue( g.correspondingInput( g["out"] ).isSame( g["in"] ) )
+		self.assertEqual( g.correspondingInput( g["in"] ), None )
+		self.assertEqual( g.correspondingInput( g["enabled"] ), None )
+		self.assertEqual( g.correspondingInput( g["gain"] ), None )

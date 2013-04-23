@@ -34,33 +34,25 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#include "IECoreRI/Renderer.h"
 
-#include "Gaffer/Executable.h"
-#include "Gaffer/Node.h"
+#include "GafferRenderMan/InteractiveRenderManRender.h"
 
-namespace Gaffer
+using namespace GafferScene;
+using namespace GafferRenderMan;
+
+IE_CORE_DEFINERUNTIMETYPED( InteractiveRenderManRender );
+
+InteractiveRenderManRender::InteractiveRenderManRender( const std::string &name )
+	:	InteractiveRender( name )
 {
+}
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+InteractiveRenderManRender::~InteractiveRenderManRender()
 {
+}
 
-	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
-
-		ExecutableNode( const std::string &name=staticTypeName() );
-	
-		virtual ~ExecutableNode();
-};
-
-IE_CORE_DECLAREPTR( ExecutableNode )
-
-} // namespace Gaffer
-
-#endif // GAFFER_EXECUTABLENODE_H
+IECore::RendererPtr InteractiveRenderManRender::createRenderer() const
+{
+	return new IECoreRI::Renderer( "" );
+}

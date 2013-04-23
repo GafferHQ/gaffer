@@ -97,7 +97,7 @@ class RenderManLightTest( unittest.TestCase ) :
 		s["r"]["ribFileName"].setValue( "/tmp/testRenderManLight.rib" )
 		s["r"]["in"].setInput( s["o"]["out"] )
 		
-		s["r"].execute()
+		s["r"].execute( [ Gaffer.Context.current() ] )
 		
 		i = IECore.EXRImageReader( "/tmp/testRenderManLight.exr" ).read()
 		e = IECore.ImagePrimitiveEvaluator( i )

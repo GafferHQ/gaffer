@@ -34,33 +34,43 @@
 #  
 ##########################################################################
 
-import IECore
-import IECoreGL
+import fnmatch
 
 import Gaffer
 import GafferScene
+import GafferUI
 
-class OpenGLRender( GafferScene.Render ) :
+##########################################################################
+# Metadata
+##########################################################################
 
-	def __init__( self, name="OpenGLRender" ) :
-	
-		GafferScene.Render.__init__( self, name )
-							
-	def _createRenderer( self ) :
-	
-		IECoreGL.init( False )
-	
-		r = IECoreGL.Renderer()
-		r.setOption( "gl:mode", "immediate" )
+GafferUI.Metadata.registerNodeDescription(
 
-		return r
-		
-	def _outputProcedural( self, procedural, bound, renderer ) :
-	
-		procedural.render( renderer )
-		
-	def _commandAndArgs( self ) :
-	
-		return []
+GafferScene.InteractiveRender,
 
-IECore.registerRunTimeTyped( OpenGLRender )
+"""A base class for nodes which can render scenes interactively, updating 
+the render to reflect changes to the node graph.""",
+
+"state",
+"The interactive state.",
+
+"updateLights",
+"When on, changes to lights are reflected in the interactive render.",
+
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+## \todo Make a custom UI with play/pause/stop/restart buttons.
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.InteractiveRender.staticTypeId(),
+	"state",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Stopped", GafferScene.InteractiveRender.State.Stopped ),
+		( "Running", GafferScene.InteractiveRender.State.Running ),
+		( "Paused", GafferScene.InteractiveRender.State.Paused ),
+	),
+)

@@ -479,7 +479,7 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "58",
+	GAFFER_MINOR_VERSION = "59",
 	GAFFER_PATCH_VERSION = "0",
 
 )
@@ -854,7 +854,7 @@ libraries = {
 
 	"GafferRenderMan" : {
 		"envAppends" : {
-			"LIBS" : [ "GafferScene" ],
+			"LIBS" : [ "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],

@@ -244,17 +244,21 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 			
 	GadgetPtr handler = 0;
+	m_lastButtonPressGadget = 0;
 	bool result = dispatchEvent( gadgets, &Gadget::buttonPressSignal, event, handler );
 	if( result )
 	{
 		m_lastButtonPressGadget = handler;
-	}
-	else
-	{
-		m_lastButtonPressGadget = 0;
+		return true;
 	}
 	
-	return result;
+	if ( event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None )
+	{
+		// accept press so we get a dragBegin opportunity for camera movement
+		return true;
+	}
+	
+	return false;
 }
 
 bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
@@ -346,7 +350,19 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( event.modifiers & ModifiableEvent::Alt )
+	if ( !(event.modifiers & ModifiableEvent::Alt) && m_lastButtonPressGadget )
+	{
+		// see if a child gadget would like to start a drag
+		RunTimeTypedPtr data = dispatchEvent( m_lastButtonPressGadget, &Gadget::dragBeginSignal, event );
+		if( data )
+		{
+			const_cast<DragDropEvent &>( event ).sourceGadget = m_lastButtonPressGadget;
+			
+			return data;
+		}
+	}
+	
+	if ( event.modifiers & ModifiableEvent::Alt || ( event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None ) )
 	{
 		// start camera motion
 	
@@ -386,23 +402,6 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 			// we have to return something to start the drag, but we return something that
 			// noone else will accept to make sure we keep the drag to ourself.
 			return IECore::NullObject::defaultNullObject();
-		}
-		else
-		{
-			return 0;
-		}
-	}
-	else
-	{
-		// see if a child gadget would like to start a drag
-		if( m_lastButtonPressGadget )
-		{
-			RunTimeTypedPtr data = dispatchEvent( m_lastButtonPressGadget, &Gadget::dragBeginSignal, event );
-			if( data )
-			{
-				const_cast<DragDropEvent &>( event ).sourceGadget = m_lastButtonPressGadget;
-			}
-			return data;
 		}
 		else
 		{
