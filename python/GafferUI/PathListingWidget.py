@@ -49,6 +49,14 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
+# PyQt unfortunately uses an implementation-specific 
+# naming scheme for its new-style signal and slot classes.
+# We use this to make it compatible with PySid, according to:
+#     http://qt-project.org/wiki/Differences_Between_PySide_and_PyQt
+if "PyQt" in GafferUI.__qtModuleName:
+	QtCore.Signal = QtCore.pyqtSignal
+
+
 ## The PathListingWidget displays the contents of a Path, updating the Path to represent the
 # current directory as the user navigates around. It supports both a list and a tree view, 
 # allows customisable column listings, and supports both single and multiple selection.
@@ -495,7 +503,7 @@ class _TreeView( QtGui.QTreeView ) :
 	# expanded. It can be preferable to use this over the expanded or
 	# collapsed signals as it is emitted only once when making several
 	# changes.
-	expansionChanged = QtCore.pyqtSignal()
+	expansionChanged = QtCore.Signal()
 
 	def __init__( self ) :
 	
