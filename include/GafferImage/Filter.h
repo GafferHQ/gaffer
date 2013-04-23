@@ -38,128 +38,120 @@
 #ifndef GAFFERIMAGE_FITLER_H
 #define GAFFERIMAGE_FILTER_H
 
+#define _USE_MATH_DEFINES
+#include "math.h"
+	
 namespace GafferImage
 {
 
 /// Interpolation class for filtering an image.
 ///
-/// The filter class represents a 1D convolution of width().
+/// The filter class represents a 1D convolution of radius().
 /// For simplicity we only implement separable kerenels.
 /// We do the following to convolve a 2D image (I) by 1D kernel (g):
 /// C(x,y) = g*I = (g2 *y (g1 *x I))(x,y)
 /// Where *x and *y denotes convolution in the x and y directions.
+///
+/// A good overview of image sampling and the variety of filters is:
+/// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
+/// Arun N.Netravali, AT&T Bell Laboratories.
 class Filter
 {
 
 public :
 
-	Filter( int width, float scale = 1. )
-		: m_scale( scale )
+	/// @param radius Half the width of the kernel at a scale of 1.
+	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
+	Filter( double radius, double scale = 1. )
+		: m_radius( radius )
 	{
-		m_width = int( round( double( width ) * scale ) );
-		
-		if ( ( width % 2 == 0 ) != ( m_width % 2 == 0 ) )
-		{
-			m_width += 1;
-		}
-
-		m_weights.resize( m_width );
+		setScale( scale );
 	}
 	
 	virtual ~Filter(){};
 
+	/// Resizes the kernel to a new scale.
+	void setScale( double scale )
+	{
+		if ( scale > 1. )
+		{
+			m_scaledRadius = m_radius * scale;
+			m_scale = scale;
+		}
+		else
+		{
+			m_scaledRadius = m_radius;
+			m_scale = 1.;
+		}
+		m_weights.resize( int( floor( m_scaledRadius*2+1 ) ) );
+	}
+
+	/// Returns the current scale of the kernel.
+	inline double getScale() const { return m_scale; }
+	
 	/// Accessors of the kernel weights.
-	float operator[]( int idx ) const
+	inline double operator[]( int idx ) const
 	{
 		return m_weights[idx];
 	};
 
-	const float *weights() const
+	/// Returns a reference to the list of weights.
+	inline const std::vector<double> &weights() const
 	{
-		return &m_weights[0];
+		return m_weights;
 	}
 
 	/// Returns the width of the filter.
 	inline int width() const
 	{
-		return m_width;
+		return m_weights.size();
 	};
 
 	/// Builds the kernel of weights.
-	/// This method is called to initialize the filter. It should resize the 
-	/// m_weights vector, calculate and populate it with the weights.
-	/// @param x A shift of the interpolation function in the range of -1 to 1.
+	/// This method is should be called to initialize the filter.
+	/// It does this by making sucessive calls to getWeight() to
+	/// populate the vector of weights.
+	/// @param center The position of the center of the filter kernel.
 	/// @return Returns the index of the first pixel sample.
-	virtual int construct( float x ) = 0;
+	int construct( double center )
+	{
+		int l, absx;
+		l = absx = (int)( center - m_scaledRadius );
+		std::vector<double>::iterator it( m_weights.begin() );
+		std::vector<double>::iterator end( m_weights.end() );
+		while ( it != end )
+		{
+			*it++ = getWeight( ( center - l++ - 0.5 ) / m_scale );
+		}
+		return absx;
+	}
+
+	// Returns a weight for a delta in the range of -m_scaledRadius to m_scaledRadius.
+	virtual double getWeight( double delta ) const = 0;
 
 protected :
 
-	int m_width;
-	float m_scale;
-	std::vector<float> m_weights;
-};
-
-class SineFilter : public Filter
-{
-
-public :
-
-	SineFilter( float scale = 1. )
-		: Filter( 9, scale )
-	{
-	};
-
-	int construct( float x )
-	{
-		x -= .5f;
-		
-		float absX = floorf( x );
-		float delta = x - absX;
-		float sum = .0f;
-		const int radius = ( m_width-1 )/2;
-		float *w = &m_weights[0];
-		
-		for ( int i = -radius; i <= radius; ++i )
-		{
-			float c = (3.14159265359f / m_scale) * float(i) - delta;
-			if ( c != 0.0 )
-			{
-				c = sin(c) / c;
-			}
-			else
-			{
-				c = 1.0;
-			}
-
-			sum += *w++ = c;
-		}
-
-		// Normalize the weights.
-		for (int i = 0; i < m_width; ++i)
-		{
-			m_weights[i] /= sum;
-		}
-
-		return static_cast<int>( absX - radius );
-	}
+	const double m_radius;
+	double m_scale;
+	double m_scaledRadius;
+	std::vector<double> m_weights;
 
 };
 
-class ImpulseFilter : public Filter
+class BoxFilter : public Filter
 {
 
-public :
+public:
 
-	ImpulseFilter( float scale = 1.f )
-		: Filter( 1, 1. )
+	BoxFilter( double scale = 1. )
+		: Filter( .5, scale )
 	{
-		m_weights[0] = 1.;
 	}
-
-	int construct( float x )
+	
+	double getWeight( double delta ) const
 	{
-		float absX = floorf( x-.5 );
-		return static_cast<int>( absX );
+		delta = fabs(delta);
+		return ( delta <= 0.5 );
 	}
 
 };
@@ -167,42 +159,245 @@ public :
 class BilinearFilter : public Filter
 {
 
-public :
+public:
 
-	BilinearFilter( float scale = 1.f )
-		: Filter( 3, scale )
+	BilinearFilter( double scale = 1. )
+		: Filter( 1, scale )
+	{}
+
+	double getWeight( double delta ) const
+	{
+		delta = fabs(delta);
+		if ( delta < 1. )
+		{
+			return 1. - delta;
+		}
+		return 0.;
+	}
+
+};
+
+class SincFilter : public Filter
+{
+
+public:
+
+	SincFilter( double scale = 1. )
+		: Filter( 8, scale )
+	{}
+
+	double getWeight( double delta ) const
+	{
+		delta = fabs(delta);
+		if ( delta < m_radius )
+		{
+			if ( delta )
+			{
+				return sinc(delta) * sinc( delta / m_radius );
+			}
+		}
+		return 0;
+	}
+
+private:
+
+	double sinc( double x ) const
+	{
+		if ( x != 0. )
+		{
+			x *= M_PI;
+			return sin(x) / x;
+		}
+		return 1.;
+	}
+
+};
+
+class HermiteFilter : public Filter
+{
+
+public:
+
+	HermiteFilter( double scale = 1. )
+		: Filter( 1, scale )
+	{}
+
+	double getWeight( double delta ) const
+	{
+		delta = fabs(delta);
+		if ( delta < 1 )
+		{
+			return ( ( 2. * delta - 3. ) * delta * delta + 1. );
+		}
+		return 0.;
+	}
+
+};
+
+class SplineFilter : public Filter
+{
+
+public:
+
+	SplineFilter( double B, double C, double scale = 1. )
+		: Filter( 2, scale ),
+		m_B( B ),
+		m_C( C )
 	{
 	}
-	
-	int construct( float x )
+
+	double getWeight( double delta ) const
 	{
-		x -= .5;
-		float absX = floorf( x );
-		float delta = 1.-(x-absX);
-	
-		// The width of this kernel should always be odd.
-		assert( m_width % 2 != 0 );
-		
-		float *w = &m_weights[0];
-		int hw = ( m_width - 1 ) / 2;
-		float sum = 0.;
-		for ( int i = -hw; i <= hw; ++i )
+		delta = fabs(delta);
+		double delta2 = delta*delta;
+
+		if ( delta < 1. )
 		{
-			sum += *w++ = std::max( 0.f, 1.f-float( fabs(float(i) + delta + .5) / m_scale ) );
-		}
-		
-		w = &m_weights[0];
-		float *END = w+m_width;
-		while( w != END )
-		{
-			*w++ /= sum;
+			delta = (((12. - 9.*m_B - 6.*m_C)*(delta*delta2)) + ((- 18. + 12.*m_B + 6.*m_C)*delta2) + (6. - 2.*m_B));
+			return delta / 6.;
 		}
 
-		return static_cast<int>( absX-hw+1 );
+		if ( delta < 2. )
+		{
+			delta = (((- m_B - 6.*m_C)*(delta*delta2)) + ((6.*m_B + 30.*m_C)*delta2) + ((- 12.*m_B - 48.*m_C)*delta) + (8.*m_B + 24.*m_C));
+			return delta / 6.;
+		}
+
+		return 0.;
+	}
+
+private:
+
+	const double m_B;
+	const double m_C;
+
+};
+
+class MitchellFilter : public SplineFilter
+{
+
+public:
+
+	MitchellFilter( double scale = 1. )
+		: SplineFilter( 1/3, 1/3, scale )
+	{}
+
+};
+
+class BSplineFilter : public SplineFilter
+{
+
+public:
+
+	BSplineFilter( double scale = 1. )
+		: SplineFilter( 1., 0., scale )
+	{}
+
+};
+
+class CatmullRomFilter : public SplineFilter
+{
+
+public:
+
+	CatmullRomFilter( double scale = 1. )
+		: SplineFilter( 0, .5, scale )
+	{}
+
+};
+
+class QuadraticFilter : public Filter
+{
+
+public:
+
+	QuadraticFilter( double scale = 1. )
+		: Filter( 1.5, scale )
+	{}
+
+	double getWeight( double delta ) const
+	{
+		delta = fabs(delta);
+
+		if ( delta <= 0.5 )
+		{
+			return -2. * delta * delta + 1.;
+		}
+
+		if ( delta <= 1.5 )
+		{
+			return delta * delta - 2.5 * delta + 1.5;
+		}
+
+		return 0;
 	}
 };
 
+class QuadraticBSplineFilter : public Filter
+{
+
+public:
+
+	QuadraticBSplineFilter( double scale = 1. )
+		: Filter( 1.5, scale )
+	{}
+
+	double getWeight( double delta ) const
+	{
+		delta = fabs(delta);
+		if ( delta <= 0.5 )
+		{
+			return -delta*delta + 0.75;
+		}
+
+		if ( delta <= 1.5 )
+		{
+			return .5 * delta * delta - 1.5 * delta + 1.125;
+		}
+
+		return 0;
+	}
+
+};
+
+class CubicFilter : public Filter
+{
+
+public:
+
+	CubicFilter( double scale = 1. )
+		: Filter( 3., scale )
+	{
+	}
+
+	double getWeight( double delta ) const 
+	{
+		delta = fabs( delta );
+		double delta2 = delta*delta;
+
+		if ( delta <= 1. )
+		{
+			return ((4./3.)*delta2*delta - (7./3.)*delta2 + 1.);
+		}
+
+		if ( delta <= 2. )
+		{
+			return (- (7./12.)*delta2*delta + 3*delta2 - (59./12.)*delta + 2.5);
+		}
+
+		if ( delta <= 3. )
+		{
+			return ((1./12.)*delta2*delta - (2./3.)*delta2 + 1.75f*delta - 1.5);
+		}
+
+		return 0;
+	}
+
+};
+
 }; // namespace GafferImage
+
+
 
 #endif
 

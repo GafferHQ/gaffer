@@ -50,9 +50,6 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_channelName( channelName ),
 	m_cacheSize( m_dataWindow.max / ImagePlug::tileSize() )
 {
-	///\todo: Find out why sometimes Sampler can be called from computeChannelData() that has a negative data window
-	/// which results in the sampler (created within computeChannelData ) being called.
-	/// If we can work that out then maybe we don't need the m_valid bool!.
 	m_valid = !m_dataWindow.isEmpty();
 	
 	if ( m_valid )

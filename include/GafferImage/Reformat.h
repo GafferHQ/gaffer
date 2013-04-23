@@ -42,6 +42,7 @@
 namespace GafferImage
 {
 
+/// Reformats the input image to a new resolution using a resampling filter.
 class Reformat : public ImageProcessor
 {
 
@@ -51,14 +52,14 @@ class Reformat : public ImageProcessor
 		virtual ~Reformat();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Reformat, ReformatTypeId, ImageProcessor );
-		
+	
+		/// Plug accessors.	
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;
 		Gaffer::IntPlug *filterPlug();
 		const Gaffer::IntPlug *filterPlug() const;
 		Gaffer::FloatPlug *offsetPlug();
 		const Gaffer::FloatPlug *offsetPlug() const;
-
 
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
@@ -73,19 +74,20 @@ class Reformat : public ImageProcessor
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		/// Reformats the input plug with a filter by doing a 2-pass squash/stretch.
+		/// We reformat the image by doing two passes over the input in first the horizontal and then vertical directions.
+		/// On each pass we use the chosen filter to create a (row or column) buffer of pixels their weighted contributeion to each pixel on the row or column.
+		/// Using this column/row buffer we iterate over the input and sum the contributing pixels. The result is normalized by the sum of weights.
+		/// This process is repeated once for the vertical and horizontal passes and the final result is written into the output buffer.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
 
-		template< typename F >
-		void reformat( const std::string &channelName, const Imath::V2i &tileOrigin, std::vector<float> &out ) const;
-	
 		static size_t g_firstPlugIndex;
 		
 };
 
 } // namespace GafferImage
-
-#include "GafferImage/Reformat.inl"
 
 #endif // GAFFERSCENE_REFORMAT_H

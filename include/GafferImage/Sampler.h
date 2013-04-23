@@ -76,53 +76,6 @@ public :
 			
 		return result;
 	}
-/*	
-	template< typename F >
-	float sample( F filter, float x, float y, float sampleWidth, float sampleHeight )
-	{
-		// Get the width of our filter.
-		const int width = filter.width();
-		
-		// The additional padding that we need.
-		const int hw =  width % 2 == 0 ? : width/2 : (width-1)/2+1;
-		
-		// Work out the number of pixels we need to sample.
-		int samplesW = int( ceil( sampleWidth ) );
-		int samplesH = int( ceil( sampleHeight ) );
-		const int nPixelsX = samplesW+hw+hw;	
-		const int nPixelsY = samplesY+hw+hw;	
-		float pixels[nPixelsY][nPixelsX];
-
-		// The step in X and Y that we take when sampling.
-		float stepX = sampleWidth/samplesW;
-		float stepY = sampleHeight/samplesH;
-		
-		// Do an upscale until we have an
-		// integer box that we can downsample easily.
-		float sy = y - sampleHeight/2.-(stepY*hw);
-		for( int j = 0; j < nPixelsY; ++j, sy += stepY )
-		{
-			float sx = x - sampleWidth/2.-(stepX*hw);
-			for( int i = 0; i < nPixelsX; ++i, sx += stepX )
-			{
-				pixels[j][i] = sample( filter, sx, sy ); 
-			}
-		}
-
-		float weights[width];
-		int offset = filter.construct( .5 );
-		memcpy( weights, filter.weights(), width*sizeof(float) );	
-		for( int j = hw; j < nPixelsY; ++j )
-		{
-			for( int i = hw; i < nPixelsX; ++i )
-			{
-				for(  )
-			}
-		}
-
-		return 1.;
-	}
-*/
 
 private:
 
