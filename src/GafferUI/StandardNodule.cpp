@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "IECore/AngleConversion.h"
+
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/Plug.h"
@@ -58,7 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
-	:	Nodule( plug ), m_hovering( false ), m_draggingConnection( false )
+	:	Nodule( plug ), m_labelVisible( false ), m_hovering( false ), m_draggingConnection( false )
 {
 	enterSignal().connect( boost::bind( &StandardNodule::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &StandardNodule::leave, this, ::_1, ::_2 ) );
@@ -76,6 +78,21 @@ StandardNodule::~StandardNodule()
 {
 }
 
+void StandardNodule::setLabelVisible( bool labelVisible )
+{
+	if( labelVisible == m_labelVisible )
+	{
+		return;
+	}
+	m_labelVisible = labelVisible;
+	renderRequestSignal()( this );
+}
+
+bool StandardNodule::getLabelVisible() const
+{
+	return m_labelVisible;
+}
+		
 Imath::Box3f StandardNodule::bound() const
 {
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
@@ -106,6 +123,55 @@ void StandardNodule::doRender( const Style *style ) const
 	}
 
 	style->renderNodule( radius, state );
+	
+	if( m_labelVisible && !IECoreGL::Selector::currentSelector() )
+	{
+		renderLabel( style );
+	}
+}
+
+void StandardNodule::renderLabel( const Style *style ) const
+{
+	const NodeGadget *nodeGadget = ancestor<NodeGadget>();
+	if( !nodeGadget )
+	{
+		return;
+	}
+	
+	const std::string &label = plug()->getName().string();
+	
+	// we rotate the label based on the angle the connection exits the node at.
+	V3f tangent = nodeGadget->noduleTangent( this );
+	float theta = IECore::radiansToDegrees( atan2f( tangent.y, tangent.x ) );
+	
+	// but we don't want the text to be vertical, so we bend it away from the
+	// vertical axis.
+	if( ( theta > 0.0f && theta < 90.0f ) || ( theta < 0.0f && theta >= -90.0f ) )
+	{
+		theta = sign( theta ) * lerp( 0.0f, 45.0f, fabs( theta ) / 90.0f );
+	}
+	else
+	{
+		theta = sign( theta ) * lerp( 135.0f, 180.0f, (fabs( theta ) - 90.0f) / 90.0f );	
+	}
+	
+	// we also don't want the text to be upside down, so we correct the rotation
+	// if that would be the case.
+	Box3f labelBound = style->textBound( Style::LabelText, label );
+	V2f anchor( labelBound.min.x - 1.0f, labelBound.center().y );
+	
+	if( theta > 90.0f )
+	{
+		theta = theta - 180.0f;
+		anchor.x = labelBound.max.x + 1.0f;
+	}
+	
+	// now we can actually do the rendering.
+	
+	glRotatef( theta, 0, 0, 1.0f );
+	glTranslatef( -anchor.x, -anchor.y, 0.0f );
+	
+	style->renderText( Style::LabelText, label );
 }
 
 void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )

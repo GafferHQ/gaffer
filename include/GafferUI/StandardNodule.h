@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,11 +58,15 @@ class StandardNodule : public Nodule
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardNodule, StandardNoduleTypeId, Nodule );
 
+		void setLabelVisible( bool labelVisible );
+		bool getLabelVisible() const;
+
 		virtual Imath::Box3f bound() const;
 
 	protected :
 
 		void doRender( const Style *style ) const;
+		void renderLabel( const Style *style ) const;
 
 		void enter( GadgetPtr gadget, const ButtonEvent &event );
 		void leave( GadgetPtr gadget, const ButtonEvent &event );
@@ -79,6 +83,7 @@ class StandardNodule : public Nodule
 		
 	private :
 
+		bool m_labelVisible;
 		bool m_hovering;
 		bool m_draggingConnection;
 		Imath::V3f m_dragPosition;

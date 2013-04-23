@@ -50,6 +50,7 @@
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/CompoundNodule.h"
+#include "GafferUI/StandardNodule.h"
 
 using namespace GafferUI;
 using namespace Gaffer;
@@ -64,7 +65,7 @@ static const float g_minWidth = 10.0f;
 static const float g_spacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-	:	NodeGadget( node ), m_nodeEnabled( true )
+	:	NodeGadget( node ), m_nodeEnabled( true ), m_labelsVisibleOnHover( true )
 {
 	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
@@ -115,6 +116,9 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		node->plugSetSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
 		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
 	}
+	
+	enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this ) );
+	leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this ) );
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -378,6 +382,16 @@ const Gadget *StandardNodeGadget::getContents() const
 	return contentsContainer()->getChild<Gadget>();
 }
 
+void StandardNodeGadget::setLabelsVisibleOnHover( bool labelsVisible )
+{
+	m_labelsVisibleOnHover = labelsVisible;
+}
+
+bool StandardNodeGadget::getLabelsVisibleOnHover() const
+{
+	return m_labelsVisibleOnHover;
+}
+
 void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
 {
 	if ( plug == node()->enabledPlug() )
@@ -393,5 +407,45 @@ void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );
+	}
+}
+
+void StandardNodeGadget::enter()
+{
+	if( m_labelsVisibleOnHover )
+	{
+		for( NoduleMap::const_iterator it = m_nodules.begin(), eIt = m_nodules.end(); it != eIt; it++ )
+		{
+			setNoduleLabelVisible( it->second, true );
+		}
+	}
+}
+
+void StandardNodeGadget::leave()
+{
+	if( m_labelsVisibleOnHover )
+	{
+		for( NoduleMap::const_iterator it = m_nodules.begin(), eIt = m_nodules.end(); it != eIt; it++ )
+		{
+			setNoduleLabelVisible( it->second, false );
+		}
+	}
+}
+
+void StandardNodeGadget::setNoduleLabelVisible( Nodule *nodule, bool labelVisible )
+{
+	if( StandardNodule *n = IECore::runTimeCast<StandardNodule>( nodule ) )
+	{
+		n->setLabelVisible( labelVisible );
+	}
+	else if( CompoundNodule *c = IECore::runTimeCast<CompoundNodule>( nodule ) )
+	{
+		for( PlugIterator it( c->plug() ); it != it.end(); it++ )
+		{
+			if( Nodule *n = c->nodule( it->get() ) )
+			{
+				setNoduleLabelVisible( n, labelVisible );
+			}
+		}
 	}
 }
