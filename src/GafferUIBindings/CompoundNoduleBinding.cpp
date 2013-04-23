@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ using namespace GafferUI;
 void GafferUIBindings::bindCompoundNodule()
 {
 	IECorePython::RunTimeTypedClass<CompoundNodule>()
-		.def( init<Gaffer::CompoundPlugPtr, LinearContainer::Orientation>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X ) ) )
+		.def( init<Gaffer::CompoundPlugPtr, LinearContainer::Orientation, float>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X, arg( "spacing" ) = 0.0f ) ) )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CompoundNodule )
 	;
 }

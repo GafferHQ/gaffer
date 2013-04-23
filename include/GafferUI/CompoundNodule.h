@@ -63,7 +63,7 @@ class CompoundNodule : public Nodule
 
 	public :
 
-		CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X );
+		CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X, float spacing = 0.0f );
 		virtual ~CompoundNodule();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundNodule, CompoundNoduleTypeId, Nodule );
