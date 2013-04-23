@@ -57,3 +57,7 @@ import StandardAttributesUI
 import ShaderUI
 import OpenGLShaderUI
 import ObjectSourceUI
+import TransformUI
+import AttributesUI
+import LightUI
+import InteractiveRenderUI

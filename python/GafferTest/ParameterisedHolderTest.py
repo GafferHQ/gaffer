@@ -1000,6 +1000,40 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 		# the plug was made read only, so should not have accepted the new parameter value
 		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
 		
+	def testExceptionInParameterChanged( self ) :
+
+		class ParameterChangedRaiser( IECore.Parameterised ) :
+
+			def __init__( self ) :
+
+				IECore.Parameterised.__init__( self, "" )
+
+				self.parameters().addParameters(
+
+					[
+
+						IECore.IntParameter(
+							name = "driver",
+							description = "",
+						),
+
+					],
+
+				)
+
+				self.changes = []
+
+			def parameterChanged( self, parameter ) :
+
+				raise RuntimeError( "Ooops!" )
+
+		c = ParameterChangedRaiser()
+
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( c )
+
+		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 10 )
+
 	def setUp( self ) :
 	
 		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"

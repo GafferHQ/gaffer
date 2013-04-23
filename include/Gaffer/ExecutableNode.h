@@ -40,11 +40,6 @@
 #include "Gaffer/Executable.h"
 #include "Gaffer/Node.h"
 
-namespace IECore
-{
-
-} // namespace IECore
-
 namespace Gaffer
 {
 

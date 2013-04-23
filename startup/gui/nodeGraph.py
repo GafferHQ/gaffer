@@ -49,17 +49,14 @@ __nodeDoubleClickConnection = GafferUI.NodeGraph.nodeDoubleClickSignal().connect
 def __toggleEnabled( node ) :
 
 	with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-		node["enabled"].setValue( not node["enabled"].getValue() )
+		node.enabledPlug().setValue( not node.enabledPlug().getValue() )
 
 def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
 
-	enabledPlug = None
-	with IECore.IgnoredExceptions( KeyError ) :
-		enabledPlug = node["enabled"]
-	
-	if enabledPlug is not None and isinstance( enabledPlug, Gaffer.BoolPlug ) and enabledPlug.settable() :
+	enabledPlug = node.enabledPlug()
+	if enabledPlug is not None and enabledPlug.settable() :
 		menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 		menuDefinition.append( "/Disable" if enabledPlug.getValue() else "/Enable", { "command" : IECore.curry( __toggleEnabled, node ) } )
 		

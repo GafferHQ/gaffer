@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,36 +31,30 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
-import IECore
-import IECoreGL
-
 import Gaffer
+import GafferUI
+
 import GafferScene
 
-class OpenGLRender( GafferScene.Render ) :
+GafferUI.Metadata.registerNodeDescription(
 
-	def __init__( self, name="OpenGLRender" ) :
-	
-		GafferScene.Render.__init__( self, name )
-							
-	def _createRenderer( self ) :
-	
-		IECoreGL.init( False )
-	
-		r = IECoreGL.Renderer()
-		r.setOption( "gl:mode", "immediate" )
+GafferScene.Transform,
 
-		return r
-		
-	def _outputProcedural( self, procedural, bound, renderer ) :
-	
-		procedural.render( renderer )
-		
-	def _commandAndArgs( self ) :
-	
-		return []
+"""Applies arbitrary user-defined attributes to locations in the scene. Note
+that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes
+and ArnoldAttributes nodes should be used in preference - they provide predefined
+sets of attributes with customised user interfaces. The Attributes node is of most use when
+needing to set a custom attribute not supported by the specialised nodes.
+""",
 
-IECore.registerRunTimeTyped( OpenGLRender )
+"attributes",
+"""The attributes to be applied - arbitrary numbers of user defined attributes may be added
+as children of this plug via the user interface, or using the CompoundDataPlug API via
+python.""",
+
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Attributes.staticTypeId(), "attributes", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

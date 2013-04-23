@@ -40,11 +40,11 @@ import IECoreRI
 import Gaffer
 import GafferScene
 
-class RenderManRender( GafferScene.Render ) :
+class RenderManRender( GafferScene.ExecutableRender ) :
 
 	def __init__( self, name="RenderManRender" ) :
 	
-		GafferScene.Render.__init__( self, name )
+		GafferScene.ExecutableRender.__init__( self, name )
 		
 		self.addChild(
 			Gaffer.StringPlug(
@@ -62,13 +62,10 @@ class RenderManRender( GafferScene.Render ) :
 				
 	def _createRenderer( self ) :
 	
-		renderer = IECoreRI.Renderer( self.__fileName() )
-		return renderer
+		return IECoreRI.Renderer( self.__fileName() )
 		
-	def _outputProcedural( self, procedural, bound, renderer ) :
-	
-		assert( isinstance( procedural, GafferScene.ScriptProcedural ) )	
-		
+	def _outputWorldProcedural( self, scenePlug, renderer ) :
+			
 		# enable all visibility types - maybe this is something which'll
 		# get dealt with using attributes at the root level at some point.
 		renderer.setAttribute( "ri:visibility:camera", IECore.BoolData( True ) )
@@ -77,17 +74,16 @@ class RenderManRender( GafferScene.Render ) :
 		renderer.setAttribute( "ri:visibility:specular", IECore.BoolData( True ) )
 		renderer.setAttribute( "ri:visibility:photon", IECore.BoolData( True ) )
 		
-		serialisedParameters = str( IECore.ParameterParser().serialise( procedural.parameters() ) )
-		pythonString = "IECoreRI.executeProcedural( 'gaffer/script', 1, %s )" % serialisedParameters
+		scriptNode = scenePlug.node().scriptNode()
 		
-		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython\" \"%s\" ] [ %f %f %f %f %f %f ]\n" % \
-			(
-				pythonString,
-				bound.min.x, bound.max.x,
-				bound.min.y, bound.max.y,
-				bound.min.z, bound.max.z,
-			)
-				
+		pythonString = "IECoreRI.executeProcedural( 'gaffer/script', 1, [ '-fileName', '%s', '-node', '%s', '-frame', '%f' ] )" % (
+			scriptNode["fileName"].getValue(),
+			scenePlug.node().relativeName( scriptNode ),
+			Gaffer.Context.current().getFrame()
+		)
+		
+		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython\" \"%s\" ] [ -1e30 1e30 -1e30 1e30 -1e30 1e30 ]\n" % pythonString
+			
 		renderer.command(
 			"ri:archiveRecord",
 			{
@@ -96,13 +92,13 @@ class RenderManRender( GafferScene.Render ) :
 			}
 		)
 		
-	def _commandAndArgs( self ) :
+	def _command( self ) :
 		
 		mode = self["mode"].getValue()
 		if mode == "render" :
-			return [ "renderdl", self.__fileName() ]
+			return "renderdl " + self.__fileName()
 		else :
-			return []
+			return ""
 			
 	def __fileName( self ) : 
 	

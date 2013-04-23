@@ -85,7 +85,7 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
 		
-		s["render"].execute()
+		s["render"].execute( [ Gaffer.Context.current() ] )
 		
 		self.assertTrue( os.path.exists( "/tmp/test.exr" ) )
 		

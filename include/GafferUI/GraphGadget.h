@@ -52,6 +52,7 @@ namespace GafferUI
 {
 
 IE_CORE_FORWARDDECLARE( NodeGadget );
+IE_CORE_FORWARDDECLARE( Nodule );
 IE_CORE_FORWARDDECLARE( ConnectionGadget );
 IE_CORE_FORWARDDECLARE( GraphLayout );
 
@@ -111,6 +112,8 @@ class GraphGadget : public ContainerGadget
 		
 		/// Returns the nodeGadget under the specified line.
 		NodeGadget *nodeGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
+		/// Returns the connectionGadget under the specified line.
+		ConnectionGadget *connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
 		
 	protected :
 
@@ -147,7 +150,9 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadgets( const Gaffer::GraphComponent *plugParent );
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
-	
+		ConnectionGadget *connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const;
+		void updateDragReconnectCandidate( const DragDropEvent &event );
+		
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
 		GraphGadgetSignal m_rootChangedSignal;
@@ -181,6 +186,9 @@ class GraphGadget : public ContainerGadget
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
 		DragMode m_dragMode;
+		ConnectionGadget *m_dragReconnectCandidate;
+		Nodule *m_dragReconnectSrcNodule;
+		Nodule *m_dragReconnectDstNodule;
 		
 		GraphLayoutPtr m_layout;
 		

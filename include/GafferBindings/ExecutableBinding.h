@@ -37,6 +37,8 @@
 #ifndef GAFFERBINDINGS_EXECUTABLE_H
 #define GAFFERBINDINGS_EXECUTABLE_H
 
+#include "Gaffer/Context.h"
+
 namespace GafferBindings
 {
 

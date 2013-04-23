@@ -66,6 +66,26 @@ const ImagePlug *ImageProcessor::inPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
+Plug *ImageProcessor::correspondingInput( const Plug *output )
+{
+	if ( output == outPlug() )
+	{
+		return inPlug();
+	}
+	
+	return ImageNode::correspondingInput( output );
+}
+
+const Plug *ImageProcessor::correspondingInput( const Plug *output ) const
+{
+	if ( output == outPlug() )
+	{
+		return inPlug();
+	}
+	
+	return ImageNode::correspondingInput( output );
+}
+
 void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	/// \todo Can this be simplified using the same logic used in SceneProcessor::hash()? It would

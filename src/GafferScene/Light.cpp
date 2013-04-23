@@ -74,6 +74,10 @@ void Light::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &out
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
+	else if( parametersPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( sourcePlug() );
+	}
 }
 
 void Light::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

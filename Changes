@@ -1,6 +1,35 @@
+0.59.0
+======
+
 * Fixed save/load of user plugs created via the UI (#174).
 
 * Fixed UI for generic Options and Attributes nodes.
+
+* Removed collapsibility of Transform node's transform plug as it just cluttered up the UI.
+
+* Removed collapsibility of Attribute node's attributes plug as it just cluttered up the UI.
+
+* Removed collapsibility of Lights node's parameters plug as it just cluttered up the UI.
+
+* Fixed MeshType::affects() (#175).
+
+* Fixed SceneInspector update (#176).
+
+* Improved SceneInspector shader representation (#147).
+
+* Improved SceneInspector numeric formatting (#88).
+
+* Added drag and drop node connection re-wiring (#78).
+
+* Added virtual slider for NumericWidgets, engaged using LeftClick + Control or ShiftControl (#79).
+
+* Fixed dirty propagation for Light nodes.
+
+* Added first implementation of interactive rerendering in the InteractiveRenderManRender node. (#141)
+
+* Deleting nodes attempts to rebuild the network to act as if the deleted nodes had been disabled (#95).
+
+* Viewports can be panned/tracked using middle mouse with no modifier key (#28).
 
 0.58.0
 ======

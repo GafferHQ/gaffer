@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -87,6 +88,18 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 				},
 			} )
 		)
-		
+
+	def testDirtyPropagation( self ) :
+
+		l = GafferSceneTest.TestLight()
+		cs = GafferTest.CapturingSlot( l.plugDirtiedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		l["parameters"]["intensity"]["r"].setValue( 10 )
+
+		dirtiedNames = [ p[0].relativeName( p[0].node() ) for p in cs ]
+		self.assertTrue( "out.object" in dirtiedNames )
+		self.assertTrue( "out" in dirtiedNames )
+
 if __name__ == "__main__":
 	unittest.main()

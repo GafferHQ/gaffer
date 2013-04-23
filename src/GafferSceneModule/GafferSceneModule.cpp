@@ -80,6 +80,7 @@
 #include "GafferSceneBindings/PathMatcherBinding.h"
 #include "GafferSceneBindings/SceneProceduralBinding.h"
 #include "GafferSceneBindings/PathMatcherDataBinding.h"
+#include "GafferSceneBindings/RenderBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -172,5 +173,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )
 	;
+	
+	bindRender();
 	
 }

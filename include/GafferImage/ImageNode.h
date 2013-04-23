@@ -64,8 +64,8 @@ class ImageNode : public Gaffer::DependencyNode
 		
 		/// The enabled plug provides a mechanism for turning the effect of a node on and off.
 		/// When disabled the node will just pass through the plug's default values.
-		Gaffer::BoolPlug *enabledPlug();
-		const Gaffer::BoolPlug *enabledPlug() const;
+		virtual Gaffer::BoolPlug *enabledPlug();
+		virtual const Gaffer::BoolPlug *enabledPlug() const;
 		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		

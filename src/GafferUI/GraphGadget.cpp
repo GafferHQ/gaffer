@@ -69,10 +69,8 @@ using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
-static const IECore::InternedString g_enabledPlugName( "enabled" );
-
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( 0 ), m_dragReconnectSrcNodule( 0 ), m_dragReconnectDstNodule( 0 )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -253,7 +251,76 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 
 	return nodeGadget;
 }
+
+ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	return connectionGadgetAt( lineInGadgetSpace, false );
+}
+
+ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const
+{
+	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+	
+	std::vector<GadgetPtr> gadgetsUnderMouse;
+	
+	if ( forReconnect )
+	{
+		std::vector<IECoreGL::HitRecord> selection;
+		{
+			Imath::V3f center = lineInGadgetSpace.p0;
+			NodeGadget *selNodeGadget = nodeGadgetAt( lineInGadgetSpace );
+			if ( selNodeGadget )
+			{
+				center = selNodeGadget->transformedBound( this ).center();
+			}
+			
+			const Imath::V3f corner0 = center - Imath::V3f( 2, 2, 1 );
+			const Imath::V3f corner1 = center + Imath::V3f( 2, 2, 1 );
+			ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
+			const Style *s = style();
+			s->bind();
+			
+			for ( ChildContainer::const_iterator it = children().begin(); it != children().end(); ++it )
+			{
+				if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
+				{
+					// don't consider the node's own connections
+					if ( selNodeGadget && selNodeGadget->node() != c->srcNodule()->plug()->node() && selNodeGadget->node() != c->dstNodule()->plug()->node() )
+					{
+						c->render( s );
+					}
+				}
+			}
+		}
 		
+		for ( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(); it != selection.end(); ++it )
+		{
+			GadgetPtr gadget = Gadget::select( it->name.value() );
+			if ( gadget )
+			{
+				gadgetsUnderMouse.push_back( gadget );
+			}
+		}
+	}
+	else
+	{
+		viewportGadget->gadgetsAt( viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this ), gadgetsUnderMouse );
+	}
+	
+	if ( !gadgetsUnderMouse.size() )
+	{
+		return 0;
+	}
+	
+	ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( gadgetsUnderMouse[0] );
+	if ( !connectionGadget )
+	{
+		connectionGadget = gadgetsUnderMouse[0]->ancestor<ConnectionGadget>();
+	}
+	
+	return connectionGadget;
+}
+
 void GraphGadget::doRender( const Style *style ) const
 {
 	glDisable( GL_DEPTH_TEST );
@@ -261,12 +328,39 @@ void GraphGadget::doRender( const Style *style ) const
 	// render connection first so they go underneath
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
-		if( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
+		ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() );
+		if ( c && c != m_dragReconnectCandidate )
 		{
 			c->render( style );
 		}
 	}
 
+	// render the new drag connections if they exist
+	if ( m_dragReconnectCandidate )
+	{
+		if ( m_dragReconnectDstNodule )
+		{
+			const Nodule *srcNodule = m_dragReconnectCandidate->srcNodule();
+			const NodeGadget *srcNodeGadget = nodeGadget( srcNodule->plug()->node() );
+			const Imath::V3f srcP = srcNodule->fullTransform( this ).translation();
+			const Imath::V3f dstP = m_dragReconnectDstNodule->fullTransform( this ).translation();
+			const Imath::V3f dstTangent = nodeGadget( m_dragReconnectDstNodule->plug()->node() )->noduleTangent( m_dragReconnectDstNodule );
+			/// \todo: can there be a highlighted/dashed state?
+			style->renderConnection( srcP, srcNodeGadget->noduleTangent( srcNodule ), dstP, dstTangent, Style::HighlightedState );
+		}
+		
+		if ( m_dragReconnectSrcNodule )
+		{
+			const Nodule *dstNodule = m_dragReconnectCandidate->dstNodule();
+			const NodeGadget *dstNodeGadget = nodeGadget( dstNodule->plug()->node() );
+			const Imath::V3f srcP = m_dragReconnectSrcNodule->fullTransform( this ).translation();
+			const Imath::V3f dstP = dstNodule->fullTransform( this ).translation();
+			const Imath::V3f srcTangent = nodeGadget( m_dragReconnectSrcNodule->plug()->node() )->noduleTangent( m_dragReconnectSrcNodule );
+			/// \todo: can there be a highlighted/dashed state?
+			style->renderConnection( srcP, srcTangent, dstP, dstNodeGadget->noduleTangent( dstNodule ), Style::HighlightedState );
+		}
+	}
+	
 	// then render the rest on top
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
@@ -305,7 +399,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 			Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( selection->member( i ) );
 			if( node && findNodeGadget( node ) )
 			{
-				Gaffer::BoolPlug *enabledPlug = node->getChild<Gaffer::BoolPlug>( g_enabledPlugName );
+				Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
 				if( enabledPlug && enabledPlug->settable() )
 				{
 					enabledPlug->setValue( !enabledPlug->getValue() );
@@ -570,6 +664,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		V2f pos = V2f( i.x, i.y );
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
+		updateDragReconnectCandidate( event );
 		renderRequestSignal()( this );
 		return true;
 	}
@@ -583,6 +678,78 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		
 	assert( 0 ); // shouldn't get here
 	return false;
+}
+
+void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
+{
+	m_dragReconnectCandidate = 0;
+	m_dragReconnectSrcNodule = 0;
+	m_dragReconnectDstNodule = 0;
+	
+	if ( m_scriptNode->selection()->size() != 1 )
+	{
+		return;
+	}
+	
+	m_dragReconnectCandidate = connectionGadgetAt( event.line, true );
+	if ( !m_dragReconnectCandidate )
+	{
+		return;
+	}
+	
+	// make sure the connection applies to this node.
+	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_scriptNode->selection()->member( 0 ) );
+	NodeGadget *selNodeGadget = nodeGadget( node );
+	if ( !node || !selNodeGadget )
+	{
+		m_dragReconnectCandidate = 0;
+		return;
+	}
+	
+	// we don't want to reconnect the selected node to itself
+	Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+	Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
+	if ( srcPlug->node() == node || dstPlug->node() == node )
+	{
+		m_dragReconnectCandidate = 0;
+		return;
+	}
+	
+	/// \todo Use InputPlugIterator when it provides non-const access to the Plug
+	GraphComponent::ChildIterator cIt = node->children().begin();
+	GraphComponent::ChildIterator cEnd = node->children().end();
+	for ( ; cIt != cEnd; ++cIt )
+	{
+		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
+		if ( p && p->direction() == Gaffer::Plug::In && !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
+		{
+			m_dragReconnectDstNodule = selNodeGadget->nodule( p );
+			if ( m_dragReconnectDstNodule )
+			{
+				break;
+			}
+		}
+	}
+
+	/// \todo Use OutputPlugIterator when it provides non-const access to the Plug
+	cIt = node->children().begin();
+	for ( ; cIt != cEnd; ++cIt )
+	{
+		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
+		if ( p && p->direction() == Gaffer::Plug::Out && dstPlug->acceptsInput( p ) )
+		{
+			m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
+			if ( m_dragReconnectSrcNodule )
+			{
+				break;
+			}
+		}
+	}
+		
+	if ( !m_dragReconnectSrcNodule && !m_dragReconnectDstNodule )
+	{
+		m_dragReconnectCandidate = 0;
+	}
 }
 
 bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
@@ -600,8 +767,35 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		return false;
 	}
+	
+	if( dragMode == Moving )
+	{
+		if ( m_dragReconnectCandidate )
+		{
+			if ( m_dragReconnectDstNodule || m_dragReconnectSrcNodule )
+			{
+				Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+				Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
+				
+				Gaffer::UndoContext undoContext( m_scriptNode );
+				
+				if ( m_dragReconnectDstNodule )
+				{
+					m_dragReconnectDstNodule->plug()->setInput( srcPlug );
+					dstPlug->setInput( 0 );
+				}
 
-	if( dragMode == Selecting )
+				if ( m_dragReconnectSrcNodule )
+				{
+					dstPlug->setInput( m_dragReconnectSrcNodule->plug() );
+				}
+			}
+		}
+		
+		m_dragReconnectCandidate = 0;
+		renderRequestSignal()( this );
+	}
+	else if( dragMode == Selecting )
 	{
 		Box2f selectionBound;
 		selectionBound.extendBy( m_dragStartPosition );

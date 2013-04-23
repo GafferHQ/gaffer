@@ -79,7 +79,7 @@ class Executable
 		};
 
 		typedef std::vector<Task> Tasks;
-		typedef std::vector<ContextPtr> Contexts;
+		typedef std::vector<ConstContextPtr> Contexts;
 
 		virtual ~Executable();
 

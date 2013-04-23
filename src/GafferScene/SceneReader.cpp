@@ -127,7 +127,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 	s = s->scene( path );
 	
 	SceneInterface::NameList nameList;
-	s->readAttributeNames( nameList );
+	s->attributeNames( nameList );
 	
 	CompoundObjectPtr result = new CompoundObject;
 	

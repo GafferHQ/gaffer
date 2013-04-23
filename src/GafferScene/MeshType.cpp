@@ -92,6 +92,8 @@ const Gaffer::BoolPlug *MeshType::overwriteExistingNormalsPlug() const
 
 void MeshType::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
+	SceneElementProcessor::affects( input, outputs );
+
 	if( input == meshTypePlug() || input == calculatePolygonNormalsPlug() || input == overwriteExistingNormalsPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );

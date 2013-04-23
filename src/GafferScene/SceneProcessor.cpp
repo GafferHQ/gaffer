@@ -65,6 +65,26 @@ const ScenePlug *SceneProcessor::inPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
+Plug *SceneProcessor::correspondingInput( const Plug *output )
+{
+	if ( output == outPlug() )
+	{
+		return inPlug();
+	}
+	
+	return SceneNode::correspondingInput( output );
+}
+
+const Plug *SceneProcessor::correspondingInput( const Plug *output ) const
+{
+	if ( output == outPlug() )
+	{
+		return inPlug();
+	}
+	
+	return SceneNode::correspondingInput( output );
+}
+
 void SceneProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ScenePlug *scenePlug = output->parent<ScenePlug>();
