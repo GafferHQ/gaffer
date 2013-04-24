@@ -43,7 +43,7 @@ import os
 
 class ReformatTest( unittest.TestCase ) :
 
-	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/" )
 	
 	filters = [
 		("Bilinear", 0),
@@ -59,7 +59,7 @@ class ReformatTest( unittest.TestCase ) :
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :
 		read = GafferImage.ImageReader()
-		read["fileName"].setValue( self.checkerFile )
+		read["fileName"].setValue( os.path.join( self.path, "checkerboard.100x100.exr" ) )
 		readFormat = read["out"]["format"].getValue()
 		
 		# Set the reformat node's format plug to be the same as the read node.
@@ -78,10 +78,11 @@ class ReformatTest( unittest.TestCase ) :
 		h2 = reformat["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
+	# Tests all filters against images of their expected result.
 	def testFilters( self ) :
 		
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue("$GAFFER_ROOT/python/GafferTest/images/checkerboard.100x100.exr")
+		reader["fileName"].setValue( os.path.join( self.path, "checkerboard.100x100.exr" ) )
 
 		reformat = GafferImage.Reformat()
 		reformat["format"].setValue( GafferImage.Format( 200, 150, 1. ) )
@@ -89,10 +90,9 @@ class ReformatTest( unittest.TestCase ) :
 		
 		expectedOutput = GafferImage.ImageReader()
 		
-		path = os.path.join( os.environ["GAFFER_ROOT"], "python/GafferTest/images/" )
 		for filter, idx in self.filters:
 			file = "checker" + filter + ".200x100.exr"
-			expectedOutput["fileName"].setValue( path+file )
+			expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
 			
 			reformat["filter"].setValue( idx )
 

@@ -44,5 +44,6 @@ import os
 class SamplerTest( unittest.TestCase ) :
 
 	def testSampleHash( self ) :
+		###\todo: See the todo in the GafferImage.Sampler class and then write this test case.
 		pass
 
