@@ -630,7 +630,20 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		
 		g.setNodePosition( s["n"], IECore.V2f( -100, 2000 ) )
 		self.assertEqual( g.getNodePosition( s["n"] ), IECore.V2f( -100, 2000 ) )
-				
+
+
+	def testTitle( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		g = GafferUI.NodeGraph( s )
+		
+		self.assertEqual( g.getTitle(), "Node Graph" )
+		
+		g.setTitle( "This is a test!" )
+		
+		self.assertEqual( g.getTitle(), "This is a test!" )
+			
 if __name__ == "__main__":
 	unittest.main()
 	
