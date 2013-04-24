@@ -174,12 +174,6 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     Format inFormat( inPlug()->formatPlug()->getValue() );
     Format outFormat( formatPlug()->getValue() );
 
-	///\ todo: Investigate why when the upstream node is passing through the default format that inFormat is getting a NULL data window. 
-	if ( !inFormat.getDisplayWindow().hasVolume() || !outFormat.getDisplayWindow().hasVolume() )
-	{
-		return ImagePlug::blackTile();
-	}
-  
     Imath::V2i inWH = Imath::V2i( inFormat.getDisplayWindow().max ) + Imath::V2i(1);
     Imath::V2i outWH = Imath::V2i( outFormat.getDisplayWindow().max ) + Imath::V2i(1);
     Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
