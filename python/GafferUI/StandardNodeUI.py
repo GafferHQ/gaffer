@@ -54,6 +54,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 	DisplayMode = IECore.Enum.create( "Tabbed", "Simplified" )
 
 	__defaultSectionName = "Settings"
+	__currentTabPlugName = "__uiCurrentTab"
 
 	def __init__( self, node, displayMode = None, **kw ) :
 
@@ -83,7 +84,12 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			defaultColumn.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
 
 		if self.__displayMode == self.DisplayMode.Tabbed :
-			self.__tabbedContainer.setCurrent( self.__tabbedContainer[0] )
+			if self.__currentTabPlugName in node :
+				tabIndex = min( node[self.__currentTabPlugName].getValue(), len( self.__tabbedContainer ) - 1 )
+			else :
+				tabIndex = 0
+			self.__tabbedContainer.setCurrent( self.__tabbedContainer[tabIndex] )
+			self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 
 	## The top level layout for the standard node ui is a tabbed container. Derived
 	# classes may access it using this function in order to add their own tabs
@@ -133,5 +139,20 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			sectionColumn = self.__sectionColumn( sectionName )
 			if sectionColumn is not None :
 				sectionColumn.append( widget )
+
+	def __currentTabChanged( self, tabbedContainer, current ) :
+
+		assert( tabbedContainer is self.__tabbedContainer )
+
+		if self.__currentTabPlugName in self.node() :
+			plug = self.node()[self.__currentTabPlugName]
+		else :
+			plug = Gaffer.IntPlug(
+				defaultValue = 0,
+				flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable,
+			)
+			self.node()[self.__currentTabPlugName] = plug
+
+		plug.setValue( self.__tabbedContainer.index( current ) )
 
 GafferUI.NodeUI.registerNodeUI( Gaffer.Node.staticTypeId(), StandardNodeUI )
