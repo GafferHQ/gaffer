@@ -45,6 +45,17 @@ class ReformatTest( unittest.TestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 	
+	filters = [
+		("Bilinear", 0),
+		("Box", 1),
+		("Bspline", 2),
+		("CatmullRom", 3),
+		("Cubic", 4),
+		("Hermite", 5),
+		("Mitchell", 6),
+		("Sinc", 7)
+	]
+	
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :
 		read = GafferImage.ImageReader()
@@ -67,5 +78,30 @@ class ReformatTest( unittest.TestCase ) :
 		h2 = reformat["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
+	def testFilters( self ) :
+		
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue("$GAFFER_ROOT/python/GafferTest/images/checkerboard.100x100.exr")
+
+		reformat = GafferImage.Reformat()
+		reformat["format"].setValue( GafferImage.Format( 200, 150, 1. ) )
+		reformat["in"].setInput( reader["out"] )
+		
+		expectedOutput = GafferImage.ImageReader()
+		
+		path = os.path.join( os.environ["GAFFER_ROOT"], "python/GafferTest/images/" )
+		for filter, idx in self.filters:
+			file = "checker" + filter + ".200x100.exr"
+			expectedOutput["fileName"].setValue( path+file )
+			
+			reformat["filter"].setValue( idx )
+
+			op = IECore.ImageDiffOp()
+			res = op(
+				imageA = expectedOutput["out"].image(),
+				imageB = reformat["out"].image()
+			)
+
+			self.assertFalse( res.value )	
 		
 

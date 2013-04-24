@@ -84,7 +84,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferImageUI.FormatPlugValueWidget
 )
 
-filterLabelsAndValues = [ ( "Bilinear", 0 ), ( "Box", 1 ), ( "BSpline", 2 ), ( "CatmullRom", 3 ), ( "Cubic", 4 ), ( "Hermite", 5 ), ( "Mitchell", 6 ), ( "Sinc", 7 ), ( "QuadraticBSpline", 8 ), ( "Quadratic", 9 ) ]
+filterLabelsAndValues = [ ( "Bilinear", 0 ), ( "Box", 1 ), ( "BSpline", 2 ), ( "CatmullRom", 3 ), ( "Cubic", 4 ), ( "Hermite", 5 ), ( "Mitchell", 6 ), ( "Sinc", 7 ) ]
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.Reformat.staticTypeId(),
 	"filter",

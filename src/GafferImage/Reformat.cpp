@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Luke Goddard. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +16,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributionibutors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -172,6 +173,13 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
     Format inFormat( inPlug()->formatPlug()->getValue() );
     Format outFormat( formatPlug()->getValue() );
+
+	///\ todo: Investigate why when the upstream node is passing through the default format that inFormat is getting a NULL data window. 
+	if ( !inFormat.getDisplayWindow().hasVolume() || !outFormat.getDisplayWindow().hasVolume() )
+	{
+		return ImagePlug::blackTile();
+	}
+  
     Imath::V2i inWH = Imath::V2i( inFormat.getDisplayWindow().max ) + Imath::V2i(1);
     Imath::V2i outWH = Imath::V2i( outFormat.getDisplayWindow().max ) + Imath::V2i(1);
     Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
@@ -196,8 +204,6 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
         case(5): f = new HermiteFilter( 1.f / scale.y ); break;
         case(6): f = new MitchellFilter( 1.f / scale.y ); break;
         case(7): f = new SincFilter( 1.f / scale.y ); break;
-        case(8): f = new QuadraticBSplineFilter( 1.f / scale.y ); break;
-        case(9): f = new QuadraticFilter( 1.f / scale.y ); break;
     }
 
     // Get the diemensions of our filter.

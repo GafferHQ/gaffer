@@ -306,60 +306,6 @@ public:
 
 };
 
-class QuadraticFilter : public Filter
-{
-
-public:
-
-	QuadraticFilter( double scale = 1. )
-		: Filter( 1.5, scale )
-	{}
-
-	double getWeight( double delta ) const
-	{
-		delta = fabs(delta);
-
-		if ( delta <= 0.5 )
-		{
-			return -2. * delta * delta + 1.;
-		}
-
-		if ( delta <= 1.5 )
-		{
-			return delta * delta - 2.5 * delta + 1.5;
-		}
-
-		return 0;
-	}
-};
-
-class QuadraticBSplineFilter : public Filter
-{
-
-public:
-
-	QuadraticBSplineFilter( double scale = 1. )
-		: Filter( 1.5, scale )
-	{}
-
-	double getWeight( double delta ) const
-	{
-		delta = fabs(delta);
-		if ( delta <= 0.5 )
-		{
-			return -delta*delta + 0.75;
-		}
-
-		if ( delta <= 1.5 )
-		{
-			return .5 * delta * delta - 1.5 * delta + 1.125;
-		}
-
-		return 0;
-	}
-
-};
-
 class CubicFilter : public Filter
 {
 

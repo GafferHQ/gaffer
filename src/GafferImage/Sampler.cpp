@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -48,14 +48,14 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	: m_plug( plug ),
 	m_channelName( channelName )
 {
-	// Intersect the data window and the sample window.
-	Imath::Box2i window = boxIntersection( sampleWindow, plug->formatPlug()->getValue().getDisplayWindow() );
-	
 	// Get the new sample bounds that includes all intersecting tiles.	
 	m_sampleWindow = Imath::Box2i( 
-		Imath::V2i( ( window.min / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) ),
-		Imath::V2i( ( window.max / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) + Imath::V2i( ImagePlug::tileSize() ) - Imath::V2i(1) )
+		Imath::V2i( ( sampleWindow.min / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) ),
+		Imath::V2i( ( sampleWindow.max / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) + Imath::V2i( ImagePlug::tileSize() ) - Imath::V2i(1) )
 	);
+	
+	// Intersect the data window and the sample window.
+	m_sampleWindow = boxIntersection( m_sampleWindow, plug->formatPlug()->getValue().getDisplayWindow() );
 		
 	m_valid = m_sampleWindow.hasVolume();
 	
