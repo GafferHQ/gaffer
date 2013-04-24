@@ -77,7 +77,11 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		return self.graphGadgetWidget().getViewportGadget().getChild()
 	
 	def getTitle( self ) :
-	
+		
+		title = super( NodeGraph, self ).getTitle()
+		if title:
+			return title
+		
 		result = IECore.CamelCase.toSpaced( self.__class__.__name__ )
 	
 		root = self.graphGadget().getRoot()

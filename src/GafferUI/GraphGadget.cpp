@@ -265,18 +265,20 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 	
 	if ( forReconnect )
 	{
+		NodeGadget *selNodeGadget = nodeGadgetAt( lineInGadgetSpace );
+		if( !selNodeGadget )
+		{
+			return 0;
+		}
+
+		Imath::V3f center = selNodeGadget->transformedBound( this ).center();
+		const Imath::V3f corner0 = center - Imath::V3f( 2, 2, 1 );
+		const Imath::V3f corner1 = center + Imath::V3f( 2, 2, 1 );
+
 		std::vector<IECoreGL::HitRecord> selection;
 		{
-			Imath::V3f center = lineInGadgetSpace.p0;
-			NodeGadget *selNodeGadget = nodeGadgetAt( lineInGadgetSpace );
-			if ( selNodeGadget )
-			{
-				center = selNodeGadget->transformedBound( this ).center();
-			}
-			
-			const Imath::V3f corner0 = center - Imath::V3f( 2, 2, 1 );
-			const Imath::V3f corner1 = center + Imath::V3f( 2, 2, 1 );
 			ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
+
 			const Style *s = style();
 			s->bind();
 			
@@ -284,8 +286,8 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 			{
 				if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
 				{
-					// don't consider the node's own connections
-					if ( selNodeGadget && selNodeGadget->node() != c->srcNodule()->plug()->node() && selNodeGadget->node() != c->dstNodule()->plug()->node() )
+					// don't consider the node's own connections, or connections without a source nodule
+					if ( c->srcNodule() && selNodeGadget->node() != c->srcNodule()->plug()->node() && selNodeGadget->node() != c->dstNodule()->plug()->node() )
 					{
 						c->render( s );
 					}

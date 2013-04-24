@@ -574,7 +574,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	V2i position( (int)event.line.p0.x, (int)event.line.p0.y );
 	
 	m_cameraController.motionStart( CameraController::Dolly, position );
-	position.x += (int)(event.wheelRotation * getViewport().x / 80.0f);
+	position.x += (int)(event.wheelRotation * getViewport().x / 140.0f);
 	m_cameraController.motionUpdate( position );
 	m_cameraController.motionEnd( position );
 
