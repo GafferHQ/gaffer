@@ -44,34 +44,42 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace GafferImage;
 
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName )
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow )
 	: m_plug( plug ),
-	m_dataWindow( plug->formatPlug()->getValue().getDisplayWindow() ),
-	m_channelName( channelName ),
-	m_cacheSize( m_dataWindow.max / ImagePlug::tileSize() )
+	m_channelName( channelName )
 {
-	m_valid = !m_dataWindow.isEmpty();
+	// Intersect the data window and the sample window.
+	Imath::Box2i window = boxIntersection( sampleWindow, plug->formatPlug()->getValue().getDisplayWindow() );
+	
+	// Get the new sample bounds that includes all intersecting tiles.	
+	m_sampleWindow = Imath::Box2i( 
+		Imath::V2i( ( window.min / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) ),
+		Imath::V2i( ( window.max / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) + Imath::V2i( ImagePlug::tileSize() ) - Imath::V2i(1) )
+	);
+		
+	m_valid = m_sampleWindow.hasVolume();
 	
 	if ( m_valid )
 	{
-		m_cacheSize.x = std::max( m_cacheSize.x, 0 );
-		m_cacheSize.y = std::max( m_cacheSize.y, 0 );
-		m_dataCache.resize( ( m_cacheSize.x + 1 ) * ( m_cacheSize.y + 1 ), NULL );
+		m_dataCache.resize( ( ( m_sampleWindow.max.x - m_sampleWindow.min.x ) / ImagePlug::tileSize() + 1 ) * ( ( m_sampleWindow.max.y - m_sampleWindow.min.y ) / ImagePlug::tileSize() + 1 ), NULL );
 	}
 }
 
 float Sampler::sample( int x, int y )
 {
-	if ( !m_valid ) return 1.;
+	if ( !m_valid ) return 0.;
 
-	x = std::max( m_dataWindow.min.x, std::min( m_dataWindow.max.x, x ) );
-	y = std::max( m_dataWindow.min.y, std::min( m_dataWindow.max.y, y ) );
+	// Clamp the sample to the sample window.
+	x = std::max( m_sampleWindow.min.x, std::min( m_sampleWindow.max.x, x ) );
+	y = std::max( m_sampleWindow.min.y, std::min( m_sampleWindow.max.y, y ) );
 
-	int cacheIndexX = x / ImagePlug::tileSize();
-	int cacheIndexY = y / ImagePlug::tileSize();
-
-	Imath::V2i tileOrigin( cacheIndexX * ImagePlug::tileSize(), cacheIndexY * ImagePlug::tileSize() );
-	ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheIndexX + cacheIndexY * ( m_cacheSize.y + 1 ) ];
+	// Get the smart pointer to the tile we want.
+	int cacheIndexX = ( x - m_sampleWindow.min.x ) / ImagePlug::tileSize();
+	int cacheIndexY = ( y - m_sampleWindow.min.y ) / ImagePlug::tileSize();
+	ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheIndexX + cacheIndexY * ( ( m_sampleWindow.max.x - m_sampleWindow.min.x ) / ImagePlug::tileSize() + 1 ) ];
+	
+	// Get the origin of the tile we want.
+	Imath::V2i tileOrigin( ( x / ImagePlug::tileSize() ) * ImagePlug::tileSize(), ( y / ImagePlug::tileSize() ) * ImagePlug::tileSize() );
 	if ( cacheTilePtr == NULL ) cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
 
 	x -= tileOrigin.x;
@@ -79,7 +87,4 @@ float Sampler::sample( int x, int y )
 
 	return *((&cacheTilePtr->readable()[0]) + y * ImagePlug::tileSize() + x);
 }	
-
-
-
 

@@ -87,16 +87,20 @@ void Reformat::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &
 {
     ImageProcessor::affects( input, outputs );
 
-    if( input == formatPlug() )
+    if ( input == formatPlug() )
     {
         outputs.push_back( outPlug()->formatPlug() );
         outputs.push_back( outPlug()->dataWindowPlug() );
         outputs.push_back( outPlug()->channelDataPlug() );
     }
-    else if( input == filterPlug() )
+    else if ( input == filterPlug() )
     {
         outputs.push_back( outPlug()->channelDataPlug() );
     }
+	else if ( input == inPlug()->channelDataPlug() )
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );	
+	}
 }
 
 bool Reformat::enabled() const
@@ -172,16 +176,12 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     Imath::V2i outWH = Imath::V2i( outFormat.getDisplayWindow().max ) + Imath::V2i(1);
     Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
 
-    Imath::Box2d inputBoxd(
-        Imath::V2d( double( tile.min.x ) / scale.x, double( tile.min.y ) / scale.y ),
-        Imath::V2d( double( tile.max.x + 1 ) / scale.x, double( tile.max.y + 1 ) / scale.y )
+	// Create a box that defines our input bounding box.
+    Imath::Box2i inputBox(
+        Imath::V2i( (int)floor( double( tile.min.x ) / scale.x ), (int)ceil( double( tile.min.y ) / scale.y ) ),
+        Imath::V2i( (int)floor( double( tile.max.x + 1 ) / scale.x ), (int)ceil( double( tile.max.y + 1 ) / scale.y ) )
     );
     
-    Imath::Box2i inputBoxi(
-        Imath::V2d( (int)floor( inputBoxd.min.x ), (int)ceil( inputBoxd.min.y ) ),
-        Imath::V2d( (int)floor( inputBoxd.max.x ), (int)ceil( inputBoxd.max.y ) )
-    );
-
     // Create our filter.
     Filter *f = NULL; 
     int filter = filterPlug()->getValue();
@@ -205,11 +205,18 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     int fHalfHeight = (fHeight - 1) / 2;
     f->setScale( 1.f / scale.x );
     int fWidth = f->width();
+    int fHalfWidth = (fWidth - 1) / 2;
+
+	// Create a box that we can use to define the bounds of our input.	
+	Imath::Box2i sampleBox(
+        Imath::V2i( inputBox.min.x - fHalfWidth, inputBox.min.y - fHalfHeight ),
+        Imath::V2i( inputBox.max.x + fHalfWidth, inputBox.max.y + fHalfHeight )
+    );
 
     // Create a temporary buffer that we can write the result of the first pass to.
     // We extend the buffer vertically as we will need additional information in the
     // vertical squash (the second pass) to properly convolve the filter.
-    int inTileHeight = inputBoxi.max.y - inputBoxi.min.y;	
+    int inTileHeight = inputBox.max.y - inputBox.min.y;	
     float buffer[ ImagePlug::tileSize() * (inTileHeight + fHeight) ];
     
     // Create several buffers for each pixel in the output row (or coloum depending on the pass)
@@ -252,7 +259,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
     // Now that we know the contribution of each pixel from the others on the row, compute the
     // horizontally scaled buffer which we will use as input in the vertical scale pass. 
-    Sampler sampler( inPlug(), channelName );
+    Sampler sampler( inPlug(), channelName, sampleBox );
     for ( int k = 0; k < inTileHeight+fHeight; ++k )
     {
         for ( int i = 0, contributionIdx = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fWidth )
@@ -269,7 +276,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
                     continue;
                 }
 
-                float value = sampler.sample( inputBoxi.min.x + contributionibutor.pixel, k + inputBoxi.min.y - fHalfHeight );
+                float value = sampler.sample( inputBox.min.x + contributionibutor.pixel, k + inputBox.min.y - fHalfHeight );
                 intensity += value * contributionibutor.weight;
             }
 

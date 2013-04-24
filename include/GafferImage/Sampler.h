@@ -44,45 +44,35 @@
 namespace GafferImage
 {
 
+///\todo: 
+/// Add a hash() method to the sampler that accumulates the hashes of all tiles within m_sampleWindow.
+/// Currently anything that uses the sampler to gather data from across an area could potentially
+/// have an incorrect hash if one of the tiles that it is sampling which isn't the one being output
+/// changes. For example, if our sampler is accessing 4 tiles to produce an output for one tile and a node
+/// upstream changes just one of them and passes the hashes of the other through, the output hash  will
+/// be wrong and not update. This has not been an issue yet as we have nodes that do that!
+	
+/// A utility class for pixel access of an image plug.
 class Sampler
 {
 
 public : 
+	
+	/// Sampler Constructor
+	/// @param plug The image plug to sample from.
+	/// @param channelName The channel to sample.
+	/// @param The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow );
 
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName );
-
+	/// Samples a colour value from the channel at x, y. The result is clamped the the sampleWindow.	
 	float sample( int x, int y );
-		
-	template< typename F >
-	float sample( F filter, float x, float y )
-	{
-		const int width( filter.width() );
-		
-		int ySample = filter.construct( y );
-		float weights[width];
-		memcpy( weights, filter.weights(), width*sizeof(float) );	
-		
-		float result = 0.;
-		for ( int j = 0; j < width; ++j )
-		{
-			int xSample = filter.construct( x );
-			float v = 0.;
-			for ( int i = 0; i < width; ++i )
-			{
-				v += sample( xSample+i, ySample+j ) * filter[i];
-			}
-			result += v * weights[j];
-		}
-			
-		return result;
-	}
+	
 
 private:
 
 	const ImagePlug *m_plug;
-	const Imath::Box2i m_dataWindow;
 	const std::string &m_channelName;
-	Imath::V2i m_cacheSize;
+	Imath::Box2i m_sampleWindow;
 	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 	bool m_valid;
 

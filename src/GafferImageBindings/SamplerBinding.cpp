@@ -50,11 +50,9 @@ namespace GafferImageBindings
 
 void bindSampler()
 {
-	/*
-	class_<Sampler>( "Sampler", init< const GafferImage::ImagePlug *, const std::string & >() )
+	class_<Sampler>( "Sampler", init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i & >() )
 		.def( "sample", &Sampler::sample )
 	;
-	*/
 }
 
 } // namespace IECorePython

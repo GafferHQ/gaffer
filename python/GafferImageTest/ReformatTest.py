@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,20 +34,38 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
+import unittest
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import IECore
+import Gaffer
+import GafferImage
+import os
+
+class ReformatTest( unittest.TestCase ) :
+
+	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	
+	# Test that when the input and output format are the same that the hash is passed through.
+	def testHashPassThrough( self ) :
+		read = GafferImage.ImageReader()
+		read["fileName"].setValue( self.checkerFile )
+		readFormat = read["out"]["format"].getValue()
+		
+		# Set the reformat node's format plug to be the same as the read node.
+		reformat = GafferImage.Reformat()
+		reformat["in"].setInput( read["out"] )
+		reformat["format"].setValue( readFormat )
+		
+		# Check that it passes through the hash for the channel data.
+		h1 = read["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
+		h2 = reformat["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
+		self.assertEqual( h1, h2 )
+		
+		# Now assert that the hash changes when set to something else.
+		reformat["format"].setValue( GafferImage.Format( 128, 256, 1. ) )
+		
+		h2 = reformat["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
+		self.assertNotEqual( h1, h2 )
+
+		
+
