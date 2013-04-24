@@ -1,6 +1,17 @@
+0.60.0
+======
+
 * Expansion state of collapsible plug grouping is now remembered for the duration of a session (#87).
 
 * Current tab in Node Editor is now remembered for the duration of a session (#87).
+
+* Fixed a bug in the NodeGraph where setTitle() was having no effect.
+
+* Slowed wheel zooming (#200).
+
+* Fixed crash when dragging nodes (#211).
+
+* Improved NodeEditor node labelling (#151).
 
 0.59.0
 ======
