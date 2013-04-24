@@ -56,7 +56,7 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	
 	// Intersect the data window and the sample window.
 	m_sampleWindow = boxIntersection( m_sampleWindow, plug->formatPlug()->getValue().getDisplayWindow() );
-		
+
 	m_valid = m_sampleWindow.hasVolume();
 	
 	if ( m_valid )

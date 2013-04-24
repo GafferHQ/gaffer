@@ -17,7 +17,7 @@
 //        the distribution.
 //  
 //      * Neither the name of Image Engine Design nor the names of
-//        any other contributionibutors to this software may be used to endorse or
+//        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
 //  
@@ -184,12 +184,6 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     Imath::V2i outWH = Imath::V2i( outFormat.getDisplayWindow().max ) + Imath::V2i(1);
     Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
 
-	// Create a box that defines our input bounding box.
-    Imath::Box2i inputBox(
-        Imath::V2i( (int)floor( double( tile.min.x ) / scale.x ), (int)ceil( double( tile.min.y ) / scale.y ) ),
-        Imath::V2i( (int)floor( double( tile.max.x + 1 ) / scale.x ), (int)ceil( double( tile.max.y + 1 ) / scale.y ) )
-    );
-    
     // Create our filter.
     Filter *f = NULL; 
     int filter = filterPlug()->getValue();
@@ -206,31 +200,38 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
         case(7): f = new SincFilter( 1.f / scale.y ); break;
     }
 
-    // Get the diemensions of our filter.
+    // Get the diemensions of our filter and create a box that we can use to define the bounds of our input.
     int fHeight = f->width();
-    int fHalfHeight = (fHeight - 1) / 2;
-    f->setScale( 1.f / scale.x );
-    int fWidth = f->width();
-    int fHalfWidth = (fWidth - 1) / 2;
+	
+	int sampleMinY = f->construct( (tile.min.y+.5) / scale.y );
+	int sampleMaxY = f->construct( (tile.max.y+.5) / scale.y );
+	
+	f->setScale( 1.f / scale.x );
+	int sampleMinX = f->construct( (tile.min.x+.5) / scale.x );
+	int sampleMaxX = f->construct( (tile.max.x+.5) / scale.x );
+    
+	int fWidth = f->width();
 
-	// Create a box that we can use to define the bounds of our input.	
 	Imath::Box2i sampleBox(
-        Imath::V2i( inputBox.min.x - fHalfWidth, inputBox.min.y - fHalfHeight ),
-        Imath::V2i( inputBox.max.x + fHalfWidth, inputBox.max.y + fHalfHeight )
+        Imath::V2i( sampleMinX, sampleMinY ),
+        Imath::V2i( sampleMaxX + fWidth, sampleMaxY + fHeight )
     );
+
+	int sampleBoxWidth = sampleBox.max.x - sampleBox.min.x + 1;
+	int sampleBoxHeight = sampleBox.max.y - sampleBox.min.y + 1;
 
     // Create a temporary buffer that we can write the result of the first pass to.
     // We extend the buffer vertically as we will need additional information in the
     // vertical squash (the second pass) to properly convolve the filter.
-    int inTileHeight = inputBox.max.y - inputBox.min.y;	
-    float buffer[ ImagePlug::tileSize() * (inTileHeight + fHeight) ];
+    float buffer[ ImagePlug::tileSize() * sampleBoxHeight ];
     
     // Create several buffers for each pixel in the output row (or coloum depending on the pass)
     // into which we can place the indices for the pixels that are contribute to it's result and
     // their weight.
     
     // A buffer that holds a list of pixel contributions and their weights for every pixel in the output buffer.
-    std::vector<Contribution> contribution( ImagePlug::tileSize() * (fWidth > fHeight ? fWidth : fHeight) ); 
+	// As it gets reused for both passes we make it large enough to hold both so that we don't have to resize it later.
+    std::vector<Contribution> contribution( ImagePlug::tileSize() * ( sampleBoxHeight > sampleBoxWidth ? sampleBoxHeight : sampleBoxWidth ) ); 
     
     // The total number of pixels that contribute towards each pixel in th resulting image.
     std::vector<int> coverageTotal( ImagePlug::tileSize() );
@@ -244,29 +245,29 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     int contributionIdx = 0;
     for ( int i = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fWidth )
     {
-        double center = (i+0.5)/scale.x;
-        int left = f->construct( center );
+        int tap = f->construct( (tile.min.x + i + 0.5) / scale.x );
         
         int n = 0;	
         weightedSum[i] = 0.;
-        for ( int j = left, k = 0; j < left+fWidth; ++j, ++k )
+        for ( int j = tap; j < tap+fWidth; ++j )
         {
-            double weight = (*f)[k];
+            double weight = (*f)[j-tap];
             if ( weight == 0 )
             {
                 continue;
             }
             
             contribution[contributionIdx+n].pixel = j; 
-            weightedSum[i] += contribution[contributionIdx+n++].weight = weight; 
+            weightedSum[i] += contribution[contributionIdx+n].weight = weight; 
+			n++;
         }
         coverageTotal[i] = n;
     }
-
-    // Now that we know the contribution of each pixel from the others on the row, compute the
+    
+	// Now that we know the contribution of each pixel from the others on the row, compute the
     // horizontally scaled buffer which we will use as input in the vertical scale pass. 
     Sampler sampler( inPlug(), channelName, sampleBox );
-    for ( int k = 0; k < inTileHeight+fHeight; ++k )
+    for ( int k = 0; k < sampleBoxHeight; ++k )
     {
         for ( int i = 0, contributionIdx = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fWidth )
         {
@@ -274,21 +275,19 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
             for ( int j = 0; j < coverageTotal[i]; ++j )
             {
-                
-                Contribution &contributionibutor( contribution[ contributionIdx+j ] );
+                Contribution &contributor( contribution[ contributionIdx+j ] );
 
-                if ( contributionibutor.weight == 0. )
+                if ( contributor.weight == 0. )
                 {
                     continue;
                 }
 
-                float value = sampler.sample( inputBox.min.x + contributionibutor.pixel, k + inputBox.min.y - fHalfHeight );
-                intensity += value * contributionibutor.weight;
+                float value = sampler.sample( contributor.pixel, k + sampleBox.min.y );
+                intensity += value * contributor.weight;
             }
 
             buffer[i + ImagePlug::tileSize() * k] = intensity / weightedSum[i];
         }
-
     }
     
     // Vertical Pass
@@ -296,21 +295,21 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
     f->setScale( 1.f / scale.y );
     for ( int i = 0, contributionIdx = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fHeight )
     {
-        double center = (i+0.5)/scale.y;
-        int left = f->construct( center );
+        int tap = f->construct( ( tile.min.y + i + 0.5 ) / scale.y ) - sampleBox.min.y;
         
         int n = 0;	
         weightedSum[i] = 0.;
-        for ( int j = left, k = 0; j < left+fHeight; ++j, ++k )
+        for ( int j = tap; j < tap+fHeight; ++j )
         {
-            double weight = (*f)[k];
+            double weight = (*f)[j - tap];
             if ( weight == 0 )
             {
                 continue;
             }
             
-            contribution[contributionIdx+n].pixel = j+fHalfHeight; 
-            weightedSum[i] += contribution[contributionIdx+n++].weight = weight; 
+            contribution[contributionIdx+n].pixel = j; 
+            weightedSum[i] += contribution[contributionIdx+n].weight = weight;
+			n++;
         }
         coverageTotal[i] = n;
     }
@@ -325,15 +324,14 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
             for ( int j = 0; j < coverageTotal[i]; ++j )
             {
-                
-                Contribution &contributionibutor( contribution[ contributionIdx+j ] );
+                Contribution &contributor( contribution[ contributionIdx+j ] );
 
-                if ( contributionibutor.weight == 0. )
+                if ( contributor.weight == 0. )
                 {
                     continue;
                 }
 
-                intensity += buffer[k + ImagePlug::tileSize() * contributionibutor.pixel] * contributionibutor.weight;
+                intensity += buffer[k + ImagePlug::tileSize() * contributor.pixel] * contributor.weight;
             }
 
             out[k + ImagePlug::tileSize() * i] = intensity / weightedSum[i];
