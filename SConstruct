@@ -71,6 +71,12 @@ options.Add(
 )
 
 options.Add(
+        "LINKFLAGS",
+        "The extra flags to pass to the C++ linker during compilation.",
+        "",
+)
+
+options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
 	"./build/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}",
@@ -474,7 +480,7 @@ env = Environment(
 
 	GAFFER_MAJOR_VERSION = "0",
 	GAFFER_MINOR_VERSION = "59",
-	GAFFER_PATCH_VERSION = "0",
+	GAFFER_PATCH_VERSION = "1",
 
 )
 
