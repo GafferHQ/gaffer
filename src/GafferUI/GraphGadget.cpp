@@ -718,11 +718,10 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		return;
 	}
 	
-	/// \todo Use RecursiveInputPlugIterator when we have it.
-	for( Gaffer::RecursiveChildIterator cIt( node ); cIt != cIt.end(); ++cIt )
+	for( Gaffer::RecursiveInputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
 	{
-		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
-		if ( p && p->direction() == Gaffer::Plug::In && !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
+		Gaffer::Plug *p = cIt->get();
+		if( !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
 		{
 			m_dragReconnectDstNodule = selNodeGadget->nodule( p );
 			if ( m_dragReconnectDstNodule )
@@ -732,11 +731,10 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		}
 	}
 
-	/// \todo Use RecursiveOutputPlugIterator when we have it.
-	for( Gaffer::RecursiveChildIterator cIt( node ); cIt != cIt.end(); ++cIt )
+	for( Gaffer::RecursiveOutputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
 	{
-		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
-		if ( p && p->direction() == Gaffer::Plug::Out && dstPlug->acceptsInput( p ) )
+		Gaffer::Plug *p = cIt->get();
+		if( dstPlug->acceptsInput( p ) )
 		{
 			m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
 			if ( m_dragReconnectSrcNodule )
