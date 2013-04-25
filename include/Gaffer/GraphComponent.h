@@ -56,6 +56,9 @@ class TypePredicate;
 template<typename Predicate>
 class FilteredChildIterator;
 
+template<typename Predicate>
+class FilteredRecursiveChildIterator;
+
 class GraphComponent : public IECore::RunTimeTyped, public boost::signals::trackable
 {
 

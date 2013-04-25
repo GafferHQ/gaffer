@@ -88,6 +88,7 @@ class DependencyNode : public Node
 };
 
 typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<DependencyNode> > RecursiveDependencyNodeIterator;
 
 } // namespace Gaffer
 

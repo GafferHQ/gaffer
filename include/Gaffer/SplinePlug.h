@@ -122,6 +122,14 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug> >
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug> > InputSplinefColor3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug> > OutputSplinefColor3fPlugIterator;
 
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug> > RecursiveSplineffPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplineffPlug> > RecursiveInputSplineffPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplineffPlug> > RecursiveOutputSplineffPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug> > RecursiveSplinefColor3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug> > RecursiveInputSplinefColor3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug> > RecursiveOutputSplinefColor3fPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_SPLINEPLUG_H

@@ -74,6 +74,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, TransformPlug> > Tran
 typedef FilteredChildIterator<PlugPredicate<Plug::In, TransformPlug> > InputTransformPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, TransformPlug> > OutputTransformPlugIterator;
 
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, TransformPlug> > RecursiveTransformPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, TransformPlug> > RecursiveInputTransformPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, TransformPlug> > RecursiveOutputTransformPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_TRANSFORMPLUG_H

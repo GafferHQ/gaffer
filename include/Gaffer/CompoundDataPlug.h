@@ -108,6 +108,10 @@ typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invali
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, CompoundDataPlug> > InputCompoundDataPlugIterator;
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug> > OutputCompoundDataPlugIterator;
 
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, CompoundDataPlug> > RecursiveCompoundDataPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, CompoundDataPlug> > RecursiveInputCompoundDataPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug> > RecursiveOutputCompoundDataPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_COMPOUNDDATAPLUG_H

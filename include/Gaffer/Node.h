@@ -40,6 +40,7 @@
 
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/FilteredChildIterator.h"
+#include "Gaffer/FilteredRecursiveChildIterator.h"
 #include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
@@ -153,6 +154,7 @@ class Node : public GraphComponent
 IE_CORE_DECLAREPTR( Node )
 
 typedef FilteredChildIterator<TypePredicate<Node> > NodeIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<Node> > RecursiveNodeIterator;
 
 } // namespace Gaffer
 
