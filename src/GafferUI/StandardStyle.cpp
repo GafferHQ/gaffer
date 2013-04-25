@@ -241,8 +241,8 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	texture->bind();
 	/// \todo IECoreGL::ColorTexture doesn't make mipmaps, so we can't do mipmapped filtering here.
 	/// Perhaps it should and then perhaps we could.
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );

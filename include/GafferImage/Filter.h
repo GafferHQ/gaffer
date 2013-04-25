@@ -35,7 +35,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FITLER_H
+#ifndef GAFFERIMAGE_FILTER_H
 #define GAFFERIMAGE_FILTER_H
 
 #define _USE_MATH_DEFINES
@@ -47,7 +47,7 @@ namespace GafferImage
 /// Interpolation class for filtering an image.
 ///
 /// The filter class represents a 1D convolution of radius().
-/// For simplicity we only implement separable kerenels.
+/// For simplicity we only implement separable kernels.
 /// We do the following to convolve a 2D image (I) by 1D kernel (g):
 /// C(x,y) = g*I = (g2 *y (g1 *x I))(x,y)
 /// Where *x and *y denotes convolution in the x and y directions.
@@ -109,7 +109,7 @@ public :
 
 	/// Builds the kernel of weights.
 	/// This method is should be called to initialize the filter.
-	/// It does this by making sucessive calls to getWeight() to
+	/// It does this by making sucessive calls to weight() to
 	/// populate the vector of weights.
 	/// @param center The position of the center of the filter kernel.
 	/// @return Returns the index of the first pixel sample.
@@ -121,13 +121,13 @@ public :
 		std::vector<double>::iterator end( m_weights.end() );
 		while ( it != end )
 		{
-			*it++ = getWeight( ( center - l++ - 0.5 ) / m_scale );
+			*it++ = weight( ( center - l++ - 0.5 ) / m_scale );
 		}
 		return absx;
 	}
 
 	// Returns a weight for a delta in the range of -m_scaledRadius to m_scaledRadius.
-	virtual double getWeight( double delta ) const = 0;
+	virtual double weight( double delta ) const = 0;
 
 protected :
 
@@ -148,7 +148,7 @@ public:
 	{
 	}
 	
-	double getWeight( double delta ) const
+	double weight( double delta ) const
 	{
 		delta = fabs(delta);
 		return ( delta <= 0.5 );
@@ -165,7 +165,7 @@ public:
 		: Filter( 1, scale )
 	{}
 
-	double getWeight( double delta ) const
+	double weight( double delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1. )
@@ -186,7 +186,7 @@ public:
 		: Filter( 8, scale )
 	{}
 
-	double getWeight( double delta ) const
+	double weight( double delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < m_radius )
@@ -222,7 +222,7 @@ public:
 		: Filter( 1, scale )
 	{}
 
-	double getWeight( double delta ) const
+	double weight( double delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1 )
@@ -246,7 +246,7 @@ public:
 	{
 	}
 
-	double getWeight( double delta ) const
+	double weight( double delta ) const
 	{
 		delta = fabs(delta);
 		double delta2 = delta*delta;
@@ -316,7 +316,7 @@ public:
 	{
 	}
 
-	double getWeight( double delta ) const 
+	double weight( double delta ) const 
 	{
 		delta = fabs( delta );
 		double delta2 = delta*delta;
