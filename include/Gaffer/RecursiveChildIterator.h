@@ -68,6 +68,16 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 			);
 		}
 		
+		RecursiveChildIterator( const GraphComponent *parent, const GraphComponent::ChildIterator &it )
+		{
+			m_stack.push_back(
+				Level(
+					parent->children(),
+					it
+				)
+			);
+		}
+		
 		size_t depth() const
 		{
 			return m_stack.size() - 1;
