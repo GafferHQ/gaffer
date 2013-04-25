@@ -161,6 +161,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ValuePlug> > ValuePlu
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ValuePlug> > InputValuePlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ValuePlug> > OutputValuePlugIterator;
 
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ValuePlug> > RecursiveValuePlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ValuePlug> > RecursiveInputValuePlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ValuePlug> > RecursiveOutputValuePlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_VALUEPLUG_H

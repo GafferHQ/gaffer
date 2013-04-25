@@ -86,6 +86,7 @@ class Box : public Node
 };
 
 typedef FilteredChildIterator<TypePredicate<Box> > BoxIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<Box> > RecursiveBoxIterator;
 
 } // namespace Gaffer
 

@@ -34,47 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CHANNELMASKPLUG_H
-#define GAFFERIMAGE_CHANNELMASKPLUG_H
+#ifndef GAFFERTEST_RECURSIVECHILDITERATORTEST_H
+#define GAFFERTEST_RECURSIVECHILDITERATORTEST_H
 
-#include "GafferImage/TypeIds.h"
-#include "Gaffer/TypedObjectPlug.h"
-
-namespace GafferImage
+namespace GafferTest
 {
 
-class ChannelMaskPlug : public Gaffer::StringVectorDataPlug
-{
-	public:
+void testRecursiveChildIterator();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelMaskPlug, ChannelMaskPlugTypeId, Gaffer::StringVectorDataPlug );
-		
-		/// A copy of defaultValue is taken - it must not be null.
-		ChannelMaskPlug(
-			const std::string &name,
-			Direction direction,
-			IECore::ConstStringVectorDataPtr defaultValue,
-			unsigned flags = Default
-		);
-		virtual ~ChannelMaskPlug();
+} // namespace GafferTest
 
-		/// Performs an in-place intersection of inChannels and the channels held within the StringVectorDataPlug.
-		void maskChannels( std::vector<std::string> &inChannels ) const;
-
-		/// Returns the index of a channel within it's layer.
-		static int channelIndex( std::string channel );
-};
-
-IE_CORE_DECLAREPTR( ChannelMaskPlug );
-
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ChannelMaskPlug> > ChannelMaskPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ChannelMaskPlug> > InputChannelMaskPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ChannelMaskPlug> > OutputChannelMaskPlugIterator;
-
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ChannelMaskPlug> > RecursiveChannelMaskPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ChannelMaskPlug> > RecursiveInputChannelMaskPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ChannelMaskPlug> > RecursiveOutputChannelMaskPlugIterator;
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_CHANNELMASKPLUG_H
+#endif // GAFFERTEST_RECURSIVECHILDITERATORTEST_H
