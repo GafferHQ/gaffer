@@ -40,6 +40,7 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/ExecutableBinding.h"
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageReader.h"
@@ -55,6 +56,7 @@
 #include "GafferImage/Grade.h"
 #include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
+#include "GafferImage/ImageWriter.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 
 using namespace boost::python;
@@ -113,5 +115,9 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();
 	GafferImageBindings::bindChannelMaskPlug();
+	
+	
+	GafferBindings::NodeClass<ImageWriter> imageWriter;
+	GafferBindings::ExecutableBinding< GafferBindings::NodeClass<ImageWriter>, ImageWriter>::bind( imageWriter );
 }
 

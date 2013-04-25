@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -16,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -35,37 +34,73 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "OpenImageIO/imagecache.h"
+OIIO_NAMESPACE_USING
 
-namespace GafferImage
+#include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageWriter.h"
+#include "Gaffer/Context.h"
+
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace GafferImage;
+using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// ImageWriter implementation
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( ImageWriter );
+
+size_t ImageWriter::g_firstPlugIndex = 0;
+
+ImageWriter::ImageWriter( const std::string &name )
+	:	Gaffer::ExecutableNode( name )
+{
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ImagePlug( "in" ) );
+	addChild( new StringPlug( "fileName" ) );
+}
+
+ImageWriter::~ImageWriter()
+{
+}
+
+GafferImage::ImagePlug *ImageWriter::inPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex );
+}
+
+const GafferImage::ImagePlug *ImageWriter::inPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringPlug *ImageWriter::fileNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex+1 );
+}
+
+const Gaffer::StringPlug *ImageWriter::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex+1 );
+}
+
+void ImageWriter::executionRequirements( const Context *context, Tasks &requirements ) const
+{
+	Executable::defaultRequirements( this, context, requirements );
+}
+		
+IECore::MurmurHash ImageWriter::executionHash( const Context *context ) const
+{
+	IECore::MurmurHash h = fileNamePlug()->hash();
+	h.append( inPlug()->hash() );
+	return h;
+}
+		
+void ImageWriter::execute( const Contexts &contexts ) const
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ImageWriterTypeId = 110768,
-	
-	LastTypeId = 110849
-};
+}
 
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
