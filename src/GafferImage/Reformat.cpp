@@ -57,7 +57,7 @@ Reformat::Reformat( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
-	addChild( new IntPlug( "filter" ) );
+	addChild( new FilterPlug( "filter" ) );
 }
 
 Reformat::~Reformat()
@@ -74,14 +74,14 @@ const GafferImage::FormatPlug *Reformat::formatPlug() const
 	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
-Gaffer::IntPlug *Reformat::filterPlug()
+GafferImage::FilterPlug *Reformat::filterPlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex+1 );
+	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
 }
 
-const Gaffer::IntPlug *Reformat::filterPlug() const
+const GafferImage::FilterPlug *Reformat::filterPlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex+1 );
+	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
 }
 
 void Reformat::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -179,20 +179,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
 
 	// Create our filter.
-	Filter *f = NULL; 
-	int filter = filterPlug()->getValue();
-	switch( filter )
-	{
-		default:
-		case(0): f = new BilinearFilter( 1.f / scale.y ); break;
-		case(1): f = new BoxFilter( 1.f / scale.y ); break;
-		case(2): f = new BSplineFilter( 1.f / scale.y ); break;
-		case(3): f = new CatmullRomFilter( 1.f / scale.y ); break;
-		case(4): f = new CubicFilter( 1.f / scale.y ); break;
-		case(5): f = new HermiteFilter( 1.f / scale.y ); break;
-		case(6): f = new MitchellFilter( 1.f / scale.y ); break;
-		case(7): f = new SincFilter( 1.f / scale.y ); break;
-	}
+	FilterPtr f = Filter::create( filterPlug()->getValue(), 1.f / scale.y );
 
 	// Get the dimensions of our filter and create a box that we can use to define the bounds of our input.
 	int fHeight = f->width();
@@ -332,7 +319,6 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 		}
 	}
    
-	delete f; 
 	return outDataPtr;
 }
 

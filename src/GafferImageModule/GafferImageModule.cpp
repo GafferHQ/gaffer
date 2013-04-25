@@ -57,6 +57,7 @@
 #include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
 #include "GafferImage/Reformat.h"
+#include "GafferImageBindings/FilterPlugBindings.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 
 using namespace boost::python;
@@ -116,6 +117,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();
 	GafferImageBindings::bindChannelMaskPlug();
+	GafferImageBindings::bindFilterPlug();
 	GafferImageBindings::bindSampler();
 }
 

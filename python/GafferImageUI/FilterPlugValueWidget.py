@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -16,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #  
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -35,11 +34,20 @@
 #  
 ##########################################################################
 
-from _GafferImageUI import *
+import IECore
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+import Gaffer
+import GafferUI
+import GafferImage
 
-import NodeUIs # Put this at the bottom or we get ordering issues!
+class FilterPlugValueWidget( GafferUI.EnumPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		filters = GafferImage.FilterPlug.filters()
+		values = [ (f, f) for f in filters ]
+		GafferUI.EnumPlugValueWidget.__init__( self, plug, values, **kw )
+	
+		
+GafferUI.PlugValueWidget.registerType( GafferImage.FilterPlug.staticTypeId(), FilterPlugValueWidget )
+

@@ -34,49 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SAMPLER_H
-#define GAFFERIMAGE_SAMPLER_H
+#ifndef GAFFERIMAGEBINDINGS_FILTERPLUGBINDINGS_H
+#define GAFFERIMAGEBINDINGS_FILTERPLUGBINDINGS_H
 
-#include <vector>
-#include "GafferImage/ImagePlug.h"
+#include "GafferImage/FilterPlug.h"
 
-namespace GafferImage
+namespace GafferImageBindings
 {
 
-///\todo: 
-/// Add a hash() method to the sampler that accumulates the hashes of all tiles within m_sampleWindow.
-/// Currently anything that uses the sampler to gather data from across an area could potentially
-/// have an incorrect hash if one of the tiles that it is sampling which isn't the one being output
-/// changes. For example, if our sampler is accessing 4 tiles to produce an output for one tile and a node
-/// upstream changes just one of them and passes the hashes of the other through, the output hash  will
-/// be wrong and not update. This has not been an issue yet as we don't have any nodes that do that!
-	
-/// A utility class for pixel access of an image plug.
-class Sampler
-{
+void bindFilterPlug();
 
-public : 
-	
-	/// Sampler Constructor
-	/// @param plug The image plug to sample from.
-	/// @param channelName The channel to sample.
-	/// @param The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow );
+}; // namespace GafferImageBindings
 
-	/// Samples a colour value from the channel at x, y. The result is clamped the the sampleWindow.	
-	float sample( int x, int y );
-
-private:
-
-	const ImagePlug *m_plug;
-	const std::string &m_channelName;
-	Imath::Box2i m_sampleWindow;
-	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
-	bool m_valid;
-
-};
-
-}; // namespace GafferImage
-
-#endif
-
+#endif // GAFFERIMAGEBINDINGS_FILTERPLUGBINDINGS_H

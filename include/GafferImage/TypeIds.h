@@ -62,6 +62,7 @@ enum TypeId
 	SelectTypeId = 110766,
 	ChannelMaskPlugTypeId = 110767,
 	ReformatTypeId = 110768,
+	FilterPlugTypeId = 110769,
 	
 	LastTypeId = 110849
 };

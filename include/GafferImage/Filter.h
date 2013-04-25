@@ -38,11 +38,19 @@
 #ifndef GAFFERIMAGE_FILTER_H
 #define GAFFERIMAGE_FILTER_H
 
+#include <vector>
+#include <string>
+
+#include "IECore/RefCounted.h"
+#include "IECore/InternedString.h"
+
 #define _USE_MATH_DEFINES
 #include "math.h"
 	
 namespace GafferImage
 {
+
+IE_CORE_FORWARDDECLARE( Filter );
 
 /// Interpolation class for filtering an image.
 ///
@@ -55,36 +63,20 @@ namespace GafferImage
 /// A good overview of image sampling and the variety of filters is:
 /// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
 /// Arun N.Netravali, AT&T Bell Laboratories.
-class Filter
+class Filter : public IECore::RefCounted
 {
 
 public :
-
+	
+	/// Constructor	
 	/// @param radius Half the width of the kernel at a scale of 1.
 	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
-	Filter( double radius, double scale = 1. )
-		: m_radius( radius )
-	{
-		setScale( scale );
-	}
-	
+	Filter( double radius, double scale = 1. );
+		
 	virtual ~Filter(){};
 
 	/// Resizes the kernel to a new scale.
-	void setScale( double scale )
-	{
-		if ( scale > 1. )
-		{
-			m_scaledRadius = m_radius * scale;
-			m_scale = scale;
-		}
-		else
-		{
-			m_scaledRadius = m_radius;
-			m_scale = 1.;
-		}
-		m_weights.resize( int( floor( m_scaledRadius*2+1 ) ) );
-	}
+	void setScale( double scale );
 
 	/// Returns the current scale of the kernel.
 	inline double getScale() const { return m_scale; }
@@ -113,30 +105,81 @@ public :
 	/// populate the vector of weights.
 	/// @param center The position of the center of the filter kernel.
 	/// @return Returns the index of the first pixel sample.
-	int construct( double center )
-	{
-		int l, absx;
-		l = absx = (int)( center - m_scaledRadius );
-		std::vector<double>::iterator it( m_weights.begin() );
-		std::vector<double>::iterator end( m_weights.end() );
-		while ( it != end )
-		{
-			*it++ = weight( ( center - l++ - 0.5 ) / m_scale );
-		}
-		return absx;
-	}
+	int construct( double center );
 
 	// Returns a weight for a delta in the range of -m_scaledRadius to m_scaledRadius.
 	virtual double weight( double delta ) const = 0;
 
+	//! @name Filter Registry
+	/// A set of methods to query the available Filters and create them.
+	//////////////////////////////////////////////////////////////
+	//@{
+	/// Instantiates a new Filter and initialises it to the desired scale.
+	/// @param filterName The name of the filter within the registry.
+	/// @param scale The scale to create the filter at.
+	static FilterPtr create( const std::string &filterName, double scale = 1. );
+
+	/// Returns a vector of the available filters.
+	static const std::vector<std::string> &filters()
+	{
+		return filterList();
+	}
+	//@}
+	
+	/// Returns the default filter.
+	static const IECore::InternedString &defaultFilter()
+	{
+		static const IECore::InternedString g_defaultFilter( "Bilinear" );
+		return g_defaultFilter;
+	}
+
 protected :
+
+	typedef FilterPtr (*CreatorFn)( double scale );
+
+	template<class T>
+	struct FilterRegistration
+	{
+		public:
+			/// Registers the Filter
+			FilterRegistration<T>( std::string name )
+			{
+				Filter::filterList().push_back( name );
+				Filter::creators().push_back( creator );
+			}
+
+		private:
+			/// Returns a new instance of the Filter class.
+			static FilterPtr creator( double scale = 1. )
+			{
+				return new T( scale );
+			}
+	};
 
 	const double m_radius;
 	double m_scale;
 	double m_scaledRadius;
 	std::vector<double> m_weights;
 
+private:
+
+	/// Registration mechanism for Filter classes.
+	/// We keep a vector of the names so that we can maintain an order. 
+	static std::vector< CreatorFn >& creators()
+	{
+		static std::vector< CreatorFn > g_creators;
+		return g_creators;
+	}
+	
+	static std::vector< std::string >& filterList()
+	{
+		static std::vector< std::string > g_filters;
+		return g_filters;
+	}
+
 };
+
+IE_CORE_DECLAREPTR(Filter);
 
 class BoxFilter : public Filter
 {
@@ -153,6 +196,11 @@ public:
 		delta = fabs(delta);
 		return ( delta <= 0.5 );
 	}
+
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<BoxFilter> m_registration;
 
 };
 
@@ -174,6 +222,11 @@ public:
 		}
 		return 0.;
 	}
+
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<BilinearFilter> m_registration;
 
 };
 
@@ -211,6 +264,9 @@ private:
 		return 1.;
 	}
 
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<SincFilter> m_registration;
+
 };
 
 class HermiteFilter : public Filter
@@ -231,6 +287,11 @@ public:
 		}
 		return 0.;
 	}
+
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<HermiteFilter> m_registration;
 
 };
 
@@ -282,6 +343,11 @@ public:
 		: SplineFilter( 1/3, 1/3, scale )
 	{}
 
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<MitchellFilter> m_registration;
+
 };
 
 class BSplineFilter : public SplineFilter
@@ -293,6 +359,11 @@ public:
 		: SplineFilter( 1., 0., scale )
 	{}
 
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<BSplineFilter> m_registration;
+
 };
 
 class CatmullRomFilter : public SplineFilter
@@ -303,6 +374,11 @@ public:
 	CatmullRomFilter( double scale = 1. )
 		: SplineFilter( 0, .5, scale )
 	{}
+
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<CatmullRomFilter> m_registration;
 
 };
 
@@ -339,11 +415,14 @@ public:
 		return 0;
 	}
 
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<CubicFilter> m_registration;
+
 };
 
 }; // namespace GafferImage
-
-
 
 #endif
 

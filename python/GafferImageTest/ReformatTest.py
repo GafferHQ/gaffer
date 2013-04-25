@@ -45,17 +45,6 @@ class ReformatTest( unittest.TestCase ) :
 
 	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/" )
 	
-	filters = [
-		("Bilinear", 0),
-		("Box", 1),
-		("Bspline", 2),
-		("CatmullRom", 3),
-		("Cubic", 4),
-		("Hermite", 5),
-		("Mitchell", 6),
-		("Sinc", 7)
-	]
-	
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :
 		read = GafferImage.ImageReader()
@@ -89,12 +78,13 @@ class ReformatTest( unittest.TestCase ) :
 		reformat["in"].setInput( reader["out"] )
 		
 		expectedOutput = GafferImage.ImageReader()
-		
-		for filter, idx in self.filters:
+
+		# Test all of the registered filters.	
+		filters = GafferImage.FilterPlug.filters()	
+		for filter in filters:
 			file = "checker" + filter + ".200x100.exr"
 			expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
-			
-			reformat["filter"].setValue( idx )
+			reformat["filter"].setValue( filter )
 
 			op = IECore.ImageDiffOp()
 			res = op(

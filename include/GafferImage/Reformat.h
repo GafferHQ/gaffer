@@ -38,6 +38,7 @@
 #define GAFFERSCENE_REFORMAT_H
 
 #include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FilterPlug.h"
 
 namespace GafferImage
 {
@@ -56,10 +57,8 @@ class Reformat : public ImageProcessor
 		/// Plug accessors.	
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;
-		Gaffer::IntPlug *filterPlug();
-		const Gaffer::IntPlug *filterPlug() const;
-		Gaffer::FloatPlug *offsetPlug();
-		const Gaffer::FloatPlug *offsetPlug() const;
+		GafferImage::FilterPlug *filterPlug();
+		const GafferImage::FilterPlug *filterPlug() const;
 
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
