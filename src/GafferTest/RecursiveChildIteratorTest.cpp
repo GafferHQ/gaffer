@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,19 +34,79 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/DependencyNodeBinding.h"
+// we undefine NDEBUG so we can use assert() for our test cases.
+/// \todo We might like to define our own assert which throws an
+/// exception which is designed to be caught by the python test
+/// runner and reported nicely.
+#undef NDEBUG
 
-#include "GafferTest/MultiplyNode.h"
+#include <iostream>
+
+#include "Gaffer/RecursiveChildIterator.h"
+
 #include "GafferTest/RecursiveChildIteratorTest.h"
 
-using namespace boost::python;
-using namespace GafferTest;
+using namespace Gaffer;
 
-BOOST_PYTHON_MODULE( _GafferTest )
+void GafferTest::testRecursiveChildIterator()
 {
+	GraphComponentPtr a = new GraphComponent( "a" );
+	GraphComponentPtr b = new GraphComponent( "b" );
+	GraphComponentPtr c = new GraphComponent( "c" );
+	GraphComponentPtr d = new GraphComponent( "d" );
+	GraphComponentPtr e = new GraphComponent( "e" );
+	GraphComponentPtr f = new GraphComponent( "f" );
+	GraphComponentPtr g = new GraphComponent( "g" );
 	
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
+	a->addChild( b );
+	a->addChild( c );
+	a->addChild( d );
+	
+	d->addChild( e );
+	d->addChild( f );
+	
+	e->addChild( g );
+	
+	// a - b
+	//   - c
+	//   - d - e - g
+	//       - f
 
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
-
+	RecursiveChildIterator it1( a );
+	RecursiveChildIterator it2( a );
+	
+	assert( *it1 == b );
+	assert( *it2 == b );
+	assert( it1 == it2 );
+	
+	it1++;
+	assert( *it1 == c );
+	assert( *it2 == b );
+	assert( it1 != it2 );
+	
+	it2++;
+	assert( *it1 == c );
+	assert( *it2 == c );
+	assert( it1 == it2 );
+	
+	it1++;
+	it2 = it1;
+	assert( *it1 == d );
+	assert( *it2 == d );
+	assert( it1 == it2 );
+		
+	std::vector<GraphComponentPtr> visited;
+	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
+	{
+		visited.push_back( *it );
+	}	
+	
+	assert( visited.size() == 6 );
+	assert( visited[0] == b );
+	assert( visited[1] == c );
+	assert( visited[2] == d );
+	assert( visited[3] == e );
+	assert( visited[4] == g );
+	assert( visited[5] == f );
+	
 }

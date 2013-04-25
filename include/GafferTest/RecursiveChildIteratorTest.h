@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,19 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#ifndef GAFFERTEST_RECURSIVECHILDITERATORTEST_H
+#define GAFFERTEST_RECURSIVECHILDITERATORTEST_H
 
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
-
-using namespace boost::python;
-using namespace GafferTest;
-
-BOOST_PYTHON_MODULE( _GafferTest )
+namespace GafferTest
 {
-	
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
 
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
+void testRecursiveChildIterator();
 
-}
+} // namespace GafferTest
+
+#endif // GAFFERTEST_RECURSIVECHILDITERATORTEST_H
