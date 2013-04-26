@@ -104,7 +104,8 @@ class Nodule : public Gadget
 
 };
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Nodule> > ChildNoduleIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Nodule> > NoduleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Nodule> > RecursiveNoduleIterator;
 
 IE_CORE_DECLAREPTR( Nodule );
 

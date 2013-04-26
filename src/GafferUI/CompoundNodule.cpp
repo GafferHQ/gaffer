@@ -93,9 +93,7 @@ bool CompoundNodule::acceptsChild( const Gaffer::GraphComponent *potentialChild 
 
 Nodule *CompoundNodule::nodule( const Gaffer::Plug *plug )
 {
-	ChildNoduleIterator it = ChildNoduleIterator( m_row->children().begin(), m_row->children().end() );
-	ChildNoduleIterator end = ChildNoduleIterator( m_row->children().end(), m_row->children().end() );
-	for( ; it!=end; it++ )
+	for( NoduleIterator it( m_row ); it!=it.end(); it++ )
 	{
 		if( (*it)->plug() == plug )
 		{
@@ -134,9 +132,7 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 		return;
 	}
 	
-	ChildNoduleIterator it = ChildNoduleIterator( m_row->children().begin(), m_row->children().end() );
-	ChildNoduleIterator end = ChildNoduleIterator( m_row->children().end(), m_row->children().end() );
-	for( ; it!=end; it++ )
+	for( NoduleIterator it( m_row ); it!=it.end(); it++ )
 	{
 		if( (*it)->plug() == plug )
 		{
