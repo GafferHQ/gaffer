@@ -101,11 +101,21 @@ class StandardNodeGadget : public NodeGadget
 		
 		void enter();
 		void leave();
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
+		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+
+		Nodule *closestCompatibleNodule( const DragDropEvent &event );
+		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
 		
 		void setNoduleLabelVisible( Nodule *nodule, bool labelVisible );
 		
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
+		// we accept drags from nodules and forward them to the
+		// closest compatible child nodule - m_dragDestinationProxy.
+		Nodule *m_dragDestinationProxy;
 		
 };
 
