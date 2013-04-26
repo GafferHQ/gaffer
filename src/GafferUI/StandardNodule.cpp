@@ -295,7 +295,7 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 	if( dropPlug )
 	{
 		Gaffer::PlugPtr thisPlug = plug();
-		if( thisPlug->direction()!=dropPlug->direction() )
+		if( thisPlug->node() != dropPlug->node() && thisPlug->direction()!=dropPlug->direction() )
 		{
 			if( thisPlug->direction()==Gaffer::Plug::In )
 			{
