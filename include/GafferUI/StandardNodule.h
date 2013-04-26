@@ -80,6 +80,8 @@ class StandardNodule : public Nodule
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 		
 		void connection( const DragDropEvent &event, Gaffer::PlugPtr &input, Gaffer::PlugPtr &output );
+
+		void setCompatibleLabelsVisible( const DragDropEvent &event, bool visible );
 		
 	private :
 

@@ -228,6 +228,15 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 			sourceNodule->m_dragPosition = centre;
 			sourceNodule->m_draggingConnection = true;
 		}
+
+		// show the labels of all compatible nodules on this node, if it doesn't
+		// look like the previous drag destination would have done so.
+		Nodule *prevDestination = IECore::runTimeCast<Nodule>( event.destinationGadget );
+		if( !prevDestination || prevDestination->plug()->node() != plug()->node() )
+		{
+			setCompatibleLabelsVisible( event, true );
+		}
+
 		renderRequestSignal()( this );
 		return true;
 	}
@@ -247,6 +256,26 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 	if( this != event.sourceGadget )
 	{
 		m_hovering = false;
+		// if the new drag destination isn't one that would warrant having the labels
+		// showing, then hide them.
+		if( Nodule *newDestination = IECore::runTimeCast<Nodule>( event.destinationGadget ) )
+		{
+			if( newDestination->plug()->node() != plug()->node() )
+			{
+				setCompatibleLabelsVisible( event, false );
+			}
+		}
+		else if( NodeGadget *newDestination = IECore::runTimeCast<NodeGadget>( event.destinationGadget ) )
+		{
+			if( newDestination->node() != plug()->node() )
+			{
+				setCompatibleLabelsVisible( event, false );
+			}
+		}
+		else
+		{
+			setCompatibleLabelsVisible( event, false );
+		}
 	}
 	else if( !event.destinationGadget || !event.destinationGadget->isInstanceOf( Nodule::staticTypeId() ) )
 	{
@@ -268,6 +297,7 @@ bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_hovering = false;
+	setCompatibleLabelsVisible( event, false );
 	
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
@@ -286,6 +316,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 			
 		return true;
 	}
+
 	return false;
 }
 
@@ -320,3 +351,21 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 	return;
 }
 
+void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, bool visible )
+{
+	NodeGadget *nodeGadget = ancestor<NodeGadget>();
+	if( !nodeGadget )
+	{
+		return;
+	}
+
+	for( RecursiveStandardNoduleIterator it( nodeGadget ); it != it.end(); ++it )
+	{
+		Gaffer::PlugPtr input, output;
+		(*it)->connection( event, input, output );
+		if( input && output )
+		{
+			(*it)->setLabelVisible( visible );
+		}
+	}
+}
