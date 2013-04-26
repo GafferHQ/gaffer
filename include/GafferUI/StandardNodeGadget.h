@@ -108,9 +108,7 @@ class StandardNodeGadget : public NodeGadget
 
 		Nodule *closestCompatibleNodule( const DragDropEvent &event );
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
-		
-		void setNoduleLabelVisible( Nodule *nodule, bool labelVisible );
-		
+
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
 		// we accept drags from nodules and forward them to the

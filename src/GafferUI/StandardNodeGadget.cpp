@@ -534,21 +534,3 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 		return nodulePlug->direction() == Plug::Out && dropPlug->acceptsInput( nodulePlug );
 	}
 }
-
-void StandardNodeGadget::setNoduleLabelVisible( Nodule *nodule, bool labelVisible )
-{
-	if( StandardNodule *n = IECore::runTimeCast<StandardNodule>( nodule ) )
-	{
-		n->setLabelVisible( labelVisible );
-	}
-	else if( CompoundNodule *c = IECore::runTimeCast<CompoundNodule>( nodule ) )
-	{
-		for( PlugIterator it( c->plug() ); it != it.end(); it++ )
-		{
-			if( Nodule *n = c->nodule( it->get() ) )
-			{
-				setNoduleLabelVisible( n, labelVisible );
-			}
-		}
-	}
-}
