@@ -37,6 +37,7 @@
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
 
+#include "boost/format.hpp"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageWriter.h"
 #include "Gaffer/Context.h"
@@ -95,12 +96,96 @@ void ImageWriter::executionRequirements( const Context *context, Tasks &requirem
 IECore::MurmurHash ImageWriter::executionHash( const Context *context ) const
 {
 	IECore::MurmurHash h = fileNamePlug()->hash();
-	h.append( inPlug()->hash() );
+	h.append( inPlug()->imageHash() );
 	return h;
 }
-		
+
+///\todo: We need to add additional meta data to the output image.
+///\todo: Add support for scanlines, tiles and display windows.
 void ImageWriter::execute( const Contexts &contexts ) const
 {
+	if( !inPlug()->getInput<ImagePlug>() )
+	{
+		throw IECore::Exception( "No input image." );
+		return;
+	}
 
+	// Loop over the execution contexts...
+	for( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
+	{
+		Context::Scope scopedContext( it->get() );
+		
+		std::string fileName = fileNamePlug()->getValue();
+		fileName = (*it)->substitute( fileName );
+		
+		ImageOutput *out = ImageOutput::create( fileName.c_str() );
+		if (!out)
+		{
+			throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
+			return;
+		}
+		
+		// Get the image channel data.
+		IECore::ImagePrimitivePtr imagePtr( inPlug()->image() );
+
+		// Get the image's display window.
+		const Imath::Box2i displayWindow( imagePtr->getDisplayWindow() );
+		//const int displayWindowWidth = displayWindow.max.x-displayWindow.min.x+1;
+		//const int displayWindowHeight = displayWindow.max.y-displayWindow.min.y+1;
+	
+		// Get the image's data window.
+		const Imath::Box2i dataWindow( imagePtr->getDataWindow() );
+		const int dataWindowWidth = dataWindow.max.x-dataWindow.min.x+1;
+		const int dataWindowHeight = dataWindow.max.y-dataWindow.min.y+1;
+		
+		// Get the image's channel names.
+		std::vector<std::string> channelNames;
+		imagePtr->channelNames( channelNames );
+		const int nChannels = channelNames.size();
+		
+		// Create a buffer for the pixels.
+		float *pixels = new float [ nChannels*dataWindowWidth*dataWindowHeight ];
+		
+		// Create the image header. 
+		ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
+		
+		// Add the channel names to the header whilst getting pointers to the channel data. 
+		std::vector<const float*> channelPtrs;
+		spec.channelnames.clear();
+		for ( std::vector<std::string>::iterator channelIt( channelNames.begin() ); channelIt != channelNames.end(); channelIt++ )
+		{
+			spec.channelnames.push_back( *channelIt );
+			IECore::FloatVectorDataPtr dataPtr = imagePtr->getChannel<float>( *channelIt );
+			channelPtrs.push_back( &(dataPtr->readable()[0]) );
+
+			// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
+			if ( *channelIt == "A" )
+			{
+				spec.alpha_channel = channelIt-channelNames.begin();
+			} else if ( *channelIt == "Z" )
+			{
+				spec.z_channel = channelIt-channelNames.begin();
+			}
+		}
+		
+		// Interleave the channel data.	
+		float *outPtr = &pixels[0];	
+		for ( int y = 0; y < dataWindowHeight; ++y )
+		{
+			for ( int x = 0; x < dataWindowWidth; ++x )
+			{
+				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+				{
+					*outPtr++ = *(*channelDataIt)++;
+				}
+			}
+		}
+		
+		out->open( fileName, spec );
+		out->write_image( TypeDesc::FLOAT, pixels );
+		out->close();
+		delete out;
+		delete [] pixels;
+	}
 }
 
