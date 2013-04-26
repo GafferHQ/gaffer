@@ -67,7 +67,7 @@ static const float g_minWidth = 10.0f;
 static const float g_spacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-	:	NodeGadget( node ), m_nodeEnabled( true ), m_labelsVisibleOnHover( false ), m_dragDestinationProxy( 0 )
+	:	NodeGadget( node ), m_nodeEnabled( true ), m_labelsVisibleOnHover( true ), m_dragDestinationProxy( 0 )
 {
 	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
@@ -119,13 +119,16 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
 	}
 	
-	enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this ) );
-	leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this ) );
-
 	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &StandardNodeGadget::dragLeave, this, ::_1, ::_2 ) );
 	dropSignal().connect( boost::bind( &StandardNodeGadget::drop, this, ::_1, ::_2 ) );
+	
+	inputNoduleContainer->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
+	inputNoduleContainer->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
+
+	outputNoduleContainer->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
+	outputNoduleContainer->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -417,24 +420,24 @@ void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	}
 }
 
-void StandardNodeGadget::enter()
+void StandardNodeGadget::enter( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( NoduleMap::const_iterator it = m_nodules.begin(), eIt = m_nodules.end(); it != eIt; it++ )
+		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
 		{
-			setNoduleLabelVisible( it->second, true );
+			(*it)->setLabelVisible( true );
 		}
 	}
 }
 
-void StandardNodeGadget::leave()
+void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( NoduleMap::const_iterator it = m_nodules.begin(), eIt = m_nodules.end(); it != eIt; it++ )
+		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
 		{
-			setNoduleLabelVisible( it->second, false );
+			(*it)->setLabelVisible( false );
 		}
 	}
 }

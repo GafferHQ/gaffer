@@ -99,8 +99,8 @@ class StandardNodeGadget : public NodeGadget
 		void plugSet( const Gaffer::Plug *plug );
 		void plugDirtied( const Gaffer::Plug *plug );
 		
-		void enter();
-		void leave();
+		void enter( Gadget *gadget );
+		void leave( Gadget *gadget );
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
