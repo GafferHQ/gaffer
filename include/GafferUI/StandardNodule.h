@@ -94,6 +94,9 @@ class StandardNodule : public Nodule
 
 IE_CORE_DECLAREPTR( StandardNodule );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<StandardNodule> > StandardNoduleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<StandardNodule> > RecursiveStandardNoduleIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_STANDARDNODULE_H
