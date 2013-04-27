@@ -45,6 +45,7 @@ from MergeTest import MergeTest
 from GradeTest import GradeTest
 from ConstantTest import ConstantTest
 from SelectTest import SelectTest
+from ImageWriterTest import ImageWriterTest
 from ChannelMaskPlugTest import ChannelMaskPlugTest
 
 if __name__ == "__main__":

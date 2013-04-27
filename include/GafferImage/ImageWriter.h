@@ -40,6 +40,7 @@
 #include "Gaffer/ExecutableNode.h"
 #include "Gaffer/Context.h"
 #include "GafferImage/TypeIds.h"
+#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
@@ -49,6 +50,12 @@ class ImageWriter : public Gaffer::ExecutableNode
 
 	public :
 
+		enum
+		{
+			Scanline = 0,
+			Tile = 1
+		};
+
 		ImageWriter( const std::string &name=staticTypeName() );
 		virtual ~ImageWriter();
 
@@ -57,7 +64,11 @@ class ImageWriter : public Gaffer::ExecutableNode
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
 		GafferImage::ImagePlug *inPlug();
+		const GafferImage::ChannelMaskPlug *channelsPlug() const;
+		GafferImage::ChannelMaskPlug *channelsPlug();
 		const GafferImage::ImagePlug *inPlug() const;
+		Gaffer::IntPlug *writeModePlug();
+		const Gaffer::IntPlug *writeModePlug() const;
 
 		// Implemented to specify the requirements which must be satisfied
 		// before it is allowed to call execute() with the given context.
@@ -72,6 +83,8 @@ class ImageWriter : public Gaffer::ExecutableNode
 		virtual void execute( const Executable::Contexts &contexts ) const;
 
 	private :
+		
+		void plugSet( Gaffer::Plug *plug );
 	
 		static size_t g_firstPlugIndex;
 		
