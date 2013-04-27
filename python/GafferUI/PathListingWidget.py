@@ -495,7 +495,7 @@ class _TreeView( QtGui.QTreeView ) :
 	# expanded. It can be preferable to use this over the expanded or
 	# collapsed signals as it is emitted only once when making several
 	# changes.
-	expansionChanged = QtCore.pyqtSignal()
+	expansionChanged = QtCore.Signal()
 
 	def __init__( self ) :
 	
