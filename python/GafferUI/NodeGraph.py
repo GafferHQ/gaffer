@@ -86,7 +86,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	
 		root = self.graphGadget().getRoot()
 		if not root.isSame( self.scriptNode() ) :
-			result += " : " + root.relativeName( self.scriptNode() )
+			result += " : " + root.relativeName( self.scriptNode() ).replace( ".", " / " )
 		
 		return result
 	
