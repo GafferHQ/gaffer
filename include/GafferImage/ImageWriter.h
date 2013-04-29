@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -16,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -35,37 +34,63 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_IMAGEWRITER_H
+#define GAFFERIMAGE_IMAGEWRITER_H
+
+#include "Gaffer/ExecutableNode.h"
+#include "Gaffer/Context.h"
+#include "GafferImage/TypeIds.h"
+#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class ImageWriter : public Gaffer::ExecutableNode
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ImageWriterTypeId = 110768,
+
+	public :
+
+		enum
+		{
+			Scanline = 0,
+			Tile = 1
+		};
+
+		ImageWriter( const std::string &name=staticTypeName() );
+		virtual ~ImageWriter();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageWriter, ImageWriterTypeId, ExecutableNode );
+		
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+		GafferImage::ImagePlug *inPlug();
+		const GafferImage::ChannelMaskPlug *channelsPlug() const;
+		GafferImage::ChannelMaskPlug *channelsPlug();
+		const GafferImage::ImagePlug *inPlug() const;
+		Gaffer::IntPlug *writeModePlug();
+		const Gaffer::IntPlug *writeModePlug() const;
+
+		// Implemented to specify the requirements which must be satisfied
+		// before it is allowed to call execute() with the given context.
+		virtual void executionRequirements( const Gaffer::Context *context, Executable::Tasks &requirements ) const;
+		
+		/// Implemented to set a hash that uniquely represents the
+		/// side effects (files created etc) of calling execute with the given context.
+		/// If the node returns the default hash it means this node does not compute anything.
+		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
+		
+		/// Implemented to execute in all the specified contexts in sequence.
+		virtual void execute( const Executable::Contexts &contexts ) const;
+
+	private :
+		
+		void plugSet( Gaffer::Plug *plug );
 	
-	LastTypeId = 110849
+		static size_t g_firstPlugIndex;
+		
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_IMAGEWRITER_H
+
