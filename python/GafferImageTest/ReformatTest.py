@@ -44,9 +44,24 @@ import os
 class ReformatTest( unittest.TestCase ) :
 
 	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/" )
-	
+
+	# Test a reformat on an image with a data window that is different to the display window.
+	def testDataWindow( self ) :
+
+		read = GafferImage.ImageReader()
+		read["fileName"].setValue( os.path.join( self.path, "blueWithDataWindow.100x100.exr" ) )
+		readWindow = read["out"]["dataWindow"].getValue()
+		
+		# Resize the image and check the size of the output data window.
+		reformat = GafferImage.Reformat()
+		reformat["format"].setValue( GafferImage.Format( 150, 125, 1. ) )
+		reformat["in"].setInput( read["out"] )
+		reformatWindow = reformat["out"]["dataWindow"].getValue()
+		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 25 ), IECore.V2i( 119, 99 )  ) )
+		
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :
+
 		read = GafferImage.ImageReader()
 		read["fileName"].setValue( os.path.join( self.path, "checkerboard.100x100.exr" ) )
 		readFormat = read["out"]["format"].getValue()
@@ -91,7 +106,7 @@ class ReformatTest( unittest.TestCase ) :
 				imageA = expectedOutput["out"].image(),
 				imageB = reformat["out"].image()
 			)
-
+			
 			self.assertFalse( res.value )	
 		
 

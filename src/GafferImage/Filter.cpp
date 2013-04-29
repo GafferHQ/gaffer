@@ -98,7 +98,7 @@ FilterPtr Filter::create( const std::string &name, double scale )
 
 	throw IECore::Exception( (boost::format("Could not find registered filter \"%s\".") % name).str() );
 	
-	return create( defaultFilter(), scale );
+	return 0; // We should never get here.
 }
 
 // Register all of the filters against their names.

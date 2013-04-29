@@ -43,7 +43,6 @@ import GafferImageUI
 import GafferImage
 
 # ImageNode
-
 def __noduleCreator( plug ) :
 
 	if isinstance( plug, GafferImage.ImagePlug ) :
@@ -59,7 +58,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
 
 # ImageReader
-
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.ImageReader.staticTypeId(),
 	"fileName",
@@ -69,23 +67,13 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 # Constant
-
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.Constant.staticTypeId(),
 	"format",
 	GafferImageUI.FormatPlugValueWidget
 )
 
-# Reformat
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.Reformat.staticTypeId(),
-	"format",
-	GafferImageUI.FormatPlugValueWidget
-)
-
 # OpenColorIO
-
 ocioColorSpaceLabelsAndValues = [ ( "None", "" ) ]
 import PyOpenColorIO as OCIO
 config = OCIO.GetCurrentConfig()

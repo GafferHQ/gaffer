@@ -43,6 +43,8 @@
 namespace GafferImage
 {
 
+///\todo: Add support for changing the pixelAspect of the image.
+
 /// Reformats the input image to a new resolution using a resampling filter.
 class Reformat : public ImageProcessor
 {
@@ -80,6 +82,9 @@ class Reformat : public ImageProcessor
 		/// Using this column/row buffer we iterate over the input and sum the contributing pixels. The result is normalized by the sum of weights.
 		/// This process is repeated once for the vertical and horizontal passes and the final result is written into the output buffer.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
+		// Computes the output scale factor from the input and output formats.
+		Imath::V2d scale() const;
 
 	private :
 
