@@ -69,17 +69,18 @@ namespace Detail
 class CopyTiles
 {
 	public:
-		CopyTiles( const vector<float *> &imageChannelData, const vector<string> &channelNames, const Gaffer::FloatVectorDataPlug *channelDataPlug, const Box2i& dataWindow, const int tileSize ) :
+		CopyTiles( const vector<float *> &imageChannelData, const vector<string> &channelNames, const Gaffer::FloatVectorDataPlug *channelDataPlug, const Box2i& dataWindow, const Context *context, const int tileSize ) :
 			m_imageChannelData( imageChannelData ),
 			m_channelNames( channelNames ),
 			m_channelDataPlug( channelDataPlug ),
 			m_dataWindow( dataWindow ),
+			m_parentContext( context ),
 			m_tileSize( tileSize )
 		{}
 		
 		void operator()( const blocked_range2d<size_t>& r ) const
 		{
-			ContextPtr context = new Context( *Context::current() );
+			ContextPtr context = new Context( *m_parentContext );
 			const Box2i operationWindow( V2i( r.rows().begin(), r.cols().begin() ), V2i( r.rows().end()-1, r.cols().end()-1 ) );
 			V2i minTileOrigin = ( operationWindow.min / m_tileSize ) * m_tileSize;
 			V2i maxTileOrigin = ( operationWindow.max / m_tileSize ) * m_tileSize;
@@ -118,6 +119,7 @@ class CopyTiles
 		const vector<string> &m_channelNames;
 		const Gaffer::FloatVectorDataPlug *m_channelDataPlug;
 		const Box2i &m_dataWindow;
+		const Context *m_parentContext;
 		const int m_tileSize;
 };
 
@@ -318,7 +320,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	}
 	
 	parallel_for( blocked_range2d<size_t>(dataWindow.min.x, dataWindow.max.x+1, tileSize(), dataWindow.min.y, dataWindow.max.y+1, tileSize() ),
-		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, tileSize()) );
+		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
 	
 	return result;
 }

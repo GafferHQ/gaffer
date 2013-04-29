@@ -39,6 +39,7 @@
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/FilteredChildIterator.h"
+#include "Gaffer/FilteredRecursiveChildIterator.h"
 
 #include "boost/iterator/filter_iterator.hpp"
 
@@ -68,6 +69,10 @@ struct PlugPredicate
 typedef FilteredChildIterator<PlugPredicate<> > PlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Plug> > InputPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Plug> > OutputPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<> > RecursivePlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Plug> > RecursiveInputPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Plug> > RecursiveOutputPlugIterator;
 
 } // namespace Gaffer
 

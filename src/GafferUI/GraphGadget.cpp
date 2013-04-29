@@ -48,6 +48,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/RecursiveChildIterator.h"
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -717,13 +718,10 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		return;
 	}
 	
-	/// \todo Use InputPlugIterator when it provides non-const access to the Plug
-	GraphComponent::ChildIterator cIt = node->children().begin();
-	GraphComponent::ChildIterator cEnd = node->children().end();
-	for ( ; cIt != cEnd; ++cIt )
+	for( Gaffer::RecursiveInputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
 	{
-		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
-		if ( p && p->direction() == Gaffer::Plug::In && !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
+		Gaffer::Plug *p = cIt->get();
+		if( !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
 		{
 			m_dragReconnectDstNodule = selNodeGadget->nodule( p );
 			if ( m_dragReconnectDstNodule )
@@ -733,12 +731,10 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		}
 	}
 
-	/// \todo Use OutputPlugIterator when it provides non-const access to the Plug
-	cIt = node->children().begin();
-	for ( ; cIt != cEnd; ++cIt )
+	for( Gaffer::RecursiveOutputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
 	{
-		Gaffer::Plug *p = static_cast<const Gaffer::Plug *>( cIt->get() );
-		if ( p && p->direction() == Gaffer::Plug::Out && dstPlug->acceptsInput( p ) )
+		Gaffer::Plug *p = cIt->get();
+		if( dstPlug->acceptsInput( p ) )
 		{
 			m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
 			if ( m_dragReconnectSrcNodule )

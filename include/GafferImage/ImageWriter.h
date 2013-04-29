@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,47 +34,63 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CHANNELMASKPLUG_H
-#define GAFFERIMAGE_CHANNELMASKPLUG_H
+#ifndef GAFFERIMAGE_IMAGEWRITER_H
+#define GAFFERIMAGE_IMAGEWRITER_H
 
+#include "Gaffer/ExecutableNode.h"
+#include "Gaffer/Context.h"
 #include "GafferImage/TypeIds.h"
-#include "Gaffer/TypedObjectPlug.h"
+#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
 
-class ChannelMaskPlug : public Gaffer::StringVectorDataPlug
+class ImageWriter : public Gaffer::ExecutableNode
 {
-	public:
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelMaskPlug, ChannelMaskPlugTypeId, Gaffer::StringVectorDataPlug );
+	public :
+
+		enum
+		{
+			Scanline = 0,
+			Tile = 1
+		};
+
+		ImageWriter( const std::string &name=staticTypeName() );
+		virtual ~ImageWriter();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageWriter, ImageWriterTypeId, ExecutableNode );
 		
-		/// A copy of defaultValue is taken - it must not be null.
-		ChannelMaskPlug(
-			const std::string &name,
-			Direction direction,
-			IECore::ConstStringVectorDataPtr defaultValue,
-			unsigned flags = Default
-		);
-		virtual ~ChannelMaskPlug();
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+		GafferImage::ImagePlug *inPlug();
+		const GafferImage::ChannelMaskPlug *channelsPlug() const;
+		GafferImage::ChannelMaskPlug *channelsPlug();
+		const GafferImage::ImagePlug *inPlug() const;
+		Gaffer::IntPlug *writeModePlug();
+		const Gaffer::IntPlug *writeModePlug() const;
 
-		/// Performs an in-place intersection of inChannels and the channels held within the StringVectorDataPlug.
-		void maskChannels( std::vector<std::string> &inChannels ) const;
+		// Implemented to specify the requirements which must be satisfied
+		// before it is allowed to call execute() with the given context.
+		virtual void executionRequirements( const Gaffer::Context *context, Executable::Tasks &requirements ) const;
+		
+		/// Implemented to set a hash that uniquely represents the
+		/// side effects (files created etc) of calling execute with the given context.
+		/// If the node returns the default hash it means this node does not compute anything.
+		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
+		
+		/// Implemented to execute in all the specified contexts in sequence.
+		virtual void execute( const Executable::Contexts &contexts ) const;
 
-		/// Returns the index of a channel within it's layer.
-		static int channelIndex( std::string channel );
+	private :
+		
+		void plugSet( Gaffer::Plug *plug );
+	
+		static size_t g_firstPlugIndex;
+		
 };
-
-IE_CORE_DECLAREPTR( ChannelMaskPlug );
-
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ChannelMaskPlug> > ChannelMaskPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ChannelMaskPlug> > InputChannelMaskPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ChannelMaskPlug> > OutputChannelMaskPlugIterator;
-
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ChannelMaskPlug> > RecursiveChannelMaskPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ChannelMaskPlug> > RecursiveInputChannelMaskPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ChannelMaskPlug> > RecursiveOutputChannelMaskPlugIterator;
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_CHANNELMASKPLUG_H
+#endif // GAFFERIMAGE_IMAGEWRITER_H
+

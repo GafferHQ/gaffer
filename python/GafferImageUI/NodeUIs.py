@@ -66,6 +66,29 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
+# ImageWriter
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.ImageWriter.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() )
+	)
+)
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter.staticTypeId(), "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter.staticTypeId(), "fileName", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter.staticTypeId(), "channels", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter.staticTypeId(), "writeMode", lambda plug : None )
+
+writeModeLabelsAndValues = [ ( "Scanline", 0), ( "Tile", 1 ) ]
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.ImageWriter.staticTypeId(),
+	"writeMode",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = writeModeLabelsAndValues
+)
+
 # Constant
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.Constant.staticTypeId(),
