@@ -571,6 +571,14 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 {
+	if( m_cameraInMotion )
+	{
+		// we can't embed a dolly inside whatever other motion we already
+		// started - we get here when the user accidentally rotates
+		// the wheel while middle dragging, so it's fine to do nothing.
+		return false;
+	}
+	
 	V2i position( (int)event.line.p0.x, (int)event.line.p0.y );
 	
 	m_cameraController.motionStart( CameraController::Dolly, position );
