@@ -39,6 +39,7 @@
 OIIO_NAMESPACE_USING
 
 #include "boost/format.hpp"
+#include "boost/shared_ptr.hpp"
 #include "boost/bind.hpp"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
@@ -71,7 +72,7 @@ ImageWriter::ImageWriter( const std::string &name )
 			"channels",
 			Gaffer::Plug::In,
 			inPlug()->channelNamesPlug()->defaultValue(),
-			~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
+			Gaffer::Plug::Default & ~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
 		)
 	);
 	
@@ -176,7 +177,6 @@ void ImageWriter::execute( const Contexts &contexts ) const
 	if( !inPlug()->getInput<ImagePlug>() )
 	{
 		throw IECore::Exception( "No input image." );
-		return;
 	}
 
 	// Loop over the execution contexts...
@@ -187,11 +187,10 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		std::string fileName = fileNamePlug()->getValue();
 		fileName = (*it)->substitute( fileName );
 		
-		ImageOutput *out = ImageOutput::create( fileName.c_str() );
-		if (!out)
+		boost::shared_ptr< ImageOutput > out( ImageOutput::create( fileName.c_str() ) );
+		if ( !out )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
-			return;
 		}
 		
 		// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
@@ -246,8 +245,6 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		if ( !out->open( fileName, spec ) )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
-			delete out;
-			return;
 		}
 
 		// Only allow tiled output if our file format supports it.	
@@ -273,8 +270,6 @@ void ImageWriter::execute( const Contexts &contexts ) const
 				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
 				{
 					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-					delete out;
-					return;
 				}
 			}
 		}
@@ -309,8 +304,6 @@ void ImageWriter::execute( const Contexts &contexts ) const
 					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+dataWindow.min.y, 0, TypeDesc::FLOAT, &tile[0] ) )
 					{
 						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-						delete out;
-						return;
 					}
 
 				}
@@ -320,7 +313,6 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		}
 
 		out->close();
-		delete out;
 	}
 }
 
