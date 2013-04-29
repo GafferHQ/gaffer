@@ -203,7 +203,8 @@ div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock
   border-color: rgb(226,226,216);
   border-radius: 3px;
   background: rgb(240,240,232);
-  overflow:auto; 
+  overflow:auto;
+  page-break-inside:avoid; 
 }
 
 div.verseblock { border-left-width: 0; margin-left: 3em; }
