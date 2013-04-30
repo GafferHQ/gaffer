@@ -139,8 +139,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if plug is None :
 			return False
 		
-		if not plug.settable() :
+		if hasattr(plug, 'settable') and not plug.settable():
 			return False
+		
 		if self.__readOnly :
 			return False
 		

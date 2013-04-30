@@ -136,6 +136,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		# stuff for drag begin
 		
+		self.__borrowedButtonPress = None
 		self.__emittingButtonPress = False
 		self.__buttonPressConnection = self.__tableViewHolder.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.__tableViewHolder.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
