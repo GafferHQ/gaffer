@@ -105,7 +105,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__summary = summary	
 
-		self._updateFromPlug()
+		CompoundPlugValueWidget._updateFromPlug( self )
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	# Because the ui is built lazily on demand, this might return None due

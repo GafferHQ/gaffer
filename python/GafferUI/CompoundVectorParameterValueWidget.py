@@ -81,7 +81,10 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 	def _updateFromPlug( self ) :
 				
 		GafferUI.CompoundParameterValueWidget._PlugValueWidget._updateFromPlug( self )
-	
+		
+		if self.__vectorDataWidget is None:
+			return
+		
 		data = []
 		for plug in self._parameterHandler().plug().children() :
 			plugData = plug.getValue()
@@ -93,7 +96,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 				# for the final plug to be set before updating the VectorDataWidget.
 				return
 			data.append( plugData )
-			
+		
 		self.__vectorDataWidget.setData( data )
 		self.__vectorDataWidget.setEditable( self._editable() )
 					
