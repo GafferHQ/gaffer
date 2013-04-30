@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -16,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -35,39 +34,25 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "GafferImage/FilterPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-namespace GafferImage
+using namespace GafferImage;
+using namespace IECore;
+
+IE_CORE_DEFINERUNTIMETYPED( FilterPlug );
+
+FilterPlug::FilterPlug(
+	const std::string &name,
+	Direction direction,
+	std::string defaultValue,
+	unsigned flags
+)
+	:	Gaffer::StringPlug( name, direction, defaultValue, flags )
 {
+}
 
-enum TypeId
+FilterPlug::~FilterPlug()
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	
-	LastTypeId = 110849
-};
+}
 
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H

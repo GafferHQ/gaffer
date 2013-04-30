@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -16,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -35,39 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_SAMPLER_H
+#define GAFFERIMAGE_SAMPLER_H
+
+#include <vector>
+#include "GafferImage/ImagePlug.h"
 
 namespace GafferImage
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
+///\todo: 
+/// Add a hash() method to the sampler that accumulates the hashes of all tiles within m_sampleWindow.
+/// Currently anything that uses the sampler to gather data from across an area could potentially
+/// have an incorrect hash if one of the tiles that it is sampling which isn't the one being output
+/// changes. For example, if our sampler is accessing 4 tiles to produce an output for one tile and a node
+/// upstream changes just one of them and passes the hashes of the other through, the output hash  will
+/// be wrong and not update. This has not been an issue yet as we don't have any nodes that do that!
 	
-	LastTypeId = 110849
+/// A utility class for pixel access of an image plug.
+class Sampler
+{
+
+public : 
+	
+	/// Sampler Constructor
+	/// @param plug The image plug to sample from.
+	/// @param channelName The channel to sample.
+	/// @param The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow );
+
+	/// Samples a colour value from the channel at x, y. The result is clamped the the sampleWindow.	
+	float sample( int x, int y );
+
+private:
+
+	const ImagePlug *m_plug;
+	const std::string &m_channelName;
+	Imath::Box2i m_sampleWindow;
+	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
+	bool m_valid;
+
 };
 
-} // namespace GafferImage
+}; // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif
+

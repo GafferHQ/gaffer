@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -16,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #  
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -35,21 +34,20 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
+import IECore
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import Gaffer
+import GafferUI
+import GafferImage
+
+class FilterPlugValueWidget( GafferUI.EnumPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		filters = GafferImage.FilterPlug.filters()
+		values = [ (f, f) for f in filters ]
+		GafferUI.EnumPlugValueWidget.__init__( self, plug, values, **kw )
+	
+		
+GafferUI.PlugValueWidget.registerType( GafferImage.FilterPlug.staticTypeId(), FilterPlugValueWidget )
+
