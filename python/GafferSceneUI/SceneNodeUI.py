@@ -152,6 +152,7 @@ GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader",
 # Group
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Group.staticTypeId(), "in[0-9]*", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Group.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
 
 # Filter
 
