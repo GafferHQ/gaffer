@@ -72,11 +72,13 @@ class ImageReaderTest( unittest.TestCase ) :
 		
 		self.assertEqual( image, image2 )
 
+	#todo: This test currently fails as there is an issue with the Image Plug and reading negative data windows.
+	# Remove this todo when this bug passes...
 	def testNegativeDataWindow( self ) :
 	
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )		
-	
+		n["out"].setFlag( GafferImage.ImagePlug.Flag.Cachable )	
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, 30 ), IECore.V2i( 174, 179 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 	
