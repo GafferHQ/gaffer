@@ -43,13 +43,17 @@ import GafferUI
 
 class UserPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
-	def __init__( self, plug, collapsed=None, label=None, **kw ) :
+	def __init__( self, plug, collapsed=None, label=None, editable=True, **kw ) :
 
 		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, **kw )
 
+		self.__editable = editable
 		self.__footerWidget = None
 
 	def _footerWidget( self ) :
+
+		if not self.__editable :
+			return None
 
 		if self.__footerWidget is not None :
 			return self.__footerWidget

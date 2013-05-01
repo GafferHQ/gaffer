@@ -34,52 +34,47 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
+#include "IECore/Exception.h"
 
-#include "Gaffer/Box.h"
-#include "Gaffer/Plug.h"
+#include "Gaffer/Reference.h"
+#include "Gaffer/ScriptNode.h"
 
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
-
-using namespace boost::python;
 using namespace Gaffer;
 
-namespace GafferBindings
-{
+IE_CORE_DEFINERUNTIMETYPED( Reference );
 
-class BoxSerialiser : public NodeSerialiser
-{
+size_t Reference::g_firstPlugIndex = 0;
 
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+Reference::Reference( const std::string &name )
+	:	Node( name )
+{
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );	
+}
+
+Reference::~Reference()
+{
+}
+
+
+StringPlug *Reference::fileNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *Reference::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+void Reference::load( const std::string &fileName )
+{
+	ScriptNode *script = scriptNode();
+	if( !script )
 	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsConstruction( child );
-	}	
+		throw IECore::Exception( "Reference::load called without ScriptNode" );
+	}
 	
-};
-
-static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
-{
-	return b.promotePlug( descendantPlug );
+	script->executeFile( fileName, this );
+	fileNamePlug()->setValue( fileName );
 }
-
-void bindBox()
-{
-	NodeClass<Box>()
-		.def( "canPromotePlug", &Box::canPromotePlug )
-		.def( "promotePlug", &promotePlug )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "exportForReference", &Box::exportForReference )
-		.def( "create", &Box::create )
-		.staticmethod( "create" )
-	;
-	
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
-	
-}
-
-} // namespace GafferBindings

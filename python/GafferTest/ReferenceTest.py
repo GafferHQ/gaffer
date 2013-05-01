@@ -1,0 +1,145 @@
+##########################################################################
+#  
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#  
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#  
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#  
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#  
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  
+##########################################################################
+
+import os
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
+
+class ReferenceTest( unittest.TestCase ) :
+			
+	def testLoad( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( "n1" in s["r"] )
+		self.assertTrue( s["r"]["out"].getInput().isSame( s["r"]["n1"]["sum"] ) )
+	
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		b.promotePlug( b["n1"]["op1"] )
+		
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( "n1" in s["r"] )
+		self.assertTrue( s["r"]["n1"]["op1"].getInput().isSame( s["r"]["user"]["n1_op1"] ) )
+		self.assertTrue( s["r"]["out"].getInput().isSame( s["r"]["n1"]["sum"] ) )
+		
+		s["r"]["user"]["n1_op1"].setValue( 25 )
+		self.assertEqual( s["r"]["out"].getValue(), 25 )
+	
+		ss = s.serialise()
+				
+		# referenced nodes should be referenced only, and not
+		# explicitly mentioned in the serialisation at all.
+		self.assertTrue( "\"n1\"" not in ss )
+		# but the values of user plugs should be stored, so
+		# they can override the values from the reference.
+		self.assertTrue( "\"n1_op1\"" in ss )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+		
+		self.assertTrue( "n1" in s2["r"] )
+		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
+		self.assertEqual( s2["r"]["out"].getValue(), 25 )
+		
+	def testReload( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		b.promotePlug( b["n1"]["op1"] )
+		
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( "n1" in s2["r"] )
+		self.assertTrue( s2["r"]["n1"]["op1"].getInput().isSame( s2["r"]["user"]["n1_op1"] ) )
+		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
+		originalReferencedNames = s2["r"].keys()
+		
+		b["anotherNode"] = GafferTest.AddNode()
+		b.promotePlug( b["anotherNode"]["op2"] )
+		s.serialiseToFile( "/tmp/test.grf", b )
+		
+		s2["r"].load( "/tmp/test.grf" )
+				
+		self.assertTrue( "n1" in s2["r"] )
+		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode" ] ) )
+		self.assertTrue( s2["r"]["n1"]["op1"].getInput().isSame( s2["r"]["user"]["n1_op1"] ) )
+		self.assertTrue( s2["r"]["anotherNode"]["op2"].getInput().isSame( s2["r"]["user"]["anotherNode_op2"] ) )
+		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
+		self.assertTrue( "anotherNode" in s2["r"] )
+		
+	def tearDown( self ) :
+	
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
+		
+if __name__ == "__main__":
+	unittest.main()
+	

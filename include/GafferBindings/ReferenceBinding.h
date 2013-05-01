@@ -34,52 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
-
-#include "Gaffer/Box.h"
-#include "Gaffer/Plug.h"
-
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
+#ifndef GAFFERBINDINGS_REFERENCEBINDING_H
+#define GAFFERBINDINGS_REFERENCEBINDING_H
 
 namespace GafferBindings
 {
 
-class BoxSerialiser : public NodeSerialiser
-{
-
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsConstruction( child );
-	}	
-	
-};
-
-static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
-{
-	return b.promotePlug( descendantPlug );
-}
-
-void bindBox()
-{
-	NodeClass<Box>()
-		.def( "canPromotePlug", &Box::canPromotePlug )
-		.def( "promotePlug", &promotePlug )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "exportForReference", &Box::exportForReference )
-		.def( "create", &Box::create )
-		.staticmethod( "create" )
-	;
-	
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
-	
-}
+void bindReference();
 
 } // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_REFERENCEBINDING_H

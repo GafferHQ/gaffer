@@ -91,7 +91,13 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			self.__tabbedContainer.setCurrent( self.__tabbedContainer[tabIndex] )
 			self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 
-	## The top level layout for the standard node ui is a tabbed container. Derived
+	## The header for the ui is a vertical ListContainer. Derived classes may
+	# access it using this method in order to add their own header items.
+	def _header( self ) :
+	
+		return self.__sectionColumns["header"]
+
+	## The main layout for the standard node ui is a tabbed container. Derived
 	# classes may access it using this function in order to add their own tabs
 	def _tabbedContainer( self ) :
 

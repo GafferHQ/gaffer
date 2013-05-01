@@ -42,6 +42,7 @@
 #include "Gaffer/PlugIterator.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace Gaffer;
 
@@ -157,6 +158,17 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 	}
 
 	return true;
+}
+
+void Box::exportForReference( const std::string &fileName ) const
+{
+	const ScriptNode *script = scriptNode();
+	if( !script )
+	{
+		throw IECore::Exception( "Box::exportForReference called without ScriptNode" );
+	}
+	
+	script->serialiseToFile( fileName, this );
 }
 
 BoxPtr Box::create( Node *parent, const Set *childNodes )

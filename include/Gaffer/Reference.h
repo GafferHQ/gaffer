@@ -34,64 +34,43 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOX_H
-#define GAFFER_BOX_H
+#ifndef GAFFER_REFERENCE_H
+#define GAFFER_REFERENCE_H
 
 #include "Gaffer/Node.h"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Box )
-IE_CORE_FORWARDDECLARE( Set )
-
-/// A Box is simply a Node which is intended to hold other Nodes
-/// as children.
-/// \note It would perhaps be natural to call this a Group,
-/// but we're reserving that name for the GafferScene::Group. It's
-/// unfortunate that the Box name clashes somewhat with the BoxPlug
-/// and Imath::Box, both of which are entirely unrelated. A better
-/// name would be welcomed.
-class Box : public Node
+class Reference : public Node
 {
 
 	public :
 
-		Box( const std::string &name=staticTypeName() );
-		virtual ~Box();
+		Reference( const std::string &name=staticTypeName() );
+		virtual ~Reference();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Box, BoxTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Reference, ReferenceTypeId, Node );
 		
-		/// Returns true if promotePlug() can be used with the
-		/// specified descendant.
-		bool canPromotePlug( const Plug *descendantPlug ) const;
-		/// Creates a user plug on the Box and connects it as the
-		/// input of the specified descendantPlug, which should belong
-		/// to one of the Nodes contained in the Box. Returns the
-		/// newly created plug.
-		/// \undoable
-		Plug *promotePlug( Plug *descendantPlug );
-		/// Returns true if the descendantPlug has been promoted.
-		bool plugIsPromoted( const Plug *descendantPlug ) const;
-
-		/// Exports the contents of the Box so that it can be referenced
-		/// by a Reference node.
-		void exportForReference( const std::string &fileName ) const;
-
-		/// Creates a Box by containing a set of child nodes which
-		/// were previously held by a different parent.
-		/// \undoable
-		static BoxPtr create( Node *parent, const Set *childNodes );
+		/// The plugs that stores the name of the file being
+		/// referenced. This should be considered read-only, and the
+		/// load() method should be used to set it.
+		StringPlug *fileNamePlug();
+		const StringPlug *fileNamePlug() const;
+				
+		/// Loads the specified script, which should have been exported
+		/// using Box::exportForReference().
+		void load( const std::string &fileName );
 
 	private :
 
-		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const;
-							
+		static size_t g_firstPlugIndex;		
+									
 };
 
-typedef FilteredChildIterator<TypePredicate<Box> > BoxIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<Box> > RecursiveBoxIterator;
+typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
 
 } // namespace Gaffer
 
-#endif // GAFFER_BOX_H
+#endif // GAFFER_REFERENCE_H
