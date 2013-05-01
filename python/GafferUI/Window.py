@@ -153,7 +153,11 @@ class Window( GafferUI.ContainerWidget ) :
 			oldParent.removeChild( childWindow ) 
 		
 		self.__childWindows.add( childWindow )
-		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() | QtCore.Qt.Tool )
+		
+		# kde 3.5 does not handle the flag QtCore.Qt.Tool well (it is making the window disappear as soon as another window is selected)
+		#childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() | QtCore.Qt.Tool )
+		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags())
+		
 		childWindow._applyVisibility()
 	
 	## Returns a list of all the windows parented to this one.
