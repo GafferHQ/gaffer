@@ -49,6 +49,7 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_channelName( channelName )
 {
 	// Get the new sample bounds that includes all intersecting tiles.	
+	//todo: I think that there will be an error with this logic when using images with a negative data window offset. Use the ImagePlug::tileOrigin() call instead.
 	m_sampleWindow = Imath::Box2i( 
 		Imath::V2i( ( sampleWindow.min / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) ),
 		Imath::V2i( ( sampleWindow.max / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) + Imath::V2i( ImagePlug::tileSize() ) - Imath::V2i(1) )
