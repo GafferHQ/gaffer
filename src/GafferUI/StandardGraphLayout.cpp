@@ -77,7 +77,7 @@ bool StandardGraphLayout::connectNode( GraphGadget *graph, Node *node, Gaffer::S
 			NodeGadget *nodeGadget = graph->nodeGadget( node );
 			if( nodeGadget )
 			{
-				for( OutputPlugIterator it( node ); it != it.end(); it++ )
+				for( RecursiveOutputPlugIterator it( node ); it != it.end(); it++ )
 				{
 					if( nodeGadget->nodule( *it ) )
 					{
@@ -181,7 +181,7 @@ void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, 
 void StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
 {
 	plugs.clear();
-	for( InputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
+	for( RecursiveInputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
 	{
 		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( *it ) )
 		{
