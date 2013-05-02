@@ -218,15 +218,26 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	if( input )
 	{
 		m_hovering = true;
-		StandardNodulePtr sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget );
-		if( sourceNodule )
+		
+		// snap the drag endpoint to our centre, as another little visual indication
+		// that we're well up for being connected.
+		V3f centre = V3f( 0 ) * fullTransform();
+		centre = centre * event.sourceGadget->fullTransform().inverse();
+		
+		V3f tangent( 0 );
+		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 		{
-			// snap the drag endpoint to our centre, as another little visual indication
-			// that we're well up for being connected.
-			V3f centre = V3f( 0 ) * fullTransform();
-			centre = centre * sourceNodule->fullTransform().inverse();
+			tangent = nodeGadget->noduleTangent( this );
+		}
+		
+		if( StandardNodule *sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget.get() ) )
+		{
 			sourceNodule->m_dragPosition = centre;
 			sourceNodule->m_draggingConnection = true;
+		}
+		else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
+		{
+			sourceConnection->updateDragEndPoint( centre, tangent );
 		}
 
 		// show the labels of all compatible nodules on this node, if it doesn't

@@ -200,6 +200,24 @@ Imath::Box3f ConnectionGadget::bound() const
 	return r;
 }
 
+void ConnectionGadget::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
+{
+	if( m_dragEnd==Gaffer::Plug::Out )
+	{
+		m_srcPos = position;
+		m_srcTangent = tangent;
+	}
+	else if( m_dragEnd==Gaffer::Plug::In )
+	{
+		m_dstPos = position;
+		m_dstTangent = tangent;
+	}
+	else
+	{
+		throw IECore::Exception( "Not dragging" );
+	}
+}
+
 void ConnectionGadget::doRender( const Style *style ) const
 {
 	const_cast<ConnectionGadget *>( this )->setPositionsFromNodules();
