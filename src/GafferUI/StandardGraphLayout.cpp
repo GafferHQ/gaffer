@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -125,14 +126,8 @@ bool StandardGraphLayout::connectNode( GraphGadget *graph, Node *node, Gaffer::S
 
 }
 
-bool StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node ) const
+void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition ) const
 {
-	NodeGadget *nodeGadget = graph->nodeGadget( node );
-	if( !nodeGadget )
-	{
-		return false;
-	}
-	
 	// try to figure out the node position based on its input connections
 	std::vector<const ConnectionGadget *> connections;
 	for( InputPlugIterator it( node ); it != it.end(); it++ )
@@ -146,7 +141,8 @@ bool StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node )
 	
 	if( !connections.size() )
 	{
-		return false;
+		graph->setNodePosition( node, fallbackPosition );
+		return;
 	}
 	
 	V3f	srcNoduleCentroid( 0 );
@@ -179,9 +175,7 @@ bool StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node )
 			
 	// apply the position
 	
-	graph->setNodePosition( node, V2f( nodePosition.x, nodePosition.y ) );
-	
-	return true;
+	graph->setNodePosition( node, V2f( nodePosition.x, nodePosition.y ) );	
 }
 
 void StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const

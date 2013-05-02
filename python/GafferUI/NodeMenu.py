@@ -88,20 +88,20 @@ def nodeCreatorWrapper( nodeCreator ) :
 			
 			graphGadget.getLayout().connectNode( graphGadget, node, script.selection() )
 
-		automaticPositioningSuccessful = graphGadget.getLayout().positionNode( graphGadget, node )		
-		if not automaticPositioningSuccessful :
-			# if no connections were made, we can't expect the graph layout to
-			# know where to put the node, so we'll try to position it based on
-			# the click location that opened the menu.
-			## \todo This positioning doesn't work very well when the menu min
-			# is not where the mouse was clicked to open the window (when the menu
-			# has been moved to keep it on screen).
-			menuPosition = menu.bound( relativeTo=gadgetWidget ).min
-			nodePosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
-				IECore.V2f( menuPosition.x, menuPosition.y ),
-				gadget = graphGadget
-			).p0
-			graphGadget.setNodePosition( node, IECore.V2f( nodePosition.x, nodePosition.y ) )
+		# if no connections were made, we can't expect the graph layout to
+		# know where to put the node, so we'll try to position it based on
+		# the click location that opened the menu.
+		## \todo This positioning doesn't work very well when the menu min
+		# is not where the mouse was clicked to open the window (when the menu
+		# has been moved to keep it on screen).
+		menuPosition = menu.bound( relativeTo=gadgetWidget ).min
+		fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
+			IECore.V2f( menuPosition.x, menuPosition.y ),
+			gadget = graphGadget
+		).p0
+		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+
+		graphGadget.getLayout().positionNode( graphGadget, node, fallbackPosition )
 			
 		script.selection().clear()
 		script.selection().add( node )

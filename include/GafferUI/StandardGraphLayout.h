@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,7 +63,7 @@ class StandardGraphLayout : public GraphLayout
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardGraphLayout, StandardGraphLayoutTypeId, GraphLayout );
 
 		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const;
-		virtual bool positionNode( GraphGadget *graph, Gaffer::Node *node ) const;
+		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;		
 
 	private :
 	
