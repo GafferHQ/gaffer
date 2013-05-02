@@ -110,7 +110,7 @@ void StandardNodule::doRender( const Style *style ) const
 			{
 				srcTangent = nodeGadget->noduleTangent( this );
 			}
-			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, -srcTangent );
+			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 		}
 	}
 	
@@ -200,7 +200,6 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
-	m_dragPosition = event.line.p0;
 	renderRequestSignal()( this );
 	return plug();
 }
@@ -210,6 +209,8 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	if( event.sourceGadget == this )
 	{
 		m_draggingConnection = true;
+		m_dragPosition = event.line.p0;
+		m_dragTangent = V3f( 0 );
 		return true;
 	}
 	
@@ -233,6 +234,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		if( StandardNodule *sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget.get() ) )
 		{
 			sourceNodule->m_dragPosition = centre;
+			sourceNodule->m_dragTangent = tangent;
 			sourceNodule->m_draggingConnection = true;
 		}
 		else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
