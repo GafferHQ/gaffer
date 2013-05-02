@@ -81,11 +81,11 @@ class CopyTiles
 		void operator()( const blocked_range2d<size_t>& r ) const
 		{
 			ContextPtr context = new Context( *m_parentContext );
-			const Box2i operationWindow( V2i( r.rows().begin(), r.cols().begin() ), V2i( r.rows().end()-1, r.cols().end()-1 ) );
-			V2i minTileOrigin = ( operationWindow.min / m_tileSize ) * m_tileSize;
-			V2i maxTileOrigin = ( operationWindow.max / m_tileSize ) * m_tileSize;
+			const Box2i operationWindow( V2i( r.rows().begin()+m_dataWindow.min.x, r.cols().begin()+m_dataWindow.min.y ), V2i( r.rows().end()+m_dataWindow.min.x-1, r.cols().end()+m_dataWindow.min.y-1 ) );
+			V2i minTileOrigin = ImagePlug::tileOrigin( operationWindow.min );
+			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max );
 			size_t imageStride = m_dataWindow.size().x + 1;
-			
+				
 			for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
 			{
 				for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
@@ -203,6 +203,14 @@ const IECore::FloatVectorData *ImagePlug::blackTile()
 	return g_blackTile.get();
 };
 
+Imath::V2i ImagePlug::tileOrigin( const Imath::V2i &point )
+{
+	Imath::V2i tileOrigin;
+	tileOrigin.x = int( floor( double( point.x ) / tileSize() ) ) * tileSize();
+	tileOrigin.y = int( floor( double( point.y ) / tileSize() ) ) * tileSize();
+	return tileOrigin;
+}
+
 bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 4;
@@ -319,7 +327,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		imageChannelData.push_back( &(c[0]) );
 	}
 	
-	parallel_for( blocked_range2d<size_t>(dataWindow.min.x, dataWindow.max.x+1, tileSize(), dataWindow.min.y, dataWindow.max.y+1, tileSize() ),
+	parallel_for( blocked_range2d<size_t>( 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
 		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
 	
 	return result;
@@ -335,8 +343,8 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	result.append( dataWindowPlug()->hash() );
 	result.append( channelNamesPlug()->hash() );
 
-	V2i minTileOrigin = ( dataWindow.min / tileSize() ) * tileSize();
-	V2i maxTileOrigin = ( dataWindow.max / tileSize() ) * tileSize();
+	V2i minTileOrigin = tileOrigin( dataWindow.min );
+	V2i maxTileOrigin = tileOrigin( dataWindow.max );
 
 	ContextPtr context = new Context( *Context::current() );
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
