@@ -168,6 +168,11 @@ void StandardNodule::renderLabel( const Style *style ) const
 	
 	// now we can actually do the rendering.
 	
+	if( m_hovering )
+	{
+		glScalef( 1.2, 1.2, 1.2 );
+	}
+	
 	glRotatef( theta, 0, 0, 1.0f );
 	glTranslatef( -anchor.x, -anchor.y, 0.0f );
 	
