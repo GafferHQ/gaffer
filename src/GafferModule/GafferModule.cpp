@@ -66,7 +66,7 @@
 #include "GafferBindings/BoxPlugBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
 #include "GafferBindings/TransformPlugBinding.h"
-#include "GafferBindings/Transform2dPlugBinding.h"
+#include "GafferBindings/Transform2DPlugBinding.h"
 #include "GafferBindings/CompoundDataPlugBinding.h"
 #include "GafferBindings/RandomBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -111,7 +111,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindBoxPlug();
 	bindExpression();
 	bindTransformPlug();
-	bindTransform2dPlug();
+	bindTransform2DPlug();
 	bindCompoundDataPlug();
 	bindRandom();
 	bindBox();

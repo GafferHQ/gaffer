@@ -34,53 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TRANSFORM2DPLUG_H
-#define GAFFER_TRANSFORM2DPLUG_H
+#ifndef GAFFERBINDINGS_TRANSFORM2DPLUGBINDING_H
+#define GAFFERBINDINGS_TRANSFORM2DPLUGBINDING_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-
-namespace Gaffer
+namespace GafferBindings
 {
 
-class Transform2dPlug : public CompoundPlug
-{
+void bindTransform2DPlug();
 
-	public :
+} // namespace GafferBindings
 
-		Transform2dPlug( const std::string &name = staticTypeName(), Direction direction=In, unsigned flags = Default );
-		virtual ~Transform2dPlug();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Transform2dPlug, Transform2dPlugTypeId, CompoundPlug );
-
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-
-		V2fPlug *pivotPlug();
-		const V2fPlug *pivotPlug() const;
-		V2fPlug *translatePlug();
-		const V2fPlug *translatePlug() const;
-		FloatPlug *rotatePlug();
-		const FloatPlug *rotatePlug() const;
-		V2fPlug *scalePlug();
-		const V2fPlug *scalePlug() const;
-
-		Imath::M33f matrix() const;
-
-	private :
-		
-		static size_t g_firstPlugIndex;
-};
-
-IE_CORE_DECLAREPTR( Transform2dPlug );
-
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Transform2dPlug> > Transform2dPlugIterator;
-typedef FilteredChildIterator<PlugPredicate<Plug::In, Transform2dPlug> > InputTransform2dPlugIterator;
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, Transform2dPlug> > OutputTransform2dPlugIterator;
-
-typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Invalid, Transform2dPlug> > RecursiveTransform2dPlugPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::In, Transform2dPlug> > RecursiveInputTransform2dPlugPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Out, Transform2dPlug> > RecursiveOutputTransform2dPlugPlugIterator;
-
-} // namespace Gaffer
-
-#endif // GAFFER_TRANSFORM2DPLUG_H
+#endif // GAFFERBINDINGS_TRANSFORM2DPLUGBINDING_H

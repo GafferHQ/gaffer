@@ -34,33 +34,53 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFER_TRANSFORM2DPLUG_H
+#define GAFFER_TRANSFORM2DPLUG_H
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
-#include "Gaffer/Transform2dPlug.h"
+namespace Gaffer
+{
 
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/Transform2dPlugBinding.h"
+class Transform2DPlug : public CompoundPlug
+{
 
-using namespace boost::python;
-using namespace GafferBindings;
-using namespace Gaffer;
+	public :
 
-void GafferBindings::bindTransform2dPlug()
-{	
-	IECorePython::RunTimeTypedClass<Transform2dPlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = Gaffer::Transform2dPlug::staticTypeName(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)
-		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( Transform2dPlug )
-		.def( "matrix", &Transform2dPlug::matrix )
-	;
-}
+		Transform2DPlug( const std::string &name = staticTypeName(), Direction direction=In, unsigned flags = Default );
+		virtual ~Transform2DPlug();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Transform2DPlug, Transform2DPlugTypeId, CompoundPlug );
+
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+
+		V2fPlug *pivotPlug();
+		const V2fPlug *pivotPlug() const;
+		V2fPlug *translatePlug();
+		const V2fPlug *translatePlug() const;
+		FloatPlug *rotatePlug();
+		const FloatPlug *rotatePlug() const;
+		V2fPlug *scalePlug();
+		const V2fPlug *scalePlug() const;
+
+		Imath::M33f matrix() const;
+
+	private :
+		
+		static size_t g_firstPlugIndex;
+};
+
+IE_CORE_DECLAREPTR( Transform2DPlug );
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Transform2DPlug> > Transform2DPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, Transform2DPlug> > InputTransform2DPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, Transform2DPlug> > OutputTransform2DPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Invalid, Transform2DPlug> > RecursiveTransform2DPlugPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::In, Transform2DPlug> > RecursiveInputTransform2DPlugPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Out, Transform2DPlug> > RecursiveOutputTransform2DPlugPlugIterator;
+
+} // namespace Gaffer
+
+#endif // GAFFER_TRANSFORM2DPLUG_H

@@ -34,14 +34,33 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_TRANSFORM2DPLUGBINDING_H
-#define GAFFERBINDINGS_TRANSFORM2DPLUGBINDING_H
+#include "boost/python.hpp"
 
-namespace GafferBindings
-{
+#include "IECorePython/RunTimeTypedBinding.h"
 
-void bindTransform2dPlug();
+#include "Gaffer/Transform2DPlug.h"
 
-} // namespace GafferBindings
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/Transform2DPlugBinding.h"
 
-#endif // GAFFERBINDINGS_TRANSFORM2DPLUGBINDING_H
+using namespace boost::python;
+using namespace GafferBindings;
+using namespace Gaffer;
+
+void GafferBindings::bindTransform2DPlug()
+{	
+	IECorePython::RunTimeTypedClass<Transform2DPlug>()
+		.def(
+			init< const std::string &, Gaffer::Plug::Direction, unsigned >
+			(
+				(
+					arg( "name" ) = Gaffer::Transform2DPlug::staticTypeName(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default
+				)
+			)
+		)
+		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( Transform2DPlug )
+		.def( "matrix", &Transform2DPlug::matrix )
+	;
+}

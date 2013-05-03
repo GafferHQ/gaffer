@@ -36,16 +36,16 @@
 
 #include "IECore/AngleConversion.h"
 
-#include "Gaffer/Transform2dPlug.h"
+#include "Gaffer/Transform2DPlug.h"
 
 using namespace Imath;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( Transform2dPlug );
+IE_CORE_DEFINERUNTIMETYPED( Transform2DPlug );
 
-size_t Transform2dPlug::g_firstPlugIndex = 0;
+size_t Transform2DPlug::g_firstPlugIndex = 0;
 
-Transform2dPlug::Transform2dPlug( const std::string &name, Direction direction, unsigned flags )
+Transform2DPlug::Transform2DPlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -96,61 +96,61 @@ Transform2dPlug::Transform2dPlug( const std::string &name, Direction direction, 
 	
 }
 
-Transform2dPlug::~Transform2dPlug()
+Transform2DPlug::~Transform2DPlug()
 {
 }
 
-bool Transform2dPlug::acceptsChild( const GraphComponent *potentialChild ) const
+bool Transform2DPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 4;
 }
 
-PlugPtr Transform2dPlug::createCounterpart( const std::string &name, Direction direction ) const
+PlugPtr Transform2DPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new Transform2dPlug( name, direction, getFlags() );
+	return new Transform2DPlug( name, direction, getFlags() );
 }
 
-V2fPlug *Transform2dPlug::pivotPlug()
-{
-	return getChild<V2fPlug>( g_firstPlugIndex+3 );
-}
-
-const V2fPlug *Transform2dPlug::pivotPlug() const
+V2fPlug *Transform2DPlug::pivotPlug()
 {
 	return getChild<V2fPlug>( g_firstPlugIndex+3 );
 }
 
-V2fPlug *Transform2dPlug::translatePlug()
+const V2fPlug *Transform2DPlug::pivotPlug() const
+{
+	return getChild<V2fPlug>( g_firstPlugIndex+3 );
+}
+
+V2fPlug *Transform2DPlug::translatePlug()
 {
 	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
-const V2fPlug *Transform2dPlug::translatePlug() const
+const V2fPlug *Transform2DPlug::translatePlug() const
 {
 	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
-FloatPlug *Transform2dPlug::rotatePlug()
+FloatPlug *Transform2DPlug::rotatePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex+1 );
 }
 
-const FloatPlug *Transform2dPlug::rotatePlug() const
+const FloatPlug *Transform2DPlug::rotatePlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex+1 );
 }
 
-V2fPlug *Transform2dPlug::scalePlug()
+V2fPlug *Transform2DPlug::scalePlug()
 {
 	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
-const V2fPlug *Transform2dPlug::scalePlug() const
+const V2fPlug *Transform2DPlug::scalePlug() const
 {
 	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
-Imath::M33f Transform2dPlug::matrix() const
+Imath::M33f Transform2DPlug::matrix() const
 {
 	M33f p;
 	p.translate( pivotPlug()->getValue() );

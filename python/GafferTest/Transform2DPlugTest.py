@@ -40,11 +40,11 @@ import IECore
 import Gaffer
 import math
 
-class Transform2dPlugTest( unittest.TestCase ) :
+class Transform2DPlugTest( unittest.TestCase ) :
 
 	def testMatrix( self ) :
 	
-		p = Gaffer.Transform2dPlug()
+		p = Gaffer.Transform2DPlug()
 		
 		p["pivot"].setValue( IECore.V2f( 1, 1 ) )
 		p["translate"].setValue( IECore.V2f( 1, 2 ) )
@@ -73,7 +73,7 @@ class Transform2dPlugTest( unittest.TestCase ) :
 
 	def testTransformOrderExplicit( self ) :
 	
-		plug = Gaffer.Transform2dPlug()
+		plug = Gaffer.Transform2DPlug()
 	
 		t =	IECore.V2f( 100, 0 )
 		r =	90
@@ -97,16 +97,16 @@ class Transform2dPlugTest( unittest.TestCase ) :
 	
 	def testCreateCounterpart( self ) :
 	
-		t = Gaffer.Transform2dPlug()
+		t = Gaffer.Transform2DPlug()
 		t2 = t.createCounterpart( "a", Gaffer.Plug.Direction.Out )
 		
 		self.assertEqual( t2.getName(), "a" )
 		self.assertEqual( t2.direction(), Gaffer.Plug.Direction.Out )
-		self.assertTrue( isinstance( t2, Gaffer.Transform2dPlug ) )
+		self.assertTrue( isinstance( t2, Gaffer.Transform2DPlug ) )
 		
 	def testRunTimeTyped( self ) :
 	
-		p = Gaffer.Transform2dPlug()
+		p = Gaffer.Transform2DPlug()
 		self.failIf( p.typeId() == Gaffer.CompoundPlug.staticTypeId() )
 		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
 
