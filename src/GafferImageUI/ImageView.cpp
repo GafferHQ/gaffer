@@ -199,7 +199,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				style->renderRectangle( dataRasterBox );
 				
 				// Draw the data window text if it is different to the display window.
-				if ( m_dataWindow != m_displayWindow )
+				if ( m_dataWindow != m_displayWindow && m_dataWindow.hasVolume() )
 				{
 					glTranslatef( dataRasterBox.max.x+5, dataRasterBox.max.y-5, 0.f );
 					glScalef( 10.f, -10.f, 1.f );
