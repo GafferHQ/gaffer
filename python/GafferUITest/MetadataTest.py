@@ -67,6 +67,7 @@ class MetadataTest( GafferUITest.TestCase ) :
 	
 		derivedAdd = self.DerivedAddNode()
 		self.assertEqual( GafferUI.Metadata.nodeDescription( derivedAdd ), "DerivedAddNode" )
+		self.assertEqual( GafferUI.Metadata.nodeDescription( derivedAdd, inherit=False ), "" )
 		
 		GafferUI.Metadata.registerNodeDescription( self.DerivedAddNode.staticTypeId(), "a not very helpful description" )
 		self.assertEqual( GafferUI.Metadata.nodeDescription( derivedAdd ), "a not very helpful description" )
@@ -86,6 +87,7 @@ class MetadataTest( GafferUITest.TestCase ) :
 		
 		derivedAdd = self.DerivedAddNode()
 		self.assertEqual( GafferUI.Metadata.plugDescription( derivedAdd["op1"] ), "op1 description" )
+		self.assertEqual( GafferUI.Metadata.plugDescription( derivedAdd["op1"], inherit=False ), "" )
 	
 		GafferUI.Metadata.registerPlugDescription( self.DerivedAddNode, "op*", "derived class description" )
 		self.assertEqual( GafferUI.Metadata.plugDescription( derivedAdd["op1"] ), "derived class description" )
@@ -107,6 +109,24 @@ class MetadataTest( GafferUITest.TestCase ) :
 		self.assertEqual( GafferUI.Metadata.nodeValue( add, "aKey" ), "something" )
 		self.assertEqual( GafferUI.Metadata.plugValue( add["op1"], "aKey" ), "somethingElse" )
 
+	def testInheritance( self ) :
+	
+		GafferUI.Metadata.registerNodeValue( GafferTest.AddNode, "iKey", "Base class value" )
+		
+		derivedAdd = self.DerivedAddNode()
+		self.assertEqual( GafferUI.Metadata.nodeValue( derivedAdd, "iKey" ), "Base class value" )
+		self.assertEqual( GafferUI.Metadata.nodeValue( derivedAdd, "iKey", inherit=False ), None )
+		
+		GafferUI.Metadata.registerNodeValue( self.DerivedAddNode, "iKey", "Derived class value" )
+		self.assertEqual( GafferUI.Metadata.nodeValue( derivedAdd, "iKey", inherit=False ), "Derived class value" )
+		
+		GafferUI.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "iKey", "Base class plug value" )
+		self.assertEqual( GafferUI.Metadata.plugValue( derivedAdd["op1"], "iKey" ), "Base class plug value" )
+		self.assertEqual( GafferUI.Metadata.plugValue( derivedAdd["op1"], "iKey", inherit=False ), None )
+
+		GafferUI.Metadata.registerPlugValue( self.DerivedAddNode, "op1", "iKey", "Derived class plug value" )
+		self.assertEqual( GafferUI.Metadata.plugValue( derivedAdd["op1"], "iKey", inherit=False ), "Derived class plug value" )
+		
 if __name__ == "__main__":
 	unittest.main()
 

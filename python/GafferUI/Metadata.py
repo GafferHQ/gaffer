@@ -63,10 +63,13 @@ class Metadata :
 	## Looks up a previously registered value for the specified
 	# Node instance. Returns None if no such value is found.
 	@classmethod
-	def nodeValue( cls, nodeInstance, key ) :
+	def nodeValue( cls, nodeInstance, key, inherit=True ) :
+		
+		typeIds = [ nodeInstance.typeId() ]
+		if inherit :
+			typeIds += IECore.RunTimeTyped.baseTypeIds( nodeInstance.typeId() )
 	
-		nodeTypeId = nodeInstance.typeId()
-		while nodeTypeId != IECore.TypeId.Invalid :
+		for nodeTypeId in typeIds :
 			
 			values = cls.__nodeValues.get( nodeTypeId, None )
 			if values is not None :
@@ -76,8 +79,6 @@ class Metadata :
 						return value( nodeInstance )
 					else :
 						return value
-
-			nodeTypeId = IECore.RunTimeTyped.baseTypeId( nodeTypeId )
 
 		return None
 		
@@ -109,9 +110,9 @@ class Metadata :
 	# a convenience returning nodeValue( node, "description" ), or the
 	# empty string if no description has been registered.
 	@classmethod
-	def nodeDescription( cls, nodeInstance ) :
+	def nodeDescription( cls, nodeInstance, inherit=True ) :
 
-		return cls.nodeValue( nodeInstance, "description" ) or ""
+		return cls.nodeValue( nodeInstance, "description", inherit ) or ""
 	
 	## Registers a named value associated with particular plugs on a particular
 	# node type. The plugPath may be a string optionally containing fnmatch
@@ -139,7 +140,7 @@ class Metadata :
 	## Looks up a previously registered value for the specified
 	# Plug instance. Returns None if no such value is found.
 	@classmethod
-	def plugValue( cls, plugInstance, key ) :
+	def plugValue( cls, plugInstance, key, inherit=True ) :
 	
 		node = plugInstance.node()
 		if node is None :
@@ -147,8 +148,11 @@ class Metadata :
 			
 		plugPath = plugInstance.relativeName( node )
 		
-		nodeTypeId = node.typeId()
-		while nodeTypeId != IECore.TypeId.Invalid :
+		typeIds = [ node.typeId() ]
+		if inherit :
+			typeIds += IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+	
+		for nodeTypeId in typeIds :
 
 			nodeValues = cls.__nodeValues.get( nodeTypeId, None )
 			if nodeValues is not None :
@@ -162,8 +166,6 @@ class Metadata :
 							else :
 								return plugValue
 			
-			nodeTypeId = IECore.RunTimeTyped.baseTypeId( nodeTypeId )
-
 		return None
 
 	## Registers a textual description for the specified plug on nodes of the
@@ -180,8 +182,8 @@ class Metadata :
 	# a convenience returning plugValue( plug, "description" ), or the
 	# empty string if no description has been registered.
 	@classmethod
-	def plugDescription( cls, plugInstance ) :
+	def plugDescription( cls, plugInstance, inherit=True ) :
 
-		return cls.plugValue( plugInstance, "description" ) or ""
+		return cls.plugValue( plugInstance, "description", inherit ) or ""
 		
 	__nodeValues = {}
