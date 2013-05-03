@@ -77,6 +77,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Transform2dPlug> > Tr
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Transform2dPlug> > InputTransform2dPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Transform2dPlug> > OutputTransform2dPlugIterator;
 
+typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Invalid, Transform2dPlug> > RecursiveTransform2dPlugPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::In, Transform2dPlug> > RecursiveInputTransform2dPlugPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Out, Transform2dPlug> > RecursiveOutputTransform2dPlugPlugIterator;
+
 } // namespace Gaffer
 
 #endif // GAFFER_TRANSFORM2DPLUG_H
