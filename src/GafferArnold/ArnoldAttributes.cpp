@@ -38,6 +38,7 @@
 #include "GafferArnold/ArnoldAttributes.h"
 
 using namespace Imath;
+using namespace Gaffer;
 using namespace GafferArnold;
 
 IE_CORE_DEFINERUNTIMETYPED( ArnoldAttributes );
@@ -55,6 +56,12 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:visibility:refracted", new IECore::BoolData( true ), "refractedVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
+	
+	// subdivision parameters
+	
+	attributes->addOptionalMember( "ai:polymesh:subdiv_iterations", new IntPlug( "value", Plug::In, 1, 1 ), "subdivIterations", false );
+	attributes->addOptionalMember( "ai:polymesh:subdiv_pixel_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivPixelError", false );
+	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );
 	
 }
 
