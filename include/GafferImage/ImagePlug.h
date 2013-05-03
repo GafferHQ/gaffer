@@ -108,7 +108,9 @@ class ImagePlug : public Gaffer::CompoundPlug
 		static Imath::Box2i tileBound( const Imath::V2i &tileOrigin ) { return Imath::Box2i( tileOrigin * tileSize(), ( tileOrigin + Imath::V2i( 1 ) ) * tileSize() - Imath::V2i( 1 ) ); }
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
-	
+		
+		/// Returns the origin of the tile that contains the point.
+		inline static Imath::V2i tileOrigin( const Imath::V2i &point );
 };
 
 IE_CORE_DECLAREPTR( ImagePlug );
