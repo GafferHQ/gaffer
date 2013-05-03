@@ -57,7 +57,7 @@ class ReformatTest( unittest.TestCase ) :
 		reformat["format"].setValue( GafferImage.Format( 150, 125, 1. ) )
 		reformat["in"].setInput( read["out"] )
 		reformatWindow = reformat["out"]["dataWindow"].getValue()
-		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 25 ), IECore.V2i( 119, 99 )  ) )
+		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 25 ), IECore.V2i( 119, 87 )  ) )
 		
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :
