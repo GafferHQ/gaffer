@@ -465,6 +465,19 @@ class Widget( object ) :
 		assert( isinstance( toolTip, basestring ) )
 		
 		self._qtWidget().setToolTip( toolTip )
+
+	## Returns the current position of the mouse. If relativeTo
+	# is not specified, then the position will be in screen coordinates,
+	# otherwise it will be in the local coordinate system of the 
+	# specified widget.
+	@staticmethod
+	def mousePosition( relativeTo=None ) :
+	
+		p = QtGui.QCursor.pos()
+		if relativeTo is not None :
+			p = relativeTo._qtWidget().mapFromGlobal( p )
+			
+		return IECore.V2i( p.x(), p.y() )
 		
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.

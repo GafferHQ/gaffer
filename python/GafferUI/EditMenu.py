@@ -99,8 +99,35 @@ def copy( menu ) :
 def paste( menu ) :
 
 	script, parent = __scriptAndParent( menu )
+	originalSelection = Gaffer.StandardSet( iter( script.selection() ) )
+	
 	with Gaffer.UndoContext( script ) :
+		
 		script.paste( parent )
+	
+		# try to get the new nodes connected to the original selection
+		nodeGraph = __nodeGraph( menu, focussedOnly=False )
+		if nodeGraph is None :
+			return
+
+		nodeGraph.graphGadget().getLayout().connectNodes( nodeGraph.graphGadget(), script.selection(), originalSelection )
+
+		# position the new nodes sensibly
+
+		bound = nodeGraph.bound()
+		mousePosition = GafferUI.Widget.mousePosition()
+		if bound.intersects( mousePosition ) :
+			fallbackPosition = mousePosition - bound.min
+		else :
+			fallbackPosition = bound.center() - bound.min
+
+		fallbackPosition = nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
+			IECore.V2f( fallbackPosition.x, fallbackPosition.y ),
+			gadget = nodeGraph.graphGadget()
+		).p0
+		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+
+		nodeGraph.graphGadget().getLayout().positionNodes( nodeGraph.graphGadget(), script.selection(), fallbackPosition )
 	
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -200,17 +227,28 @@ def __pasteAvailable( menu ) :
 	root = scriptNode.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
 
+def __nodeGraph( menu, focussedOnly=True ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+
+	nodeGraph = None
+	## \todo Does this belong as a Window.focussedChild() method?
+	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
+	if focusWidget is not None :
+		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
+	
+	if nodeGraph is not None or focussedOnly :
+		return nodeGraph
+			
+	nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
+	return nodeGraphs[0] if nodeGraphs else None
+
 def __scriptAndParent( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	
-	## \todo Does this belong as a Window.focussedChild() method?
-	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
-	nodeGraph = None
-	if focusWidget is not None :
-		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
-	
+	nodeGraph = __nodeGraph( menu )
 	if nodeGraph is not None :
 		parent = nodeGraph.graphGadget().getRoot()
 	else :

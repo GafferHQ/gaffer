@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -76,7 +77,7 @@ bool StandardGraphLayout::connectNode( GraphGadget *graph, Node *node, Gaffer::S
 			NodeGadget *nodeGadget = graph->nodeGadget( node );
 			if( nodeGadget )
 			{
-				for( OutputPlugIterator it( node ); it != it.end(); it++ )
+				for( RecursiveOutputPlugIterator it( node ); it != it.end(); it++ )
 				{
 					if( nodeGadget->nodule( *it ) )
 					{
@@ -125,33 +126,187 @@ bool StandardGraphLayout::connectNode( GraphGadget *graph, Node *node, Gaffer::S
 
 }
 
-bool StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node ) const
+bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const
 {
-	NodeGadget *nodeGadget = graph->nodeGadget( node );
-	if( !nodeGadget )
+	// find the nodes without existing inputs, and when one of them
+	// accepts connections from potentialInputs call it good.
+	
+	for( size_t i = 0, s = nodes->size(); i < s; ++i )
 	{
-		return false;
+		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
+		if( !node )
+		{
+			continue;
+		}
+		NodeGadget *nodeGadget = graph->nodeGadget( node );
+		if( !nodeGadget )
+		{
+			continue;
+		}
+		
+		bool hasInputs = false;
+		for( RecursiveInputPlugIterator it( node ); it != it.end(); ++it )
+		{
+			if( (*it)->getInput<Plug>() && nodeGadget->nodule( it->get() ) )
+			{
+				hasInputs = true;
+				break;
+			}
+		}
+		if( hasInputs )
+		{
+			continue;
+		}
+		
+		if( connectNode( graph, node, potentialInputs ) )
+		{
+			return true;
+		}
 	}
 	
-	// try to figure out the node position based on its input connections
+	return false;
+}
+
+void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition ) const
+{
+	V2f hardConstraint, softConstraint, position;
+	if( nodeConstraints( graph, node, 0, hardConstraint, softConstraint ) )
+	{
+		position = V2f(
+			std::max( softConstraint.x, hardConstraint.x ),
+			std::min( softConstraint.y, hardConstraint.y )
+		);
+	}
+	else
+	{
+		position = fallbackPosition;
+	}
+	
+	graph->setNodePosition( node, position );
+}
+
+void StandardGraphLayout::positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition ) const
+{
+	// get the centre of the bunch of nodes we're positioning
+	
+	V2f centroid( 0 );
+	size_t numNodes = 0;
+	for( size_t i=0, s=nodes->size(); i<s; ++i )
+	{
+		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
+		if( !node )
+		{
+			continue;
+		}
+		centroid += graph->getNodePosition( node );
+		numNodes++;
+	}
+	
+	centroid /= numNodes;
+	
+	// figure out the hard and soft constraints per node, combining them
+	// to produce constraints for the centroid.
+	
+	size_t numConstraints = 0;
+	V2f softConstraint( 0 );
+	V2f hardConstraint( V2f::baseTypeMin(), V2f::baseTypeMax() );
+
+	for( size_t i=0, s=nodes->size(); i<s; ++i )
+	{
+		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
+		if( !node )
+		{
+			continue;
+		}
+	
+		V2f nodeSoftConstraint, nodeHardConstraint;
+		if( nodeConstraints( graph, node, nodes, nodeHardConstraint, nodeSoftConstraint ) )
+		{
+			const V2f nodeOffset = graph->getNodePosition( node ) - centroid;
+			hardConstraint = V2f(
+				std::max( hardConstraint.x, nodeHardConstraint.x - nodeOffset.x ),
+				std::min( hardConstraint.y, nodeHardConstraint.y - nodeOffset.y )
+			);
+		
+			softConstraint += nodeSoftConstraint - nodeOffset;
+		
+			numConstraints += 1;
+		}
+	
+	}	
+	
+	V2f newCentroid;
+	if( numConstraints )
+	{
+		softConstraint /= numConstraints;
+		newCentroid = V2f(
+			std::max( softConstraint.x, hardConstraint.x ),
+			std::min( softConstraint.y, hardConstraint.y )
+		);
+	}
+	else
+	{
+		newCentroid = fallbackPosition;
+	}
+	
+	// apply the offset between the old and new centroid to the nodes
+	
+	for( size_t i=0, s=nodes->size(); i<s; ++i )
+	{
+		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
+		if( !node )
+		{
+			continue;
+		}
+	
+		const V2f nodeOffset = graph->getNodePosition( node ) - centroid;
+		graph->setNodePosition( node, newCentroid + nodeOffset );
+	}	
+	
+}
+
+void StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
+{
+	plugs.clear();
+	for( RecursiveInputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
+	{
+		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( *it ) )
+		{
+			plugs.push_back( it->get() );
+		}
+	}
+}
+
+bool StandardGraphLayout::nodeConstraints( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedInputs, Imath::V2f &hardConstraint, Imath::V2f &softConstraint ) const
+{
+	// find all the input connections which aren't excluded
+	
 	std::vector<const ConnectionGadget *> connections;
-	for( InputPlugIterator it( node ); it != it.end(); it++ )
+	for( RecursiveInputPlugIterator it( node ); it != it.end(); it++ )
 	{
 		const ConnectionGadget *connection = graph->connectionGadget( *it );
-		if( connection )
+		if( !connection )
 		{
-			connections.push_back( connection );
+			continue;
 		}
+		if( excludedInputs && excludedInputs->contains( connection->srcNodule()->plug()->node() ) )
+		{
+			continue;
+		}
+		connections.push_back( connection );
 	}
 	
 	if( !connections.size() )
 	{
+		// there's nothing to go on - give up
 		return false;
 	}
 	
+	// figure out a position based on those connections
+	
 	V3f	srcNoduleCentroid( 0 );
-	V2f floorPos( V2f::baseTypeMin(), V2f::baseTypeMax() );
-		
+	hardConstraint = V2f( V2f::baseTypeMin(), V2f::baseTypeMax() );
+
 	for( std::vector<const ConnectionGadget *>::const_iterator it = connections.begin(), eIt = connections.end(); it != eIt; it++ )
 	{
 		const Nodule *srcNodule = (*it)->srcNodule();
@@ -163,35 +318,15 @@ bool StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node )
 		
 		if( srcTangent.dot( V3f( 0, -1, 0 ) ) > 0.5f )
 		{
-			floorPos.y = std::min( floorPos.y, srcNodulePos.y - 10.0f );
+			hardConstraint.y = std::min( hardConstraint.y, srcNodulePos.y - 10.0f );
 		}
 		if( srcTangent.dot( V3f( 1, 0, 0 ) ) > 0.5f )
 		{
-			floorPos.x = std::max( floorPos.x, srcNodulePos.x + 10.0f );
+			hardConstraint.x = std::max( hardConstraint.x, srcNodulePos.x + 10.0f );
 		}
 	}
 
-	srcNoduleCentroid /= connections.size();
-	V2f nodePosition(
-		std::max( srcNoduleCentroid.x, floorPos.x ),
-		std::min( srcNoduleCentroid.y, floorPos.y )
-	);
-			
-	// apply the position
-	
-	graph->setNodePosition( node, V2f( nodePosition.x, nodePosition.y ) );
+	softConstraint = V2f( srcNoduleCentroid.x, srcNoduleCentroid.y ) / connections.size();
 	
 	return true;
-}
-
-void StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
-{
-	plugs.clear();
-	for( InputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
-	{
-		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( *it ) )
-		{
-			plugs.push_back( it->get() );
-		}
-	}
 }
