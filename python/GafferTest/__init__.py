@@ -100,7 +100,7 @@ from ExpressionTest import ExpressionTest
 from BlockedConnectionTest import BlockedConnectionTest
 from TimeWarpDependencyNodeTest import TimeWarpDependencyNodeTest
 from TransformPlugTest import TransformPlugTest
-from Transform2dPlugTest import Transform2dPlugTest
+from Transform2DPlugTest import Transform2DPlugTest
 from SequencePathTest import SequencePathTest
 from OpMatcherTest import OpMatcherTest
 from WeakMethodTest import WeakMethodTest
