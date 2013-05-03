@@ -199,6 +199,40 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glCallList( connectionDisplayList() );
 }
 
+void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
+{
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	
+	glBegin( GL_QUADS );
+		
+		glVertex2f( box.min.x, box.min.y );
+		glVertex2f( box.min.x, box.max.y );
+		glVertex2f( box.max.x, box.max.y );
+		glVertex2f( box.max.x, box.min.y );
+
+	glEnd();
+}
+
+void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
+{
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	
+	glBegin( GL_LINE_LOOP );
+		
+		glVertex2f( box.min.x, box.min.y );
+		glVertex2f( box.min.x, box.max.y );
+		glVertex2f( box.max.x, box.max.y );
+		glVertex2f( box.max.x, box.min.y );
+
+	glEnd();
+}
+
 void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 {
 	V2f boxSize = box.size();
@@ -234,15 +268,15 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 
 }
 
-void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const
+void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture, int textureFilter ) const
 {
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
 	texture->bind();
 	/// \todo IECoreGL::ColorTexture doesn't make mipmaps, so we can't do mipmapped filtering here.
 	/// Perhaps it should and then perhaps we could.
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureFilter );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureFilter );
 	
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );

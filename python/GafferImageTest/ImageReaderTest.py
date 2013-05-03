@@ -47,6 +47,7 @@ class ImageReaderTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
+	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
 
 	def test( self ) :
 	
@@ -70,7 +71,28 @@ class ImageReaderTest( unittest.TestCase ) :
 		image2.blindData().clear()
 		
 		self.assertEqual( image, image2 )
+
+	def testNegativeDataWindow( self ) :
+	
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.negativeDataWindowFileName )		
+		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, 30 ), IECore.V2i( 174, 179 ) ) )
+		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
+	
+		channelNames = n["out"]["channelNames"].getValue()
+		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
+		self.failUnless( "R" in channelNames )
+		self.failUnless( "G" in channelNames )
+		self.failUnless( "B" in channelNames )
+	
+		image = n["out"].image()
+		image2 = IECore.Reader.create( self.negativeDataWindowFileName ).read()
 		
+		image.blindData().clear()
+		image2.blindData().clear()
+		
+		self.assertEqual( image, image2 )
+
 	def testTileSize( self ) :
 	
 		n = GafferImage.ImageReader()
