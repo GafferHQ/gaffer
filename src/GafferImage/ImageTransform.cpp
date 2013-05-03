@@ -56,43 +56,28 @@ ImageTransform::ImageTransform( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Gaffer::TransformPlug( "transform" ) );
-	addChild( new Gaffer::V2fPlug( "center" ) );
+	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 }
 
 ImageTransform::~ImageTransform()
 {
 }
 
-Gaffer::TransformPlug *ImageTransform::transformPlug()
+Gaffer::Transform2DPlug *ImageTransform::transformPlug()
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::TransformPlug *ImageTransform::transformPlug() const
+const Gaffer::Transform2DPlug *ImageTransform::transformPlug() const
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
-}
-
-Gaffer::V2fPlug *ImageTransform::centerPlug()
-{
-	return getChild<Gaffer::V2fPlug>( g_firstPlugIndex+1 );
-}
-
-const Gaffer::V2fPlug *ImageTransform::centerPlug() const
-{
-	return getChild<Gaffer::V2fPlug>( g_firstPlugIndex+1 );
+	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
 }
 
 void ImageTransform::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if ( input == transformPlug()->scalePlug() ||
-		 input == transformPlug()->translatePlug() ||
-		 input == transformPlug()->rotatePlug() ||
-		 input == centerPlug()
-		)
+	if ( transformPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -120,10 +105,7 @@ void ImageTransform::hashFormatPlug( const GafferImage::ImagePlug *output, const
 void ImageTransform::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->dataWindowPlug()->hash( h );
-	transformPlug()->scalePlug()->hash( h );
-	transformPlug()->rotatePlug()->hash( h );
-	transformPlug()->translatePlug()->hash( h );
-	centerPlug()->hash( h );
+	transformPlug()->hash( h );
 }
 
 void ImageTransform::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -135,31 +117,41 @@ void ImageTransform::hashChannelDataPlug( const GafferImage::ImagePlug *output, 
 {
 	inPlug()->channelDataPlug()->hash( h );
 	inPlug()->dataWindowPlug()->hash( h );
-	transformPlug()->scalePlug()->hash( h );
-	transformPlug()->rotatePlug()->hash( h );
-	transformPlug()->translatePlug()->hash( h );
-	centerPlug()->hash( h );
+	transformPlug()->hash( h );
 }
 
 Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	///\todo: Work out the new data window by transforming the input data window.
-	// Work out the scale factor of the output image and scale the input data window.
+	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
+	Imath::Box2i outWindow( transformBox( transformPlug()->matrix(), inWindow ) );
+	std::cerr << "In Window : " << inWindow.min.x << ", " << inWindow.min.y << ", " << inWindow.max.x << ", " << inWindow.max.y << std::endl;
+	std::cerr << "Out Window : " << outWindow.min.x << ", " << outWindow.min.y << ", " << outWindow.max.x << ", " << outWindow.max.y << std::endl;
+	return outWindow;
+}
 
+Imath::Box2i ImageTransform::transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const
+{
+	Imath::V3f pt[4];
+	pt[0] = Imath::V3f( box.min.x, box.min.y, 1. );
+	pt[1] = Imath::V3f( box.max.x+1, box.max.y+1, 1. );
+	pt[2] = Imath::V3f( box.max.x+1, box.min.y, 1. );
+	pt[3] = Imath::V3f( box.min.x, box.max.y+1, 1. );
 
-	Imath::Box2i dataWindow( inPlug()->dataWindowPlug()->getValue() );
-	Imath::V2f min( dataWindow.min );
-	Imath::V2f max( dataWindow.max );
-/*
-	std::cerr << min.x << ", " << min.y << ", " << max.x << ", " << max.y << std::endl;
-	Imath::V2f center( centerPlug()->getValue() );
-	min -= center;
-	max -= center;
-	min = transformPlug()->matrix() * min;
-	max = transformPlug()->matrix() * max;
-	std::cerr << min.x << ", " << min.y << ", " << max.x << ", " << max.y << std::endl;
-	*/
-	return dataWindow;
+	int maxX = std::numeric_limits<int>::min();
+	int maxY = std::numeric_limits<int>::min();
+	int minX = std::numeric_limits<int>::max();
+	int minY = std::numeric_limits<int>::max();
+	
+	for( unsigned int i = 0; i < 4; ++i )
+	{
+		pt[i] = pt[i] * m;
+		maxX = std::max( int( ceil( pt[i].x ) ), maxX );
+		maxY = std::max( int( ceil( pt[i].y ) ), maxY );
+		minX = std::min( int( floor( pt[i].x ) ), minX );
+		minY = std::min( int( floor( pt[i].y ) ), minY );
+	}
+	
+	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );	
 }
 
 GafferImage::Format ImageTransform::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -179,8 +171,24 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 	std::vector<float> &out = outDataPtr->writable();
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	// Create some useful variables...
+	// Work out the bounds of the tile that we are outputting to.
 	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+
+	// Work out the sample area that we require to compute this tile.
+	Imath::M33f t( transformPlug()->matrix().inverse() );
+	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
+	Imath::Box2i sampleBox( transformBox( t, tile ) );
+	
+	Sampler sampler( inPlug(), channelName, sampleBox );
+	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
+	{
+		for ( int i = 0; i < ImagePlug::tileSize(); ++i )
+		{
+			Imath::V3f p( i+tile.min.x+.5, j+tile.min.y+.5, 1. );
+			p *= t;
+			out[ i + j*ImagePlug::tileSize() ] = sampler.sample( int(p.x), int(p.y) );
+		}
+	}
 
 	return outDataPtr;
 }

@@ -39,7 +39,7 @@
 
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/FilterPlug.h"
-#include "Gaffer/TransformPlug.h"
+#include "Gaffer/Transform2DPlug.h"
 
 namespace GafferImage
 {
@@ -55,14 +55,12 @@ class ImageTransform : public ImageProcessor
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, ImageProcessor );
 	
 		/// Plug accessors.	
-		Gaffer::TransformPlug *transformPlug();
-		const Gaffer::TransformPlug *transformPlug() const;
-		Gaffer::V2fPlug *centerPlug();
-		const Gaffer::V2fPlug *centerPlug() const;
-
+		Gaffer::Transform2DPlug *transformPlug();
+		const Gaffer::Transform2DPlug *transformPlug() const;
+		
 		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
-				
+
 	protected :
 		
 		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -76,6 +74,9 @@ class ImageTransform : public ImageProcessor
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 		
 	private :
+
+		// A useful method that returns an axis-aligned box that contains box*m.		
+		Imath::Box2i transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const;
 
 		static size_t g_firstPlugIndex;
 		
