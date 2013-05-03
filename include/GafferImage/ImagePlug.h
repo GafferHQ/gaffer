@@ -110,7 +110,17 @@ class ImagePlug : public Gaffer::CompoundPlug
 		static const IECore::FloatVectorData *whiteTile();
 		
 		/// Returns the origin of the tile that contains the point.
-		inline static Imath::V2i tileOrigin( const Imath::V2i &point );
+		inline static Imath::V2i tileOrigin( const Imath::V2i &point )
+		{
+			Imath::V2i tileOrigin;
+			tileOrigin.x = int( floor( double( point.x ) / tileSize() ) ) * tileSize();
+			tileOrigin.y = int( floor( double( point.y ) / tileSize() ) ) * tileSize();
+			return tileOrigin;
+		}
+	
+	private :
+		
+		static size_t g_firstPlugIndex;
 };
 
 IE_CORE_DECLAREPTR( ImagePlug );
