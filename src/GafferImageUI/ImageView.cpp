@@ -201,14 +201,14 @@ class ImageViewGadget : public GafferUI::Gadget
 				// Draw the data window text if it is different to the display window.
 				if ( m_dataWindow != m_displayWindow && m_dataWindow.hasVolume() )
 				{
-					glTranslatef( dataRasterBox.max.x+5, dataRasterBox.min.y+10, 0.f );
+					glTranslatef( dataRasterBox.max.x+5, dataRasterBox.max.y-5, 0.f ); 
 					glScalef( 10.f, -10.f, 1.f );
 					
 					std::string dataWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % int(m_dataWindow.max.x+1) % int(m_dataWindow.max.y+1) ) );
 					style->renderText( Style::LabelText, dataWindowMaxStr );
 					
 					glLoadIdentity();
-					glTranslatef( dataRasterBox.min.x+5, dataRasterBox.max.y-5, 0.f );
+					glTranslatef( dataRasterBox.min.x+5, dataRasterBox.min.y+10, 0.f ); 
 					glScalef( 10.f, -10.f, 1.f );
 					
 					std::string dataWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % int(m_dataWindow.min.x) % int(m_dataWindow.min.y) ) );
