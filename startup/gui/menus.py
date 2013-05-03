@@ -110,6 +110,7 @@ try :
 	GafferUI.NodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )
 	GafferUI.NodeMenu.append( "/Image/Filter/Merge", GafferImage.Merge )
 	GafferUI.NodeMenu.append( "/Image/Filter/Reformat", GafferImage.Reformat )
+	GafferUI.NodeMenu.append( "/Image/Filter/ImageTransform", GafferImage.ImageTransform )
 	GafferUI.NodeMenu.append( "/Image/Utility/Select", GafferImage.Select )
 except ImportError :
 	pass
