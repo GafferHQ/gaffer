@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import string
+
 import Gaffer
 import GafferUI
 import GafferArnold
@@ -56,7 +58,19 @@ def __visibilitySummary( plug ) :
 			info.append( label + ( " On" if plug[childName+"Visibility"]["value"].getValue() else " Off" ) )
 			
 	return ", ".join( info )
+
+def __subdivisionSummary( plug ) :
+
+	info = []
+	if plug["subdivIterations"]["enabled"].getValue() :
+		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
+	if plug["subdivPixelError"]["enabled"].getValue() :
+		info.append( ( "Error %.4f" % plug["subdivPixelError"]["value"].getValue() ).rstrip( '0' ).rstrip( '.' ) )
+	if plug["subdivAdaptiveMetric"]["enabled"].getValue() :
+		info.append( string.capwords( plug["subdivAdaptiveMetric"]["value"].getValue().replace( "_", " " ) ) + " Metric" )
 	
+	return ", ".join( info )
+
 GafferUI.PlugValueWidget.registerCreator(
 	
 	GafferArnold.ArnoldAttributes.staticTypeId(),
@@ -75,6 +89,26 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ai:visibility:glossy", "Glossy" ),
 			),
 		},
+		{
+			"label" : "Subdivision",
+			"summary" : __subdivisionSummary,
+			"namesAndLabels" : (
+				( "ai:polymesh:subdiv_iterations", "Iterations" ),
+				( "ai:polymesh:subdiv_pixel_error", "Pixel Error" ),
+				( "ai:polymesh:subdiv_adaptive_metric", "Adaptive Metric" ),
+			),
+		},
 	),	
 	
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferArnold.ArnoldAttributes.staticTypeId(),
+	"attributes.subdivAdaptiveMetric.value",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Auto", "auto" ),
+		( "Edge Length", "edge_length" ),
+		( "Flatness", "flatness" ),
+	),
 )
