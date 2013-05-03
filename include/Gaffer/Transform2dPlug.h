@@ -66,6 +66,9 @@ class Transform2dPlug : public CompoundPlug
 
 		Imath::M33f matrix() const;
 
+	private :
+		
+		static size_t g_firstPlugIndex;
 };
 
 IE_CORE_DECLAREPTR( Transform2dPlug );

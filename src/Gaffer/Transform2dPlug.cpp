@@ -43,9 +43,13 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Transform2dPlug );
 
+size_t Transform2dPlug::g_firstPlugIndex = 0;
+
 Transform2dPlug::Transform2dPlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	
 	addChild(
 		new V2fPlug(
 			"translate",
@@ -108,42 +112,42 @@ PlugPtr Transform2dPlug::createCounterpart( const std::string &name, Direction d
 
 V2fPlug *Transform2dPlug::pivotPlug()
 {
-	return getChild<V2fPlug>( "pivot" );
+	return getChild<V2fPlug>( g_firstPlugIndex+3 );
 }
 
 const V2fPlug *Transform2dPlug::pivotPlug() const
 {
-	return getChild<V2fPlug>( "pivot" );
+	return getChild<V2fPlug>( g_firstPlugIndex+3 );
 }
 
 V2fPlug *Transform2dPlug::translatePlug()
 {
-	return getChild<V2fPlug>( "translate" );
+	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
 const V2fPlug *Transform2dPlug::translatePlug() const
 {
-	return getChild<V2fPlug>( "translate" );
+	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
 FloatPlug *Transform2dPlug::rotatePlug()
 {
-	return getChild<FloatPlug>( "rotate" );
+	return getChild<FloatPlug>( g_firstPlugIndex+1 );
 }
 
 const FloatPlug *Transform2dPlug::rotatePlug() const
 {
-	return getChild<FloatPlug>( "rotate" );
+	return getChild<FloatPlug>( g_firstPlugIndex+1 );
 }
 
 V2fPlug *Transform2dPlug::scalePlug()
 {
-	return getChild<V2fPlug>( "scale" );
+	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
 const V2fPlug *Transform2dPlug::scalePlug() const
 {
-	return getChild<V2fPlug>( "scale" );
+	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
 Imath::M33f Transform2dPlug::matrix() const
