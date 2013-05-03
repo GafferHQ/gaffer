@@ -133,9 +133,12 @@ class CopyTiles
 const IECore::InternedString ImagePlug::channelNameContextName = "image:channelName";
 const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigin";
 
+size_t ImagePlug::g_firstPlugIndex = 0;
+
 ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	
 	// we don't want the children to be serialised in any way - we always create
 	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
@@ -203,14 +206,6 @@ const IECore::FloatVectorData *ImagePlug::blackTile()
 	return g_blackTile.get();
 };
 
-Imath::V2i ImagePlug::tileOrigin( const Imath::V2i &point )
-{
-	Imath::V2i tileOrigin;
-	tileOrigin.x = int( floor( double( point.x ) / tileSize() ) ) * tileSize();
-	tileOrigin.y = int( floor( double( point.y ) / tileSize() ) ) * tileSize();
-	return tileOrigin;
-}
-
 bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return children().size() != 4;
@@ -236,42 +231,42 @@ Gaffer::PlugPtr ImagePlug::createCounterpart( const std::string &name, Direction
 
 GafferImage::FormatPlug *ImagePlug::formatPlug()
 {
-	return getChild<FormatPlug>( "format" );
+	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
 const GafferImage::FormatPlug *ImagePlug::formatPlug() const
 {
-	return getChild<FormatPlug>( "format" );
+	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
 Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug()
 {
-	return getChild<AtomicBox2iPlug>( "dataWindow" );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+1 );
 }
 
 const Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug() const
 {
-	return getChild<AtomicBox2iPlug>( "dataWindow" );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+1 );
 }
 
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( "channelNames" );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+2 );
 }
 
 const Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( "channelNames" );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+2 );
 }
 
 Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( "channelData" );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+3 );
 }
 
 const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( "channelData" );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+3 );
 }
 
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
