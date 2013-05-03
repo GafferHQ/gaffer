@@ -55,6 +55,8 @@ void GafferUIBindings::bindGraphLayout()
 {
 	IECorePython::RunTimeTypedClass<GraphLayout>()
 		.def( "connectNode", &GraphLayout::connectNode )
+		.def( "connectNodes", &GraphLayout::connectNodes )
 		.def( "positionNode", &GraphLayout::positionNode, ( arg_( "graph" ), arg_( "node" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
+		.def( "positionNodes", &GraphLayout::positionNodes, ( arg_( "graph" ), arg_( "nodes" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
 	;
 }

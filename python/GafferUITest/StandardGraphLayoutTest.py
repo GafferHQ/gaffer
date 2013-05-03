@@ -89,6 +89,21 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		
 		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound3"] ] ) )
 		self.assertTrue( s["add3"]["op1"].getInput().isSame( s["compound3"]["o"]["f"] ) )
+	
+	def testConnectNodes( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		s["add3"] = GafferTest.AddNode()
+		
+		s["add3"]["op1"].setInput( s["add2"]["sum"] )
+		
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNodes( g, Gaffer.StandardSet( [ s["add3"], s["add2"] ] ), Gaffer.StandardSet( [ s["add1"] ] ) )
+		
+		self.assertTrue( s["add2"]["op1"].getInput().isSame( s["add1"]["sum"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

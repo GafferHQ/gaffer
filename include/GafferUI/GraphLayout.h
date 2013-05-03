@@ -76,11 +76,20 @@ class GraphLayout : public IECore::RunTimeTyped
 		/// Attempts to connect the specified node to the specified input nodes. Returns true
 		/// if any connections were made and false otherwise.
 		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const = 0;
+		/// Attempts to connect the specified nodes to the specified input nodes in a sensible fashion.
+		/// Returns true if any connections were made and false otherwise.
+		virtual bool connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const = 0;
+
 		/// Positions the specified node somewhere sensible, while leaving all other
 		/// nodes in the graph in their current positions. The fallbackPosition may
 		/// be specified to provide a hint as to where might be convenient for the user
 		/// in the absence of a better means of determining a position.
-		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const = 0;		
+		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const = 0;
+		/// Positions the specified nodes somewhere sensible, preserving their relative positions
+		/// and leaving all other nodes in the graph in their current positions. The fallbackPosition may
+		/// be specified to provide a hint as to where might be convenient for the user
+		/// in the absence of a better means of determining a position.
+		virtual void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const = 0;		
 
 	protected :
 	
