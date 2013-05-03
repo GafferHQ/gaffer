@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -62,11 +63,21 @@ class StandardGraphLayout : public GraphLayout
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardGraphLayout, StandardGraphLayoutTypeId, GraphLayout );
 
 		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const;
-		virtual bool positionNode( GraphGadget *graph, Gaffer::Node *node ) const;
+		virtual bool connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const;
+		
+		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;
+		virtual void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;		
 
 	private :
 	
 		void unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
+		
+		// We calculate node positions based on the assumption that connections flow left to right and/or top to bottom.
+		// From this we compute a hard constraint which guarantees that a node is not to the left of or above its inputs.
+		// In the case of all inputs being either vertical or horizontal, this will only give us a constraint in one dimension, so
+		// we compute a soft constraint for that dimension, based on trying to keep the node centered between its inputs.
+		// Returns false if no positions were found and therefore nothing could be computed, true otherwise.
+		bool nodeConstraints( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedInputs, Imath::V2f &hardConstraint, Imath::V2f &softConstraint ) const;
 
 };
 

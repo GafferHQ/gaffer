@@ -891,10 +891,7 @@ void GraphGadget::addNodeGadget( Gaffer::Node *node )
 	// place it if it's not placed already.	
 	if( !node->getChild<Gaffer::V2fPlug>( "__uiPosition" ) )
 	{
-		if( !m_layout->positionNode( this, node ) )
-		{
-			setNodePosition( node, V2f( 0 ) );
-		}
+		m_layout->positionNode( this, node );
 	}
 	
 	updateNodeGadgetTransform( nodeGadget.get() );

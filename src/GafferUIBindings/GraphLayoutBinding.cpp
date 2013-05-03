@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,14 +37,15 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/GraphLayoutBinding.h"
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/GraphLayout.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Set.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/GraphLayout.h"
+
+#include "GafferUIBindings/GraphLayoutBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -53,6 +55,8 @@ void GafferUIBindings::bindGraphLayout()
 {
 	IECorePython::RunTimeTypedClass<GraphLayout>()
 		.def( "connectNode", &GraphLayout::connectNode )
-		.def( "positionNode", &GraphLayout::positionNode )
+		.def( "connectNodes", &GraphLayout::connectNodes )
+		.def( "positionNode", &GraphLayout::positionNode, ( arg_( "graph" ), arg_( "node" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
+		.def( "positionNodes", &GraphLayout::positionNodes, ( arg_( "graph" ), arg_( "nodes" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
 	;
 }
