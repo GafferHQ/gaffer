@@ -64,6 +64,7 @@ enum TypeId
 	ReformatTypeId = 110768,
 	FilterPlugTypeId = 110769,
 	ImageWriterTypeId = 110770,
+	ImageTransformTypeId = 110771,
 	
 	LastTypeId = 110849
 };
