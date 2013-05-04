@@ -36,6 +36,7 @@
 
 #include "boost/format.hpp"
 #include "boost/algorithm/string/replace.hpp"
+#include "boost/regex.hpp"
 
 #include "Gaffer/Box.h"
 #include "Gaffer/StandardSet.h"
@@ -168,7 +169,28 @@ void Box::exportForReference( const std::string &fileName ) const
 		throw IECore::Exception( "Box::exportForReference called without ScriptNode" );
 	}
 	
-	script->serialiseToFile( fileName, this );
+	// we only want to save out our child nodes, user plugs and in*/out* plugs so we build a filter.
+	// to specify just the things to export.
+	
+	boost::regex inOrOut( "^in|out[0-9]*$" );
+	StandardSetPtr toExport = new StandardSet;
+	for( ChildIterator it = children().begin(), eIt = children().end(); it != eIt; ++it )
+	{
+		if( (*it)->isInstanceOf( Node::staticTypeId() ) )
+		{
+			toExport->add( *it );
+		}
+		else if( const Plug *plug = IECore::runTimeCast<Plug>( it->get() ) )
+		{
+			if( plug == userPlug() || boost::regex_match( plug->getName().c_str(), inOrOut ) )
+			{
+				toExport->add( *it );	
+			}
+		}
+	}
+	
+	script->serialiseToFile( fileName, this, toExport.get() );
+
 }
 
 BoxPtr Box::create( Node *parent, const Set *childNodes )
