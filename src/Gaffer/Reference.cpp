@@ -86,7 +86,7 @@ void Reference::load( const std::string &fileName )
 	for( PlugIterator it( this ); it != it.end(); ++it )
 	{
 		Plug *plug = it->get();
-		if( plug->getFlags( Plug::Dynamic ) && isReferencePlug( plug ) )
+		if( isReferencePlug( plug ) )
 		{
 			previousPlugs[plug->getName()] = plug;
 			plug->setName( "__tmp__" + plug->getName().string() );
@@ -167,6 +167,18 @@ void Reference::load( const std::string &fileName )
 			it->second->parent<GraphComponent>()->removeChild( oldPlug );	
 		}
 		
+	}
+	
+	// make the loaded plugs non-dynamic, because we don't want them
+	// to be serialised in the script the reference is in - the whole
+	// point is that they are referenced.
+	
+	for( RecursivePlugIterator it( this ); it != it.end(); ++it )
+	{
+		if( isReferencePlug( it->get() ) )
+		{
+			(*it)->setFlags( Plug::Dynamic, false );
+		}
 	}
 	
 }

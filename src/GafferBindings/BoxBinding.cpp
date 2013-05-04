@@ -50,7 +50,16 @@ namespace GafferBindings
 
 class BoxSerialiser : public NodeSerialiser
 {
-
+	
+	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+	{
+		if( child->isInstanceOf( Node::staticTypeId() ) )
+		{
+			return true;
+		}
+		return NodeSerialiser::childNeedsSerialisation( child );
+	}
+	
 	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )

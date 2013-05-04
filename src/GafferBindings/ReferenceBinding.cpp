@@ -55,18 +55,7 @@ class ReferenceSerialiser : public NodeSerialiser
 		const Reference *r = static_cast<const Reference *>( graphComponent );
 		return identifier + ".load( \"" + r->fileNamePlug()->getValue() + "\" )\n";
 	}
-
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
-	{
-		const Reference *r = child->parent<Reference>();
-		return child == (GraphComponent *)r->userPlug();
-	}
-	
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
-	{
-		return false;
-	}
-	
+		
 };
 
 void bindReference()

@@ -89,7 +89,7 @@ class ReferenceTest( unittest.TestCase ) :
 				
 		# referenced nodes should be referenced only, and not
 		# explicitly mentioned in the serialisation at all.
-		self.assertTrue( "\"n1\"" not in ss )
+		self.assertTrue( "AddNode" not in ss )
 		# but the values of user plugs should be stored, so
 		# they can override the values from the reference.
 		self.assertTrue( "\"n1_op1\"" in ss )
@@ -201,11 +201,54 @@ class ReferenceTest( unittest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 		
 		self.assertTrue( "mySpecialPlug" in s2["r"] )
+	
+	def testLoadScriptWithReference( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n3"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		s["n3"]["op1"].setInput( s["n2"]["sum"] )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
+		b.promotePlug( b["n2"]["op2"] )
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		s2["a"] = GafferTest.AddNode()
+		
+		s2["r"]["user"]["n2_op2"].setValue( 123 )
+		s2["r"]["in"].setInput( s2["a"]["sum"] )
+		
+		self.assertTrue( "n2_op2" in s2["r"]["user"] )
+		self.assertTrue( "n2" in s2["r"] )
+		self.assertTrue( "out" in s2["r"] )
+		self.assertEqual( s2["r"]["user"]["n2_op2"].getValue(), 123 )
+		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["a"]["sum"] ) )
+		
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.save()
+				
+		s3 = Gaffer.ScriptNode()
+		s3["fileName"].setValue( "/tmp/test.gfr" )
+		s3.load()
+		
+		self.assertEqual( s3["r"].keys(), s2["r"].keys() )
+		self.assertEqual( s3["r"]["user"].keys(), s2["r"]["user"].keys() )
+		self.assertEqual( s3["r"]["user"]["n2_op2"].getValue(), 123 )
+		self.assertTrue( s3["r"]["in"].getInput().isSame( s3["a"]["sum"] ) )
 		
 	def tearDown( self ) :
 	
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
+		for f in (
+			"/tmp/test.grf",
+			"/tmp/test.gfr",
+		) :
+			if os.path.exists( f ) :
+				os.remove( f )
 		
 if __name__ == "__main__":
 	unittest.main()
