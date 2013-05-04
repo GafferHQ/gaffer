@@ -36,13 +36,14 @@
 
 #include "Gaffer/Context.h"
 #include "GafferImage/ImageTransform.h"
-#include "GafferImage/ImageTransform.h"
 #include "GafferImage/Filter.h"
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
+#include "boost/format.hpp"
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -50,12 +51,13 @@ using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( ImageTransform );
 
-size_t ImageTransform::g_firstPlugIndex = 0;
+size_t ImageTransform::g_firstChildIndex = 0;
 
 ImageTransform::ImageTransform( const std::string &name )
 	:	ImageProcessor( name )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
+	storeIndexOfNextChild( g_firstChildIndex );
+	
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 }
 
@@ -65,12 +67,12 @@ ImageTransform::~ImageTransform()
 
 Gaffer::Transform2DPlug *ImageTransform::transformPlug()
 {
-	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::Transform2DPlug>( g_firstChildIndex );
 }
 
 const Gaffer::Transform2DPlug *ImageTransform::transformPlug() const
 {
-	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::Transform2DPlug>( g_firstChildIndex );
 }
 
 void ImageTransform::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
@@ -91,7 +93,9 @@ bool ImageTransform::enabled() const
 		return false;
 	}
 
-	///\todo test whether we have the transform has no effect.	
+	//\todo: 
+	// If the transform is an identity matrix then disable it.
+
 	return true;
 }
 
@@ -122,10 +126,9 @@ void ImageTransform::hashChannelDataPlug( const GafferImage::ImagePlug *output, 
 
 Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	Format inFormat( inPlug()->formatPlug()->getValue() );
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
-	Imath::Box2i outWindow( transformBox( transformPlug()->matrix(), inWindow ) );
-	std::cerr << "In Window : " << inWindow.min.x << ", " << inWindow.min.y << ", " << inWindow.max.x << ", " << inWindow.max.y << std::endl;
-	std::cerr << "Out Window : " << outWindow.min.x << ", " << outWindow.min.y << ", " << outWindow.max.x << ", " << outWindow.max.y << std::endl;
+	Imath::Box2i outWindow( transformBox( transformPlug()->matrix( inFormat ), inWindow ) );
 	return outWindow;
 }
 
@@ -175,7 +178,8 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
 
 	// Work out the sample area that we require to compute this tile.
-	Imath::M33f t( transformPlug()->matrix().inverse() );
+	Format inputFormat = inPlug()->formatPlug()->getValue();
+	Imath::M33f t( transformPlug()->matrix( inputFormat ).inverse() );
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
 	

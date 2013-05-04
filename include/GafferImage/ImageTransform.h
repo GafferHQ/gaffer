@@ -78,7 +78,7 @@ class ImageTransform : public ImageProcessor
 		// A useful method that returns an axis-aligned box that contains box*m.		
 		Imath::Box2i transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const;
 
-		static size_t g_firstPlugIndex;
+		static size_t g_firstChildIndex;
 		
 };
 

@@ -38,6 +38,7 @@ import unittest
 
 import IECore
 import Gaffer
+import GafferImage
 import math
 
 class Transform2DPlugTest( unittest.TestCase ) :
@@ -51,11 +52,19 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		p["rotate"].setValue( 45 )
 		p["scale"].setValue( IECore.V2f( 2, 3 ) )
 	
-		pivot = IECore.M33f.createTranslated( p["pivot"].getValue() )
-		translate = IECore.M33f.createTranslated( p["translate"].getValue() )
+		format = GafferImage.Format( 10, 10, 1. )
+		formatHeight = format.height() 
+		pivotValue = p["pivot"].getValue()
+		pivotValue.y = formatHeight - pivotValue.y
+		pivot = IECore.M33f.createTranslated( pivotValue )
+		
+		translateValue = p["translate"].getValue()
+		translateValue.y = -translateValue.y
+		translate = IECore.M33f.createTranslated( translateValue )
+		
 		rotate = IECore.M33f.createRotated( IECore.degreesToRadians( p["rotate"].getValue() ) )
 		scale = IECore.M33f.createScaled( p["scale"].getValue() )
-		invPivot = IECore.M33f.createTranslated( p["pivot"].getValue() * IECore.V2f(-1.) )
+		invPivot = IECore.M33f.createTranslated( pivotValue * IECore.V2f(-1.) )
 		
 		transforms = {
 			"p" : pivot,
@@ -69,7 +78,7 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		for m in ( "pi", "s", "r", "t", "p" ) :
 			transform = transform * transforms[m]
 
-		self.assertEqual( p.matrix(), transform )
+		self.assertEqual( p.matrix( format ), transform )
 
 	def testTransformOrderExplicit( self ) :
 	
@@ -78,7 +87,7 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		t =	IECore.V2f( 100, 0 )
 		r =	90
 		s =	IECore.V2f( 2, 2 )
-		p = IECore.V2f( 10, 10 )
+		p = IECore.V2f( 10, -10 )
 		plug["translate"].setValue(  t )
 		plug["rotate"].setValue( r )
 		plug["scale"].setValue( s )
@@ -87,12 +96,12 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		# Test if this is equal to a simple hardcoded matrix, down to floating point error
 		# This verifies that translation is not being affected by rotation and scale,
 		# which is what users will expect
-		self.assertTrue( plug.matrix().equalWithAbsError(
+		self.assertTrue( plug.matrix( GafferImage.Format( 10, 10, 1. ) ).equalWithAbsError(
 			IECore.M33f(
 				0,   2, 0,
 				-2,  0, 0,
-				130, -10, 1),
-			1e-6
+				150, 0, 1),
+			2e-6
 		) )
 	
 	def testCreateCounterpart( self ) :

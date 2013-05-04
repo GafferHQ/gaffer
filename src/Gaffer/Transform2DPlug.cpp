@@ -37,6 +37,7 @@
 #include "IECore/AngleConversion.h"
 
 #include "Gaffer/Transform2DPlug.h"
+#include "GafferImage/Format.h"
 
 using namespace Imath;
 using namespace Gaffer;
@@ -150,18 +151,32 @@ const V2fPlug *Transform2DPlug::scalePlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
-Imath::M33f Transform2DPlug::matrix() const
+Imath::M33f Transform2DPlug::matrix( const GafferImage::Format &format ) const
 {
+	// We need to transform from image space (with 0x0 being the bottom left)
+	// to Gadget space (where 0x0 is the top left). To do this, we need to know the
+	// size of the Format.
+	
+	///\todo: We don't handle the pixel aspect of the format here but we should!
+	float formatHeight = format.getDisplayWindow().size().y + 1;
+	
 	M33f p;
-	p.translate( pivotPlug()->getValue() );
+	V2f pivotVec = pivotPlug()->getValue();
+	pivotVec.y = formatHeight - pivotVec.y;
+	p.translate( pivotVec );
+	
 	M33f t;
-	t.translate( translatePlug()->getValue() );
+	V2f translateVec = translatePlug()->getValue();
+	translateVec.y *= -1.;
+	t.translate( translateVec );
+	
 	M33f r;
 	r.rotate( IECore::degreesToRadians( rotatePlug()->getValue() ) );
 	M33f s;
 	s.scale( scalePlug()->getValue() );
+	
 	M33f pi;
-	pi.translate( pivotPlug()->getValue()*Imath::V2f(-1.f) );
+	pi.translate( pivotVec*Imath::V2f(-1.f) );
 	M33f result = pi * s * r * t * p;
 
 	return result;

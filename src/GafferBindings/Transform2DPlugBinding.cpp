@@ -39,6 +39,7 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/Transform2DPlug.h"
+#include "GafferImage/Format.h"
 
 #include "GafferBindings/PlugBinding.h"
 #include "GafferBindings/Transform2DPlugBinding.h"
