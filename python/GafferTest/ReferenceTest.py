@@ -107,19 +107,31 @@ class ReferenceTest( unittest.TestCase ) :
 		
 		s["n1"] = GafferTest.AddNode()
 		s["n2"] = GafferTest.AddNode()
+		s["n3"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
-		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		b.promotePlug( b["n1"]["op1"] )
+		s["n3"]["op1"].setInput( s["n2"]["sum"] )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
+		b.promotePlug( b["n2"]["op2"] )
 		
 		b.exportForReference( "/tmp/test.grf" )
 		
 		s2 = Gaffer.ScriptNode()
+		s2["n1"] = GafferTest.AddNode()
+		s2["n3"] = GafferTest.AddNode()
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( "/tmp/test.grf" )
 		
-		self.assertTrue( "n1" in s2["r"] )
-		self.assertTrue( s2["r"]["n1"]["op1"].getInput().isSame( s2["r"]["user"]["n1_op1"] ) )
-		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
+		s2["r"]["in"].setInput( s2["n1"]["sum"] )
+		s2["r"]["user"]["n2_op2"].setValue( 1001 )
+		s2["n3"]["op1"].setInput( s2["r"]["out"] )
+		
+		self.assertTrue( "n2" in s2["r"] )
+		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["in"] ) )
+		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["user"]["n2_op2"] ) )
+		self.assertEqual( s2["r"]["user"]["n2_op2"].getValue(), 1001 )
+		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
+		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
+		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
 		originalReferencedNames = s2["r"].keys()
 		
 		b["anotherNode"] = GafferTest.AddNode()
@@ -128,13 +140,44 @@ class ReferenceTest( unittest.TestCase ) :
 		
 		s2["r"].load( "/tmp/test.grf" )
 				
-		self.assertTrue( "n1" in s2["r"] )
+		self.assertTrue( "n2" in s2["r"] )
 		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode" ] ) )
-		self.assertTrue( s2["r"]["n1"]["op1"].getInput().isSame( s2["r"]["user"]["n1_op1"] ) )
+		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["in"] ) )
+		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["user"]["n2_op2"] ) )
+		self.assertEqual( s2["r"]["user"]["n2_op2"].getValue(), 1001 )
 		self.assertTrue( s2["r"]["anotherNode"]["op2"].getInput().isSame( s2["r"]["user"]["anotherNode_op2"] ) )
-		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
-		self.assertTrue( "anotherNode" in s2["r"] )
+		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
+		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
+		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
+
+	def testReloadPreservesPlugIdentities( self ) :
+	
+		# when reloading a reference, we'd prefer to reuse the old external output plugs rather than
+		# replace them with new ones - this makes life much easier for observers of those plugs.
 		
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n3"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		s["n3"]["op1"].setInput( s["n2"]["sum"] )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
+		
+		b.exportForReference( "/tmp/test.grf" )
+
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		inPlug = s2["r"]["in"]
+		outPlug = s2["r"]["out"]
+		
+		s2["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( inPlug.isSame( s2["r"]["in"] ) )
+		self.assertTrue( outPlug.isSame( s2["r"]["out"] ) )
+
 	def tearDown( self ) :
 	
 		if os.path.exists( "/tmp/test.grf" ) :

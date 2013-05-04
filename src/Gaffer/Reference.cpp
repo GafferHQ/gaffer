@@ -38,7 +38,9 @@
 
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/CompoundPlug.h"
 
+using namespace IECore;
 using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Reference );
@@ -75,6 +77,96 @@ void Reference::load( const std::string &fileName )
 		throw IECore::Exception( "Reference::load called without ScriptNode" );
 	}
 	
+	// if we're doing a reload, then we want to maintain any values and
+	// connections that our external plugs might have. but we also need to
+	// get those existing plugs out of the way during the load, so that the
+	// incoming plugs don't get renamed.
+	
+	std::map<std::string, Plug *> previousPlugs;
+	for( PlugIterator it( this ); it != it.end(); ++it )
+	{
+		Plug *plug = it->get();
+		if( plug->getFlags( Plug::Dynamic ) )
+		{
+			previousPlugs[plug->getName()] = plug;
+			plug->setName( "__tmp__" + plug->getName().string() );
+		}
+	}
+
+	for( PlugIterator it( userPlug() ); it != it.end(); ++it )
+	{
+		Plug *plug = it->get();
+		previousPlugs[plug->relativeName( this )] = plug;
+		plug->setName( "__tmp__" + plug->getName().string() );
+	}
+	
+	// if we're doing a reload, then we also need to delete all our child
+	// nodes to make way for the incoming nodes.
+	
+	int i = (int)(children().size()) - 1;
+	while( i >= 0 )
+	{
+		if( Node *node = getChild<Node>( i ) )
+		{
+			removeChild( node );
+		}
+		i--;
+	}
+	
+	// load the reference
+	
 	script->executeFile( fileName, this );
 	fileNamePlug()->setValue( fileName );
+
+	// sort out any conflicts between the old and new plugs, preferring to reuse
+	// the old ones wherever possible so that the node remains identical from the
+	// outside and old connections and values are preserved.
+	
+	for( std::map<std::string, Plug *>::const_iterator it = previousPlugs.begin(), eIt = previousPlugs.end(); it != eIt; ++it )
+	{
+		Plug *oldPlug = it->second;
+		Plug *newPlug = descendant<Plug>( it->first );
+		if( newPlug )
+		{
+			if( oldPlug->direction() == newPlug->direction() && oldPlug->typeId() == newPlug->typeId() )
+			{
+				// assume plugs are compatible and we can reuse the old one in place of the new one.
+				/// \todo really we need a better way of guaranteeing compatibility that takes into account
+				/// default values and the like.
+				if( newPlug->direction() == Plug::In )
+				{
+					for( Plug::OutputContainer::const_iterator oIt = newPlug->outputs().begin(), oeIt = newPlug->outputs().end(); oIt != oeIt;  )
+					{
+						Plug *outputPlug = *oIt;
+						++oIt; // increment now because the setInput() call invalidates our iterator.
+						outputPlug->setInput( oldPlug );
+					}
+				}
+				else
+				{
+					Plug *newInput = newPlug->getInput<Plug>();
+					if( newInput )
+					{
+						oldPlug->setInput( newInput );
+					}
+				}
+				InternedString name = newPlug->getName();
+				newPlug->parent<GraphComponent>()->removeChild( newPlug );
+				oldPlug->setName( name );
+			}
+			else
+			{
+				// plugs are incompatible - erase the old one and keep the new one.
+				it->second->parent<GraphComponent>()->removeChild( oldPlug );		
+			}
+		}
+		else
+		{
+			// no corresponding new plug - remove the old one because it was
+			// removed in the referenced file.
+			it->second->parent<GraphComponent>()->removeChild( oldPlug );	
+		}
+		
+	}
+	
 }
