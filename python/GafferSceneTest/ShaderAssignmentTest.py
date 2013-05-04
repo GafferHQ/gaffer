@@ -44,7 +44,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class AssignmentTest( unittest.TestCase ) :
+class ShaderAssignmentTest( unittest.TestCase ) :
 
 	def testFilter( self ) :
 	
@@ -66,7 +66,7 @@ class AssignmentTest( unittest.TestCase ) :
 			} )
 		)
 	
-		a = GafferScene.Assignment()
+		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( input["out"] )
 		
 		s = GafferSceneTest.TestShader()
@@ -82,7 +82,7 @@ class AssignmentTest( unittest.TestCase ) :
 	
 	def testFilterInputAcceptance( self ) :
 	
-		a = GafferScene.Assignment()
+		a = GafferScene.ShaderAssignment()
 		
 		f = GafferScene.PathFilter()
 		self.assertTrue( a["filter"].acceptsInput( f["match"] ) )
@@ -101,7 +101,7 @@ class AssignmentTest( unittest.TestCase ) :
 		
 		s["p"] = GafferScene.Plane()
 		s["s"] = GafferSceneTest.TestShader()
-		s["a"] = GafferScene.Assignment()
+		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["p"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
@@ -125,7 +125,7 @@ class AssignmentTest( unittest.TestCase ) :
 
 		s["p"] = GafferScene.Plane()
 		s["s"] = GafferSceneTest.TestShader()
-		s["a"] = GafferScene.Assignment()
+		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["p"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		

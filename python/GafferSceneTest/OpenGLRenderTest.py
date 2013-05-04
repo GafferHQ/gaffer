@@ -63,7 +63,7 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["shader"]["parameters"]["mult"].setValue( 1 )
 		s["shader"]["parameters"]["tint"].setValue( IECore.Color4f( 1 ) )
 		
-		s["assignment"] = GafferScene.Assignment()
+		s["assignment"] = GafferScene.ShaderAssignment()
 		s["assignment"]["in"].setInput( s["plane"]["out"] )
 		s["assignment"]["shader"].setInput( s["shader"]["out"] )
 		

@@ -35,76 +35,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Assignment.h"
-#include "GafferScene/Shader.h"
+#ifndef GAFFERSCENE_SHADERASSIGNMENT_H
+#define GAFFERSCENE_SHADERASSIGNMENT_H
 
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferScene;
+#include "GafferScene/SceneElementProcessor.h"
 
-IE_CORE_DEFINERUNTIMETYPED( Assignment );
-
-size_t Assignment::g_firstPlugIndex = 0;
-
-Assignment::Assignment( const std::string &name )
-	:	SceneElementProcessor( name )
+namespace GafferScene
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "shader" ) );
-}
 
-Assignment::~Assignment()
+class ShaderAssignment : public SceneElementProcessor
 {
-}
 
-Gaffer::Plug *Assignment::shaderPlug()
-{
-	return getChild<Plug>( g_firstPlugIndex );
-}
+	public :
 
-const Gaffer::Plug *Assignment::shaderPlug() const
-{
-	return getChild<Plug>( g_firstPlugIndex );
-}
+		ShaderAssignment( const std::string &name=staticTypeName() );
+		virtual ~ShaderAssignment();
 
-bool Assignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !SceneElementProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-	
-	if( plug == shaderPlug() )
-	{
-		return inputPlug->source<Plug>()->ancestor<Shader>();
-	}
-	return true;
-}
-
-bool Assignment::processesAttributes() const
-{
-	return true;
-}
-
-void Assignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
-	if( shader )
-	{
-		shader->stateHash( h );
-	}
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
 		
-IECore::ConstCompoundObjectPtr Assignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
-{
-	CompoundObjectPtr result = inputAttributes->copy();
+		Gaffer::Plug *shaderPlug();
+		const Gaffer::Plug *shaderPlug() const;
+				
+	protected :
+		
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+		
+		virtual bool processesAttributes() const;
+		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 	
-	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
-	if( shader )
-	{
-		IECore::ObjectVectorPtr state = shader->state();
-		result->members()["shader"] = state;
-	}
+	private :
 	
-	return result;
-}
+		static size_t g_firstPlugIndex;
+	
+};
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SHADERASSIGNMENT_H

@@ -80,7 +80,7 @@ GafferUI.NodeMenu.append( "/Scene/Object/Generators/Instancer", GafferScene.Inst
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.AttributeCache )
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables )
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/Mesh Type", GafferScene.MeshType )
-GafferUI.NodeMenu.append( "/Scene/Attributes/Assignment", GafferScene.Assignment )
+GafferUI.NodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes )
 GafferUI.NodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes )
 GafferUI.NodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )

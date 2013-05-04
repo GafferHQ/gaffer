@@ -67,7 +67,7 @@ enum TypeId
 	DisplaysTypeId = 110522,
 	OptionsTypeId = 110523,
 	ShaderTypeId = 110524,
-	AssignmentTypeId = 110525,
+	ShaderAssignmentTypeId = 110525,
 	FilterTypeId = 110526,
 	PathFilterTypeId = 110527,
 	AttributesTypeId = 110528,

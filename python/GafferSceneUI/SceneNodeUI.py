@@ -145,9 +145,9 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-# Assignment
+# ShaderAssignment
 
-GafferUI.Nodule.registerNodule( GafferScene.Assignment.staticTypeId(), "shader", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferScene.ShaderAssignment.staticTypeId(), "shader", GafferUI.StandardNodule )
 
 # Group
 

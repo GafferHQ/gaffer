@@ -54,7 +54,7 @@ from OptionsTest import OptionsTest
 from SceneNodeTest import SceneNodeTest
 from PathMatcherTest import PathMatcherTest
 from PathFilterTest import PathFilterTest
-from AssignmentTest import AssignmentTest
+from ShaderAssignmentTest import ShaderAssignmentTest
 from AttributesTest import AttributesTest
 from AlembicSourceTest import AlembicSourceTest
 from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest

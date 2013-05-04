@@ -48,7 +48,7 @@ GafferUI.Metadata.registerNodeDescription(
 
 GafferScene.Shader,
 
-"""The base type for all nodes which create shaders. Use the Assignment node to assign them to objects in the scene.""",
+"""The base type for all nodes which create shaders. Use the ShaderAssignment node to assign them to objects in the scene.""",
 
 "name",
 {

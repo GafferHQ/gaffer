@@ -238,7 +238,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 		}
 		// reparent the child under the Box. it's important that we do this after adding the intermediate
 		// input plugs, so that when they are serialised and reloaded, the inputs to the box are set before
-		// the inputs to the nodes inside the box - see GafferSceneTest.AssignmentTest.testAssignShaderFromOutsideBox
+		// the inputs to the nodes inside the box - see GafferSceneTest.ShaderAssignmentTest.testAssignShaderFromOutsideBox
 		// for a test case highlighting this necessity.
 		result->addChild( childNode );
 	}

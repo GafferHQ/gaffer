@@ -57,7 +57,7 @@
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
-#include "GafferScene/Assignment.h"
+#include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/Attributes.h"
@@ -133,7 +133,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		.def( "state", &Shader::state )
 	;
 	
-	GafferBindings::DependencyNodeClass<Assignment>();
+	GafferBindings::DependencyNodeClass<ShaderAssignment>();
 	
 	{
 		scope s = GafferBindings::DependencyNodeClass<Filter>();

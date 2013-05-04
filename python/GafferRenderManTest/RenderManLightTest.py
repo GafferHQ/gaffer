@@ -80,7 +80,7 @@ class RenderManLightTest( unittest.TestCase ) :
 		
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( "matte" )
-		s["a"] = GafferScene.Assignment()
+		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
