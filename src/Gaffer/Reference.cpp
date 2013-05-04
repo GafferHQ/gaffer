@@ -86,7 +86,7 @@ void Reference::load( const std::string &fileName )
 	for( PlugIterator it( this ); it != it.end(); ++it )
 	{
 		Plug *plug = it->get();
-		if( plug->getFlags( Plug::Dynamic ) )
+		if( plug->getFlags( Plug::Dynamic ) && isReferencePlug( plug ) )
 		{
 			previousPlugs[plug->getName()] = plug;
 			plug->setName( "__tmp__" + plug->getName().string() );
@@ -169,4 +169,28 @@ void Reference::load( const std::string &fileName )
 		
 	}
 	
+}
+
+bool Reference::isReferencePlug( const Plug *plug ) const
+{
+	// we consider a plug to be a reference plug if it has connections to nodes within the reference.
+	if( plug->direction() == Plug::In )
+	{
+		for( Plug::OutputContainer::const_iterator it = plug->outputs().begin(), eIt = plug->outputs().end(); it != eIt; ++it )
+		{
+			if( this->isAncestorOf( *it ) )
+			{
+				return true;
+			}
+		}
+	}
+	else
+	{
+		const Plug *input = plug->getInput<Plug>();
+		if( input && this->isAncestorOf( input ) )
+		{
+			return true;
+		}
+	}
+	return false;
 }

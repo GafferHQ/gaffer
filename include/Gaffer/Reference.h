@@ -64,6 +64,8 @@ class Reference : public Node
 
 	private :
 
+		bool isReferencePlug( const Plug *plug ) const;
+
 		static size_t g_firstPlugIndex;		
 									
 };
