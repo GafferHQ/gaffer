@@ -863,6 +863,13 @@ class Widget( object ) :
 
 		}
 		
+		QPushButton::menu-indicator {
+			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+			subcontrol-position: right center;
+			subcontrol-origin: padding;
+			left: -4px;
+		}
+		
 		QComboBox {
 		
 			padding: 0;
