@@ -178,6 +178,30 @@ class ReferenceTest( unittest.TestCase ) :
 		self.assertTrue( inPlug.isSame( s2["r"]["in"] ) )
 		self.assertTrue( outPlug.isSame( s2["r"]["out"] ) )
 
+	def testReloadDoesntRemoveCustomPlugs( self ) :
+	
+		# plugs unrelated to referencing shouldn't disappear when a reference is
+		# reloaded. various parts of the ui might be using them for other purposes.
+		
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		s2["r"]["mySpecialPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		s2["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( "mySpecialPlug" in s2["r"] )
+		
 	def tearDown( self ) :
 	
 		if os.path.exists( "/tmp/test.grf" ) :
