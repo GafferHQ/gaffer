@@ -484,7 +484,7 @@ static const char *g_fragmentSource =
 	"	}"
 	"	else if( textureType==2 )"
 	"	{"
-	"		outColor = texture2D( texture, gl_TexCoord[0].xy );"
+	"		outColor = vec4( outColor.rgb, texture2D( texture, gl_TexCoord[0].xy ).a );"
 	"	}"
 
 	"	ieCoreGLNameOut = ieCoreGLNameIn;"
