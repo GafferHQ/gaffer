@@ -37,6 +37,8 @@
 
 #include "boost/bind.hpp"
 
+#include "OpenEXR/ImathBoxAlgo.h"
+
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/TypedObjectPlug.h"
@@ -50,6 +52,7 @@
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/CompoundNodule.h"
+#include "GafferUI/StandardNodule.h"
 
 using namespace GafferUI;
 using namespace Gaffer;
@@ -64,7 +67,7 @@ static const float g_minWidth = 10.0f;
 static const float g_spacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-	:	NodeGadget( node ), m_nodeEnabled( true )
+	:	NodeGadget( node ), m_nodeEnabled( true ), m_labelsVisibleOnHover( true ), m_dragDestinationProxy( 0 )
 {
 	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
@@ -115,6 +118,17 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		node->plugSetSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
 		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
 	}
+	
+	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
+	dragLeaveSignal().connect( boost::bind( &StandardNodeGadget::dragLeave, this, ::_1, ::_2 ) );
+	dropSignal().connect( boost::bind( &StandardNodeGadget::drop, this, ::_1, ::_2 ) );
+	
+	inputNoduleContainer->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
+	inputNoduleContainer->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
+
+	outputNoduleContainer->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
+	outputNoduleContainer->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -378,6 +392,16 @@ const Gadget *StandardNodeGadget::getContents() const
 	return contentsContainer()->getChild<Gadget>();
 }
 
+void StandardNodeGadget::setLabelsVisibleOnHover( bool labelsVisible )
+{
+	m_labelsVisibleOnHover = labelsVisible;
+}
+
+bool StandardNodeGadget::getLabelsVisibleOnHover() const
+{
+	return m_labelsVisibleOnHover;
+}
+
 void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
 {
 	if ( plug == node()->enabledPlug() )
@@ -393,5 +417,120 @@ void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );
+	}
+}
+
+void StandardNodeGadget::enter( Gadget *gadget )
+{
+	if( m_labelsVisibleOnHover )
+	{
+		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
+		{
+			(*it)->setLabelVisible( true );
+		}
+	}
+}
+
+void StandardNodeGadget::leave( Gadget *gadget )
+{
+	if( m_labelsVisibleOnHover )
+	{
+		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
+		{
+			(*it)->setLabelVisible( false );
+		}
+	}
+}
+
+bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+{
+	// we'll accept the drag if we know we can forward it on to a nodule
+	// we own. we don't actually start the forwarding until dragMove, here we
+	// just check there is something to forward to.
+	if( closestCompatibleNodule( event ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
+{
+	Nodule *closest = closestCompatibleNodule( event );
+	if( closest != m_dragDestinationProxy )
+	{
+		if( closest->dragEnterSignal()( closest, event ) )
+		{
+			if( m_dragDestinationProxy )
+			{
+				m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+			}
+			m_dragDestinationProxy = closest;
+		}		
+	}
+	return true;
+}
+
+bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
+{
+	if( m_dragDestinationProxy && m_dragDestinationProxy != event.destinationGadget )
+	{
+		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+	}
+	m_dragDestinationProxy = 0;
+
+	return true;
+}
+
+bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
+{
+	bool result = true;
+	if( m_dragDestinationProxy )
+	{
+		result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
+		m_dragDestinationProxy = 0;
+	}
+	return result;
+}
+
+Nodule *StandardNodeGadget::closestCompatibleNodule( const DragDropEvent &event )
+{
+	Nodule *result = 0;
+	float maxDist = Imath::limits<float>::max();
+	for( RecursiveNoduleIterator it( this ); it != it.end(); it++ )
+	{
+		if( noduleIsCompatible( it->get(), event ) )
+		{
+			Box3f noduleBound = (*it)->transformedBound( this );
+			const V3f closestPoint = closestPointOnBox( event.line.p0, noduleBound );
+			const float dist = ( closestPoint - event.line.p0 ).length2();
+			if( dist < maxDist )
+			{
+				result = it->get();
+				maxDist = dist;
+			}
+		}
+	}
+
+	return result;
+}
+
+bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event )
+{
+	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data );
+	if( !dropPlug || dropPlug->node() == node() )
+	{
+		return 0;
+	}
+
+	const Plug *nodulePlug = nodule->plug();
+	if( dropPlug->direction() == Plug::Out )
+	{
+		return nodulePlug->direction() == Plug::In && nodulePlug->acceptsInput( dropPlug );
+	}
+	else
+	{
+		return nodulePlug->direction() == Plug::Out && dropPlug->acceptsInput( nodulePlug );
 	}
 }

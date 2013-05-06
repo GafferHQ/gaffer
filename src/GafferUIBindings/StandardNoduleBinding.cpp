@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,5 +53,7 @@ void GafferUIBindings::bindStandardNodule()
 	IECorePython::RunTimeTypedClass<StandardNodule>()
 		.def( init<Gaffer::PlugPtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( StandardNodule )
+		.def( "setLabelVisible", &StandardNodule::setLabelVisible )
+		.def( "getLabelVisible", &StandardNodule::getLabelVisible )
 	;
 }

@@ -60,10 +60,10 @@ IE_CORE_DEFINERUNTIMETYPED( StandardStyle );
 
 StandardStyle::StandardStyle()
 {
-	setFont( LabelText, FontLoader::defaultFontLoader()->load( "Vera.ttf" ) );
+	setFont( LabelText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
 	setColor( BackgroundColor, Color3f( 0.1 ) );
 	setColor( SunkenColor, Color3f( 0.1 ) );
-	setColor( RaisedColor, Color3f( 0.5 ) );
+	setColor( RaisedColor, Color3f( 0.4 ) );
 	setColor( ForegroundColor, Color3f( 0.9 ) );
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.1, 0.1, 0.1 ) );
@@ -484,7 +484,7 @@ static const char *g_fragmentSource =
 	"	}"
 	"	else if( textureType==2 )"
 	"	{"
-	"		outColor = texture2D( texture, gl_TexCoord[0].xy );"
+	"		outColor = vec4( outColor.rgb, texture2D( texture, gl_TexCoord[0].xy ).a );"
 	"	}"
 
 	"	ieCoreGLNameOut = ieCoreGLNameIn;"
