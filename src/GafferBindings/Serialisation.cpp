@@ -65,6 +65,11 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 		{
 			continue;
 		}
+		if( !parentSerialiser->childNeedsSerialisation( child ) )
+		{
+			continue;
+		}
+		
 		std::string childIdentifier;
 		if( parentSerialiser->childNeedsConstruction( child ) )
 		{
@@ -155,6 +160,10 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 	for( GraphComponent::ChildIterator it = parent->children().begin(), eIt = parent->children().end(); it != eIt; it++ )
 	{
 		const GraphComponent *child = it->get();
+		if( !parentSerialiser->childNeedsSerialisation( child ) )
+		{
+			continue;
+		}
 		if( parentSerialiser->childNeedsConstruction( child ) )
 		{
 			const Serialiser *childSerialiser = serialiser( child );
@@ -252,6 +261,11 @@ std::string Serialisation::Serialiser::postConstructor( const Gaffer::GraphCompo
 std::string Serialisation::Serialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
 	return "";
+}
+
+bool Serialisation::Serialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+{
+	return true;
 }
 
 bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const

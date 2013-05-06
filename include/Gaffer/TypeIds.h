@@ -103,6 +103,7 @@ enum TypeId
 	ExecutableOpHolderTypeId = 110056,
 	DespatcherTypeId = 110057,
 	Transform2DPlugTypeId = 110058,
+	ReferenceTypeId = 110059,
 	LastTypeId = 110200,
 	
 };

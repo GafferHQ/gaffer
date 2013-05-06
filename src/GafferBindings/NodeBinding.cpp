@@ -93,11 +93,20 @@ static ScriptNodePtr scriptNode( Node &node )
 	return node.scriptNode();
 }
 
+bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+{
+	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
+	{
+		return childPlug->getFlags( Plug::Serialisable );
+	}
+	return false;
+}
+
 bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 {
 	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
 	{
-		return childPlug->getFlags( Plug::Dynamic | Plug::Serialisable );
+		return childPlug->getFlags( Plug::Dynamic );
 	}
 	return false;
 }

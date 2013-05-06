@@ -36,11 +36,10 @@
 
 #include "boost/python.hpp" // must be the first include
 
-#include "Gaffer/Box.h"
-#include "Gaffer/Plug.h"
+#include "Gaffer/Reference.h"
 
+#include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -48,46 +47,24 @@ using namespace Gaffer;
 namespace GafferBindings
 {
 
-class BoxSerialiser : public NodeSerialiser
+class ReferenceSerialiser : public NodeSerialiser
 {
-	
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+
+	virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child );
+		const Reference *r = static_cast<const Reference *>( graphComponent );
+		return identifier + ".load( \"" + r->fileNamePlug()->getValue() + "\" )\n";
 	}
-	
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsConstruction( child );
-	}	
-	
+		
 };
 
-static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
+void bindReference()
 {
-	return b.promotePlug( descendantPlug );
-}
-
-void bindBox()
-{
-	NodeClass<Box>()
-		.def( "canPromotePlug", &Box::canPromotePlug )
-		.def( "promotePlug", &promotePlug )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "exportForReference", &Box::exportForReference )
-		.def( "create", &Box::create )
-		.staticmethod( "create" )
+	NodeClass<Reference>()
+		.def( "load", &Reference::load )
 	;
 	
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
+	Serialisation::registerSerialiser( Reference::staticTypeId(), new ReferenceSerialiser );
 	
 }
 

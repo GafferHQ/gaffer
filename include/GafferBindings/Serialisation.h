@@ -86,6 +86,9 @@ class Serialisation
 				/// At this point it is possible to request the identifiers of other objects via the Serialisation and refer to them in the result.
 				/// The default implementation returns the empty string.
 				virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+				/// May be implemented to say whether or not the child needs to be serialised. The default
+				/// implementation returns true.
+				virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const;
 				/// May be implemented to say whether or not the child needs to be constructed explicitly by the serialisation,
 				/// or it will be created by the parent automatically on construction of the parent. Default
 				/// implementation returns false.
