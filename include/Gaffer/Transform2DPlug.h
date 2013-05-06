@@ -39,6 +39,13 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+namespace GafferImage
+{
+
+IE_CORE_FORWARDDECLARE( Format );
+
+}; // namespace GafferImage
+
 namespace Gaffer
 {
 
@@ -64,7 +71,7 @@ class Transform2DPlug : public CompoundPlug
 		V2fPlug *scalePlug();
 		const V2fPlug *scalePlug() const;
 
-		Imath::M33f matrix() const;
+		Imath::M33f matrix( const GafferImage::Format &format ) const;
 
 	private :
 		
