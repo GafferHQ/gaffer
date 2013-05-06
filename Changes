@@ -1,3 +1,50 @@
+0.61.0
+======
+
+* Fixed bug in MultiSelectionMenu so that if only one selection is available, it is displayed by name rather than as "All".
+
+* Added image Sampler and Filter API classes.
+
+* Added an image Reformat node.
+
+* Added an ImageWriter node.
+
+* Added RecursiveChildIterator API class.
+
+* Fixed noodle-snatching to work with Shader nodes.
+
+* Node Graph label now uses "/" as a separator for Box paths, rather than ".".
+
+* Fixed layouts to allow panels to be collapsed fully and smoothly - addresses issue #93.
+
+* Added workaround for PyQt/PySide pyqtSignal/Signal differences.
+
+* Fixed "CameraController not in motion" errors. These occurred when the user accidentally moved the mouse scroll wheel while performing a drag to move the camera. We now ignore wheel events when dragging the camera.
+
+* Removed unecessary collapsible section in Group UI.
+
+* Fixed ImageReader to work with offset data windows.
+
+* Fixed node auto-connection to work with Shader nodes (and other nodes with nested plugs).
+
+* Added auto-connection and auto-positioning for pasted nodes (#13).
+
+* Added inherit argument to Metadata query functions (#232).
+
+* Fixed negative data window origins in image module.
+
+* Added subdivision attributes to ArnoldAttributes node.
+
+* Renamed Assignment node to ShaderAssignment.
+
+* Added Reference node, providing the ability to reference in external scripts to facilitate collaborative workflows (#228).
+
+* Added popup plug labelling to the NodeGraph (#138).
+
+* Added connection snapping to the NodeGraph - connections dragged onto a node will snap to the nearest compatible plug.
+
+* Added ImageTransform node (#96).
+
 0.60.0
 ======
 
