@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "IECore/AngleConversion.h"
+
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/Plug.h"
@@ -58,7 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
-	:	Nodule( plug ), m_hovering( false ), m_draggingConnection( false )
+	:	Nodule( plug ), m_labelVisible( false ), m_hovering( false ), m_draggingConnection( false )
 {
 	enterSignal().connect( boost::bind( &StandardNodule::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &StandardNodule::leave, this, ::_1, ::_2 ) );
@@ -76,6 +78,21 @@ StandardNodule::~StandardNodule()
 {
 }
 
+void StandardNodule::setLabelVisible( bool labelVisible )
+{
+	if( labelVisible == m_labelVisible )
+	{
+		return;
+	}
+	m_labelVisible = labelVisible;
+	renderRequestSignal()( this );
+}
+
+bool StandardNodule::getLabelVisible() const
+{
+	return m_labelVisible;
+}
+		
 Imath::Box3f StandardNodule::bound() const
 {
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
@@ -93,7 +110,7 @@ void StandardNodule::doRender( const Style *style ) const
 			{
 				srcTangent = nodeGadget->noduleTangent( this );
 			}
-			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, -srcTangent );
+			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 		}
 	}
 	
@@ -106,6 +123,60 @@ void StandardNodule::doRender( const Style *style ) const
 	}
 
 	style->renderNodule( radius, state );
+	
+	if( m_labelVisible && !IECoreGL::Selector::currentSelector() )
+	{
+		renderLabel( style );
+	}
+}
+
+void StandardNodule::renderLabel( const Style *style ) const
+{
+	const NodeGadget *nodeGadget = ancestor<NodeGadget>();
+	if( !nodeGadget )
+	{
+		return;
+	}
+	
+	const std::string &label = plug()->getName().string();
+	
+	// we rotate the label based on the angle the connection exits the node at.
+	V3f tangent = nodeGadget->noduleTangent( this );
+	float theta = IECore::radiansToDegrees( atan2f( tangent.y, tangent.x ) );
+	
+	// but we don't want the text to be vertical, so we bend it away from the
+	// vertical axis.
+	if( ( theta > 0.0f && theta < 90.0f ) || ( theta < 0.0f && theta >= -90.0f ) )
+	{
+		theta = sign( theta ) * lerp( 0.0f, 45.0f, fabs( theta ) / 90.0f );
+	}
+	else
+	{
+		theta = sign( theta ) * lerp( 135.0f, 180.0f, (fabs( theta ) - 90.0f) / 90.0f );	
+	}
+	
+	// we also don't want the text to be upside down, so we correct the rotation
+	// if that would be the case.
+	Box3f labelBound = style->textBound( Style::LabelText, label );
+	V2f anchor( labelBound.min.x - 1.0f, labelBound.center().y );
+	
+	if( theta > 90.0f )
+	{
+		theta = theta - 180.0f;
+		anchor.x = labelBound.max.x + 1.0f;
+	}
+	
+	// now we can actually do the rendering.
+	
+	if( m_hovering )
+	{
+		glScalef( 1.2, 1.2, 1.2 );
+	}
+	
+	glRotatef( theta, 0, 0, 1.0f );
+	glTranslatef( -anchor.x, -anchor.y, 0.0f );
+	
+	style->renderText( Style::LabelText, label );
 }
 
 void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )
@@ -134,7 +205,6 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
-	m_dragPosition = event.line.p0;
 	renderRequestSignal()( this );
 	return plug();
 }
@@ -144,6 +214,8 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	if( event.sourceGadget == this )
 	{
 		m_draggingConnection = true;
+		m_dragPosition = event.line.p0;
+		m_dragTangent = V3f( 0 );
 		return true;
 	}
 	
@@ -152,16 +224,37 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	if( input )
 	{
 		m_hovering = true;
-		StandardNodulePtr sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget );
-		if( sourceNodule )
+		
+		// snap the drag endpoint to our centre, as another little visual indication
+		// that we're well up for being connected.
+		V3f centre = V3f( 0 ) * fullTransform();
+		centre = centre * event.sourceGadget->fullTransform().inverse();
+		
+		V3f tangent( 0 );
+		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 		{
-			// snap the drag endpoint to our centre, as another little visual indication
-			// that we're well up for being connected.
-			V3f centre = V3f( 0 ) * fullTransform();
-			centre = centre * sourceNodule->fullTransform().inverse();
+			tangent = nodeGadget->noduleTangent( this );
+		}
+		
+		if( StandardNodule *sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget.get() ) )
+		{
 			sourceNodule->m_dragPosition = centre;
+			sourceNodule->m_dragTangent = tangent;
 			sourceNodule->m_draggingConnection = true;
 		}
+		else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
+		{
+			sourceConnection->updateDragEndPoint( centre, tangent );
+		}
+
+		// show the labels of all compatible nodules on this node, if it doesn't
+		// look like the previous drag destination would have done so.
+		Nodule *prevDestination = IECore::runTimeCast<Nodule>( event.destinationGadget );
+		if( !prevDestination || prevDestination->plug()->node() != plug()->node() )
+		{
+			setCompatibleLabelsVisible( event, true );
+		}
+
 		renderRequestSignal()( this );
 		return true;
 	}
@@ -181,6 +274,26 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 	if( this != event.sourceGadget )
 	{
 		m_hovering = false;
+		// if the new drag destination isn't one that would warrant having the labels
+		// showing, then hide them.
+		if( Nodule *newDestination = IECore::runTimeCast<Nodule>( event.destinationGadget ) )
+		{
+			if( newDestination->plug()->node() != plug()->node() )
+			{
+				setCompatibleLabelsVisible( event, false );
+			}
+		}
+		else if( NodeGadget *newDestination = IECore::runTimeCast<NodeGadget>( event.destinationGadget ) )
+		{
+			if( newDestination->node() != plug()->node() )
+			{
+				setCompatibleLabelsVisible( event, false );
+			}
+		}
+		else
+		{
+			setCompatibleLabelsVisible( event, false );
+		}
 	}
 	else if( !event.destinationGadget || !event.destinationGadget->isInstanceOf( Nodule::staticTypeId() ) )
 	{
@@ -202,6 +315,7 @@ bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_hovering = false;
+	setCompatibleLabelsVisible( event, false );
 	
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
@@ -220,6 +334,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 			
 		return true;
 	}
+
 	return false;
 }
 
@@ -229,7 +344,7 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 	if( dropPlug )
 	{
 		Gaffer::PlugPtr thisPlug = plug();
-		if( thisPlug->direction()!=dropPlug->direction() )
+		if( thisPlug->node() != dropPlug->node() && thisPlug->direction()!=dropPlug->direction() )
 		{
 			if( thisPlug->direction()==Gaffer::Plug::In )
 			{
@@ -254,3 +369,21 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 	return;
 }
 
+void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, bool visible )
+{
+	NodeGadget *nodeGadget = ancestor<NodeGadget>();
+	if( !nodeGadget )
+	{
+		return;
+	}
+
+	for( RecursiveStandardNoduleIterator it( nodeGadget ); it != it.end(); ++it )
+	{
+		Gaffer::PlugPtr input, output;
+		(*it)->connection( event, input, output );
+		if( input && output )
+		{
+			(*it)->setLabelVisible( visible );
+		}
+	}
+}

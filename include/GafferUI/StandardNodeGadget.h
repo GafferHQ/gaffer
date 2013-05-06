@@ -65,6 +65,9 @@ class StandardNodeGadget : public NodeGadget
 		Gadget *getContents();
 		const Gadget *getContents() const;
 		
+		void setLabelsVisibleOnHover( bool labelsVisible );
+		bool getLabelsVisibleOnHover() const;
+		
 		Imath::Box3f bound() const;
 
 	protected :
@@ -96,7 +99,21 @@ class StandardNodeGadget : public NodeGadget
 		void plugSet( const Gaffer::Plug *plug );
 		void plugDirtied( const Gaffer::Plug *plug );
 		
+		void enter( Gadget *gadget );
+		void leave( Gadget *gadget );
+		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
+		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
+		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+
+		Nodule *closestCompatibleNodule( const DragDropEvent &event );
+		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
+
 		bool m_nodeEnabled;
+		bool m_labelsVisibleOnHover;
+		// we accept drags from nodules and forward them to the
+		// closest compatible child nodule - m_dragDestinationProxy.
+		Nodule *m_dragDestinationProxy;
 		
 };
 

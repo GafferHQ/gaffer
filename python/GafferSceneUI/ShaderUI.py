@@ -122,7 +122,7 @@ GafferUI.NodeGadget.registerNodeGadget( GafferScene.Shader.staticTypeId(), __nod
 
 def __parametersNoduleCreator( plug ) :
 
-	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y )
+	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y, spacing = 0.2 )
 
 GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "parameters", __parametersNoduleCreator )
 GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "name", lambda plug : None )
