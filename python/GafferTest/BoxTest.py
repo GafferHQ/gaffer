@@ -333,6 +333,23 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( b["n"]["c"]["b"].getInput().isSame( p["b"] ) )
 		self.assertEqual( p.getValue(), IECore.Color3f( 1, 0, 1 ) )
 
+	def testPromoteCompoundPlugAndSerialise( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.CompoundPlugNode()
+		s["n"]["p"]["s"].setValue( "hello" )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		b.promotePlug( b["n"]["p"] )
+		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+
+		self.assertEqual( s["Box"]["n"]["p"]["s"].getValue(), "hello" )
+
 if __name__ == "__main__":
 	unittest.main()
 	

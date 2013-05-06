@@ -72,6 +72,12 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 
 	PlugPtr externalPlug = descendantPlug->createCounterpart( externalPlugName, Plug::In );
 	externalPlug->setFlags( Plug::Dynamic, true );
+	// flags are not automatically propagated to the children of compound plugs,
+	// so we need to do that ourselves.
+	for( RecursivePlugIterator it( externalPlug ); it != it.end(); ++it )
+	{
+		(*it)->setFlags( Plug::Dynamic, true );
+	}
 
 	ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug );
 	if( externalValuePlug )
