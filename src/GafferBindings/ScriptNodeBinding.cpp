@@ -84,6 +84,12 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			scriptExecutedSignal()( this, pythonScript );
 		}
 
+		void executeFile( const std::string &pythonFile, Node *parent = 0 )
+		{
+			const std::string pythonScript = readFile( pythonFile );
+			execute( pythonScript, parent );
+		}
+		
 		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -103,9 +109,46 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return serialisation.result();
 		}
 		
+		virtual void serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
+		{
+			std::string s = serialise( parent, filter );
+			
+			std::ofstream f( fileName.c_str() );
+			if( !f.good() )
+			{
+				throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+			}
+			
+			f << s;
+			
+			if( !f.good() )
+			{
+				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
+			}		
+		}
+		
 		virtual void load()
 		{
-			std::string fileName = fileNamePlug()->getValue();
+			const std::string s = readFile( fileNamePlug()->getValue() );
+			
+			deleteNodes();			
+			execute( s );
+			
+			UndoContext undoDisabled( this, UndoContext::Disabled );
+			unsavedChangesPlug()->setValue( false );
+		}
+		
+		virtual void save() const
+		{
+			serialiseToFile( fileNamePlug()->getValue(), 0, 0 );
+			UndoContext undoDisabled( const_cast<ScriptNodeWrapper *>( this ), UndoContext::Disabled );
+			const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
+		}
+				
+	private :
+	
+		std::string readFile( const std::string &fileName )
+		{
 			std::ifstream f( fileName.c_str() );
 			if( !f.good() )
 			{
@@ -124,37 +167,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 				std::getline( f, line );
 				s += line + "\n";
 			}
-			
-			deleteNodes();			
-			execute( s );
-			
-			UndoContext undoDisabled( this, UndoContext::Disabled );
-			unsavedChangesPlug()->setValue( false );
-		}
 		
-		virtual void save() const
-		{
-			std::string s = serialise();
-			
-			std::string fileName = fileNamePlug()->getValue();
-			std::ofstream f( fileName.c_str() );
-			if( !f.good() )
-			{
-				throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
-			}
-			
-			f << s;
-			
-			if( !f.good() )
-			{
-				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
-			}
-			
-			UndoContext undoDisabled( const_cast<ScriptNodeWrapper *>( this ), UndoContext::Disabled );
-			const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
+			return s;
 		}
-				
-	private :
 	
 		// the dict returned will form both the locals and the globals for the execute()
 		// and evaluate() methods. it's not possible to have a separate locals
@@ -216,6 +231,15 @@ static StandardSetPtr selection( ScriptNode &s )
 class ScriptNodeSerialiser : public NodeSerialiser
 {
 
+	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+	{
+		if( child->isInstanceOf( Node::staticTypeId() ) )
+		{
+			return true;
+		}
+		return NodeSerialiser::childNeedsSerialisation( child );
+	}
+	
 	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
@@ -260,10 +284,12 @@ void bindScriptNode()
 		.def( "paste", &ScriptNode::paste, ( arg_( "parent" ) = object() ) )
 		.def( "deleteNodes", &ScriptNode::deleteNodes, ( arg_( "parent" ) = object(), arg_( "filter" ) = object(), arg_( "reconnect" ) = true ) )
 		.def( "execute", &ScriptNode::execute, ( arg_( "parent" ) = object() ) )
+		.def( "executeFile", &ScriptNode::executeFile, ( arg_( "fileName" ), arg_( "parent" ) = object() ) )
 		.def( "evaluate", &ScriptNode::evaluate, ( arg_( "parent" ) = object() ) )
 		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, return_internal_reference<1>() )
 		.def( "scriptEvaluatedSignal", &ScriptNode::scriptEvaluatedSignal, return_internal_reference<1>() )
 		.def( "serialise", &ScriptNode::serialise, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
+		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( arg_( "fileName" ), arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
 		.def( "save", &ScriptNode::save )
 		.def( "load", &ScriptNode::load )
 		.def( "context", &context )

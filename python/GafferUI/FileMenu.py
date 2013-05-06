@@ -55,6 +55,9 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
 	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved } )
 	menuDefinition.append( prefix + "/SaveDivider", { "divider" : True } )
+	menuDefinition.append( prefix + "/Export Selection...", { "command" : exportSelection, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Import...", { "command" : importFile } )
+	menuDefinition.append( prefix + "/ImportExportDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Settings...", { "command" : showSettings } )
 
 ## A function suitable as the command for a File/New menu item. It must be invoked from a menu which
@@ -211,6 +214,61 @@ def revertToSaved( menu ) :
 		## \todo Warn
 		pass
 
+## A function suitable as the command for a File/Export Selection... menu item. It must be invoked from a menu which
+# has a ScriptWindow in its ancestry.
+def exportSelection( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	selection = script.selection()
+	parent = selection[0].parent()
+	for node in selection :
+		if not parent.isAncestorOf( node ) :
+			assert( node.parent().isAncestorOf( parent ) )
+			parent = node.parent()
+	
+	path = Gaffer.FileSystemPath( os.getcwd() )
+	path.setFilter( __scriptPathFilter() )
+	
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export" )
+	path = dialogue.waitForPath( parentWindow = scriptWindow )
+
+	if not path :
+		return
+	
+	path = str( path )
+	if not path.endswith( ".gfr" ) :
+		path += ".gfr"		
+	
+	script.serialiseToFile( path, parent, script.selection() )
+	
+## A function suitable as the command for a File/Import File... menu item. It must be invoked from a menu which
+# has a ScriptWindow in its ancestry.
+def importFile( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	path = Gaffer.FileSystemPath( os.getcwd() )
+	path.setFilter( __scriptPathFilter() )
+
+	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import" )
+	path = dialogue.waitForPath( parentWindow = scriptWindow )
+
+	newNodes = []
+	c = script.childAddedSignal().connect( lambda parent, child : newNodes.append( child ) )
+	with Gaffer.UndoContext( script ) :
+		## \todo We need to prevent the ScriptNode plugs themselves getting clobbered
+		# when importing an entire script.
+		script.executeFile( str( path ) )
+	
+	script.selection().clear()
+	for n in newNodes :
+		script.selection().add( n )
+		
+	## \todo Position the nodes somewhere sensible if there's a Node Graph available
+
 ## A function suitable as the command for a File/Settings... menu item.
 def showSettings( menu ) :
 
@@ -234,3 +292,7 @@ def __scriptPathFilter() :
 
 	return Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] )
 	
+def __selectionAvailable( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	return True if scriptWindow.scriptNode().selection().size() else False

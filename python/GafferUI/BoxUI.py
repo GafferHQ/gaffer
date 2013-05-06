@@ -35,6 +35,7 @@
 ##########################################################################
 
 import re
+import os
 
 import IECore
 
@@ -70,6 +71,49 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 def __showContents( nodeGraph, box ) :
 
 	GafferUI.NodeGraph.acquire( box )
+
+# NodeUI
+##########################################################################
+
+class BoxNodeUI( GafferUI.StandardNodeUI ) :
+
+	def __init__( self, node, displayMode = None, **kw ) :
+	
+		GafferUI.StandardNodeUI.__init__( self, node, displayMode, **kw )
+		
+		## \todo Maybe this should become a customisable part of the StandardNodeUI - if so then
+		# perhaps we need to integrate it with the existing presets menu in ParameterisedHolderNodeUI.
+		toolButton = GafferUI.MenuButton( image = "gear.png", hasFrame=False )
+		toolButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self._toolMenuDefinition ) ) )
+
+		self._tabbedContainer().setCornerWidget( toolButton )
+	
+	def _toolMenuDefinition( self ) :
+	
+		result = IECore.MenuDefinition()
+		result.append( "/Export for referencing...", { "command" : Gaffer.WeakMethod( self.__exportForReferencing ) } )
+		
+		return result
+		
+	def __exportForReferencing( self ) :
+	
+		path = Gaffer.FileSystemPath( os.getcwd() )
+		
+		path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
+
+		dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export" )
+		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
+
+		if not path :
+			return
+
+		path = str( path )
+		if not path.endswith( ".grf" ) :
+			path += ".grf"
+
+		self.node().exportForReference( path )
+	
+GafferUI.NodeUI.registerNodeUI( Gaffer.Box.staticTypeId(), BoxNodeUI )
 
 # PlugValueWidget registrations
 ##########################################################################

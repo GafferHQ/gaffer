@@ -120,6 +120,7 @@ from ExecutableOpHolderTest import ExecutableOpHolderTest
 from DespatcherTest import DespatcherTest
 from RecursiveChildIteratorTest import RecursiveChildIteratorTest
 from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTest
+from ReferenceTest import ReferenceTest
 
 if __name__ == "__main__":
 	import unittest

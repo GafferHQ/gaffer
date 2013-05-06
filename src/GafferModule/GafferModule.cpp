@@ -75,6 +75,7 @@
 #include "GafferBindings/ExecutableOpHolderBinding.h"
 #include "GafferBindings/ExecutableNodeBinding.h"
 #include "GafferBindings/DespatcherBinding.h"
+#include "GafferBindings/ReferenceBinding.h"
 
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -119,6 +120,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindExecutableNode();
 	bindDespatcher();
 	bindExecutableOpHolder();
+	bindReference();
 			
 	DependencyNodeClass<ContextProcessorDependencyNode>();
 	DependencyNodeClass<TimeWarpDependencyNode>();

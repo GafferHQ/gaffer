@@ -164,6 +164,8 @@ class ScriptNode : public Node
 		/// We might expose that here or just introduce it in the binding layer for
 		/// use from the python side only.
 		virtual void execute( const std::string &pythonScript, Node *parent = 0 );
+		/// As above, but loads the python script from the specified file.
+		virtual void executeFile( const std::string &pythonFile, Node *parent = 0 );
 		/// This signal is emitted following successful execution of a script.
 		ScriptExecutedSignal &scriptExecutedSignal();
 		/// Evaluates the specified python expression. The caller owns a reference to
@@ -190,6 +192,8 @@ class ScriptNode : public Node
 		/// default to the ScriptNode itself. The filter may be specified to limit
 		/// serialised nodes to those contained in the set.
 		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
+		/// Calls serialise() and saves the result into the specified file.
+		virtual void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Returns the plug which specifies the file used in all load and save
 		/// operations.
 		StringPlug *fileNamePlug();

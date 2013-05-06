@@ -129,6 +129,11 @@ class NodeSerialiser : public Serialisation::Serialiser
 
 	public :
 	
+		/// Implemented so that only plugs are serialised - child nodes are expected to
+		/// be a part of the implementation of the node rather than something the user
+		/// has created themselves.
+		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const;
+		/// Implemented so that dynamic plugs are constructed appropriately.
 		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
 
 };

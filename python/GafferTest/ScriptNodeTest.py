@@ -860,7 +860,52 @@ a = A()"""
 		
 		s.load()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
+	
+	def testSerialiseToFile( self ) :
+	
+		s = Gaffer.ScriptNode()
 		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		
+		s.serialiseToFile( "/tmp/test.gfr" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.load()
+		
+		self.assertTrue( "n1" in s2 )
+		self.assertTrue( "n2" in s2 )
+		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
+		
+		s.serialiseToFile( "/tmp/test.gfr", filter = Gaffer.StandardSet( [ s["n2"] ] ) )
+		
+		s3 = Gaffer.ScriptNode()
+		s3["fileName"].setValue( "/tmp/test.gfr" )
+		s3.load()
+		
+		self.assertTrue( "n1" not in s3 )
+		self.assertTrue( "n2" in s3 )
+	
+	def testExecuteFile( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		
+		s.serialiseToFile( "/tmp/test.gfr" )
+		
+		s2 = Gaffer.ScriptNode()
+		
+		self.assertRaises( RuntimeError, s2.executeFile, "thisFileDoesntExist.gfr" )
+		
+		s2.executeFile( "/tmp/test.gfr" )
+		
+		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
+				
 	def tearDown( self ) :
 	
 		for f in (
