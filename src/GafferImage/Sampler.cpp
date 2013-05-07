@@ -36,7 +36,6 @@
 
 #include "Gaffer/Context.h"
 #include "GafferImage/Sampler.h"
-#include "GafferImage/Filter.h"
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
 
@@ -44,9 +43,10 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace GafferImage;
 
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow )
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter )
 	: m_plug( plug ),
-	m_channelName( channelName )
+	m_channelName( channelName ),
+	m_filter( Filter::create( filter ) )
 {
 	// Get the new sample bounds that includes all intersecting tiles.	
 	//todo: I think that there will be an error with this logic when using images with a negative data window offset. Use the ImagePlug::tileOrigin() call instead.
@@ -88,4 +88,33 @@ float Sampler::sample( int x, int y )
 
 	return *((&cacheTilePtr->readable()[0]) + y * ImagePlug::tileSize() + x);
 }	
+
+float Sampler::sample( float x, float y )
+{
+	if ( !m_valid ) return 0.;
+
+	m_filter->setScale( 1. );
+	int tapX = m_filter->construct( x );
+	const std::vector<double> weightsX = m_filter->weights();
+	const int width = weightsX.size();
+	
+	int tapY = m_filter->construct( y );
+	const std::vector<double> &weightsY = m_filter->weights();
+	const int height = weightsY.size();
+
+	double weightedSum = 0.;
+	float colour = 0.f;
+	for ( int y = 0; y < height; ++y )
+	{
+		for ( int x = 0; x < width; ++x )
+		{
+			float c = sample( tapX + x, tapY + y );
+			double w = weightsX[x] * weightsY[y];
+			weightedSum += w;
+			colour += c * w;
+		}
+	}
+	colour /= weightedSum;
+	return colour;
+}
 
