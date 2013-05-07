@@ -39,6 +39,7 @@
 
 #include <vector>
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/Filter.h"
 
 namespace GafferImage
 {
@@ -51,6 +52,8 @@ namespace GafferImage
 /// upstream changes just one of them and passes the hashes of the other through, the output hash  will
 /// be wrong and not update. This has not been an issue yet as we don't have any nodes that do that!
 	
+IE_CORE_FORWARDDECLARE( Filter );
+
 /// A utility class for pixel access of an image plug.
 class Sampler
 {
@@ -61,16 +64,20 @@ public :
 	/// @param plug The image plug to sample from.
 	/// @param channelName The channel to sample.
 	/// @param The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow );
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter = Filter::defaultFilter() );
 
-	/// Samples a colour value from the channel at x, y. The result is clamped the the sampleWindow.	
+	/// Samples a colour value from the channel at x, y. The result is clamped to the sampleWindow.
 	float sample( int x, int y );
+
+	/// Sub-samples the image using a filter.
+	float sample( float x, float y );
 
 private:
 
 	const ImagePlug *m_plug;
 	const std::string &m_channelName;
 	Imath::Box2i m_sampleWindow;
+	FilterPtr m_filter;
 	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 	bool m_valid;
 
