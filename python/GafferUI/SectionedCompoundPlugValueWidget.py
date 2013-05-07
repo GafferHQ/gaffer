@@ -52,11 +52,11 @@ class SectionedCompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, sections, **kw ) :
 	
-		column = GafferUI.ListContainer( spacing = 8 )
+		self.__column = GafferUI.ListContainer( spacing = 8 )
 	
-		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 		
-		with column :
+		with self.__column :
 			for section in sections :
 				_Section(
 					self.getPlug(),
@@ -69,6 +69,15 @@ class SectionedCompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 	
 		return True
+	
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	
+		for section in self.__column :
+			result = section.childPlugValueWidget( childPlug, lazy )
+			if result is not None :
+				return result
+				
+		return None
 			
 	def _updateFromPlug( self ) :
 	
