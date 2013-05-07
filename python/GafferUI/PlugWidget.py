@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,7 +42,7 @@ import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## The PlugWidget combines a PlugLabelValueWidget with a second PlugValueWidget
+## The PlugWidget combines a LabelPlugValueWidget with a second PlugValueWidget
 ## suitable for editing the plug.
 ## \todo This could provide functionality for arbitrary Widgets to be placed
 ## on the right, which combined with the ability to find a 
@@ -96,6 +96,10 @@ class PlugWidget( GafferUI.Widget ) :
 		else :
 			return self.__valueWidget.plugValueWidget()
 
+	def labelPlugValueWidget( self ) :
+	
+		return self.__label
+	
 	@staticmethod
 	def labelWidth() :
 	
