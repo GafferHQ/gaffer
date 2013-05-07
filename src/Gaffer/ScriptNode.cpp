@@ -214,7 +214,11 @@ void ScriptNode::paste( Node *parent )
 		selection()->clear();
 		for( size_t i = 0, e = newNodes->size(); i < e; i++ )
 		{
-			selection()->add( newNodes->member( i ) );
+			StandardSet::Member *member = newNodes->member( i );
+			if( member->isInstanceOf( Node::staticTypeId() ) )
+			{
+				selection()->add( member );
+			}
 		}
 	}
 }
