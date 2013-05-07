@@ -49,7 +49,11 @@ import GafferRenderMan
 
 def _shader( shaderNode ) :
 
-	shaderName = shaderNode["name"].getValue()
+	if isinstance( shaderNode, GafferRenderMan.RenderManShader ) :
+		shaderName = shaderNode["name"].getValue()
+	else :
+		shaderName = shaderNode["__shaderName"].getValue()
+		
 	try :
 		return GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
 	except Exception, e :
@@ -157,6 +161,7 @@ class __NodeUI( GafferUI.StandardNodeUI ) :
 						plugWidget.labelPlugValueWidget().setReadOnly( not active )
 				
 GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader.staticTypeId(), __NodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight.staticTypeId(), __NodeUI )
 
 ##########################################################################
 # PlugValueWidget for the "parameters" compound. This is defined in order
@@ -212,6 +217,7 @@ def __parametersPlugValueWidgetCreator( plug ) :
 	return GafferUI.SectionedCompoundPlugValueWidget( plug, sections )
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
 
 ##########################################################################
 # PlugValueWidgets for the individual parameter plugs. We use annotations
@@ -337,6 +343,7 @@ def __plugValueWidgetCreator( plug ) :
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
 
 ##########################################################################
 # Metadata registrations
@@ -350,3 +357,4 @@ def __plugDescription( plug ) :
 	return d.value if d is not None else ""
 
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
+GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
