@@ -270,6 +270,12 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 
 void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture, int textureFilter ) const
 {
+	glPushAttrib( GL_COLOR_BUFFER_BIT );
+	
+	// As the image is already pre-multiplied we need to change our blend mode.
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
 	texture->bind();
@@ -298,6 +304,8 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 		glVertex2f( box.min.x, box.min.y );
 		
 	glEnd();
+		
+	glPopAttrib();
 }
 
 void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
