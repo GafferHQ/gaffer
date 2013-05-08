@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+#include "GafferImage/ImageProcessor.h"
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/Filter.h"
 #include "GafferImage/FormatPlug.h"
@@ -51,31 +52,85 @@ using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( ImageTransform );
 
-size_t ImageTransform::g_firstChildIndex = 0;
+//////////////////////////////////////////////////////////////////////////
+// Implementation of ImageTransform::Implementation
+//////////////////////////////////////////////////////////////////////////
 
-ImageTransform::ImageTransform( const std::string &name )
+namespace GafferImage
+{
+
+namespace Detail
+{
+
+class Implementation : public ImageProcessor
+{
+	public :
+
+		Implementation( const std::string &name=staticTypeName() );
+
+		virtual ~Implementation(){};
+		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Implementation, ImageTransformImplementationTypeId, ImageProcessor );
+	
+		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		/// Plug accessors.	
+		Gaffer::Transform2DPlug *transformPlug();
+		const Gaffer::Transform2DPlug *transformPlug() const;
+		GafferImage::FilterPlug *filterPlug();
+		const GafferImage::FilterPlug *filterPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		virtual bool enabled() const;
+
+	private :
+				
+		static size_t g_firstPlugIndex;
+
+		// A useful method that returns an axis-aligned box that contains box*m.		
+		Imath::Box2i transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const;
+};
+
+size_t Implementation::g_firstPlugIndex = 0;
+
+Implementation::Implementation( const std::string &name )
 	:	ImageProcessor( name )
 {
-	storeIndexOfNextChild( g_firstChildIndex );
+	storeIndexOfNextChild( g_firstPlugIndex );
 	
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
+	addChild( new GafferImage::FilterPlug( "filter" ) );
 }
 
-ImageTransform::~ImageTransform()
+Gaffer::Transform2DPlug *Implementation::transformPlug()
 {
+	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
 }
 
-Gaffer::Transform2DPlug *ImageTransform::transformPlug()
+const Gaffer::Transform2DPlug *Implementation::transformPlug() const
 {
-	return getChild<Gaffer::Transform2DPlug>( g_firstChildIndex );
+	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Transform2DPlug *ImageTransform::transformPlug() const
+GafferImage::FilterPlug *Implementation::filterPlug()
 {
-	return getChild<Gaffer::Transform2DPlug>( g_firstChildIndex );
+	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
 }
 
-void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+const GafferImage::FilterPlug *Implementation::filterPlug() const
+{
+	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
+}
+
+void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
@@ -84,9 +139,13 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 		outputs.push_back( outPlug()->dataWindowPlug() );
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
+	else if ( input == filterPlug() )
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
 }
 
-bool ImageTransform::enabled() const
+bool Implementation::enabled() const
 {
 	if ( !ImageProcessor::enabled() )
 	{
@@ -99,32 +158,33 @@ bool ImageTransform::enabled() const
 	return true;
 }
 
-void ImageTransform::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	Format format( inPlug()->formatPlug()->getValue() );
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
 }
 
-void ImageTransform::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->dataWindowPlug()->hash( h );
 	transformPlug()->hash( h );
 }
 
-void ImageTransform::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->channelNamesPlug()->hash( h );
 }
 
-void ImageTransform::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->channelDataPlug()->hash( h );
 	inPlug()->dataWindowPlug()->hash( h );
+	filterPlug()->hash( h );
 	transformPlug()->hash( h );
 }
 
-Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Format inFormat( inPlug()->formatPlug()->getValue() );
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
@@ -132,7 +192,7 @@ Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, 
 	return outWindow;
 }
 
-Imath::Box2i ImageTransform::transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const
+Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const
 {
 	Imath::V3f pt[4];
 	pt[0] = Imath::V3f( box.min.x, box.min.y, 1. );
@@ -157,17 +217,17 @@ Imath::Box2i ImageTransform::transformBox( const Imath::M33f &m, const Imath::Bo
 	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );	
 }
 
-GafferImage::Format ImageTransform::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format Implementation::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->formatPlug()->getValue();
 }
 
-IECore::ConstStringVectorDataPtr ImageTransform::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr Implementation::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->channelNamesPlug()->getValue();
 }
 
-IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	// Allocate the new tile
 	FloatVectorDataPtr outDataPtr = new FloatVectorData;
@@ -183,17 +243,48 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
 	
-	Sampler sampler( inPlug(), channelName, sampleBox );
+	Sampler sampler( inPlug(), channelName, sampleBox, filterPlug()->getValue() );
 	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
 	{
 		for ( int i = 0; i < ImagePlug::tileSize(); ++i )
 		{
 			Imath::V3f p( i+tile.min.x+.5, j+tile.min.y+.5, 1. );
 			p *= t;
-			out[ i + j*ImagePlug::tileSize() ] = sampler.sample( int(p.x), int(p.y) );
+			out[ i + j*ImagePlug::tileSize() ] = sampler.sample( p.x, p.y );
 		}
 	}
 
 	return outDataPtr;
+}
+
+}; // namespace Detail
+
+}; // namespace GafferImage
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of ImageTransform
+//////////////////////////////////////////////////////////////////////////
+
+ImageTransform::ImageTransform( const std::string &name )
+	:	ChannelDataProcessor( name )
+{
+	Gaffer::Transform2DPlug *transform2DPlug = new Gaffer::Transform2DPlug( "transform" );
+	addChild( transform2DPlug );
+	
+	FilterPlug *filterPlug = new FilterPlug( "filter" );
+	addChild( filterPlug );
+
+	// Create the internal implementation of our transform and connect it up the our plugs.
+	GafferImage::Detail::Implementation *t = new GafferImage::Detail::Implementation( std::string( boost::str( boost::format( "__%sImplementation" )  % name  ) ) );
+	t->inPlug()->setInput( inPlug() );
+	t->transformPlug()->setInput( transform2DPlug );
+	t->filterPlug()->setInput( filterPlug );
+	t->enabledPlug()->setInput( enabledPlug() );
+	outPlug()->setInput( t->outPlug() );
+	addChild( t );
+}
+
+ImageTransform::~ImageTransform()
+{
 }
 

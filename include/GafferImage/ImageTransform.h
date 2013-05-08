@@ -37,49 +37,23 @@
 #ifndef GAFFERSCENE_IMAGETRANSFORM_H
 #define GAFFERSCENE_IMAGETRANSFORM_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/FilterPlug.h"
 #include "Gaffer/Transform2DPlug.h"
 
 namespace GafferImage
 {
 
-class ImageTransform : public ImageProcessor
+class ImageTransform : public ChannelDataProcessor
 {
-
 	public :
 
 		ImageTransform( const std::string &name=staticTypeName() );
 		virtual ~ImageTransform();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, ChannelDataProcessor );
 	
-		/// Plug accessors.	
-		Gaffer::Transform2DPlug *transformPlug();
-		const Gaffer::Transform2DPlug *transformPlug() const;
-		
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual bool enabled() const;
-
-	protected :
-		
-		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-		
-	private :
-
-		// A useful method that returns an axis-aligned box that contains box*m.		
-		Imath::Box2i transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const;
-
-		static size_t g_firstChildIndex;
-		
+		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, IECore::FloatVectorDataPtr outData ) const {}
 };
 
 } // namespace GafferImage
