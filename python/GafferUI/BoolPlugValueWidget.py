@@ -60,7 +60,8 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		if self.getPlug() is not None :
 			with self.getContext() :
-				self.__checkBox.setState( self.getPlug().getValue() )
+				with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
+					self.__checkBox.setState( self.getPlug().getValue() )
 		
 		self.__checkBox.setEnabled( self._editable() )
 		
