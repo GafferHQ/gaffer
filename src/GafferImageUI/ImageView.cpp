@@ -139,9 +139,17 @@ class ImageViewGadget : public GafferUI::Gadget
 				
 				// Draw the image data.
 				{
+					glPushAttrib( GL_COLOR_BUFFER_BIT );
+					
+					// As the image is already pre-multiplied we need to change our blend mode.
+					glEnable( GL_BLEND );
+					glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
 					// Get the bounds of the data window in Gadget space.
 					Box2f b( V2f( m_dataBound.min.x, m_dataBound.min.y ), V2f( m_dataBound.max.x, m_dataBound.max.y ) );
 					style->renderImage( b, (const Texture *)m_imageOrTexture.get(), GL_NEAREST );
+					
+					glPopAttrib();
 				}
 				
 				ViewportGadget::RasterScope rasterScope( viewportGadget );
