@@ -155,7 +155,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				ViewportGadget::RasterScope rasterScope( viewportGadget );
 				
 				// Mask the data window where it doesn't overlap the display window.
-				if ( !IECore::boxContains( dataRasterBox, dispRasterBox ) &&  m_dataWindow != m_displayWindow )
+				if ( m_dataWindow != m_displayWindow )
 				{
 					const Box2f& c = dispRasterBox;
 					Box2f b = dataRasterBox;
