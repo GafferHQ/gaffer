@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,62 +34,28 @@
 #  
 ##########################################################################
 
-import re
-import fnmatch
-
-import IECore
-
 import Gaffer
 import GafferUI
+import GafferUITest
 
-## This class forms the base class for all uis for nodes.
-class NodeUI( GafferUI.Widget ) :
-	
-	## Derived classes may override the default ui by passing
-	# their own top level widget - otherwise a standard ui is built
-	# using the result of _plugsWidget().
-	def __init__( self, node, topLevelWidget, **kw ) :
+class StandardNodeUITest( GafferUITest.TestCase ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
-	
-		self.__node = node
-			
-	## Returns the node the ui represents.
-	def node( self ) :
-	
-		return self.__node
-
-	## Should be implemented by derived classes to return
-	# a PlugValueWidget they are using to represent the
-	# specified plug. Since many UIs are built lazily on
-	# demand, this may return None unless lazy=False is
-	# passed to force creation of parts of the UI that
-	# otherwise are not yet visible to the user.
-	def plugValueWidget( self, plug, lazy=True ) :
-	
-		return None
-
-	## Creates a NodeUI instance for the specified node.
-	@classmethod
-	def create( cls, node ) :
-	
-		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-		for typeId in [ node.typeId() ] + nodeHierarchy :	
-			nodeUI = cls.__nodeUIs.get( typeId, None )
-			if nodeUI is not None :
-				return nodeUI( node )
+	def testPlugValueWidgetAccess( self ) :
 		
-		assert( 0 )
+		n = Gaffer.Node()
+		n["c"] = Gaffer.CompoundPlug()
+		n["c"]["i"] = Gaffer.IntPlug()
+		n["c"]["s"] = Gaffer.StringPlug()
+		
+		u = GafferUI.StandardNodeUI( n )
+		
+		self.assertTrue( isinstance( u.plugValueWidget( n["c"] ), GafferUI.PlugValueWidget ) )
+		self.assertTrue( u.plugValueWidget( n["c"] ).getPlug().isSame( n["c"] ) )
+		
+		self.assertEqual( u.plugValueWidget( n["c"]["i"] ), None )
+		self.assertTrue( isinstance( u.plugValueWidget( n["c"]["i"], lazy=False ), GafferUI.PlugValueWidget ) )
+		self.assertTrue( u.plugValueWidget( n["c"]["i"] ).getPlug().isSame( n["c"]["i"] ) )
+		
+if __name__ == "__main__":
+	unittest.main()
 	
-	__nodeUIs = {}
-	## Registers a subclass of NodeUI to be used with a specific node type.
-	@classmethod
-	def registerNodeUI( cls, nodeTypeId, nodeUICreator ) :
-	
-		assert( callable( nodeUICreator ) )
-	
-		cls.__nodeUIs[nodeTypeId] = nodeUICreator
-
-GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "user", lambda plug : None )
-
-GafferUI.Metadata.registerPlugValue( Gaffer.Node, "user", "nodeUI:section", "User" )

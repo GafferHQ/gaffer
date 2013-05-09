@@ -91,6 +91,24 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			self.__tabbedContainer.setCurrent( self.__tabbedContainer[tabIndex] )
 			self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 
+	def plugValueWidget( self, plug, lazy=True ) :
+	
+		hierarchy = []
+		while not plug.isSame( self.node() ) :
+			hierarchy.insert( 0, plug )
+			plug = plug.parent()
+
+		plugValueWidget = self.__plugValueWidgets.get( hierarchy[0].getName(), None )
+		if plugValueWidget is None :
+			return None
+			
+		for i in range( 1, len( hierarchy ) ) :
+			plugValueWidget = plugValueWidget.childPlugValueWidget( hierarchy[i], lazy=lazy )
+			if plugValueWidget is None :
+				return None
+				
+		return plugValueWidget
+	
 	## The header for the ui is a vertical ListContainer. Derived classes may
 	# access it using this method in order to add their own header items.
 	def _header( self ) :
@@ -130,21 +148,32 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 	def __buildPlugWidgets( self ) :
 
+		# mapping from plug name to PlugValueWidget for use in plugValueWidget().
+		## \todo Using names makes us vulnerable to plug name changes - do better. We
+		# currently have the same problem in CompoundPlugValueWidget, where the problem is
+		# worse because the names are much more likely to change.
+		self.__plugValueWidgets = {} 
+		
 		for plug in self.node().children( Gaffer.Plug.staticTypeId() ) :
 
 			if plug.getName().startswith( "__" ) :
 				continue
+				
+			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
+			sectionColumn = self.__sectionColumn( sectionName )
+			if sectionColumn is None :
+				continue
+				
 			widget = GafferUI.PlugValueWidget.create( plug )
 			if widget is None :
 				continue
+				
+			self.__plugValueWidgets[plug.getName()] = widget
 
 			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :
 				widget = GafferUI.PlugWidget( widget )
 
-			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
-			sectionColumn = self.__sectionColumn( sectionName )
-			if sectionColumn is not None :
-				sectionColumn.append( widget )
+			sectionColumn.append( widget )
 
 	def __currentTabChanged( self, tabbedContainer, current ) :
 
