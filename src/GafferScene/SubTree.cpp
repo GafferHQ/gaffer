@@ -155,12 +155,20 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 	if( inputForwardDeclarations )
 	{
 		std::string root = rootPlug()->getValue();
+		if( !root.size() || root[root.size()-1] != '/' )
+		{
+			root += "/";
+		}
+
 		IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
 		for( IECore::CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
 		{
 			const IECore::InternedString &inputPath = it->first;
-			std::string outputPath( inputPath, root.size() );
-			forwardDeclarations->writable()[outputPath] = it->second;
+			if( inputPath.string().compare( 0, root.size(), root ) == 0 )
+			{
+				std::string outputPath( inputPath, root.size()-1 );
+				forwardDeclarations->writable()[outputPath] = it->second;
+			}
 		}
 		result->members()["gaffer:forwardDeclarations"] = forwardDeclarations;
 	}
