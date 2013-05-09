@@ -588,6 +588,38 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( g["out"] )
 		self.assertEqual( g["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 		self.assertScenesEqual( g["out"], p1["out"] )		
+
+	def testForwardDeclarationsWithDiamondInput( self ) :
+
+		#	l
+		#	| \
+		#	|  \
+		#	lg1 lg2
+		#	|  /
+		#	| /
+		#	g
+
+		l = GafferSceneTest.TestLight()
+
+		lg1 = GafferScene.Group()
+		lg1["name"].setValue( "lightGroup1" )
+		lg1["in"].setInput( l["out"] )
+
+		lg2 = GafferScene.Group()
+		lg2["name"].setValue( "lightGroup2" )
+		lg2["in"].setInput( l["out"] )
+
+		self.assertNotEqual( lg1["out"]["globals"].hash(), lg2["out"]["globals"].hash() )
+
+		g = GafferScene.Group()
+		g["in"].setInput( lg1["out"] )
+		g["in1"].setInput( lg2["out"] )
+
+		forwardDeclarations = g["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+
+		self.assertEqual( len( forwardDeclarations ), 2 )
+		self.assertEqual( forwardDeclarations["/group/lightGroup1/light"]["type"].value, IECore.Light.staticTypeId() )
+		self.assertEqual( forwardDeclarations["/group/lightGroup2/light"]["type"].value, IECore.Light.staticTypeId() )
 		
 	def setUp( self ) :
 	

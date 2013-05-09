@@ -264,6 +264,7 @@ void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent
 		(*it)->globalsPlug()->hash( h );
 	}
 	inputMappingPlug()->hash( h );
+	namePlug()->hash( h );
 }
 
 void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
