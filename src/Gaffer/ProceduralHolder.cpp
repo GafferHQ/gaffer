@@ -90,7 +90,7 @@ IECore::ConstParameterisedProceduralPtr ProceduralHolder::getProcedural( std::st
 	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
-void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ProceduralHolder::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ParameterisedHolderDependencyNode::affects( input, outputs );
 	

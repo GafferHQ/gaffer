@@ -65,7 +65,7 @@ const Gaffer::ObjectPlug *CompoundObjectSource::inPlug() const
 	return getChild<ObjectPlug>( "in" );
 }
 		
-void CompoundObjectSource::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void CompoundObjectSource::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Source::affects( input, outputs );
 	if( input == inPlug() )

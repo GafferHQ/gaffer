@@ -91,7 +91,7 @@ const Gaffer::V2fPlug *Camera::clippingPlanesPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex + 2 );
 }
 
-void Camera::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Camera::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	

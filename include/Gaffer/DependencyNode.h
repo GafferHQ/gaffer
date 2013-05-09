@@ -57,14 +57,14 @@ class DependencyNode : public Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DependencyNode, DependencyNodeTypeId, Node );
 
-		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
+		typedef std::vector<const Plug *> AffectedPlugsContainer;
 		
 		/// Must be implemented to fill outputs with all the plugs whose computation
 		/// will be affected by the specified input. It is an error to pass a CompoundPlug
 		/// for input or to place one in outputs as computations are always performed on the
 		/// leaf level plugs only. Implementations of this method should call the base class
 		/// implementation first.
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const = 0;
+		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const = 0;
 		
 	protected :
 		

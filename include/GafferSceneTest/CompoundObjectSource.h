@@ -62,7 +62,7 @@ class CompoundObjectSource : public GafferScene::Source
 		Gaffer::ObjectPlug *inPlug();
 		const Gaffer::ObjectPlug *inPlug() const;
 
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 

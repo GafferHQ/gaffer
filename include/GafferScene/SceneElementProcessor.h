@@ -56,7 +56,7 @@ class SceneElementProcessor : public FilteredSceneProcessor
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );
 				
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 

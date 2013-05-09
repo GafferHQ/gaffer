@@ -79,7 +79,7 @@ const Gaffer::BoolPlug *PrimitiveVariableProcessor::invertNamesPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-void PrimitiveVariableProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void PrimitiveVariableProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input == namesPlug() || input == invertNamesPlug() )
 	{

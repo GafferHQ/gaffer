@@ -55,7 +55,7 @@ MultiplyNode::~MultiplyNode()
 {
 }
 
-void MultiplyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void MultiplyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 	

@@ -113,7 +113,7 @@ bool ImageReader::enabled() const
 	return (spec != 0) ? ImageNode::enabled() : false;
 }
 
-void ImageReader::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
 

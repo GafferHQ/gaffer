@@ -228,8 +228,9 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		
 		self.assertEqual( len( set ), 1 )
 		self.failUnless( set[0][0].isSame( n2["op1"] ) )
-		self.assertEqual( len( dirtied ), 3 )
-		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
+		self.assertEqual( len( dirtied ), 4 )
+		self.failUnless( dirtied[2][0].isSame( n2["op1"] ) )
+		self.failUnless( dirtied[3][0].isSame( n2["sum"] ) )
 	
 	def testHash( self ) :
 	
@@ -481,12 +482,42 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( "CompoundIn.in.two" in dstDirtiedNames )
 		self.assertTrue( "CompoundIn.in" in dstDirtiedNames )
 		self.assertTrue( "CompoundIn.out" in dstDirtiedNames )
-	
+				
 	def testAffectsRejectsCompoundPlugs( self ) :
 	
 		n = GafferTest.CompoundPlugNode()
 		
 		self.assertRaises( RuntimeError, n.affects, n["p"] )
+	
+	def testAffectsWorksWithPlugs( self ) :
+	
+		# check that we can propagate dirtiness for simple Plugs, and
+		# not just ValuePlugs.
+	
+		class SimpleDependencyNode( Gaffer.DependencyNode ) :
+	
+			def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
+	
+				Gaffer.DependencyNode.__init__( self, name )
+
+				self.addChild( Gaffer.Plug( "in", Gaffer.Plug.Direction.In ) )
+				self.addChild( Gaffer.Plug( "out", Gaffer.Plug.Direction.Out ) )
+
+			def affects( self, input ) :
+
+				assert( input.isSame( self["in"] ) )	
+				return [ self["out"] ]
+				
+		s1 = SimpleDependencyNode()
+		s2 = SimpleDependencyNode()
+		
+		cs = GafferTest.CapturingSlot( s2.plugDirtiedSignal() )
+		
+		s2["in"].setInput( s1["out"] )
+		
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[0][0].isSame( s2["in"] ) )
+		self.assertTrue( cs[1][0].isSame( s2["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

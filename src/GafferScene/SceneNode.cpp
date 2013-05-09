@@ -81,7 +81,7 @@ const BoolPlug *SceneNode::enabledPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-void SceneNode::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void SceneNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 	

@@ -68,7 +68,7 @@ const Gaffer::CompoundDataPlug *Options::optionsPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
-void Options::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Options::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 	

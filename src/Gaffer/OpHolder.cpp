@@ -90,7 +90,7 @@ IECore::ConstOpPtr OpHolder::getOp( std::string *className, int *classVersion ) 
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void OpHolder::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ConstPlugPtr parametersPlug = getChild<Plug>( "parameters" );
 	if( parametersPlug && parametersPlug->isAncestorOf( input ) )

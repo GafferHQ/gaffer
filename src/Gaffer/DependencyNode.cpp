@@ -52,7 +52,7 @@ DependencyNode::~DependencyNode()
 {
 }
 		
-void DependencyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
 	{

@@ -48,6 +48,7 @@ TestShader::TestShader( const std::string &name )
 	:	Shader( name )
 {
 	addChild( new Color3fPlug( "out", Plug::Out ) );
+	parametersPlug()->addChild( new IntPlug( "i" ) );
 }
 
 TestShader::~TestShader()

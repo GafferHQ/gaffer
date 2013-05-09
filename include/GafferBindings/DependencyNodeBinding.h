@@ -73,7 +73,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 		}		
 		
-		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
+		virtual void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "affects" ) )
@@ -81,7 +81,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 				boost::python::override f = this->get_override( "affects" );
 				if( f )
 				{
-					boost::python::list pythonOutputs = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( input ) ) );
+					boost::python::list pythonOutputs = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
 					boost::python::container_utils::extend_container( outputs, pythonOutputs );
 					return;
 				}

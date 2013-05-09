@@ -68,7 +68,7 @@ class OpHolder : public ParameterisedHolderDependencyNode
 		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
 		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
 
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
 	
 	protected :
 	

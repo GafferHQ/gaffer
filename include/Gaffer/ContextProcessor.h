@@ -58,7 +58,7 @@ class ContextProcessor : public BaseType
 		ContextProcessor( const std::string &name=staticTypeName() );
 		virtual ~ContextProcessor();
 
-		virtual void affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 		

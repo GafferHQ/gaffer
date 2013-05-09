@@ -74,7 +74,7 @@ const ScenePlug *Instancer::instancePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 		
-void Instancer::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
 	

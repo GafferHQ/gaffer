@@ -84,7 +84,7 @@ class Grade : public ChannelDataProcessor
 		const Gaffer::BoolPlug *whiteClampPlug() const;
         //@}
 		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 	
 	protected :
 

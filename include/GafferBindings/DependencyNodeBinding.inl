@@ -53,7 +53,7 @@ static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
 	boost::python::list result;
 	for( Gaffer::DependencyNode::AffectedPlugsContainer::const_iterator it=a.begin(); it!=a.end(); it++ )
 	{
-		result.append( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( *it ) ) );
+		result.append( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( *it ) ) );
 	}
 	return result;
 }

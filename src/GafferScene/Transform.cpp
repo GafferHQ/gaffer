@@ -65,7 +65,7 @@ const Gaffer::TransformPlug *Transform::transformPlug() const
 	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
 }
 
-void Transform::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Transform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 	

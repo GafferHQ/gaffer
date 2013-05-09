@@ -75,7 +75,7 @@ const Gaffer::Transform2DPlug *ImageTransform::transformPlug() const
 	return getChild<Gaffer::Transform2DPlug>( g_firstChildIndex );
 }
 
-void ImageTransform::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 

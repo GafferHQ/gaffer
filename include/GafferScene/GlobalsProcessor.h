@@ -56,7 +56,7 @@ class GlobalsProcessor : public SceneProcessor
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
 		
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		

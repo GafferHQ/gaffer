@@ -230,7 +230,7 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 	}
 }
 
-void ImageNode::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ImageNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 	

@@ -62,7 +62,7 @@ class MeshType : public SceneElementProcessor
 		Gaffer::BoolPlug *overwriteExistingNormalsPlug();
 		const Gaffer::BoolPlug *overwriteExistingNormalsPlug() const;
 
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		

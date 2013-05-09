@@ -58,7 +58,7 @@ class Options : public GlobalsProcessor
 		Gaffer::CompoundDataPlug *optionsPlug();
 		const Gaffer::CompoundDataPlug *optionsPlug() const;
 		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 

@@ -61,7 +61,7 @@ class TimeWarp : public ContextProcessor<BaseType>
 		FloatPlug *offsetPlug();
 		const FloatPlug *offsetPlug() const;
 
-		void affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 

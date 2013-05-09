@@ -64,7 +64,7 @@ GafferImage::ImagePlug *FilterProcessor::inPlug( int index )
 	return m_inputs.inputs()[index];
 }
 
-void FilterProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void FilterProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it < inputs.end(); it++ )

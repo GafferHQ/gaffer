@@ -67,7 +67,7 @@ class SceneNode : public Gaffer::DependencyNode
 		virtual const Gaffer::BoolPlug *enabledPlug() const;
 
 		/// Implemented so that enabledPlug() affects outPlug().
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		

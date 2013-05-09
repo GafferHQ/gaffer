@@ -90,7 +90,7 @@ const Gaffer::Color4fPlug *Constant::colorPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex+1 );
 }
 
-void Constant::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
 

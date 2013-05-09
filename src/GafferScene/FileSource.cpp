@@ -76,7 +76,7 @@ const Gaffer::IntPlug *FileSource::refreshCountPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-void FileSource::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void FileSource::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Source::affects( input, outputs );
 	

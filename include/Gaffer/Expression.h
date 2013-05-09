@@ -97,7 +97,7 @@ class Expression : public DependencyNode
 				
 		};
 		
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 		

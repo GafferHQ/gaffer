@@ -164,7 +164,7 @@ const Color3fPlug *Random::outColorPlug() const
 	return getChild<Color3fPlug>( g_firstPlugIndex + 8 );
 }
 
-void Random::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Random::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 	

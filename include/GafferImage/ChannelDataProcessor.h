@@ -56,7 +56,7 @@ class ChannelDataProcessor : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
 
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 		//! @name Plug Accessors
 		/// Returns a pointer to the node's plugs.

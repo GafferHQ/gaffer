@@ -96,7 +96,7 @@ bool OpenColorIO::enabled() const
 		? FilterProcessor::enabled() : false;
 }
 
-void OpenColorIO::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void OpenColorIO::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilterProcessor::affects( input, outputs );
 	

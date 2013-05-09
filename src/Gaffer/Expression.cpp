@@ -102,7 +102,7 @@ const StringPlug *Expression::expressionPlug() const
 	return getChild<StringPlug>( "expression" );
 }
 
-void Expression::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 	
