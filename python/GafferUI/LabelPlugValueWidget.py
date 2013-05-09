@@ -71,4 +71,4 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 	
-		pass
+		self.__label.setEnabled( self._editable() )

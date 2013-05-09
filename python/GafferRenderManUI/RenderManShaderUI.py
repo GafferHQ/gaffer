@@ -47,17 +47,21 @@ import GafferRenderMan
 # Access to shaders and annotations from the shader cache
 ##########################################################################
 
-def __shader( shaderNode ) :
+def _shader( shaderNode ) :
 
-	shaderName = shaderNode["name"].getValue()
+	if isinstance( shaderNode, GafferRenderMan.RenderManShader ) :
+		shaderName = shaderNode["name"].getValue()
+	else :
+		shaderName = shaderNode["__shaderName"].getValue()
+		
 	try :
 		return GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
 	except Exception, e :
 		return None
 
-def __shaderAnnotations( shaderNode ) :
+def _shaderAnnotations( shaderNode ) :
 
-	shader = __shader( shaderNode )
+	shader = _shader( shaderNode )
 	return shader.blindData().get( "ri:annotations", {} ) if shader is not None else {}
 
 ##########################################################################
@@ -76,14 +80,98 @@ def __parameterNoduleCreator( plug ) :
 GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
+# NodeUI - we implement a custom NodeUI so we can enable/disable
+# parameter uis using a plugSet callback.
+##########################################################################
+
+class __NodeUI( GafferUI.StandardNodeUI ) :
+
+	def __init__( self, node, displayMode = None, **kw ) :
+
+		GafferUI.StandardNodeUI.__init__( self, node, displayMode, **kw )
+
+		self.__plugSetConnection = self.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+		self.__plugInputChangedConnection = self.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+
+		self.__updateActivations()
+
+	def __plugSet( self, plug ) :
+
+		if plug.parent().isSame( self.node()["parameters"] ) :
+			self.__updateActivations()
+
+	def __plugInputChanged( self, plug ) :
+
+		if plug.parent().isSame( self.node()["parameters"] ) :
+			self.__updateActivations()
+
+	def __updateActivations( self ) :
+
+		parametersPlug = self.node()["parameters"]
+
+		annotations = _shaderAnnotations( self.node() )
+		activators = {}
+		for name, value in annotations.items() :
+			if name.startswith( "activator." ) and name.endswith( ".expression" ) :
+				activator = activators.setdefault( name.split( "." )[1], {} )
+				activator["expression"] = value.value
+			elif name.endswith( ".activator" ) :
+				plugName = name.split( "." )[0]
+				plug = parametersPlug.getChild( plugName )
+				if plug is not None :
+					activator = activators.setdefault( value.value, {} )
+					activatorPlugs = activator.setdefault( "plugs", [] )
+					activatorPlugs.append( plug )
+
+		class ExpressionVariables :
+
+			def __init__( self, parametersPlug ) :
+
+				self.__parametersPlug = parametersPlug
+
+			def connected( self, key ) :
+
+				return self.__parametersPlug[key].getInput() is not None
+
+			def __getitem__( self, key ) :
+
+				if key == "connected" :
+					return self.connected
+				else :
+					return self.__parametersPlug[key].getValue()
+
+		for activator in activators.values() :
+
+			expression = activator.get( "expression", None )
+			if not expression :
+				continue
+
+			plugs = activator.get( "plugs", None )
+			if not plugs :
+				continue
+
+			active = eval( expression, globals(), ExpressionVariables( parametersPlug ) )
+
+			for plug in plugs :
+				plugValueWidget = self.plugValueWidget( plug, lazy=False )
+				if plugValueWidget is not None :
+					plugValueWidget.setReadOnly( not active )
+					plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
+					if plugWidget is not None :
+						plugWidget.labelPlugValueWidget().setReadOnly( not active )
+				
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader.staticTypeId(), __NodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight.staticTypeId(), __NodeUI )
+
+##########################################################################
 # PlugValueWidget for the "parameters" compound. This is defined in order
 # to group shader parameters into sections according to the "page" metadata.
 ##########################################################################
 
 def __parametersPlugValueWidgetCreator( plug ) :
 
-	shader = __shader( plug.node() )
-	annotations = __shaderAnnotations( plug.node() )
+	shader = _shader( plug.node() )
+	annotations = _shaderAnnotations( plug.node() )
 
 	if shader is not None :
 		# when shaders are reloaded after having new parameters added,
@@ -129,6 +217,7 @@ def __parametersPlugValueWidgetCreator( plug ) :
 	return GafferUI.SectionedCompoundPlugValueWidget( plug, sections )
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
 
 ##########################################################################
 # PlugValueWidgets for the individual parameter plugs. We use annotations
@@ -225,7 +314,7 @@ def __plugValueWidgetCreator( plug ) :
 
 	global __creators
 
-	annotations = __shaderAnnotations( plug.node() )
+	annotations = _shaderAnnotations( plug.node() )
 	parameterName = plug.getName()
 		
 	widgetType = annotations.get( parameterName + ".widget", None )
@@ -254,6 +343,7 @@ def __plugValueWidgetCreator( plug ) :
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
 
 ##########################################################################
 # Metadata registrations
@@ -261,9 +351,10 @@ GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.static
 
 def __plugDescription( plug ) :
 
-	annotations = __shaderAnnotations( plug.node() )
+	annotations = _shaderAnnotations( plug.node() )
 	d = annotations.get( plug.getName() + ".help", None )	
 
 	return d.value if d is not None else ""
 
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
+GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
