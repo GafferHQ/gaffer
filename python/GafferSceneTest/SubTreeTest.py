@@ -113,6 +113,73 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( s["out"] )
 		self.assertScenesEqual( s["out"], g["out"] )
 		self.assertSceneHashesEqual( s["out"], g["out"] )
-		
+
+	def testForwardDeclarationsFromOmittedBranchAreOmitted( self ) :
+
+		# /group
+		#	/lightGroup1
+		#		/light
+		#	/lightGroup2
+		#		/light
+		#	/lightGroup
+		#		/light
+		#	/lightGroup10
+		#		/light
+
+		l = GafferSceneTest.TestLight()
+
+		lg1 = GafferScene.Group()
+		lg1["name"].setValue( "lightGroup1" )
+		lg1["in"].setInput( l["out"] )
+
+		lg2 = GafferScene.Group()
+		lg2["name"].setValue( "lightGroup2" )
+		lg2["in"].setInput( l["out"] )
+
+		lg3 = GafferScene.Group()
+		lg3["name"].setValue( "lightGroup" )
+		lg3["in"].setInput( l["out"] )
+
+		lg4 = GafferScene.Group()
+		lg4["name"].setValue( "lightGroup10" )
+		lg4["in"].setInput( l["out"] )
+
+		g = GafferScene.Group()
+		g["in"].setInput( lg1["out"] )
+		g["in1"].setInput( lg2["out"] )
+		g["in2"].setInput( lg3["out"] )
+		g["in3"].setInput( lg4["out"] )
+
+		self.assertForwardDeclarationsValid( g["out"] )
+
+		# /light
+
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "/group/lightGroup1" )
+
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/light" ] )
+
+		self.assertForwardDeclarationsValid( s["out"] )
+
+	def testForwardDeclarationPassThroughWhenNoRoot( self ) :
+
+		l = GafferSceneTest.TestLight()
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
+		self.assertForwardDeclarationsValid( s["out"] )
+
+		s["root"].setValue( "/" )
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
+		self.assertForwardDeclarationsValid( s["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
