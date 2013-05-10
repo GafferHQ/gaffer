@@ -35,43 +35,71 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTES_H
-#define GAFFERSCENE_ATTRIBUTES_H
+#ifndef GAFFERBINDINGS_COMPUTENODEBINDING_H
+#define GAFFERBINDINGS_COMPUTENODEBINDING_H
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "boost/python.hpp"
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "IECorePython/ScopedGILLock.h"
 
-namespace GafferScene
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ValuePlug.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
+
+namespace GafferBindings
 {
 
-class Attributes : public SceneElementProcessor
-{
+void bindComputeNode();
 
+template<typename WrappedType>
+class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
+{
 	public :
-
-		Attributes( const std::string &name=staticTypeName() );
-		virtual ~Attributes();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Attributes, AttributesTypeId, SceneElementProcessor );
-		
-		Gaffer::CompoundDataPlug *attributesPlug();
-		const Gaffer::CompoundDataPlug *attributesPlug() const;
-		
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		
-	protected :
-					
-		virtual bool processesAttributes() const;
-		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
-
-	private :
 	
-		static size_t g_firstPlugIndex;
+		ComputeNodeWrapper( PyObject *self, const std::string &name )
+			:	DependencyNodeWrapper<WrappedType>( self, name )
+		{
+		}		
+			
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		{
+			WrappedType::hash( output, context, h );
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "hash" ) )
+			{
+				boost::python::override f = this->get_override( "hash" );
+				if( f )
+				{
+					boost::python::object pythonHash( h );
+					f(
+						Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
+						Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
+						pythonHash
+					);
+					h = boost::python::extract<IECore::MurmurHash>( pythonHash );
+				}
+			}
+		}
+
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "compute" ) )
+			{
+				boost::python::override f = this->get_override( "compute" );
+				if( f )
+				{
+					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
+					return;
+				}
+			}
+			WrappedType::compute( output, context );
+		}
 	
 };
 
-} // namespace GafferScene
+} // namespace GafferBindings
 
-#endif // GAFFERSCENE_ATTRIBUTES_H
+#endif // GAFFERBINDINGS_COMPUTENODEBINDING_H

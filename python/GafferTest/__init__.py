@@ -98,7 +98,7 @@ from IndexedIOPathTest import IndexedIOPathTest
 from ClassLoaderPathTest import ClassLoaderPathTest
 from ExpressionTest import ExpressionTest
 from BlockedConnectionTest import BlockedConnectionTest
-from TimeWarpDependencyNodeTest import TimeWarpDependencyNodeTest
+from TimeWarpComputeNodeTest import TimeWarpComputeNodeTest
 from TransformPlugTest import TransformPlugTest
 from Transform2DPlugTest import Transform2DPlugTest
 from SequencePathTest import SequencePathTest
@@ -112,6 +112,7 @@ from RandomTest import RandomTest
 from ParameterPathTest import ParameterPathTest
 from CompoundDataPlugTest import CompoundDataPlugTest
 from DependencyNodeTest import DependencyNodeTest
+from ComputeNodeTest import ComputeNodeTest
 from BoxPlugTest import BoxPlugTest
 from BoxTest import BoxTest
 from OutputRedirectionTest import OutputRedirectionTest

@@ -39,9 +39,9 @@
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ContextVariablesDependencyNode, ContextVariablesDependencyNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ContextVariablesComputeNode, ContextVariablesComputeNodeTypeId )
 
 }
 
 // explicit instantiation
-template class Gaffer::ContextVariables<Gaffer::DependencyNode>;
+template class Gaffer::ContextVariables<Gaffer::ComputeNode>;

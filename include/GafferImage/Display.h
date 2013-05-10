@@ -61,7 +61,7 @@ class Display : public ImagePrimitiveNode
 		Gaffer::IntPlug *portPlug();
 		const Gaffer::IntPlug *portPlug() const;
 				
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 		/// Emitted when a new bucket is received.
 		static UnaryPlugSignal &dataReceivedSignal();

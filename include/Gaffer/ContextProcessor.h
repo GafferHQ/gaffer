@@ -37,7 +37,7 @@
 #ifndef GAFFER_CONTEXTPROCESSOR_H
 #define GAFFER_CONTEXTPROCESSOR_H
 
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 
 namespace Gaffer
 {
@@ -58,7 +58,7 @@ class ContextProcessor : public BaseType
 		ContextProcessor( const std::string &name=staticTypeName() );
 		virtual ~ContextProcessor();
 
-		virtual void affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 		
@@ -82,8 +82,8 @@ class ContextProcessor : public BaseType
 	
 };
 
-typedef ContextProcessor<DependencyNode> ContextProcessorDependencyNode;
-IE_CORE_DECLAREPTR( ContextProcessorDependencyNode );
+typedef ContextProcessor<ComputeNode> ContextProcessorComputeNode;
+IE_CORE_DECLAREPTR( ContextProcessorComputeNode );
 
 } // namespace Gaffer
 

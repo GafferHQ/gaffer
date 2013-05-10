@@ -81,7 +81,7 @@ const Gaffer::IntPlug *Constraint::targetModePlug() const
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
 }
 		
-void Constraint::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 	

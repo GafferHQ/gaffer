@@ -1,5 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -34,28 +35,29 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/ValuePlug.h"
+#include "Gaffer/CompoundPlug.h"
 
-#include "GafferSceneTest/TestShader.h"
-
-using namespace IECore;
 using namespace Gaffer;
-using namespace GafferSceneTest;
 
-IE_CORE_DEFINERUNTIMETYPED( TestShader )
+IE_CORE_DEFINERUNTIMETYPED( ComputeNode );
 
-TestShader::TestShader( const std::string &name )
-	:	Shader( name )
-{
-	addChild( new Color3fPlug( "out", Plug::Out ) );
-	parametersPlug()->addChild( new IntPlug( "i" ) );
-}
-
-TestShader::~TestShader()
+ComputeNode::ComputeNode( const std::string &name )
+	:	DependencyNode( name )
 {
 }
 
-IECore::ShaderPtr TestShader::shader( NetworkBuilder &network ) const
+ComputeNode::~ComputeNode()
 {
-	return new IECore::Shader();
+}
+
+void ComputeNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( typeId() );
+	h.append( output->relativeName( this ) );
+}
+
+void ComputeNode::compute( ValuePlug *output, const Context *context ) const
+{
 }

@@ -63,7 +63,7 @@ class FilterProcessor : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( FilterProcessor, FilterProcessorTypeId, ImageProcessor );
 
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 		/// Useful accessors for getting an input image plug of a certain index.	
 		const ImagePlug *inPlug( int index ) const;

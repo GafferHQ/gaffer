@@ -86,38 +86,6 @@ class NodeWrapper : public GraphComponentWrapper<T>
 			}
 			return T::acceptsInput( plug, inputPlug );
 		}
-		
-		virtual Gaffer::BoolPlug *enabledPlug()
-		{
-			IECorePython::ScopedGILLock gilLock;
-			if ( PyObject_HasAttrString( GraphComponentWrapper<T>::m_pyObject, "enabledPlug" ) )
-			{
-				boost::python::override f = this->get_override( "enabledPlug" );
-				if ( f )
-				{
-					Gaffer::BoolPlugPtr value = f();
-					return value.get();
-				}
-			}
-			
-			return T::enabledPlug();
-		}
-		
-		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output )
-		{
-			IECorePython::ScopedGILLock gilLock;
-			if ( PyObject_HasAttrString( GraphComponentWrapper<T>::m_pyObject, "correspondingInput" ) )
-			{
-				boost::python::override f = this->get_override( "correspondingInput" );
-				if ( f )
-				{
-					Gaffer::PlugPtr value = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( output ) ) );
-					return value.get();
-				}
-			}
-			
-			return T::correspondingInput( output );
-		}
 	
 };
 

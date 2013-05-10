@@ -72,7 +72,7 @@ const Gaffer::StringPlug *SubTree::rootPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-void SubTree::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 	

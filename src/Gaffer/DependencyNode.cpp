@@ -52,7 +52,7 @@ DependencyNode::~DependencyNode()
 {
 }
 		
-void DependencyNode::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
 	{
@@ -60,12 +60,23 @@ void DependencyNode::affects( const ValuePlug *input, AffectedPlugsContainer &ou
 	}
 }
 
-void DependencyNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+
+BoolPlug *DependencyNode::enabledPlug()
 {
-	h.append( typeId() );
-	h.append( output->relativeName( this ) );
+	return 0;
 }
 
-void DependencyNode::compute( ValuePlug *output, const Context *context ) const
+const BoolPlug *DependencyNode::enabledPlug() const
 {
+	return 0;
+}
+
+Plug *DependencyNode::correspondingInput( const Plug *output )
+{
+	return 0;
+}
+
+const Plug *DependencyNode::correspondingInput( const Plug *output ) const
+{
+	return 0;
 }

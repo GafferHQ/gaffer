@@ -82,7 +82,7 @@ const FloatPlug *TimeWarp<BaseType>::offsetPlug() const
 }
 
 template<typename BaseType>
-void TimeWarp<BaseType>::affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+void TimeWarp<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ContextProcessor<BaseType>::affects( input, outputs );
 	

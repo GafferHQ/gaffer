@@ -95,7 +95,7 @@ const Gaffer::TransformPlug *ObjectSourceBase<BaseType>::transformPlug() const
 }
 
 template<typename BaseType>
-void ObjectSourceBase<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
+void ObjectSourceBase<BaseType>::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
 	

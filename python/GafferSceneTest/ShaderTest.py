@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,33 +34,31 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
-
 import unittest
 
 import IECore
 
 import Gaffer
 import GafferTest
+import GafferScene
+import GafferSceneTest
 
-class ContextVariablesTest( GafferTest.TestCase ) :
-
-	def test( self ) :
+class ShaderTest( unittest.TestCase ) :
 	
-		n = GafferTest.StringInOutNode()
-		self.assertHashesValid( n )
+	def testDirtyPropagation( self ) :
+	
+		s = GafferSceneTest.TestShader( "s" )
+				
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 		
-		c = Gaffer.ContextVariablesComputeNode()
-		c["in"] = Gaffer.StringPlug()
-		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
-		c["in"].setInput( n["out"] )
+		s["parameters"]["i"].setValue( 10 )
 		
-		n["in"].setValue( "$a" )
-		self.assertEqual( c["out"].getValue(), "" )
-		
-		c["variables"].addMember( "a", IECore.StringData( "A" ) )
-		self.assertEqual( c["out"].getValue(), "A" )
+		d = set( [ a[0].fullName() for a in cs ] )
+				
+		self.assertTrue( "s.out" in d )
+		self.assertTrue( "s.out.r" in d )
+		self.assertTrue( "s.out.g" in d )
+		self.assertTrue( "s.out.b" in d )
 		
 if __name__ == "__main__":
 	unittest.main()
-	

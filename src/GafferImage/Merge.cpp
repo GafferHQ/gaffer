@@ -82,7 +82,7 @@ const Gaffer::IntPlug *Merge::operationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-void Merge::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input == operationPlug() )
 	{

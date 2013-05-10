@@ -48,7 +48,8 @@ class ProceduralHolderTest( unittest.TestCase ) :
 	
 		n = Gaffer.ProceduralHolder()
 		self.assertEqual( n.typeName(), "ProceduralHolder" )
-		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderDependencyNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderComputeNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 		
 	def testCompute( self ) :
@@ -90,7 +91,7 @@ class ProceduralHolderTest( unittest.TestCase ) :
 		
 		self.assertEqual( n.typeName(), "ProceduralHolder" )
 		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "ProceduralHolder" )
-		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.ParameterisedHolderDependencyNode.staticTypeId() )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.ParameterisedHolderComputeNode.staticTypeId() )
 								
 if __name__ == "__main__":
 	unittest.main()

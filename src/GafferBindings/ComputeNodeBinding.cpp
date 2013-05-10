@@ -1,5 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -34,28 +35,18 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/CompoundNumericPlug.h"
+#include "boost/python.hpp"
 
-#include "GafferSceneTest/TestShader.h"
+#include "GafferBindings/ComputeNodeBinding.h"
 
-using namespace IECore;
+using namespace boost::python;
+using namespace GafferBindings;
 using namespace Gaffer;
-using namespace GafferSceneTest;
 
-IE_CORE_DEFINERUNTIMETYPED( TestShader )
-
-TestShader::TestShader( const std::string &name )
-	:	Shader( name )
+void GafferBindings::bindComputeNode()
 {
-	addChild( new Color3fPlug( "out", Plug::Out ) );
-	parametersPlug()->addChild( new IntPlug( "i" ) );
-}
+	typedef ComputeNodeWrapper<ComputeNode> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
 
-TestShader::~TestShader()
-{
-}
-
-IECore::ShaderPtr TestShader::shader( NetworkBuilder &network ) const
-{
-	return new IECore::Shader();
+	DependencyNodeClass<ComputeNode, WrapperPtr>();	
 }

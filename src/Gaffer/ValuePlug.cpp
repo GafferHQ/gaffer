@@ -45,7 +45,7 @@
 #include "IECore/LRUCache.h"
 
 #include "Gaffer/ValuePlug.h"
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Action.h"
 
@@ -185,10 +185,10 @@ class ValuePlug::Computation
 			}
 			else
 			{
-				const DependencyNode *n = m_resultPlug->ancestor<DependencyNode>();
+				const ComputeNode *n = m_resultPlug->ancestor<ComputeNode>();
 				if( !n )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no DependencyNode." ) % m_resultPlug->fullName() ) );			
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no ComputeNode." ) % m_resultPlug->fullName() ) );			
 				}
 				// cast is ok - see comment above.
 				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
@@ -262,18 +262,20 @@ void ValuePlug::setInput( PlugPtr input )
 		return;
 	}
 	
+	// set value back to what it was before
+	// we received a connection. we do that
+	// before calling Plug::setInput, so that
+	// we've got our new state set correctly before
+	// the dirty signal is emitted. we don't emit
+	// in the setValueInternal call, because we don't
+	// want to double up on the signals that the Plug
+	// is emitting for us in Plug::setInput().
+	if( !input )
+	{
+		setValueInternal( m_staticValue, false );
+	}
+	
 	Plug::setInput( input );
-	if( input )
-	{
-		emitDirtiness();
-		propagateDirtiness();
-	}
-	else
-	{
-		// set value back to what it was before
-		// we received a connection.
-		setValueInternal( m_staticValue );
-	}
 }
 
 bool ValuePlug::settable() const
@@ -330,16 +332,16 @@ IECore::MurmurHash ValuePlug::hash() const
 		}
 		else
 		{
-			const DependencyNode *n = ancestor<DependencyNode>();
+			const ComputeNode *n = ancestor<ComputeNode>();
 			if( !n )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no DependencyNode." ) % fullName() ) );			
+				throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no ComputeNode." ) % fullName() ) );			
 			}
 			IECore::MurmurHash emptyHash;
 			n->hash( this, Context::current(), h );
 			if( h == emptyHash )
 			{
-				throw IECore::Exception( boost::str( boost::format( "DependencyNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
+				throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
 			}
 		}
 	}
@@ -387,8 +389,8 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 		{
 			Action::enact( 
 				this,
-				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), value ),
-				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), m_staticValue )
+				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), value, true ),
+				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), m_staticValue, true )
 			);
 		}		
 		return;
@@ -405,7 +407,7 @@ bool ValuePlug::inCompute() const
 	return Computation::current();
 }
 
-void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
+void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness )
 {
 	m_staticValue = value;
 	Node *n = node();
@@ -423,64 +425,9 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value )
 			p = p->parent<ValuePlug>();
 		}
 	}
-	propagateDirtiness();
-}
-
-void ValuePlug::emitDirtiness( Node *n )
-{
-	n = n ? n : ancestor<Node>();
-	if( !n )
+	if( propagateDirtiness )
 	{
-		return;
-	}
-	
-	ValuePlug *p = this;
-	while( p )
-	{
-		n->plugDirtiedSignal()( p );
-		p = p->parent<ValuePlug>();
-	}
-}
-
-void ValuePlug::propagateDirtiness()
-{
-	if( children().size() ) /// \todo This would be isInstanceOf( CompoundPlugTypeId ) if it didn't cause crashes somehow
-	{
-		// we only propagate dirtiness along leaf level plugs, because
-		// they are the only plugs which can be the target of the affects(),
-		// and compute() methods.
-		return;
-	}
-
-	DependencyNode *n = ancestor<DependencyNode>();
-	if( n )
-	{
-		if( direction()==In )
-		{
-			DependencyNode::AffectedPlugsContainer affected;
-			n->affects( this, affected );
-			for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
-			{
-				if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
-				{
-					// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
-					// so we helpfully report any mistakes.
-					throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
-				}
-				const_cast<ValuePlug *>( *it )->emitDirtiness( n );
-				const_cast<ValuePlug *>( *it )->propagateDirtiness();
-			}
-		}
-	}
-	
-	for( OutputContainer::const_iterator it=outputs().begin(); it!=outputs().end(); it++ )
-	{
-		ValuePlugPtr o = IECore::runTimeCast<ValuePlug>( *it );
-		if( o )
-		{
-			o->emitDirtiness();
-			o->propagateDirtiness();
-		}
+		this->propagateDirtiness();
 	}
 }
 

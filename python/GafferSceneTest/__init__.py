@@ -75,6 +75,7 @@ from OpenGLRenderTest import OpenGLRenderTest
 from TransformTest import TransformTest
 from AimConstraintTest import AimConstraintTest
 from PruneTest import PruneTest
+from ShaderTest import ShaderTest
 
 if __name__ == "__main__":
 	import unittest

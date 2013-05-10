@@ -41,6 +41,7 @@ import IECore
 import IECoreArnold
 
 import Gaffer
+import GafferTest
 import GafferArnold
 
 class ArnoldShaderTest( unittest.TestCase ) :
@@ -245,5 +246,25 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		self.failUnless( s["parameters"]["emission_color"][1].getInput().isSame( t["out"][1] ) )
 		self.failUnless( s["parameters"]["emission_color"][2].getInput().isSame( t["out"][2] ) )
 
+	def testDirtyPropagationThroughNetwork( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "standard" )
+		
+		n1 = GafferArnold.ArnoldShader()
+		n1.loadShader( "noise" )
+		
+		n2 = GafferArnold.ArnoldShader()
+		n2.loadShader( "noise" )
+		
+		s["parameters"]["Kd"].setInput( n1["out"] )
+		n1["parameters"]["distortion"].setInput( n2["out"] )
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		
+		n2["parameters"]["amplitude"].setValue( 20 )
+		
+		self.assertTrue( "ArnoldShader.out" in [ x[0].fullName() for x in cs ] )
+	
 if __name__ == "__main__":
 	unittest.main()

@@ -68,7 +68,7 @@ const Gaffer::IntPlug *Select::selectPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-void Select::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Select::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input == selectPlug() )
 	{

@@ -152,7 +152,7 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label, const IECo
 	return displayPlug;
 }
 
-void Displays::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Displays::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 	

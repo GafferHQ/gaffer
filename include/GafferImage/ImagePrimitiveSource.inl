@@ -69,7 +69,7 @@ ImagePrimitiveSource<BaseType>::~ImagePrimitiveSource()
 }
 
 template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::affects( const Gaffer::ValuePlug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
+void ImagePrimitiveSource<BaseType>::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
 	

@@ -184,7 +184,7 @@ bool Grade::channelEnabled( const std::string &channel ) const
 	);
 }
 
-void Grade::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ChannelDataProcessor::affects( input, outputs );
 

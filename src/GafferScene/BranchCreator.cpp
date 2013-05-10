@@ -83,7 +83,7 @@ const Gaffer::StringPlug *BranchCreator::namePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-void BranchCreator::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 	

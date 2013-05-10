@@ -38,6 +38,7 @@
 
 #include "GafferScene/InteractiveRender.h"
 
+using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
@@ -53,6 +54,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
+	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
 
 	plugInputChangedSignal().connect( boost::bind( &InteractiveRender::plugInputChanged, this, ::_1 ) );
 	plugSetSignal().connect( boost::bind( &InteractiveRender::plugSetOrDirtied, this, ::_1 ) );
@@ -81,6 +83,16 @@ Gaffer::BoolPlug *InteractiveRender::updateLightsPlug()
 const Gaffer::BoolPlug *InteractiveRender::updateLightsPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *InteractiveRender::updateShadersPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *InteractiveRender::updateShadersPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 void InteractiveRender::plugInputChanged( const Gaffer::Plug *plug )
@@ -140,6 +152,10 @@ void InteractiveRender::plugSetOrDirtied( const Gaffer::Plug *plug )
 	{
 		updateLights();
 	}
+	else if( plug == updateShadersPlug() && updateShadersPlug()->getValue() && m_renderer )
+	{
+		updateShaders();
+	}
 }
 
 void InteractiveRender::start()
@@ -151,9 +167,15 @@ void InteractiveRender::start()
 
 void InteractiveRender::update()
 {
+	/// \todo Only update lights if objects/transforms have been dirtied,
+	/// and only update shaders if attributes have been dirtied.
 	if( updateLightsPlug()->getValue() )
 	{
 		updateLights();
+	}
+	if( updateShadersPlug()->getValue() )
+	{
+		updateShaders();
 	}
 }
 
@@ -163,4 +185,44 @@ void InteractiveRender::updateLights()
 	m_renderer->editBegin( "light", CompoundDataMap() );
 		outputLights( inPlug(), globals, m_renderer );
 	m_renderer->editEnd();
+}
+
+void InteractiveRender::updateShaders( const ScenePlug::ScenePath &path )
+{
+	/// \todo Keep a track of the hashes of the shaders at each path,
+	/// and use it to only update the shaders when they've changed.	
+	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
+	ConstObjectVectorPtr shader = attributes->member<ObjectVector>( "shader" );
+	if( shader )
+	{
+		std::string name = "";
+		for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
+		{
+			name += "/" + it->string();
+		}
+		
+		CompoundDataMap parameters;
+		parameters["scopename"] = new StringData( name );
+		m_renderer->editBegin( "attribute", parameters );
+		
+			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
+			{
+				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+				if( s )
+				{
+					s->render( m_renderer );
+				}
+			}
+
+		m_renderer->editEnd();
+	}
+	
+	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
+	ScenePlug::ScenePath childPath = path;
+	childPath.push_back( InternedString() ); // for the child name
+	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+	{
+		childPath[path.size()] = *it;
+		updateShaders( childPath );
+	}
 }

@@ -89,8 +89,8 @@ const Plug *ImageProcessor::correspondingInput( const Plug *output ) const
 void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	/// \todo Can this be simplified using the same logic used in SceneProcessor::hash()? It would
-	/// avoid calling DependencyNode::hash only to overwrite the hash if we're disabled.
-	DependencyNode::hash( output, context, h );
+	/// avoid calling ComputeNode::hash only to overwrite the hash if we're disabled.
+	ComputeNode::hash( output, context, h );
 	h.append( enabledPlug()->hash() );
 	
 	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();

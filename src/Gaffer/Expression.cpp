@@ -55,7 +55,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
-	:	DependencyNode( name ), m_engine( 0 )
+	:	ComputeNode( name ), m_engine( 0 )
 {
 	addChild(
 		new StringPlug(
@@ -102,9 +102,9 @@ const StringPlug *Expression::expressionPlug() const
 	return getChild<StringPlug>( "expression" );
 }
 
-void Expression::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	DependencyNode::affects( input, outputs );
+	ComputeNode::affects( input, outputs );
 	
 	const CompoundPlug *in = getChild<CompoundPlug>( "in" );
 	const ValuePlug *out = getChild<ValuePlug>( "out" );
@@ -126,7 +126,7 @@ void Expression::affects( const ValuePlug *input, AffectedPlugsContainer &output
 
 void Expression::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( output, context, h );
+	ComputeNode::hash( output, context, h );
 	if( output == getChild<ValuePlug>( "out" ) )
 	{
 		enginePlug()->hash( h );
@@ -178,7 +178,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 	
-	DependencyNode::compute( output, context );
+	ComputeNode::compute( output, context );
 }
 
 void Expression::plugSet( Plug *plug )

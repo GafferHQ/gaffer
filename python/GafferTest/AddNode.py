@@ -38,11 +38,11 @@
 import IECore
 import Gaffer
 
-class AddNode( Gaffer.DependencyNode ) :
+class AddNode( Gaffer.ComputeNode ) :
 		
 	def __init__( self, name="AddNode" ) :
 
-		Gaffer.DependencyNode.__init__( self, name )
+		Gaffer.ComputeNode.__init__( self, name )
 
 		p1 = Gaffer.IntPlug( "op1", Gaffer.Plug.Direction.In )
 		p2 = Gaffer.IntPlug( "op2", Gaffer.Plug.Direction.In )
@@ -65,7 +65,7 @@ class AddNode( Gaffer.DependencyNode ) :
 			
 			return self["op1"]
 		
-		return Gaffer.DependencyNode.correspondingInput( self, output )
+		return Gaffer.ComputeNode.correspondingInput( self, output )
 	
 	def affects( self, input ) :
 		

@@ -73,7 +73,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 		}		
 		
-		virtual void affects( const Gaffer::ValuePlug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
+		virtual void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "affects" ) )
@@ -81,47 +81,44 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 				boost::python::override f = this->get_override( "affects" );
 				if( f )
 				{
-					boost::python::list pythonOutputs = f( Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( input ) ) );
+					boost::python::list pythonOutputs = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
 					boost::python::container_utils::extend_container( outputs, pythonOutputs );
 					return;
 				}
 			}
 			WrappedType::affects( input, outputs );
 		}
-	
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		
+		virtual Gaffer::BoolPlug *enabledPlug()
 		{
-			WrappedType::hash( output, context, h );
 			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "hash" ) )
+			if ( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "enabledPlug" ) )
 			{
-				boost::python::override f = this->get_override( "hash" );
-				if( f )
+				boost::python::override f = this->get_override( "enabledPlug" );
+				if ( f )
 				{
-					boost::python::object pythonHash( h );
-					f(
-						Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
-						Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
-						pythonHash
-					);
-					h = boost::python::extract<IECore::MurmurHash>( pythonHash );
+					Gaffer::BoolPlugPtr value = f();
+					return value.get();
 				}
 			}
+			
+			return WrappedType::enabledPlug();
 		}
-
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+		
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "compute" ) )
+			if ( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "correspondingInput" ) )
 			{
-				boost::python::override f = this->get_override( "compute" );
-				if( f )
+				boost::python::override f = this->get_override( "correspondingInput" );
+				if ( f )
 				{
-					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
-					return;
+					Gaffer::PlugPtr value = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( output ) ) );
+					return value.get();
 				}
 			}
-			WrappedType::compute( output, context );
+			
+			return WrappedType::correspondingInput( output );
 		}
 	
 };

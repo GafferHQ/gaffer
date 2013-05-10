@@ -100,7 +100,7 @@ const Gaffer::TransformPlug *Group::transformPlug() const
 	return getChild<TransformPlug>( g_firstPlugIndex + 1 );
 }
 
-void Group::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 	

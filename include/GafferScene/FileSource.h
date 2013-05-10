@@ -64,7 +64,7 @@ class FileSource : public Source
 		const Gaffer::IntPlug *refreshCountPlug() const;
 
 		/// Implemented to specify that fileNamePlug() affects all the scene output.
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 	
 	protected :
 	

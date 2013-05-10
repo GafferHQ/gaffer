@@ -67,7 +67,7 @@ const Gaffer::ObjectPlug *ObjectToScene::objectPlug() const
 	return getChild<ObjectPlug>( g_firstPlugIndex );
 }
 
-void ObjectToScene::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ObjectToScene::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	

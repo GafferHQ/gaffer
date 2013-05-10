@@ -88,7 +88,7 @@ const Gaffer::StringPlug *AttributeCache::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-void AttributeCache::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void AttributeCache::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input == fileNamePlug() )
 	{

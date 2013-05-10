@@ -67,6 +67,9 @@ class InteractiveRender : public Render
 		Gaffer::BoolPlug *updateLightsPlug();
 		const Gaffer::BoolPlug *updateLightsPlug() const;
 		
+		Gaffer::BoolPlug *updateShadersPlug();
+		const Gaffer::BoolPlug *updateShadersPlug() const;
+		
 	protected :
 	
 		/// Must be implemented by derived classes to return the renderer that will be used.
@@ -80,6 +83,7 @@ class InteractiveRender : public Render
 		void start();
 		void update();
 		void updateLights();
+		void updateShaders( const ScenePlug::ScenePath &path = ScenePlug::ScenePath() );
 	
 		IECore::RendererPtr m_renderer;
 
@@ -88,6 +92,9 @@ class InteractiveRender : public Render
 };
 
 IE_CORE_DECLAREPTR( InteractiveRender );
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<InteractiveRender> > InteractiveRenderIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<InteractiveRender> > RecursiveInteractiveRenderIterator;
 
 } // namespace GafferScene
 

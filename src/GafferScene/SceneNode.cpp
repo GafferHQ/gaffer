@@ -50,7 +50,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneNode );
 size_t SceneNode::g_firstPlugIndex = 0;
 
 SceneNode::SceneNode( const std::string &name )
-	:	DependencyNode( name )
+	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "out", Gaffer::Plug::Out ) );
@@ -81,9 +81,9 @@ const BoolPlug *SceneNode::enabledPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-void SceneNode::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void SceneNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	DependencyNode::affects( input, outputs );
+	ComputeNode::affects( input, outputs );
 	
 	if( input == enabledPlug() )
 	{
@@ -99,9 +99,9 @@ void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::M
 	const ScenePlug *scenePlug = output->parent<ScenePlug>();
 	if( scenePlug && enabledPlug()->getValue() )
 	{
-		// We don't call DependencyNode::hash() immediately here, because for subclasses which
+		// We don't call ComputeNode::hash() immediately here, because for subclasses which
 		// want to pass through a specific hash in the hash*() methods it's a waste of time (the
-		// hash will get overwritten anyway). Instead we call DependencyNode::hash() in our
+		// hash will get overwritten anyway). Instead we call ComputeNode::hash() in our
 		// hash*() implementations, and allow subclass implementations to not call the base class
 		// if they intend to overwrite the hash.
 		if( output == scenePlug->boundPlug() )
@@ -136,38 +136,38 @@ void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::M
 	}
 	else
 	{
-		DependencyNode::hash( output, context, h );
+		ComputeNode::hash( output, context, h );
 	}
 }
 
 void SceneNode::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( parent->boundPlug(), context, h );
+	ComputeNode::hash( parent->boundPlug(), context, h );
 }
 
 void SceneNode::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( parent->transformPlug(), context, h );
+	ComputeNode::hash( parent->transformPlug(), context, h );
 }
 
 void SceneNode::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( parent->attributesPlug(), context, h );
+	ComputeNode::hash( parent->attributesPlug(), context, h );
 }
 
 void SceneNode::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( parent->objectPlug(), context, h );
+	ComputeNode::hash( parent->objectPlug(), context, h );
 }
 
 void SceneNode::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( parent->childNamesPlug(), context, h );
+	ComputeNode::hash( parent->childNamesPlug(), context, h );
 }
 
 void SceneNode::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( parent->globalsPlug(), context, h );
+	ComputeNode::hash( parent->globalsPlug(), context, h );
 }
 		
 void SceneNode::compute( ValuePlug *output, const Context *context ) const
