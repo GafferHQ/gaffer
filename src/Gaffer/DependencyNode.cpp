@@ -59,3 +59,24 @@ void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs
 		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
 	}
 }
+
+
+BoolPlug *DependencyNode::enabledPlug()
+{
+	return 0;
+}
+
+const BoolPlug *DependencyNode::enabledPlug() const
+{
+	return 0;
+}
+
+Plug *DependencyNode::correspondingInput( const Plug *output )
+{
+	return 0;
+}
+
+const Plug *DependencyNode::correspondingInput( const Plug *output ) const
+{
+	return 0;
+}

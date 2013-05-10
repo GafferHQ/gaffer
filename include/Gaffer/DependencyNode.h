@@ -43,6 +43,12 @@
 namespace Gaffer
 {
 
+/// DependencyNodes extend the Node concept to define dependencies between the input
+/// and output plugs, with the implication being that outputs represent the result of some
+/// operation the node will perform based on the inputs. These dependencies allow the ripple
+/// down effect of changes to an input plug to be tracked through the graph. Note however that
+/// the DependencyNode does not define how operations should be performed - see the ComputeNode
+/// derived class for the primary means of achieving that.
 class DependencyNode : public Node
 {
 
@@ -62,6 +68,23 @@ class DependencyNode : public Node
 		/// implementation first.
 		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const = 0;
 		
+		/// @name Enable/Disable Behaviour
+		/// DependencyNodes can optionally define a means of being enabled and disabled.
+		/// If they do, then they can also specify an input plug corresponding
+		/// to each output plug. By providing a corresponding plug, the node
+		/// is promising that the input will pass-through to the output in some
+		/// meaningful way when the node is disabled.
+		//////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the enable plug, or 0 if this node is not disable-able.
+		virtual BoolPlug *enabledPlug();
+		virtual const BoolPlug *enabledPlug() const;
+		/// Returns the input plug corresponding to the given output plug. Note that each
+		/// node is responsible for ensuring that this correspondence is respected.
+		virtual Plug *correspondingInput( const Plug *output );
+		virtual const Plug *correspondingInput( const Plug *output ) const;
+		//@}
+
 };
 
 typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;

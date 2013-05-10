@@ -48,6 +48,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/DependencyNode.h"
 
 using namespace Gaffer;
 
@@ -236,11 +237,12 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 		if( node && ( !filter || filter->contains( node ) ) )
 		{
 			// reconnect the inputs and outputs as though the node was disabled
-			if ( reconnect && node->enabledPlug() )
+			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
+			if( reconnect && dependencyNode && dependencyNode->enabledPlug() )
 			{
 				for ( OutputPlugIterator it( node ); it != it.end(); ++it )
 				{
-					Plug *inPlug = node->correspondingInput( *it );
+					Plug *inPlug = dependencyNode->correspondingInput( *it );
 					if ( !inPlug )
 					{
 						continue;

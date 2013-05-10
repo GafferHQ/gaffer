@@ -47,6 +47,12 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Context )
 
+/// The ComputeNode class extends DependencyNode to define a mechanism via which
+/// computations can be performed. When an output ValuePlug::getValue() method is
+/// called the value will be computed using a combination of the hash() and compute()
+/// methods defined by the ComputeNode. ComputeNode computations are threadsafe (multiple
+/// threads may call getValue() with multiple Contexts concurrently) and make use
+/// of an in-memory caching mechanism to avoid repeated computations of the same thing.
 class ComputeNode : public DependencyNode
 {
 

@@ -49,6 +49,12 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 IE_CORE_FORWARDDECLARE( ScriptNode )
 
+/// The primary class from which node graphs are constructed. Nodes may
+/// have any number of child plugs which provide values and/or define connections
+/// to the plugs of other nodes. They provide signals for the monitoring of changes
+/// to the plugs and their values, flags and connections. The Node class itself
+/// doesn't define any means of performing computations - this is instead provided by
+/// the DependencyNode and ComputeNode derived classes.
 class Node : public GraphComponent
 {
 
@@ -78,6 +84,11 @@ class Node : public GraphComponent
 		UnaryPlugSignal &plugFlagsChangedSignal();
 		/// Called when a plug of this node is dirtied - this signifies that
 		/// any previously calculated values are invalid and should be recalculated.
+		/// Although only DependencyNodes can define the relationships necessary
+		/// for dirtying a plug, the signal is defined on the Node base class,
+		/// because dirtiness may be propagated from an output plug of a DependencyNode
+		/// onto an input plug of a plain Node (and potentially onwards if that plug
+		/// has its own output connections).
 		UnaryPlugSignal &plugDirtiedSignal();
 		//@}
 		
@@ -100,23 +111,6 @@ class Node : public GraphComponent
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-		
-		/// @name Enable/Disable Behaviour
-		/// Nodes can optionally define a means of being enabled and disabled.
-		/// If they do, then they can also specify an input plug corresponding
-		/// to each output plug. By providing a corresponding plug, the node
-		/// is promising that the input will pass-through to the output in some
-		/// meaningful way when the node is disabled.
-		//////////////////////////////////////////////////////////////
-		//@{
-		/// Returns the enable plug, or 0 if this node is not disable-able.
-		virtual BoolPlug *enabledPlug();
-		virtual const BoolPlug *enabledPlug() const;
-		/// Returns the input plug corresponding to the given output plug. Note that each
-		/// node is responsible for ensuring that this correspondence is respected.
-		virtual Plug *correspondingInput( const Plug *output );
-		virtual const Plug *correspondingInput( const Plug *output ) const;
-		//@}
 	
 	protected :
 

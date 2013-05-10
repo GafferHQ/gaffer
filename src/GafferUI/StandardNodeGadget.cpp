@@ -45,6 +45,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/DependencyNode.h"
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -111,13 +112,17 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		addNodule( *it );
 	}
 	
-	const Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
-	if( enabledPlug )
+	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node ) )
 	{
-		m_nodeEnabled = enabledPlug->getValue();
-		node->plugSetSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
-		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
+		const Gaffer::BoolPlug *enabledPlug = dependencyNode->enabledPlug();
+		if( enabledPlug )
+		{
+			m_nodeEnabled = enabledPlug->getValue();
+			node->plugSetSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
+			node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugSet, this, ::_1 ) );
+		}
 	}
+	
 	
 	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
@@ -404,7 +409,8 @@ bool StandardNodeGadget::getLabelsVisibleOnHover() const
 
 void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
 {
-	if ( plug == node()->enabledPlug() )
+	const DependencyNode *dependencyNode = IECore::runTimeCast<const DependencyNode>( plug->node() );
+	if( dependencyNode && plug == dependencyNode->enabledPlug() )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );
@@ -413,7 +419,8 @@ void StandardNodeGadget::plugSet( const Gaffer::Plug *plug )
 
 void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
-	if ( plug == node()->enabledPlug() )
+	const DependencyNode *dependencyNode = IECore::runTimeCast<const DependencyNode>( plug->node() );
+	if( dependencyNode && plug == dependencyNode->enabledPlug() )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );

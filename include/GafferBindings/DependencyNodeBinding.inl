@@ -58,10 +58,24 @@ static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
 	return result;
 }
 
+template<typename T>
+static Gaffer::BoolPlugPtr enabledPlug( T &n )
+{
+	return n.T::enabledPlug();
+}
+
+template<typename T>
+static Gaffer::PlugPtr correspondingInput( T &n, const Gaffer::Plug *output )
+{
+	return n.T::correspondingInput( output );
+}
+
 template<typename T, typename Ptr>
 void defDependencyNodeWrapperFunctions( NodeClass<T, Ptr> &cls )
 {
 	cls.def( "affects", &affects<T> );
+	cls.def( "enabledPlug", &enabledPlug<T> );
+	cls.def( "correspondingInput", &correspondingInput<T> );
 }
 
 } // namespace Detail

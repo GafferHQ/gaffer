@@ -235,52 +235,5 @@ class NodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n"]["user"]["test"].getValue(), 10 )
 	
-	def testEnableBehaviour( self ) :
-		
-		n = Gaffer.Node()
-		self.assertEqual( n.enabledPlug(), None )
-		
-		m = GafferTest.MultiplyNode()
-		self.assertEqual( m.enabledPlug(), None )
-		self.assertEqual( m.correspondingInput( m["product"] ), None )
-		
-		class EnableAbleNode( Gaffer.Node ) :
-			
-			def __init__( self, name = "EnableAbleNode" ) :
-				
-				Gaffer.Node.__init__( self, name )
-				
-				self.addChild( Gaffer.BoolPlug( "enabled", Gaffer.Plug.Direction.In, True ) )
-				self.addChild( Gaffer.IntPlug( "aIn" ) )
-				self.addChild( Gaffer.IntPlug( "bIn" ) )
-				self.addChild( Gaffer.IntPlug( "aOut", Gaffer.Plug.Direction.Out ) )
-				self.addChild( Gaffer.IntPlug( "bOut", Gaffer.Plug.Direction.Out ) )
-				self.addChild( Gaffer.IntPlug( "cOut", Gaffer.Plug.Direction.Out ) )
-			
-			def enabledPlug( self ) :
-				
-				return self["enabled"]
-			
-			def correspondingInput( self, output ) :
-				
-				if output.isSame( self["aOut"] ) :
-					
-					return self["aIn"]
-				
-				elif output.isSame( self["bOut"] ) :
-					
-					return self["bIn"]
-				
-				return None
-		
-		e = EnableAbleNode()
-		self.assertTrue( e.enabledPlug().isSame( e["enabled"] ) )
-		self.assertTrue( e.correspondingInput( e["aOut"] ).isSame( e["aIn"] ) )
-		self.assertTrue( e.correspondingInput( e["bOut"] ).isSame( e["bIn"] ) )
-		self.assertEqual( e.correspondingInput( e["enabled"] ), None )
-		self.assertEqual( e.correspondingInput( e["aIn"] ), None )
-		self.assertEqual( e.correspondingInput( e["bIn"] ), None )
-		self.assertEqual( e.correspondingInput( e["cOut"] ), None )
-
 if __name__ == "__main__":
 	unittest.main()

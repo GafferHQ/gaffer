@@ -60,24 +60,10 @@ void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<boost
 
 // bindings for node wrapper functions
 
-template<typename T>
-static Gaffer::BoolPlugPtr enabledPlug( T &n )
-{
-	return n.T::enabledPlug();
-}
-
-template<typename T>
-static Gaffer::PlugPtr correspondingInput( T &n, const Gaffer::Plug *output )
-{
-	return n.T::correspondingInput( output );
-}
-
 template<typename T, typename Ptr>
 void defNodeWrapperFunctions( NodeClass<T, Ptr> &cls )
 {
 	cls.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( T );
-	cls.def( "enabledPlug", &enabledPlug<T> );
-	cls.def( "correspondingInput", &correspondingInput<T> );
 }
 
 } // namespace Detail
