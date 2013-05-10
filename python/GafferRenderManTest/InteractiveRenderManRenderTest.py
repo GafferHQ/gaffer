@@ -190,6 +190,101 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[2], IECore.Color3f( 0.25, 0.5, 1 ) )
+	
+	def testShaders( self ) :
+
+		s = Gaffer.ScriptNode()
 		
+		s["p"] = GafferScene.Plane()
+		s["p"]["transform"]["translate"].setValue( IECore.V3f( -0.1, -0.1, 0 ) )
+		
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["l"] = GafferRenderMan.RenderManLight()
+		s["l"].loadShader( "ambientlight" )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in2"].setInput( s["l"]["out"] )
+		
+		s["s"] = GafferRenderMan.RenderManShader()
+		s["s"].loadShader( "checker" )
+		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 1, 0.5, 0.25 ) )
+		s["s"]["parameters"]["Ka"].setValue( 1 )
+		s["s"]["parameters"]["frequency"].setValue( 1 )
+		
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 1 )
+				
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c, IECore.Color3f( 1, 0.5, 0.25 ) )
+		
+		# adjust a shader parameter, wait, and check that it changed
+		
+		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 1, 1, 1 ) )
+		time.sleep( 1 )
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c, IECore.Color3f( 1 ) )
+		
+		# turn off shader updates, do the same, and check that it hasn't changed
+		
+		s["r"]["updateShaders"].setValue( False )
+		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 0.5 ) )
+		time.sleep( 1 )
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c, IECore.Color3f( 1 ) )
+		
+		# turn shader updates back on, and check that it updates
+		
+		s["r"]["updateShaders"].setValue( True )
+		time.sleep( 1 )
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c, IECore.Color3f( 0.5 ) )
+				
 if __name__ == "__main__":
 	unittest.main()
