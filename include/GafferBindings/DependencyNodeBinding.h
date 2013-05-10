@@ -89,41 +89,6 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			WrappedType::affects( input, outputs );
 		}
 	
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-		{
-			WrappedType::hash( output, context, h );
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "hash" ) )
-			{
-				boost::python::override f = this->get_override( "hash" );
-				if( f )
-				{
-					boost::python::object pythonHash( h );
-					f(
-						Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
-						Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
-						pythonHash
-					);
-					h = boost::python::extract<IECore::MurmurHash>( pythonHash );
-				}
-			}
-		}
-
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
-		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "compute" ) )
-			{
-				boost::python::override f = this->get_override( "compute" );
-				if( f )
-				{
-					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
-					return;
-				}
-			}
-			WrappedType::compute( output, context );
-		}
-	
 };
 
 #define GAFFERBINDINGS_DEFDEPENDENCYNODEWRAPPERFNS( CLASSNAME ) \

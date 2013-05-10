@@ -41,11 +41,11 @@ import IECore
 
 import Gaffer
 
-class ReadNode( Gaffer.DependencyNode ) :
+class ReadNode( Gaffer.ComputeNode ) :
 
 	def __init__( self, name="Read" ) :
 	
-		Gaffer.DependencyNode.__init__( self, name )
+		Gaffer.ComputeNode.__init__( self, name )
 		
 		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
 		self.addChild( fileNamePlug )

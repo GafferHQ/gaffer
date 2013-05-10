@@ -38,14 +38,10 @@
 #ifndef GAFFER_DEPENDENCYNODE_H
 #define GAFFER_DEPENDENCYNODE_H
 
-#include "IECore/MurmurHash.h"
-
 #include "Gaffer/Node.h"
 
 namespace Gaffer
 {
-
-IE_CORE_FORWARDDECLARE( Context )
 
 class DependencyNode : public Node
 {
@@ -65,25 +61,6 @@ class DependencyNode : public Node
 		/// leaf level plugs only. Implementations of this method should call the base class
 		/// implementation first.
 		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const = 0;
-		
-	protected :
-		
-		/// Called to compute the hashes for output Plugs. Must be implemented to call the base
-		/// class method, then call input->hash( h ) for all input plugs used in the computation
-		/// of output. Must also hash in the value of any context items that will be accessed by
-		/// the computation.
-		///
-		/// In the special case that the node will pass through a value from an input plug
-		/// unchanged, the hash for the input plug should be assigned directly to the result
-		/// (rather than appended) - this allows cache entries to be shared.
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const = 0;
-		/// Called to compute the values for output Plugs. Must be implemented to compute
-		/// an appropriate value and apply it using output->setValue().
-		virtual void compute( ValuePlug *output, const Context *context ) const = 0;
-		
-	private :
-			
-		friend class ValuePlug;
 		
 };
 

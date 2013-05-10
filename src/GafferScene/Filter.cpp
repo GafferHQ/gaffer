@@ -44,7 +44,7 @@ IE_CORE_DEFINERUNTIMETYPED( Filter );
 size_t Filter::g_firstPlugIndex = 0;
 
 Filter::Filter( const std::string &name )
-	:	DependencyNode( name )
+	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, Match ) );
@@ -66,7 +66,7 @@ const Gaffer::IntPlug *Filter::matchPlug() const
 
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( output, context, h );
+	ComputeNode::hash( output, context, h );
 	if( output == matchPlug() )
 	{
 		hashMatch( context, h );

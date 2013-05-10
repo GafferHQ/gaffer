@@ -37,14 +37,14 @@
 #ifndef GAFFERTEST_MULTIPLYNODE_H
 #define GAFFERTEST_MULTIPLYNODE_H
 
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 
 #include "GafferTest/TypeIds.h"
 
 namespace GafferTest
 {
 
-class MultiplyNode : public Gaffer::DependencyNode
+class MultiplyNode : public Gaffer::ComputeNode
 {
 
 	public :
@@ -52,7 +52,7 @@ class MultiplyNode : public Gaffer::DependencyNode
 		MultiplyNode( const std::string &name=staticTypeName() );
 		virtual ~MultiplyNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MultiplyNode, MultiplyNodeTypeId, Gaffer::DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		

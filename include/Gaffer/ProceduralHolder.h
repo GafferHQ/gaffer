@@ -49,12 +49,12 @@ IE_CORE_FORWARDDECLARE( ParameterisedProcedural )
 namespace Gaffer
 {
 
-class ProceduralHolder : public ParameterisedHolderDependencyNode
+class ProceduralHolder : public ParameterisedHolderComputeNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ProceduralHolder, ProceduralHolderTypeId, ParameterisedHolderDependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ProceduralHolder, ProceduralHolderTypeId, ParameterisedHolderComputeNode );
 
 		ProceduralHolder( const std::string &name=staticTypeName() );
 			

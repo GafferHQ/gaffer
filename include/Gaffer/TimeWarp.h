@@ -69,8 +69,8 @@ class TimeWarp : public ContextProcessor<BaseType>
 		
 };
 
-typedef TimeWarp<DependencyNode> TimeWarpDependencyNode;
-IE_CORE_DECLAREPTR( TimeWarpDependencyNode );
+typedef TimeWarp<ComputeNode> TimeWarpComputeNode;
+IE_CORE_DECLAREPTR( TimeWarpComputeNode );
 
 } // namespace Gaffer
 

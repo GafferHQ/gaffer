@@ -232,9 +232,11 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderNode, ParameterisedHolderNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeTypeId )
 
 }
 
 // explicit instantiation
 template class ParameterisedHolder<Node>;
 template class ParameterisedHolder<DependencyNode>;
+template class ParameterisedHolder<ComputeNode>;

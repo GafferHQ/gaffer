@@ -38,7 +38,7 @@
 #ifndef GAFFER_PARAMETERISEDHOLDER_H
 #define GAFFER_PARAMETERISEDHOLDER_H
 
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 
 namespace IECore
 {
@@ -120,9 +120,11 @@ class ParameterisedHolder : public BaseType
 
 typedef ParameterisedHolder<Node> ParameterisedHolderNode;
 typedef ParameterisedHolder<DependencyNode> ParameterisedHolderDependencyNode;
+typedef ParameterisedHolder<ComputeNode> ParameterisedHolderComputeNode;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNode )
 IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNode )
+IE_CORE_DECLAREPTR( ParameterisedHolderComputeNode )
 
 } // namespace Gaffer
 

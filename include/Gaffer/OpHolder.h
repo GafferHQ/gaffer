@@ -51,12 +51,12 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( ParameterHandler )
 
-class OpHolder : public ParameterisedHolderDependencyNode
+class OpHolder : public ParameterisedHolderComputeNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpHolder, OpHolderTypeId, ParameterisedHolderDependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpHolder, OpHolderTypeId, ParameterisedHolderComputeNode );
 
 		OpHolder( const std::string &name=staticTypeName() );
 			

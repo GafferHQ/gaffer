@@ -70,8 +70,8 @@ class ContextVariables : public ContextProcessor<BaseType>
 		
 };
 
-typedef ContextVariables<DependencyNode> ContextVariablesDependencyNode;
-IE_CORE_DECLAREPTR( ContextVariablesDependencyNode );
+typedef ContextVariables<ComputeNode> ContextVariablesComputeNode;
+IE_CORE_DECLAREPTR( ContextVariablesComputeNode );
 
 } // namespace Gaffer
 

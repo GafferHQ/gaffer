@@ -35,27 +35,18 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DependencyNode.h"
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/CompoundPlug.h"
+#include "boost/python.hpp"
 
+#include "GafferBindings/ComputeNodeBinding.h"
+
+using namespace boost::python;
+using namespace GafferBindings;
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
+void GafferBindings::bindComputeNode()
+{
+	typedef ComputeNodeWrapper<ComputeNode> Wrapper;
+	IE_CORE_DECLAREPTR( Wrapper );
 
-DependencyNode::DependencyNode( const std::string &name )
-	:	Node( name )
-{
-}
-
-DependencyNode::~DependencyNode()
-{
-}
-		
-void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
-	{
-		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
-	}
+	DependencyNodeClass<ComputeNode, WrapperPtr>();	
 }

@@ -36,7 +36,7 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/ComputeNodeBinding.h"
 
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/FileSource.h"

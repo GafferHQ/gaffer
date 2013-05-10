@@ -35,27 +35,52 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef GAFFER_COMPUTENODE_H
+#define GAFFER_COMPUTENODE_H
+
+#include "IECore/MurmurHash.h"
+
 #include "Gaffer/DependencyNode.h"
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/CompoundPlug.h"
 
-using namespace Gaffer;
-
-IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
-
-DependencyNode::DependencyNode( const std::string &name )
-	:	Node( name )
+namespace Gaffer
 {
-}
 
-DependencyNode::~DependencyNode()
+IE_CORE_FORWARDDECLARE( Context )
+
+class ComputeNode : public DependencyNode
 {
-}
+
+	public :
+
+		ComputeNode( const std::string &name=staticTypeName() );
+		virtual ~ComputeNode();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ComputeNode, ComputeNodeTypeId, DependencyNode );
 		
-void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
-	{
-		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
-	}
-}
+	protected :
+		
+		/// Called to compute the hashes for output Plugs. Must be implemented to call the base
+		/// class method, then call input->hash( h ) for all input plugs used in the computation
+		/// of output. Must also hash in the value of any context items that will be accessed by
+		/// the computation.
+		///
+		/// In the special case that the node will pass through a value from an input plug
+		/// unchanged, the hash for the input plug should be assigned directly to the result
+		/// (rather than appended) - this allows cache entries to be shared.
+		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const = 0;
+		/// Called to compute the values for output Plugs. Must be implemented to compute
+		/// an appropriate value and apply it using output->setValue().
+		virtual void compute( ValuePlug *output, const Context *context ) const = 0;
+		
+	private :
+			
+		friend class ValuePlug;
+		
+};
+
+typedef FilteredChildIterator<TypePredicate<ComputeNode> > ComputeNodeIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<ComputeNode> > RecursiveComputeNodeIterator;
+
+} // namespace Gaffer
+
+#endif // GAFFER_COMPUTENODE_H

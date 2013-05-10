@@ -35,27 +35,71 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DependencyNode.h"
+#ifndef GAFFERBINDINGS_COMPUTENODEBINDING_H
+#define GAFFERBINDINGS_COMPUTENODEBINDING_H
+
+#include "boost/python.hpp"
+
+#include "IECorePython/ScopedGILLock.h"
+
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
-#include "Gaffer/CompoundPlug.h"
 
-using namespace Gaffer;
+#include "GafferBindings/DependencyNodeBinding.h"
 
-IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
-
-DependencyNode::DependencyNode( const std::string &name )
-	:	Node( name )
+namespace GafferBindings
 {
-}
 
-DependencyNode::~DependencyNode()
+void bindComputeNode();
+
+template<typename WrappedType>
+class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 {
-}
-		
-void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
-	{
-		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
-	}
-}
+	public :
+	
+		ComputeNodeWrapper( PyObject *self, const std::string &name )
+			:	DependencyNodeWrapper<WrappedType>( self, name )
+		{
+		}		
+			
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		{
+			WrappedType::hash( output, context, h );
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "hash" ) )
+			{
+				boost::python::override f = this->get_override( "hash" );
+				if( f )
+				{
+					boost::python::object pythonHash( h );
+					f(
+						Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
+						Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
+						pythonHash
+					);
+					h = boost::python::extract<IECore::MurmurHash>( pythonHash );
+				}
+			}
+		}
+
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "compute" ) )
+			{
+				boost::python::override f = this->get_override( "compute" );
+				if( f )
+				{
+					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
+					return;
+				}
+			}
+			WrappedType::compute( output, context );
+		}
+	
+};
+
+} // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_COMPUTENODEBINDING_H

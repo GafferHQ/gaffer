@@ -35,27 +35,29 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/CompoundPlug.h"
 
 using namespace Gaffer;
 
-IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
+IE_CORE_DEFINERUNTIMETYPED( ComputeNode );
 
-DependencyNode::DependencyNode( const std::string &name )
-	:	Node( name )
+ComputeNode::ComputeNode( const std::string &name )
+	:	DependencyNode( name )
 {
 }
 
-DependencyNode::~DependencyNode()
+ComputeNode::~ComputeNode()
 {
 }
-		
-void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+
+void ComputeNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
-	{
-		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
-	}
+	h.append( typeId() );
+	h.append( output->relativeName( this ) );
+}
+
+void ComputeNode::compute( ValuePlug *output, const Context *context ) const
+{
 }
