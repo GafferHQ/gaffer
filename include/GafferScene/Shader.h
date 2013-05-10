@@ -41,7 +41,7 @@
 #include "IECore/ObjectVector.h"
 #include "IECore/Shader.h"
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -50,7 +50,7 @@
 namespace GafferScene
 {
 
-class Shader : public Gaffer::Node
+class Shader : public Gaffer::DependencyNode
 {
 
 	public :
@@ -58,13 +58,26 @@ class Shader : public Gaffer::Node
 		Shader( const std::string &name=staticTypeName() );
 		virtual ~Shader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Shader, ShaderTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Shader, ShaderTypeId, Gaffer::DependencyNode );
 		
+		/// A plug defining the name of the shader.
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 		
+		/// Plug under which the shader parameters are defined.
 		Gaffer::CompoundPlug *parametersPlug();
 		const Gaffer::CompoundPlug *parametersPlug() const;
+		
+		/// Plug which defines the shader's output - this should
+		/// be connected to a ShaderAssignment::shaderPlug() or
+		/// in the case of shaders which support networking it may
+		/// be connected to a parameter plug of another shader.
+		Gaffer::Plug *outPlug();
+		const Gaffer::Plug *outPlug() const;
+		
+		/// Implemented so that the children of parametersPlug() affect
+		/// outPlug().
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 		IECore::MurmurHash stateHash() const;
 		void stateHash( IECore::MurmurHash &h ) const;

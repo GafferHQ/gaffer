@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,48 +34,31 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
 import GafferScene
+import GafferSceneTest
 
-from _GafferSceneTest import *
-
-from SceneTestCase import SceneTestCase
-from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
-from GroupTest import GroupTest
-from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
-from PlaneTest import PlaneTest
-from InstancerTest import InstancerTest
-from ObjectToSceneTest import ObjectToSceneTest
-from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
-from OptionsTest import OptionsTest
-from SceneNodeTest import SceneNodeTest
-from PathMatcherTest import PathMatcherTest
-from PathFilterTest import PathFilterTest
-from ShaderAssignmentTest import ShaderAssignmentTest
-from AttributesTest import AttributesTest
-from AlembicSourceTest import AlembicSourceTest
-from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from SeedsTest import SeedsTest
-from SceneContextVariablesTest import SceneContextVariablesTest
-from ModelCacheSourceTest import ModelCacheSourceTest
-from SubTreeTest import SubTreeTest
-from OpenGLAttributesTest import OpenGLAttributesTest
-from StandardOptionsTest import StandardOptionsTest
-from SceneReadWriteTest import SceneReadWriteTest
-from ScenePathTest import ScenePathTest
-from PathMatcherDataTest import PathMatcherDataTest
-from LightTest import LightTest
-from TestRender import TestRender
-from RenderTest import RenderTest
-from OpenGLShaderTest import OpenGLShaderTest
-from OpenGLRenderTest import OpenGLRenderTest
-from TransformTest import TransformTest
-from AimConstraintTest import AimConstraintTest
-from PruneTest import PruneTest
-from ShaderTest import ShaderTest
-
+class ShaderTest( unittest.TestCase ) :
+	
+	def testDirtyPropagation( self ) :
+	
+		s = GafferSceneTest.TestShader( "s" )
+				
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		
+		s["parameters"]["i"].setValue( 10 )
+		
+		d = set( [ a[0].fullName() for a in cs ] )
+				
+		self.assertTrue( "s.out" in d )
+		self.assertTrue( "s.out.r" in d )
+		self.assertTrue( "s.out.g" in d )
+		self.assertTrue( "s.out.b" in d )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
