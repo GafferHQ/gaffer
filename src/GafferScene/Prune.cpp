@@ -70,7 +70,7 @@ const Gaffer::BoolPlug *Prune::adjustBoundsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex );
 }
 
-void Prune::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Prune::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilteredSceneProcessor::affects( input, outputs );
 

@@ -40,6 +40,8 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
+import GafferScene
 import GafferRenderMan
 import GafferRenderManTest
 
@@ -366,6 +368,33 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n.loadShader( shader )
 		
 		self.failIf( "outputFloat" in n["parameters"].keys() )
+	
+	def testAssignmentDirtyPropagation( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+				
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
+		
+		plane = GafferScene.Plane()
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["shader"].setInput( shaderNode["out"] )
+		
+		cs = GafferTest.CapturingSlot( assignment.plugDirtiedSignal() )
+		
+		coshaderNode["parameters"]["floatParameter"].setValue( 12 )
+		
+		dirtiedNames = [ x[0].fullName() for x in cs ]
+		self.assertEqual( len( dirtiedNames ), 3 )
+		self.assertEqual( dirtiedNames[0], "ShaderAssignment.shader" )
+		self.assertEqual( dirtiedNames[1], "ShaderAssignment.out.attributes" )
+		self.assertEqual( dirtiedNames[2], "ShaderAssignment.out" )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -47,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( OpHolder )
 
 OpHolder::OpHolder( const std::string &name )
-	:	ParameterisedHolderDependencyNode( name ), m_resultParameterHandler( 0 )
+	:	ParameterisedHolderComputeNode( name ), m_resultParameterHandler( 0 )
 {
 }
 			
@@ -58,7 +58,7 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 	{
 		throw IECore::Exception( "Parameterised object is not an IECore::Op" );
 	}
-	ParameterisedHolderDependencyNode::setParameterised( parameterised, keepExistingValues );
+	ParameterisedHolderComputeNode::setParameterised( parameterised, keepExistingValues );
 		
 	m_resultParameterHandler = ParameterHandler::create( const_cast<Parameter *>( op->resultParameter() ) );
 	if( !m_resultParameterHandler )
@@ -77,7 +77,7 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 
 void OpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
 {
-	ParameterisedHolderDependencyNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
+	ParameterisedHolderComputeNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
 }
 
 IECore::OpPtr OpHolder::getOp( std::string *className, int *classVersion )
@@ -90,7 +90,7 @@ IECore::ConstOpPtr OpHolder::getOp( std::string *className, int *classVersion ) 
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void OpHolder::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ConstPlugPtr parametersPlug = getChild<Plug>( "parameters" );
 	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
@@ -105,7 +105,7 @@ void OpHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs 
 
 void OpHolder::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ParameterisedHolderDependencyNode::hash( output, context, h );
+	ParameterisedHolderComputeNode::hash( output, context, h );
 	if( output->getName()=="result" )
 	{
 		std::string className;
@@ -132,5 +132,5 @@ void OpHolder::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 	
-	ParameterisedHolderDependencyNode::compute( output, context );
+	ParameterisedHolderComputeNode::compute( output, context );
 }

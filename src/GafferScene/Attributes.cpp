@@ -66,7 +66,7 @@ const Gaffer::CompoundDataPlug *Attributes::attributesPlug() const
 	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
 }
 
-void Attributes::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 	

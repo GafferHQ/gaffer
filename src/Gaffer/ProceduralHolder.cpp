@@ -47,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( ProceduralHolder )
 
 ProceduralHolder::ProceduralHolder( const std::string &name )
-	:	ParameterisedHolderDependencyNode( name )
+	:	ParameterisedHolderComputeNode( name )
 {
 
 	addChild(
@@ -70,14 +70,14 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
 		throw IECore::Exception( "Parameterised object is not an IECore::ParameterisedProcedural" );
 	}
 	
-	ParameterisedHolderDependencyNode::setParameterised( parameterised );
+	ParameterisedHolderComputeNode::setParameterised( parameterised );
 	
 	plugDirtiedSignal()( getChild<ObjectPlug>( "output" ) );
 }
 
 void ProceduralHolder::setProcedural( const std::string &className, int classVersion )
 {
-	ParameterisedHolderDependencyNode::setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" );
+	ParameterisedHolderComputeNode::setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" );
 }
 
 IECore::ParameterisedProceduralPtr ProceduralHolder::getProcedural( std::string *className, int *classVersion )
@@ -90,9 +90,9 @@ IECore::ConstParameterisedProceduralPtr ProceduralHolder::getProcedural( std::st
 	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
-void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ProceduralHolder::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ParameterisedHolderDependencyNode::affects( input, outputs );
+	ParameterisedHolderComputeNode::affects( input, outputs );
 	
 	const Plug *parametersPlug = getChild<Plug>( "parameters" );
 	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
@@ -103,7 +103,7 @@ void ProceduralHolder::affects( const ValuePlug *input, AffectedPlugsContainer &
 
 void ProceduralHolder::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ParameterisedHolderDependencyNode::hash( output, context, h );
+	ParameterisedHolderComputeNode::hash( output, context, h );
 	if( output->getName()=="output" )
 	{
 		std::string className;
@@ -129,5 +129,5 @@ void ProceduralHolder::compute( ValuePlug *output, const Context *context ) cons
 		return;
 	}
 	
-	ParameterisedHolderDependencyNode::compute( output, context );	
+	ParameterisedHolderComputeNode::compute( output, context );	
 }

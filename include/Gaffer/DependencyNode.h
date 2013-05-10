@@ -38,15 +38,17 @@
 #ifndef GAFFER_DEPENDENCYNODE_H
 #define GAFFER_DEPENDENCYNODE_H
 
-#include "IECore/MurmurHash.h"
-
 #include "Gaffer/Node.h"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Context )
-
+/// DependencyNodes extend the Node concept to define dependencies between the input
+/// and output plugs, with the implication being that outputs represent the result of some
+/// operation the node will perform based on the inputs. These dependencies allow the ripple
+/// down effect of changes to an input plug to be tracked through the graph. Note however that
+/// the DependencyNode does not define how operations should be performed - see the ComputeNode
+/// derived class for the primary means of achieving that.
 class DependencyNode : public Node
 {
 
@@ -57,34 +59,32 @@ class DependencyNode : public Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DependencyNode, DependencyNodeTypeId, Node );
 
-		typedef std::vector<const ValuePlug *> AffectedPlugsContainer;
+		typedef std::vector<const Plug *> AffectedPlugsContainer;
 		
 		/// Must be implemented to fill outputs with all the plugs whose computation
 		/// will be affected by the specified input. It is an error to pass a CompoundPlug
 		/// for input or to place one in outputs as computations are always performed on the
 		/// leaf level plugs only. Implementations of this method should call the base class
 		/// implementation first.
-		virtual void affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const = 0;
+		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const = 0;
 		
-	protected :
-		
-		/// Called to compute the hashes for output Plugs. Must be implemented to call the base
-		/// class method, then call input->hash( h ) for all input plugs used in the computation
-		/// of output. Must also hash in the value of any context items that will be accessed by
-		/// the computation.
-		///
-		/// In the special case that the node will pass through a value from an input plug
-		/// unchanged, the hash for the input plug should be assigned directly to the result
-		/// (rather than appended) - this allows cache entries to be shared.
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const = 0;
-		/// Called to compute the values for output Plugs. Must be implemented to compute
-		/// an appropriate value and apply it using output->setValue().
-		virtual void compute( ValuePlug *output, const Context *context ) const = 0;
-		
-	private :
-			
-		friend class ValuePlug;
-		
+		/// @name Enable/Disable Behaviour
+		/// DependencyNodes can optionally define a means of being enabled and disabled.
+		/// If they do, then they can also specify an input plug corresponding
+		/// to each output plug. By providing a corresponding plug, the node
+		/// is promising that the input will pass-through to the output in some
+		/// meaningful way when the node is disabled.
+		//////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the enable plug, or 0 if this node is not disable-able.
+		virtual BoolPlug *enabledPlug();
+		virtual const BoolPlug *enabledPlug() const;
+		/// Returns the input plug corresponding to the given output plug. Note that each
+		/// node is responsible for ensuring that this correspondence is respected.
+		virtual Plug *correspondingInput( const Plug *output );
+		virtual const Plug *correspondingInput( const Plug *output ) const;
+		//@}
+
 };
 
 typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;

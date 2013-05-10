@@ -38,7 +38,7 @@
 #ifndef GAFFERSCENE_IMAGENODE_H
 #define GAFFERSCENE_IMAGENODE_H
 
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/ComputeNode.h"
 
 #include "GafferImage/ImagePlug.h"
 
@@ -47,7 +47,7 @@ namespace GafferImage
 
 /// The ImageNode class is the base class for all Nodes which are capable of generating
 /// or manipulating images.
-class ImageNode : public Gaffer::DependencyNode
+class ImageNode : public Gaffer::ComputeNode
 {
 
 	public :
@@ -55,7 +55,7 @@ class ImageNode : public Gaffer::DependencyNode
 		ImageNode( const std::string &name=staticTypeName() );
 		virtual ~ImageNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageNode, ImageNodeTypeId, Gaffer::DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
 		
 		/// All ImageNodes have at least one output ImagePlug for passing on their result. More
 		/// may be added by derived classes if necessary.
@@ -67,7 +67,7 @@ class ImageNode : public Gaffer::DependencyNode
 		virtual Gaffer::BoolPlug *enabledPlug();
 		virtual const Gaffer::BoolPlug *enabledPlug() const;
 		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 		

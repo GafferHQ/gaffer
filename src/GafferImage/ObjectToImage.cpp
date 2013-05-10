@@ -67,7 +67,7 @@ const Gaffer::ObjectPlug *ObjectToImage::objectPlug() const
 	return getChild<ObjectPlug>( g_firstPlugIndex );
 }
 				
-void ObjectToImage::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ObjectToImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImagePrimitiveNode::affects( input, outputs );
 	

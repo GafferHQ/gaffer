@@ -36,177 +36,12 @@
 ##########################################################################
 
 import unittest
-import threading
-import time
-
-import IECore
 
 import Gaffer
 import GafferTest
 
 class DependencyNodeTest( GafferTest.TestCase ) :
-
-	def testOperation( self ) :
-		
-		n1 = GafferTest.AddNode()
-		n1["sum"].getValue()
-		
-		dirtiedPlugs = GafferTest.CapturingSlot( n1.plugDirtiedSignal() )
-		setPlugs = GafferTest.CapturingSlot( n1.plugSetSignal() )	
-		
-		n1["op1"].setValue( 2 )
-		self.assertEqual( len( setPlugs ), 1 )
-		self.assertEqual( len( dirtiedPlugs ), 1 )
-		self.assertEqual( setPlugs[0][0].fullName(), "AddNode.op1" )
-		self.assertEqual( dirtiedPlugs[0][0].fullName(), "AddNode.sum" )
-		
-		n1["op2"].setValue( 3 )
-		self.assertEqual( len( setPlugs ), 2 )
-		self.assertEqual( setPlugs[1][0].fullName(), "AddNode.op2" )
-		# the dirty callback shouldn't have been triggered this time,
-		# as the plug was already dirty.
-		## \todo Reintroduce me
-		#self.assertEqual( len( dirtiedPlugs ), 1 )
-		
-		del dirtiedPlugs[:]
-		del setPlugs[:]
-		
-		# plug set or dirty signals are not emitted during computation
-		self.assertEqual( n1.getChild("sum").getValue(), 5 )
-		self.assertEqual( len( setPlugs ), 0 )
-		self.assertEqual( len( dirtiedPlugs ), 0 )
-		
-		# connect another add node onto the output of this one
-		
-		n2 = GafferTest.AddNode( "Add2" )
-		
-		dirtiedPlugs2 = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
-		setPlugs2 = GafferTest.CapturingSlot( n2.plugSetSignal() )	
-		
-		n2["op1"].setInput( n1["sum"] )
-		# connecting a plug doesn't set the value of the input plug
-		# immediately - the value is transferred only upon request.
-		self.assertEqual( len( setPlugs2 ), 0 )
-		self.assertEqual( len( dirtiedPlugs2 ), 2 )
-		self.assertEqual( dirtiedPlugs2[0][0].fullName(), "Add2.op1" )
-		self.assertEqual( dirtiedPlugs2[1][0].fullName(), "Add2.sum" )
-		
-		del dirtiedPlugs2[:]
-		del setPlugs2[:]
-		
-		self.assertEqual( n2["op1"].getValue(), 5 )
-		self.assertEqual( n2["sum"].getValue(), 5 )
-
-		# plug set or dirty signals are not emitted during computation
-		self.assertEqual( len( setPlugs2 ), 0 )
-		self.assertEqual( len( dirtiedPlugs2 ), 0 )
-	
-	def testDirtyOfInputsWithConnections( self ) :
-	
-		n1 = GafferTest.AddNode( "n1" )
-		n2 = GafferTest.AddNode( "n2" )
-		
-		dirtied = GafferTest.CapturingSlot( n1.plugDirtiedSignal(), n2.plugDirtiedSignal() )
-		
-		n2["op1"].setInput( n1["sum"] )
-		self.assertEqual( len( dirtied ), 2 )
-		self.failUnless( dirtied[0][0].isSame( n2["op1"] ) )
-		self.failUnless( dirtied[1][0].isSame( n2["sum"] ) )
-
-		del dirtied[:]
-		n1["op1"].setValue( 10 )
-		self.assertEqual( len( dirtied ), 3 )
-		self.failUnless( dirtied[0][0].isSame( n1["sum"] ) )
-		self.failUnless( dirtied[1][0].isSame( n2["op1"] ) )
-		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
-		
-		self.assertEqual( n2.getChild( "sum" ).getValue(), 10 )
-	
-	def testDirtyPlugComputesSameValueAsBefore( self ) :
-	
-		n1 = GafferTest.AddNode( "N1" )
-		n2 = GafferTest.AddNode( "N2" )
-		
-		n2.getChild( "op1" ).setInput( n1.getChild( "sum" ) )
-				
-		n1.getChild( "op1" ).setValue( 1 )
-		n1.getChild( "op2" ).setValue( -1 )
-		
-		self.assertEqual( n2.getChild( "sum" ).getValue(), 0 )
-		
-	def testOutputsDirtyForNewNodes( self ) :
-	
-		n = GafferTest.AddNode()
-		n["op1"].setValue( 1 )
-		n["op2"].setValue( 2 )
-		
-		self.assertEqual( n["sum"].getValue(), 3 )
-			
-	def testComputeInContext( self ) :
-	
-		n = GafferTest.FrameNode()
-		self.assertEqual( n["output"].getValue(), 1 )
-	
-		c = Gaffer.Context()
-		c.setFrame( 10 )
-		
-		with c :
-			self.assertEqual( n["output"].getValue(), 10 )
-	
-	def testComputeInThreads( self ) :
-	
-		n = GafferTest.FrameNode()
-		
-		def f( frame ) :
-		
-			c = Gaffer.Context()
-			c.setFrame( frame )
-			
-			with c :
-				time.sleep( 0.01 )
-				self.assertEqual( n["output"].getValue(), frame )
-		
-		threads = []
-		for i in range( 0, 1000 ) :
-		
-			t = threading.Thread( target = f, args = ( i, ) )
-			t.start()
-			threads.append( t )
-			
-		for t in threads :
-			t.join()
-			
-	def testDirtyNotPropagatedDuringCompute( self ) :
-					
-		n1 = GafferTest.AddNode( "n1" )
-		n2 = GafferTest.AddNode( "n2" )
-		
-		n1["op1"].setValue( 2 )
-		n1["op2"].setValue( 3 )
-		n2["op1"].setInput( n1["sum"] )
-		
-		dirtyCapturer = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
-				
-		self.assertEqual( n2["sum"].getValue(), 5 )
-		
-		self.assertEqual( len( dirtyCapturer ), 0 )
-	
-	def testWrongPlugSet( self ) :
-	
-		n = GafferTest.BadNode()
-		self.assertRaises( RuntimeError, n["out1"].getValue )
-	
-	@GafferTest.expectedFailure
-	def testWrongPlugPulled( self ) :
-	
-		n = GafferTest.BadNode()
-		self.assertRaises( RuntimeError, n["out2"].getValue )
-	
-	def testPlugNotSet( self ) :
-	
-		n = GafferTest.BadNode()
-		self.assertRaises( RuntimeError, n["out3"].getValue )
-			
+											
 	def testDirtyOnDisconnect( self ) :
 	
 		n1 = GafferTest.AddNode( "n1" )
@@ -228,177 +63,10 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		
 		self.assertEqual( len( set ), 1 )
 		self.failUnless( set[0][0].isSame( n2["op1"] ) )
-		self.assertEqual( len( dirtied ), 3 )
-		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
-	
-	def testHash( self ) :
-	
-		n = GafferTest.MultiplyNode()
-		self.assertHashesValid( n )
-	
-	def testHashForPythonDerivedClasses( self ) :
-	
-		n = GafferTest.AddNode()
-		self.assertHashesValid( n )
+		self.assertEqual( len( dirtied ), 4 )
+		self.failUnless( dirtied[2][0].isSame( n2["op1"] ) )
+		self.failUnless( dirtied[3][0].isSame( n2["sum"] ) )
 		
-	def testDisableCaching( self ) :
-		
-		n = GafferTest.CachingTestNode()
-		
-		n["in"].setValue( "d" )
-		
-		v1 = n["out"].getValue( _copy=False )
-		v2 = n["out"].getValue( _copy=False )
-		
-		self.assertEqual( v1, v2 )
-		self.assertEqual( v1, IECore.StringData( "d" ) )
-		
-		# the objects should be one and the same, as the second computation
-		# should have shortcut and returned a cached result.
-		self.failUnless( v1.isSame( v2 ) )
-		
-		n["out"].setFlags( Gaffer.Plug.Flags.Cacheable, False )
-		v3 = n["out"].getValue( _copy=False )
-		
-		self.assertEqual( v3, IECore.StringData( "d" ) )
-		self.assertEqual( v3, v1 )
-
-		# we disabled caching, so the two values should
-		# be distinct objects, even though they are equal.
-		self.failIf( v3.isSame( v1 ) )
-	
-	def testConnectedPlugsShareHashesAndCacheEntries( self ) :
-	
-		class Out( Gaffer.DependencyNode ) :
-		
-			def __init__( self, name="Out" ) :
-		
-				Gaffer.DependencyNode.__init__( self, name )
-		
-				self.addChild( Gaffer.ObjectPlug( "oOut", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
-				self.addChild( Gaffer.FloatPlug( "fOut", Gaffer.Plug.Direction.Out ) )
-				
-			def affects( self, input ) :
-					
-				return []
-		
-			def hash( self, output, context, h ) :
-			
-				h.append( context.getFrame() )
-		
-			def compute( self, plug, context ) :
-		
-				if plug.getName() == "oOut" :
-					plug.setValue( IECore.IntData( int( context.getFrame() ) ) )
-				else :
-					plug.setValue( context.getFrame() )
-
-		IECore.registerRunTimeTyped( Out )
-		
-		class In( Gaffer.DependencyNode ) :
-		
-			def __init__( self, name="In" ) :
-		
-				Gaffer.DependencyNode.__init__( self, name )
-		
-				self.addChild( Gaffer.ObjectPlug( "oIn", Gaffer.Plug.Direction.In, IECore.NullObject() ) )	
-				self.addChild( Gaffer.IntPlug( "iIn", Gaffer.Plug.Direction.In ) )
-			
-		IECore.registerRunTimeTyped( In )
-					
-		nOut = Out()
-		nIn = In()
-		
-		nIn["oIn"].setInput( nOut["oOut"] )
-		nIn["iIn"].setInput( nOut["fOut"] )
-		
-		for i in range( 0, 1000 ) :
-		
-			c = Gaffer.Context()
-			c.setFrame( i )
-			with c :
-			
-				# because oIn and oOut are connected, they should
-				# have the same hash and share the exact same value.
-				
-				self.assertEqual( nIn["oIn"].getValue(), IECore.IntData( i ) )
-				self.assertEqual( nOut["oOut"].getValue(), IECore.IntData( i ) )
-				
-				self.assertEqual( nIn["oIn"].hash(), nOut["oOut"].hash() )
-				self.failUnless( nIn["oIn"].getValue( _copy=False ).isSame( nOut["oOut"].getValue( _copy=False ) ) )
-		
-				# even though iIn and fOut are connected, they should have
-				# different hashes and different values, because type conversion
-				# (float to int) is performed when connecting them.
-				
-				self.assertEqual( nIn["iIn"].getValue(), i )
-				self.assertEqual( nOut["fOut"].getValue(), float( i ) )
-				
-				self.assertNotEqual( nIn["iIn"].hash(), nOut["fOut"].hash() )
-
-	class PassThrough( Gaffer.DependencyNode ) :
-	
-		def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
-	
-			Gaffer.DependencyNode.__init__( self, name )
-	
-			self.addChild( Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject() ) )	
-			self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
-		
-		def affects( self, input ) :
-				
-			assert( input.isSame( self["in"] ) )	
-				
-			return [ self["out"] ]
-	
-		def hash( self, output, context, h ) :
-
-			assert( output.isSame( self["out"] ) )	
-		
-			# by assigning directly to the hash rather than appending,
-			# we signify that we'll pass through the value unchanged.
-			h.copyFrom( self["in"].hash() )
-							
-		def compute( self, plug, context ) :
-	
-			assert( plug.isSame( self["out"] ) )
-
-			plug.setValue( self["in"].getValue( _copy=False ), _copy=False )
-
-	IECore.registerRunTimeTyped( PassThrough )
-
-	def testPassThroughSharesHashes( self ) :
-		
-		n = self.PassThrough()
-		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		
-		self.assertEqual( n["in"].hash(), n["out"].hash() )
-		self.assertEqual( n["in"].getValue(), n["out"].getValue() )
-	
-	def testPassThroughSharesCacheEntries( self ) :
-	
-		n = self.PassThrough()
-		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-
-		# this fails because TypedObjectPlug::setValue() currently does a copy. i think we can
-		# optimise things by allowing a copy-free setValue() function for use during computations.
-		self.failUnless( n["in"].getValue( _copy=False ).isSame( n["out"].getValue( _copy=False ) ) )
-	
-	def testInternalConnections( self ) :
-	
-		a = GafferTest.AddNode()
-		a["op1"].setValue( 10 )
-		
-		n = Gaffer.Node()
-		n["in"] = Gaffer.IntPlug()
-		n["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-		n["out"].setInput( n["in"] )
-		
-		n["in"].setInput( a["sum"] )
-		
-		self.assertEqual( n["out"].getValue(), a["sum"].getValue() )
-		self.assertEqual( n["out"].hash(), a["sum"].hash() )
-	
 	def testDirtyPropagationForCompoundPlugs( self ) :
 	
 		class CompoundOut( Gaffer.DependencyNode ) :
@@ -481,12 +149,89 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( "CompoundIn.in.two" in dstDirtiedNames )
 		self.assertTrue( "CompoundIn.in" in dstDirtiedNames )
 		self.assertTrue( "CompoundIn.out" in dstDirtiedNames )
-	
+				
 	def testAffectsRejectsCompoundPlugs( self ) :
 	
 		n = GafferTest.CompoundPlugNode()
 		
 		self.assertRaises( RuntimeError, n.affects, n["p"] )
+	
+	def testAffectsWorksWithPlugs( self ) :
+	
+		# check that we can propagate dirtiness for simple Plugs, and
+		# not just ValuePlugs.
+	
+		class SimpleDependencyNode( Gaffer.DependencyNode ) :
+	
+			def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
+	
+				Gaffer.DependencyNode.__init__( self, name )
+
+				self.addChild( Gaffer.Plug( "in", Gaffer.Plug.Direction.In ) )
+				self.addChild( Gaffer.Plug( "out", Gaffer.Plug.Direction.Out ) )
+
+			def affects( self, input ) :
+
+				assert( input.isSame( self["in"] ) )	
+				return [ self["out"] ]
+				
+		s1 = SimpleDependencyNode()
+		s2 = SimpleDependencyNode()
 		
+		cs = GafferTest.CapturingSlot( s2.plugDirtiedSignal() )
+		
+		s2["in"].setInput( s1["out"] )
+		
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[0][0].isSame( s2["in"] ) )
+		self.assertTrue( cs[1][0].isSame( s2["out"] ) )
+	
+	def testEnableBehaviour( self ) :
+		
+		n = Gaffer.DependencyNode()
+		self.assertEqual( n.enabledPlug(), None )
+		
+		m = GafferTest.MultiplyNode()
+		self.assertEqual( m.enabledPlug(), None )
+		self.assertEqual( m.correspondingInput( m["product"] ), None )
+		
+		class EnableAbleNode( Gaffer.DependencyNode ) :
+			
+			def __init__( self, name = "EnableAbleNode" ) :
+				
+				Gaffer.DependencyNode.__init__( self, name )
+				
+				self.addChild( Gaffer.BoolPlug( "enabled", Gaffer.Plug.Direction.In, True ) )
+				self.addChild( Gaffer.IntPlug( "aIn" ) )
+				self.addChild( Gaffer.IntPlug( "bIn" ) )
+				self.addChild( Gaffer.IntPlug( "aOut", Gaffer.Plug.Direction.Out ) )
+				self.addChild( Gaffer.IntPlug( "bOut", Gaffer.Plug.Direction.Out ) )
+				self.addChild( Gaffer.IntPlug( "cOut", Gaffer.Plug.Direction.Out ) )
+			
+			def enabledPlug( self ) :
+				
+				return self["enabled"]
+			
+			def correspondingInput( self, output ) :
+				
+				if output.isSame( self["aOut"] ) :
+					
+					return self["aIn"]
+				
+				elif output.isSame( self["bOut"] ) :
+					
+					return self["bIn"]
+				
+				return None
+		
+		e = EnableAbleNode()
+		self.assertTrue( e.enabledPlug().isSame( e["enabled"] ) )
+		self.assertTrue( e.correspondingInput( e["aOut"] ).isSame( e["aIn"] ) )
+		self.assertTrue( e.correspondingInput( e["bOut"] ).isSame( e["bIn"] ) )
+		self.assertEqual( e.correspondingInput( e["enabled"] ), None )
+		self.assertEqual( e.correspondingInput( e["aIn"] ), None )
+		self.assertEqual( e.correspondingInput( e["bIn"] ), None )
+		self.assertEqual( e.correspondingInput( e["cOut"] ), None )
+	
 if __name__ == "__main__":
 	unittest.main()

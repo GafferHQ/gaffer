@@ -39,10 +39,10 @@
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ContextProcessorDependencyNode, ContextProcessorDependencyNodeTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( TimeWarpDependencyNode, TimeWarpDependencyNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ContextProcessorComputeNode, ContextProcessorComputeNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( TimeWarpComputeNode, TimeWarpComputeNodeTypeId )
 
 }
 
 // explicit instantiation
-template class Gaffer::TimeWarp<Gaffer::DependencyNode>;
+template class Gaffer::TimeWarp<Gaffer::ComputeNode>;

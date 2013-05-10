@@ -140,22 +140,3 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 	}
 }
 
-BoolPlug *Node::enabledPlug()
-{
-	return 0;
-}
-
-const BoolPlug *Node::enabledPlug() const
-{
-	return 0;
-}
-
-Plug *Node::correspondingInput( const Plug *output )
-{
-	return 0;
-}
-
-const Plug *Node::correspondingInput( const Plug *output ) const
-{
-	return 0;
-}

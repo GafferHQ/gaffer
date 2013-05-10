@@ -50,7 +50,7 @@ IE_CORE_DEFINERUNTIMETYPED( ImageNode );
 size_t ImageNode::g_firstPlugIndex = 0;
 
 ImageNode::ImageNode( const std::string &name )
-	:	DependencyNode( name )
+	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "out", Gaffer::Plug::Out ) );
@@ -88,7 +88,7 @@ bool ImageNode::enabled() const
 
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	DependencyNode::hash( output, context, h );
+	ComputeNode::hash( output, context, h );
 	
 	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
 	if( imagePlug )
@@ -136,7 +136,7 @@ void ImageNode::parentChanging( Gaffer::GraphComponent *newParent )
 		}
 	}
 	
-	Node::parentChanging( newParent );
+	ComputeNode::parentChanging( newParent );
 }
 
 void ImageNode::computeImagePlugs( ValuePlug *output, const Context *context ) const
@@ -230,9 +230,9 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 	}
 }
 
-void ImageNode::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ImageNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	DependencyNode::affects( input, outputs );
+	ComputeNode::affects( input, outputs );
 	
 	if( input == enabledPlug() )
 	{

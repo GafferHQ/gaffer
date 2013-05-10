@@ -61,7 +61,7 @@ class TimeWarp : public ContextProcessor<BaseType>
 		FloatPlug *offsetPlug();
 		const FloatPlug *offsetPlug() const;
 
-		void affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 
@@ -69,8 +69,8 @@ class TimeWarp : public ContextProcessor<BaseType>
 		
 };
 
-typedef TimeWarp<DependencyNode> TimeWarpDependencyNode;
-IE_CORE_DECLAREPTR( TimeWarpDependencyNode );
+typedef TimeWarp<ComputeNode> TimeWarpComputeNode;
+IE_CORE_DECLAREPTR( TimeWarpComputeNode );
 
 } // namespace Gaffer
 

@@ -218,7 +218,7 @@ const Gaffer::IntPlug *Display::updateCountPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 				
-void Display::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Display::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImagePrimitiveNode::affects( input, outputs );
 	

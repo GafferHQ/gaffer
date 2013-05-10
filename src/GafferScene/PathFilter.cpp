@@ -77,7 +77,7 @@ const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
 	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
 }
 
-void PathFilter::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void PathFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input == pathsPlug() )
 	{

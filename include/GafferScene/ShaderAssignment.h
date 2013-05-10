@@ -55,6 +55,8 @@ class ShaderAssignment : public SceneElementProcessor
 		
 		Gaffer::Plug *shaderPlug();
 		const Gaffer::Plug *shaderPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 				
 	protected :
 		

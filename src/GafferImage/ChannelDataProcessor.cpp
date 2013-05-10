@@ -75,7 +75,7 @@ const GafferImage::ChannelMaskPlug *ChannelDataProcessor::channelMaskPlug() cons
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex );
 }
 
-void ChannelDataProcessor::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 	

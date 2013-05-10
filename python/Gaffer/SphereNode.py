@@ -39,11 +39,11 @@ import IECore
 
 import Gaffer
 
-class SphereNode( Gaffer.DependencyNode ) :
+class SphereNode( Gaffer.ComputeNode ) :
 
 	def __init__( self, name="Sphere" ) :
 	
-		Gaffer.DependencyNode.__init__( self, name )
+		Gaffer.ComputeNode.__init__( self, name )
 		
 		radiusPlug = Gaffer.FloatPlug( name="radius", defaultValue=1, minValue=0 )
 		self.addChild( radiusPlug )

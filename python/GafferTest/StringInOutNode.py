@@ -37,11 +37,11 @@
 import IECore
 import Gaffer
 
-class StringInOutNode( Gaffer.DependencyNode ) :
+class StringInOutNode( Gaffer.ComputeNode ) :
 
 	def __init__( self, name="StringInOutNode" ) :
 	
-		Gaffer.DependencyNode.__init__( self, name )
+		Gaffer.ComputeNode.__init__( self, name )
 		
 		self.addChild( Gaffer.StringPlug( "in" ) )
 		self.addChild( Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out ) )

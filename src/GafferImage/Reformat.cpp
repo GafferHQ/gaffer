@@ -84,7 +84,7 @@ const GafferImage::FilterPlug *Reformat::filterPlug() const
 	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
 }
 
-void Reformat::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Reformat::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 

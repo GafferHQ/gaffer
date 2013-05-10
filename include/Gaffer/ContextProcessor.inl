@@ -57,14 +57,17 @@ ContextProcessor<BaseType>::~ContextProcessor()
 }
 
 template<typename BaseType>
-void ContextProcessor<BaseType>::affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
 	
-	const ValuePlug *output = oppositePlug( input );
-	if( output ) 
+	if( const ValuePlug *inputValuePlug = IECore::runTimeCast<const ValuePlug>( input ) )
 	{
-		outputs.push_back( output );
+		const ValuePlug *output = oppositePlug( inputValuePlug );
+		if( output ) 
+		{
+			outputs.push_back( output );
+		}
 	}
 }
 

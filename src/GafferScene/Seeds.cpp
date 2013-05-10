@@ -81,7 +81,7 @@ const Gaffer::StringPlug *Seeds::pointTypePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-void Seeds::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
 	

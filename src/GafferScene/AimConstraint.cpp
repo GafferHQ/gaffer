@@ -78,7 +78,7 @@ const Gaffer::V3fPlug *AimConstraint::upPlug() const
 	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 1 );
 }
 
-bool AimConstraint::affectsConstraint( const Gaffer::ValuePlug *input ) const
+bool AimConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 {
 	return aimPlug()->isAncestorOf( input ) || upPlug()->isAncestorOf( input );
 }

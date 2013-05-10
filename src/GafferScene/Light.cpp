@@ -66,7 +66,7 @@ const Gaffer::CompoundPlug *Light::parametersPlug() const
 	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
-void Light::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	

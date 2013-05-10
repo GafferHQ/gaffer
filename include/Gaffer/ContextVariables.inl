@@ -84,7 +84,7 @@ const CompoundDataPlug *ContextVariables<BaseType>::variablesPlug() const
 }
 
 template<typename BaseType>
-void ContextVariables<BaseType>::affects( const ValuePlug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+void ContextVariables<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ContextProcessor<BaseType>::affects( input, outputs );
 	

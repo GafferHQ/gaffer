@@ -66,7 +66,7 @@ class Constraint : public SceneElementProcessor
 		Gaffer::IntPlug *targetModePlug();
 		const Gaffer::IntPlug *targetModePlug() const;
 		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 		
@@ -76,7 +76,7 @@ class Constraint : public SceneElementProcessor
 		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 
 		/// Must be implemented to return true if the specified plug affects the computation of the constraint.
-		virtual bool affectsConstraint( const Gaffer::ValuePlug *input ) const = 0;
+		virtual bool affectsConstraint( const Gaffer::Plug *input ) const = 0;
 		/// Must be implemented to hash in any plugs which will be used in computing the constraint.
 		virtual void hashConstraint( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented to return a new full (absolute in world space) transform constraining fullInputTransform to

@@ -49,6 +49,7 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/RecursiveChildIterator.h"
+#include "Gaffer/DependencyNode.h"
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -399,7 +400,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 		Gaffer::Set *selection = m_scriptNode->selection();
 		for( size_t i = 0, s = selection->size(); i != s; i++ )
 		{
-			Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( selection->member( i ) );
+			Gaffer::DependencyNode *node = IECore::runTimeCast<Gaffer::DependencyNode>( selection->member( i ) );
 			if( node && findNodeGadget( node ) )
 			{
 				Gaffer::BoolPlug *enabledPlug = node->enabledPlug();

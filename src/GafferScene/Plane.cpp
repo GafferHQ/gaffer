@@ -68,7 +68,7 @@ const Gaffer::V2fPlug *Plane::dimensionsPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
-void Plane::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void Plane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	

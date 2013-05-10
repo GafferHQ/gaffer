@@ -51,7 +51,7 @@ GlobalsProcessor::~GlobalsProcessor()
 {
 }
 
-void GlobalsProcessor::affects( const ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void GlobalsProcessor::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 	

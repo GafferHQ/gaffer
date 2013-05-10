@@ -90,7 +90,7 @@ const Gaffer::BoolPlug *MeshType::overwriteExistingNormalsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
-void MeshType::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void MeshType::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
