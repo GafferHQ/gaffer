@@ -255,60 +255,10 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 
 ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
 {
-	return connectionGadgetAt( lineInGadgetSpace, false );
-}
-
-ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace, bool forReconnect ) const
-{
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	
 	std::vector<GadgetPtr> gadgetsUnderMouse;
-	
-	if ( forReconnect )
-	{
-		NodeGadget *selNodeGadget = nodeGadgetAt( lineInGadgetSpace );
-		if( !selNodeGadget )
-		{
-			return 0;
-		}
-
-		Imath::V3f center = selNodeGadget->transformedBound( this ).center();
-		const Imath::V3f corner0 = center - Imath::V3f( 2, 2, 1 );
-		const Imath::V3f corner1 = center + Imath::V3f( 2, 2, 1 );
-
-		std::vector<IECoreGL::HitRecord> selection;
-		{
-			ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
-
-			const Style *s = style();
-			s->bind();
-			
-			for ( ChildContainer::const_iterator it = children().begin(); it != children().end(); ++it )
-			{
-				if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
-				{
-					// don't consider the node's own connections, or connections without a source nodule
-					if ( c->srcNodule() && selNodeGadget->node() != c->srcNodule()->plug()->node() && selNodeGadget->node() != c->dstNodule()->plug()->node() )
-					{
-						c->render( s );
-					}
-				}
-			}
-		}
-		
-		for ( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(); it != selection.end(); ++it )
-		{
-			GadgetPtr gadget = Gadget::select( it->name.value() );
-			if ( gadget )
-			{
-				gadgetsUnderMouse.push_back( gadget );
-			}
-		}
-	}
-	else
-	{
-		viewportGadget->gadgetsAt( viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this ), gadgetsUnderMouse );
-	}
+	viewportGadget->gadgetsAt( viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this ), gadgetsUnderMouse );
 	
 	if ( !gadgetsUnderMouse.size() )
 	{
@@ -322,6 +272,46 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 	}
 	
 	return connectionGadget;
+}
+
+ConnectionGadget *GraphGadget::reconnectionGadgetAt( NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	std::vector<GadgetPtr> gadgetsUnderMouse;
+	
+	Imath::V3f center = gadget->transformedBound( this ).center();
+	const Imath::V3f corner0 = center - Imath::V3f( 2, 2, 1 );
+	const Imath::V3f corner1 = center + Imath::V3f( 2, 2, 1 );
+	
+	std::vector<IECoreGL::HitRecord> selection;
+	{
+		ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
+		
+		const Style *s = style();
+		s->bind();
+		
+		for ( ChildContainer::const_iterator it = children().begin(); it != children().end(); ++it )
+		{
+			if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
+			{
+				// don't consider the node's own connections, or connections without a source nodule
+				if ( c->srcNodule() && gadget->node() != c->srcNodule()->plug()->node() && gadget->node() != c->dstNodule()->plug()->node() )
+				{
+					c->render( s );
+				}
+			}
+		}
+	}
+	
+	for ( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(); it != selection.end(); ++it )
+	{
+		GadgetPtr gadget = Gadget::select( it->name.value() );
+		if ( gadget )
+		{
+			return runTimeCast<ConnectionGadget>( gadget );
+		}
+	}
+	
+	return 0;
 }
 
 void GraphGadget::doRender( const Style *style ) const
@@ -694,18 +684,18 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		return;
 	}
 	
-	m_dragReconnectCandidate = connectionGadgetAt( event.line, true );
-	if ( !m_dragReconnectCandidate )
-	{
-		return;
-	}
-	
 	// make sure the connection applies to this node.
 	Gaffer::Node *node = IECore::runTimeCast<Gaffer::Node>( m_scriptNode->selection()->member( 0 ) );
 	NodeGadget *selNodeGadget = nodeGadget( node );
 	if ( !node || !selNodeGadget )
 	{
 		m_dragReconnectCandidate = 0;
+		return;
+	}
+	
+	m_dragReconnectCandidate = reconnectionGadgetAt( selNodeGadget, event.line );
+	if ( !m_dragReconnectCandidate )
+	{
 		return;
 	}
 	
