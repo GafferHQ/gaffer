@@ -781,7 +781,7 @@ libraries = {
 	
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene" ],
@@ -813,7 +813,7 @@ libraries = {
 	
 	"GafferImage" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage" ],
@@ -827,7 +827,7 @@ libraries = {
 	
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferImage", "GafferUI" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUI", "GafferImageUI" ],
@@ -859,6 +859,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],
 		},
+		"requiredOptions" : [ "RMAN_ROOT" ],
 	},
 
 	"GafferRenderManUI" : {},
@@ -938,10 +939,12 @@ libraries = {
 
 }
 
-if env["PLATFORM"] == "darwin" :
-	libraries["GafferUI"]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
-else :
-	libraries["GafferUI"]["envAppends"]["LIBS"].append( "GL" )
+# Add on OpenGL libraries to definitions - these vary from platform to platform
+for library in ( "GafferUI", "GafferImageUI" ) :
+	if env["PLATFORM"] == "darwin" :
+		libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
+	else :
+		libraries[library]["envAppends"]["LIBS"].append( "GL" )
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules
