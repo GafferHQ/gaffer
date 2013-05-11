@@ -141,6 +141,8 @@ class Format
 		double m_aspect;
 };
 
+std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
+
 } // namespace GafferImage
 
 #endif // GAFFER_FORMAT_H
