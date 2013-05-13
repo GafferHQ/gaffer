@@ -27,7 +27,7 @@ def addPlugDefinitionToDoc( doc, plugName, plugDescription, plugDepth ):
 		indentLevel += ':'
 	
 	if plugDescription == "":
-		string = "%s%s %s\n" % (plugName, indentLevel, "__EMPTY__")
+		string = "%s%s %s\n" % (plugName, indentLevel, "!!!__EMPTY__!!!")
 	else:
 		string = "%s%s %s\n" % (plugName, indentLevel, plugDescription)
 	doc.write(string)
@@ -66,8 +66,6 @@ for path in sys.path:
 	if 'gaffer' in path and os.path.exists( path ):
 		for module in os.listdir( path ):
 			if module.startswith( 'Gaffer' ) and not module.endswith('Test'):
-				#temporarily skip Gaffer itself until old Group is removed
-				#if module!='Gaffer':
 				modules.append( module )
 
 

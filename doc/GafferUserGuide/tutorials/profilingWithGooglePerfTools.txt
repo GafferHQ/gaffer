@@ -9,7 +9,7 @@ The http://code.google.com/p/gperftools[Google Performance] Tools provide a libr
 .Details
 Simply place the following in a file called ~/gaffer/startup/gui/profiler.py :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ---------------------------------------------------------------------------------------------------
 import os
 import sys

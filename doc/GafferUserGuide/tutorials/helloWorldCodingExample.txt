@@ -4,7 +4,7 @@
 .Introduction
 In this tutorial we'll get our first taste of the GafferUI module, and write our first Gaffer based script. So without further ado, here's some familiar looking code...
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 import GafferUI
 
@@ -31,7 +31,7 @@ Here we're using the built in "python" application to run our script in an envir
 .Declaring Widget Layouts
 GafferUI allows hierarchical layouts of Widgets to be described in a nice declarative style using Python's "with" statement. Using it we can remove a whole line of code from our script.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 import GafferUI
 
@@ -47,7 +47,7 @@ When we use the "with" syntax above, Gaffer automatically keeps a track of the c
 
 Let's make our example slightly more complex by introducing a layout consisting of columns and rows using the ListContainer...
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
         with GafferUI.ListContainer( spacing = 5 ) :
@@ -69,7 +69,7 @@ That's all well and good, but now we have no greeting - hardly friendly. We'll n
 .Signals
 The GafferUI module uses a system of signals and slots to allow code to be triggered by events such as button presses. We'll connect to the clicked signal for the button to allow us to trigger the greeting.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 def greet( button ) :
 
@@ -83,7 +83,7 @@ clickedConnection = button.clickedSignal().connect( greet )
 .Putting it together
 Here's our final script in all its glory...
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 import GafferUI
 

@@ -18,7 +18,7 @@ We can add a startup script for the main gaffer application by creating a file i
 --------------------------------------------------
 
 For now, let's just create a really simple script to provide a nice little distraction from work. 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ---------------------------------------------------------------------------------------------------
 import urllib2
 import datetime

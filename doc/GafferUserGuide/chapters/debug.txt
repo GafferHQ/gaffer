@@ -1,0 +1,13 @@
+== DEBUG
+
+This chapter is exclusively for the purposes of testing the documenation build chain.
+
+It contains example of formatting and layout.
+
+IT SHOULD NOT BE PRESENT IN RELEASE DOCUMENTATION
+
+//example of straight html include
+pass::[<a href="https://www.google.com">googles</a>]
+
+//alternative - had pass macro rejected in some locations before
++++<a href="https://www.google.com">googles</a>+++

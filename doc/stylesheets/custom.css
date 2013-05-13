@@ -87,12 +87,18 @@ body {
   font-size: 15px;
   color: #404030;
   line-height: 1.5em;
-  letter-spacing: 0px;
+  letter-spacing: 0em;
   padding: 2em;
   padding-bottom: 6em;
   width: 900px;
   margin: 20px auto;
 }
+
+/*add some extra padding under each paragraph*/
+p {
+  margin-bottom: 1em;
+}
+
 
 body.book{
   border-width: 1px;

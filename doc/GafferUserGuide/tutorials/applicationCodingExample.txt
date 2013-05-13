@@ -33,7 +33,7 @@ apps/helloWorld-1.py
 .Writing our application
 In helloWorld-1.py, we start by defining a class called helloWorld (the name must match the name in the filename), and deriving it from Gaffer.Application :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 --------------------------------------------------------------------------------------------------
 import IECore
 import Gaffer
@@ -43,7 +43,7 @@ class helloWorld( Gaffer.Application ) :
 
 We then define our command line arguments in our constructor, specifying them using Cortex parameters. If you're familiar with writing procedurals or ops in Cortex then these will be familiar to you. We'll define some parameters to form the default values for our ui :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 --------------------------------------------------------------------------------------------------
         def __init__( self ) :
         
@@ -73,7 +73,7 @@ We then define our command line arguments in our constructor, specifying them us
 
 Finally, we just need to define the method _run(), which gaffer will use when it wants to run our application. Gaffer will already have parsed the command line arguments for us, and placed the results in a dictionary called args. Our _run() simply contains the "hello world" script, modified ever so slightly to populate the ui with the values provided in args. We also return a status code to provide the exit status for the application - in this case 0 to indicate general happiness.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 --------------------------------------------------------------------------------------------------
         def _run( self, args ) :
         

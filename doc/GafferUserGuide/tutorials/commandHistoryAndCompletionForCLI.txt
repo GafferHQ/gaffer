@@ -7,7 +7,7 @@ Out of the box, the gaffer command line app "gaffer cli" isn't particularly usea
 .Enabling readline and command completion
 Chances are you already have a system install of python, and it has the readline module. If so, the following startup script will locate it and set it up, along with some nice tab-based completion. Just cut and paste the text into a ~/gaffer/startup/cli/completion.py file. 
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ---------------------------------------------------------------------------------------------------
 import imp
 import sys

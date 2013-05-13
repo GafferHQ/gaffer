@@ -1,13 +1,44 @@
 == Introduction to Gaffer anchor:introduction_introductionToGaffer[]
 Welcome. This would be some text introducing people to Gaffer and its capabilities.
 
+Gaffer is a 3D content creation application that is built around procedurally defined scenes. Its primary use is as a lighting and look developement (shading) tool, but its modular nature allows for expansion into other areas.
+
+It provides non-destructive ways to build and modify scenes and send those resulting scenes to render. Gaffer is not tied to any specific renderer, and can be extended to support any renderer currently implemented in the +++<a href="http://code.google.com/p/cortex-vfx/cortex">cortex<"/a">+++ framework.
+In addition to processing of 3D scenes, Gaffer has simple 2D compositing functionality allowing for renders and other imagery to be combined, and for the application of basic 2D manipulations.
+
+The framework which Gaffer tool is built with is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
+
+
 === Design Overview anchor:introduction_designOverview[]
 What is the core design philosophy of Gaffer and how should users approach it?
+
+.......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....
+
 
 === Functionality anchor:introduction_functionality[]
 What can Gaffer do?
 
 === Using this guide anchor:introduction_usingThisGuide[]
-The user guide is structured thusly. Some simple tutorials are included, but extra in depth tutorials are available HERE. Nodes also have tooltips that contain useful information, and that information is collated in the GafferNodeReference document.
+The user guide is structured thusly. Some simple tutorials are included, but extra in depth tutorials are available HERE.  Nodes also have tooltips that contain useful information, and that information is collated in the GafferNodeReference document.
 
+
+
+
+As the Gaffer workflow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology thoughout the user guide.
+
+To refer to components of the interface (as apposed to generic concepts), this document will stick to the convention of *UpperCamelCase*.  So for example, we might talk about the *NodeGraph* being used to manipulate a node graph.  In this case the *NodeGraph* is part of the GUI, where as the 'node graph' is a network of nodes created by the user.
+
+In addition, for some aspects of the application we will refer to them by both the name given to them 'behind the scenes' and by terms related more to everyday usage.  It can be helpful for users to be aware of the mechanisms behind their actions, so these will be exposed where appropriate.  As an exmaple of this, the user guide might talk generically about manipulating items in a scene, then go on to discuss the fact that an item is represented internally as a *location* in a *scene-graph*.  Here the emphasis indicates that 'location' and 'scene-graph' are technical terms.
+
+
+
+
+
+
+scratchpad...
+
+A node's controls can be viewed and edited in the *NodeEditor* tab.
+
+[NOTE]
+Internally all of the exposed parts of a node ( its label, its input/output slots, its tweakable controls ) are known as *plugs*.  In this user guide we will refer to both plugs and controls.  Plugs will be used in the general case, and controls when we are indicating plugs whos values are modifiable via the NodeEditor interface.
 
