@@ -1,74 +1,120 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
   <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Gaffer : Gaffer is an open source application framework designed specifically for creating tools for use in visual effects production." />
-
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Gaffer</title>
+    <title>Gaffer : Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<link href="css/bootstrap-responsive.css" rel="stylesheet">
   </head>
-
   <body>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/ImageEngine/gaffer">View on GitHub</a>
 
-          <h1 id="project_title">Gaffer</h1>
-          <h2 id="project_tagline">Gaffer is an open source application framework designed specifically for creating tools for use in visual effects production.</h2>
+	<a href="https://github.com/ImageEngine/gaffer"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/ImageEngine/gaffer/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/ImageEngine/gaffer/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>Welcome to GitHub Pages.</h3>
-
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
-
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
-<h3>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Gaffer maintained by <a href="https://github.com/ImageEngine">ImageEngine</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
+    <!-- Navigation Bar -->
+	
+    <div class="container">
     
+		<div class="masthead">
+			<h3 class="muted">Gaffer</h3>	
+			<div class="navbar navbar-static-top">
+				<div class="navbar-inner">
+					<div class="container">
+						<ul class="nav">
+							<li class="active"><a href="#home" data-toggle="tab"><i class="icon-home"></i> Home</a></li>
+							<li><a href="#profile" data-toggle="tab">Documentation</a></li>
+							<li><a href="#">Blog</a></li>
+							<li><a href="#">Code</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
 
-  </body>
+  		<hr>
+
+	    <!-- Content - This is shown/hidden by the navigation bar -->
+	
+        <div id="myTabContent" class="tab-content">
+		              
+	 	    <!-- Home -->
+
+             <div class="tab-pane fade in active" id="home">
+		
+				<div class="jumbotron">
+					<h1>Node based tinkering for VFX</h1>
+					<p class="lead">Gaffer is a powerful node-based application for visual effects professionals</p>
+					<a class="btn btn-large btn-success" href="#"><i class="icon-download icon-white"></i> Give it a whirl...</a>
+				</div>
+
+				<hr>
+		
+				<div class="row-fluid marketing">
+
+					<div class="span4">
+						<h4>Powerful</h4>
+						<p>Indeed</p>
+						<h4>BlahBlah2</h4>
+						<p>Indeed2</p>
+					</div>
+
+					<div class="span4">
+
+						<h4>Customisable</h4>
+						<p>Gaffer is built to be customisable throughout. Be it a simple
+						scripted configuration tweak, complex expression, custom node
+						or user interface, even a full blown application, Gaffer's open APIs enable
+						you to make the changes you need with ease.
+						
+						
+						</p>
+
+						<h4>Extensible</h4>
+						<p>Indeed3</p>
+				
+					</div>
+			
+					<div class="span4">
+						<h4>Open Source</h4>
+						<p>Gaffer is distributed under the BSD license, and builds upon a
+						   wealth of open-source VFX libraries including OpenEXR, OpenImageIO,
+						   OpenColorIO and Cortex to name but a few.
+						</p>
+						<h4>Work In Progress</h4>
+						<p>Although Gaffer is becoming more capable by the day, it still lacks
+						in features and useability.
+						
+						Itching to fix a bug or contribute a cool new enhancement? Want to
+						add support for OpenVDB, Bullet or another renderer backend? 
+						Fork it on GitHub...
+						</p>
+					</div>
+			
+				</div>
+			</div>
+
+	 	    <!-- Documentation -->
+			
+			<div class="tab-pane fade" id="profile">
+				<p>Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid. Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed echo park.</p>
+			</div>
+
+		</div>
+ 
+		<hr>
+
+		<!-- Footer -->
+ 		
+ 		<div class="footer">
+ 			<p><small>&copy; John Haddon 2013</small></p>
+ 		</div>
+ 		
+	 </div>
+	
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="js/bootstrap.js"></script>
+	 
+	</body>
 </html>
+
