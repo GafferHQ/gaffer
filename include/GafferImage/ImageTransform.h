@@ -37,23 +37,45 @@
 #ifndef GAFFERSCENE_IMAGETRANSFORM_H
 #define GAFFERSCENE_IMAGETRANSFORM_H
 
-#include "GafferImage/ChannelDataProcessor.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Context.h"
 #include "GafferImage/FilterPlug.h"
 #include "Gaffer/Transform2DPlug.h"
+#include "GafferImage/ChannelDataProcessor.h"
+#include "Gaffer/DependencyNode.h"
 
 namespace GafferImage
 {
 
-class ImageTransform : public ChannelDataProcessor
+IE_CORE_FORWARDDECLARE( Reformat );
+
+class ImageTransform : public GafferImage::ChannelDataProcessor
 {
 	public :
 
 		ImageTransform( const std::string &name=staticTypeName() );
 		virtual ~ImageTransform();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, ChannelDataProcessor );
-	
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, IECore::FloatVectorDataPtr outData ) const {}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, GafferImage::ChannelDataProcessor );
+		
+		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+		Gaffer::Transform2DPlug *transformPlug();
+		const Gaffer::Transform2DPlug *transformPlug() const;
+		
+	protected:
+
+		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, IECore::FloatVectorDataPtr outData ) const {};
+
+	private :
+		
+		GafferImage::FormatPlug *formatPlug();
+		const GafferImage::FormatPlug *formatPlug() const;	
+
+		static size_t g_firstPlugIndex;
 };
 
 } // namespace GafferImage
