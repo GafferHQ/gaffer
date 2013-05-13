@@ -101,7 +101,7 @@ public :
 
 	/// Builds the kernel of weights.
 	/// This method is should be called to initialize the filter.
-	/// It does this by making sucessive calls to weight() to
+	/// It does this by making successive calls to weight() to
 	/// populate the vector of weights.
 	/// @param center The position of the center of the filter kernel.
 	/// @return Returns the index of the first pixel sample.
