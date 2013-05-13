@@ -150,6 +150,10 @@ class GLWidget( GafferUI.Widget ) :
 
 				for panel in modelPanels:
 					ptr = maya.OpenMayaUI.MQtUtil.findLayout( panel )
+					
+					if ptr is None:
+						continue
+
 					widget = sip.wrapinstance(long(ptr), QtGui.QWidget)
 					glWidget = GLWidget.__findGLWidget( widget )
 					if glWidget:
