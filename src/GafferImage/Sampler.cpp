@@ -49,12 +49,11 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_filter( Filter::create( filter ) )
 {
 	// Get the new sample bounds that includes all intersecting tiles.	
-	//todo: I think that there will be an error with this logic when using images with a negative data window offset. Use the ImagePlug::tileOrigin() call instead.
 	m_sampleWindow = Imath::Box2i( 
-		Imath::V2i( ( sampleWindow.min / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) ),
-		Imath::V2i( ( sampleWindow.max / Imath::V2i( ImagePlug::tileSize() ) ) * Imath::V2i( ImagePlug::tileSize() ) + Imath::V2i( ImagePlug::tileSize() ) - Imath::V2i(1) )
+		GafferImage::ImagePlug::tileOrigin( sampleWindow.min ),
+		GafferImage::ImagePlug::tileOrigin( sampleWindow.max ) + Imath::V2i( ImagePlug::tileSize() ) - Imath::V2i(1)
 	);
-	
+		
 	// Intersect the data window and the sample window.
 	m_sampleWindow = boxIntersection( m_sampleWindow, plug->formatPlug()->getValue().getDisplayWindow() );
 
@@ -70,9 +69,16 @@ float Sampler::sample( int x, int y )
 {
 	if ( !m_valid ) return 0.;
 
-	// Clamp the sample to the sample window.
-	x = std::max( m_sampleWindow.min.x, std::min( m_sampleWindow.max.x, x ) );
-	y = std::max( m_sampleWindow.min.y, std::min( m_sampleWindow.max.y, y ) );
+	// Return 0 for pixels outside of our sample window.	
+	if ( x < m_sampleWindow.min.x || x > m_sampleWindow.max.x )
+	{
+		return 0.;
+	}
+	
+	if ( y < m_sampleWindow.min.y || y > m_sampleWindow.max.y )
+	{
+		return 0.;
+	}
 
 	// Get the smart pointer to the tile we want.
 	int cacheIndexX = ( x - m_sampleWindow.min.x ) / ImagePlug::tileSize();
