@@ -268,15 +268,17 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 
 }
 
-void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture, int textureFilter ) const
+void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const
 {
+	glPushAttrib( GL_COLOR_BUFFER_BIT );
+	
+	// As the image is already pre-multiplied we need to change our blend mode.
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
 	texture->bind();
-	/// \todo IECoreGL::ColorTexture doesn't make mipmaps, so we can't do mipmapped filtering here.
-	/// Perhaps it should and then perhaps we could.
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureFilter );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureFilter );
 	
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
@@ -298,6 +300,8 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 		glVertex2f( box.min.x, box.min.y );
 		
 	glEnd();
+		
+	glPopAttrib();
 }
 
 void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const

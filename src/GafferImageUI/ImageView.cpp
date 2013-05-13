@@ -108,7 +108,14 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				// convert image to texture
 				ToGLTextureConverterPtr converter = new ToGLTextureConverter( staticPointerCast<const ImagePrimitive>( m_imageOrTexture ) );
-				m_imageOrTexture = converter->convert();
+				const IECoreGL::TexturePtr texture = IECore::runTimeCast<IECoreGL::Texture>( converter->convert() );
+				m_imageOrTexture = texture;
+
+				{
+					Texture::ScopedBinding scope( *texture );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+				}
 			}
 			
 			// render texture
@@ -141,13 +148,13 @@ class ImageViewGadget : public GafferUI::Gadget
 				{
 					// Get the bounds of the data window in Gadget space.
 					Box2f b( V2f( m_dataBound.min.x, m_dataBound.min.y ), V2f( m_dataBound.max.x, m_dataBound.max.y ) );
-					style->renderImage( b, (const Texture *)m_imageOrTexture.get(), GL_NEAREST );
+					style->renderImage( b, (const Texture *)m_imageOrTexture.get() );
 				}
 				
 				ViewportGadget::RasterScope rasterScope( viewportGadget );
 				
 				// Mask the data window where it doesn't overlap the display window.
-				if ( !IECore::boxContains( dataRasterBox, dispRasterBox ) &&  m_dataWindow != m_displayWindow )
+				if ( m_dataWindow != m_displayWindow )
 				{
 					const Box2f& c = dispRasterBox;
 					Box2f b = dataRasterBox;
