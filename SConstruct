@@ -854,10 +854,12 @@ libraries = {
 
 	"GafferRenderMan" : {
 		"envAppends" : {
-			"LIBS" : [ "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
+			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferRenderMan" ],
+			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
 		},
 		"requiredOptions" : [ "RMAN_ROOT" ],
 	},
