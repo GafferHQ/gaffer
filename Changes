@@ -1,3 +1,39 @@
+0.62.0
+======
+
+* Fixed bug with promotion of CompoundPlugs to Boxes.
+
+* Fixed ImageNode paste error (#251).
+
+* Fixed BoolPlugValueWidget._updateFromPlug() to avoid setting plug value (#266).
+
+* Fixed bug in Group operation (#269).
+
+* Implemented RenderMan shader parameter activation via annotation expressions (#226).
+    An activator is defined by a global annotation of this form :
+        pragma annotation "activator.name.expression" "pythonExpression"
+    The python expression may reference current parameter values by name, and also use the connected( "parameterName" ) function to query whether or not a parameter is connected.
+    Activators are then assigned to specific parameters using annotations of this form :    
+        pragma annotation "parameterName.activator" "name"
+
+* Implemented annotation-based uis for RenderManLight node.
+
+* Added a ComputeNode class, and refactored DependencyNode so it can be a useful base class for shaders as well.
+
+* Fixed dirty propagation of Shaders through ShaderAssignments.
+
+* Fixed 3delight workaround. GafferRenderMan now requires 3delight 10.0.138 or newer.
+
+* Added rudimentary shader updates to InteractiveRender. Note that there are still problems whereby deadlocks sometimes occur so this isn't in a state where you'd want to bet the success of any public performances on it.
+
+* Fixed an issue with the glBlendingMode that was causing the result to be pre-multiplied twice.
+
+* Fixed an image rendering issue with data/display window mismatches.
+
+* Fixed banding and dark edges evident in 2D viewer (#74).
+
+* Improved speed issues when moving single nodes in the NodeGraph by refactoring GraphGadget::connectionGadgetAt (#283).
+
 0.61.0
 ======
 
