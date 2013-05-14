@@ -1090,7 +1090,7 @@ def buildGraphics( target, source, env ) :
 				)
 			)
 
-graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "graphics/graphics.svg", buildGraphics )
+graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "resources/graphics.svg", buildGraphics )
 env.NoCache( graphicsBuild )
 env.Alias( "build", graphicsBuild )
 
@@ -1326,20 +1326,39 @@ def installer( target, source, env ) :
 						os.symlink( os.readlink( srcName ), dstName )
 					else:
 						shutil.copy2( srcName, dstName )
-				
+	
 	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in manifest ] ) )	
-	copyTree( env.subst( "$BUILD_DIR" ), env.subst( "$INSTALL_DIR" ), regex )
-										
-install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
-env.AlwaysBuild( install )
-env.NoCache( install )
+	copyTree( str( source[0] ), str( target[0] ), regex )
 
-env.Alias( "install", install )
+if env["PLATFORM"] == "darwin" :
+	
+	# build an app bundle
+
+	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer )
+	env.AlwaysBuild( install )
+	env.NoCache( install )
+	env.Alias( "install", install )
+
+	plistInstall = env.Install( "$INSTALL_DIR/Gaffer.app/Contents", "resources/Info.plist" )
+	env.Alias( "install", plistInstall )
+	
+	gafferLink = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/MacOS/gaffer", "", "ln -s ../Resources/bin/gaffer $TARGET" )
+	env.Alias( "install", gafferLink )
+	
+else :
+
+	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
+	env.AlwaysBuild( install )
+	env.NoCache( install )
+
+	env.Alias( "install", install )
+
 
 #########################################################################################################
 # Packaging
 #########################################################################################################
 
+## \todo Use hdiutil to create a disk image for OS X
 def packager( target, source, env ) :
 
 	installDir = env.subst( "$INSTALL_DIR" )
