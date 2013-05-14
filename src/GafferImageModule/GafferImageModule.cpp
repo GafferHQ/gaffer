@@ -98,6 +98,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 		.def( "imageHash", &ImagePlug::imageHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
 		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
+		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
 	;
 
 	GafferBindings::DependencyNodeClass<ImageNode>();
