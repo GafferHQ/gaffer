@@ -46,7 +46,13 @@ class ReaderPathPreview( GafferUI.DeferredPathPreview ) :
 	def __init__( self, path ) :
 	
 		self.__renderableGadget = GafferUI.RenderableGadget( None )
-		self.__gadgetWidget = GafferUI.GadgetWidget( self.__renderableGadget )
+		self.__gadgetWidget = GafferUI.GadgetWidget(
+			self.__renderableGadget,
+			bufferOptions = set( (
+				GafferUI.GLWidget.BufferOptions.Depth,
+				GafferUI.GLWidget.BufferOptions.Double,
+			) ),
+		)
 	
 		GafferUI.DeferredPathPreview.__init__( self, self.__gadgetWidget, path )
 		
