@@ -43,6 +43,28 @@ import GafferImage
 
 class ImagePlugTest( unittest.TestCase ) :
 
+	def testTileOrigin( self ) :
+
+		ts = GafferImage.ImagePlug.tileSize()
+		
+		testCases = [
+			( IECore.V2i( ts-1, ts-1 ), IECore.V2i( 0, 0 ) ),
+			( IECore.V2i( ts, ts-1 ), IECore.V2i( ts, 0 ) ),
+			( IECore.V2i( ts, ts ), IECore.V2i( ts, ts ) ),
+			( IECore.V2i( ts*3-1, ts+5 ), IECore.V2i( ts*2, ts ) ),
+			( IECore.V2i( ts*3, ts-5 ), IECore.V2i( ts*3, 0 ) ),
+			( IECore.V2i( -ts+ts/2, 0 ), IECore.V2i( -ts, 0 ) ),
+			( IECore.V2i( ts*5+ts/3, -ts*4 ), IECore.V2i( ts*5, -ts*4 ) ),
+			( IECore.V2i( -ts+1, -ts-1 ), IECore.V2i( -ts, -ts*2 ) )
+		]
+
+		for input, expectedResult in testCases :
+			print str( input ) + ", " + str( expectedResult ) + " : " + str( GafferImage.ImagePlug.tileOrigin( input ) )
+			self.assertEqual(
+				GafferImage.ImagePlug.tileOrigin( input ),
+				expectedResult
+			)
+
 	def testTileStaticMethod( self ) :
 	
 		tileSize = GafferImage.ImagePlug.tileSize()
