@@ -109,4 +109,38 @@ void GafferTest::testRecursiveChildIterator()
 	assert( visited[4] == g );
 	assert( visited[5] == f );
 	
+	// test pruning
+	
+	visited.clear();
+	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
+	{
+		if( *it == e || *it == b )
+		{
+			it.prune();
+		}
+		visited.push_back( *it );
+	}
+	
+	assert( visited.size() == 5 );
+	assert( visited[0] == b );
+	assert( visited[1] == c );
+	assert( visited[2] == d );
+	assert( visited[3] == e );
+	assert( visited[4] == f );
+	
+	visited.clear();
+	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
+	{
+		if( *it == b || *it == d )
+		{
+			it.prune();
+		}
+		visited.push_back( *it );
+	}
+	
+	assert( visited.size() == 3 );
+	assert( visited[0] == b );
+	assert( visited[1] == c );
+	assert( visited[2] == d );
+	
 }
