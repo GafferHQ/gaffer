@@ -105,15 +105,12 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 		std::string systemCommand = command();
 		if( systemCommand.size() )
 		{
-			const ApplicationRoot *applicationRoot = scene->ancestor<ApplicationRoot>();
-			if( applicationRoot && applicationRoot->getName() == "gui" )
-			{
-				/// \todo We need this weird background execution behaviour because we
-				/// don't want to block the ui while rendering, but really the LocalDespatcher
-				/// should be responsible for launching a separate process to do the execution
-				/// from anyway.
-				systemCommand += "&";
-			}
+			/// \todo We need this weird background execution behaviour because we
+			/// don't want to block the ui while rendering, but really the LocalDespatcher
+			/// should be responsible for launching a separate process to do the execution
+			/// from anyway.
+			systemCommand += "&";
+			
 			system( systemCommand.c_str() );
 		}
 	}
