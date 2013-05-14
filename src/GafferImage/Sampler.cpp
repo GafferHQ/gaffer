@@ -68,7 +68,7 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 float Sampler::sample( int x, int y )
 {
 	if ( !m_valid ) return 0.;
-
+	
 	// Return 0 for pixels outside of our sample window.	
 	if ( x < m_sampleWindow.min.x || x > m_sampleWindow.max.x )
 	{
@@ -79,14 +79,14 @@ float Sampler::sample( int x, int y )
 	{
 		return 0.;
 	}
-
+	
 	// Get the smart pointer to the tile we want.
 	int cacheIndexX = ( x - m_sampleWindow.min.x ) / ImagePlug::tileSize();
 	int cacheIndexY = ( y - m_sampleWindow.min.y ) / ImagePlug::tileSize();
 	ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheIndexX + cacheIndexY * ( ( m_sampleWindow.max.x - m_sampleWindow.min.x ) / ImagePlug::tileSize() + 1 ) ];
 	
 	// Get the origin of the tile we want.
-	Imath::V2i tileOrigin( ( x / ImagePlug::tileSize() ) * ImagePlug::tileSize(), ( y / ImagePlug::tileSize() ) * ImagePlug::tileSize() );
+	Imath::V2i tileOrigin( GafferImage::ImagePlug::tileOrigin( Imath::V2i( x, y ) ) );
 	if ( cacheTilePtr == NULL ) cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
 
 	x -= tileOrigin.x;

@@ -96,7 +96,7 @@ public :
 	/// Returns the width of the filter.
 	inline int width() const
 	{
-		return int( m_scaledRadius*2.+1. );
+		return int( m_scaledRadius*2. + 1. );
 	};
 
 	/// Builds the kernel of weights.
