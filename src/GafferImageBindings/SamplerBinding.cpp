@@ -51,8 +51,8 @@ namespace GafferImageBindings
 void bindSampler()
 {
 	class_<Sampler>( "Sampler", init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, const std::string & >() )
-		.def( "setFlags", (float (Sampler::*)( int, int ) )&Sampler::sample )
-		.def( "setFlags", (float (Sampler::*)( float, float ) )&Sampler::sample )
+		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
+		.def( "sample", (float (Sampler::*)( float, float ) )&Sampler::sample )
 	;
 }
 
