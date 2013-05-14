@@ -75,7 +75,7 @@ public :
 private:
 
 	const ImagePlug *m_plug;
-	const std::string &m_channelName;
+	const std::string m_channelName;
 	Imath::Box2i m_sampleWindow;
 	FilterPtr m_filter;
 	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;

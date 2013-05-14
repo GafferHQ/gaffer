@@ -42,6 +42,48 @@ import GafferImage
 import os
 
 class SamplerTest( unittest.TestCase ) :
+	
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+
+	def testOutOfBoundsSample( self ) : 
+		
+		s = Gaffer.ScriptNode()
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )		
+		s.addChild( r )
+			
+		c = Gaffer.Context()
+		c["image:channelName"] = 'R'
+		c["image:tileOrigin"] = IECore.V2i( 0 )
+		
+		bounds = r["out"]["dataWindow"].getValue();
+	
+		testCases = [
+			( bounds.min.x-1, bounds.min.y ),
+			( bounds.min.x, bounds.min.y-1 ),
+			( bounds.max.x, bounds.max.y+1 ),
+			( bounds.max.x+1, bounds.max.y ),
+			( bounds.min.x-1, bounds.max.y ),
+			( bounds.min.x, bounds.max.y+1 ),
+			( bounds.max.x+1, bounds.min.y ),
+			( bounds.max.x, bounds.min.y-1 )
+		]
+
+		with c :
+			
+			self.assertTrue( "Box" in GafferImage.FilterPlug.filters() )
+			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
+			s = GafferImage.Sampler( r["out"], "R", bounds, "Box" )
+		
+			# Check that the bounding pixels are non zero.
+			self.assertNotEqual( s.sample( bounds.min.x, bounds.min.y ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x, bounds.max.y ), 0. )
+			self.assertNotEqual( s.sample( bounds.min.x, bounds.max.y ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x, bounds.min.y ), 0. )
+	
+			# Sample out of bounds and assert that a zero is returned.	
+			for x, y in testCases :
+				self.assertEqual( s.sample( x+.5, y+.5 ), 0. )
 
 	def testSampleHash( self ) :
 		###\todo: See the todo in the GafferImage.Sampler class and then write this test case.

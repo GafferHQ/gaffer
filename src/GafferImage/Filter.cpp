@@ -54,7 +54,7 @@ Filter::Filter( double radius, double scale )
 
 void Filter::setScale( double scale )
 {
-	m_scale = scale; 
+	m_scale = std::max( scale, 1. ); 
 	m_scaledRadius = m_radius * m_scale;
 	m_weights.resize( width() );
 }

@@ -194,7 +194,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	Imath::V2d scaleFactor( scale() );
 
 	// Create our filter.
-	FilterPtr f = Filter::create( filterPlug()->getValue(), std::max( 1.f / scaleFactor.y, 1. ) );
+	FilterPtr f = Filter::create( filterPlug()->getValue(), 1.f / scaleFactor.y );
 
 	// Get the dimensions of our filter and create a box that we can use to define the bounds of our input.
 	int fHeight = f->width();
@@ -202,7 +202,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	int sampleMinY = f->construct( (tile.min.y+.5) / scaleFactor.y );
 	int sampleMaxY = f->construct( (tile.max.y+.5) / scaleFactor.y );
 		
-	f->setScale( std::max( 1.f / scaleFactor.x, 1. ) );
+	f->setScale( 1.f / scaleFactor.x );
 	int sampleMinX = f->construct( (tile.min.x+.5) / scaleFactor.x );
 	int sampleMaxX = f->construct( (tile.max.x+.5) / scaleFactor.x );
 	
@@ -288,7 +288,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	
 	// Vertical Pass
 	// Build the column buffer of contributing pixels and their weights for each pixel in the column.
-	f->setScale( std::max( 1.f / scaleFactor.y, 1. ) );
+	f->setScale( 1.f / scaleFactor.y );
 	for ( int i = 0, contributionIdx = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fHeight )
 	{
 		int tap = f->construct( ( tile.min.y + i + 0.5 ) / scaleFactor.y ) - sampleBox.min.y;
