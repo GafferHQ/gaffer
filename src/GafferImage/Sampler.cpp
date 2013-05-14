@@ -43,10 +43,11 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace GafferImage;
 
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter )
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter, BoundingMode boundingMode )
 	: m_plug( plug ),
 	m_channelName( channelName ),
-	m_filter( Filter::create( filter ) )
+	m_filter( Filter::create( filter ) ),
+	m_boundingMode( boundingMode )
 {
 	// Get the new sample bounds that includes all intersecting tiles.	
 	m_sampleWindow = Imath::Box2i( 
@@ -69,17 +70,25 @@ float Sampler::sample( int x, int y )
 {
 	if ( !m_valid ) return 0.;
 	
-	// Return 0 for pixels outside of our sample window.	
-	if ( x < m_sampleWindow.min.x || x > m_sampleWindow.max.x )
+	// Return 0 for pixels outside of our sample window.
+	if ( m_boundingMode == Black )
 	{
-		return 0.;
+		if ( x < m_sampleWindow.min.x || x > m_sampleWindow.max.x )
+		{
+			return 0.;
+		}
+
+		if ( y < m_sampleWindow.min.y || y > m_sampleWindow.max.y )
+		{
+			return 0.;
+		}
 	}
-	
-	if ( y < m_sampleWindow.min.y || y > m_sampleWindow.max.y )
+	else if ( m_boundingMode == Clamp )
 	{
-		return 0.;
+		x = std::max( std::min( x, m_sampleWindow.max.x ), m_sampleWindow.min.x );
+		y = std::max( std::min( y, m_sampleWindow.max.y ), m_sampleWindow.min.y );
 	}
-	
+
 	// Get the smart pointer to the tile we want.
 	int cacheIndexX = ( x - m_sampleWindow.min.x ) / ImagePlug::tileSize();
 	int cacheIndexY = ( y - m_sampleWindow.min.y ) / ImagePlug::tileSize();
