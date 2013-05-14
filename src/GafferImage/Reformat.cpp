@@ -262,7 +262,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	
 	// Now that we know the contribution of each pixel from the others on the row, compute the
 	// horizontally scaled buffer which we will use as input in the vertical scale pass. 
-	Sampler sampler( inPlug(), channelName, sampleBox );
+	Sampler sampler( inPlug(), channelName, sampleBox, Filter::defaultFilter(), Sampler::Clamp );
 	for ( int k = 0; k < sampleBoxHeight; ++k )
 	{
 		for ( int i = 0, contributionIdx = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fWidth )

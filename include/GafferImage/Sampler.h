@@ -60,13 +60,20 @@ class Sampler
 
 public : 
 	
+	typedef enum
+	{
+		Black = 0,
+		Clamp = 1
+	} BoundingMode;
+		
 	/// Sampler Constructor
 	/// @param plug The image plug to sample from.
 	/// @param channelName The channel to sample.
 	/// @param The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter = Filter::defaultFilter() );
+	/// @param The method of handling samples that fall out of the sample window.
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter = Filter::defaultFilter(), BoundingMode = Black );
 
-	/// Samples a colour value from the channel at x, y. The result is clamped to the sampleWindow.
+	/// Samples a colour value from the channel at x, y.
 	float sample( int x, int y );
 
 	/// Sub-samples the image using a filter.
@@ -80,6 +87,7 @@ private:
 	FilterPtr m_filter;
 	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 	bool m_valid;
+	BoundingMode m_boundingMode;
 
 };
 

@@ -36,6 +36,7 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
+#include "GafferImage/Filter.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/Serialisation.h"
 #include "GafferImageBindings/SamplerBinding.h"
@@ -50,10 +51,24 @@ namespace GafferImageBindings
 
 void bindSampler()
 {
-	class_<Sampler>( "Sampler", init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, const std::string & >() )
+	enum_<Sampler::BoundingMode>( "BoundingMode" )
+		.value( "Black", Sampler::Black )
+		.value( "Clamp", Sampler::Clamp )
+	;
+
+	class_<Sampler>( "Sampler",
+			init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, const std::string &, Sampler::BoundingMode >
+			(
+				(
+					arg( "filter" ) = Filter::defaultFilter(),
+					arg( "boundingMode" ) = Sampler::Black
+				)
+			) 
+		)
 		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
 		.def( "sample", (float (Sampler::*)( float, float ) )&Sampler::sample )
 	;
 }
 
-} // namespace IECorePython
+}; // namespace IECorePython
+

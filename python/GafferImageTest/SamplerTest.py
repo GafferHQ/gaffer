@@ -45,7 +45,7 @@ class SamplerTest( unittest.TestCase ) :
 	
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
-	def testOutOfBoundsSample( self ) : 
+	def testOutOfBoundsSampleModeBlack( self ) : 
 		
 		s = Gaffer.ScriptNode()
 		r = GafferImage.ImageReader()
@@ -73,17 +73,52 @@ class SamplerTest( unittest.TestCase ) :
 			
 			self.assertTrue( "Box" in GafferImage.FilterPlug.filters() )
 			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, "Box" )
+			s = GafferImage.Sampler( r["out"], "R", bounds, "Box", GafferImage.BoundingMode.Black )
 		
 			# Check that the bounding pixels are non zero.
-			self.assertNotEqual( s.sample( bounds.min.x, bounds.min.y ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x, bounds.max.y ), 0. )
-			self.assertNotEqual( s.sample( bounds.min.x, bounds.max.y ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x, bounds.min.y ), 0. )
+			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.min.y+.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.max.y+.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.max.y+.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.min.y+.5 ), 0. )
 	
 			# Sample out of bounds and assert that a zero is returned.	
 			for x, y in testCases :
 				self.assertEqual( s.sample( x+.5, y+.5 ), 0. )
+
+	def testOutOfBoundsSampleModeClamp( self ) : 
+		
+		s = Gaffer.ScriptNode()
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )		
+		s.addChild( r )
+			
+		c = Gaffer.Context()
+		c["image:channelName"] = 'R'
+		c["image:tileOrigin"] = IECore.V2i( 0 )
+		
+		bounds = r["out"]["dataWindow"].getValue();
+	
+		with c :
+			
+			self.assertTrue( "Box" in GafferImage.FilterPlug.filters() )
+			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
+			s = GafferImage.Sampler( r["out"], "R", bounds, "Box", GafferImage.BoundingMode.Clamp )
+		
+			# Get the values of the corner pixels.
+			bl = s.sample( bounds.min.x+.5, bounds.min.y+.5 )
+			br = s.sample( bounds.max.x+.5, bounds.min.y+.5 )
+			tr = s.sample( bounds.max.x+.5, bounds.max.y+.5 )
+			tl = s.sample( bounds.min.x+.5, bounds.max.y+.5 )
+	
+			# Sample out of bounds and assert that the same value as the nearest pixel is returned.	
+			self.assertEqual( s.sample( bounds.min.x-1, bounds.min.y ), bl )
+			self.assertEqual( s.sample( bounds.min.x, bounds.min.y-1 ), bl )
+			self.assertEqual( s.sample( bounds.max.x, bounds.max.y+1 ), tr )
+			self.assertEqual( s.sample( bounds.max.x+1, bounds.max.y ), tr )
+			self.assertEqual( s.sample( bounds.min.x-1, bounds.max.y ), tl )
+			self.assertEqual( s.sample( bounds.min.x, bounds.max.y+1 ), tl )
+			self.assertEqual( s.sample( bounds.max.x+1, bounds.min.y ), br )
+			self.assertEqual( s.sample( bounds.max.x, bounds.min.y-1 ), br )
 
 	def testSampleHash( self ) :
 		###\todo: See the todo in the GafferImage.Sampler class and then write this test case.

@@ -97,10 +97,10 @@ class ReformatTest( unittest.TestCase ) :
 		# Test all of the registered filters.	
 		filters = GafferImage.FilterPlug.filters()	
 		for filter in filters:
-			file = "checker" + filter + ".200x100.exr"
+			file = "checker" + filter + ".200x150.exr"
 			expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
 			reformat["filter"].setValue( filter )
-
+			
 			op = IECore.ImageDiffOp()
 			res = op(
 				imageA = expectedOutput["out"].image(),
