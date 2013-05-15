@@ -213,13 +213,28 @@ void Implementation::hashChannelNamesPlug( const GafferImage::ImagePlug *output,
 
 void Implementation::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	///\todo: Here we need to append the hashes of the tiles that this tile samples. Do this by changing the context to each tile origin that we need to hash
-	/// on the input plug and then call channelDataPlug()->hash( h ) on it. Perhaps this feature be added to the sampler?
+	// Hash all of the tiles that the sample requires for this tile.	
+	Imath::V2i tileOrigin( Context::current()->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
+	std::string channelName( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
+	Imath::M33f sampleTransform( computeAdjustedMatrix().inverse() );
+	Imath::Box2i tile( transformBox( sampleTransform, Imath::Box2i( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) ) ) );
+	Sampler sampler( inPlug(), channelName, tile, filterPlug()->getValue() );
+	///\ todo: Uncomment this method once the pull request has been accepted.
+	// sampler.hash( h );
 	
+	// Hash the filter type that we are using.	
 	filterPlug()->hash( h );
 	
+	// Finally we hash the transformation.
 	Imath::V2d t = transformPlug()->translatePlug()->getValue();
-	h.append( Imath::V2d( t.x - floor( t.x ), t.y - floor( t.y ) ) );
+
+	///\ todo: Ideally we should only hash the offset of the transform from the data window so that when translated by ImagePlug::tileSize()
+	/// we can reuse the cache. However this involves changing the ImageProcessor so that it hashes each tile relative to it's data window
+	/// rather than it's absolute coordinates. When this is implemented, uncomment the line below and delete the line that hashes translatePlug(). 
+	// h.append( Imath::V2d( t.x - floor( t.x ), t.y - floor( t.y ) ) );
+	
+	transformPlug()->translatePlug()->hash( h );
+	
 	transformPlug()->scalePlug()->hash( h );
 	transformPlug()->pivotPlug()->hash( h );
 	transformPlug()->rotatePlug()->hash( h );
