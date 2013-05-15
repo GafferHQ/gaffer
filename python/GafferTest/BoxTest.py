@@ -350,6 +350,23 @@ class BoxTest( unittest.TestCase ) :
 
 		self.assertEqual( s["Box"]["n"]["p"]["s"].getValue(), "hello" )
 
+	def testPromoteDynamicColorPlugAndSerialise( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		b.promotePlug( b["n"]["c"] )
+		
+		ss = s.serialise()
+				
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertTrue( isinstance( s["Box"]["user"]["n_c"], Gaffer.Color3fPlug ) )
+		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["user"]["n_c"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
