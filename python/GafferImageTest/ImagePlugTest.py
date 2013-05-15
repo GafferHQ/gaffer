@@ -59,7 +59,6 @@ class ImagePlugTest( unittest.TestCase ) :
 		]
 
 		for input, expectedResult in testCases :
-			print str( input ) + ", " + str( expectedResult ) + " : " + str( GafferImage.ImagePlug.tileOrigin( input ) )
 			self.assertEqual(
 				GafferImage.ImagePlug.tileOrigin( input ),
 				expectedResult
