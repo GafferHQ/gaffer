@@ -44,14 +44,6 @@
 namespace GafferImage
 {
 
-///\todo: 
-/// Add a hash() method to the sampler that accumulates the hashes of all tiles within m_sampleWindow.
-/// Currently anything that uses the sampler to gather data from across an area could potentially
-/// have an incorrect hash if one of the tiles that it is sampling which isn't the one being output
-/// changes. For example, if our sampler is accessing 4 tiles to produce an output for one tile and a node
-/// upstream changes just one of them and passes the hashes of the other through, the output hash  will
-/// be wrong and not update. This has not been an issue yet as we don't have any nodes that do that!
-	
 IE_CORE_FORWARDDECLARE( Filter );
 
 /// A utility class for pixel access of an image plug.
