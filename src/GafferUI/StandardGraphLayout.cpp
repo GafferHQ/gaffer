@@ -39,7 +39,7 @@
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugIterator.h"
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/GraphGadget.h"
@@ -64,47 +64,7 @@ StandardGraphLayout::StandardGraphLayout()
 
 bool StandardGraphLayout::connectNode( GraphGadget *graph, Node *node, Gaffer::Set *potentialInputs ) const
 {
-	// we only want to connect plugs which are visible in the ui - otherwise
-	// things will get very confusing for the user.
-	
-	// get the gadget for the target node
-	NodeGadget *nodeGadget = graph->nodeGadget( node );
-	if( !nodeGadget )
-	{
-		return false;
-	}
-	
-	// get all visible output plugs we could potentially connect in to our node
-	vector<Plug *> outputPlugs;
-	if( !this->outputPlugs( graph, potentialInputs, outputPlugs ) )
-	{
-		return false;
-	}
-	
-	// iterate over the output plugs, connecting them in to the node if we can
-	
-	bool result = false;
-	vector<Plug *> inputPlugs;
-	unconnectedInputPlugs( nodeGadget, inputPlugs );
-	for( vector<Plug *>::const_iterator oIt = outputPlugs.begin(), oEIt = outputPlugs.end(); oIt != oEIt; oIt++ )
-	{
-		for( vector<Plug *>::const_iterator iIt = inputPlugs.begin(), iEIt = inputPlugs.end(); iIt != iEIt; iIt++ )
-		{
-			if( (*iIt)->acceptsInput( *oIt ) )
-			{
-				(*iIt)->setInput( *oIt );
-				result = true;
-				// some nodes dynamically add new inputs when we connect
-				// existing inputs, so we recalculate the input plugs
-				// to take account
-				unconnectedInputPlugs( nodeGadget, inputPlugs );
-				break;
-			}
-		}
-	}
-	
-	return result;
-
+	return connectNodeInternal( graph, node, potentialInputs, true /* insert if possible */ );
 }
 
 bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const
@@ -139,7 +99,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 			continue;
 		}
 		
-		if( connectNode( graph, node, potentialInputs ) )
+		if( connectNodeInternal( graph, node, potentialInputs, nodes->size() == 1 /* only insert if there's only one node */ ) )
 		{
 			return true;
 		}
@@ -246,6 +206,91 @@ void StandardGraphLayout::positionNodes( GraphGadget *graph, Gaffer::Set *nodes,
 	
 }
 
+
+bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs, bool insertIfPossible ) const
+{
+	// we only want to connect plugs which are visible in the ui - otherwise
+	// things will get very confusing for the user.
+	
+	// get the gadget for the target node
+	NodeGadget *nodeGadget = graph->nodeGadget( node );
+	if( !nodeGadget )
+	{
+		return false;
+	}
+	
+	// get all visible output plugs we could potentially connect in to our node
+	vector<Plug *> outputPlugs;
+	if( !this->outputPlugs( graph, potentialInputs, outputPlugs ) )
+	{
+		return false;
+	}
+	
+	// iterate over the output plugs, connecting them in to the node if we can
+	
+	size_t numConnectionsMade = 0;
+	Plug *firstConnectionSrc = 0, *firstConnectionDst = 0;
+	vector<Plug *> inputPlugs;
+	unconnectedInputPlugs( nodeGadget, inputPlugs );
+	for( vector<Plug *>::const_iterator oIt = outputPlugs.begin(), oEIt = outputPlugs.end(); oIt != oEIt; oIt++ )
+	{
+		for( vector<Plug *>::const_iterator iIt = inputPlugs.begin(), iEIt = inputPlugs.end(); iIt != iEIt; iIt++ )
+		{
+			if( (*iIt)->acceptsInput( *oIt ) )
+			{
+				(*iIt)->setInput( *oIt );
+				if( numConnectionsMade == 0 )
+				{
+					firstConnectionSrc = *oIt;
+					firstConnectionDst = *iIt;
+				}
+				numConnectionsMade += 1;
+				// some nodes dynamically add new inputs when we connect
+				// existing inputs, so we recalculate the input plugs
+				// to take account
+				unconnectedInputPlugs( nodeGadget, inputPlugs );
+				break;
+			}
+		}
+	}
+
+	// if only one connection was made, then try to insert the node into
+	// the existing connections from the source.
+			
+	if( numConnectionsMade == 1 && insertIfPossible )
+	{
+		Plug *correspondingOutput = this->correspondingOutput( firstConnectionDst );
+		if( correspondingOutput )
+		{
+			bool allCompatible = true;
+			const Plug::OutputContainer &outputs = firstConnectionSrc->outputs();
+			for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
+			{
+				if( !(*it)->acceptsInput( correspondingOutput ) )
+				{
+					allCompatible = false;
+					break;
+				}
+			}
+			
+			if( allCompatible )
+			{
+				for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); )
+				{
+					Plug *p = *it;
+					++it; // increment now because it gets invalidated by the setInput().
+					if( p != firstConnectionDst )
+					{
+						p->setInput( correspondingOutput );
+					}
+				}
+			}
+		}
+	}
+
+	return numConnectionsMade;
+}
+
 size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const
 {
 	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
@@ -288,6 +333,28 @@ void StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::ve
 	}
 }
 
+Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *input ) const
+{
+	/// \todo Consider adding this to DependencyNode as a correspondingOutput() method. If we do,
+	/// then the method should be virtual and we should reimplement it more efficiently in derived
+	/// classes wherever possible.
+	const DependencyNode *dependencyNode = IECore::runTimeCast<const DependencyNode>( input->node() );
+	if( !dependencyNode )
+	{
+		return 0;
+	}
+		
+	for( RecursiveOutputPlugIterator it( dependencyNode ); it != it.end(); ++it )
+	{
+		if( dependencyNode->correspondingInput( *it ) == input )
+		{
+			return it->get();
+		}
+	}
+	
+	return 0;
+}
+	
 bool StandardGraphLayout::nodeConstraints( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedInputs, Imath::V2f &hardConstraint, Imath::V2f &softConstraint ) const
 {
 	// find all the input connections which aren't excluded
