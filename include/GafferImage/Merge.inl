@@ -42,7 +42,7 @@ IECore::ConstFloatVectorDataPtr Merge::doMergeOperation( F f, std::vector< IECor
 	IECore::FloatVectorDataPtr outDataPtr = inData.back()->copy();
 	std::vector<float> &outData = outDataPtr->writable();
 
-	// Alocate a temporary tile that will hold the intermediate values of the alpha channel.	
+	// Allocate a temporary tile that will hold the intermediate values of the alpha channel.
 	IECore::FloatVectorDataPtr aOut = inAlpha.back()->copy();
 	std::vector<float> &outAlpha = aOut->writable();
 	
