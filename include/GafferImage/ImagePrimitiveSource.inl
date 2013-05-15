@@ -163,8 +163,9 @@ GafferImage::Format ImagePrimitiveSource<BaseType>::computeFormat( const Gaffer:
 	if( image )
 	{
 		result = image->getDisplayWindow();
+		return GafferImage::Format( result.size().x+1, result.size().y+1 );
 	}
-	return GafferImage::Format( result.max[0]-result.min[0]+1, result.max[1]-result.min[1]+1 );
+	return GafferImage::Format();
 }
 
 template<typename BaseType>
