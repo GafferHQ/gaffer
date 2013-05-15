@@ -60,11 +60,11 @@ class Sampler
 
 public : 
 	
-	typedef enum
+	enum BoundingMode
 	{
 		Black = 0,
 		Clamp = 1
-	} BoundingMode;
+	};
 		
 	/// Sampler Constructor
 	/// @param plug The image plug to sample from.
