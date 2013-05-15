@@ -119,8 +119,56 @@ class SamplerTest( unittest.TestCase ) :
 			self.assertEqual( s.sample( bounds.min.x, bounds.max.y+1 ), tl )
 			self.assertEqual( s.sample( bounds.max.x+1, bounds.min.y ), br )
 			self.assertEqual( s.sample( bounds.max.x, bounds.min.y-1 ), br )
-
+	
+	# Test that the hash() method accumulates all of the hashes of the tiles within the sample area
+	# for a large number of different sample areas.
 	def testSampleHash( self ) :
-		###\todo: See the todo in the GafferImage.Sampler class and then write this test case.
-		pass
+		
+		s = Gaffer.ScriptNode()
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )		
+		s.addChild( r )
+		
+		tileSize = GafferImage.ImagePlug.tileSize() 
+		# Test one tile first.
+		
+		for w in range(2, 6) :
+			for x in range(-3, 3) :
+				for y in range(-3, 3) :
+					sampleBox = IECore.Box2i( IECore.V2i( x*tileSize, y*tileSize ), IECore.V2i( x*tileSize+w*tileSize/2, y*tileSize+w*tileSize/2 ) )
+					self.__testHashOfBounds( sampleBox, "R", r["out"] )
+						
+
+	# A private method that acumulates the hashes of the tiles within
+	# a box and compares them to the hash returned by the sampler.
+	def __testHashOfBounds( self, box, channel, plug ) :
+		
+		tileOrigin = GafferImage.ImagePlug.tileOrigin( IECore.V2i( box.min ) )
+		self.assertTrue( channel in plug["channelNames"].getValue() )
+			
+		c = Gaffer.Context()
+		c["image:channelName"] = channel
+		c["image:tileOrigin"] = tileOrigin
+
+		h = IECore.MurmurHash()
+		h2 = h
+
+		# Get the hash from the sampler.
+		with c :		
+			s = GafferImage.Sampler( plug, channel, box, "Box", GafferImage.BoundingMode.Clamp )
+			s.hash( h )
+
+		# Get the hash from the tiles within our desired sample area.
+		with c :		
+			y = box.min.y
+			while y <= box.max.y :
+				x = box.min.x
+				while x <= box.max.x :
+					tileOrigin = GafferImage.ImagePlug.tileOrigin( IECore.V2i( x, y ) )
+					tile = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize()-1 ) )
+					h2.append( plug.channelDataHash( channel, tileOrigin ) )
+					x += GafferImage.ImagePlug.tileSize()	
+				y += GafferImage.ImagePlug.tileSize()	
+		
+		self.assertEqual( h, h2 )
 

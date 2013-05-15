@@ -65,6 +65,7 @@ void bindSampler()
 				)
 			) 
 		)
+		.def( "hash", &Sampler::hash )
 		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
 		.def( "sample", (float (Sampler::*)( float, float ) )&Sampler::sample )
 	;

@@ -79,6 +79,9 @@ public :
 	/// Sub-samples the image using a filter.
 	float sample( float x, float y );
 
+	/// Accumulates the hashes of the tiles that it accesses.
+	void hash( IECore::MurmurHash &h ) const;
+
 private:
 
 	const ImagePlug *m_plug;
