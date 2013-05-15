@@ -789,7 +789,15 @@ class Widget( object ) :
 			color: $foregroundFaded;
 		
 		}
-
+		
+		QLineEdit#search{
+			background-image: url($GAFFER_ROOT/graphics/search.png);
+			background-repeat:no-repeat;
+			padding-left: 20px;
+			height:20px;
+			border-radius:5px
+		}
+		
 		QDateTimeEdit {
 
 			background-color: $backgroundLighter;
