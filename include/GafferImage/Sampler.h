@@ -61,9 +61,9 @@ public :
 	/// Sampler Constructor
 	/// @param plug The image plug to sample from.
 	/// @param channelName The channel to sample.
-	/// @param The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-	/// @param The method of handling samples that fall out of the sample window.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter = Filter::defaultFilter(), BoundingMode = Black );
+	/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
+	/// @param boundingMode The method of handling samples that fall out of the sample window.
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, const std::string &filter = Filter::defaultFilter(), BoundingMode boundingMode = Black );
 
 	/// Samples a colour value from the channel at x, y.
 	float sample( int x, int y );
