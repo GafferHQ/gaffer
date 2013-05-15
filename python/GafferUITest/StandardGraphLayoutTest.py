@@ -104,7 +104,61 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().connectNodes( g, Gaffer.StandardSet( [ s["add3"], s["add2"] ] ), Gaffer.StandardSet( [ s["add1"] ] ) )
 		
 		self.assertTrue( s["add2"]["op1"].getInput().isSame( s["add1"]["sum"] ) )
+	
+	def testConnectNodeInStream( self ) :
+	
+		s = Gaffer.ScriptNode()
 		
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		s["add3"] = GafferTest.AddNode()
+		
+		s["add2"]["op1"].setInput( s["add1"]["sum"] )
+		
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["add1"] ] ) )
+		
+		self.assertTrue( s["add3"]["op1"].getInput().isSame( s["add1"]["sum"] ) )
+		self.assertTrue( s["add2"]["op1"].getInput().isSame( s["add3"]["sum"] ) )
+	
+	def testConnectNodeInStreamWithMultipleOutputs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		s["add3"] = GafferTest.AddNode()
+		s["add4"] = GafferTest.AddNode()
+		
+		s["add2"]["op1"].setInput( s["add1"]["sum"] )
+		s["add3"]["op1"].setInput( s["add1"]["sum"] )
+		
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["add4"], Gaffer.StandardSet( [ s["add1"] ] ) )
+		
+		self.assertTrue( s["add2"]["op1"].getInput().isSame( s["add4"]["sum"] ) )
+		self.assertTrue( s["add3"]["op1"].getInput().isSame( s["add4"]["sum"] ) )
+		
+	def testConnectNodeToMultipleInputsDoesntInsertInStream( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		s["add3"] = GafferTest.AddNode()
+		s["add4"] = GafferTest.AddNode()
+		
+		s["add3"]["op1"].setInput( s["add1"]["sum"] )
+		s["add3"]["op2"].setInput( s["add2"]["sum"] )
+		
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["add4"], Gaffer.StandardSet( [ s["add1"], s["add2"] ] ) )
+		
+		self.assertTrue( s["add4"]["op1"].getInput().isSame( s["add1"]["sum"] ) )
+		self.assertTrue( s["add4"]["op2"].getInput().isSame( s["add2"]["sum"] ) )
+
+		self.assertEqual( len( s["add4"]["sum"].outputs() ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
 	
