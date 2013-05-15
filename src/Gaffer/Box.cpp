@@ -74,9 +74,16 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 	externalPlug->setFlags( Plug::Dynamic, true );
 	// flags are not automatically propagated to the children of compound plugs,
 	// so we need to do that ourselves.
-	for( RecursivePlugIterator it( externalPlug ); it != it.end(); ++it )
+	if( externalPlug->typeId() == Gaffer::CompoundPlug::staticTypeId() )
 	{
-		(*it)->setFlags( Plug::Dynamic, true );
+		for( RecursivePlugIterator it( externalPlug ); it != it.end(); ++it )
+		{
+			(*it)->setFlags( Plug::Dynamic, true );
+			if( (*it)->typeId() != Gaffer::CompoundPlug::staticTypeId() )
+			{
+				it.prune();
+			}
+		}
 	}
 
 	ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug );

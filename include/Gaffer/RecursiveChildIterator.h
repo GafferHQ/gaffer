@@ -55,10 +55,12 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 	public :
 		
 		RecursiveChildIterator()
+			:	m_pruned( false )
 		{
 		}
 
 		RecursiveChildIterator( const GraphComponent *parent )
+			:	m_pruned( false )
 		{
 			m_stack.push_back(
 				Level(
@@ -69,6 +71,7 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 		}
 		
 		RecursiveChildIterator( const GraphComponent *parent, const GraphComponent::ChildIterator &it )
+			:	m_pruned( false )
 		{
 			m_stack.push_back(
 				Level(
@@ -81,6 +84,13 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 		size_t depth() const
 		{
 			return m_stack.size() - 1;
+		}
+		
+		/// Calling prune() causes the next increment to skip any recursion
+		/// that it would normally perform.
+		void prune()
+		{
+			m_pruned = true;
 		}
 		
 		bool operator==( const GraphComponent::ChildIterator &rhs ) const
@@ -121,11 +131,12 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 
 		typedef std::vector<Level> Levels;		
 		Levels m_stack;
+		bool m_pruned;
 		
 		void increment()
 		{
 			const GraphComponent *currentGraphComponent = stackTop().it->get();
-			if( currentGraphComponent->children().size() )
+			if( !m_pruned && currentGraphComponent->children().size() )
 			{
 				m_stack.push_back(
 					Level(
@@ -143,6 +154,7 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 					++(stackTop().it);
 				}
 			}
+			m_pruned = false;
 		}
 		
 		bool equal( const RecursiveChildIterator &other ) const

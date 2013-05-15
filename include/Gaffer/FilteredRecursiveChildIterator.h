@@ -112,7 +112,14 @@ class FilteredRecursiveChildIterator : public boost::filter_iterator<Predicate, 
 			BaseIterator::operator++();
 			return r;
 		}
-
+		
+		/// Calling prune() causes the next increment to skip any recursion
+		/// that it would normally perform.
+		void prune()
+		{
+			const_cast<RecursiveChildIterator &>( BaseIterator::base() ).prune();
+		}
+		
 };
 
 } // namespace Gaffer
