@@ -42,6 +42,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
+
 class NodeGraph( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -64,6 +66,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		
+		self.__gadgetWidget._qtWidget().installEventFilter( _eventFilter )
+		
+		self._sm = None
+	
 	## Returns the internal GadgetWidget holding the GraphGadget.	
 	def graphGadgetWidget( self ) :
 	
@@ -168,8 +174,6 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			# or a menu specific to the node/plug/connection under the
 			# mouse if possible.
 			
-			menuDefinition = GafferUI.NodeMenu.definition()
-			
 			viewport = self.__gadgetWidget.getViewportGadget()
 			gadgets = viewport.gadgetsAt( IECore.V2f( event.line.p1.x, event.line.p1.y ) )
 			if len( gadgets ) :
@@ -188,11 +192,15 @@ class NodeGraph( GafferUI.EditorWidget ) :
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
 			
 				if len( overrideMenuDefinition.items() ) :
-					menuDefinition = overrideMenuDefinition	
-		
-			self.__m = GafferUI.Menu( menuDefinition )
-			self.__m.popup( self )
-						
+					menuDefinition = overrideMenuDefinition
+					self._m = GafferUI.Menu( menuDefinition )
+					self._m.popup( self )
+					return True
+			
+			if not self._sm :
+				self._sm = GafferUI.Menu( GafferUI.NodeMenu.definition(), searchable=True )
+			self._sm.popup( self )
+			
 			return True
 	
 		return False
@@ -204,7 +212,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		return self.graphGadget().nodeGadgetAt( line )
 	
 	def __keyPress( self, widget, event ) :
-	
+		
 		if event.key == "F" :
 			self.__frame()
 			return True
@@ -295,5 +303,24 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		# Perhaps we should just signal that we're not valid in some way and the CompoundEditor should
 		# remove us? Consider how this relates to NodeEditor.__deleteWindow() too.
 		self.parent().removeChild( self )
+
+## Used to capture TAB input since it doesn't make it through to the keyPressSignal
+class _EventFilter( QtCore.QObject ) :
 	
+	def eventFilter( self, qObject, qEvent ) :
+		
+		if qEvent.type() == QtCore.QEvent.KeyPress and qEvent.key() == QtCore.Qt.Key_Tab :
+			
+			nodeGraph = GafferUI.Widget._owner( qObject ).ancestor( NodeGraph )
+			if nodeGraph :
+				if not nodeGraph._sm :
+					nodeGraph._sm = GafferUI.Menu( GafferUI.NodeMenu.definition(), searchable=True )
+				nodeGraph._sm.popup( nodeGraph )
+				return True
+		
+		return False
+
+# this single instance is used by all widgets
+_eventFilter = _EventFilter()
+
 GafferUI.EditorWidget.registerType( "NodeGraph", NodeGraph )
