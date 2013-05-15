@@ -70,6 +70,9 @@ class StandardGraphLayout : public GraphLayout
 
 	private :
 	
+		size_t outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
+		size_t outputPlugs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Gaffer::Plug *> &plugs ) const;
+		
 		void unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
 		
 		// We calculate node positions based on the assumption that connections flow left to right and/or top to bottom.

@@ -67,39 +67,20 @@ bool StandardGraphLayout::connectNode( GraphGadget *graph, Node *node, Gaffer::S
 	// we only want to connect plugs which are visible in the ui - otherwise
 	// things will get very confusing for the user.
 	
-	// get all visible output plugs we could potentially connect in to our node
-	vector<Plug *> outputPlugs;
-	for( size_t i = 0; i < potentialInputs->size(); i++ )
-	{
-		const Node *node = IECore::runTimeCast<Node>( potentialInputs->member( i ) );
-		if( node )
-		{
-			NodeGadget *nodeGadget = graph->nodeGadget( node );
-			if( nodeGadget )
-			{
-				for( RecursiveOutputPlugIterator it( node ); it != it.end(); it++ )
-				{
-					if( nodeGadget->nodule( *it ) )
-					{
-						outputPlugs.push_back( it->get() );
-					}
-				}
-			}
-		}
-	}
-		
-	if( !outputPlugs.size() )
-	{
-		return false;
-	}
-	
 	// get the gadget for the target node
 	NodeGadget *nodeGadget = graph->nodeGadget( node );
 	if( !nodeGadget )
 	{
 		return false;
 	}
-
+	
+	// get all visible output plugs we could potentially connect in to our node
+	vector<Plug *> outputPlugs;
+	if( !this->outputPlugs( graph, potentialInputs, outputPlugs ) )
+	{
+		return false;
+	}
+	
 	// iterate over the output plugs, connecting them in to the node if we can
 	
 	bool result = false;
@@ -265,6 +246,36 @@ void StandardGraphLayout::positionNodes( GraphGadget *graph, Gaffer::Set *nodes,
 	
 }
 
+size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const
+{
+	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
+	{
+		if( nodeGadget->nodule( *it ) )
+		{
+			plugs.push_back( it->get() );
+		}
+	}
+	
+	return plugs.size();
+}
+
+size_t StandardGraphLayout::outputPlugs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Gaffer::Plug *> &plugs ) const
+{
+	for( size_t i = 0; i < nodes->size(); i++ )
+	{
+		const Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
+		if( node )
+		{
+			NodeGadget *nodeGadget = graph->nodeGadget( node );
+			if( nodeGadget )
+			{
+				outputPlugs( nodeGadget, plugs );
+			}
+		}
+	}
+	return plugs.size();
+}
+		
 void StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
 {
 	plugs.clear();
