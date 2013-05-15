@@ -133,3 +133,15 @@ float Sampler::sample( float x, float y )
 	return colour;
 }
 
+void Sampler::hash( IECore::MurmurHash &h ) const
+{
+	for ( int x = m_sampleWindow.min.x; x <= m_sampleWindow.max.x; x += GafferImage::ImagePlug::tileSize() )
+	{
+		for ( int y = m_sampleWindow.min.y; y <= m_sampleWindow.max.y; y += GafferImage::ImagePlug::tileSize() )
+		{
+			Imath::V2i tileOrigin( GafferImage::ImagePlug::tileOrigin( Imath::V2i( x, y ) ) );
+			h.append( m_plug->channelDataHash( m_channelName, tileOrigin ) );
+		}
+	}
+}
+
