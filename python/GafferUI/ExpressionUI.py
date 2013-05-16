@@ -84,9 +84,8 @@ GafferUI.NodeUI.registerNodeUI( Gaffer.Expression.staticTypeId(), ExpressionUI )
 # PlugValueWidget popup menu for creating expressions
 ##########################################################################
 
-def __createExpression( plugValueWidget ) :
+def __createExpression( plug ) :
 
-	plug = plugValueWidget.getPlug()
 	node = plug.node()
 	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
 
@@ -108,11 +107,10 @@ def __createExpression( plugValueWidget ) :
 		
 		expressionNode["expression"].setValue( expression )
 		
-	__editExpression( plugValueWidget )
+	__editExpression( plug )
 
-def __editExpression( plugValueWidget ) :
+def __editExpression( plug ) :
 
-	plug = plugValueWidget.getPlug()
 	expressionNode = plug.getInput().node()	
 
 	GafferUI.NodeEditor.acquire( expressionNode )
@@ -130,7 +128,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	input = plug.getInput()
 	if input is None and plugValueWidget._editable() :		
 		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
-		menuDefinition.prepend( "/Create Expression...", { "command" : IECore.curry( __createExpression, plugValueWidget ) } )
+		menuDefinition.prepend( "/Create Expression...", { "command" : IECore.curry( __createExpression, plug ) } )
 		
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 

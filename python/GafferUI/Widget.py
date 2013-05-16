@@ -363,7 +363,12 @@ class Widget( object ) :
 	## This signal is emitted if a previous buttonPressSignal() returned true, and the
 	# user has subsequently moved the mouse with the button down. To initiate a drag
 	# a Widget must return an IECore::RunTimeTyped object representing the data being
-	# dragged. When a drag is in motion, dragEnterSignals are emitted as the cursor
+	# dragged - note that this return type differs from many signals where either True
+	# or False is returned, and that a False return value will actually initiate a 
+	# drag with IECore.BoolData( False ) which is almost certainly not what is intended.
+	# Return None to signify that no drag should be initiated.
+	#
+	# When a drag is in motion, dragEnterSignals are emitted as the cursor
 	# enters Widgets, and if True is returned, that Widget becomes the current target for the
 	# drag. The target widget receives dragMoveSignals and a dropSignal when
 	# the drag ends. Finally, the originating Widget receives a dragEndSignal
