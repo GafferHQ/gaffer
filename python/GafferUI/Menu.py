@@ -184,10 +184,6 @@ class Menu( GafferUI.Widget ) :
 					
 				else :
 				
-					label = name
-					with IECore.IgnoredExceptions( AttributeError ) :
-						label = item.label
-					
 					if item.subMenu is not None :
 										
 						subMenu = _Menu( qtMenu, name )
@@ -198,43 +194,50 @@ class Menu( GafferUI.Widget ) :
 							self.__build( subMenu, item.subMenu, activeOverride, recurse )
 							
 					else :
-				
+						
 						# it's not a submenu
-
-						qtAction = QtGui.QAction( label, qtMenu )
-
-						if item.checkBox is not None :
-							qtAction.setCheckable( True )
-							checked = self.__evaluateItemValue( item.checkBox )
-							qtAction.setChecked( checked )
-
-						if item.divider :
-							qtAction.setSeparator( True )
-
-						if item.command :
-
-							if item.checkBox :	
-								signal = qtAction.toggled[bool]
-							else :
-								signal = qtAction.triggered[bool]
-
-							signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command, item.active ) )
-
-						active = item.active if activeOverride is None else activeOverride
-						active = self.__evaluateItemValue( active )
-						qtAction.setEnabled( active )
-						
-						shortCut = getattr( item, "shortCut", None )
-						if shortCut is not None :
-							qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
-						
-						if item.description :
-							qtAction.setStatusTip( item.description )
-						
-						qtMenu.addAction( qtAction )
-
-				done.add( name )
+						qtMenu.addAction( self.__buildAction( item, name, qtMenu, activeOverride ) )
 				
+				done.add( name )
+	
+	def __buildAction( self, item, name, parent, activeOverride=None ) :
+		
+		label = name
+		with IECore.IgnoredExceptions( AttributeError ) :
+			label = item.label
+		
+		qtAction = QtGui.QAction( label, parent )
+		
+		if item.checkBox is not None :
+			qtAction.setCheckable( True )
+			checked = self.__evaluateItemValue( item.checkBox )
+			qtAction.setChecked( checked )
+		
+		if item.divider :
+			qtAction.setSeparator( True )
+		
+		if item.command :
+			
+			if item.checkBox :	
+				signal = qtAction.toggled[bool]
+			else :
+				signal = qtAction.triggered[bool]
+			
+			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command, item.active ) )
+		
+		active = item.active if activeOverride is None else activeOverride
+		active = self.__evaluateItemValue( active )
+		qtAction.setEnabled( active )
+		
+		shortCut = getattr( item, "shortCut", None )
+		if shortCut is not None :
+			qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
+		
+		if item.description :
+			qtAction.setStatusTip( item.description )
+		
+		return qtAction
+	
 	def __evaluateItemValue( self, itemValue ) :
 	
 		if callable( itemValue ) :
