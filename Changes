@@ -1,3 +1,10 @@
+0.62.2
+======
+
+* Fixed NumericWidget dragBegin errors.
+
+* Fixed circular references in plug popup menus.
+
 0.62.1
 ======
 
