@@ -38,7 +38,6 @@ import unittest
 
 import IECore
 import Gaffer
-import GafferImage
 import math
 
 class Transform2DPlugTest( unittest.TestCase ) :
@@ -52,8 +51,9 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		p["rotate"].setValue( 45 )
 		p["scale"].setValue( IECore.V2f( 2, 3 ) )
 	
-		format = GafferImage.Format( 10, 10, 1. )
-		formatHeight = format.height() 
+		displayWindow = IECore.Box2i( IECore.V2i(0), IECore.V2i(9) )
+		pixelAspect = 1.
+		formatHeight = displayWindow.size().y+1 
 		pivotValue = p["pivot"].getValue()
 		pivotValue.y = formatHeight - pivotValue.y
 		pivot = IECore.M33f.createTranslated( pivotValue )
@@ -78,11 +78,14 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		for m in ( "pi", "s", "r", "t", "p" ) :
 			transform = transform * transforms[m]
 
-		self.assertEqual( p.matrix( format ), transform )
+		self.assertEqual( p.matrix( displayWindow, pixelAspect ), transform )
 
 	def testTransformOrderExplicit( self ) :
 	
 		plug = Gaffer.Transform2DPlug()
+		
+		displayWindow = IECore.Box2i( IECore.V2i(0), IECore.V2i(9) )
+		pixelAspect = 1.
 	
 		t =	IECore.V2f( 100, 0 )
 		r =	90
@@ -96,7 +99,7 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		# Test if this is equal to a simple hardcoded matrix, down to floating point error
 		# This verifies that translation is not being affected by rotation and scale,
 		# which is what users will expect
-		self.assertTrue( plug.matrix( GafferImage.Format( 10, 10, 1. ) ).equalWithAbsError(
+		self.assertTrue( plug.matrix( displayWindow, pixelAspect ).equalWithAbsError(
 			IECore.M33f(
 				0,   2, 0,
 				-2,  0, 0,

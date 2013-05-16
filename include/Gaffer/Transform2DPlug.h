@@ -71,7 +71,7 @@ class Transform2DPlug : public CompoundPlug
 		V2fPlug *scalePlug();
 		const V2fPlug *scalePlug() const;
 
-		Imath::M33f matrix( const GafferImage::Format &format ) const;
+		Imath::M33f matrix( const Imath::Box2i &displayWindow, double pixelAspect ) const;
 
 	private :
 		

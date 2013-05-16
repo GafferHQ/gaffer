@@ -128,7 +128,7 @@ Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, 
 {
 	Format inFormat( inPlug()->formatPlug()->getValue() );
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
-	Imath::Box2i outWindow( transformBox( transformPlug()->matrix( inFormat ), inWindow ) );
+	Imath::Box2i outWindow( transformBox( transformPlug()->matrix( inFormat.getDisplayWindow(), inFormat.getPixelAspect() ), inWindow ) );
 	return outWindow;
 }
 
@@ -179,7 +179,7 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 
 	// Work out the sample area that we require to compute this tile.
 	Format inputFormat = inPlug()->formatPlug()->getValue();
-	Imath::M33f t( transformPlug()->matrix( inputFormat ).inverse() );
+	Imath::M33f t( transformPlug()->matrix( inputFormat.getDisplayWindow(), inputFormat.getPixelAspect() ).inverse() );
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
 	

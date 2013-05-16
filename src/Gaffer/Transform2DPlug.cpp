@@ -37,7 +37,6 @@
 #include "IECore/AngleConversion.h"
 
 #include "Gaffer/Transform2DPlug.h"
-#include "GafferImage/Format.h"
 
 using namespace Imath;
 using namespace Gaffer;
@@ -151,14 +150,14 @@ const V2fPlug *Transform2DPlug::scalePlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
-Imath::M33f Transform2DPlug::matrix( const GafferImage::Format &format ) const
+Imath::M33f Transform2DPlug::matrix( const Imath::Box2i &displayWindow, double pixelAspect ) const
 {
 	// We need to transform from image space (with 0x0 being the bottom left)
 	// to Gadget space (where 0x0 is the top left). To do this, we need to know the
 	// size of the Format.
 	
 	///\todo: We don't handle the pixel aspect of the format here but we should!
-	float formatHeight = format.getDisplayWindow().size().y + 1;
+	float formatHeight = displayWindow.size().y + 1;
 	
 	M33f p;
 	V2f pivotVec = pivotPlug()->getValue();
