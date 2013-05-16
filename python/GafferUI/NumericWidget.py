@@ -37,6 +37,8 @@
 
 import math
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -168,14 +170,16 @@ class NumericWidget( GafferUI.TextWidget ) :
 	def __dragBegin( self, widget, event ) :
 		
 		if self.__dragValue is None :
-			return False
+			return None
 		
 		self.__dragStart = event.line.p0.x
-		return True
+		# IECore.NullObject is the convention for data for drags which are intended
+		# only for the purposes of the originating widget.
+		return IECore.NullObject.defaultNullObject()
 	
 	def __dragEnter( self, widget, event ) :
-		
-		if widget is self and self.__dragStart is not None :
+				
+		if event.sourceWidget is self and self.__dragStart is not None :
 			return True
 		
 		return False
