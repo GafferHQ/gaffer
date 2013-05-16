@@ -37,6 +37,8 @@
 
 import math
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -61,8 +63,8 @@ class NumericWidget( GafferUI.TextWidget ) :
 		
 		self._qtWidget().setValidator( validator )
 		
-		self.__slideValue = None
-		self.__slideStart = None
+		self.__dragValue = None
+		self.__dragStart = None
 		
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
@@ -162,27 +164,29 @@ class NumericWidget( GafferUI.TextWidget ) :
 		if event.modifiers != GafferUI.ModifiableEvent.Modifiers.Control and event.modifiers != GafferUI.ModifiableEvent.Modifiers.ShiftControl :
 			return False
 		
-		self.__slideValue = self.getValue()
+		self.__dragValue = self.getValue()
 		return True
 	
 	def __dragBegin( self, widget, event ) :
 		
-		if self.__slideValue is None :
-			return False
+		if self.__dragValue is None :
+			return None
 		
-		self.__slideStart = event.line.p0.x
-		return True
+		self.__dragStart = event.line.p0.x
+		# IECore.NullObject is the convention for data for drags which are intended
+		# only for the purposes of the originating widget.
+		return IECore.NullObject.defaultNullObject()
 	
 	def __dragEnter( self, widget, event ) :
-		
-		if widget is self and self.__slideStart is not None :
+				
+		if event.sourceWidget is self and self.__dragStart is not None :
 			return True
 		
 		return False
 	
 	def __dragMove( self, widget, event ) : 
 		
-		move = event.line.p0.x - self.__slideStart
+		move = event.line.p0.x - self.__dragStart
 		
 		offset = 0
 		## \todo: come up with an official scheme after some user testing
@@ -191,13 +195,13 @@ class NumericWidget( GafferUI.TextWidget ) :
 		elif event.modifiers == GafferUI.ModifiableEvent.Modifiers.ShiftControl :
 			offset = 0.00001 * math.pow( move, 3 )
 		
-		self.setValue( self.__slideValue + offset )
+		self.setValue( self.__dragValue + offset )
 		return True
 	
 	def __dragEnd( self, widget, event ) :
 		
-		self.__slideValue = None
-		self.__slideStart = None
+		self.__dragValue = None
+		self.__dragStart = None
 		return True
 	
 	def __editingFinished( self, widget ) :

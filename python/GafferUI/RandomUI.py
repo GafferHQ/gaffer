@@ -73,9 +73,8 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outFloa
 # PlugValueWidget popup menu
 ##########################################################################
 
-def __createRandom( plugValueWidget ) :
+def __createRandom( plug ) :
 
-	plug = plugValueWidget.getPlug()
 	node = plug.node()
 	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
 
@@ -103,6 +102,6 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	input = plug.getInput()
 	if input is None and plugValueWidget._editable() :		
-		menuDefinition.prepend( "/Randomise...", { "command" : IECore.curry( __createRandom, plugValueWidget ) } )
+		menuDefinition.prepend( "/Randomise...", { "command" : IECore.curry( __createRandom, plug ) } )
 		
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
