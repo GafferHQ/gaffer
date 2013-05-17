@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,58 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SAMPLER_H
-#define GAFFERIMAGE_SAMPLER_H
+#ifndef GAFFERBINDINGS_FILTERBINDING_H
+#define GAFFERBINDINGS_FILTERBINDING_H
 
-#include <vector>
-#include "GafferImage/ImagePlug.h"
 #include "GafferImage/Filter.h"
 
-namespace GafferImage
+namespace GafferImageBindings
 {
 
-IE_CORE_FORWARDDECLARE( Filter );
+void bindFilters();
 
-/// A utility class for pixel access of an image plug.
-class Sampler
-{
+}; // namespace GafferImageBindings
 
-public : 
-	
-	enum BoundingMode
-	{
-		Black = 0,
-		Clamp = 1
-	};
-		
-	/// Sampler Constructor
-	/// @param plug The image plug to sample from.
-	/// @param channelName The channel to sample.
-	/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-	/// @param boundingMode The method of handling samples that fall out of the sample window.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
-
-	/// Samples a colour value from the channel at x, y.
-	float sample( int x, int y );
-
-	/// Sub-samples the image using a filter.
-	float sample( float x, float y, Filter *filter );
-
-	/// Accumulates the hashes of the tiles that it accesses.
-	void hash( IECore::MurmurHash &h ) const;
-
-private:
-
-	const ImagePlug *m_plug;
-	const std::string m_channelName;
-	Imath::Box2i m_sampleWindow;
-	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
-	bool m_valid;
-	BoundingMode m_boundingMode;
-
-};
-
-}; // namespace GafferImage
-
-#endif
-
+#endif // GAFFERBINDINGS_FILTERBINDING_H
