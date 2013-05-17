@@ -126,6 +126,16 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().node().parent().addChild( filterNode )
 			self.getPlug().setInput( filterNode["match"] )
 		
+		# position the node appropriately.
+		## \todo In an ideal world the GraphGadget would do this
+		# without prompting.
+		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
+		if scriptWindow is not None :
+			nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
+			if nodeGraphs :
+				graphGadget = nodeGraphs[0].graphGadget()
+				graphGadget.getLayout().positionNode( graphGadget, filterNode )
+		
 	def __linkFilter( self ) :
 	
 		## \todo Implement browsing to other nodes with existing filters
