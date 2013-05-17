@@ -23,7 +23,8 @@
 					<div class="container">
 						<ul class="nav">
 							<li class="active"><a href="#home" data-toggle="tab"><i class="icon-home"></i> Home</a></li>
-							<li><a href="#profile" data-toggle="tab">Documentation</a></li>
+							<li><a href="#forumsTab" data-toggle="tab">Forums</a></li>
+							<li><a href="#documentationTab" data-toggle="tab">Documentation</a></li>
 							<li><a href="#">Blog</a></li>
 							<li><a href="#">Code</a></li>
 						</ul>
@@ -99,9 +100,29 @@
 				</div>
 			</div>
 
+	 	    <!-- Forums -->
+
+			<div class="tab-pane fade" id="forumsTab">
+
+				<iframe id="forum_embed"
+					src="javascript:void(0)"
+					scrolling="no"
+					frameborder="0"
+					width="900"
+					height="700">
+				</iframe>
+				<script type="text/javascript">
+					document.getElementById('forum_embed').src =
+					'https://groups.google.com/forum/embed/?place=forum/gaffer-dev'
+						+ '&showsearch=true&showpopout=true&showtabs=false'
+						+ '&parenturl=' + encodeURIComponent(window.location.href);
+				</script>
+
+			</div>
+
 	 	    <!-- Documentation -->
 			
-			<div class="tab-pane fade" id="profile">
+			<div class="tab-pane fade" id="documentationTab">
 				<p>Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid. Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed echo park.</p>
 			</div>
 
