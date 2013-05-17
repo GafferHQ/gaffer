@@ -403,7 +403,7 @@ size_t StandardGraphLayout::connections( GraphGadget *graph, Gaffer::Plug *plug,
 				continue;
 			}
 			ConnectionGadget *connection = graph->connectionGadget( *it );
-			if( connection )
+			if( connection && connection->srcNodule() )
 			{
 				connections.push_back( connection );
 			}
