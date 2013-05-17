@@ -57,7 +57,6 @@ class SamplerTest( unittest.TestCase ) :
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		
 		bounds = r["out"]["dataWindow"].getValue();
-		f = GafferImage.Filter.create( "Box" )
 	
 		testCases = [
 			( bounds.min.x-1, bounds.min.y ),
