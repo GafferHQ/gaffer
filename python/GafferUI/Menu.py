@@ -38,6 +38,7 @@
 import inspect
 import weakref
 import types
+import re
 
 import IECore
 
@@ -49,15 +50,19 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Menu( GafferUI.Widget ) :
 
-	def __init__( self, definition, _qtParent=None, **kw ) :
+	def __init__( self, definition, _qtParent=None, searchable=False, **kw ) :
 	
 		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
 		
 		self.__definition = definition
+		self.__searchable = searchable
 		
-		# we rebuild each menu every time it's shown, to support the use of callable items to provide
-		# dynamic submenus and item states.
-		self._qtWidget().aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), self._qtWidget(), self.__definition ) )
+		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
+		
+		if searchable :
+			self._qtWidget().aboutToHide.connect( Gaffer.WeakMethod( self.__hide ) )
+			self._qtWidget().triggered.connect( Gaffer.WeakMethod( self.__menuActionTriggered ) )
+			self.__lastAction = None
 		
 		self._setStyleSheet()		
 		
@@ -101,6 +106,10 @@ class Menu( GafferUI.Widget ) :
 			
 		return GafferUI.Widget.parent( self )
 	
+	def searchable( self ) :
+		
+		return self.__searchable
+	
 	def __argNames( self, function ) :
 	
 		if isinstance( function, types.FunctionType ) :
@@ -134,7 +143,48 @@ class Menu( GafferUI.Widget ) :
 			args.append( toggled )
 		
 		command( *args, **kw )
-
+	
+	def __show( self ) :
+		
+		# we rebuild each menu every time it's shown, to support the use of callable items to provide
+		# dynamic submenus and item states.
+		self.__build( self._qtWidget(), self.__definition )
+		
+		if self.__searchable :
+			# Searchable menus need to initialize a search structure so they can be searched without
+			# expanding each submenu. The definition is fully expanded, so dynanmic submenus that
+			# exist will be expanded and searched.
+			self.__searchStructure = {}
+			self.__initSearch( self.__definition )
+			
+			# Searchable menus require an extra submenu to display the search results. 
+			searchWidget = QtGui.QWidgetAction( self._qtWidget() )
+			searchWidget.setObjectName( "GafferUI.Menu.__searchWidget" )
+			self.__searchMenu = _Menu( self._qtWidget(), "" )
+			self.__searchMenu.aboutToShow.connect( Gaffer.WeakMethod( self.__searchMenuShow ) )
+			self.__searchMenu.triggered.connect( Gaffer.WeakMethod( self.__menuActionTriggered ) )
+			self.__searchLine = QtGui.QLineEdit()
+			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
+			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
+			self.__searchLine.setObjectName( "search" )
+			self.__searchLine.setPlaceholderText( "Search..." )
+			if self.__lastAction :
+				self.__searchLine.setText( self.__lastAction.text() )
+				self.__searchMenu.setDefaultAction( self.__lastAction )
+			
+			self.__searchLine.selectAll()
+			searchWidget.setDefaultWidget( self.__searchLine )
+			
+			firstAction = self._qtWidget().actions()[0]
+			self._qtWidget().insertAction( firstAction, searchWidget )
+			self._qtWidget().setActiveAction( searchWidget )
+			self.__searchLine.setFocus()
+	
+	def __hide( self ) :
+		
+		if self.__searchable and self.__searchMenu :
+			self.__searchMenu.hide()
+	
 	# May be called to fully build the menu /now/, rather than only do it lazily
 	# when it's shown. This is used by the MenuBar to make sure that keyboard shortcuts
 	# are available even before the menu has been shown.
@@ -168,7 +218,6 @@ class Menu( GafferUI.Widget ) :
 			
 			if not name in done :
 
-				menuItem = None
 				if len( pathComponents ) > 1 :
 					
 					# it's an intermediate submenu we need to make
@@ -238,6 +287,37 @@ class Menu( GafferUI.Widget ) :
 		
 		return qtAction
 	
+	def __initSearch( self, definition, dirname = "" ) :
+		
+		if callable( definition ) :
+			if "menu" in self.__argNames( definition ) :
+				definition = definition( self )
+			else :
+				definition = definition()
+		
+		done = set()
+		for path, item in definition.items() :
+			
+			name = path.split( "/" )[-1]
+			fullPath = dirname + path
+			
+			if item.divider or not item.blindData.get( "searchable", IECore.BoolData( True ) ).value :
+				continue
+			
+			elif item.subMenu is not None :
+				
+				self.__initSearch( item.subMenu, dirname=fullPath )
+			
+			else :
+				label = name
+				with IECore.IgnoredExceptions( AttributeError ) :
+					label = item.label
+				
+				if label in self.__searchStructure :
+					self.__searchStructure[label].append( ( item, fullPath ) )
+				else :
+					self.__searchStructure[label] = [ ( item, fullPath ) ]
+	
 	def __evaluateItemValue( self, itemValue ) :
 	
 		if callable( itemValue ) :
@@ -247,6 +327,79 @@ class Menu( GafferUI.Widget ) :
 			itemValue = itemValue( **kwArgs )
 				
 		return itemValue
+	
+	def __updateSearchMenu( self, text ) :
+		
+		if not self.__searchable :
+			return
+		
+		self.__searchMenu.hide()
+		self.__searchMenu.clear()
+		self.__searchMenu.setDefaultAction( None )
+		
+		if not text :
+			return
+		
+		matched = self.__matchingActions( str(text) )
+		## \todo: may need smarter sorting (or just use menu order?)
+		## \todo: max num actions?
+		for name in sorted( matched ) :
+			actions = matched[name]
+			if len(actions) > 1 :
+				for ( action, path ) in actions :
+					action.setText( self.__disambiguate( action.text(), path ) )
+			for ( action, path ) in sorted( actions, key = lambda x : x[0].text() ) :
+				self.__searchMenu.addAction( action )
+		
+		finalActions = self.__searchMenu.actions()
+		if len(finalActions) :
+			self.__searchMenu.setDefaultAction( finalActions[0] )
+			self.__searchMenu.setActiveAction( finalActions[0] )
+			pos = self.__searchLine.mapToGlobal( QtCore.QPoint( 0, 0 ) )
+			self.__searchMenu.popup( QtCore.QPoint( pos.x() + self.__searchLine.width(), pos.y() ) )
+			self.__searchLine.setFocus()
+	
+	def __matchingActions( self, searchText, path = "" ) :
+		
+		results = {}
+		# find all actions matching a case-insensitive regex
+		matcher = re.compile( "".join( [ "[%s|%s]" % ( c.upper(), c.lower() ) for c in searchText ] ) )
+		
+		for name in self.__searchStructure :
+			
+			if matcher.search( name ) :
+				
+				for item, path in self.__searchStructure[name] :
+					
+					action = self.__buildAction( item, name, self.__searchMenu )
+					if name in results :
+						results[name].append( ( action, path ) )
+					else :
+						results[name] = [ ( action, path ) ]
+		
+		return results
+	
+	def __disambiguate( self, name, path, remove=False ) :
+		
+		result = str(name).partition( " (" + path + ")" )[0]
+		if remove :
+			return result
+		
+		return result + " (" + path + ")"
+	
+	def __searchMenuShow( self ) :
+		
+		self.__searchMenu.keyboardMode = _Menu.KeyboardMode.Forward
+	
+	def __searchReturnPressed( self ) :
+		
+		if self.__searchMenu and self.__searchMenu.defaultAction() :
+			self.__searchMenu.defaultAction().trigger()
+	
+	def __menuActionTriggered( self, action ) :
+		
+		self.__lastAction = action if action.objectName() != "GafferUI.Menu.__searchWidget" else None
+		self._qtWidget().hide()
 
 class _Menu( QtGui.QMenu ) :
 
