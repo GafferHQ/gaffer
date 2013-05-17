@@ -69,7 +69,7 @@ class Menu( GafferUI.Widget ) :
 	# then the menu will be shown exactly at the requested position, even if
 	# doing so means some of it will be off screen. If grabFocus is False, then
 	# the menu will not take keyboard events unless the first such event is a
-	# press of the down arrow.
+	# press of the up or down arrows.
 	def popup( self, parent=None, position=None, forcePosition=False, grabFocus=True ) :
 	
 		if parent is not None :
@@ -82,7 +82,7 @@ class Menu( GafferUI.Widget ) :
 		else :
 			position = QtCore.QPoint( position.x, position.y )
 
-		self._qtWidget().grabFocus = grabFocus
+		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 			
 		self._qtWidget().popup( position )
 	
@@ -165,7 +165,7 @@ class Menu( GafferUI.Widget ) :
 		
 			pathComponents = path.strip( "/" ).split( "/" )
 			name = pathComponents[0]
-						
+			
 			if not name in done :
 
 				menuItem = None
@@ -250,6 +250,8 @@ class Menu( GafferUI.Widget ) :
 
 class _Menu( QtGui.QMenu ) :
 
+	KeyboardMode = IECore.Enum.create( "Grab", "Close", "Forward" )
+	
 	def __init__( self, parent, title=None ) :
 	
 		QtGui.QMenu.__init__( self, parent )
@@ -257,7 +259,7 @@ class _Menu( QtGui.QMenu ) :
 		if title is not None :
 			self.setTitle( title )
 
-		self.grabFocus = True
+		self.keyboardMode = _Menu.KeyboardMode.Grab
 	
 	def event( self, qEvent ) :
 	
@@ -270,17 +272,21 @@ class _Menu( QtGui.QMenu ) :
 		return QtGui.QMenu.event( self, qEvent )
 	
 	def keyPressEvent( self, qEvent ) :
-	
-		if not self.grabFocus :
-			if qEvent.key() == QtCore.Qt.Key_Down :
-				self.grabFocus = True
+		
+		if not self.keyboardMode == _Menu.KeyboardMode.Grab :
+			
+			if qEvent.key() == QtCore.Qt.Key_Up or qEvent.key() == QtCore.Qt.Key_Down :
+				self.keyboardMode = _Menu.KeyboardMode.Grab
 			else :
-				# pass the event on to the rightful recipient
-				self.hide()	
-				app = QtGui.QApplication.instance()
-				app.sendEvent( app.focusWidget(), qEvent )
-				return
+				if self.keyboardMode == _Menu.KeyboardMode.Close :
+					self.hide()
 				
+				# pass the event on to the rightful recipient
+				app = QtGui.QApplication.instance()
+				if app.focusWidget() != self :
+					app.sendEvent( app.focusWidget(), qEvent )
+					return
+		
 		QtGui.QMenu.keyPressEvent( self, qEvent )
 
 	def hideEvent( self, qEvent ) :
