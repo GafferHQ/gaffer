@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -16,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #  
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -35,22 +34,31 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
+import unittest
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import IECore
+import Gaffer
+import GafferImage
+import os
+
+class FilterTest( unittest.TestCase ) :
+	
+	def testFilterList( self ) : 
+		filters = GafferImage.Filter.filters()
+		self.assertTrue( len(filters) == 9 )
+		self.assertTrue( "Box" in filters )
+		self.assertTrue( "BSpline" in filters )
+		self.assertTrue( "Bilinear" in filters )
+		self.assertTrue( "Hermite" in filters )
+		self.assertTrue( "Mitchell" in filters )
+		self.assertTrue( "CatmullRom" in filters )
+		self.assertTrue( "Cubic" in filters )
+		self.assertTrue( "Lanczos" in filters )
+		self.assertTrue( "Sinc" in filters )
+		
+	def testCreators( self ) : 
+		filters = GafferImage.Filter.filters()
+		for name in filters :
+			f = GafferImage.Filter.create( name )
+			self.assertTrue( f.typeName(), name+"Filter" )
+
