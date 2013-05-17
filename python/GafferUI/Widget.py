@@ -795,7 +795,9 @@ class Widget( object ) :
 			background-repeat:no-repeat;
 			padding-left: 20px;
 			height:20px;
-			border-radius:5px
+			border-radius:5px;
+			margin-left: 4px;
+			margin-right: 4px;
 		}
 		
 		QDateTimeEdit {

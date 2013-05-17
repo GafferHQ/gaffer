@@ -152,7 +152,7 @@ class Menu( GafferUI.Widget ) :
 		
 		if self.__searchable :
 			# Searchable menus need to initialize a search structure so they can be searched without
-			# expanding each submenu. The definition is fully expanded, so dynanmic submenus that
+			# expanding each submenu. The definition is fully expanded, so dynamic submenus that
 			# exist will be expanded and searched.
 			self.__searchStructure = {}
 			self.__initSearch( self.__definition )
@@ -177,6 +177,7 @@ class Menu( GafferUI.Widget ) :
 			
 			firstAction = self._qtWidget().actions()[0]
 			self._qtWidget().insertAction( firstAction, searchWidget )
+			self._qtWidget().insertSeparator( firstAction )
 			self._qtWidget().setActiveAction( searchWidget )
 			self.__searchLine.setFocus()
 	
@@ -368,6 +369,7 @@ class Menu( GafferUI.Widget ) :
 						self.__searchMenu.addAction( action )
 					else :
 						if overflowMenu is None :
+							self.__searchMenu.addSeparator()
 							overflowMenu = _Menu( self.__searchMenu, "More Results" )
 							self.__searchMenu.addMenu( overflowMenu )
 						overflowMenu.addAction( action )
