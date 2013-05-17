@@ -57,6 +57,7 @@ class SamplerTest( unittest.TestCase ) :
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		
 		bounds = r["out"]["dataWindow"].getValue();
+		f = GafferImage.Filter.create( "Box" )
 	
 		testCases = [
 			( bounds.min.x-1, bounds.min.y ),
@@ -69,21 +70,23 @@ class SamplerTest( unittest.TestCase ) :
 			( bounds.max.x, bounds.min.y-1 )
 		]
 
+		self.assertTrue( "Box" in GafferImage.Filter.filters() )
+		f = GafferImage.Filter.create("Box")
+		
 		with c :
 			
-			self.assertTrue( "Box" in GafferImage.FilterPlug.filters() )
 			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, "Box", GafferImage.BoundingMode.Black )
-		
+			s = GafferImage.Sampler( r["out"], "R", bounds, GafferImage.BoundingMode.Black )
+				
 			# Check that the bounding pixels are non zero.
-			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.min.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.max.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.max.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.min.y+.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.min.y+.5, f ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.max.y+.5, f ), 0. )
+			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.max.y+.5, f ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.min.y+.5, f ), 0. )
 	
 			# Sample out of bounds and assert that a zero is returned.	
 			for x, y in testCases :
-				self.assertEqual( s.sample( x+.5, y+.5 ), 0. )
+				self.assertEqual( s.sample( x+.5, y+.5, f ), 0. )
 
 	def testOutOfBoundsSampleModeClamp( self ) : 
 		
@@ -97,28 +100,28 @@ class SamplerTest( unittest.TestCase ) :
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		
 		bounds = r["out"]["dataWindow"].getValue();
+		f = GafferImage.Filter.create( "Box" )
 	
 		with c :
 			
-			self.assertTrue( "Box" in GafferImage.FilterPlug.filters() )
 			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, "Box", GafferImage.BoundingMode.Clamp )
+			s = GafferImage.Sampler( r["out"], "R", bounds, GafferImage.BoundingMode.Clamp )
 		
 			# Get the values of the corner pixels.
-			bl = s.sample( bounds.min.x+.5, bounds.min.y+.5 )
-			br = s.sample( bounds.max.x+.5, bounds.min.y+.5 )
-			tr = s.sample( bounds.max.x+.5, bounds.max.y+.5 )
-			tl = s.sample( bounds.min.x+.5, bounds.max.y+.5 )
+			bl = s.sample( bounds.min.x+.5, bounds.min.y+.5, f )
+			br = s.sample( bounds.max.x+.5, bounds.min.y+.5, f )
+			tr = s.sample( bounds.max.x+.5, bounds.max.y+.5, f )
+			tl = s.sample( bounds.min.x+.5, bounds.max.y+.5, f )
 	
 			# Sample out of bounds and assert that the same value as the nearest pixel is returned.	
-			self.assertEqual( s.sample( bounds.min.x-1, bounds.min.y ), bl )
-			self.assertEqual( s.sample( bounds.min.x, bounds.min.y-1 ), bl )
-			self.assertEqual( s.sample( bounds.max.x, bounds.max.y+1 ), tr )
-			self.assertEqual( s.sample( bounds.max.x+1, bounds.max.y ), tr )
-			self.assertEqual( s.sample( bounds.min.x-1, bounds.max.y ), tl )
-			self.assertEqual( s.sample( bounds.min.x, bounds.max.y+1 ), tl )
-			self.assertEqual( s.sample( bounds.max.x+1, bounds.min.y ), br )
-			self.assertEqual( s.sample( bounds.max.x, bounds.min.y-1 ), br )
+			self.assertEqual( s.sample( bounds.min.x-1, bounds.min.y, f ), bl )
+			self.assertEqual( s.sample( bounds.min.x, bounds.min.y-1, f ), bl )
+			self.assertEqual( s.sample( bounds.max.x, bounds.max.y+1, f ), tr )
+			self.assertEqual( s.sample( bounds.max.x+1, bounds.max.y, f ), tr )
+			self.assertEqual( s.sample( bounds.min.x-1, bounds.max.y, f ), tl )
+			self.assertEqual( s.sample( bounds.min.x, bounds.max.y+1, f ), tl )
+			self.assertEqual( s.sample( bounds.max.x+1, bounds.min.y, f ), br )
+			self.assertEqual( s.sample( bounds.max.x, bounds.min.y-1, f ), br )
 	
 	# Test that the hash() method accumulates all of the hashes of the tiles within the sample area
 	# for a large number of different sample areas.
@@ -155,7 +158,7 @@ class SamplerTest( unittest.TestCase ) :
 
 		# Get the hash from the sampler.
 		with c :		
-			s = GafferImage.Sampler( plug, channel, box, "Box", GafferImage.BoundingMode.Clamp )
+			s = GafferImage.Sampler( plug, channel, box, GafferImage.BoundingMode.Clamp )
 			s.hash( h )
 
 		# Get the hash from the tiles within our desired sample area.

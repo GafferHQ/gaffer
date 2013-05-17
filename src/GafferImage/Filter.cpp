@@ -108,5 +108,16 @@ Filter::FilterRegistration<CubicFilter> CubicFilter::m_registration( "Cubic" );
 Filter::FilterRegistration<LanczosFilter> LanczosFilter::m_registration( "Lanczos" );
 Filter::FilterRegistration<SincFilter> SincFilter::m_registration( "Sinc" );
 
+IE_CORE_DEFINERUNTIMETYPED( Filter );
+IE_CORE_DEFINERUNTIMETYPED( BSplineFilter );
+IE_CORE_DEFINERUNTIMETYPED( BilinearFilter );
+IE_CORE_DEFINERUNTIMETYPED( HermiteFilter );
+IE_CORE_DEFINERUNTIMETYPED( MitchellFilter );
+IE_CORE_DEFINERUNTIMETYPED( SplineFilter );
+IE_CORE_DEFINERUNTIMETYPED( CatmullRomFilter );
+IE_CORE_DEFINERUNTIMETYPED( CubicFilter );
+IE_CORE_DEFINERUNTIMETYPED( LanczosFilter );
+IE_CORE_DEFINERUNTIMETYPED( SincFilter );
+
 }; // namespace GafferImage
 
