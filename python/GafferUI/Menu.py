@@ -341,7 +341,7 @@ class Menu( GafferUI.Widget ) :
 			return
 		
 		matched = self.__matchingActions( str(text) )
-		## \todo: max num actions?
+		
 		# sorting on match position within the name
 		matchIndexMap = {}
 		for name, info in matched.items() :
@@ -349,15 +349,30 @@ class Menu( GafferUI.Widget ) :
 				matchIndexMap[info["pos"]] = []
 			matchIndexMap[info["pos"]].append( ( name, info["actions"] ) )
 		
+		numActions = 0
+		maxActions = 50
+		overflowMenu = None
+		
 		# sorting again alphabetically within each match position
 		for matchIndex in sorted( matchIndexMap ) :
+			
 			for ( name, actions ) in sorted( matchIndexMap[matchIndex], key = lambda x : x[0] ) :
+				
 				if len(actions) > 1 :
 					for ( action, path ) in actions :
 						action.setText( self.__disambiguate( name, path ) )
 				# since all have the same name, sorting alphabetically on disambiguation text
 				for ( action, path ) in sorted( actions, key = lambda x : x[0].text() ) :
-					self.__searchMenu.addAction( action )
+					
+					if numActions < maxActions :
+						self.__searchMenu.addAction( action )
+					else :
+						if overflowMenu is None :
+							overflowMenu = _Menu( self.__searchMenu, "More Results" )
+							self.__searchMenu.addMenu( overflowMenu )
+						overflowMenu.addAction( action )
+					
+					numActions += 1
 		
 		finalActions = self.__searchMenu.actions()
 		if len(finalActions) :
