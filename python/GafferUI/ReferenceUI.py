@@ -129,7 +129,7 @@ GafferUI.Metadata.registerPlugValue( Gaffer.Reference, "fileName", "nodeUI:secti
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), re.compile( "out[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", GafferUI.UserPlugValueWidget, editable=False )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), "user", GafferUI.UserPlugValueWidget, editable=False )
 
 ##########################################################################
 # Utilities
