@@ -68,7 +68,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		
 		self.__gadgetWidget._qtWidget().installEventFilter( _eventFilter )
 		
-		self._sm = None
+		self._nodeMenu = GafferUI.Menu( GafferUI.NodeMenu.definition(), searchable=True )
 	
 	## Returns the internal GadgetWidget holding the GraphGadget.	
 	def graphGadgetWidget( self ) :
@@ -197,9 +197,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 					self._m.popup( self )
 					return True
 			
-			if not self._sm :
-				self._sm = GafferUI.Menu( GafferUI.NodeMenu.definition(), searchable=True )
-			self._sm.popup( self )
+			self._nodeMenu.popup( self )
 			
 			return True
 	
@@ -305,6 +303,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.parent().removeChild( self )
 
 ## Used to capture TAB input since it doesn't make it through to the keyPressSignal
+## \todo: investigate this further. TextWidget does receive TAB in keyPressSignal
 class _EventFilter( QtCore.QObject ) :
 	
 	def eventFilter( self, qObject, qEvent ) :
@@ -313,9 +312,7 @@ class _EventFilter( QtCore.QObject ) :
 			
 			nodeGraph = GafferUI.Widget._owner( qObject ).ancestor( NodeGraph )
 			if nodeGraph :
-				if not nodeGraph._sm :
-					nodeGraph._sm = GafferUI.Menu( GafferUI.NodeMenu.definition(), searchable=True )
-				nodeGraph._sm.popup( nodeGraph )
+				nodeGraph._nodeMenu.popup( nodeGraph )
 				return True
 		
 		return False
