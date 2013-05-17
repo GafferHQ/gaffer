@@ -35,6 +35,7 @@
 ##########################################################################
 
 import fnmatch
+import traceback
 
 import IECore
 
@@ -150,8 +151,12 @@ class __NodeUI( GafferUI.StandardNodeUI ) :
 			if not plugs :
 				continue
 
-			active = eval( expression, globals(), ExpressionVariables( parametersPlug ) )
-
+			try :
+				active = eval( expression, globals(), ExpressionVariables( parametersPlug ) )
+			except Exception, e :
+				IECore.msg( IECore.Msg.Level.Error, "Parameter activator", "".join( traceback.format_exception_only( type( e ), e ) ) )
+				continue
+				
 			for plug in plugs :
 				plugValueWidget = self.plugValueWidget( plug, lazy=False )
 				if plugValueWidget is not None :
