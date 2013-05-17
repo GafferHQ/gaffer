@@ -341,15 +341,23 @@ class Menu( GafferUI.Widget ) :
 			return
 		
 		matched = self.__matchingActions( str(text) )
-		## \todo: may need smarter sorting (or just use menu order?)
 		## \todo: max num actions?
-		for name in sorted( matched ) :
-			actions = matched[name]
-			if len(actions) > 1 :
-				for ( action, path ) in actions :
-					action.setText( self.__disambiguate( action.text(), path ) )
-			for ( action, path ) in sorted( actions, key = lambda x : x[0].text() ) :
-				self.__searchMenu.addAction( action )
+		# sorting on match position within the name
+		matchIndexMap = {}
+		for name, info in matched.items() :
+			if info["pos"] not in matchIndexMap :
+				matchIndexMap[info["pos"]] = []
+			matchIndexMap[info["pos"]].append( ( name, info["actions"] ) )
+		
+		# sorting again alphabetically within each match position
+		for matchIndex in sorted( matchIndexMap ) :
+			for ( name, actions ) in sorted( matchIndexMap[matchIndex], key = lambda x : x[0] ) :
+				if len(actions) > 1 :
+					for ( action, path ) in actions :
+						action.setText( self.__disambiguate( name, path ) )
+				# since all have the same name, sorting alphabetically on disambiguation text
+				for ( action, path ) in sorted( actions, key = lambda x : x[0].text() ) :
+					self.__searchMenu.addAction( action )
 		
 		finalActions = self.__searchMenu.actions()
 		if len(finalActions) :
@@ -367,15 +375,16 @@ class Menu( GafferUI.Widget ) :
 		
 		for name in self.__searchStructure :
 			
-			if matcher.search( name ) :
+			match = matcher.search( name )
+			if match :
 				
 				for item, path in self.__searchStructure[name] :
 					
 					action = self.__buildAction( item, name, self.__searchMenu )
-					if name in results :
-						results[name].append( ( action, path ) )
-					else :
-						results[name] = [ ( action, path ) ]
+					if name not in results :
+						results[name] = { "pos" : match.start(), "actions" : [] }
+					
+					results[name]["actions"].append( ( action, path ) )
 		
 		return results
 	
