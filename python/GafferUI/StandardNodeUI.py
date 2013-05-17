@@ -123,9 +123,6 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 	def __sectionColumn( self, sectionName ) :
 
-		if self.__displayMode == self.DisplayMode.Simplified and sectionName != self.__defaultSectionName :
-			return None
-
 		sectionColumn = self.__sectionColumns.get( sectionName, None )
 		if sectionColumn is None :
 
@@ -160,8 +157,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 				continue
 				
 			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
-			sectionColumn = self.__sectionColumn( sectionName )
-			if sectionColumn is None :
+			if self.__displayMode == self.DisplayMode.Simplified and sectionName != self.__defaultSectionName :
 				continue
 				
 			widget = GafferUI.PlugValueWidget.create( plug )
@@ -173,6 +169,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :
 				widget = GafferUI.PlugWidget( widget )
 
+			sectionColumn = self.__sectionColumn( sectionName )
 			sectionColumn.append( widget )
 
 	def __currentTabChanged( self, tabbedContainer, current ) :
