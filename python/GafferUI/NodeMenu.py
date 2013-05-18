@@ -55,9 +55,10 @@ __definition = IECore.MenuDefinition()
 
 ## Utility function to append a menu item to definition.
 # nodeCreator must be a callable that returns a Gaffer.Node.	
-def append( path, nodeCreator ) :
+def append( path, nodeCreator, **kw ) :
 
-	definition().append( path, { "command" : nodeCreatorWrapper( nodeCreator=nodeCreator ) } )
+	item = IECore.MenuItemDefinition( command = nodeCreatorWrapper( nodeCreator=nodeCreator ), **kw )
+	definition().append( path, item )
 
 ## Utility function which takes a callable that creates a node, and returns a new
 # callable which will add the node to the graph.
