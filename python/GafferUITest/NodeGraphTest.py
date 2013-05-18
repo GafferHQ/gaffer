@@ -631,7 +631,6 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		g.setNodePosition( s["n"], IECore.V2f( -100, 2000 ) )
 		self.assertEqual( g.getNodePosition( s["n"] ), IECore.V2f( -100, 2000 ) )
 
-
 	def testTitle( self ) :
 	
 		s = Gaffer.ScriptNode()
@@ -643,7 +642,80 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		g.setTitle( "This is a test!" )
 		
 		self.assertEqual( g.getTitle(), "This is a test!" )
-			
+		
+	def testPlugConnectionGadgets( self ) :
+
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		script["add3"] = GafferTest.AddNode()
+		script["add4"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		script["add3"]["op1"].setInput( script["add2"]["sum"] )
+		script["add4"]["op2"].setInput( script["add2"]["sum"] )
+				
+		g = GafferUI.GraphGadget( script )
+		
+		c = g.connectionGadgets( script["add1"]["sum"] )
+		self.assertEqual( len( c ), 1 )
+		self.assertTrue( c[0].srcNodule().plug().isSame( script["add1"]["sum"] ) )
+		self.assertTrue( c[0].dstNodule().plug().isSame( script["add2"]["op1"] ) )
+		
+		c = g.connectionGadgets( script["add1"]["sum"], excludedNodes = Gaffer.StandardSet( [ script["add2"] ] ) )
+		self.assertEqual( len( c ), 0 )
+		
+		c = g.connectionGadgets( script["add2"]["sum"] )
+		self.assertEqual( len( c ), 2 )
+		self.assertTrue( c[0].srcNodule().plug().isSame( script["add2"]["sum"] ) )
+		self.assertTrue( c[0].dstNodule().plug().isSame( script["add3"]["op1"] ) )
+		self.assertTrue( c[1].srcNodule().plug().isSame( script["add2"]["sum"] ) )
+		self.assertTrue( c[1].dstNodule().plug().isSame( script["add4"]["op2"] ) )
+		
+		c = g.connectionGadgets( script["add2"]["sum"], excludedNodes = Gaffer.StandardSet( [ script["add3"] ] ) )
+		self.assertEqual( len( c ), 1 )
+		self.assertTrue( c[0].srcNodule().plug().isSame( script["add2"]["sum"] ) )
+		self.assertTrue( c[0].dstNodule().plug().isSame( script["add4"]["op2"] ) )
+
+	def testNodeConnectionGadgets( self ) :
+
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		script["add3"] = GafferTest.AddNode()
+		script["add4"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		script["add3"]["op1"].setInput( script["add2"]["sum"] )
+		script["add4"]["op2"].setInput( script["add2"]["sum"] )
+				
+		g = GafferUI.GraphGadget( script )
+		
+		c = g.connectionGadgets( script["add1"] )
+		self.assertEqual( len( c ), 1 )
+		self.assertTrue( c[0].srcNodule().plug().isSame( script["add1"]["sum"] ) )
+		self.assertTrue( c[0].dstNodule().plug().isSame( script["add2"]["op1"] ) )
+		
+		c = g.connectionGadgets( script["add1"], excludedNodes = Gaffer.StandardSet( [ script["add2"] ] ) )
+		self.assertEqual( len( c ), 0 )
+		
+		c = g.connectionGadgets( script["add2"] )
+		self.assertEqual( len( c ), 3 )
+		self.assertTrue( c[0].srcNodule().plug().isSame( script["add1"]["sum"] ) )
+		self.assertTrue( c[0].dstNodule().plug().isSame( script["add2"]["op1"] ) )
+		self.assertTrue( c[1].srcNodule().plug().isSame( script["add2"]["sum"] ) )
+		self.assertTrue( c[1].dstNodule().plug().isSame( script["add3"]["op1"] ) )
+		self.assertTrue( c[2].srcNodule().plug().isSame( script["add2"]["sum"] ) )
+		self.assertTrue( c[2].dstNodule().plug().isSame( script["add4"]["op2"] ) )
+		
+		c = g.connectionGadgets( script["add2"], excludedNodes = Gaffer.StandardSet( [ script["add3"] ] ) )
+		self.assertEqual( len( c ), 2 )
+		self.assertTrue( c[0].srcNodule().plug().isSame( script["add1"]["sum"] ) )
+		self.assertTrue( c[0].dstNodule().plug().isSame( script["add2"]["op1"] ) )
+		self.assertTrue( c[1].srcNodule().plug().isSame( script["add2"]["sum"] ) )
+		self.assertTrue( c[1].dstNodule().plug().isSame( script["add4"]["op2"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
-	
