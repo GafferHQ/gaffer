@@ -793,6 +793,7 @@ class Widget( object ) :
 		QLineEdit#search{
 			background-image: url($GAFFER_ROOT/graphics/search.png);
 			background-repeat:no-repeat;
+			background-position: left center;
 			padding-left: 20px;
 			height:20px;
 			border-radius:5px;
