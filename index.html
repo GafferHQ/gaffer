@@ -12,10 +12,11 @@
 
 	<a href="https://github.com/ImageEngine/gaffer"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
-    <!-- Navigation Bar -->
 	
     <div class="container">
     
+	    <!-- Navigation Bar -->
+
 		<div class="masthead">
 			<h3 class="muted">Gaffer</h3>	
 			<div class="navbar navbar-static-top">
@@ -23,8 +24,14 @@
 					<div class="container">
 						<ul class="nav">
 							<li class="active"><a href="#home" data-toggle="tab"><i class="icon-home"></i> Home</a></li>
-							<li><a href="#forumsTab" data-toggle="tab">Forums</a></li>
-							<li><a href="#documentationTab" data-toggle="tab">Documentation</a></li>
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Forums <b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									<li><a href="#userForumTab" data-toggle="tab">Users</a></li>
+									<li><a href="#developerForumTab" data-toggle="tab">Developers</a></li>
+								</ul>
+							</li>
+							<li><a href="#documentationTab" data-toggle="tab">Documentation</a></li> 
 							<li><a href="#">Blog</a></li>
 							<li><a href="#">Code</a></li>
 						</ul>
@@ -100,9 +107,29 @@
 				</div>
 			</div>
 
-	 	    <!-- Forums -->
+			<!-- User Forum -->
 
-			<div class="tab-pane fade" id="forumsTab">
+			<div class="tab-pane fade" id="userForumTab">
+
+				<iframe id="forum_embed"
+					src="javascript:void(0)"
+					scrolling="no"
+					frameborder="0"
+					width="900"
+					height="700">
+				</iframe>
+				<script type="text/javascript">
+					document.getElementById('forum_embed').src =
+					'https://groups.google.com/forum/embed/?place=forum/gaffer-users'
+						+ '&showsearch=true&showpopout=true&showtabs=false&hideforumtitle=true'
+						+ '&parenturl=' + encodeURIComponent(window.location.href);
+				</script>
+
+			</div>
+
+	 	    <!-- Developer Forum -->
+
+			<div class="tab-pane fade" id="developerForumTab">
 
 				<iframe id="forum_embed"
 					src="javascript:void(0)"
