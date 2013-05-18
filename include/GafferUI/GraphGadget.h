@@ -99,6 +99,20 @@ class GraphGadget : public ContainerGadget
 		ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug );
 		const ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug ) const;
 		
+		/// Finds all the ConnectionGadgets (both inputs and outputs) connected
+		/// to the specified plug and appends them to the connections vector.
+		/// Returns the new size of the vector. If excludedNodes is specified,
+		/// then connections to any nodes it contains will be ignored.
+		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 );
+		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 ) const;
+		
+		/// Finds all the ConnectionGadgets connected to the specified node and
+		/// appends them to the connections vector. Returns the new size of the 
+		/// vector. If excludedNodes is specified, then connections to any
+		/// nodes it contains will be ignored.
+		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 );
+		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 ) const;
+		
 		/// Sets the position of the specified node within the graph. This
 		/// method may be used even when the node currently has no NodeGadget
 		/// associated with it, and the position will be used if and when a NodeGadget

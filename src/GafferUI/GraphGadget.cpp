@@ -196,6 +196,68 @@ const ConnectionGadget *GraphGadget::connectionGadget( const Gaffer::Plug *dstPl
 	return findConnectionGadget( dstPlug );
 }
 
+size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
+{
+	if( plug->direction() == Gaffer::Plug::In )
+	{
+		const Gaffer::Plug *input = plug->getInput<Gaffer::Plug>();
+		if( input )
+		{
+			if( !excludedNodes || !excludedNodes->contains( input->node() ) )
+			{
+				ConnectionGadget *connection = connectionGadget( plug );
+				if( connection && connection->srcNodule() )
+				{
+					connections.push_back( connection );
+				}
+			}
+		}
+	}
+	else
+	{
+		const Gaffer::Plug::OutputContainer &outputs = plug->outputs();
+		for( Gaffer::Plug::OutputContainer::const_iterator it = outputs.begin(), eIt = outputs.end(); it != eIt; ++it )
+		{
+			if( excludedNodes && excludedNodes->contains( (*it)->node() ) )
+			{
+				continue;
+			}
+			ConnectionGadget *connection = connectionGadget( *it );
+			if( connection && connection->srcNodule() )
+			{
+				connections.push_back( connection );
+			}
+		}
+	}
+	return connections.size();
+}
+
+size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
+{
+	// preferring naughty casts over maintaining two identical implementations
+	return const_cast<GraphGadget *>( this )->connectionGadgets( plug, reinterpret_cast<std::vector<ConnectionGadget *> &>( connections ), excludedNodes );
+}
+		
+size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
+{
+	for( Gaffer::RecursivePlugIterator it( node ); it != it.end(); ++it )
+	{
+		this->connectionGadgets( it->get(), connections, excludedNodes );
+	}
+	
+	return connections.size();
+}
+
+size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
+{
+	for( Gaffer::RecursivePlugIterator it( node ); it != it.end(); ++it )
+	{
+		this->connectionGadgets( it->get(), connections, excludedNodes );
+	}
+	
+	return connections.size();
+}
+
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
 	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
