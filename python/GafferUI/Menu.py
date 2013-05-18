@@ -334,7 +334,7 @@ class Menu( GafferUI.Widget ) :
 		if not self.__searchable :
 			return
 		
-		self.__searchMenu.hide()
+		self.__searchMenu.setUpdatesEnabled( False )
 		self.__searchMenu.clear()
 		self.__searchMenu.setDefaultAction( None )
 		
@@ -383,6 +383,7 @@ class Menu( GafferUI.Widget ) :
 			pos = self.__searchLine.mapToGlobal( QtCore.QPoint( 0, 0 ) )
 			self.__searchMenu.popup( QtCore.QPoint( pos.x() + self.__searchLine.width(), pos.y() ) )
 			self.__searchLine.setFocus()
+			self.__searchMenu.setUpdatesEnabled( True )
 	
 	def __matchingActions( self, searchText, path = "" ) :
 		
