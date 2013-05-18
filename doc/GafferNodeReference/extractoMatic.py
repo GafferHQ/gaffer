@@ -5,6 +5,9 @@ import GafferUI
 import inspect
 import sys,os
 
+
+__PLACEHOLDERSTRING__ = "!!!__EMPTY__!!!"
+
 def addModuleDefinitionToDoc( doc, modulename ):
 	#format for asciidoc. First level header
 	string = "\n== %s anchor:module_%s[]\n" % (modulename,modulename)
@@ -15,8 +18,13 @@ def addNodeDefinitionToDoc( doc, nodename, node ):
 	string = "\n\n=== %s anchor:node_%s[]\n" % (nodename,nodename)
 	doc.write(string)
 	
+	#get node description from metadata
+	desc = GafferUI.Metadata.nodeDescription(node)
+	
 	#record the node description from the metadata
-	string = "%s\n\n" % (GafferUI.Metadata.nodeDescription(node))
+	if desc == "":
+		desc = __PLACEHOLDERSTRING__
+	string = "%s\n\n" % (desc)
 	string += ".Plugs\n"
 	doc.write(string)
 
@@ -27,7 +35,7 @@ def addPlugDefinitionToDoc( doc, plugName, plugDescription, plugDepth ):
 		indentLevel += ':'
 	
 	if plugDescription == "":
-		string = "%s%s %s\n" % (plugName, indentLevel, "!!!__EMPTY__!!!")
+		string = "%s%s %s\n" % (plugName, indentLevel, __PLACEHOLDERSTRING__)
 	else:
 		string = "%s%s %s\n" % (plugName, indentLevel, plugDescription)
 	doc.write(string)
@@ -67,7 +75,7 @@ for path in sys.path:
 		for module in os.listdir( path ):
 			if module.startswith( 'Gaffer' ) and not module.endswith('Test'):
 				modules.append( module )
-
+modules.sort()
 
 #now import all the modules
 imported = map( __import__, modules )
@@ -113,15 +121,20 @@ for i in range(len(modules)):
 		#now we need to loop over all plugs (the children of the node)
 		for plug in node.children():
 			if not plug.getName().startswith('__'): #skip special plugs
-				#print to doc both the name of the plug (i.e fileName) and the metadata description ('The path to the file to be loaded')
-				#addPlugDefinitionToDoc( targetDoc, [plug.getName(), GafferUI.Metadata.plugDescription(plug)] )
-				checkForChildPlugsAndAddToDoc( targetDoc, plug, 0 )
 				
-				''' TODO - refine this 
-				#start of some work to categorise plugs - IO plugs, control plugs etc
-				if isPlugPluggable( plug ):
-					print '%s is a pluggable plug' % (plug.getName())
-				'''
+				#handle special cases where we know we want to skip plugs with specific names
+				plugsBlacklist = ['user']
+				if not plug.getName() in plugsBlacklist:
+				
+					#print to doc both the name of the plug (i.e fileName) and the metadata description ('The path to the file to be loaded')
+					#addPlugDefinitionToDoc( targetDoc, [plug.getName(), GafferUI.Metadata.plugDescription(plug)] )
+					checkForChildPlugsAndAddToDoc( targetDoc, plug, 0 )
+					
+					''' TODO - refine this 
+					#start of some work to categorise plugs - IO plugs, control plugs etc
+					if isPlugPluggable( plug ):
+						print '%s is a pluggable plug' % (plug.getName())
+					'''
 
 
 

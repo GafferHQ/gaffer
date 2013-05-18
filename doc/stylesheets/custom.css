@@ -152,15 +152,17 @@ thead, p.table.header,
 #toctitle,
 #author, #revnumber, #revdate, #revremark,
 #footer {
-  /*font-family: Garmond, Georgia, serif;*/
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 15px;
   font-weight: 700;
   color: #3E4349;
 }
 
-div.title, caption.title { color: #596673; font-weight: bold; font-size:110%; }
+div.title, caption.title { color: #596673; font-weight: bold; font-size:80%; text-align:center }
 h1 { font-size: 240%; }
 h2 { font-size: 180%; }
 h3 { font-size: 130%; }
+h3 { font-size: 110%; }
 #header h1 { margin-top: 0; }
 /*
 div.toclevel1 { margin-top: 0.2em; font-size: 16px; }

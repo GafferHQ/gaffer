@@ -1,0 +1,5 @@
+cd gaffer/doc/GafferNodeReference/;
+gaffer python extractoMatic.py; asciidoc GafferNodeReference.txt; 
+
+wkhtmltopdf ??
+

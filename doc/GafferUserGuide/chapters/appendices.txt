@@ -1,6 +1,6 @@
 == Appendices anchor:appendices_appendices[]
 
-This section contains additional material for users to refer to as they delve deeper into Gaffer.
+This section contains additional material to be referenced whilst using Gaffer.
 
 It is composed of the following appendices:
 

@@ -2,7 +2,7 @@
 
 This chapter is exclusively for the purposes of testing the documenation build chain.
 
-It contains example of formatting and layout.
+It contains examples of formatting and layout.
 
 IT SHOULD NOT BE PRESENT IN RELEASE DOCUMENTATION
 
@@ -11,3 +11,6 @@ pass::[<a href="https://www.google.com">googles</a>]
 
 //alternative - had pass macro rejected in some locations before
 +++<a href="https://www.google.com">googles</a>+++
+
+[source, python]
+foo = (1,2,3)
