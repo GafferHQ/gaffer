@@ -302,7 +302,7 @@ class Menu( GafferUI.Widget ) :
 			name = path.split( "/" )[-1]
 			fullPath = dirname + path
 			
-			if item.divider or not item.blindData.get( "searchable", IECore.BoolData( True ) ).value :
+			if item.divider or not getattr( item, "searchable", True ) :
 				continue
 			
 			elif item.subMenu is not None :
@@ -310,10 +310,7 @@ class Menu( GafferUI.Widget ) :
 				self.__initSearch( item.subMenu, dirname=fullPath )
 			
 			else :
-				label = name
-				with IECore.IgnoredExceptions( AttributeError ) :
-					label = item.label
-				
+				label = getattr( item, "searchText", getattr( item, "label", name ) )
 				if label in self.__searchStructure :
 					self.__searchStructure[label].append( ( item, fullPath ) )
 				else :
