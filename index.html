@@ -1,169 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Gaffer : Home</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap -->
-    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-	<link href="css/bootstrap-responsive.css" rel="stylesheet">
-  </head>
-  <body>
-	
-    <div class="container">
-    
-	    <!-- Navigation Bar -->
+---
+title: Gaffer Home
+---
 
-		<div class="masthead">
-			<h3 class="muted">Gaffer</h3>	
-			<div class="navbar navbar-static-top">
-				<div class="navbar-inner">
-					<div class="container">
-						<ul class="nav">
-							<li class="active"><a href="#home" data-toggle="tab"><i class="icon-home"></i> Home</a></li>
-							<li class="dropdown">
-								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Forums <b class="caret"></b></a>
-								<ul class="dropdown-menu">
-									<li><a href="#userForumTab" data-toggle="tab">Users</a></li>
-									<li><a href="#developerForumTab" data-toggle="tab">Developers</a></li>
-								</ul>
-							</li>
-							<li><a href="#documentationTab" data-toggle="tab">Documentation</a></li> 
-							<li><a href="#">Blog</a></li>
-							<li><a href="#">Code</a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
+{% include header.html %}
 
-  		<hr>
+<div class="jumbotron">
+	<h1>Connect nodes. Make pictures.</h1>
+	<p class="lead">
+	Gaffer is a general purpose node-based application designed for use in the visual effects industry.
+	It provides basic tools for procedural scene generation, shader authoring, rendering, and image compositing.
+	</p>
+	<a class="btn btn-large btn-success" href="getStarted.html"><i class="icon-download icon-white"></i> Give it a whirl...</a>
+</div>
 
-	    <!-- Content - This is shown/hidden by the navigation bar -->
-	
-        <div id="myTabContent" class="tab-content">
-		              
-	 	    <!-- Home -->
+<hr>
 
-             <div class="tab-pane fade in active" id="home">
+<div class="row-fluid marketing">
+
+	<div class="span4">
+		<h4>Powerful</h4>
+		<p>Based on a multithreaded blah blah...</p>
+		<h4>Renderer Agnostic</h4>
+		<p>Gaffer utilises a renderer abstraction layer allowing it to export to your favourite renderer (assuming
+		   for now that your favourite renderer is either Arnold or 3Delight).
+		</p>
+	</div>
+
+	<div class="span4">
+
+		<h4>Customisable</h4>
+		<p>Gaffer is built to be customisable throughout. Be it a simple
+		scripted configuration tweak, complex expression, custom node
+		or user interface, even a full blown application, Gaffer's open APIs enable
+		you to do what you need.
 		
-				<div class="jumbotron">
-					<h1>Connect nodes. Make pictures.</h1>
-					<p class="lead">
-					Gaffer is a general purpose node-based application designed for use in the visual effects industry.
-					It provides basic tools for procedural scene generation, shader authoring, rendering, and image compositing.
-					</p>
-					<a class="btn btn-large btn-success" href="#"><i class="icon-download icon-white"></i> Give it a whirl...</a>
-				</div>
-
-				<hr>
 		
-				<div class="row-fluid marketing">
+		</p>
 
-					<div class="span4">
-						<h4>Powerful</h4>
-						<p>Based on a multithreaded blah blah...</p>
-						<h4>Renderer Agnostic</h4>
-						<p>Gaffer utilises a renderer abstraction layer allowing it to export to your favourite renderer (assuming
-						   for now that your favourite renderer is either Arnold or 3Delight).
-						</p>
-					</div>
+		<h4>Extensible</h4>
+		<p>Indeed3</p>
 
-					<div class="span4">
+	</div>
 
-						<h4>Customisable</h4>
-						<p>Gaffer is built to be customisable throughout. Be it a simple
-						scripted configuration tweak, complex expression, custom node
-						or user interface, even a full blown application, Gaffer's open APIs enable
-						you to do what you need.
-						
-						
-						</p>
+	<div class="span4">
+		<h4>Open Source</h4>
+		<p>Distributed under the BSD license, Gaffer builds upon a
+		   wealth of open-source VFX libraries including OpenEXR, OpenImageIO,
+		   OpenColorIO, Cortex and of course the Gaffer frameworks themselves.
+		</p>
+		<h4>Unfinished</h4>
+		<p>Although Gaffer is becoming more capable by the day, it still lacks
+		in features and useability.
+		
+		Itching to fix a bug or contribute a cool new enhancement? Want to
+		add support for OpenVDB, Bullet or another renderer backend? 
+		<a href="https://github.com/ImageEngine/gaffer">Fork it on GitHub...</a>
+		</p>
+	</div>
 
-						<h4>Extensible</h4>
-						<p>Indeed3</p>
-				
-					</div>
-			
-					<div class="span4">
-						<h4>Open Source</h4>
-						<p>Distributed under the BSD license, Gaffer builds upon a
-						   wealth of open-source VFX libraries including OpenEXR, OpenImageIO,
-						   OpenColorIO, Cortex and of course the Gaffer frameworks themselves.
-						</p>
-						<h4>Unfinished</h4>
-						<p>Although Gaffer is becoming more capable by the day, it still lacks
-						in features and useability.
-						
-						Itching to fix a bug or contribute a cool new enhancement? Want to
-						add support for OpenVDB, Bullet or another renderer backend? 
-						<a href="https://github.com/ImageEngine/gaffer">Fork it on GitHub...</a>
-						</p>
-					</div>
-			
-				</div>
-			</div>
+</div>
 
-			<!-- User Forum -->
-
-			<div class="tab-pane fade" id="userForumTab">
-
-				<iframe id="userForumIFrame"
-					src="javascript:void(0)"
-					scrolling="no"
-					frameborder="0"
-					width="900"
-					height="700">
-				</iframe>
-				<script type="text/javascript">
-					document.getElementById('userForumIFrame').src =
-					'https://groups.google.com/forum/embed/?place=forum/gaffer-users'
-						+ '&showsearch=true&showpopout=true&showtabs=false&hideforumtitle=true'
-						+ '&parenturl=' + encodeURIComponent(window.location.href);
-				</script>
-
-			</div>
-
-	 	    <!-- Developer Forum -->
-
-			<div class="tab-pane fade" id="developerForumTab">
-
-				<iframe id="developerForumIFrame"
-					src="javascript:void(0)"
-					scrolling="no"
-					frameborder="0"
-					width="900"
-					height="700">
-				</iframe>
-				<script type="text/javascript">
-					document.getElementById('developerForumIFrame').src =
-					'https://groups.google.com/forum/embed/?place=forum/gaffer-dev'
-						+ '&showsearch=true&showpopout=true&showtabs=false&hideforumtitle=true'
-						+ '&parenturl=' + encodeURIComponent(window.location.href);
-				</script>
-
-			</div>
-
-	 	    <!-- Documentation -->
-			
-			<div class="tab-pane fade" id="documentationTab">
-				<p>Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid. Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed echo park.</p>
-			</div>
-
-		</div>
- 
-		<hr>
-
-		<!-- Footer -->
- 		
- 		<div class="footer">
- 			<p><small>&copy; John Haddon 2013</small></p>
- 		</div>
- 		
-	 </div>
-	
-	<script src="http://code.jquery.com/jquery-latest.js"></script>
-    <script src="js/bootstrap.js"></script>
-	 
-	</body>
-</html>
-
+{% include footer.html %}

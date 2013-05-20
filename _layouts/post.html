@@ -1,0 +1,25 @@
+{% include header.html %}
+
+{% if page.next %}
+<a href="{{ page.next.url }}">
+	<p class="text-center">
+		<i class="icon-arrow-up"></i>
+		<small>{{ page.next.title}}</small><small class="muted"> - {{page.next.date | date_to_long_string }}</small>
+	</p>
+</a>
+{% endif %}
+
+<h1> {{ page.title }} </h1>
+
+{{ content }}
+
+{% if page.previous %}
+<a href="{{ page.previous.url }}">
+	<p class="text-center">
+		<i class="icon-arrow-down"></i>
+		<small>{{ page.previous.title}}</small><small class="muted"> - {{page.previous.date | date_to_long_string }}</small>
+	</p>
+</a>
+{% endif %}
+
+{% include footer.html %}

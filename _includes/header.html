@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{{ page.title }}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Bootstrap -->
+	<link href="/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<link href="/css/bootstrap-responsive.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container">
+    
+	    <!-- Navigation Bar -->
+
+		<div class="masthead">
+			<h3 class="muted">Gaffer</h3>	
+			<div class="navbar navbar-static-top">
+				<div class="navbar-inner">
+					<div class="container">
+						<ul class="nav">
+							<li {% if page.url == '/index.html' %} class="active" {% endif %}>
+								<a href="/index.html"><i class="icon-home"></i> Gaffer</a>
+							</li>
+							<li {% if page.url == '/getStarted.html' %} class="active" {% endif %}>
+								<a href="/getStarted.html">Get Started</a>
+							</li>
+							<li {% if page.url == '/forum.html' %} class="active" {% endif %}>
+								<a href="/forum.html">Forum</a>
+							</li>
+							<li {% if page.url contains '/blog'  %} class="active" {% endif %}>
+								<a href="{{ site.posts.first.url }}">Blog</a></li>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+
+  		<hr>

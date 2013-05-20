@@ -1,0 +1,22 @@
+---
+title: Gaffer Forum
+---
+
+{% include header.html %}
+
+	<iframe id="userForumIFrame"
+		src="javascript:void(0)"
+		scrolling="no"
+		frameborder="0"
+		width="900"
+		height="700">
+	</iframe>
+	<script type="text/javascript">
+		document.getElementById('userForumIFrame').src =
+		'https://groups.google.com/forum/embed/?place=forum/gaffer-users'
+			+ '&showsearch=true&showpopout=true&showtabs=false&hideforumtitle=true'
+			+ '&parenturl=' + encodeURIComponent(window.location.href);
+	</script>
+ 
+{% include footer.html %}
+
