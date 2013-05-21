@@ -84,6 +84,32 @@ static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaf
 	return graphGadget.connectionGadget( dstPlug );
 }
 
+static list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
+{
+	std::vector<ConnectionGadget *> connections;
+	graphGadget.connectionGadgets( plug, connections, excludedNodes );
+	
+	boost::python::list l;
+	for( std::vector<ConnectionGadget *>::const_iterator it=connections.begin(), eIt=connections.end(); it!=eIt; ++it )
+	{
+		l.append( ConnectionGadgetPtr( *it ) );
+	}
+	return l;
+}
+
+static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = 0 )
+{
+	std::vector<ConnectionGadget *> connections;
+	graphGadget.connectionGadgets( node, connections, excludedNodes );
+	
+	boost::python::list l;
+	for( std::vector<ConnectionGadget *>::const_iterator it=connections.begin(), eIt=connections.end(); it!=eIt; ++it )
+	{
+		l.append( ConnectionGadgetPtr( *it ) );
+	}
+	return l;
+}
+
 static void setLayout( GraphGadget &g, GraphLayoutPtr l )
 {
 	return g.setLayout( l );
@@ -116,6 +142,8 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "setFilter", &GraphGadget::setFilter )
 		.def( "nodeGadget", &nodeGadget )
 		.def( "connectionGadget", &connectionGadget )
+		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
+		.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
 		.def( "setLayout", &setLayout )

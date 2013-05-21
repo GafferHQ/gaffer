@@ -196,6 +196,68 @@ const ConnectionGadget *GraphGadget::connectionGadget( const Gaffer::Plug *dstPl
 	return findConnectionGadget( dstPlug );
 }
 
+size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
+{
+	if( plug->direction() == Gaffer::Plug::In )
+	{
+		const Gaffer::Plug *input = plug->getInput<Gaffer::Plug>();
+		if( input )
+		{
+			if( !excludedNodes || !excludedNodes->contains( input->node() ) )
+			{
+				ConnectionGadget *connection = connectionGadget( plug );
+				if( connection && connection->srcNodule() )
+				{
+					connections.push_back( connection );
+				}
+			}
+		}
+	}
+	else
+	{
+		const Gaffer::Plug::OutputContainer &outputs = plug->outputs();
+		for( Gaffer::Plug::OutputContainer::const_iterator it = outputs.begin(), eIt = outputs.end(); it != eIt; ++it )
+		{
+			if( excludedNodes && excludedNodes->contains( (*it)->node() ) )
+			{
+				continue;
+			}
+			ConnectionGadget *connection = connectionGadget( *it );
+			if( connection && connection->srcNodule() )
+			{
+				connections.push_back( connection );
+			}
+		}
+	}
+	return connections.size();
+}
+
+size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
+{
+	// preferring naughty casts over maintaining two identical implementations
+	return const_cast<GraphGadget *>( this )->connectionGadgets( plug, reinterpret_cast<std::vector<ConnectionGadget *> &>( connections ), excludedNodes );
+}
+		
+size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
+{
+	for( Gaffer::RecursivePlugIterator it( node ); it != it.end(); ++it )
+	{
+		this->connectionGadgets( it->get(), connections, excludedNodes );
+	}
+	
+	return connections.size();
+}
+
+size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
+{
+	for( Gaffer::RecursivePlugIterator it( node ); it != it.end(); ++it )
+	{
+		this->connectionGadgets( it->get(), connections, excludedNodes );
+	}
+	
+	return connections.size();
+}
+
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
 	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
@@ -624,6 +686,8 @@ bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( m_dragMode == Moving )
 	{
+		calculateDragSnapOffsets( m_scriptNode->selection() );
+		
 		V2f pos = V2f( i.x, i.y );
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
@@ -655,7 +719,38 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	
 	if( m_dragMode == Moving )
 	{
+		// snap the position using the offsets precomputed in calculateDragSnapOffsets()
 		V2f pos = V2f( i.x, i.y );
+		for( int axis = 0; axis <= 1; ++axis )
+		{
+			const std::vector<float> &snapOffsets = m_dragSnapOffsets[axis];
+
+			float offset = pos[axis] - m_dragStartPosition[axis];
+			float snappedDist = Imath::limits<float>::max();
+			float snappedOffset = offset;
+			vector<float>::const_iterator it = lower_bound( snapOffsets.begin(), snapOffsets.end(), offset );
+			if( it != snapOffsets.end() )
+			{
+				snappedOffset = *it;
+				snappedDist = fabs( offset - *it );
+			}
+			if( it != snapOffsets.begin() )
+			{
+				it--;
+				if( fabs( offset - *it ) < snappedDist )
+				{
+					snappedDist = fabs( offset - *it );
+					snappedOffset = *it;
+				}
+			}
+
+			if( snappedDist < 1.5 )
+			{
+				pos[axis] = snappedOffset + m_dragStartPosition[axis];
+			}
+		}
+		
+		// move all the nodes using the snapped offset
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
 		updateDragReconnectCandidate( event );
@@ -808,6 +903,112 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	}
 
 	return true;
+}
+
+void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
+{
+	m_dragSnapOffsets[0].clear();
+	m_dragSnapOffsets[1].clear();
+	
+	std::vector<const ConnectionGadget *> connections;
+	for( size_t i = 0, s = nodes->size(); i < s; ++i )
+	{
+		Gaffer::Node *node = runTimeCast<Gaffer::Node>( nodes->member( i ) );
+		if( !node )
+		{
+			continue;
+		}
+	
+		connections.clear();
+		connectionGadgets( node, connections, nodes );
+		
+		for( std::vector<const ConnectionGadget *>::const_iterator it = connections.begin(), eIt = connections.end(); it != eIt; ++it )
+		{
+			// get the node gadgets at either end of the connection
+			
+			const ConnectionGadget *connection = *it;
+			const Nodule *srcNodule = connection->srcNodule();
+			const Nodule *dstNodule = connection->dstNodule();
+			const NodeGadget *srcNodeGadget = srcNodule->ancestor<NodeGadget>();
+			const NodeGadget *dstNodeGadget = dstNodule->ancestor<NodeGadget>();
+			
+			if( !srcNodeGadget || !dstNodeGadget )
+			{
+				continue;
+			}
+			
+			// check that the connection tangents are opposed - if not we don't want to snap
+			
+			V3f srcTangent = srcNodeGadget->noduleTangent( srcNodule );
+			V3f dstTangent = dstNodeGadget->noduleTangent( dstNodule );
+				
+			if( srcTangent.dot( dstTangent ) > -0.5f )
+			{
+				continue;
+			}
+			
+			// compute an offset that will bring the src and destination nodules into line
+			
+			const int snapAxis = fabs( srcTangent.x ) > 0.5 ? 1 : 0;
+						
+			V3f srcPosition = V3f( 0 ) * srcNodule->fullTransform();
+			V3f dstPosition = V3f( 0 ) * dstNodule->fullTransform();
+			float offset = srcPosition[snapAxis] - dstPosition[snapAxis];
+				
+			if( dstNodule->plug()->node() != node )
+			{
+				offset *= -1;
+			}
+			
+			m_dragSnapOffsets[snapAxis].push_back( offset );
+			
+			// compute an offset that will bring the src and destination nodes into line
+			
+			V3f srcNodePosition = V3f( 0 ) * srcNodeGadget->fullTransform();
+			V3f dstNodePosition = V3f( 0 ) * dstNodeGadget->fullTransform();
+			offset = srcNodePosition[snapAxis] - dstNodePosition[snapAxis];
+				
+			if( dstNodule->plug()->node() != node )
+			{
+				offset *= -1;
+			}
+
+			m_dragSnapOffsets[snapAxis].push_back( offset );
+
+			// compute an offset that will position the node snugly next to its input
+			// in the other axis.
+			
+			Box3f srcNodeBound = srcNodeGadget->transformedBound( 0 );
+			Box3f dstNodeBound = dstNodeGadget->transformedBound( 0 );
+			
+			const int otherAxis = snapAxis == 1 ? 0 : 1;
+			if( otherAxis == 1 )
+			{
+				offset = dstNodeBound.max[otherAxis] - srcNodeBound.min[otherAxis] + 1.0f;
+			}
+			else
+			{
+				offset = dstNodeBound.min[otherAxis] - srcNodeBound.max[otherAxis] - 1.0f;				
+			}
+			
+			if( dstNodule->plug()->node() == node )
+			{
+				offset *= -1;
+			}
+			
+			m_dragSnapOffsets[otherAxis].push_back( offset );
+		}
+	}
+	
+	// sort and remove duplicates so that we can use lower_bound() to find appropriate
+	// snap points in dragMove().
+	
+	for( int axis = 0; axis <= 1; ++axis )
+	{
+		std::sort( m_dragSnapOffsets[axis].begin(), m_dragSnapOffsets[axis].end() );
+		m_dragSnapOffsets[axis].erase( std::unique( m_dragSnapOffsets[axis].begin(), m_dragSnapOffsets[axis].end()), m_dragSnapOffsets[axis].end() );
+	}
+	
 }
 
 void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )

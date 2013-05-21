@@ -79,10 +79,7 @@ class StandardGraphLayout : public GraphLayout
 		size_t outputPlugs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Gaffer::Plug *> &plugs ) const;
 		Gaffer::Plug *correspondingOutput( const Gaffer::Plug *input ) const;
 		size_t unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
-		
-		size_t connections( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedNodes, std::vector<GafferUI::ConnectionGadget *> &connections ) const;
-		size_t connections( GraphGadget *graph, Gaffer::Plug *plug, Gaffer::Set *excludedNodes, std::vector<GafferUI::ConnectionGadget *> &connections ) const;		
-				
+						
 		// We calculate node positions based on the assumption that connections flow left to right and/or top to bottom.
 		// From this we compute a hard constraint which guarantees that a node is not to the left of or above its inputs and is
 		// not below or to the left of its outputs. In the case of all connections being either vertical or horizontal, this will only
