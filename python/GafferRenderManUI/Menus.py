@@ -67,9 +67,7 @@ def __shaderSubMenu() :
 		for root, dirs, files in os.walk( path ) :
 			for file in files :
 				if os.path.splitext( file )[1] == ".sdl" :
-					shaderPath = os.path.join( root, file )
-					shaderPath = os.path.realpath( shaderPath )
-					shaderPath = os.path.relpath( shaderPath, path )					
+					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
 					if shaderPath not in shaders :
 						shaders.add( os.path.splitext( shaderPath )[0] )
 	
@@ -100,7 +98,7 @@ def __shaderSubMenu() :
 
 GafferUI.NodeMenu.definition().append( "/RenderMan/Shader", { "subMenu" : __shaderSubMenu } )
 
-GafferUI.NodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes )
-GafferUI.NodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions )
-GafferUI.NodeMenu.append( "/RenderMan/Render", GafferRenderMan.RenderManRender )
-GafferUI.NodeMenu.append( "/RenderMan/Interactive Render", GafferRenderMan.InteractiveRenderManRender )
+GafferUI.NodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
+GafferUI.NodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
+GafferUI.NodeMenu.append( "/RenderMan/Render", GafferRenderMan.RenderManRender, searchText = "RenderManRender" )
+GafferUI.NodeMenu.append( "/RenderMan/InteractiveRender", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRender" )

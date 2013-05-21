@@ -94,17 +94,17 @@ GafferUI.NodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVa
 GafferUI.NodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )
 GafferUI.NodeMenu.append( "/Scene/Globals/Standard Options", GafferScene.StandardOptions )
 GafferUI.NodeMenu.append( "/Scene/Globals/Options", GafferScene.Options )
-GafferUI.NodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes )
+GafferUI.NodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
 GafferUI.NodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
-GafferUI.NodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender )
+GafferUI.NodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = "OpenGLRender" )
 
 try :	
 	import GafferImage
 	import GafferImageUI
 
 	GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
-	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader )
-	GafferUI.NodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter )
+	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
+	GafferUI.NodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
 	GafferUI.NodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
 	GafferUI.NodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
 	GafferUI.NodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )
