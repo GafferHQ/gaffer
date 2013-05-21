@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,23 +34,29 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
+import os
+import unittest
 
+import IECore
+
+import Gaffer
+import GafferImage
+
+class DisplayTest( unittest.TestCase ) :
+
+	def testDefaultFormat( self ) :
+
+		s = Gaffer.ScriptNode()
+		d = GafferImage.Display()
+		s.addChild( d )
+		
+		p = GafferImage.ImagePlug( "in", Gaffer.Plug.Direction.In )	
+		p.setInput( d["out"] )
+		
+		with s.context() :
+			self.assertEqual( p["format"].getValue(), GafferImage.Format.getDefaultFormat( s ) )
+			GafferImage.Format.setDefaultFormat( s, GafferImage.Format( 200, 150, 1. ) )
+			self.assertEqual( p["format"].getValue(), GafferImage.Format.getDefaultFormat( s ) )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
