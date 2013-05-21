@@ -33,42 +33,77 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/suite/indexing/container_utils.hpp>
 #include "boost/python.hpp"
 #include "boost/format.hpp"
-
-#include "GafferImage/Filter.h"
-#include "GafferBindings/SignalBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 #include "GafferBindings/Serialisation.h"
-#include "GafferImageBindings/SamplerBinding.h"
+#include "GafferImage/Filter.h"
+#include "GafferImageBindings/FilterBinding.h"
 
+using namespace boost;
 using namespace boost::python;
 using namespace IECore;
-using namespace GafferBindings;
+using namespace IECorePython;
 using namespace GafferImage;
+using namespace Gaffer;
+using namespace GafferBindings;
 
 namespace GafferImageBindings
 {
 
-void bindSampler()
+static boost::python::list filterList()
 {
-	enum_<Sampler::BoundingMode>( "BoundingMode" )
-		.value( "Black", Sampler::Black )
-		.value( "Clamp", Sampler::Clamp )
-	;
+	std::vector<std::string> filters( Filter::filters() );
+	std::vector<std::string>::iterator it( filters.begin() );	
+	boost::python::list result;
+	for( ; it != filters.end(); it++ )
+	{
+		result.append( *it );
+	}
+	
+	return result;
+}
 
-	class_<Sampler>( "Sampler",
-			init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode >
-			(
+template<typename T>
+static void bindTypedFilter()
+{
+	IECorePython::RunTimeTypedClass<T>()
+		.def( init<double>(
 				(
-					arg( "boundingMode" ) = Sampler::Black
+					boost::python::arg_( "scale" ) = 1.0
 				)
-			) 
+			)
 		)
-		.def( "hash", &Sampler::hash )
-		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
-		.def( "sample", (float (Sampler::*)( float, float, GafferImage::Filter * ) )&Sampler::sample )
 	;
 }
 
-}; // namespace IECorePython
+GafferImage::FilterPtr create1( std::string name ){ return GafferImage::Filter::create( name ); };
+GafferImage::FilterPtr create2( std::string name, double scale ){ return GafferImage::Filter::create( name ); };
+
+void bindFilters()
+{
+	RunTimeTypedClass<Filter> bind( "Filter" );
+	bind.def( "construct", &Filter::construct );
+	bind.def( "__len__", &Filter::width );
+	bind.def( "__getitem__", &Filter::weight );
+	
+	// Convenience methods for creating Filter classes.
+	bind.def( "filters", &filterList ).staticmethod("filters");
+	bind.def( "create", &create1 );
+	bind.def( "create", &create2 ).staticmethod( "create" );
+	
+	RunTimeTypedClass<SplineFilter>();
+	RunTimeTypedClass<BoxFilter>();
+	RunTimeTypedClass<BilinearFilter>();
+	RunTimeTypedClass<CubicFilter>();
+	RunTimeTypedClass<CatmullRomFilter>();
+	RunTimeTypedClass<BSplineFilter>();
+	RunTimeTypedClass<HermiteFilter>();
+	RunTimeTypedClass<MitchellFilter>();
+	RunTimeTypedClass<LanczosFilter>();
+	RunTimeTypedClass<SincFilter>();
+}
+
+} // namespace IECorePython
 

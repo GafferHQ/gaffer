@@ -41,7 +41,8 @@
 #include <vector>
 #include <string>
 
-#include "IECore/RefCounted.h"
+#include "GafferImage/TypeIds.h"
+#include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
 
 #define _USE_MATH_DEFINES
@@ -63,10 +64,12 @@ IE_CORE_FORWARDDECLARE( Filter );
 /// A good overview of image sampling and the variety of filters is:
 /// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
 /// Arun N.Netravali, AT&T Bell Laboratories.
-class Filter : public IECore::RefCounted
+class Filter : public IECore::RunTimeTyped
 {
 
 public :
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Filter, FilterTypeId, RunTimeTyped );
 	
 	/// Constructor	
 	/// @param radius Half the width of the kernel at a scale of 1.
@@ -96,18 +99,18 @@ public :
 	/// Returns the width of the filter.
 	inline int width() const
 	{
-		return m_weights.size();
+		return int( m_scaledRadius*2. + 1. );
 	};
 
 	/// Builds the kernel of weights.
 	/// This method is should be called to initialize the filter.
-	/// It does this by making sucessive calls to weight() to
+	/// It does this by making successive calls to weight() to
 	/// populate the vector of weights.
 	/// @param center The position of the center of the filter kernel.
 	/// @return Returns the index of the first pixel sample.
 	int construct( double center );
 
-	// Returns a weight for a delta in the range of -m_scaledRadius to m_scaledRadius.
+	// Returns a weight for a delta in the range of 0 to m_radius.
 	virtual double weight( double delta ) const = 0;
 
 	//! @name Filter Registry
@@ -185,6 +188,8 @@ class BoxFilter : public Filter
 {
 
 public:
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BoxFilter, BoxFilterTypeId, Filter );
 
 	BoxFilter( double scale = 1. )
 		: Filter( .5, scale )
@@ -209,6 +214,8 @@ class BilinearFilter : public Filter
 
 public:
 
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BilinearFilter, BilinearFilterTypeId, Filter );
+	
 	BilinearFilter( double scale = 1. )
 		: Filter( 1, scale )
 	{}
@@ -234,35 +241,30 @@ class SincFilter : public Filter
 {
 
 public:
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SincFilter, SincFilterTypeId, Filter );
 
 	SincFilter( double scale = 1. )
-		: Filter( 8, scale )
+		: Filter( 2., scale )
 	{}
 
 	double weight( double delta ) const
 	{
 		delta = fabs(delta);
-		if ( delta < m_radius )
+		if ( delta > m_radius )
 		{
-			if ( delta )
-			{
-				return sinc(delta) * sinc( delta / m_radius );
-			}
+			return 0.;
 		}
-		return 0;
+		if ( delta < 10e-6 )
+		{
+			return 1.;
+		}
+
+		const double PI = M_PI;
+		return sin( PI*delta ) / ( PI*delta );
 	}
 
 private:
-
-	double sinc( double x ) const
-	{
-		if ( x != 0. )
-		{
-			x *= M_PI;
-			return sin(x) / x;
-		}
-		return 1.;
-	}
 
 	/// Register this filter so that it can be created using the Filter::create method.
 	static FilterRegistration<SincFilter> m_registration;
@@ -273,6 +275,8 @@ class HermiteFilter : public Filter
 {
 
 public:
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( HermiteFilter, HermiteFilterTypeId, Filter );
 
 	HermiteFilter( double scale = 1. )
 		: Filter( 1, scale )
@@ -295,11 +299,48 @@ private:
 
 };
 
+class LanczosFilter : public Filter
+{
+
+public:
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( LanczosFilter, LanczosFilterTypeId, Filter );
+
+	LanczosFilter( double scale = 1. )
+		: Filter( 3., scale )
+	{}
+
+	double weight( double delta ) const
+	{
+		delta = fabs(delta);
+		
+		if ( delta > m_radius )
+		{
+			return 0.;
+		}
+		if ( delta < 10e-6 )
+		{
+			return 1.;
+		}
+		
+		const double PI = M_PI;
+		return ( m_radius * (1./PI) * (1./PI) ) / ( delta*delta) * sin( PI * delta ) * sin( PI*delta * (1./m_radius) );
+	}
+
+private:
+
+	/// Register this filter so that it can be created using the Filter::create method.
+	static FilterRegistration<LanczosFilter> m_registration;
+
+};
+
 class SplineFilter : public Filter
 {
 
 public:
 
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SplineFilter, SplineFilterTypeId, Filter );
+	
 	SplineFilter( double B, double C, double scale = 1. )
 		: Filter( 2, scale ),
 		m_B( B ),
@@ -338,9 +379,11 @@ class MitchellFilter : public SplineFilter
 {
 
 public:
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
 	MitchellFilter( double scale = 1. )
-		: SplineFilter( 1/3, 1/3, scale )
+		: SplineFilter( 1./3., 1./3., scale )
 	{}
 
 private:
@@ -354,6 +397,8 @@ class BSplineFilter : public SplineFilter
 {
 
 public:
+	
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
 	BSplineFilter( double scale = 1. )
 		: SplineFilter( 1., 0., scale )
@@ -371,8 +416,10 @@ class CatmullRomFilter : public SplineFilter
 
 public:
 
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
+	
 	CatmullRomFilter( double scale = 1. )
-		: SplineFilter( 0, .5, scale )
+		: SplineFilter( 0., .5, scale )
 	{}
 
 private:
@@ -387,6 +434,8 @@ class CubicFilter : public Filter
 
 public:
 
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CubicFilter, CubicFilterTypeId, Filter );
+	
 	CubicFilter( double scale = 1. )
 		: Filter( 3., scale )
 	{

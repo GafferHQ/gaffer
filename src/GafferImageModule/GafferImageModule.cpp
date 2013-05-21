@@ -59,6 +59,7 @@
 #include "GafferImage/Select.h"
 #include "GafferImage/Reformat.h"
 #include "GafferImageBindings/FilterPlugBindings.h"
+#include "GafferImageBindings/FilterBinding.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImageTransform.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
@@ -124,6 +125,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindChannelMaskPlug();
 	GafferImageBindings::bindFilterPlug();
 	GafferImageBindings::bindSampler();
+	GafferImageBindings::bindFilters();
 	GafferBindings::NodeClass<ImageWriter> imageWriter;
 	GafferBindings::ExecutableBinding< GafferBindings::NodeClass<ImageWriter>, ImageWriter>::bind( imageWriter );
 }
