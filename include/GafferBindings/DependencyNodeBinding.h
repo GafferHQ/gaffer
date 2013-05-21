@@ -120,6 +120,12 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			
 			return WrappedType::correspondingInput( output );
 		}
+		
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const
+		{
+			// Better to make an ugly cast than repeat the implementation of the non-const version.
+			return const_cast<DependencyNodeWrapper *>( this )->correspondingInput( output );
+		}
 	
 };
 
