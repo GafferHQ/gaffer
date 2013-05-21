@@ -4,15 +4,15 @@ v0.1, 2013
 :doctype: book
 
 
-//include::chapters/debug.txt[]
+include::chapters/debug.txt[]
 
 include::chapters/introduction.txt[]
+
+include::chapters/installation.txt[]
 
 include::chapters/quickstart.txt[]
 
 include::chapters/interface.txt[]
-
-include::chapters/installation.txt[]
 
 include::chapters/minitutorials.txt[]
 

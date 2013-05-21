@@ -12,5 +12,20 @@ pass::[<a href="https://www.google.com">googles</a>]
 //alternative - had pass macro rejected in some locations before
 +++<a href="https://www.google.com">googles</a>+++
 
+
+
 [source, python]
+------------------------------------
+import this
 foo = (1,2,3)
+def jam:
+    eggs * 5
+------------------------------------
+
+------------------------------------
+import this
+foo = (1,2,3)
+def jam:
+    eggs * 5
+
+------------------------------------

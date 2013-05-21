@@ -1,12 +1,12 @@
 === Scripting Architecture anchor:scriptingArchitecture[]
 
 
-.Introduction
+==== Introduction
 All of Gaffer's core functionality is available to be scripted using Python - in fact much of the GUI application itself is written in Python, Gaffer plugins are just Python modules, and the file format itself is simply a Python script with a .gfr extension.
 
 There is a direct one to one correspondence between the C\++ and Python APIs for Gaffer, so if you start out using one, you can easily transfer to the other. This makes it relatively straightforward to prototype in Python, but convert to C\++ if performance becomes an issue, or to spend most of your time hacking away in C\++ but still be comfortable writing some GUI code in Python.
 
-.GraphComponents
+==== GraphComponents
 The most central classes in the Gaffer API are the GraphComponents - the nodes and plugs which are connected to make up a dependency graph. These are parented together in a hierarchical set of relationships, which nicely map to python's dictionary and list syntax. Plugs may be added to nodes using the familiar dictionary notation :
 
 [source,python]
@@ -24,7 +24,7 @@ node["firstPlug"].setValue( 10 )
 node[1].setValue( 20.5 )
 ------------------------------------
 
-.Undo
+==== Undo
 Undo is a fundamental part of both the C++ and Python APIs for Gaffer. Rather than have a set of non-undoable APIs and layer undo on top of them using some sort of separate command architecture, Gaffer builds undo right into the core APIs. Naturally sometimes you won't want an operation you perform to be undoable, and other times you will, but in both cases you use the exact same calls. To enable undo just make sure to wrap everything in an UndoContext.
 
 So, if you were to set the values of some plugs like this :
