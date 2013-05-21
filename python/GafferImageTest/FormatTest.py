@@ -92,6 +92,23 @@ class FormatTest( unittest.TestCase ) :
 		n = GafferImage.Grade()
 		s.addChild( n )
 		s.context().get("image:defaultFormat")
+	
+	def testHashChanged( self ) :
+		# Create a grade node and check that the format changes if it is unconnected.
+		n = GafferImage.Grade()
+		s = Gaffer.ScriptNode()
+		s.addChild( n )
+		
+		h1 = n["out"]["format"].hash()
+		
+		# Change the default format.
+		GafferImage.Format.registerFormat( self.__testFormatValue(), self.__testFormatName() )
+		GafferImage.Format.setDefaultFormat( s, self.__testFormatValue() )
+		
+		# Check that the hash has changed.
+		h2 = n["out"]["format"].hash()
+		
+		self.assertNotEqual( h1, h2 )
 		
 	def testDefaultFormatChanged( self ) :
 		# Create a grade node and check that the format changes if it is unconnected.
