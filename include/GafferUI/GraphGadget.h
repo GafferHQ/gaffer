@@ -156,6 +156,7 @@ class GraphGadget : public ContainerGadget
 		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		void calculateDragSnapOffsets( Gaffer::Set *nodes );
 		void offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset );
 		
 		void updateGraph();
@@ -208,6 +209,7 @@ class GraphGadget : public ContainerGadget
 		ConnectionGadget *m_dragReconnectCandidate;
 		Nodule *m_dragReconnectSrcNodule;
 		Nodule *m_dragReconnectDstNodule;
+		std::vector<float> m_dragSnapOffsets[2]; // offsets in x and y
 		
 		GraphLayoutPtr m_layout;
 		
