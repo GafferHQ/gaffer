@@ -37,6 +37,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <iostream>
 
 #include "boost/format.hpp"
 #include "IECore/Exception.h"
@@ -53,28 +54,23 @@ Filter::Filter( double radius, double scale )
 
 void Filter::setScale( double scale )
 {
-	if ( scale > 1. )
-	{
-		m_scaledRadius = m_radius * scale;
-		m_scale = scale;
-	}
-	else
-	{
-		m_scaledRadius = m_radius;
-		m_scale = 1.;
-	}
-	m_weights.resize( int( floor( m_scaledRadius*2+1 ) ) );
+	m_scale = std::max( scale, 1. ); 
+	m_scaledRadius = m_radius * m_scale;
+	m_weights.resize( width() );
 }
 
 int Filter::construct( double center )
 {
 	int l, absx;
 	l = absx = (int)( center - m_scaledRadius );
+	
 	std::vector<double>::iterator it( m_weights.begin() );
 	std::vector<double>::iterator end( m_weights.end() );
+	
 	while ( it != end )
 	{
-		*it++ = weight( ( center - l++ - 0.5 ) / m_scale );
+		double t = ( center - l++ - .5 ) / m_scale;
+		*it++ = weight( t );
 	}
 	return absx;
 }
@@ -102,14 +98,26 @@ FilterPtr Filter::create( const std::string &name, double scale )
 }
 
 // Register all of the filters against their names.
-Filter::FilterRegistration<BilinearFilter> BilinearFilter::m_registration( "Bilinear" );
 Filter::FilterRegistration<BoxFilter> BoxFilter::m_registration( "Box" );
 Filter::FilterRegistration<BSplineFilter> BSplineFilter::m_registration( "BSpline" );
-Filter::FilterRegistration<CatmullRomFilter> CatmullRomFilter::m_registration( "CatmullRom" );
-Filter::FilterRegistration<CubicFilter> CubicFilter::m_registration( "Cubic" );
+Filter::FilterRegistration<BilinearFilter> BilinearFilter::m_registration( "Bilinear" );
 Filter::FilterRegistration<HermiteFilter> HermiteFilter::m_registration( "Hermite" );
 Filter::FilterRegistration<MitchellFilter> MitchellFilter::m_registration( "Mitchell" );
+Filter::FilterRegistration<CatmullRomFilter> CatmullRomFilter::m_registration( "CatmullRom" );
+Filter::FilterRegistration<CubicFilter> CubicFilter::m_registration( "Cubic" );
+Filter::FilterRegistration<LanczosFilter> LanczosFilter::m_registration( "Lanczos" );
 Filter::FilterRegistration<SincFilter> SincFilter::m_registration( "Sinc" );
+
+IE_CORE_DEFINERUNTIMETYPED( Filter );
+IE_CORE_DEFINERUNTIMETYPED( BSplineFilter );
+IE_CORE_DEFINERUNTIMETYPED( BilinearFilter );
+IE_CORE_DEFINERUNTIMETYPED( HermiteFilter );
+IE_CORE_DEFINERUNTIMETYPED( MitchellFilter );
+IE_CORE_DEFINERUNTIMETYPED( SplineFilter );
+IE_CORE_DEFINERUNTIMETYPED( CatmullRomFilter );
+IE_CORE_DEFINERUNTIMETYPED( CubicFilter );
+IE_CORE_DEFINERUNTIMETYPED( LanczosFilter );
+IE_CORE_DEFINERUNTIMETYPED( SincFilter );
 
 }; // namespace GafferImage
 
