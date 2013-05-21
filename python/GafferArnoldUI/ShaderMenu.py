@@ -68,6 +68,6 @@ with IECoreArnold.UniverseBlock() :
 	
 	arnold.AiEnd()
 
-GafferUI.NodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions )
-GafferUI.NodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes )
-GafferUI.NodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender )
+GafferUI.NodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
+GafferUI.NodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
+GafferUI.NodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender, searchText = "ArnoldRender" )

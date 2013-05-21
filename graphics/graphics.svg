@@ -42,6 +42,27 @@
        inkscape:vp_y="0 : 1000 : 0"
        inkscape:vp_x="0 : 0.5 : 1"
        sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3087"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3109"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3153"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -50,18 +71,19 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="16"
-     inkscape:cx="176.51591"
-     inkscape:cy="984.09706"
+     inkscape:zoom="2.561137"
+     inkscape:cx="292.5676"
+     inkscape:cy="866.04688"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="forExport:search"
      showgrid="true"
-     inkscape:window-width="1151"
-     inkscape:window-height="896"
-     inkscape:window-x="2334"
-     inkscape:window-y="9"
-     inkscape:window-maximized="0"
-     inkscape:snap-global="true">
+     inkscape:window-width="1920"
+     inkscape:window-height="1175"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:snap-global="true"
+     inkscape:snap-nodes="false">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
@@ -1306,5 +1328,40 @@
        d="m 188.5,59.862183 15,0 0,15 -15,0 z"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc" />
+    <g
+       id="forExport:search"
+       inkscape:label="#g3188">
+      <path
+         style="fill:#3c3c3c;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         d="m 241.63736,98.674398 2.82842,2.828432 6.78823,-6.78823 -2.82843,-2.828427 -6.78822,6.788225 z"
+         id="fsdsf-6"
+         sodipodi:nodetypes="ccccc"
+         inkscape:label="#rect3638"
+         inkscape:connector-curvature="0" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path2865-1"
+         d="m 242.53302,98.721534 1.88563,1.885626 5.93969,-5.939696 -1.88562,-1.885627 -5.9397,5.939697 z"
+         style="fill:#779cbd;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         sodipodi:type="arc"
+         style="fill:#787878;fill-opacity:1;stroke:none"
+         id="path3978"
+         sodipodi:cx="251.39661"
+         sodipodi:cy="36.247993"
+         sodipodi:rx="3.9255164"
+         sodipodi:ry="4.0010071"
+         d="m 255.32212,36.247993 a 3.9255164,4.0010071 0 1 1 0,-0.004"
+         transform="translate(1.1323604,53.456798)"
+         sodipodi:start="0"
+         sodipodi:end="6.2821966"
+         sodipodi:open="true" />
+      <path
+         inkscape:label="#path3102"
+         id="path3102"
+         d="m 252.53302,83.721531 c -3.24244,0 -5.87095,2.6863 -5.87095,6 0,3.31372 2.62851,6 5.87095,6 3.24244,0 5.87095,-2.68628 5.87095,-6 0,-3.3137 -2.62851,-6 -5.87095,-6 z m 0,2 c 2.16163,0 3.91397,1.79086 3.91397,4 0,2.20914 -1.75234,4 -3.91397,4 -2.16163,0 -3.91397,-1.79086 -3.91397,-4 0,-2.20914 1.75234,-4 3.91397,-4 z"
+         style="fill:#779cbd;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.65945845999999997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    </g>
   </g>
 </svg>
