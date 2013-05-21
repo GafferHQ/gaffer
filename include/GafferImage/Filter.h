@@ -416,7 +416,7 @@ class CatmullRomFilter : public SplineFilter
 
 public:
 
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CatmullRomFilter, CatmullRomFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
 	
 	CatmullRomFilter( double scale = 1. )
 		: SplineFilter( 0., .5, scale )
