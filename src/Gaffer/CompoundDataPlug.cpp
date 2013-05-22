@@ -254,6 +254,14 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const StringVectorData *>( value ) );
 		}
+		case V3fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const V3fVectorData *>( value ) );
+		}
+		case Color3fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const Color3fVectorData *>( value ) );
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
@@ -324,6 +332,10 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return static_cast<const IntVectorDataPlug *>( plug )->getValue()->copy();
 		case StringVectorDataPlugTypeId :
 			return static_cast<const StringVectorDataPlug *>( plug )->getValue()->copy();
+		case V3fVectorDataPlugTypeId :
+			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();		
+		case Color3fVectorDataPlugTypeId :
+			return static_cast<const Color3fVectorDataPlug *>( plug )->getValue()->copy();
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
