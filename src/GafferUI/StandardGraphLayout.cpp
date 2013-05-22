@@ -366,52 +366,6 @@ size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::
 	return plugs.size();
 }
 
-size_t StandardGraphLayout::connections( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedNodes, std::vector<GafferUI::ConnectionGadget *> &connections ) const
-{
-	for( RecursivePlugIterator it( node ); it != it.end(); ++it )
-	{
-		this->connections( graph, it->get(), excludedNodes, connections );
-	}
-	
-	return connections.size();
-}
-
-size_t StandardGraphLayout::connections( GraphGadget *graph, Gaffer::Plug *plug, Gaffer::Set *excludedNodes, std::vector<GafferUI::ConnectionGadget *> &connections ) const
-{
-	if( plug->direction() == Plug::In )
-	{
-		const Plug *input = plug->getInput<Plug>();
-		if( input )
-		{
-			if( !excludedNodes || !excludedNodes->contains( input->node() ) )
-			{
-				ConnectionGadget *connection = graph->connectionGadget( plug );
-				if( connection && connection->srcNodule() )
-				{
-					connections.push_back( connection );
-				}
-			}
-		}
-	}
-	else
-	{
-		const Plug::OutputContainer &outputs = plug->outputs();
-		for( Plug::OutputContainer::const_iterator it = outputs.begin(), eIt = outputs.end(); it != eIt; ++it )
-		{
-			if( excludedNodes && excludedNodes->contains( (*it)->node() ) )
-			{
-				continue;
-			}
-			ConnectionGadget *connection = graph->connectionGadget( *it );
-			if( connection && connection->srcNodule() )
-			{
-				connections.push_back( connection );
-			}
-		}
-	}
-	return connections.size();
-}
-
 Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *input ) const
 {
 	/// \todo Consider adding this to DependencyNode as a correspondingOutput() method. If we do,
@@ -439,7 +393,7 @@ bool StandardGraphLayout::nodeConstraints( GraphGadget *graph, Gaffer::Node *nod
 	// find all the connections which aren't excluded
 	
 	std::vector<ConnectionGadget *> connections;
-	if( !this->connections( graph, node, excludedNodes, connections ) )
+	if( !graph->connectionGadgets( node, connections, excludedNodes ) )
 	{
 		// there's nothing to go on - give up
 		return false;
