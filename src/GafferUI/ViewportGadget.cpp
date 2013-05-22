@@ -444,18 +444,24 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	else
 	{
-		std::vector<GadgetPtr> gadgets;
-		gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
-		
-		// update drag destination	
-		GadgetPtr updatedDestination = updatedDragDestination( gadgets, event );
-		if( updatedDestination != event.destinationGadget )
+		// update the destination gadget. if the drag data is a NullObject then we know
+		// that it isn't intended for use outside of the source gadget, and can skip this
+		// step as an optimisation.
+		if( !event.destinationGadget || !event.data->isInstanceOf( IECore::NullObjectTypeId ) )
 		{
-			GadgetPtr previousDestination = event.destinationGadget;
-			const_cast<DragDropEvent &>( event ).destinationGadget = updatedDestination;
-			if( previousDestination )
+			std::vector<GadgetPtr> gadgets;
+			gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
+
+			// update drag destination	
+			GadgetPtr updatedDestination = updatedDragDestination( gadgets, event );
+			if( updatedDestination != event.destinationGadget )
 			{
-				dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
+				GadgetPtr previousDestination = event.destinationGadget;
+				const_cast<DragDropEvent &>( event ).destinationGadget = updatedDestination;
+				if( previousDestination )
+				{
+					dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
+				}
 			}
 		}
 		
