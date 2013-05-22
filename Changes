@@ -1,3 +1,44 @@
+0.63.0
+======
+
+* Fixed promotion of dynamic colour plugs to Boxes.
+
+* Fixed crash creating Merge node (#253).
+
+* Fixed Gaffer module dependency on GafferImage.
+
+* Display now obeys the default format (#280).
+
+* Fixed circular references in plug popup menus.
+
+* Fixed NumericWidget dragBegin errors.
+
+* Newly created nodes are now connected in-stream where possible (#257).
+
+* Fixed editability of user plugs.
+
+* Added error handling for bad RenderManShader activator annotations.
+
+* Improved automatic placement of filter nodes (#86).
+
+* Fixed empty tab creation in Node Editor.
+
+* Added interactive search for node menu.
+
+* Reordered image filters so that they are displayed from most soft to most sharp.
+
+* Added the Lanczos image filter.
+
+* Fixed a bug with the Sinc image filter.
+
+* Fixed the "streaking" issues when using the ImageTransform.
+
+* Added subpixel filtering to the image Sampler.
+
+* Implemented snapping during Graph Editor drags.
+
+* Optimised node dragging in the Graph Editor.
+
 0.62.1
 ======
 
