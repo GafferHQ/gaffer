@@ -245,7 +245,10 @@ def __optionValue( plug, stringValue ) :
 
 def __numberCreator( plug, annotations ) :
 
-	return GafferUI.NumericPlugValueWidget( plug )
+	if isinstance( plug, Gaffer.CompoundPlug ) :
+		return GafferUI.CompoundNumericPlugValueWidget( plug )
+	else :
+		return GafferUI.NumericPlugValueWidget( plug )
 	
 def __stringCreator( plug, annotations ) :
 
