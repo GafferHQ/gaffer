@@ -160,6 +160,7 @@ void GafferBindings::bindTypedObjectPlug()
 	bind<StringVectorDataPlug>();
 	bind<InternedStringVectorDataPlug>();
 	bind<V3fVectorDataPlug>();
+	bind<Color3fVectorDataPlug>();
 	bind<ObjectVectorPlug>();
 	bind<CompoundObjectPlug>();
 }
