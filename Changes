@@ -1,3 +1,8 @@
+0.63.1
+======
+
+* Using Boost Filesystem version 3 (for compatibility with Cortex 8)
+
 0.63.0
 ======
 
