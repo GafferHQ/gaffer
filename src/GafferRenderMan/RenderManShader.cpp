@@ -44,6 +44,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 
@@ -248,6 +249,34 @@ static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const st
 	parametersPlug->setChild( name, plug );
 }
 
+template<typename PlugType>
+static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const Data *defaultValue, const CompoundData *annotations )
+{
+	const typename PlugType::ValueType *typedDefaultValue = static_cast<const typename PlugType::ValueType *>( defaultValue );
+
+	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
+	if( existingPlug && existingPlug->defaultValue()->isEqualTo( defaultValue ) )
+	{
+		return;
+	}
+	
+	typename PlugType::Ptr plug = new PlugType( name, Plug::In, typedDefaultValue, Plug::Default | Plug::Dynamic );
+	if( existingPlug )
+	{
+		if( existingPlug->template getInput<PlugType>() )
+		{
+			plug->setInput( existingPlug->template getInput<PlugType>() );
+		}
+		else
+		{
+			plug->setValue( existingPlug->getValue() );
+		}
+	}
+	
+	parametersPlug->setChild( name, plug );
+
+}
+
 void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
 {
 	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
@@ -310,7 +339,19 @@ void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffe
 				break;
 			case V3fDataTypeId :
 				loadNumericParameter<V3fPlug>( parametersPlug, *it, defaultValue, annotations );
-				break;	
+				break;
+			case StringVectorDataTypeId :
+				loadArrayParameter<StringVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
+				break;
+			case FloatVectorDataTypeId :
+				loadArrayParameter<FloatVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
+				break;
+			case Color3fVectorDataTypeId :
+				loadArrayParameter<Color3fVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
+				break;
+			case V3fVectorDataTypeId :
+				loadArrayParameter<V3fVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
+				break;		
 			default :
 				msg(
 					Msg::Warning, "RenderManShader::loadShaderParameters",
