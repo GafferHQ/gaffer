@@ -395,6 +395,40 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( dirtiedNames[0], "ShaderAssignment.shader" )
 		self.assertEqual( dirtiedNames[1], "ShaderAssignment.out.attributes" )
 		self.assertEqual( dirtiedNames[2], "ShaderAssignment.out" )
+	
+	def testArrayParameters( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrayParameters.sl" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader )
+		
+		expected = {
+			"dynamicFloatArray" : IECore.FloatVectorData( [] ),
+			"fixedFloatArray" : IECore.FloatVectorData( [ 1, 2, 3, 4 ] ),
+			"dynamicStringArray" : IECore.StringVectorData( [ "dynamic", "arrays", "can", "still", "have", "defaults" ] ),
+			"fixedStringArray" : IECore.StringVectorData( [ "hello", "goodbye" ] ),
+			"dynamicColorArray" : IECore.Color3fVectorData( [ IECore.Color3f( 1 ), IECore.Color3f( 2 ) ] ),
+			"fixedColorArray" : IECore.Color3fVectorData( [ IECore.Color3f( 1 ), IECore.Color3f( 2 ) ] ),
+			"dynamicVectorArray" : IECore.V3fVectorData( [] ),
+			"fixedVectorArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ] ),
+			"dynamicPointArray" : IECore.V3fVectorData( [] ),
+			"fixedPointArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ] ),
+			"dynamicNormalArray" : IECore.V3fVectorData( [] ),
+			"fixedNormalArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ] ),
+		}
+		
+		self.assertEqual( set( n["parameters"].keys() ), set( expected.keys() ) )
+		
+		for name, value in expected.items() :
+		
+			self.assertEqual( n["parameters"][name].defaultValue(), value )
+			self.assertEqual( n["parameters"][name].getValue(), value )
+		
+		s = n.state()[0]
+		
+		for name, value in expected.items() :
+		
+			self.assertEqual( s.parameters[name], value )
 		
 if __name__ == "__main__":
 	unittest.main()
