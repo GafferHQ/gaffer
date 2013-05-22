@@ -348,7 +348,11 @@ def __plugValueWidgetCreator( plug ) :
 					( plug.node()["name"].getValue(), parameterName, str( e ) )
 			)
 	
-	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+	result = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+	if isinstance( result, GafferUI.VectorDataPlugValueWidget ) :
+		result.vectorDataWidget().setSizeEditable( plug.defaultValue().size() == 0 )
+	
+	return result
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
