@@ -331,6 +331,12 @@ void SceneProcedural::render( RendererPtr renderer ) const
 	}	
 }
 
+IECore::MurmurHash SceneProcedural::hash() const
+{
+	/// \todo Implement me properly.
+	return IECore::MurmurHash();
+}
+
 void SceneProcedural::updateAttributes( bool full )
 {
 	Context::Scope scopedContext( m_context );

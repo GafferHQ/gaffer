@@ -71,6 +71,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0 );
 		virtual ~SceneProcedural();
 		
+		virtual IECore::MurmurHash hash() const;
 		virtual Imath::Box3f bound() const;
 		virtual void render( IECore::RendererPtr renderer ) const;
 				
