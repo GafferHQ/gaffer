@@ -52,7 +52,7 @@ using namespace GafferUI;
 void GafferUIBindings::bindCompoundNodule()
 {
 	IECorePython::RunTimeTypedClass<CompoundNodule>()
-		.def( init<Gaffer::CompoundPlugPtr, LinearContainer::Orientation, float>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X, arg( "spacing" ) = 0.0f ) ) )
+		.def( init<Gaffer::CompoundPlugPtr, LinearContainer::Orientation, float, LinearContainer::Direction>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X, arg( "spacing" ) = 0.0f, arg( "direction" )=LinearContainer::InvalidDirection ) ) )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CompoundNodule )
 	;
 }
