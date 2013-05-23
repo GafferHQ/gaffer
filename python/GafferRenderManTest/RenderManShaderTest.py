@@ -429,6 +429,37 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		for name, value in expected.items() :
 		
 			self.assertEqual( s.parameters[name], value )
+			
+	def testFixedCoshaderArrayParameters( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader )
 		
+		self.assertEqual( n["parameters"].keys(), [ "dynamicShaderArray", "fixedShaderArray" ] )
+		
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"], Gaffer.CompoundPlug ) )
+		
+		self.assertEqual( len( n["parameters"]["fixedShaderArray"] ), 4 )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in1"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in2"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in3"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in4"], Gaffer.Plug ) )
+		
+		state = n.state()
+		
+		self.assertEqual( state[0].parameters["fixedShaderArray"], IECore.StringVectorData( [ "" ] * 4 ) )
+
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		n["parameters"]["fixedShaderArray"]["in1"].setInput( coshaderNode["out"] )
+	
+		state = n.state()
+			
+		self.assertEqual( state[1].parameters["fixedShaderArray"], IECore.StringVectorData( [ state[0].parameters["__handle"].value, "", "", "" ] ) )
+				
 if __name__ == "__main__":
 	unittest.main()

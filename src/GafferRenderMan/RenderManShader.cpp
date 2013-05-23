@@ -118,6 +118,25 @@ IECore::ShaderPtr RenderManShader::shader( NetworkBuilder &network ) const
 				}
 			}
 		}
+		else if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		{
+			// coshader array parameter
+			StringVectorDataPtr value = new StringVectorData();
+			for( InputPlugIterator cIt( *it ); cIt != cIt.end(); ++cIt )
+			{
+				const Plug *inputPlug = (*cIt)->source<Plug>();
+				const RenderManShader *inputShader = inputPlug && inputPlug != *cIt ? inputPlug->parent<RenderManShader>() : 0;
+				if( inputShader )
+				{
+					value->writable().push_back( network.shaderHandle( inputShader ) );
+				}
+				else
+				{
+					value->writable().push_back( "" );
+				}
+			}
+			result->parameters()[(*it)->getName()] = value;
+		}
 		else
 		{
 			// standard shader parameter
@@ -181,6 +200,22 @@ static void loadCoshaderParameter( Gaffer::CompoundPlug *parametersPlug, const s
 	}
 	
 	parametersPlug->setChild( name, plug );
+}
+
+static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const Data *defaultValue )
+{
+	CompoundPlugPtr plug = parametersPlug->getChild<CompoundPlug>( name );
+	if( !plug )
+	{
+		plug = new CompoundPlug( name, Plug::In, Plug::Default | Plug::Dynamic );
+		parametersPlug->setChild( name, plug );
+	}
+		
+	const std::vector<std::string> &typedDefaultValue = static_cast<const StringVectorData *>( defaultValue )->readable();
+	while( plug->children().size() != typedDefaultValue.size() )
+	{
+		plug->addChild( new Plug( "in1" , Plug::In, Plug::Default | Plug::Dynamic ) );
+	}
 }
 
 template <typename PlugType>
@@ -341,7 +376,14 @@ void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffe
 				loadNumericParameter<V3fPlug>( parametersPlug, *it, defaultValue, annotations );
 				break;
 			case StringVectorDataTypeId :
-				loadArrayParameter<StringVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
+				if( typeHint && typeHint->readable() == "shader" )
+				{
+					loadCoshaderArrayParameter( parametersPlug, *it, defaultValue );
+				}
+				else
+				{
+					loadArrayParameter<StringVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
+				}
 				break;
 			case FloatVectorDataTypeId :
 				loadArrayParameter<FloatVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
