@@ -1,3 +1,5 @@
+		</div>
+		
 		<hr>
  		
  		<div class="footer">
@@ -7,8 +9,55 @@
 	 </div>
 	
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
-    <script src="/gaffer/js/bootstrap.js"></script>
+	<script src="/gaffer/js/bootstrap.js"></script>
 	 
+	<script>
+ 
+	$( document ).ready(function() {
+
+		// fade up page content on load
+	 
+		$( "#contentContainer" ).css( { opacity : 0.5 } );
+		$( "#contentContainer" ).fadeTo( 350, 1 );
+
+		// fade out page content on visiting a link
+
+		$( "a" ).on( "click", function( event ) {
+
+			// abort if there's a modifier held - the browser might
+			// perform special actions like opening in another tab.
+			if( event.ctrlKey || event.shiftKey || event.altKey || event.metaKey )
+			{
+				return;
+			}
+			
+			// abort if the link is to an external url or to an
+			// anchor on this page - in that case we don't want to
+			// fade out.
+			
+			var href = this.href;
+			if( href.match( /:/ ) || href.match( /^#/ ) )
+			{
+				return;
+			}
+			
+			// fade our main content out, loading the new page manually
+			// when it's done.
+			$( "#contentContainer" ).fadeTo(
+				350,
+				0,
+				function() {
+					window.location.href = href;
+				}
+			);
+			event.preventDefault();
+
+		} );
+    
+	});
+ 
+ 	</script>
+    
 	</body>
 </html>
 
