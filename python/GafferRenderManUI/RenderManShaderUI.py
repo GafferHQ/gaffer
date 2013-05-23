@@ -75,6 +75,14 @@ def __parameterNoduleCreator( plug ) :
 	# graph.
 	if plug.typeId() == Gaffer.Plug.staticTypeId() :
 		return GafferUI.StandardNodule( plug )
+	elif plug.typeId() == Gaffer.CompoundPlug.staticTypeId() :
+		# coshader arrays tend to be used for layering, so we prefer to present the
+		# last entry at the top, hence the increasing direction.
+		return GafferUI.CompoundNodule(
+			plug,
+			GafferUI.LinearContainer.Orientation.Y,
+			direction = GafferUI.LinearContainer.Direction.Increasing
+		)
 
 	return None
 
@@ -347,6 +355,10 @@ def __plugValueWidgetCreator( plug ) :
 				"Error creating UI for parameter \"%s.%s\" : \"%s\"" %
 					( plug.node()["name"].getValue(), parameterName, str( e ) )
 			)
+	
+	if plug.typeId() == Gaffer.CompoundPlug.staticTypeId() :
+		# coshader array
+		return None
 	
 	result = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 	if isinstance( result, GafferUI.VectorDataPlugValueWidget ) :
