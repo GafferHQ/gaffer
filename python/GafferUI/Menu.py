@@ -332,6 +332,7 @@ class Menu( GafferUI.Widget ) :
 			return
 		
 		self.__searchMenu.setUpdatesEnabled( False )
+		self.__searchMenu.hide()
 		self.__searchMenu.clear()
 		self.__searchMenu.setDefaultAction( None )
 		
