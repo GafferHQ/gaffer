@@ -79,6 +79,7 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 	}
 
 	namePlug()->setValue( AiNodeEntryGetName( shader ) );
+	typePlug()->setValue( "ai:surface" );
 		
 	ParameterHandler::setupPlugs( shader, parametersPlug() );
 			
@@ -146,7 +147,7 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 
 IECore::ShaderPtr ArnoldShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), "ai:surface" );
+	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), typePlug()->getValue() );
 	
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{

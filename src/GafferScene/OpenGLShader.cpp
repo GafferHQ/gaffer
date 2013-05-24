@@ -140,6 +140,7 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 	}
 	
 	namePlug()->setValue( shaderName );
+	typePlug()->setValue( "gl:surface" );
 }
 
 void OpenGLShader::shaderHash( IECore::MurmurHash &h ) const
@@ -163,7 +164,7 @@ void OpenGLShader::shaderHash( IECore::MurmurHash &h ) const
 
 IECore::ShaderPtr OpenGLShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), "gl:surface" );
+	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), typePlug()->getValue() );
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		if( GafferImage::ImagePlug *imagePlug = runTimeCast<GafferImage::ImagePlug>( it->get() ) )

@@ -68,6 +68,8 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( ss ), 1 )
 		self.failUnless( isinstance( ss[0], IECore.Shader ) )
 		
+		self.assertEqual( ss[0].name, "texture" )
+		self.assertEqual( ss[0].type, "gl:surface" )
 		self.assertEqual( ss[0].parameters["mult"], IECore.FloatData( 0.5 ) )
 		self.assertEqual( ss[0].parameters["tint"].value, IECore.Color4f( 1, 0.5, 0.25, 1 ) )
 		self.assertTrue( isinstance( ss[0].parameters["texture"], IECore.CompoundData ) )

@@ -109,6 +109,7 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "na
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "type", None )
 
 ##########################################################################
 # NodeGadgets and Nodules

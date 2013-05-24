@@ -68,8 +68,10 @@ RenderManShader::~RenderManShader()
 
 void RenderManShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
-	loadShaderParameters( shaderName, parametersPlug(), keepExistingValues );
+	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
+	loadShaderParameters( shader, parametersPlug(), keepExistingValues );
 	namePlug()->setValue( shaderName );
+	typePlug()->setValue( "ri:" + shader->getType() );
 }
 
 bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
@@ -102,7 +104,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 
 IECore::ShaderPtr RenderManShader::shader( NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), "ri:surface" );
+	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), typePlug()->getValue() );
 	for( InputPlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		if( (*it)->typeId() == Plug::staticTypeId() )
@@ -312,10 +314,8 @@ static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std:
 
 }
 
-void RenderManShader::loadShaderParameters( const std::string &shaderName, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
-{
-	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
-	
+void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
+{	
 	const CompoundData *typeHints = shader->blindData()->member<CompoundData>( "ri:parameterTypeHints", true );
 	
 	const StringVectorData *orderedParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:orderedParameterNames", true );
