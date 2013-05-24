@@ -460,6 +460,14 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		state = n.state()
 			
 		self.assertEqual( state[1].parameters["fixedShaderArray"], IECore.StringVectorData( [ state[0].parameters["__handle"].value, "", "", "" ] ) )
+	
+	def testCoshaderType( self ) :
+	
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		self.assertEqual( coshaderNode.state()[0].type, "ri:shader" )
 				
 if __name__ == "__main__":
 	unittest.main()
