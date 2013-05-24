@@ -41,7 +41,7 @@
 #include "Gaffer/Context.h"
 #include "GafferImage/FilterPlug.h"
 #include "Gaffer/Transform2DPlug.h"
-#include "GafferImage/ChannelDataProcessor.h"
+#include "GafferImage/ImageProcessor.h"
 #include "Gaffer/DependencyNode.h"
 
 namespace GafferImage
@@ -49,27 +49,36 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Reformat );
 
-class ImageTransform : public GafferImage::ChannelDataProcessor
+class ImageTransform : public GafferImage::ImageProcessor
 {
 	public :
 
 		ImageTransform( const std::string &name=staticTypeName() );
 		virtual ~ImageTransform();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, GafferImage::ChannelDataProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, GafferImage::ImageProcessor );
 		
-		virtual void affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 		Gaffer::Transform2DPlug *transformPlug();
 		const Gaffer::Transform2DPlug *transformPlug() const;
+
+		bool enabled() const;
 		
 	protected:
-
+	
+		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {} ;
+		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
 		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, IECore::FloatVectorDataPtr outData ) const {};
 
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
 	private :
 		
 		GafferImage::FormatPlug *formatPlug();

@@ -186,18 +186,26 @@ bool Implementation::enabled() const
 	{
 		return false;
 	}
-
-	///\todo: 
-	/// If the transform is an identity matrix then disable it.
+	
+	// Disable the node if it isn't doing anything...
+	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
+	Imath::V2f translate = transformPlug()->translatePlug()->getValue();
+	float rotate = transformPlug()->rotatePlug()->getValue();
+	if (
+		rotate == 0 &&
+		scale.x == 1 && scale.y == 1 &&
+		translate.x == 0 && translate.y == 0
+		)
+	{
+		return false;
+	}
 
 	return true;
 }
 
 void Implementation::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Format format( outputFormatPlug()->getValue() );
-	h.append( format.getDisplayWindow() );
-	h.append( format.getPixelAspect() );
+	h = outputFormatPlug()->hash();
 }
 
 void Implementation::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -218,9 +226,10 @@ void Implementation::hashChannelDataPlug( const GafferImage::ImagePlug *output, 
 	std::string channelName( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
 	Imath::M33f sampleTransform( computeAdjustedMatrix().inverse() );
 	Imath::Box2i tile( transformBox( sampleTransform, Imath::Box2i( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) ) ) );
-	Sampler sampler( inPlug(), channelName, tile, filterPlug()->getValue() );
-	///\ todo: Uncomment this method once the pull request has been accepted.
-	// sampler.hash( h );
+	
+	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
+	Sampler sampler( inPlug(), channelName, tile, filter );
+	sampler.hash( h );
 	
 	// Hash the filter type that we are using.	
 	filterPlug()->hash( h );
@@ -357,7 +366,8 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
 	
-	Sampler sampler( inPlug(), channelName, sampleBox, filterPlug()->getValue() );
+	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
+	Sampler sampler( inPlug(), channelName, sampleBox, filter );
 	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
 	{
 		for ( int i = 0; i < ImagePlug::tileSize(); ++i )
@@ -382,7 +392,7 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 size_t ImageTransform::g_firstPlugIndex = 0;
 
 ImageTransform::ImageTransform( const std::string &name )
-	:	ChannelDataProcessor( name )
+	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	
@@ -412,7 +422,29 @@ ImageTransform::ImageTransform( const std::string &name )
 	addChild( t );
 	
 	outPlug()->setInput( t->outPlug() );
+}
 
+bool ImageTransform::enabled() const
+{
+	if ( !ImageProcessor::enabled() )
+	{
+		return false;
+	}
+
+	// Disable the node if it isn't doing anything...
+	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
+	Imath::V2f translate = transformPlug()->translatePlug()->getValue();
+	float rotate = transformPlug()->rotatePlug()->getValue();
+	if (
+		rotate == 0 &&
+		scale.x == 1 && scale.y == 1 &&
+		translate.x == 0 && translate.y == 0
+		)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 Gaffer::Transform2DPlug *ImageTransform::transformPlug()
@@ -447,14 +479,16 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
-	ChannelDataProcessor::compute( output, context );
+	ImageProcessor::compute( output, context );
 }
 
-void ImageTransform::affects( const Gaffer::ValuePlug *input, AffectedPlugsContainer &outputs ) const
+void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ChannelDataProcessor::affects( input, outputs );
+	ImageProcessor::affects( input, outputs );
 	
-	if( transformPlug()->scalePlug()->isAncestorOf( input ) )
+	if( transformPlug()->scalePlug()->isAncestorOf( input ) ||
+		input == inPlug()->formatPlug()
+	)
 	{
 		outputs.push_back( formatPlug() );
 	}
@@ -462,11 +496,12 @@ void ImageTransform::affects( const Gaffer::ValuePlug *input, AffectedPlugsConta
 
 void ImageTransform::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ChannelDataProcessor::hash( output, context, h );
+	ImageProcessor::hash( output, context, h );
 	
 	const FormatPlug *fPlug = IECore::runTimeCast<const FormatPlug>(output);
 	if( fPlug == formatPlug() )
 	{
+		h = inPlug()->formatPlug()->hash();
 		transformPlug()->scalePlug()->hash( h );
 		return;
 	}
@@ -474,5 +509,26 @@ void ImageTransform::hash( const ValuePlug *output, const Context *context, IECo
 
 ImageTransform::~ImageTransform()
 {
+}
+
+GafferImage::Format ImageTransform::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->formatPlug()->getValue();
+}
+
+Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->dataWindowPlug()->getValue();
+}
+
+IECore::ConstStringVectorDataPtr ImageTransform::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->channelNamesPlug()->getValue();
+}
+
+IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
+	return outData;
 }
 

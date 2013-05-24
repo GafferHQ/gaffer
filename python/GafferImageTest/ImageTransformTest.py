@@ -46,6 +46,22 @@ class ImageTransformTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
+	def testIdentityHash( self ) :
+		
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )		
+
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( r["out"] )
+		
+		c = Gaffer.Context()
+		c["image:channelName"] = "R"
+		c["image:tileOrigin"] = IECore.V2i( 0 )
+		with c :
+			h1 = t["out"].hash();	
+			h2 = r["out"].hash();	
+			self.assertEqual( h1, h2 )	
+		
 	def testScaleHash( self ) :
 		
 		r = GafferImage.ImageReader()
@@ -71,38 +87,11 @@ class ImageTransformTest( unittest.TestCase ) :
 		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) );	
 		
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len( dirtiedPlugs ), 1 )
+		self.assertEqual( len( dirtiedPlugs ), 4 )
+		self.assertTrue( "out" in dirtiedPlugs )
+		self.assertTrue( "out.channelData" in dirtiedPlugs )
+		self.assertTrue( "out.dataWindow" in dirtiedPlugs )
 		self.assertTrue( "__scaledFormat" in dirtiedPlugs )
-
-	# Check that the hash is the same for all integer translations.
-	# As the ImagePlug::image() method renders the data window of the plug with tiles
-	# that have an origin relative to the data window, we can assume that the data
-	# in a tile with origin (0,0) that has a data window origin of (0,0) is the same as
-	# the same tile translated to (1, 1) if the data window is also (1, 1).
-	# Therefore, a translation of 1.5 and 4.5 should produce the same channel data
-	# but with a translated data window. As a result, the channel data hashes should also be the same.
-	# We test this by comparing the results of several translations that have identical floating point
-	# parts but different integer parts. As the ImagePlug::image() method renders the
-	# data window of the plug with tiles that have an origin relative to the data window, we can assume
-	# that the data in a tile with origin (0,0) that has a data window origin of (0,0) is the same as
-	# the same tile translated to (1, 1) if the data window is also (1,1).
-	def testTranslateHash( self ) :	
-
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.fileName )		
-
-		t = GafferImage.ImageTransform()
-		t["in"].setInput( r["out"] )
-		
-		tileSize = GafferImage.ImagePlug.tileSize()
-		v1 = IECore.V2f( 1.5, 0.0 )
-		v2 = IECore.V2f( 4.5, 0.0 )
-		for i in range( 0, 30 ) :
-			t["transform"]["translate"].setValue( v1 + IECore.V2f( i ) )
-			h1 = t["out"].channelDataHash( "R", t["out"]["dataWindow"].getValue().min )
-			t["transform"]["translate"].setValue( v2 + IECore.V2f( i ) )
-			h2 = t["out"].channelDataHash( "R", t["out"]["dataWindow"].getValue().min )
-			self.assertEqual( h1, h2 )
 
 	def testOutputFormat( self ) :
 	
@@ -118,7 +107,7 @@ class ImageTransformTest( unittest.TestCase ) :
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		with c :
 			self.assertEqual( t["out"]["format"].hash(), r["out"]["format"].hash() )
-		
+
 	def testHashPassThrough( self ) :
 	
 		r = GafferImage.ImageReader()
