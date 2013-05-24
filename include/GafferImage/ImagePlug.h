@@ -113,8 +113,8 @@ class ImagePlug : public Gaffer::CompoundPlug
 		inline static Imath::V2i tileOrigin( const Imath::V2i &point )
 		{
 			Imath::V2i tileOrigin;
-			tileOrigin.x = int( floor( double( point.x ) / tileSize() ) ) * tileSize();
-			tileOrigin.y = int( floor( double( point.y ) / tileSize() ) ) * tileSize();
+			tileOrigin.x = point.x < 0 && point.x % tileSize() != 0 ? ( point.x / tileSize() - 1 ) * tileSize() : ( point.x / tileSize() ) * tileSize();
+			tileOrigin.y = point.y < 0 && point.y % tileSize() != 0 ? ( point.y / tileSize() - 1 ) * tileSize() : ( point.y / tileSize() ) * tileSize();
 			return tileOrigin;
 		}
 	
