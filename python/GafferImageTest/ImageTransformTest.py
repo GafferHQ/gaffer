@@ -45,6 +45,7 @@ import GafferImage
 class ImageTransformTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/" )
 
 	def testIdentityHash( self ) :
 		
@@ -146,6 +147,59 @@ class ImageTransformTest( unittest.TestCase ) :
 		
 			t["enabled"].setValue( False )
 			self.assertEqual( r["out"].hash(), t["out"].hash() )
+
+	def testBoxFilter( self ) :
+		self.__testFilter( "Box" )
+
+	def testBSplineFilter( self ) :
+		self.__testFilter( "BSpline" )
+
+	def testBilinearFilter( self ) :
+		self.__testFilter( "Bilinear" )
+
+	def testCatmullRomFilter( self ) :
+		self.__testFilter( "CatmullRom" )
+
+	def testCubicFilter( self ) :
+		self.__testFilter( "Cubic" )
+
+	def testHermiteFilter( self ) :
+		self.__testFilter( "Hermite" )
+
+	def testLanczosFilter( self ) :
+		self.__testFilter( "Lanczos" )
+		
+	def testMitchellFilter( self ) :
+		self.__testFilter( "Mitchell" )
+
+	def testSincFilter( self ) :
+		self.__testFilter( "Sinc" )
+
+	def __testFilter( self, filter ) :
+		
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.join( self.path, "checkerWithNegativeDataWindow.200x150.exr" ) )
+
+		t = GafferImage.ImageTransform()
+		t["transform"]["translate"].setValue( IECore.V2f( 20, -10 ) )
+		t["transform"]["scale"].setValue( IECore.V2f( .75, 1.1 ) )
+		t["transform"]["rotate"].setValue( 40 )
+		t["transform"]["pivot"].setValue( IECore.V2f( 50, 30 ) )
+		t["in"].setInput( reader["out"] ) 
+		
+		expectedOutput = GafferImage.ImageReader()
+
+		file = "transformedChecker" + filter + ".200x150.exr"
+		expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
+		t["filter"].setValue( filter )
+		
+		op = IECore.ImageDiffOp()
+		res = op(
+			imageA = expectedOutput["out"].image(),
+			imageB = t["out"].image()
+		)
+		
+		self.assertFalse( res.value )
 
 if __name__ == "__main__":
 	unittest.main()
