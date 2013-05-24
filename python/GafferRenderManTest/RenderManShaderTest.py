@@ -468,6 +468,30 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshaderNode.loadShader( coshader )
 		
 		self.assertEqual( coshaderNode.state()[0].type, "ri:shader" )
-				
+	
+	def testCantConnectSurfaceShaderIntoCoshaderInput( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		n1 = GafferRenderMan.RenderManShader()
+		n1.loadShader( shader )
+		
+		n2 = GafferRenderMan.RenderManShader()
+		n2.loadShader( "plastic" )
+		
+		self.assertFalse( n1["parameters"]["coshaderParameter"].acceptsInput( n2["out"] ) )
+
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		n3 = GafferRenderMan.RenderManShader()
+		n3.loadShader( coshader )
+
+		self.assertTrue( n1["parameters"]["coshaderParameter"].acceptsInput( n3["out"] ) )
+		
+		arrayShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		n4 = GafferRenderMan.RenderManShader()
+		n4.loadShader( arrayShader )
+		
+		self.assertFalse( n4["parameters"]["fixedShaderArray"]["in1"].acceptsInput( n2["out"] ) )
+		self.assertTrue( n4["parameters"]["fixedShaderArray"]["in1"].acceptsInput( n3["out"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
