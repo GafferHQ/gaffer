@@ -1,9 +1,43 @@
 == Introduction to Gaffer anchor:introduction_introductionToGaffer[]
 !!!!Welcome. This would be some text introducing people to Gaffer and its capabilities.!!!!
 
-Gaffer is a 3D content creation application that is built around procedurally defined scenes. Its primary use is as a lighting and look development (shading) tool, but its modular nature allows for expansion into other areas.
+Gaffer is a 3D content creation application !!!!that is built around procedurally defined scenes!!!!. Its primary use is as a lighting and look-development (shading) tool, but its modular nature allows for customisation and expansion for use in other aspects of CGI production.   !!!!into other    areas.!!!!
 
-It provides non-destructive methods to build and modify scenes and send those resulting scenes to render. Gaffer is not tied to any specific renderer, and can be extended to support any renderer currently implemented in the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gaffer is a ... application built around the core concept of scenes defined procedurally by networks of nodes.
+
+but due to its modular nature its possible to expand the app to tackle a range of tasks.
+
+the app as potential to be expanded into other cgi fields  aspects  tasks
+
+
+
+
+
+
+
+
+
+
+
+It provides non-destructive methods for constructing and modifying scenes and sending the resulting scenes to render. Gaffer is not tied to any specific renderer, and can be 
+extended to support any renderer currently implemented in the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.
 In addition to processing of 3D scenes Gaffer has simple 2D compositing functionality, allowing for renders and other imagery to be combined, and for the application of basic image manipulations.
 
 The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
@@ -13,6 +47,9 @@ The framework with which the Gaffer tool is built is also available for rapid de
 !!!!What is the core design philosophy of Gaffer and how should users approach it?
 
 .......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....!!!!
+
+
+
 
 
 === Functionality anchor:introduction_functionality[]

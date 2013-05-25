@@ -34,11 +34,16 @@ Internally all of the exposed parts of a node ( its label, its input/output slot
 
 === Viewer
 !!!!lorem ipsum foo bar doodah!!!!
+==== 3D Mode
+
+==== 2D Mode
 
 
 === SceneHierarchy
-!!!!lorem ipsum foo bar doodah!!!!
+Alongside the 3D navigation provided by the Viewer, users can browse the contents of a scene via the *SceneHierarchy*. This editor provides an expandable tree view, listing all the items composing the current scene along with their parent-child relationships.
 
+
+representation
 
 === SceneInspector anchor:interface_sceneInspector[]
 
@@ -76,12 +81,12 @@ image::images/placeHolder.png[align="center"]
 .!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: redPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
 image::images/placeHolder.png[align="center"]
 
-* In this example, the problem was an incorrect path filter expression which is easily fixed. However without the SceneInspector it may have been tricky to track down the root cause of the error, with the user having to fall back on trial and error testing to isolate the culpable node.
+* In this example, the problem was an incorrect path filter expression which is easily fixed. However, without the SceneInspector it may have been tricky to track down the root cause of the error, with the user having to fall back on trial and error testing to isolate the culpable node.
 
 ==== How to use the SceneInspector anchor:interface_howToUserTheSceneInspector[]
-To use the SceneInspector simply select a node from the NodeGraph then pick either one or two scene items. This item selection can be done from within either the 3D Viewer or the SceneHierarchy editor.
+To start, simply select a node from the NodeGraph then pick either one or two scene items. This item selection can be done from within either the 3D Viewer or the SceneHierarchy editor.
 
-In the case where you select just one item from the scene the SceneInspector will display the properties of that single item. However if you pick two items, the SceneInspector will highlight the differences between them. Properties and/or values unique to the first selected item will be highligted red, and those unqiue to the second item highlighted green.
+In the case where you select just one item from the scene, the SceneInspector will display the properties of that single item. However, if you pick two items the SceneInspector will highlight the differences between them. Properties and/or values unique to the first item selected will be highligted red, and those unqiue to the second item highlighted green.
 
 .!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING SINGLE ITEM !!!!!!!!!!!!!!!!!!!!!!!!!!
 image::images/placeHolder.png[align="center"]
