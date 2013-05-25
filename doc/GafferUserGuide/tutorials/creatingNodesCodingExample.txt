@@ -5,7 +5,7 @@
 Rumour has it some other application has a feature for creating equestrian playthings on demand. Here we'll address this deficiency in Gaffer while taking the opportunity to learn about the scripted creation of nodes.
 
 ==== Creating our script
-If you've already read the anchor:introduction_introductionToGaffer[], then you'll know we can add features to Gaffer by creating files it runs automatically on startup. We'll create our script in the following file, and gaffer will load it each time it runs :
+If you've already read the xref:configurationFilesExample[Configuration Files Example], then you'll know we can add features to Gaffer by creating files it runs automatically on startup. We'll create our script in the following file, and gaffer will load it each time it runs :
 
 ------------------------------------
 ~/gaffer/startup/gui/iWantAPony.py
@@ -96,6 +96,4 @@ def __iWantAPony( menu ) :
         script.selection().add( objectToScene )
         
 GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
-
-#THIS IS A TEST COMMENT FOR PYGMENTS - DELETE
 ------------------------------------
