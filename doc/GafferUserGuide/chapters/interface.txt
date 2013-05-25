@@ -61,7 +61,7 @@ To help clarify, consider this useage example for the SceneInspector:
 .!!!!!!!!!!SCREEN GRAB OF NODE GRAPH SHOWING SHADERASSIGNMENTS AT DIFFERENT POINTS IN THE GRAPH !!!!!!!!!!!!!!!
 image::images/placeHolder.png[align="center"]
 
-* When we render the scene ballA is showing up green. Is is not intended and it appears that it is picking up the shader destined for a different object, ballB.
+* When we render the scene ballA is showing up green. This is not intended and it appears that it is picking up the shader destined for a different object, ballB.
 
 .!!!!!!!!!!SCREEN GRAB OF RESULTING RENDER HERE!!!!!!!!!!!!!!!
 image::images/placeHolder.png[align="center"]
