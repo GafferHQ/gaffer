@@ -196,7 +196,7 @@ a:hover {
 }
 
 
-div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
+div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; page-break-inside:avoid; }
 th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
 ul > li > * { color: #3E4349; }
 
