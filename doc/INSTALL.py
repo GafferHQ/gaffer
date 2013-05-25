@@ -9,7 +9,7 @@ ad_cmd = 'asciidoc'
 ag_cmd = 'gaffer screenGrabber'
 pdf_cmd = '/home/btoogood/Tools/wkhtmltopdf-amd64'
 
-'''
+
 #build the node reference
 os.chdir( os.path.join (build_root, 'GafferNodeReference' ))
 
@@ -19,7 +19,7 @@ os.system( gp_cmd + " extractoMatic.py" )
 ## run asciidoc then convert the result into a pdf
 os.system( ad_cmd + " GafferNodeReference.txt" )
 os.system( pdf_cmd + " GafferNodeReference.html GafferNodeReference.pdf" )
-'''
+
 
 
 #build the user guide
