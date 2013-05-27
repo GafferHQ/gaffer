@@ -266,6 +266,14 @@ ImageView::ImageView( GafferImage::ImagePlugPtr inPlug )
 	View::inPlug<ImagePlug>()->setInput( inPlug );
 }
 
+// constructor for derived classes not accepting ImagePlugs
+ImageView::ImageView( Gaffer::PlugPtr inPlug )
+	:	View( staticTypeName(), new Gaffer::Plug() )
+{
+	View::inPlug<Plug>()->setInput( inPlug );
+}
+
+
 ImageView::~ImageView()
 {
 }

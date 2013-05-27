@@ -59,7 +59,13 @@ class ImageView : public GafferUI::View
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageView, ImageViewTypeId, GafferUI::View );
 	
 	protected :
-
+		
+		/// This constructor is for classes which derive from ImageView, but
+		/// don't necessarily accept an ImagePlug. Instead they should create
+		/// a preprocessor node that accepts the input plug and outputs an
+		/// image plug, and enable it using setPreprocessor().
+		ImageView( Gaffer::PlugPtr inputPlug );
+		
 		virtual void update();
 	
 		static ViewDescription<ImageView> g_viewDescription;
