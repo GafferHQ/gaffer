@@ -95,6 +95,12 @@ p {
   margin-bottom: 1em;
 }
 
+/*make sure italics follow body colour*/
+em { 
+	font-style: italic;
+	color: #404030; 
+	}
+
 
 /* don't need this bunch - pdf will just have white bg
 body.book{
@@ -171,7 +177,9 @@ div.toclevel1 { margin-top: 0.2em; font-size: 16px; }
 div.toclevel2 { margin-top: 0.15em; font-size: 14px; }
 */
 
-em, dt, td.hdlist1 { color: black; }
+dt, td.hdlist1 { color: black; }
+
+
 
 /*list definitions*/
 dt {
