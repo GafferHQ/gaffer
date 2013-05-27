@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferUITest
@@ -56,6 +58,43 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		g.setContents( t )
 		
 		self.failUnless( g.getContents().isSame( t ) )
+	
+	def testNestedNodules( self ) :
+	
+		class DeeplyNestedNode( Gaffer.Node ) :
+		
+			def __init__( self, name = "DeeplyNestedNode" ) :
+			
+				Gaffer.Node.__init__( self, name )
+				
+				self["c1"] = Gaffer.CompoundPlug()
+				self["c1"]["i1"] = Gaffer.IntPlug()
+				self["c1"]["c2"] = Gaffer.CompoundPlug()
+				self["c1"]["c2"]["i2"] = Gaffer.IntPlug()
+				self["c1"]["c2"]["c3"] = Gaffer.CompoundPlug()
+				self["c1"]["c2"]["c3"]["i3"] = Gaffer.IntPlug()
+				
+		IECore.registerRunTimeTyped( DeeplyNestedNode )
+				
+		n = DeeplyNestedNode()
+		
+		def noduleCreator( plug ) :
+			if isinstance( plug, Gaffer.CompoundPlug ) :
+				return GafferUI.CompoundNodule( plug )
+			else :
+				return GafferUI.StandardNodule( plug )
+			
+		GafferUI.Nodule.registerNodule( DeeplyNestedNode.staticTypeId(), ".*", noduleCreator )
+		
+		g = GafferUI.StandardNodeGadget( n )
+		
+		self.assertTrue( g.nodule( n["c1"] ).plug().isSame( n["c1"] ) )
+		self.assertTrue( g.nodule( n["c1"]["i1"] ).plug().isSame( n["c1"]["i1"] ) )
+		self.assertTrue( g.nodule( n["c1"]["c2"] ).plug().isSame( n["c1"]["c2"] ) )
+		self.assertTrue( g.nodule( n["c1"]["c2"]["i2"] ).plug().isSame( n["c1"]["c2"]["i2"] ) )
+		self.assertTrue( g.nodule( n["c1"]["c2"]["c3"] ).plug().isSame( n["c1"]["c2"]["c3"] ) )
+		self.assertTrue( g.nodule( n["c1"]["c2"]["c3"]["i3"] ).plug().isSame( n["c1"]["c2"]["c3"]["i3"] ) )
+		
 			
 if __name__ == "__main__":
 	unittest.main()

@@ -60,7 +60,8 @@ RenderManLight::~RenderManLight()
 
 void RenderManLight::loadShader( const std::string &shaderName )
 {
-	RenderManShader::loadShaderParameters( shaderName, parametersPlug() );
+	IECore::ConstShaderPtr shader = IECore::runTimeCast<const IECore::Shader>( RenderManShader::shaderLoader()->read( shaderName + ".sdl" ) );
+	RenderManShader::loadShaderParameters( shader, parametersPlug() );
 	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
 }
 

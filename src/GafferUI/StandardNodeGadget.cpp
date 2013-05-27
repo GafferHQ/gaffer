@@ -253,27 +253,25 @@ void StandardNodeGadget::doRender( const Style *style ) const
 
 Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
 {	
-	NoduleMap::iterator it = m_nodules.find( plug );
-	if( it==m_nodules.end() )
+	const GraphComponent *parent = plug->parent<GraphComponent>();
+	if( parent == node() )
 	{
-		/// \todo This needs to be generalised so other compound nodule types
-		/// are possible, and so we can do nested compounds too.
-		const Gaffer::CompoundPlug *compoundParent = plug->parent<Gaffer::CompoundPlug>();
-		if( compoundParent )
+		NoduleMap::iterator it = m_nodules.find( plug );
+		if( it != m_nodules.end() )
 		{
-			it = m_nodules.find( compoundParent );
-			if( it!=m_nodules.end() )
-			{
-				CompoundNodule *compoundNodule = IECore::runTimeCast<CompoundNodule>( it->second );
-				if( compoundNodule )
-				{
-					return compoundNodule->nodule( plug );
-				}
-			}
+			return it->second;
 		}
 		return 0;
 	}
-	return it->second;
+	else if( const Plug *parentPlug = IECore::runTimeCast<const Plug>( parent ) )
+	{
+		CompoundNodule *compoundNodule = IECore::runTimeCast<CompoundNodule>( nodule( parentPlug ) );
+		if( compoundNodule )
+		{
+			return compoundNodule->nodule( plug );
+		}
+	}
+	return 0;
 }
 
 const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
