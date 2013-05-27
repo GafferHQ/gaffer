@@ -106,6 +106,7 @@ enum TypeId
 	ReferenceTypeId = 110059,
 	ComputeNodeTypeId = 110060,
 	ParameterisedHolderComputeNodeTypeId = 110061,
+	Color3fVectorDataPlugTypeId = 110062,
 	LastTypeId = 110200,
 	
 };

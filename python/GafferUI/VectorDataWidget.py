@@ -59,6 +59,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 	#
 	# columnToolTips may be specified as a list of strings to provide a tooltip for
 	# each column.
+	#
+	# sizeEditable specifies whether or not items may be added and removed
+	# from the data (assuming it is editable).
 	def __init__(
 		self,
 		data=None,
@@ -67,6 +70,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		showIndices=True,
 		minimumVisibleRows=8,
 		columnToolTips=None,
+		sizeEditable=True,
 		**kw
 	) :
 	
@@ -155,6 +159,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		
 		self.__propagatingDataChangesToSelection = False
 		
+		self.__sizeEditable = sizeEditable
 		self.setData( data )
 		self.setEditable( editable )
 	
@@ -228,7 +233,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# if not editable.
 		if editable :
 			self.__tableView.setObjectName( "vectorDataWidgetEditable" )
-			self.__buttonRow.setVisible( True )
+			self.__buttonRow.setVisible( self.__sizeEditable )
 		else :
 			self.__tableView.setObjectName( "vectorDataWidget" )
 			self.__buttonRow.setVisible( False )
@@ -240,6 +245,18 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def getEditable( self ) :
 	
 		return self.__tableView.objectName()=="vectorDataWidgetEditable"
+	
+	def setSizeEditable( self, sizeEditable ) :
+	
+		if sizeEditable == self.__sizeEditable :
+			return
+		
+		self.__sizeEditable = sizeEditable
+		self.__buttonRow.setVisible( self.getEditable() and self.__sizeEditable )
+	
+	def getSizeEditable( self ) :
+	
+		return self.__sizeEditable
 	
 	## Returns a signal which is emitted whenever the data is edited.
 	# The signal is /not/ emitted when setData() is called.
@@ -257,7 +274,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		m.append( "/Select All", { "command" : self.__selectAll } )
 		m.append( "/Clear Selection", { "command" : self.__clearSelection } )
 		
-		if self.getEditable() :
+		if self.getEditable() and self.getSizeEditable() :
 
 			m.append( "/divider", { "divider" : True } )
 			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )

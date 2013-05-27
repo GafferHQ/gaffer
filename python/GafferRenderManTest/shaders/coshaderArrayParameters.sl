@@ -34,54 +34,13 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_RENDERMANSHADER_H
-#define GAFFERRENDERMAN_RENDERMANSHADER_H
+surface coshaderArrayParameters(
 
-#include "IECore/CachedReader.h"
+	shader dynamicShaderArray[] = {};
+	shader fixedShaderArray[4] = { null, null, null, null };
 
-#include "GafferScene/Shader.h"
-
-#include "GafferRenderMan/TypeIds.h"
-
-namespace GafferRenderMan
+)
 {
-
-class RenderManLight;
-
-class RenderManShader : public GafferScene::Shader
-{
-
-	public :
-
-		RenderManShader( const std::string &name=staticTypeName() );
-		virtual ~RenderManShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
-		
-		/// \undoable.
-		/// \todo Make this method virtual and define it on the Shader base class.
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
-
-		/// The loader used by loadShader() - this is exposed so that the ui
-		/// can use it too.
-		static IECore::CachedReader *shaderLoader();
-
-	protected :
-	
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-	
-	private :
-	
-		// RenderMan light is a friend to allow it to share the shader loading code.
-		/// \todo Perhaps some other code sharing mechanism makes more sense?
-		friend class RenderManLight;
-		
-		static void loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues=false );
-					
-};
-
-} // namespace GafferRenderMan
-
-#endif // GAFFERRENDERMAN_RENDERMANSHADER_H
+	Ci = 1;
+	Oi = 1;
+}
