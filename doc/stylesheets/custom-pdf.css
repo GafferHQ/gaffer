@@ -76,7 +76,24 @@
   src: local('Ubuntu Mono Bold Italic'), local('UbuntuMono-BoldItalic'), url(http://themes.googleusercontent.com/static/fonts/ubuntumono/v3/n_d8tv_JOIiYyMXR4eaV9QRV2F9RPTaqyJ4QibDfkzM.woff) format('woff');
 }
 
+/*testing for prince*/
+@page {  size: A4;
+         margin: 50pt 40pt 50pt 40pt;
+      }
 
+body {
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: 400;
+  font-size: 9pt;
+  color: #404030;
+  line-height: 1.5em;
+  letter-spacing: 0em;
+  /*padding: 2em;
+  padding-bottom: 6em;*/
+}
+
+
+/*wkhtmltopdf way
 body {
   font-family: 'Ubuntu', sans-serif;
   font-weight: 400;
@@ -88,7 +105,7 @@ body {
   padding-bottom: 6em;
   width: 900px;
   margin: 20px auto;
-}
+}*/
 
 /*add some extra padding under each paragraph*/
 p {
@@ -205,8 +222,13 @@ a:hover {
 
 
 div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; page-break-inside:avoid; }
-th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
+td,th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
 ul > li > * { color: #3E4349; }
+
+/*fix unwanted borders round admonitionblock*/
+td.icon, td.content { border: 0px; }
+
+
 
 /*code and inset blocks text*/
 pre, code, .monospaced {
