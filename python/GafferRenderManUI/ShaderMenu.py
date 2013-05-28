@@ -73,14 +73,28 @@ def __shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
 	
 	shaders = set()
+	pathsVisited = set()
 	for path in GafferRenderMan.RenderManShader.shaderLoader().searchPath.paths :
-
+		
+		if path in pathsVisited :
+			# the 3delight installer adds duplicate paths for some reason, and
+			# since traversing them can be slow, we skip duplicates.
+			continue
+		
+		if path == "." :
+			# the 3delight installer adds "." to the shader path, but we skip it
+			# since it can lead to us traversing into arbitrarily deep hierarchies
+			# rooted in the current directory.
+			continue
+							
 		for root, dirs, files in os.walk( path ) :
 			for file in files :
 				if os.path.splitext( file )[1] == ".sdl" :
 					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
 					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
 						shaders.add( os.path.splitext( shaderPath )[0] )
+	
+		pathsVisited.add( path )
 	
 	shaders = sorted( list( shaders ) )
 	categorisedShaders = [ x for x in shaders if "/" in x ]
