@@ -74,6 +74,7 @@
 #include "GafferScene/Transform.h"
 #include "GafferScene/AimConstraint.h"
 #include "GafferScene/Prune.h"
+#include "GafferScene/Cube.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -107,6 +108,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
 	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
+	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Plane>();
 	GafferBindings::DependencyNodeClass<BranchCreator>();
 	GafferBindings::DependencyNodeClass<Seeds>();

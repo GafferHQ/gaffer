@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,69 +34,57 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#include "IECore/MeshPrimitive.h"
 
-namespace GafferScene
-{
+#include "GafferScene/Cube.h"
 
-enum TypeId
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace Imath;
+using namespace IECore;
+
+IE_CORE_DEFINERUNTIMETYPED( Cube );
+
+size_t Cube::g_firstPlugIndex = 0;
+
+Cube::Cube( const std::string &name )
+	:	ObjectSource( name, "cube" )
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	OptionsTypeId = 110523,
-	ShaderTypeId = 110524,
-	ShaderAssignmentTypeId = 110525,
-	FilterTypeId = 110526,
-	PathFilterTypeId = 110527,
-	AttributesTypeId = 110528,
-	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
-	StandardOptionsTypeId = 110532,
-	SubTreeTypeId = 110533,
-	OpenGLAttributesTypeId = 110534,
-	SceneWriterTypeId = 110535,
-	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537,
-	LightTypeId = 110538,
-	StandardAttributesTypeId = 110539,
-	OpenGLShaderTypeId = 110540,
-	TransformTypeId = 110541,
-	ConstraintTypeId = 110542,
-	AimConstraintTypeId = 110543,
-	MeshTypeTypeId = 110544,
-	FilteredSceneProcessorTypeId = 110545,
-	PruneTypeId = 110546,
-	RenderTypeId = 110547,
-	ExecutableRenderTypeId = 110548,
-	OpenGLRenderTypeId = 110549,
-	InteractiveRenderTypeId = 110550,
-	CubeTypeId = 110551,
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new V3fPlug( "dimensions", Plug::In, V3f( 1.0f ), V3f( 0.0f ) ) );
+}
+
+Cube::~Cube()
+{
+}
+
+Gaffer::V3fPlug *Cube::dimensionsPlug()
+{
+	return getChild<V3fPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::V3fPlug *Cube::dimensionsPlug() const
+{
+	return getChild<V3fPlug>( g_firstPlugIndex );
+}
+
+void Cube::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	ObjectSource::affects( input, outputs );
 	
-	LastTypeId = 110650
-};
+	if( input->parent<V3fPlug>() == dimensionsPlug() )
+	{
+		outputs.push_back( sourcePlug() );
+	}
+}
 
-} // namespace GafferScene
+void Cube::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	dimensionsPlug()->hash( h );	
+}
 
-#endif // GAFFERSCENE_TYPEIDS_H
+IECore::ConstObjectPtr Cube::computeSource( const Context *context ) const
+{
+	V3f dimensions = dimensionsPlug()->getValue();
+	return MeshPrimitive::createBox( Box3f( -dimensions / 2.0f, dimensions / 2.0f ) );
+}
