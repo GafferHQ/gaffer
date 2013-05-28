@@ -20,7 +20,7 @@ Editors provide ways of viewing and interacting with both the script defining th
 * how to save and restore layouts
 
 
-=== NodeGraph anchor:interface_nodeEditor[]
+=== NodeGraph anchor:interface_nodeGraph[]
 !!!!lorem ipsum foo bar doodah!!!!
 
 
