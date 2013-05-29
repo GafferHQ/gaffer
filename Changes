@@ -1,3 +1,12 @@
+0.64.0
+======
+
+* Added support for displaying RenderMan shader color parameters as plain numbers. This can be achieved by setting the "parameterName.widget" annotation to a value of "number".
+
+* Added support for RenderManShader array parameters, including arrays of coshaders.
+
+* Fixed redraw issue in searchable menus.
+
 0.63.1
 ======
 
