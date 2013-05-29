@@ -41,9 +41,12 @@
 #include <vector>
 #include <string>
 
+#include "tbb/mutex.h"
+#include "boost/weak_ptr.hpp"
 #include "GafferImage/TypeIds.h"
 #include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
+#include "IECore/Lookup.h"
 
 #define _USE_MATH_DEFINES
 #include "math.h"
@@ -104,8 +107,8 @@ public :
 	//  @return The weight of the sample.
 	inline double weight( double center, int samplePosition ) const
 	{
-		double t = ( center - samplePosition - .5 ) / m_scale;
-		return weight( t );
+		float t = ( center - samplePosition - .5 ) / m_scale;
+		return (*m_lut)( fabs( t ) );
 	}
 	/// Returns the position of the first sample influenced by the kernel.
 	/// Use this function to get the index of the first pixel to convolve
@@ -158,10 +161,39 @@ protected :
 			}
 
 		private:
-			/// Returns a new instance of the Filter class.
+
+			static float calculateLutWeight( float value )
+			{
+				T filter;
+				if (value >= filter.m_radius ) return 0;
+				return filter.weight( value );
+			}
+
+			/// Returns a new instance of the Filter class and initializes it's LUT if it does not exist or just grabs a shared_ptr to one if it does.
 			static FilterPtr creator( double scale = 1. )
 			{
-				return new T( scale );
+				T* filter = new T( scale );
+				const std::string &filterName( filter->typeName() );
+				
+				tbb::mutex::scoped_lock lock;
+				lock.acquire( lutMutex() );
+				std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap( Filter::lutMap() );
+				boost::shared_ptr<IECore::Lookupff> lutPtr( lutMap[filterName].lock() );
+				if ( !lutPtr )
+				{
+					lutPtr.reset( new IECore::Lookupff( calculateLutWeight, 0.f, filter->m_radius, 256 ) );
+					lutMap[filterName] = lutPtr;
+				}
+				lock.release();
+
+				filter->m_lut = lutPtr;
+				return FilterPtr( filter );
+			}
+
+			static tbb::mutex& lutMutex()
+			{
+				static tbb::mutex g_mutex;
+				return g_mutex;
 			}
 	};
 
@@ -184,6 +216,14 @@ private:
 		static std::vector< std::string > g_filters;
 		return g_filters;
 	}
+	
+	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap()
+	{
+		static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > l;
+		return l;
+	}
+	
+	boost::shared_ptr<IECore::Lookupff> m_lut;
 
 };
 
