@@ -120,8 +120,6 @@ except ImportError :
 GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
 
-GafferUI.NodeMenu.append( "/Cortex/Primitive/Sphere", Gaffer.SphereNode )
-
 # \todo have a method for dynamically choosing between Gaffer.OpHolder and Gaffer.ExecutableOpHolder
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )

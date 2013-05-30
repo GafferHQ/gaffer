@@ -40,6 +40,7 @@ import subprocess
 import unittest
 
 import Gaffer
+import GafferTest
 
 class ExecuteApplicationTest( unittest.TestCase ) :
 
@@ -62,7 +63,7 @@ class ExecuteApplicationTest( unittest.TestCase ) :
 	
 		s = Gaffer.ScriptNode()
 		
-		s["sphere"] = Gaffer.SphereNode()
+		s["sphere"] = GafferTest.SphereNode()
 		s["write"] = Gaffer.WriteNode()
 		s["write"]["in"].setInput( s["sphere"]["out"] )
 		s["write"]["fileName"].setValue( self.__outputFileName )
