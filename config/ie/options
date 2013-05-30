@@ -208,7 +208,7 @@ OCIO_LIB_SUFFIX = "-%s" % ocioVersion
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
-OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", "1.6.1" )
+OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 # Houdini currently uses an OpenEXR version that we can't install centrally
 if targetApp == "houdini" :
 	OPENEXR_LIB_SUFFIX = ""
