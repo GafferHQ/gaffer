@@ -8,7 +8,7 @@ image::images/placeHolder.png[align="center"]
 .!!!!!!!!!!SCREEN GRAB OF ANOTHER SAMPLE LAYOUT !!!!!!!!!!!!!!!
 image::images/placeHolder.png[align="center"]
 
-Editors provide ways of viewing and interacting with both the script defining the scene and the scene itself. For example, Gaffer provides editors for manipulating nodes, viewing 2D images, navigating an opengl 3D scene, and running python commands to modify the current script and/or session.
+Editors provide ways of viewing and interacting with both the script which defines the scene and the scene itself. For example, Gaffer provides editors for manipulating nodes, viewing 2D images, navigating scenes in 3D, and running python commands to modify the current working file or Gaffer session.
 
 === Layouts anchor:interface_layouts[]
 
@@ -21,7 +21,49 @@ Editors provide ways of viewing and interacting with both the script defining th
 
 
 === NodeGraph anchor:interface_nodeGraph[]
-!!!!lorem ipsum foo bar doodah!!!!
+
+The NodeGraph is one of the key parts of the Gaffer interface and acts as the primary means  of constructing and modifying the contents of a script.
+As we have seen previously, the script is composed of nodes connected to form graphs and the NodeGraph provides a visualisation of both these nodes and their connections.
+
+[NOTE]
+Nodes, noodles, and nodules... +
+When discussing Gaffer graphs, nodes are usually just referred to as nodes. However, you may see the curvy lines that represent the connections between nodes called 'noodles'. Additionally, 'nodule' is the name given to the little circles drawn on each node representing the plugs available for connection. +
+It might be useful to note that noodles and nodules are a components of the GUI rather than part of the Gaffer backend - you can manipulate them visually in the NodeGraph, but they aren't entities with values that you can set by other means.
+
+
+==== Manipulating the NodeGraph view anchor:interface_manipulatingTheNodeGraphView[]
+
+The mouse can be used to perform most actions in the NodeGraph.
+
+* To pan around, simply click and hold the middle-mouse button in empty space (i.e. not on a node)
+** Alternatively, hold down the ALT key and left-mouse drag to perform the same action.
+* To zoom in and out of the graph, you can use the middle-mouse scrollwheel if you have one.
+** Alternatively, hold down the ALT key and right-mouse drag to zoom.
+
+==== Manipulating nodes anchor:interface_manipulatingNodes[]
+
+creating nodes
+moving nodes
+duplicating/deleting - The usual system hotkeys for cut/copy-paste and deleting nodes will work.
+dragging nodes to other editors - examples: viewers, NodeEditor, ScriptEditor
+
+==== Manipulating noodles anchor:interface_manipulatingNoodles[]
+
+drag from out to in
+
+drag from in to out
+[NOTE]
+To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
+
+!!!!screen grab of popup plug labels!!!!
+
+
+
+
+
+
+
+
 
 
 [NOTE]

@@ -48,7 +48,7 @@ The framework with which the Gaffer tool is built is also available for rapid de
 
 .......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....!!!!
 
-
+!!!!script -> scene   defines    which gaffer then generates on demand!!!!
 
 
 
@@ -58,7 +58,7 @@ The framework with which the Gaffer tool is built is also available for rapid de
 === Using this guide anchor:introduction_usingThisGuide[]
 !!!!The user guide is structured thusly. Some simple tutorials are included, but extra in depth tutorials are available HERE.  Nodes also have tooltips that contain useful information, and that information is collated in the GafferNodeReference document.!!!!
 
-
+The GafferUserGuide provides!!!!!!!!
 
 
 As the Gaffer workflow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology thoughout the user guide.

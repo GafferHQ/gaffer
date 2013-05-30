@@ -17,7 +17,7 @@ It is composed of the following appendices:
 |Keypress|Result
 |right-arrow|Increment current frame
 |left-arrow |Decrement current frame
-|`          |Make Gaffer run in full-screen mode
+|`          |Set Gaffer to run in full-screen mode
 |CTRL+z     |Undo last action
 |SHIFT+CTRL+z|Redo last undone action
 |CTRL+n     |Create blank script in new Gaffer session
