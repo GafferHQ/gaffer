@@ -40,7 +40,7 @@ Now we can create a read node to load a model, set the values of its plugs, and 
 [source,python]
 ------------------------------------
 read = Gaffer.ReadNode()
-read["fileName"].setValue( "/Users/john/Documents/cortexData/cow.cob" )
+read["fileName"].setValue( "/path/to/some/cortexData/cow.cob" )
 script.addChild( read )
 ------------------------------------
 
@@ -83,7 +83,7 @@ def __iWantAPony( menu ) :
         script = scriptWindow.scriptNode()
         
         read = Gaffer.ReadNode()
-        read["fileName"].setValue( "/Users/john/Documents/cortexData/cow.cob" )
+        read["fileName"].setValue( "/path/to/some/cortexData/cow.cob" )
         script.addChild( read )
         
         objectToScene = GafferScene.ObjectToScene()
