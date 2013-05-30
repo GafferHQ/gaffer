@@ -76,6 +76,7 @@ GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToSce
 GafferUI.NodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
 GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
 GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )
+GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Sphere", GafferScene.Sphere )
 GafferUI.NodeMenu.append( "/Scene/Object/Generators/Seeds", GafferScene.Seeds )
 GafferUI.NodeMenu.append( "/Scene/Object/Generators/Instancer", GafferScene.Instancer )
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.AttributeCache )

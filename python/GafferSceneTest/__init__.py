@@ -47,6 +47,7 @@ from SceneTimeWarpTest import SceneTimeWarpTest
 from SceneProceduralTest import SceneProceduralTest
 from CubeTest import CubeTest
 from PlaneTest import PlaneTest
+from SphereTest import SphereTest
 from InstancerTest import InstancerTest
 from ObjectToSceneTest import ObjectToSceneTest
 from CameraTest import CameraTest

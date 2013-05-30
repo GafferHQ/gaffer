@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,30 +34,53 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferScene
+import GafferUI
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
+##########################################################################
+# Metadata
+##########################################################################
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.Sphere,
+
+"""A node which produces scenes containing a sphere.""",
+
+"type",
+"The type of object to produce. May be a SpherePrimitive or a Mesh.",
+
+"radius",
+"Radius of the sphere.",
+
+"zMin",
+"Limits the extent of the sphere along the lower pole. Valid values are in the range [-1,1] and should always be less than zMax.",
+
+"zMax",
+"Limits the extent of the sphere along the upper pole. Valid values are in the range [-1,1] and should always be greater than zMin.",
+
+"thetaMax",
+"Limits the extent of the sphere around the pole axis. Valid values are in the range [0,360].",
+
+"divisions",
+"Controls tesselation of the sphere when type is Mesh.",
+
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Sphere.staticTypeId(),
+	"type",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Primitive", GafferScene.Sphere.Type.Primitive ),
+		( "Mesh", GafferScene.Sphere.Type.Mesh ),
+	),
+)
+
+## \todo: Disable divisions when type is Primitive. There is a similar mechanism in RenderManShaderUI, which
+## could be generalized on StandardNodeUI and used here.
