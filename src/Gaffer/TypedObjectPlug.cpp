@@ -127,6 +127,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FloatVectorDataPlug, FloatVect
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( StringVectorDataPlug, StringVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( InternedStringVectorDataPlug, InternedStringVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( V3fVectorDataPlug, V3fVectorDataPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Color3fVectorDataPlug, Color3fVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectVectorPlug, ObjectVectorPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( CompoundObjectPlug, CompoundObjectPlugTypeId )
 
@@ -140,5 +141,6 @@ template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::InternedStringVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
+template class TypedObjectPlug<IECore::Color3fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
 template class TypedObjectPlug<IECore::CompoundObject>;

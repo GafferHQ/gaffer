@@ -34,54 +34,28 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_RENDERMANSHADER_H
-#define GAFFERRENDERMAN_RENDERMANSHADER_H
+surface arrayParameters(
 
-#include "IECore/CachedReader.h"
+	float dynamicFloatArray[] = {};
+	float fixedFloatArray[4] = { 1, 2, 3, 4 };
 
-#include "GafferScene/Shader.h"
+	string dynamicStringArray[] = { "dynamic", "arrays", "can", "still", "have", "defaults" };
+	string fixedStringArray[2] = { "hello", "goodbye" };
+	
+	color dynamicColorArray[] = { 1, 2 };
+	color fixedColorArray[2] = { 1, 2 };
+	
+	vector dynamicVectorArray[] = {};
+	vector fixedVectorArray[5] = { 1, 2, 3, 4, 5 };
 
-#include "GafferRenderMan/TypeIds.h"
+	point dynamicPointArray[] = {};
+	point fixedPointArray[5] = { 1, 2, 3, 4, 5 };
+	
+	normal dynamicNormalArray[] = {};
+	normal fixedNormalArray[5] = { 1, 2, 3, 4, 5 };
 
-namespace GafferRenderMan
+)
 {
-
-class RenderManLight;
-
-class RenderManShader : public GafferScene::Shader
-{
-
-	public :
-
-		RenderManShader( const std::string &name=staticTypeName() );
-		virtual ~RenderManShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
-		
-		/// \undoable.
-		/// \todo Make this method virtual and define it on the Shader base class.
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
-
-		/// The loader used by loadShader() - this is exposed so that the ui
-		/// can use it too.
-		static IECore::CachedReader *shaderLoader();
-
-	protected :
-	
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-	
-	private :
-	
-		// RenderMan light is a friend to allow it to share the shader loading code.
-		/// \todo Perhaps some other code sharing mechanism makes more sense?
-		friend class RenderManLight;
-		
-		static void loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues=false );
-					
-};
-
-} // namespace GafferRenderMan
-
-#endif // GAFFERRENDERMAN_RENDERMANSHADER_H
+	Ci = 1;
+	Oi = 1;
+}

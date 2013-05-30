@@ -143,6 +143,29 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( isinstance( l[0], IECore.AttributeState ) )
 		self.assertEqual( l[0].attributes["user:test"], IECore.IntData( 10 ) )
 		self.assertTrue( isinstance( l[1], IECore.Light ) )
-				
+	
+	def testLightName( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["l"] = GafferSceneTest.TestLight()
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["l"]["out"] )
+		
+		self.assertSceneValid( s["g"]["out"] )
+	
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["g"]["out"] )
+		
+		# CapturingRenderer outputs some spurious errors which
+		# we suppress by capturing them.
+		with IECore.CapturingMessageHandler() :
+			s["r"].execute( [ Gaffer.Context.current() ] )
+		
+		w = s["r"].world()
+		self.assertEqual( w.children()[0].state()[0].attributes["name"].value, "/group/light" )
+		self.assertEqual( w.children()[0].state()[1].handle, "/group/light" )
+					
 if __name__ == "__main__":
 	unittest.main()

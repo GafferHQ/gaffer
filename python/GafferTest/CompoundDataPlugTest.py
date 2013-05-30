@@ -116,6 +116,20 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		d, n = p.memberDataAndName( m3 )
 		self.assertEqual( d, IECore.StringVectorData( [ "1", "2", "3" ] ) )
 		self.assertEqual( n, "c" )
+		
+		m4 = p.addMember( "d", IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 5 ) ] ) )
+		self.failUnless( isinstance( m4, Gaffer.CompoundPlug ) )
+		
+		d, n = p.memberDataAndName( m4 )
+		self.assertEqual( d, IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 5 ) ] ) )
+		self.assertEqual( n, "d" )
+		
+		m5 = p.addMember( "e", IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 1, 5 ) ] ) )
+		self.failUnless( isinstance( m5, Gaffer.CompoundPlug ) )
+		
+		d, n = p.memberDataAndName( m5 )
+		self.assertEqual( d, IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 1, 5 ) ] ) )
+		self.assertEqual( n, "e" )
 	
 	def testImathVectorData( self ) :
 	

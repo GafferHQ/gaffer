@@ -75,6 +75,14 @@ def __parameterNoduleCreator( plug ) :
 	# graph.
 	if plug.typeId() == Gaffer.Plug.staticTypeId() :
 		return GafferUI.StandardNodule( plug )
+	elif plug.typeId() == Gaffer.CompoundPlug.staticTypeId() :
+		# coshader arrays tend to be used for layering, so we prefer to present the
+		# last entry at the top, hence the increasing direction.
+		return GafferUI.CompoundNodule(
+			plug,
+			GafferUI.LinearContainer.Orientation.Y,
+			direction = GafferUI.LinearContainer.Direction.Increasing
+		)
 
 	return None
 
@@ -245,7 +253,10 @@ def __optionValue( plug, stringValue ) :
 
 def __numberCreator( plug, annotations ) :
 
-	return GafferUI.NumericPlugValueWidget( plug )
+	if isinstance( plug, Gaffer.CompoundPlug ) :
+		return GafferUI.CompoundNumericPlugValueWidget( plug )
+	else :
+		return GafferUI.NumericPlugValueWidget( plug )
 	
 def __stringCreator( plug, annotations ) :
 
@@ -345,7 +356,15 @@ def __plugValueWidgetCreator( plug ) :
 					( plug.node()["name"].getValue(), parameterName, str( e ) )
 			)
 	
-	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+	if plug.typeId() == Gaffer.CompoundPlug.staticTypeId() :
+		# coshader array
+		return None
+	
+	result = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+	if isinstance( result, GafferUI.VectorDataPlugValueWidget ) :
+		result.vectorDataWidget().setSizeEditable( plug.defaultValue().size() == 0 )
+	
+	return result
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )

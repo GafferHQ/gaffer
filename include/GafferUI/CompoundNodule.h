@@ -63,7 +63,10 @@ class CompoundNodule : public Nodule
 
 	public :
 
-		CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X, float spacing = 0.0f );
+		/// The default value for direction causes increasing direction when oriented in X and decreasing when
+		/// oriented in Y, it may be overridden by explicitly specifying a direction.
+		CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X,
+			float spacing = 0.0f, LinearContainer::Direction direction=LinearContainer::InvalidDirection );
 		virtual ~CompoundNodule();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundNodule, CompoundNoduleTypeId, Nodule );

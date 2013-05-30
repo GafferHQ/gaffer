@@ -55,6 +55,7 @@ Shader::Shader( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name" ) );
+	addChild( new StringPlug( "type" ) );
 	addChild( new CompoundPlug( "parameters" ) );
 }
 
@@ -71,15 +72,25 @@ const Gaffer::StringPlug *Shader::namePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
-		
+
+Gaffer::StringPlug *Shader::typePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Shader::typePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::CompoundPlug *Shader::parametersPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::CompoundPlug *Shader::parametersPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::Plug *Shader::outPlug()

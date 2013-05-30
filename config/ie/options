@@ -57,7 +57,7 @@ compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
 targetApp = getOption( "APP", None )
 targetAppVersion = None
-oiioVersion = "1.1.0"
+oiioVersion = "1.1.10"
 ocioVersion = "1.0.7"
 
 if targetApp :
@@ -81,10 +81,11 @@ else :
 	targetApp = "gaffer"
 	targetAppReg = cortexReg
 	pythonVersion = targetAppReg["preferredPythonVersion"]
+	platformReg = IEEnv.registry["platformDefaults"][IEEnv.platform()]
 	if not compiler :
-		compiler = IEEnv.registry["platformDefaults"][IEEnv.platform()]["compiler"]
+		compiler = platformReg.get( "toolsCompiler", platformReg["compiler"] )
 	if not compilerVersion :
-		compilerVersion = IEEnv.registry["platformDefaults"][IEEnv.platform()]["compilerVersion"]
+		compilerVersion = platformReg.get( "toolsCompilerVersion", platformReg["compilerVersion"] )
 
 pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
@@ -124,8 +125,8 @@ if targetAppVersion :
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
 
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), "gcc", "4.1.2", "include" ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenImageIO", oiioVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenImageIO", oiioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ), "OpenEXR" ),
@@ -207,7 +208,7 @@ OCIO_LIB_SUFFIX = "-%s" % ocioVersion
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
-OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", "1.6.1" )
+OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 # Houdini currently uses an OpenEXR version that we can't install centrally
 if targetApp == "houdini" :
 	OPENEXR_LIB_SUFFIX = ""
