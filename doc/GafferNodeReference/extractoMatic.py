@@ -25,7 +25,7 @@ def addNodeDefinitionToDoc( doc, nodename, node ):
 	if desc == "":
 		desc = __PLACEHOLDERSTRING__
 	string = "%s\n\n" % (desc)
-	string += ".Plugs\n"
+	string += "==== Plugs\n"
 	doc.write(string)
 
 def addPlugDefinitionToDoc( doc, plugName, plugDescription, plugDepth ):
