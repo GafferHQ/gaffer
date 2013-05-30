@@ -51,9 +51,7 @@ class ImageView : public GafferUI::View
 
 	public :
 
-		typedef GafferImage::ImagePlug InPlugType;
-
-		ImageView( GafferImage::ImagePlugPtr inputPlug );
+		ImageView();
 		virtual ~ImageView();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageView, ImageViewTypeId, GafferUI::View );

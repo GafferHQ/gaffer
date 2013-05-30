@@ -260,10 +260,9 @@ IE_CORE_DEFINERUNTIMETYPED( ImageView );
 
 ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 
-ImageView::ImageView( GafferImage::ImagePlugPtr inPlug )
+ImageView::ImageView()
 	:	View( staticTypeName(), new GafferImage::ImagePlug() )
 {
-	View::inPlug<ImagePlug>()->setInput( inPlug );
 }
 
 // constructor for derived classes not accepting ImagePlugs

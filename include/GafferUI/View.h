@@ -57,9 +57,6 @@ class View : public Gaffer::Node
 
 	public :
 
-		/// This typedef should be overridden by derived classes.
-		typedef Gaffer::Plug InPlugType;
-
 		virtual ~View();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( View, ViewTypeId, Gaffer::Node );
@@ -98,6 +95,10 @@ class View : public Gaffer::Node
 		
 	protected :
 
+		/// The input plug is added to the View to form inPlug() - the derived
+		/// class should construct a plug of a suitable type and pass it
+		/// to the View constructor. For instance, the SceneView will pass
+		/// a ScenePlug so that only scenes may be viewed.
 		View( const std::string &name, Gaffer::PlugPtr input );
 		
 		/// The View may want to perform preprocessing of the input before

@@ -49,11 +49,10 @@ IE_CORE_DEFINERUNTIMETYPED( ObjectView );
 
 ObjectView::ViewDescription<ObjectView> ObjectView::g_viewDescription( ObjectPlug::staticTypeId() );
 
-ObjectView::ObjectView( Gaffer::ObjectPlugPtr inPlug )
+ObjectView::ObjectView()
 	:	View3D( staticTypeName(), new ObjectPlug( "in", Plug::In, NullObject::defaultNullObject() ) ),
 		m_renderableGadget( new RenderableGadget )
 {
-	View3D::inPlug<ObjectPlug>()->setInput( inPlug );
 	viewportGadget()->setChild( m_renderableGadget );
 }
 

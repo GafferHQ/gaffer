@@ -103,11 +103,10 @@ IE_CORE_DEFINERUNTIMETYPED( SceneView );
 
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
-SceneView::SceneView( GafferScene::ScenePlugPtr inPlug )
+SceneView::SceneView()
 	:	View3D( staticTypeName(), new GafferScene::ScenePlug() ),
 		m_renderableGadget( new RenderableGadget )
 {
-	View3D::inPlug<ScenePlug>()->setInput( inPlug );
 	viewportGadget()->setChild( m_renderableGadget );
 
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
