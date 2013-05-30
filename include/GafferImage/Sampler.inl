@@ -39,6 +39,13 @@ namespace GafferImage
 
 float Sampler::sample( float x, float y )
 {
+	// Perform an early-out for the box filter.
+	if ( static_cast<GafferImage::TypeId>( m_filter->typeId() ) == GafferImage::BoxFilterTypeId )
+	{
+		return sample( IECore::fastFloatFloor( x ), IECore::fastFloatFloor( y ) );
+	}
+
+	// Otherwise do a filtered lookup.	
 	int tapX = m_filter->tap( x - m_cacheWindow.min.x );
 	const int width = m_filter->width();
 	float weightsX[width];
@@ -99,7 +106,7 @@ float Sampler::sample( int x, int y )
 		p.x = std::max( std::min( p.x, m_sampleWindow.max.x ), m_sampleWindow.min.x );
 		p.y = std::max( std::min( p.y, m_sampleWindow.max.y ), m_sampleWindow.min.y );
 	}
-	
+
 	const float *tileData;
 	Imath::V2i tileOrigin;
 	Imath::V2i tileIndex;

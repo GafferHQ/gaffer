@@ -235,12 +235,12 @@ void Implementation::hashChannelDataPlug( const GafferImage::ImagePlug *output, 
 	filterPlug()->hash( h );
 	
 	// Finally we hash the transformation.
-	Imath::V2d t = transformPlug()->translatePlug()->getValue();
+	Imath::V2f t = transformPlug()->translatePlug()->getValue();
 
 	///\ todo: Ideally we should only hash the offset of the transform from the data window so that when translated by ImagePlug::tileSize()
 	/// we can reuse the cache. However this involves changing the ImageProcessor so that it hashes each tile relative to it's data window
 	/// rather than it's absolute coordinates. When this is implemented, uncomment the line below and delete the line that hashes translatePlug(). 
-	// h.append( Imath::V2d( t.x - floor( t.x ), t.y - floor( t.y ) ) );
+	// h.append( Imath::V2f( t.x - floor( t.x ), t.y - floor( t.y ) ) );
 	
 	transformPlug()->translatePlug()->hash( h );
 	
@@ -269,8 +269,8 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 
 	// The actual scale factor that the reformat node has resized the input to.
 	Imath::V2f trueScale = Imath::V2f(
-		double( inFormat.getDisplayWindow().size().x+1 ) / ( outFormat.getDisplayWindow().size().x+1 ),
-		double( inFormat.getDisplayWindow().size().y+1 ) / ( outFormat.getDisplayWindow().size().y+1 )
+		float( inFormat.getDisplayWindow().size().x+1 ) / ( outFormat.getDisplayWindow().size().x+1 ),
+		float( inFormat.getDisplayWindow().size().y+1 ) / ( outFormat.getDisplayWindow().size().y+1 )
 	);
 
 	// To transform the image correctly we need to first move the image to the pivot point.
@@ -406,6 +406,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	// Create the internal implementation of our transform and connect it up the our plugs.
 	GafferImage::Reformat *r = new GafferImage::Reformat( std::string( boost::str( boost::format( "__%sReformat" )  % name  ) ) );
 	r->inPlug()->setInput( inPlug() );
+	r->filterPlug()->setInput( filterPlug );
 	r->formatPlug()->setInput( formatPlug() );
 	r->enabledPlug()->setInput( enabledPlug() );
 	addChild( r );
