@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -52,6 +53,7 @@ Plane::Plane( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 1.0f ), V2f( 0.0f ) ) );
+	addChild( new V2iPlug( "divisions", Plug::In, V2i( 1 ), V2i( 1 ) ) );
 }
 
 Plane::~Plane()
@@ -68,11 +70,21 @@ const Gaffer::V2fPlug *Plane::dimensionsPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex );
 }
 
+Gaffer::V2iPlug *Plane::divisionsPlug()
+{
+	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::V2iPlug *Plane::divisionsPlug() const
+{
+	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
+}
+
 void Plane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	
-	if( input->parent<V2fPlug>() == dimensionsPlug() )
+	if ( input->parent<V2fPlug>() == dimensionsPlug() || input->parent<V2iPlug>() == divisionsPlug() )
 	{
 		outputs.push_back( sourcePlug() );
 	}
@@ -81,10 +93,11 @@ void Plane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 void Plane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	dimensionsPlug()->hash( h );	
+	divisionsPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr Plane::computeSource( const Context *context ) const
 {
 	V2f dimensions = dimensionsPlug()->getValue();
-	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ) );
+	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ), divisionsPlug()->getValue() );
 }
