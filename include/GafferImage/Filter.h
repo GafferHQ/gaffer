@@ -43,7 +43,9 @@
 
 #include "tbb/mutex.h"
 #include "boost/weak_ptr.hpp"
+
 #include "GafferImage/TypeIds.h"
+
 #include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
 #include "IECore/Lookup.h"
@@ -77,7 +79,7 @@ public :
 	/// Constructor	
 	/// @param radius Half the width of the kernel at a scale of 1.
 	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
-	Filter( double radius, double scale = 1. );
+	Filter( float radius, float scale = 1. );
 		
 	virtual ~Filter(){};
 
@@ -86,9 +88,9 @@ public :
 	//////////////////////////////////////////////////////////////
 	//@{
 	/// Resizes the kernel to a new scale.
-	void setScale( double scale );
+	void setScale( float scale );
 	/// Returns the current scale of the kernel.
-	inline double getScale() const { return m_scale; }
+	inline float getScale() const { return m_scale; }
 	//@}
 	//! @name Filter Convolution
 	/// A set of methods that create a simple interface to allow the
@@ -105,7 +107,7 @@ public :
 	/// @param center The center of the kernel.
 	/// @param samplePosition The position of the sample to return the weight for.
 	//  @return The weight of the sample.
-	inline double weight( double center, int samplePosition ) const
+	inline float weight( float center, int samplePosition ) const
 	{
 		float t = ( center - samplePosition - .5 ) / m_scale;
 		return (*m_lut)( fabs( t ) );
@@ -113,9 +115,10 @@ public :
 	/// Returns the position of the first sample influenced by the kernel.
 	/// Use this function to get the index of the first pixel to convolve
 	/// the filter with.
-	inline int tap( double center ) const
+	/// "Center" must be positive.
+	inline int tap( float center ) const
 	{
-		return (int)( center - m_scaledRadius );
+		return int( center - m_scaledRadius );
 	}
 	//@}
 
@@ -126,7 +129,7 @@ public :
 	/// Instantiates a new Filter and initialises it to the desired scale.
 	/// @param filterName The name of the filter within the registry.
 	/// @param scale The scale to create the filter at.
-	static FilterPtr create( const std::string &filterName, double scale = 1. );
+	static FilterPtr create( const std::string &filterName, float scale = 1. );
 
 	/// Returns a vector of the available filters.
 	static const std::vector<std::string> &filters()
@@ -145,9 +148,9 @@ public :
 protected :
 
 	// Returns a weight for a delta in the range of 0 to m_radius.
-	virtual double weight( double delta ) const = 0;
+	virtual float weight( float delta ) const = 0;
 
-	typedef FilterPtr (*CreatorFn)( double scale );
+	typedef FilterPtr (*CreatorFn)( float scale );
 
 	template<class T>
 	struct FilterRegistration
@@ -170,7 +173,7 @@ protected :
 			}
 
 			/// Returns a new instance of the Filter class and initializes it's LUT if it does not exist or just grabs a shared_ptr to one if it does.
-			static FilterPtr creator( double scale = 1. )
+			static FilterPtr creator( float scale = 1. )
 			{
 				T* filter = new T( scale );
 				const std::string &filterName( filter->typeName() );
@@ -197,9 +200,9 @@ protected :
 			}
 	};
 
-	const double m_radius;
-	double m_scale;
-	double m_scaledRadius;
+	const float m_radius;
+	float m_scale;
+	float m_scaledRadius;
 
 private:
 
@@ -236,12 +239,12 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BoxFilter, BoxFilterTypeId, Filter );
 
-	BoxFilter( double scale = 1. )
+	BoxFilter( float scale = 1. )
 		: Filter( .5, scale )
 	{
 	}
 	
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		return ( delta <= 0.5 );
@@ -261,11 +264,11 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BilinearFilter, BilinearFilterTypeId, Filter );
 	
-	BilinearFilter( double scale = 1. )
+	BilinearFilter( float scale = 1. )
 		: Filter( 1, scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1. )
@@ -289,11 +292,11 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SincFilter, SincFilterTypeId, Filter );
 
-	SincFilter( double scale = 1. )
+	SincFilter( float scale = 1. )
 		: Filter( 2., scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta > m_radius )
@@ -305,7 +308,7 @@ public:
 			return 1.;
 		}
 
-		const double PI = M_PI;
+		const float PI = M_PI;
 		return sin( PI*delta ) / ( PI*delta );
 	}
 
@@ -323,11 +326,11 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( HermiteFilter, HermiteFilterTypeId, Filter );
 
-	HermiteFilter( double scale = 1. )
+	HermiteFilter( float scale = 1. )
 		: Filter( 1, scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1 )
@@ -351,11 +354,11 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( LanczosFilter, LanczosFilterTypeId, Filter );
 
-	LanczosFilter( double scale = 1. )
+	LanczosFilter( float scale = 1. )
 		: Filter( 3., scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		
@@ -368,7 +371,7 @@ public:
 			return 1.;
 		}
 		
-		const double PI = M_PI;
+		const float PI = M_PI;
 		return ( m_radius * (1./PI) * (1./PI) ) / ( delta*delta) * sin( PI * delta ) * sin( PI*delta * (1./m_radius) );
 	}
 
@@ -386,17 +389,17 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SplineFilter, SplineFilterTypeId, Filter );
 	
-	SplineFilter( double B, double C, double scale = 1. )
+	SplineFilter( float B, float C, float scale = 1. )
 		: Filter( 2, scale ),
 		m_B( B ),
 		m_C( C )
 	{
 	}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
-		double delta2 = delta*delta;
+		float delta2 = delta*delta;
 
 		if ( delta < 1. )
 		{
@@ -415,8 +418,8 @@ public:
 
 private:
 
-	const double m_B;
-	const double m_C;
+	const float m_B;
+	const float m_C;
 
 };
 
@@ -427,7 +430,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
-	MitchellFilter( double scale = 1. )
+	MitchellFilter( float scale = 1. )
 		: SplineFilter( 1./3., 1./3., scale )
 	{}
 
@@ -445,7 +448,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
-	BSplineFilter( double scale = 1. )
+	BSplineFilter( float scale = 1. )
 		: SplineFilter( 1., 0., scale )
 	{}
 
@@ -463,7 +466,7 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
 	
-	CatmullRomFilter( double scale = 1. )
+	CatmullRomFilter( float scale = 1. )
 		: SplineFilter( 0., .5, scale )
 	{}
 
@@ -481,15 +484,15 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CubicFilter, CubicFilterTypeId, Filter );
 	
-	CubicFilter( double scale = 1. )
+	CubicFilter( float scale = 1. )
 		: Filter( 3., scale )
 	{
 	}
 
-	double weight( double delta ) const 
+	float weight( float delta ) const 
 	{
 		delta = fabs( delta );
-		double delta2 = delta*delta;
+		float delta2 = delta*delta;
 
 		if ( delta <= 1. )
 		{

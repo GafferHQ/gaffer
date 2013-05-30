@@ -69,7 +69,7 @@ template<typename T>
 static void bindTypedFilter()
 {
 	IECorePython::RunTimeTypedClass<T>()
-		.def( init<double>(
+		.def( init<float>(
 				(
 					boost::python::arg_( "scale" ) = 1.0
 				)
@@ -79,8 +79,8 @@ static void bindTypedFilter()
 }
 
 GafferImage::FilterPtr create1( std::string name ){ return GafferImage::Filter::create( name ); };
-GafferImage::FilterPtr create2( std::string name, double scale ){ return GafferImage::Filter::create( name ); };
-double weight( Filter& filter, double center, int pos ){ return filter.weight( center, pos  ); };
+GafferImage::FilterPtr create2( std::string name, float scale ){ return GafferImage::Filter::create( name ); };
+float weight( Filter& filter, float center, int pos ){ return filter.weight( center, pos  ); };
 
 void bindFilters()
 {
