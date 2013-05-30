@@ -203,6 +203,8 @@ void Render::outputLights( const ScenePlug *scene, const IECore::CompoundObject 
 		{
 			AttributeBlock attributeBlock( renderer );
 		
+			renderer->setAttribute( "name", new StringData( it->first ) );
+		
 			CompoundObject::ObjectMap::const_iterator aIt, aeIt;
 			for( aIt = attributes->members().begin(), aeIt = attributes->members().end(); aIt != aeIt; aIt++ )
 			{
