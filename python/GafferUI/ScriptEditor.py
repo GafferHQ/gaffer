@@ -135,6 +135,10 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 				return self.__dropText( widget, dragData[0] )
 			else :
 				return "[ " + ", ".join( [ self.__dropText( widget, d ) for d in dragData ] ) + " ]"
+		elif isinstance( dragData, IECore.Color4fData ) :
+			return repr( dragData.value )
+		elif isinstance( dragData, IECore.Color3fData ) :
+			return repr( dragData.value )
 				
 		return None
 		
