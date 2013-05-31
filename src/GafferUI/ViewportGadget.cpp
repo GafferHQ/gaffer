@@ -294,7 +294,10 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	
 	if( m_gadgetUnderMouse == newGadgetUnderMouse )
 	{
-		// nothing to be done
+		// nothing to be done except pass the signal through
+		std::vector<GadgetPtr> gadgetUnderMouse(1, m_gadgetUnderMouse);
+		GadgetPtr handler(0);
+		dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
 		return true;
 	}
 	
@@ -342,6 +345,11 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 			dispatchEvent( *it, &Gadget::enterSignal, event );		
 		}
 	}
+
+	// pass the signal through
+	std::vector<GadgetPtr> gadgetUnderMouse(1, m_gadgetUnderMouse);
+	GadgetPtr handler(0);
+	dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
 	
 	// update status
 	m_gadgetUnderMouse = newGadgetUnderMouse;
