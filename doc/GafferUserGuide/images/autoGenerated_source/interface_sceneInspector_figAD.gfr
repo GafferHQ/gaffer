@@ -374,7 +374,7 @@ __children["StandardOptions"]["__uiPosition"]["y"].setValue( -51.253860473632812
 __children["RenderManRender"] = GafferRenderMan.RenderManRender( "RenderManRender" )
 parent.addChild( __children["RenderManRender"] )
 __children["RenderManRender"]["mode"].setValue( 'render' )
-__children["RenderManRender"]["ribFileName"].setValue( '/tmp/interface_sceneInspector_figAA.#.rib' )
+__children["RenderManRender"]["ribFileName"].setValue( '/tmp/interface_sceneInspector_figAD.#.rib' )
 __children["RenderManRender"].addChild( Gaffer.V2fPlug( "__uiPosition", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
 __children["RenderManRender"]["__uiPosition"].setValue( IECore.V2f( 27.5622, -56.6247 ) )
 __children["RenderManRender"]["__uiPosition"]["x"].setValue( 27.562217712402344 )
