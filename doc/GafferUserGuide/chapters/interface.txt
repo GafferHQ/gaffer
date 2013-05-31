@@ -89,7 +89,8 @@ Internally all of the exposed parts of a node ( its label, its input/output slot
 
 
 === SceneHierarchy anchor:interface_sceneHierarchy[]
-Alongside the 3D navigation provided by the Viewer, users can browse the contents of a scene via the *SceneHierarchy*. This editor provides an expandable tree view, listing all the items composing the current scene along with their parent-child relationships.
+Alongside the 3D navigation provided by the Viewer, users can browse the contents of a scene via the *SceneHierarchy*. This editor provides an expandable tree view of the scene, listing all the items and showing their parent-child relationships.
+Selection of single or multiple scene items can be carried out within the SceneHierarchy, as well as expansion of the tree.
 
 
 representation
