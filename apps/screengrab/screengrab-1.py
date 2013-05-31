@@ -38,7 +38,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from PyQt4 import QtCore, QtGui
+QtGui = GafferUI._qtImport( "QtGui" )
 
 import os
 
@@ -46,7 +46,7 @@ import os
 class screengrab( Gaffer.Application ) :
 	def __init__( self ) :
 	
-		Gaffer.Application.__init__( self, "A tool to generate documentation screen-grabs." )
+		Gaffer.Application.__init__( self, "A tool to generate documentation screengrabs." )
 		
 		self.parameters().addParameters(
 		
