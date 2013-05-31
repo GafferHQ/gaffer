@@ -159,7 +159,11 @@ class GLWidget( GafferUI.Widget ) :
 					if glWidget:
 						break
 				
-				GLWidget.__sharingWidget = glWidget
+				
+				if glWidget is None:
+					GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
+				else:
+					GLWidget.__sharingWidget = glWidget
 				
 				def newScene( clientData ):
 					import GafferUI
