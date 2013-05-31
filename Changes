@@ -1,3 +1,8 @@
+0.64.1
+======
+
+* Temporary band aid for a problem in maya 2013, where it can't find a QGLWidget to share a gl context with. It now just creates one if it can't find one, like it does in standalone gaffer.
+
 0.64.0
 ======
 
