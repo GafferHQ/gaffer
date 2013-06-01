@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -150,9 +150,9 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	
 		return self.__widgets.index( child )
 	
-	def addChild( self, child ) :
+	def addChild( self, child, label="" ) :
 	
-		self.append( child )
+		self.append( child, label )
 	
 	def removeChild( self, child ) :
 	

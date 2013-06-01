@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -226,6 +226,16 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( t.getLabel( b2 ), "B2" )
 		self.assertEqual( t.getLabel( b3 ), "B3" )
 
+	def testLabellingDuringAutoParenting( self ) :
+	
+		with GafferUI.TabbedContainer() as t :
+		
+			one = GafferUI.ListContainer( label = "One" )
+			two = GafferUI.ListContainer( label = "Two" )
+
+		self.assertEqual( t.getLabel( one ), "One" )
+		self.assertEqual( t.getLabel( two ), "Two" )
+		
 	def tearDown( self ) :
 	
 		self.__current = None
