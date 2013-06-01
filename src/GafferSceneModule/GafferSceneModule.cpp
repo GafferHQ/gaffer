@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -76,6 +77,7 @@
 #include "GafferScene/Prune.h"
 #include "GafferScene/Cube.h"
 #include "GafferScene/Sphere.h"
+#include "GafferScene/Text.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -159,6 +161,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<StandardAttributes>();
 	GafferBindings::DependencyNodeClass<Transform>();
 	GafferBindings::DependencyNodeClass<Prune>();
+	GafferBindings::DependencyNodeClass<Text>();
 	
 	{
 		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
