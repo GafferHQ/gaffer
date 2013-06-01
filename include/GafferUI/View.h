@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_VIEW_H
 #define GAFFERUI_VIEW_H
 
+#include "boost/regex.hpp"
+
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
 
@@ -90,7 +92,11 @@ class View : public Gaffer::Node
 		typedef boost::function<ViewPtr ( Gaffer::PlugPtr )> ViewCreator;
 		/// Registers a function which will return a View instance for a
 		/// plug of a specific type.
-		static void registerView( IECore::TypeId nodeType, ViewCreator creator );
+		static void registerView( IECore::TypeId plugType, ViewCreator creator );
+		/// Registers a function which returns a View instance for plugs with specific names
+		/// on nodes of a specific type. Views registered in this manner take precedence over
+		/// those registered by plug type only.
+		static void registerView( const IECore::TypeId nodeType, const std::string &plugPathRegex, ViewCreator creator );
 		//@}
 		
 	protected :
@@ -164,9 +170,16 @@ class View : public Gaffer::Node
 		typedef std::map<IECore::TypeId, ViewCreator> CreatorMap;
 		static CreatorMap &creators();
 	
+		typedef std::pair<boost::regex, ViewCreator> RegexAndCreator;
+		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;
+		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
+		static NamedCreatorMap &namedCreators();
+		
 		static size_t g_firstPlugIndex;
 		
+		friend void GafferUIBindings::bindView();
 		friend void GafferUIBindings::updateView( View & );
+		friend Gaffer::NodePtr GafferUIBindings::getPreprocessor( View & );
 					
 };
 

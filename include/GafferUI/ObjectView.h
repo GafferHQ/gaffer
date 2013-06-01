@@ -51,7 +51,7 @@ class ObjectView : public View3D
 
 	public :
 
-		ObjectView();
+		ObjectView( const std::string &name = staticTypeName() );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectView, ObjectViewTypeId, View3D );
 

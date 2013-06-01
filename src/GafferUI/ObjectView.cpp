@@ -49,8 +49,8 @@ IE_CORE_DEFINERUNTIMETYPED( ObjectView );
 
 ObjectView::ViewDescription<ObjectView> ObjectView::g_viewDescription( ObjectPlug::staticTypeId() );
 
-ObjectView::ObjectView()
-	:	View3D( staticTypeName(), new ObjectPlug( "in", Plug::In, NullObject::defaultNullObject() ) ),
+ObjectView::ObjectView( const std::string &name )
+	:	View3D( name, new ObjectPlug( "in", Plug::In, NullObject::defaultNullObject() ) ),
 		m_renderableGadget( new RenderableGadget )
 {
 	viewportGadget()->setChild( m_renderableGadget );

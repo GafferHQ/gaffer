@@ -153,8 +153,37 @@ View::CreatorMap &View::creators()
 	return m;
 }
 
+View::NamedCreatorMap &View::namedCreators()
+{
+	static NamedCreatorMap m;
+	return m;
+}
+
 ViewPtr View::create( Gaffer::PlugPtr plug )
 {	
+	const Gaffer::Node *node = plug->node();
+	if( node )
+	{
+		std::string plugPath = plug->relativeName( node );
+		const NamedCreatorMap &m = namedCreators();
+		IECore::TypeId t = node->typeId();
+		while( t!=IECore::InvalidTypeId )
+		{
+			NamedCreatorMap::const_iterator it = m.find( t );
+			if( it!=m.end() )
+			{
+				for( RegexAndCreatorVector::const_reverse_iterator nIt = it->second.rbegin(); nIt!=it->second.rend(); nIt++ )
+				{
+					if( boost::regex_match( plugPath, nIt->first ) )
+					{
+						return nIt->second( plug );
+					}
+				}
+			}
+			t = IECore::RunTimeTyped::baseTypeId( t );
+		}
+	}
+	
 	CreatorMap &m = creators();
 	IECore::TypeId t = plug->typeId();
 	while( t!=IECore::InvalidTypeId )
@@ -173,4 +202,9 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 void View::registerView( IECore::TypeId plugType, ViewCreator creator )
 {
 	creators()[plugType] = creator;
+}
+
+void View::registerView( const IECore::TypeId nodeType, const std::string &plugPath, ViewCreator creator )
+{
+	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
 }
