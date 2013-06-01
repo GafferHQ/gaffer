@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -39,77 +39,91 @@ import os
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 class AboutWindow( GafferUI.Window ) :
 
 	def __init__( self, about, **kw ) :
 	
-		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
+		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Manual, borderWidth = 6, **kw )
 		
-		frame = GafferUI.Frame( borderWidth = 30 )
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10 )
-		frame.setChild( column )
+		self.__linkActivatedConnections = []
 		
-		name = GafferUI.Label( text = about.name() + " " + about.versionString() )
-		name.setFont( size=GafferUI.Widget.FontSize.Large, weight=GafferUI.Widget.FontWeight.Bold )
-		column.append( name )
+		with self :
+		
+			with GafferUI.TabbedContainer() :
 				
-		copy = GafferUI.Label( text = about.copyright() )
-		copy.setFont( size=GafferUI.Widget.FontSize.Medium, weight=GafferUI.Widget.FontWeight.Bold )
-		column.append( copy )
-		
-		url = GafferUI.URLWidget( about.url() )
-		column.append( url )
-		
-		dependencies = about.dependencies()
-		if dependencies :
-		
-			collapsible = GafferUI.Collapsible( label="Dependencies", collapsed=False )
-			scrollable = GafferUI.ScrolledContainer(
-				horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never,
-				verticalMode=GafferUI.ScrolledContainer.ScrollMode.Always,
-				borderWidth = 5
-			)
-			depColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=5, borderWidth=10 )
-			scrollable.setChild( depColumn )
-			collapsible.setChild( scrollable )
-			
-			depColumn.append( GafferUI.Label(
-					IECore.StringUtil.wrap(
-						about.dependenciesPreamble(),
-						60
-					),
-					alignment = IECore.V2f( 0 ),
-				) 
-			)
-			
-			for d in dependencies :
-			
-				spacer = GafferUI.Label( text = "" )
-				depColumn.append( spacer )
-			
-				name = GafferUI.Label( text = d["name"], alignment=IECore.V2f( 0 ) )
-				name.setFont( size=name.FontSize.Medium, weight=name.FontWeight.Bold )
-				depColumn.append( name )
-				
-				if "credit" in d :
-					credit = GafferUI.Label( text=IECore.StringUtil.wrap( d["credit"], 60 ), alignment=IECore.V2f( 0 ) )
-					depColumn.append( credit )
-				
-				if "license" in d :
-					license = GafferUI.URLWidget( url="file://" + os.path.expandvars( d["license"] ), label="License", alignment=IECore.V2f( 0 ) )
-					depColumn.append( license )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="Gaffer" ) :
 					
-				if "url" in d :
-					url = GafferUI.URLWidget( d["url"], alignment=IECore.V2f( 0 ) )
-					depColumn.append( url )
+					text = "<h2>%s %s</h2>" % ( about.name(), about.versionString() )
+					text += about.copyright() + "<hr>"
+					text += "<a href='%s'>%s</a>" % ( about.url(), about.url() )
 					
-				if "source" in d :
-					source = GafferUI.URLWidget( url=d["source"], label="Source", alignment=IECore.V2f( 0 ) )
-					depColumn.append( source )
+					self.__label( text )
+					
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="License" ) :
+					
+					license = "".join( open( os.path.expandvars( about.license() ) ).readlines() )
+					with GafferUI.ScrolledContainer(
+						horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never,
+						verticalMode=GafferUI.ScrolledContainer.ScrollMode.Automatic,
+						borderWidth = 5
+					) :
+						self.__label( "<pre>" + license + "</pre>" ) 
+
+				dependencies = about.dependencies()
+				if dependencies :
+					
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="Dependencies" ) :
+		
+						with GafferUI.ScrolledContainer(
+							horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never,
+							verticalMode=GafferUI.ScrolledContainer.ScrollMode.Always,
+							borderWidth = 5
+						) :
+						
+							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=5, borderWidth=10 ) :
+						
+								text = "<p>%s</p>" % self.__wrapText( about.dependenciesPreamble() )
 			
-			column.append( collapsible, expand=True )
+								for d in dependencies :
 
-		self.setChild( frame )
+									text += "<h3>%s</h3>" % d["name"]
+								
+									if "credit" in d :
+										text += "<p>%s</p>" % self.__wrapText( d["credit"] )
+									
+									if "license" in d :
+										text += "<a href='file://%s'>License</a>" % os.path.expandvars( d["license"] )
+										
+									if "url" in d :
+										if "license" in d :
+											text += " | "
+										text += "<a href='%s'>%s</a>" % ( d["url"], d["url"] )
+										
+								self.__label( text )
+				
+	def __wrapText( self, text ) :
+	
+		return IECore.StringUtil.wrap( text, 80 ).replace( '\n', "<br>" )
 
+	def __label( self, text ) :
+	
+		## \todo Perhaps this stylesheet stuff should be done as standard for all labels?
+		header = "<html><head><style type=text/css>"
+		header += "a:link { color:#bbbbbb; text-decoration:none }"
+		header += "</style></head><body>"
+		
+		footer = "</body></html>"
+		
+		text = header + text + footer
+			
+		label = GafferUI.Label( text )
+		self.__linkActivatedConnections.append( label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ) ) )
+		return label
+		
+	def __linkActivated( self, label, url ) :
+	
+		GafferUI.showURL( url )
+		
