@@ -124,8 +124,8 @@ def openRecent( menu ) :
 		
 	result = IECore.MenuDefinition()
 	if recentFiles :
-		for fileName in recentFiles :
-			result.append( "/" + os.path.basename( fileName ), { "command" : IECore.curry( __open, currentScript, fileName ), "description" : fileName } )
+		for index, fileName in enumerate( recentFiles ) :
+			result.append( "/" + str( index ), { "label": os.path.basename( fileName ), "command" : IECore.curry( __open, currentScript, fileName ), "description" : fileName } )
 	else :
 		result.append( "/None Available", { "active" : False } )
 	
