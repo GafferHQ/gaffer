@@ -35,6 +35,7 @@
 ##########################################################################
 
 from FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
+from ImageViewTest import ImageViewTest
 
 if __name__ == "__main__":
 	unittest.main()

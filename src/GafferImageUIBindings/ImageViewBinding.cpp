@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,15 +36,39 @@
 
 #include "boost/python.hpp"
 
+#include "GafferBindings/NodeBinding.h"
+
+#include "GafferImageUI/ImageView.h"
 #include "GafferImageUIBindings/ImageViewBinding.h"
 
 using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferImageUI;
 
-using namespace GafferImageUIBindings;
+class ImageViewWrapper : public NodeWrapper<ImageView>
+{
+	
+	public :
+	
+		ImageViewWrapper( PyObject *self, const std::string &name, Gaffer::PlugPtr input = 0 )
+			:	NodeWrapper<ImageView>( self, name )
+		{
+			if( input )
+			{
+				setChild( "in", input );
+			}
+		}
 
-BOOST_PYTHON_MODULE( _GafferImageUI )
+};
+
+IE_CORE_DECLAREPTR( ImageViewWrapper );
+
+void GafferImageUIBindings::bindImageView()
 {
 
-	bindImageView();
-
+	GafferBindings::NodeClass<ImageView, ImageViewWrapperPtr>()
+		.def( init<const std::string &, Gaffer::PlugPtr>() )
+	;
+	
 }

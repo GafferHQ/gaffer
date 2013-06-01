@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,17 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
+#define GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
 
-#include "GafferImageUIBindings/ImageViewBinding.h"
-
-using namespace boost::python;
-
-using namespace GafferImageUIBindings;
-
-BOOST_PYTHON_MODULE( _GafferImageUI )
+namespace GafferImageUIBindings
 {
 
-	bindImageView();
+void bindImageView();
 
-}
+} // namespace GafferImageUIBindings
+
+#endif // GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
