@@ -87,29 +87,25 @@ class screengrab( Gaffer.Application ) :
 		self.root()["scripts"].addChild( scriptNode )
 		
 		#get a hook into the target window
-		primaryScript = self.root()["scripts"][-1]
-		self.__primaryWindow = GafferUI.ScriptWindow.acquire( primaryScript )
+		self.__primaryWindow = GafferUI.ScriptWindow.acquire( scriptNode )
 		
 		#set up target to write to
 		self.__image = str(args["image"])
 		#create path if missing
 		targetdir = os.path.dirname(self.__image)
 		if not os.path.exists(targetdir):
-			try:
-				print "Creating target directory [ %s ]" % (targetdir)
-				os.makedirs(targetdir)
-			except OSError:
-				print "Failed to create target directory [ %s ]" % (targetdir)
+			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % (targetdir) )
+			os.makedirs(targetdir)
 		
 		#register the function to run when the app is idle.
 		self.__idleCount = 0
 		GafferUI.EventLoop.addIdleCallback( self.__grabAndQuit )
 		GafferUI.EventLoop.mainEventLoop().start()
 		
-		
 		return 0
 
 	def __grabAndQuit( self ) :
+		
 		
 		self.__idleCount += 1
 		if self.__idleCount == 100 : #put a little wait in to give gaffer a chance to draw the ui
@@ -122,15 +118,12 @@ class screengrab( Gaffer.Application ) :
 			pm = QtGui.QPixmap.grabWindow( winhandle )
 			
 			#save that file out
-			print "Writing image [ %s ]" % (self.__image)
-			try:
-				pm.save( self.__image )
-			except:
-				print "Failed to write image [ %s ]" % (self.__image)
-		
+			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % (self.__image) )
+			pm.save( self.__image )
+			
 			#exit the application once we've done the screen grab
 			GafferUI.EventLoop.mainEventLoop().stop()
-
+		
 		return True
 
 IECore.registerRunTimeTyped( screengrab )
