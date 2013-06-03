@@ -76,6 +76,7 @@ enum TypeId
 	CatmullRomFilterTypeId = 110780,
 	SincFilterTypeId = 110781,
 	LanczosFilterTypeId = 110782,
+	ImageTransformImplementationTypeId = 110783,
 	
 	LastTypeId = 110849
 };

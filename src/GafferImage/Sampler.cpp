@@ -47,7 +47,7 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_boundingMode( boundingMode ),
 	m_filter( filter )
 {
-	// The area that we need to sample.
+	// The area that we actually need to sample the area requested.
 	const int filterRadius = int( ceil( m_filter->width() / 2. ) );
 	m_sampleWindow = Imath::Box2i(
 		Imath::V2i( userSampleWindow.min.x - filterRadius, userSampleWindow.min.y - filterRadius ),
