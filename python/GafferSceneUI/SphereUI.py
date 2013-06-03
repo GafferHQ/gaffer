@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,64 +34,53 @@
 #  
 ##########################################################################
 
-import os
-import subprocess
-import unittest
-
 import Gaffer
-import GafferTest
+import GafferScene
+import GafferUI
 
-class ExecuteApplicationTest( unittest.TestCase ) :
+##########################################################################
+# Metadata
+##########################################################################
 
-	__scriptFileName = "/tmp/executeScript.gfr"
-	__outputFileName = "/tmp/sphere.cob"
+GafferUI.Metadata.registerNodeDescription(
 
-	def testErrorReturnStatusForMissingScript( self ) :
-		
-		p = subprocess.Popen(
-			"gaffer execute thisScriptDoesNotExist",
-			shell=True,
-			stderr = subprocess.PIPE,
-		)
-		p.wait()
-		
-		self.failUnless( "thisScriptDoesNotExist" in "".join( p.stderr.readlines() ) )
-		self.failUnless( p.returncode )
-	
-	def testExecuteWriteNode( self ) :
-	
-		s = Gaffer.ScriptNode()
-		
-		s["sphere"] = GafferTest.SphereNode()
-		s["write"] = Gaffer.WriteNode()
-		s["write"]["in"].setInput( s["sphere"]["out"] )
-		s["write"]["fileName"].setValue( self.__outputFileName )
-			
-		s["fileName"].setValue( self.__scriptFileName )
-		s.save()		
-	
-		self.failIf( os.path.exists( self.__outputFileName ) )
-		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName,
-			shell=True,
-			stderr = subprocess.PIPE,
-		)
-		p.wait()
-	
-		print "".join( p.stderr.readlines() )
-	
-		self.failUnless( os.path.exists( self.__outputFileName ) )
-		self.failIf( p.returncode )
-	
-	def tearDown( self ) :
-	
-		for f in [
-			self.__scriptFileName,
-			self.__outputFileName,
-		] :
-			if os.path.exists( f ) :
-				os.remove( f )
-	
-if __name__ == "__main__":
-	unittest.main()
-	
+GafferScene.Sphere,
+
+"""A node which produces scenes containing a sphere.""",
+
+"type",
+"The type of object to produce. May be a SpherePrimitive or a Mesh.",
+
+"radius",
+"Radius of the sphere.",
+
+"zMin",
+"Limits the extent of the sphere along the lower pole. Valid values are in the range [-1,1] and should always be less than zMax.",
+
+"zMax",
+"Limits the extent of the sphere along the upper pole. Valid values are in the range [-1,1] and should always be greater than zMin.",
+
+"thetaMax",
+"Limits the extent of the sphere around the pole axis. Valid values are in the range [0,360].",
+
+"divisions",
+"Controls tesselation of the sphere when type is Mesh.",
+
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Sphere.staticTypeId(),
+	"type",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Primitive", GafferScene.Sphere.Type.Primitive ),
+		( "Mesh", GafferScene.Sphere.Type.Mesh ),
+	),
+)
+
+## \todo: Disable divisions when type is Primitive. There is a similar mechanism in RenderManShaderUI, which
+## could be generalized on StandardNodeUI and used here.

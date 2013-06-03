@@ -64,6 +64,24 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["out"].transform( "/plane" ), IECore.M44f() )
 		self.assertEqual( p["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( p["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
+		
+	def testPlugs( self ) : 
+		
+		p = GafferScene.Plane()
+		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) )
+		self.assertEqual( p["out"].object( "/plane" ), m )
+		h = p["out"].objectHash( "/plane" )
+		
+		p["dimensions"].setValue( IECore.V2f( 2.5, 5 ) )
+		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1.25, -2.5 ), IECore.V2f( 1.25, 2.5 ) ) )
+		self.assertEqual( p["out"].object( "/plane" ), m )
+		self.assertNotEqual( p["out"].objectHash( "/plane" ), h )
+		h = p["out"].objectHash( "/plane" )
+		
+		p["divisions"].setValue( IECore.V2i( 5, 10 ) )
+		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1.25, -2.5 ), IECore.V2f( 1.25, 2.5 ) ), IECore.V2i( 5, 10 ) )
+		self.assertEqual( p["out"].object( "/plane" ), m )
+		self.assertNotEqual( p["out"].objectHash( "/plane" ), h )
 	
 	def testAffects( self ) :
 	

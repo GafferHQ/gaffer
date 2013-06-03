@@ -93,6 +93,8 @@ enum TypeId
 	ExecutableRenderTypeId = 110548,
 	OpenGLRenderTypeId = 110549,
 	InteractiveRenderTypeId = 110550,
+	CubeTypeId = 110551,
+	SphereTypeId = 110552,
 	
 	LastTypeId = 110650
 };

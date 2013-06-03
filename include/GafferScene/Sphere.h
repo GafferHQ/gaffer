@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,69 +34,63 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MeshPrimitive.h"
+#ifndef GAFFERSCENE_SPHERE_H
+#define GAFFERSCENE_SPHERE_H
 
-#include "GafferScene/Plane.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
-using namespace Gaffer;
-using namespace GafferScene;
-using namespace Imath;
-using namespace IECore;
+#include "GafferScene/ObjectSourceBase.h"
 
-IE_CORE_DEFINERUNTIMETYPED( Plane );
-
-size_t Plane::g_firstPlugIndex = 0;
-
-Plane::Plane( const std::string &name )
-	:	ObjectSource( name, "plane" )
+namespace GafferScene
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 1.0f ), V2f( 0.0f ) ) );
-	addChild( new V2iPlug( "divisions", Plug::In, V2i( 1 ), V2i( 1 ) ) );
-}
 
-Plane::~Plane()
+class Sphere : public ObjectSource
 {
-}
 
-Gaffer::V2fPlug *Plane::dimensionsPlug()
-{
-	return getChild<V2fPlug>( g_firstPlugIndex );
-}
+	public :
 
-const Gaffer::V2fPlug *Plane::dimensionsPlug() const
-{
-	return getChild<V2fPlug>( g_firstPlugIndex );
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Sphere, SphereTypeId, ObjectSource );
 
-Gaffer::V2iPlug *Plane::divisionsPlug()
-{
-	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
-}
+		Sphere( const std::string &name=staticTypeName() );
+		virtual ~Sphere();
+		
+		enum Type
+		{
+			Primitive = 0,
+			Mesh
+		};
+		
+		Gaffer::IntPlug *typePlug();
+		const Gaffer::IntPlug *typePlug() const;
+		
+		Gaffer::FloatPlug *radiusPlug();
+		const Gaffer::FloatPlug *radiusPlug() const;
+		
+		Gaffer::FloatPlug *zMinPlug();
+		const Gaffer::FloatPlug *zMinPlug() const;
+		
+		Gaffer::FloatPlug *zMaxPlug();
+		const Gaffer::FloatPlug *zMaxPlug() const;
+		
+		Gaffer::FloatPlug *thetaMaxPlug();
+		const Gaffer::FloatPlug *thetaMaxPlug() const;
+		
+		Gaffer::V2iPlug *divisionsPlug();
+		const Gaffer::V2iPlug *divisionsPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
 
-const Gaffer::V2iPlug *Plane::divisionsPlug() const
-{
-	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
-}
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
 
-void Plane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	ObjectSource::affects( input, outputs );
+	private :
 	
-	if ( input->parent<V2fPlug>() == dimensionsPlug() || input->parent<V2iPlug>() == divisionsPlug() )
-	{
-		outputs.push_back( sourcePlug() );
-	}
-}
+		static size_t g_firstPlugIndex;
 
-void Plane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	dimensionsPlug()->hash( h );	
-	divisionsPlug()->hash( h );
-}
+};
 
-IECore::ConstObjectPtr Plane::computeSource( const Context *context ) const
-{
-	V2f dimensions = dimensionsPlug()->getValue();
-	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ), divisionsPlug()->getValue() );
-}
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SPHERE_H
