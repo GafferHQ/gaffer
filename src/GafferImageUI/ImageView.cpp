@@ -260,19 +260,15 @@ IE_CORE_DEFINERUNTIMETYPED( ImageView );
 
 ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 
-ImageView::ImageView( GafferImage::ImagePlugPtr inPlug )
-	:	View( staticTypeName(), new GafferImage::ImagePlug() )
+ImageView::ImageView( const std::string &name )
+	:	View( name, new GafferImage::ImagePlug() )
 {
-	View::inPlug<ImagePlug>()->setInput( inPlug );
 }
 
-// constructor for derived classes not accepting ImagePlugs
-ImageView::ImageView( Gaffer::PlugPtr inPlug )
-	:	View( staticTypeName(), new Gaffer::Plug() )
+ImageView::ImageView( const std::string &name, Gaffer::PlugPtr input )
+	:	View( name, input )
 {
-	View::inPlug<Plug>()->setInput( inPlug );
 }
-
 
 ImageView::~ImageView()
 {
@@ -283,7 +279,12 @@ void ImageView::update()
 	IECore::ConstImagePrimitivePtr image = 0;
 	{
 		Context::Scope context( getContext() );
-		image = preprocessedInPlug<ImagePlug>()->image();
+		ImagePlug *imagePlug = preprocessedInPlug<ImagePlug>();
+		if( !imagePlug )
+		{
+			throw IECore::Exception( "ImageView::preprocessedInPlug() is not an ImagePlug" );
+		}
+		image = imagePlug->image();
 	}
 
 	if( image )

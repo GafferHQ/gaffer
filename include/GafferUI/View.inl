@@ -84,7 +84,9 @@ View::ViewDescription<T>::ViewDescription( IECore::TypeId plugType )
 template<typename T>
 ViewPtr View::ViewDescription<T>::creator( Gaffer::PlugPtr input )
 {
-	return new T( IECore::runTimeCast<typename T::InPlugType>( input ) );
+	ViewPtr result = new T();
+	result->inPlug<Gaffer::Plug>()->setInput( input );
+	return result;
 };
 
 } // namespace GafferUI

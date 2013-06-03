@@ -44,6 +44,8 @@
 #include "GafferBindings/NodeBinding.h"
 
 #include "GafferUI/View.h"
+#include "GafferUI/View3D.h"
+#include "GafferUI/ObjectView.h"
 #include "GafferUIBindings/ViewBinding.h"
 
 using namespace boost::python;
@@ -70,6 +72,41 @@ void GafferUIBindings::updateView( View &v )
 	v.update();
 }
 
+struct ViewCreator
+{
+	ViewCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+	
+	ViewPtr operator()( Gaffer::PlugPtr plug )
+	{
+		IECorePython::ScopedGILLock gilLock;
+		ViewPtr result = extract<ViewPtr>( m_fn( plug ) );
+		return result;
+	}
+	
+	private :
+	
+		object m_fn;
+
+};
+
+static void registerView1( IECore::TypeId plugType, object creator )
+{
+	View::registerView( plugType, ViewCreator( creator ) );
+}
+
+static void registerView2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
+{
+	View::registerView( nodeType, plugPath, ViewCreator( creator ) );
+}
+
+Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
+{
+	return v.getPreprocessor<Node>();
+}
+
 void GafferUIBindings::bindView()
 {
 	GafferBindings::NodeClass<View>()
@@ -77,8 +114,21 @@ void GafferUIBindings::bindView()
 		.def( "setContext", &View::setContext )
 		.def( "viewportGadget", &viewportGadget )
 		.def( "updateRequestSignal", &View::updateRequestSignal, return_internal_reference<1>() )
+		.def( "_setPreprocessor", &View::setPreprocessor )
+		.def( "_getPreprocessor", &getPreprocessor )
 		.def( "_update", &updateView )
 		.def( "create", &View::create )
 		.staticmethod( "create" )
+		.def( "registerView", &registerView1 )
+		.def( "registerView", &registerView2 )
+		.staticmethod( "registerView" )
 	;
+	
+	GafferBindings::NodeClass<View3D>();
+	
+	typedef GafferBindings::NodeWrapper<ObjectView> ObjectViewWrapper;
+	IE_CORE_DECLAREPTR( ObjectViewWrapper );
+	
+	GafferBindings::NodeClass<ObjectView, ObjectViewWrapperPtr>();
+	
 }
