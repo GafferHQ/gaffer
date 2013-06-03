@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,67 +36,55 @@
 
 #include "IECore/MeshPrimitive.h"
 
-#include "GafferScene/Plane.h"
+#include "GafferScene/Cube.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
 using namespace IECore;
 
-IE_CORE_DEFINERUNTIMETYPED( Plane );
+IE_CORE_DEFINERUNTIMETYPED( Cube );
 
-size_t Plane::g_firstPlugIndex = 0;
+size_t Cube::g_firstPlugIndex = 0;
 
-Plane::Plane( const std::string &name )
-	:	ObjectSource( name, "plane" )
+Cube::Cube( const std::string &name )
+	:	ObjectSource( name, "cube" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 1.0f ), V2f( 0.0f ) ) );
-	addChild( new V2iPlug( "divisions", Plug::In, V2i( 1 ), V2i( 1 ) ) );
+	addChild( new V3fPlug( "dimensions", Plug::In, V3f( 1.0f ), V3f( 0.0f ) ) );
 }
 
-Plane::~Plane()
+Cube::~Cube()
 {
 }
 
-Gaffer::V2fPlug *Plane::dimensionsPlug()
+Gaffer::V3fPlug *Cube::dimensionsPlug()
 {
-	return getChild<V2fPlug>( g_firstPlugIndex );
+	return getChild<V3fPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::V2fPlug *Plane::dimensionsPlug() const
+const Gaffer::V3fPlug *Cube::dimensionsPlug() const
 {
-	return getChild<V2fPlug>( g_firstPlugIndex );
+	return getChild<V3fPlug>( g_firstPlugIndex );
 }
 
-Gaffer::V2iPlug *Plane::divisionsPlug()
-{
-	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::V2iPlug *Plane::divisionsPlug() const
-{
-	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
-}
-
-void Plane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+void Cube::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 	
-	if ( input->parent<V2fPlug>() == dimensionsPlug() || input->parent<V2iPlug>() == divisionsPlug() )
+	if( input->parent<V3fPlug>() == dimensionsPlug() )
 	{
 		outputs.push_back( sourcePlug() );
 	}
 }
 
-void Plane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Cube::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	dimensionsPlug()->hash( h );	
-	divisionsPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr Plane::computeSource( const Context *context ) const
+IECore::ConstObjectPtr Cube::computeSource( const Context *context ) const
 {
-	V2f dimensions = dimensionsPlug()->getValue();
-	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ), divisionsPlug()->getValue() );
+	V3f dimensions = dimensionsPlug()->getValue();
+	return MeshPrimitive::createBox( Box3f( -dimensions / 2.0f, dimensions / 2.0f ) );
 }

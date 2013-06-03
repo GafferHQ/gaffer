@@ -74,7 +74,9 @@ GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSour
 GafferUI.NodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
 GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
 GafferUI.NodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
+GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
 GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )
+GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Sphere", GafferScene.Sphere )
 GafferUI.NodeMenu.append( "/Scene/Object/Generators/Seeds", GafferScene.Seeds )
 GafferUI.NodeMenu.append( "/Scene/Object/Generators/Instancer", GafferScene.Instancer )
 GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.AttributeCache )
@@ -117,8 +119,6 @@ except ImportError :
 	
 GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
 GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
-
-GafferUI.NodeMenu.append( "/Cortex/Primitive/Sphere", Gaffer.SphereNode )
 
 # \todo have a method for dynamically choosing between Gaffer.OpHolder and Gaffer.ExecutableOpHolder
 GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )

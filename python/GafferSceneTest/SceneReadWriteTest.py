@@ -41,6 +41,7 @@ import threading
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -115,7 +116,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 	
 	def testWrite( self ) :
 		
-		s = Gaffer.SphereNode()
+		s = GafferTest.SphereNode()
 		
 		o = GafferScene.ObjectToScene()
 		

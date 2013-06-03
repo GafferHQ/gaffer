@@ -61,3 +61,4 @@ import TransformUI
 import AttributesUI
 import LightUI
 import InteractiveRenderUI
+import SphereUI

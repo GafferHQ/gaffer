@@ -47,7 +47,6 @@ from FileNamePathFilter import FileNamePathFilter
 from UndoContext import UndoContext
 from ReadNode import ReadNode
 from WriteNode import WriteNode
-from SphereNode import SphereNode
 from Context import Context
 from CompoundPathFilter import CompoundPathFilter
 from InfoPathFilter import InfoPathFilter

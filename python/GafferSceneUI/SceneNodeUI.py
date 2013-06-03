@@ -205,3 +205,32 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "Subdiv", "catmullClark" ),
 	),
 )
+
+# Plane
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.Plane,
+
+"""A node which produces scenes containing a plane.""",
+
+"dimensions",
+"Controls size of the plane in X and Y.",
+
+"divisions",
+"Controls tesselation of the plane.",
+
+)
+
+# Cube
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.Cube,
+
+"""A node which produces scenes containing a cube.""",
+
+"dimensions",
+"Controls size of the cube.",
+
+)

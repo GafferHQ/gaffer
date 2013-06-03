@@ -74,6 +74,8 @@
 #include "GafferScene/Transform.h"
 #include "GafferScene/AimConstraint.h"
 #include "GafferScene/Prune.h"
+#include "GafferScene/Cube.h"
+#include "GafferScene/Sphere.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -107,6 +109,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
 	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
+	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Plane>();
 	GafferBindings::DependencyNodeClass<BranchCreator>();
 	GafferBindings::DependencyNodeClass<Seeds>();
@@ -173,6 +176,15 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )
 	;
+	
+	{
+		scope s = GafferBindings::DependencyNodeClass<Sphere>();
+		
+		enum_<Sphere::Type>( "Type" )
+			.value( "Primitive", Sphere::Primitive )
+			.value( "Mesh", Sphere::Mesh )
+		;
+	}
 	
 	bindRender();
 	
