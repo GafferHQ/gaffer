@@ -49,11 +49,9 @@ from ImageWriterTest import ImageWriterTest
 from ChannelMaskPlugTest import ChannelMaskPlugTest
 from SamplerTest import SamplerTest
 from ReformatTest import ReformatTest
-<<<<<<< HEAD
 from FilterTest import FilterTest
-=======
 from DisplayTest import DisplayTest
->>>>>>> 2f3d2ad... Fixed issue #280: Display now obeys the default format.
+from ImageTransformTest import ImageTransformTest
 
 if __name__ == "__main__":
 	import unittest
