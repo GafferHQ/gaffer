@@ -153,10 +153,10 @@ IECore::ConstObjectPtr Sphere::computeSource( const Context *context ) const
 {
 	float radius = radiusPlug()->getValue();
 	float thetaMax = thetaMaxPlug()->getValue();
-	float zMin = zMinPlug()->getValue();
+	float tmp = zMinPlug()->getValue();
 	float zMax = zMaxPlug()->getValue();
-	zMin = std::min( zMin, zMax );
-	zMax = std::max( zMin, zMax );
+	float zMin = std::min( tmp, zMax );
+	zMax = std::max( tmp, zMax );
 	
 	if ( typePlug()->getValue() == Sphere::Primitive )
 	{
