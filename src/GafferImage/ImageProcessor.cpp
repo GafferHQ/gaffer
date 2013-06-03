@@ -92,8 +92,8 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 	/// avoid calling ComputeNode::hash only to overwrite the hash if we're disabled.
 	ComputeNode::hash( output, context, h );
 	h.append( enabledPlug()->hash() );
-	
-	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+
+	const ImagePlug *imagePlug = output->parent<ImagePlug>();
 	if ( imagePlug == 0 )
 	{
 		return;
