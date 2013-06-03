@@ -183,7 +183,8 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
 	
-	Sampler sampler( inPlug(), channelName, sampleBox );
+	GafferImage::FilterPtr filter( GafferImage::Filter::create( "Box") );
+	Sampler sampler( inPlug(), channelName, sampleBox, filter );
 	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
 	{
 		for ( int i = 0; i < ImagePlug::tileSize(); ++i )

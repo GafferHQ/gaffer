@@ -55,12 +55,12 @@ IE_CORE_FORWARDDECLARE( Filter );
 
 /// Interpolation class for filtering an image.
 ///
-/// The filter class represents a 1D convolution of radius().
-/// For simplicity we only implement separable kernels.
-/// We do the following to convolve a 2D image (I) by 1D kernel (g):
+/// The filter class represents a 1D separable kernel which 
+/// provides methods for convolution with a set of pixel samples.
+/// We can convolve a 2D image (I) by 1D kernel (g) by:
 /// C(x,y) = g*I = (g2 *y (g1 *x I))(x,y)
 /// Where *x and *y denotes convolution in the x and y directions.
-///
+/// 
 /// A good overview of image sampling and the variety of filters is:
 /// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
 /// Arun N.Netravali, AT&T Bell Laboratories.
@@ -78,40 +78,43 @@ public :
 		
 	virtual ~Filter(){};
 
+	//! @name Accessors
+	/// A set of methods to access the members of the filter.
+	//////////////////////////////////////////////////////////////
+	//@{
 	/// Resizes the kernel to a new scale.
 	void setScale( double scale );
-
 	/// Returns the current scale of the kernel.
 	inline double getScale() const { return m_scale; }
-	
-	/// Accessors of the kernel weights.
-	inline double operator[]( int idx ) const
-	{
-		return m_weights[idx];
-	};
-
-	/// Returns a reference to the list of weights.
-	inline const std::vector<double> &weights() const
-	{
-		return m_weights;
-	}
-
-	/// Returns the width of the filter.
+	//@}
+	//! @name Filter Convolution
+	/// A set of methods that create a simple interface to allow the
+	/// filter to be convolved with a discreet array (such as a set of pixels).
+	//////////////////////////////////////////////////////////////
+	//@{
+	/// Returns the width of the filter in pixels.
 	inline int width() const
 	{
 		return int( m_scaledRadius*2. + 1. );
 	};
-
-	/// Builds the kernel of weights.
-	/// This method is should be called to initialize the filter.
-	/// It does this by making successive calls to weight() to
-	/// populate the vector of weights.
-	/// @param center The position of the center of the filter kernel.
-	/// @return Returns the index of the first pixel sample.
-	int construct( double center );
-
-	// Returns a weight for a delta in the range of 0 to m_radius.
-	virtual double weight( double delta ) const = 0;
+	/// Returns the weight of a pixel to be convolved with the filter
+	/// given the center of the filter and the position of the pixel to be sampled.  
+	/// @param center The center of the kernel.
+	/// @param samplePosition The position of the sample to return the weight for.
+	//  @return The weight of the sample.
+	inline double weight( double center, int samplePosition ) const
+	{
+		double t = ( center - samplePosition - .5 ) / m_scale;
+		return weight( t );
+	}
+	/// Returns the position of the first sample influenced by the kernel.
+	/// Use this function to get the index of the first pixel to convolve
+	/// the filter with.
+	inline int tap( double center ) const
+	{
+		return (int)( center - m_scaledRadius );
+	}
+	//@}
 
 	//! @name Filter Registry
 	/// A set of methods to query the available Filters and create them.
@@ -138,6 +141,9 @@ public :
 
 protected :
 
+	// Returns a weight for a delta in the range of 0 to m_radius.
+	virtual double weight( double delta ) const = 0;
+
 	typedef FilterPtr (*CreatorFn)( double scale );
 
 	template<class T>
@@ -162,7 +168,6 @@ protected :
 	const double m_radius;
 	double m_scale;
 	double m_scaledRadius;
-	std::vector<double> m_weights;
 
 private:
 

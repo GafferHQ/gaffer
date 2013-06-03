@@ -56,23 +56,6 @@ void Filter::setScale( double scale )
 {
 	m_scale = std::max( scale, 1. ); 
 	m_scaledRadius = m_radius * m_scale;
-	m_weights.resize( width() );
-}
-
-int Filter::construct( double center )
-{
-	int l, absx;
-	l = absx = (int)( center - m_scaledRadius );
-	
-	std::vector<double>::iterator it( m_weights.begin() );
-	std::vector<double>::iterator end( m_weights.end() );
-	
-	while ( it != end )
-	{
-		double t = ( center - l++ - .5 ) / m_scale;
-		*it++ = weight( t );
-	}
-	return absx;
 }
 
 FilterPtr Filter::create( const std::string &name, double scale )
