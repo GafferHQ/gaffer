@@ -94,6 +94,11 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 	h.append( enabledPlug()->hash() );
 	
 	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	if ( imagePlug == 0 )
+	{
+		return;
+	} 
+	
 	if ( enabled() )
 	{
 		if( output == imagePlug->channelDataPlug() )
