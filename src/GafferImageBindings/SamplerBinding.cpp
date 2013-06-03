@@ -57,7 +57,7 @@ void bindSampler()
 	;
 
 	class_<Sampler>( "Sampler",
-			init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode >
+			init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, ConstFilterPtr, Sampler::BoundingMode >
 			(
 				(
 					arg( "boundingMode" ) = Sampler::Black
@@ -66,7 +66,7 @@ void bindSampler()
 		)
 		.def( "hash", &Sampler::hash )
 		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
-		.def( "sample", (float (Sampler::*)( float, float, GafferImage::Filter * ) )&Sampler::sample )
+		.def( "sample", (float (Sampler::*)( float, float ) )&Sampler::sample )
 	;
 }
 

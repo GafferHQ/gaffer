@@ -41,9 +41,14 @@
 #include <vector>
 #include <string>
 
+#include "tbb/mutex.h"
+#include "boost/weak_ptr.hpp"
+
 #include "GafferImage/TypeIds.h"
+
 #include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
+#include "IECore/Lookup.h"
 
 #define _USE_MATH_DEFINES
 #include "math.h"
@@ -55,12 +60,12 @@ IE_CORE_FORWARDDECLARE( Filter );
 
 /// Interpolation class for filtering an image.
 ///
-/// The filter class represents a 1D convolution of radius().
-/// For simplicity we only implement separable kernels.
-/// We do the following to convolve a 2D image (I) by 1D kernel (g):
+/// The filter class represents a 1D separable kernel which 
+/// provides methods for convolution with a set of pixel samples.
+/// We can convolve a 2D image (I) by 1D kernel (g) by:
 /// C(x,y) = g*I = (g2 *y (g1 *x I))(x,y)
 /// Where *x and *y denotes convolution in the x and y directions.
-///
+/// 
 /// A good overview of image sampling and the variety of filters is:
 /// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
 /// Arun N.Netravali, AT&T Bell Laboratories.
@@ -74,44 +79,48 @@ public :
 	/// Constructor	
 	/// @param radius Half the width of the kernel at a scale of 1.
 	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
-	Filter( double radius, double scale = 1. );
+	Filter( float radius, float scale = 1. );
 		
 	virtual ~Filter(){};
 
+	//! @name Accessors
+	/// A set of methods to access the members of the filter.
+	//////////////////////////////////////////////////////////////
+	//@{
 	/// Resizes the kernel to a new scale.
-	void setScale( double scale );
-
+	void setScale( float scale );
 	/// Returns the current scale of the kernel.
-	inline double getScale() const { return m_scale; }
-	
-	/// Accessors of the kernel weights.
-	inline double operator[]( int idx ) const
-	{
-		return m_weights[idx];
-	};
-
-	/// Returns a reference to the list of weights.
-	inline const std::vector<double> &weights() const
-	{
-		return m_weights;
-	}
-
-	/// Returns the width of the filter.
+	inline float getScale() const { return m_scale; }
+	//@}
+	//! @name Filter Convolution
+	/// A set of methods that create a simple interface to allow the
+	/// filter to be convolved with a discreet array (such as a set of pixels).
+	//////////////////////////////////////////////////////////////
+	//@{
+	/// Returns the width of the filter in pixels.
 	inline int width() const
 	{
 		return int( m_scaledRadius*2. + 1. );
 	};
-
-	/// Builds the kernel of weights.
-	/// This method is should be called to initialize the filter.
-	/// It does this by making successive calls to weight() to
-	/// populate the vector of weights.
-	/// @param center The position of the center of the filter kernel.
-	/// @return Returns the index of the first pixel sample.
-	int construct( double center );
-
-	// Returns a weight for a delta in the range of 0 to m_radius.
-	virtual double weight( double delta ) const = 0;
+	/// Returns the weight of a pixel to be convolved with the filter
+	/// given the center of the filter and the position of the pixel to be sampled.  
+	/// @param center The center of the kernel.
+	/// @param samplePosition The position of the sample to return the weight for.
+	//  @return The weight of the sample.
+	inline float weight( float center, int samplePosition ) const
+	{
+		float t = ( center - samplePosition - .5 ) / m_scale;
+		return (*m_lut)( fabs( t ) );
+	}
+	/// Returns the position of the first sample influenced by the kernel.
+	/// Use this function to get the index of the first pixel to convolve
+	/// the filter with.
+	/// "Center" must be positive.
+	inline int tap( float center ) const
+	{
+		return int( center - m_scaledRadius );
+	}
+	//@}
 
 	//! @name Filter Registry
 	/// A set of methods to query the available Filters and create them.
@@ -120,7 +129,7 @@ public :
 	/// Instantiates a new Filter and initialises it to the desired scale.
 	/// @param filterName The name of the filter within the registry.
 	/// @param scale The scale to create the filter at.
-	static FilterPtr create( const std::string &filterName, double scale = 1. );
+	static FilterPtr create( const std::string &filterName, float scale = 1. );
 
 	/// Returns a vector of the available filters.
 	static const std::vector<std::string> &filters()
@@ -138,7 +147,10 @@ public :
 
 protected :
 
-	typedef FilterPtr (*CreatorFn)( double scale );
+	// Returns a weight for a delta in the range of 0 to m_radius.
+	virtual float weight( float delta ) const = 0;
+
+	typedef FilterPtr (*CreatorFn)( float scale );
 
 	template<class T>
 	struct FilterRegistration
@@ -152,17 +164,45 @@ protected :
 			}
 
 		private:
-			/// Returns a new instance of the Filter class.
-			static FilterPtr creator( double scale = 1. )
+
+			static float calculateLutWeight( float value )
 			{
-				return new T( scale );
+				T filter;
+				if (value >= filter.m_radius ) return 0;
+				return filter.weight( value );
+			}
+
+			/// Returns a new instance of the Filter class and initializes it's LUT if it does not exist or just grabs a shared_ptr to one if it does.
+			static FilterPtr creator( float scale = 1. )
+			{
+				T* filter = new T( scale );
+				const std::string &filterName( filter->typeName() );
+				
+				tbb::mutex::scoped_lock lock;
+				lock.acquire( lutMutex() );
+				std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap( Filter::lutMap() );
+				boost::shared_ptr<IECore::Lookupff> lutPtr( lutMap[filterName].lock() );
+				if ( !lutPtr )
+				{
+					lutPtr.reset( new IECore::Lookupff( calculateLutWeight, 0.f, filter->m_radius, 256 ) );
+					lutMap[filterName] = lutPtr;
+				}
+				lock.release();
+
+				filter->m_lut = lutPtr;
+				return FilterPtr( filter );
+			}
+
+			static tbb::mutex& lutMutex()
+			{
+				static tbb::mutex g_mutex;
+				return g_mutex;
 			}
 	};
 
-	const double m_radius;
-	double m_scale;
-	double m_scaledRadius;
-	std::vector<double> m_weights;
+	const float m_radius;
+	float m_scale;
+	float m_scaledRadius;
 
 private:
 
@@ -179,6 +219,14 @@ private:
 		static std::vector< std::string > g_filters;
 		return g_filters;
 	}
+	
+	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap()
+	{
+		static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > l;
+		return l;
+	}
+	
+	boost::shared_ptr<IECore::Lookupff> m_lut;
 
 };
 
@@ -191,12 +239,12 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BoxFilter, BoxFilterTypeId, Filter );
 
-	BoxFilter( double scale = 1. )
+	BoxFilter( float scale = 1. )
 		: Filter( .5, scale )
 	{
 	}
 	
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		return ( delta <= 0.5 );
@@ -216,11 +264,11 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BilinearFilter, BilinearFilterTypeId, Filter );
 	
-	BilinearFilter( double scale = 1. )
+	BilinearFilter( float scale = 1. )
 		: Filter( 1, scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1. )
@@ -244,11 +292,11 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SincFilter, SincFilterTypeId, Filter );
 
-	SincFilter( double scale = 1. )
+	SincFilter( float scale = 1. )
 		: Filter( 2., scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta > m_radius )
@@ -260,7 +308,7 @@ public:
 			return 1.;
 		}
 
-		const double PI = M_PI;
+		const float PI = M_PI;
 		return sin( PI*delta ) / ( PI*delta );
 	}
 
@@ -278,11 +326,11 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( HermiteFilter, HermiteFilterTypeId, Filter );
 
-	HermiteFilter( double scale = 1. )
+	HermiteFilter( float scale = 1. )
 		: Filter( 1, scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1 )
@@ -306,11 +354,11 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( LanczosFilter, LanczosFilterTypeId, Filter );
 
-	LanczosFilter( double scale = 1. )
+	LanczosFilter( float scale = 1. )
 		: Filter( 3., scale )
 	{}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		
@@ -323,7 +371,7 @@ public:
 			return 1.;
 		}
 		
-		const double PI = M_PI;
+		const float PI = M_PI;
 		return ( m_radius * (1./PI) * (1./PI) ) / ( delta*delta) * sin( PI * delta ) * sin( PI*delta * (1./m_radius) );
 	}
 
@@ -341,17 +389,17 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SplineFilter, SplineFilterTypeId, Filter );
 	
-	SplineFilter( double B, double C, double scale = 1. )
+	SplineFilter( float B, float C, float scale = 1. )
 		: Filter( 2, scale ),
 		m_B( B ),
 		m_C( C )
 	{
 	}
 
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
-		double delta2 = delta*delta;
+		float delta2 = delta*delta;
 
 		if ( delta < 1. )
 		{
@@ -370,8 +418,8 @@ public:
 
 private:
 
-	const double m_B;
-	const double m_C;
+	const float m_B;
+	const float m_C;
 
 };
 
@@ -382,7 +430,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
-	MitchellFilter( double scale = 1. )
+	MitchellFilter( float scale = 1. )
 		: SplineFilter( 1./3., 1./3., scale )
 	{}
 
@@ -400,7 +448,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
-	BSplineFilter( double scale = 1. )
+	BSplineFilter( float scale = 1. )
 		: SplineFilter( 1., 0., scale )
 	{}
 
@@ -418,7 +466,7 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
 	
-	CatmullRomFilter( double scale = 1. )
+	CatmullRomFilter( float scale = 1. )
 		: SplineFilter( 0., .5, scale )
 	{}
 
@@ -436,15 +484,15 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CubicFilter, CubicFilterTypeId, Filter );
 	
-	CubicFilter( double scale = 1. )
+	CubicFilter( float scale = 1. )
 		: Filter( 3., scale )
 	{
 	}
 
-	double weight( double delta ) const 
+	float weight( float delta ) const 
 	{
 		delta = fabs( delta );
-		double delta2 = delta*delta;
+		float delta2 = delta*delta;
 
 		if ( delta <= 1. )
 		{
