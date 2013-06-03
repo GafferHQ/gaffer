@@ -34,8 +34,51 @@
 #  
 ##########################################################################
 
-from FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
-from ImageViewTest import ImageViewTest
+import unittest
 
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferUI
+import GafferUITest
+
+class ViewTest( GafferUITest.TestCase ) :
+
+	def testFactory( self ) :
+	
+		sphere = GafferTest.SphereNode()
+		view = GafferUI.View.create( sphere["out"] )
+		
+		self.assertTrue( isinstance( view, GafferUI.ObjectView ) )
+		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
+		
+		# check that we can make our own view and register it for the node
+		
+		class MyView( GafferUI.ObjectView ) :
+		
+			def __init__( self, viewedPlug = None ) :
+			
+				GafferUI.ObjectView.__init__( self )
+				
+				self["in"].setInput( viewedPlug )
+				
+		GafferUI.View.registerView( GafferTest.SphereNode.staticTypeId(), "out", MyView )
+				
+		view = GafferUI.View.create( sphere["out"] )
+		self.assertTrue( isinstance( view, MyView ) )
+		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
+		
+		# and check that that registration leaves other nodes alone
+		
+		n = Gaffer.Node()
+		n["out"] = Gaffer.ObjectPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.NullObject.defaultNullObject() )
+		
+		view = GafferUI.View.create( n["out"] )
+		
+		self.assertTrue( isinstance( view, GafferUI.ObjectView ) )
+		self.assertTrue( view["in"].getInput().isSame( n["out"] ) )
+		
 if __name__ == "__main__":
 	unittest.main()
+	

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,9 +37,15 @@
 
 #include "boost/python.hpp"
 
-// this placeholder currently only exists so that libGafferImageUI is
-// loaded with the python module so that the ImageView can be
-// registered.
+#include "GafferImageUIBindings/ImageViewBinding.h"
+
+using namespace boost::python;
+
+using namespace GafferImageUIBindings;
+
 BOOST_PYTHON_MODULE( _GafferImageUI )
 {
+
+	bindImageView();
+
 }

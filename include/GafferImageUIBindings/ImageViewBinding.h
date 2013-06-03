@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,40 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_OBJECTVIEW_H
-#define GAFFERUI_OBJECTVIEW_H
+#ifndef GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
+#define GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferUI/View3D.h"
-#include "GafferUI/RenderableGadget.h"
-
-namespace GafferUI
+namespace GafferImageUIBindings
 {
 
-class ObjectView : public View3D
-{
+void bindImageView();
 
-	public :
+} // namespace GafferImageUIBindings
 
-		ObjectView( const std::string &name = staticTypeName() );
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectView, ObjectViewTypeId, View3D );
-
-	protected :
-
-		virtual void update();
-								
-	private :
-
-		GafferUI::RenderableGadgetPtr m_renderableGadget;	
-
-		static ViewDescription<ObjectView> g_viewDescription;
-
-};
-
-IE_CORE_DECLAREPTR( ObjectView );
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_OBJECTVIEW_H
+#endif // GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H

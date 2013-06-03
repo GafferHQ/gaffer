@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,40 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_OBJECTVIEW_H
-#define GAFFERUI_OBJECTVIEW_H
+#include "boost/python.hpp"
 
-#include "Gaffer/TypedObjectPlug.h"
+#include "GafferBindings/NodeBinding.h"
 
-#include "GafferUI/View3D.h"
-#include "GafferUI/RenderableGadget.h"
+#include "GafferImageUI/ImageView.h"
+#include "GafferImageUIBindings/ImageViewBinding.h"
 
-namespace GafferUI
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferImageUI;
+
+class ImageViewWrapper : public NodeWrapper<ImageView>
 {
-
-class ObjectView : public View3D
-{
-
+	
 	public :
-
-		ObjectView( const std::string &name = staticTypeName() );
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectView, ObjectViewTypeId, View3D );
-
-	protected :
-
-		virtual void update();
-								
-	private :
-
-		GafferUI::RenderableGadgetPtr m_renderableGadget;	
-
-		static ViewDescription<ObjectView> g_viewDescription;
+	
+		ImageViewWrapper( PyObject *self, const std::string &name, Gaffer::PlugPtr input = 0 )
+			:	NodeWrapper<ImageView>( self, name )
+		{
+			if( input )
+			{
+				setChild( "in", input );
+			}
+		}
 
 };
 
-IE_CORE_DECLAREPTR( ObjectView );
+IE_CORE_DECLAREPTR( ImageViewWrapper );
 
-} // namespace GafferUI
+void GafferImageUIBindings::bindImageView()
+{
 
-#endif // GAFFERUI_OBJECTVIEW_H
+	GafferBindings::NodeClass<ImageView, ImageViewWrapperPtr>()
+		.def( init<const std::string &, Gaffer::PlugPtr>() )
+	;
+	
+}

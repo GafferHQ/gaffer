@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,9 +54,7 @@ class SceneView : public GafferUI::View3D
 
 	public :
 
-		typedef GafferScene::ScenePlug InPlugType;
-
-		SceneView( GafferScene::ScenePlugPtr inputPlug );
+		SceneView();
 		virtual ~SceneView();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneView, SceneViewTypeId, GafferUI::View );
