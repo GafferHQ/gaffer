@@ -39,11 +39,13 @@
 
 #include <vector>
 
+#include "IECore/FastFloat.h"
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Filter.h"
+#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {
