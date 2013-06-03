@@ -80,13 +80,17 @@ static void bindTypedFilter()
 
 GafferImage::FilterPtr create1( std::string name ){ return GafferImage::Filter::create( name ); };
 GafferImage::FilterPtr create2( std::string name, double scale ){ return GafferImage::Filter::create( name ); };
+double weight( Filter& filter, double center, int pos ){ return filter.weight( center, pos  ); };
 
 void bindFilters()
 {
 	RunTimeTypedClass<Filter> bind( "Filter" );
-	bind.def( "construct", &Filter::construct );
 	bind.def( "__len__", &Filter::width );
-	bind.def( "__getitem__", &Filter::weight );
+	bind.def( "width", &Filter::width );
+	bind.def( "getScale", &Filter::getScale );
+	bind.def( "setScale", &Filter::setScale );
+	bind.def( "tap", &Filter::tap );
+	bind.def( "weight", &weight );
 	
 	// Convenience methods for creating Filter classes.
 	bind.def( "filters", &filterList ).staticmethod("filters");
