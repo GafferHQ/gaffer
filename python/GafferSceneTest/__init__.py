@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -78,6 +78,7 @@ from TransformTest import TransformTest
 from AimConstraintTest import AimConstraintTest
 from PruneTest import PruneTest
 from ShaderTest import ShaderTest
+from TextTest import TextTest
 
 if __name__ == "__main__":
 	import unittest

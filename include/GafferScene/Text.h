@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,71 +34,43 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#ifndef GAFFERSCENE_TEXT_H
+#define GAFFERSCENE_TEXT_H
+
+#include "GafferScene/ObjectSourceBase.h"
 
 namespace GafferScene
 {
 
-enum TypeId
+class Text : public ObjectSource
 {
-	ScenePlugTypeId = 110501,
-	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
-	SceneProcessorTypeId = 110505,
-	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
-	PrimitiveVariableProcessorTypeId = 110508,
-	DeletePrimitiveVariablesTypeId = 110509,
-	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
-	SceneContextProcessorTypeId = 110512,
-	SceneTimeWarpTypeId = 110513,
-	ObjectSourceTypeId = 110514,
-	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
-	InstancerTypeId = 110517,
-	BranchCreatorTypeId = 110518,
-	ObjectToSceneTypeId = 110519,
-	CameraTypeId = 110520,
-	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
-	OptionsTypeId = 110523,
-	ShaderTypeId = 110524,
-	ShaderAssignmentTypeId = 110525,
-	FilterTypeId = 110526,
-	PathFilterTypeId = 110527,
-	AttributesTypeId = 110528,
-	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
-	SceneContextVariablesTypeId = 110531,
-	StandardOptionsTypeId = 110532,
-	SubTreeTypeId = 110533,
-	OpenGLAttributesTypeId = 110534,
-	SceneWriterTypeId = 110535,
-	SceneReaderTypeId = 110536,
-	PathMatcherDataTypeId = 110537,
-	LightTypeId = 110538,
-	StandardAttributesTypeId = 110539,
-	OpenGLShaderTypeId = 110540,
-	TransformTypeId = 110541,
-	ConstraintTypeId = 110542,
-	AimConstraintTypeId = 110543,
-	MeshTypeTypeId = 110544,
-	FilteredSceneProcessorTypeId = 110545,
-	PruneTypeId = 110546,
-	RenderTypeId = 110547,
-	ExecutableRenderTypeId = 110548,
-	OpenGLRenderTypeId = 110549,
-	InteractiveRenderTypeId = 110550,
-	CubeTypeId = 110551,
-	SphereTypeId = 110552,
-	TextTypeId = 110553,
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Text, TextTypeId, ObjectSource );
+
+		Text( const std::string &name=staticTypeName() );
+		virtual ~Text();
+		
+		Gaffer::StringPlug *textPlug();
+		const Gaffer::StringPlug *textPlug() const;
+
+		Gaffer::StringPlug *fontPlug();
+		const Gaffer::StringPlug *fontPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+
+	private :
 	
-	LastTypeId = 110650
+		static size_t g_firstPlugIndex;
+
 };
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_TYPEIDS_H
+#endif // GAFFERSCENE_TEXT_H
