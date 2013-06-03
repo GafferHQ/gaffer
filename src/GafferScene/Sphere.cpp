@@ -152,9 +152,11 @@ void Sphere::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h )
 IECore::ConstObjectPtr Sphere::computeSource( const Context *context ) const
 {
 	float radius = radiusPlug()->getValue();
-	float zMin = std::min( zMinPlug()->getValue(), zMaxPlug()->getValue() );
-	float zMax = std::max( zMinPlug()->getValue(), zMaxPlug()->getValue() );
 	float thetaMax = thetaMaxPlug()->getValue();
+	float zMin = zMinPlug()->getValue();
+	float zMax = zMaxPlug()->getValue();
+	zMin = std::min( zMin, zMax );
+	zMax = std::max( zMin, zMax );
 	
 	if ( typePlug()->getValue() == Sphere::Primitive )
 	{
