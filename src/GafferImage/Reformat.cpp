@@ -127,6 +127,12 @@ void Reformat::hashDataWindowPlug( const GafferImage::ImagePlug *output, const G
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
+	
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	h.append( inFormat.getDisplayWindow() );
+	h.append( inFormat.getPixelAspect() );
+	
+	inPlug()->dataWindowPlug()->hash( h );
 }
 
 void Reformat::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -137,11 +143,10 @@ void Reformat::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const
 void Reformat::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->channelDataPlug()->hash( h );
+	inPlug()->dataWindowPlug()->hash( h );
 	filterPlug()->hash( h );
-	Format format = formatPlug()->getValue();
-	h.append( inPlug()->dataWindowPlug()->getValue() );
-	h.append( format.getDisplayWindow() );
-	h.append( format.getPixelAspect() );
+	formatPlug()->hash( h );	
+	inPlug()->formatPlug()->hash( h );
 }
 
 Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
