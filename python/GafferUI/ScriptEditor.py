@@ -135,7 +135,9 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 				return self.__dropText( widget, dragData[0] )
 			else :
 				return "[ " + ", ".join( [ self.__dropText( widget, d ) for d in dragData ] ) + " ]"
-				
+		elif isinstance( dragData, IECore.Data ) and hasattr( dragData, "value" ) :
+			return repr( dragData.value )
+			
 		return None
 		
 	def __codeToHTML( self, code ) :
