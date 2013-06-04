@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import ctypes
 import logging
 
 # the OpenGL module loves spewing things into logs, and for some reason
@@ -67,10 +68,6 @@ class GLWidget( GafferUI.Widget ) :
 		"Depth",
 		"Double"
 	)	
-
-	# we keep a single hidden widget which owns the texture and display lists
-	# and then share those with all the widgets we really want to make.
-	__sharingWidget = None
 			
 	## Note that you won't always get the buffer options you ask for - a best fit is found
 	# among the available formats. In particular it appears that a depth buffer is often present
@@ -86,10 +83,8 @@ class GLWidget( GafferUI.Widget ) :
 		
 		if hasattr( format, "setVersion" ) : # setVersion doesn't exist in qt prior to 4.7.		
 			format.setVersion( 2, 1 )
-		
-		glwidget = QtOpenGL.QGLWidget( format, shareWidget = GLWidget.__retrieveSharingWidget() )
-		
-		GafferUI.Widget.__init__( self, glwidget, **kw )
+				
+		GafferUI.Widget.__init__( self, self.__createQGLWidget( format ), **kw )
 		
 		self._qtWidget().resizeGL = Gaffer.WeakMethod( self.__resizeGL )
 		self._qtWidget().paintGL = Gaffer.WeakMethod( self.__paintGL )
@@ -116,7 +111,7 @@ class GLWidget( GafferUI.Widget ) :
 			self._qtWidget().update()
 	
 	def __resizeGL( self, width, height ) :
-	
+		
 		self._resize( IECore.V2i( width, height ) )
 
 	def __paintGL( self ) :
@@ -128,88 +123,97 @@ class GLWidget( GafferUI.Widget ) :
 		IECoreGL.init( True )
 		
 		self._draw()
-	
-	## This retrieves a gl widget whose gl context all subsequent GafferUI.GLWidgets 
-	# will share. In maya this tries to grab one of the model panels, in case you're
-	# doing some IECoreGL drawing in maya as well as gaffer - this is because IECoreGL
-	# currently only works reliably in a single GL context.
+
+	# We keep a single hidden widget which owns the texture and display lists
+	# and then share those with all the widgets we really want to make.
+	__shareWidget = None
 	@classmethod
-	def __retrieveSharingWidget( cls ) :
+	def __createQGLWidget( cls, format ) :
+	
+		# try to make a host specific widget if necessary.
+		result = cls.__createMayaQGLWidget( format )
+		if result is not None :
+			return result
 		
-		if GLWidget.__sharingWidget is None :
-		
-			try:
-				
-				import maya.OpenMayaUI
-				import maya.OpenMaya
-				import maya.cmds
-				import sip
-				modelPanels = maya.cmds.getPanel( type="modelPanel" )
-				
-				glWidget = None
-
-				for panel in modelPanels:
-					ptr = maya.OpenMayaUI.MQtUtil.findLayout( panel )
-					
-					if ptr is None:
-						continue
-
-					widget = sip.wrapinstance(long(ptr), QtGui.QWidget)
-					glWidget = GLWidget.__findGLWidget( widget )
-					if glWidget:
-						break
-				
-				
-				if glWidget is None:
-					GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
-				else:
-					GLWidget.__sharingWidget = glWidget
-				
-				def newScene( clientData ):
-					import GafferUI
-					import maya.OpenMaya
-					GafferUI.GLWidget.__sharingWidget = None
-					maya.OpenMaya.MMessage.removeCallback( GafferUI.GLWidget.__beforeNewCallbackId )
-					maya.OpenMaya.MMessage.removeCallback( GafferUI.GLWidget.__beforeOpenCallbackId )
-				
-				cls.__beforeNewCallbackId = maya.OpenMaya.MSceneMessage.addCallback( maya.OpenMaya.MSceneMessage.kBeforeNew, newScene )
-				cls.__beforeOpenCallbackId = maya.OpenMaya.MSceneMessage.addCallback( maya.OpenMaya.MSceneMessage.kBeforeOpen, newScene )
-				
-			except ImportError, e:
-				
-				GLWidget.__sharingWidget = QtOpenGL.QGLWidget()
+		# and if it wasn't necessary, just breathe a sigh of relief
+		# and make a nice normal one.
+		if cls.__shareWidget is None :
+			cls.__shareWidget = QtOpenGL.QGLWidget()
 			
-		return GLWidget.__sharingWidget
-
+		return QtOpenGL.QGLWidget( format, shareWidget = cls.__shareWidget )
+			
+	@classmethod
+	def __createMayaQGLWidget( cls, format ) :
 	
-	## this method finds a gl widget somewhere in the hierarchy under the supplied
-	# widget. 
-	@staticmethod
-	def __findGLWidget( widget ) :
-		
-		# is this a gl widget? If so, we're laughing!
-		if isinstance( widget, QtOpenGL.QGLWidget ):
-			return widget
-
-		layout = widget.layout()
-		
-		# no layout = no children - this is not the widget you are looking for...
-		if layout is None:
+		# We want to be able to share OpenGL resources between gaffer uis
+		# and maya viewport uis, because IECoreGL will be used in both.
+		# So we implement our own QGLContext class which creates a context
+		# which shares with maya.
+				
+		try :
+			import maya.OpenMayaRender
+		except ImportError :
+			# we're not in maya - createQGLWidget() will just make a
+			# normal widget.
 			return None
+
+		import OpenGL.GLX
 		
-		# recurse through children:
-		i = 0
-		while 1:
-			childItem = layout.itemAt(i)
+		# This is our custom context class which allows us to share gl
+		# resources with maya's contexts. We define it in here rather than
+		# at the top level because we want to import QtOpenGL lazily and
+		# don't want to trigger a full import until the last minute.
+		## \todo Call glXDestroyContext appropriately, although as far as I
+		# can tell this is impossible. The base class implementation calls it
+		# in reset(), but that's not virtual, and we can't store it in d->cx
+		# (which is what the base class destroys) because that's entirely
+		# on the C++ side of things.
+		class MayaGLContext( QtOpenGL.QGLContext ) :
+		
+			def __init__( self, format, paintDevice ) :
+			
+				QtOpenGL.QGLContext.__init__( self, format, paintDevice )
+				
+				self.__paintDevice = paintDevice
+				self.__context = None
+		
+			def chooseContext( self, shareContext ) :
+				
+				assert( self.__context is None )
 
-			if childItem is None:
-				break
+				# We have to call this to get d->vi set in the base class, because
+				# QGLWidget::setContext() accesses it directly, and will crash if we don't.
+				QtOpenGL.QGLContext.chooseContext( self, shareContext )
 
-			i = i + 1
-			ret = GLWidget.__findGLWidget( childItem.widget() )
-			if ret:
-				# woop - we've found a gl widget!
-				return ret
+				# Get maya's global resource context - we'll create our context
+				# to be sharing with this one.
+				import maya.OpenMayaRender
+				mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
+				mayaRenderer.makeResourceContextCurrent( mayaRenderer.backEndString() )
+				mayaResourceContext = OpenGL.GLX.glXGetCurrentContext()
+				self.__display = OpenGL.GLX.glXGetCurrentDisplay()
+				
+				# Get a visual - we let the base class figure this out, but then we need
+				# to convert it from the form given by the qt bindings into the ctypes form
+				# needed by PyOpenGL.
+				visual = self.chooseVisual()
+				visual = ctypes.cast( int( visual ), ctypes.POINTER( OpenGL.raw._GLX.XVisualInfo ) )
+				
+				# Make our context.
+				self.__context = OpenGL.GLX.glXCreateContext(
+					OpenGL.GLX.glXGetCurrentDisplay()[0],
+					visual,
+					OpenGL.GLX.glXGetCurrentContext(),
+					True
+				)
 
-		return None
-	
+				return True
+
+			def makeCurrent( self ) :
+
+				success = OpenGL.GLX.glXMakeCurrent( self.__display, self.__paintDevice.effectiveWinId(), self.__context )
+				assert( success )
+				
+		result = QtOpenGL.QGLWidget()
+		result.setContext( MayaGLContext( format, result ) )
+		return result
