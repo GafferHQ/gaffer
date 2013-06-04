@@ -15,13 +15,13 @@ def build( extraArgs = [] ) :
 	
 		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
 
-if IEEnv.platform() == "cent5.x86_64" :
+if IEEnv.platform() == "cent6.x86_64" :
 
 	# standalone build
 	build()
 	
 	# app specific builds
-	build( [ "APP=maya", "APP_VERSION=2012" ] )
+	build( [ "APP=maya", "APP_VERSION=2013" ] )
 	build( [ "APP=houdini", "APP_VERSION=12.1.230" ] )
 	build( [ "APP=nuke", "APP_VERSION=6.3v7" ] )
 	
