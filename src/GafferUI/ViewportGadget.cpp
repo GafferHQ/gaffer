@@ -280,49 +280,30 @@ bool ViewportGadget::buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &eve
 	return false;
 }
 
-bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
+void ViewportGadget::emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event )
 {
-	// find the gadget under the mouse
-	std::vector<GadgetPtr> gadgets;
-	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
-	
-	GadgetPtr newGadgetUnderMouse = 0;
-	if( gadgets.size() )
-	{
-		newGadgetUnderMouse = gadgets[0];
-	}
-	
-	if( m_gadgetUnderMouse == newGadgetUnderMouse )
-	{
-		// nothing to be done except pass the signal through
-		std::vector<GadgetPtr> gadgetUnderMouse(1, m_gadgetUnderMouse);
-		GadgetPtr handler(0);
-		dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
-		return true;
-	}
-	
 	// figure out the lowest point in the hierarchy where the entered status is unchanged.
 	GadgetPtr lowestUnchanged = this;
-	if( m_gadgetUnderMouse && newGadgetUnderMouse )
+	if( oldGadgetUnderMouse && newGadgetUnderMouse )
 	{
-		if( m_gadgetUnderMouse->isAncestorOf( newGadgetUnderMouse ) )
+		if( oldGadgetUnderMouse->isAncestorOf( newGadgetUnderMouse ) )
 		{
-			lowestUnchanged = m_gadgetUnderMouse;		
+			lowestUnchanged = oldGadgetUnderMouse;		
 		}
-		else if( newGadgetUnderMouse->isAncestorOf( m_gadgetUnderMouse ) )
+		else if( newGadgetUnderMouse->isAncestorOf( oldGadgetUnderMouse ) )
 		{
 			lowestUnchanged = newGadgetUnderMouse;
 		}
 		else
 		{
-			lowestUnchanged = m_gadgetUnderMouse->commonAncestor<Gadget>( newGadgetUnderMouse );
+			lowestUnchanged = oldGadgetUnderMouse->commonAncestor<Gadget>( newGadgetUnderMouse );
 		}
 	}
 		
 	// emit leave events, innermost first
-	if( m_gadgetUnderMouse )
+	if( oldGadgetUnderMouse )
 	{
-		GadgetPtr leaveTarget = m_gadgetUnderMouse;
+		GadgetPtr leaveTarget = oldGadgetUnderMouse;
 		while( leaveTarget != lowestUnchanged )
 		{
 			dispatchEvent( leaveTarget, &Gadget::leaveSignal, event );
@@ -345,14 +326,31 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 			dispatchEvent( *it, &Gadget::enterSignal, event );		
 		}
 	}
+};
+
+bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
+{
+	// find the gadget under the mouse
+	std::vector<GadgetPtr> gadgets;
+	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
+	
+	GadgetPtr newGadgetUnderMouse = 0;
+	if( gadgets.size() )
+	{
+		newGadgetUnderMouse = gadgets[0];
+	}
+	
+	if( m_gadgetUnderMouse != newGadgetUnderMouse )
+	{
+		emitEnterLeaveEvents( newGadgetUnderMouse, m_gadgetUnderMouse, event );
+		m_gadgetUnderMouse = newGadgetUnderMouse;
+	}
 
 	// pass the signal through
 	std::vector<GadgetPtr> gadgetUnderMouse(1, m_gadgetUnderMouse);
 	GadgetPtr handler(0);
 	dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
 	
-	// update status
-	m_gadgetUnderMouse = newGadgetUnderMouse;
 	return true;
 }
 
