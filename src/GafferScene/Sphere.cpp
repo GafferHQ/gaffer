@@ -57,7 +57,7 @@ Sphere::Sphere( const std::string &name )
 	addChild( new FloatPlug( "zMin", Plug::In, -1, -1, 1 ) );
 	addChild( new FloatPlug( "zMax", Plug::In, 1, -1, 1 ) );
 	addChild( new FloatPlug( "thetaMax", Plug::In, 360, 1e-4, 360 ) );
-	addChild( new V2iPlug( "divisions", Plug::In, V2i( 20, 40 ), V2i( 4, 7 ) ) );
+	addChild( new V2iPlug( "divisions", Plug::In, V2i( 20, 40 ), V2i( 3, 6 ) ) );
 }
 
 Sphere::~Sphere()
