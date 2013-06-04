@@ -55,7 +55,29 @@ class ChannelMaskPlugTest( unittest.TestCase ) :
 		for channel, expectedIdx in tests :
 			idx = GafferImage.ChannelMaskPlug.channelIndex( channel )
 			self.assertEqual( expectedIdx, idx )
-				
+
+	def testDuplicateRemoval( self ) :
+		# Tests that the removeDuplicateIndices() call removes all duplicate channels which share an index with another.
+		# For example, XYZ.X and RGBA.R share the same channel index and so one should be removed.
+		channels = [
+				"test.rgba.R",
+				"test2.rgba.R",
+				"test3.rgba.R",
+				"test4.rgba.G",
+				"test.rgba.B",
+				"test2.rgba.G",
+				"test.rgba.G",
+				"test.rgba.A"
+			]
+	
+		# The result of this removeDuplicateIndices() call should be the removal of all duplicate channels which share an index with another.
+		maskedChannels = GafferImage.ChannelMaskPlug.removeDuplicateIndices( channels )
+		self.assertTrue( len( maskedChannels ) == 4 )
+		self.assertTrue( "test.rgba.R" in maskedChannels )
+		self.assertTrue( "test4.rgba.G" in maskedChannels )
+		self.assertTrue( "test.rgba.B" in maskedChannels )
+		self.assertTrue( "test.rgba.A" in maskedChannels )
+	
 	def testChannelMask( self ) :
 		n = Gaffer.Node()
 

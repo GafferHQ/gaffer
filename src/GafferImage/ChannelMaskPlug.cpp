@@ -61,7 +61,7 @@ void ChannelMaskPlug::maskChannels( std::vector<std::string> &inChannels ) const
 	ConstStringVectorDataPtr channelNamesData = getValue();
 	const std::vector<std::string> &maskChannels = channelNamesData->readable();
 
-	// Itersect the inChannels and the maskChannels in place.
+	// Intersect the inChannels and the maskChannels in place.
 	std::vector<std::string>::iterator cIt( inChannels.begin() );
 	while ( cIt != inChannels.end() )
 	{
@@ -71,6 +71,32 @@ void ChannelMaskPlug::maskChannels( std::vector<std::string> &inChannels ) const
 		}
 		else
 		{
+			++cIt;
+		}
+	}
+}
+
+void ChannelMaskPlug::removeDuplicateIndices( std::vector<std::string> &inChannels )
+{
+	if( inChannels.size() > 1 )
+	{
+		std::vector<std::string>::iterator cIt( inChannels.begin() );
+		while ( cIt != inChannels.end() )
+		{
+			int idx = channelIndex( *cIt );
+			std::vector<std::string>::iterator duplicateIt( cIt + 1 );
+			while ( duplicateIt != inChannels.end() )
+			{
+				if ( channelIndex( *duplicateIt ) == idx )
+				{
+					inChannels.erase( duplicateIt );
+					duplicateIt = cIt + 1;
+				}
+				else
+				{	
+					++duplicateIt;
+				}
+			}
 			++cIt;
 		}
 	}
