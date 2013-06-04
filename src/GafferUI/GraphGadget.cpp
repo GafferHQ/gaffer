@@ -785,8 +785,31 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 	NodeGadget *selNodeGadget = nodeGadget( node );
 	if ( !node || !selNodeGadget )
 	{
-		m_dragReconnectCandidate = 0;
 		return;
+	}
+	
+	// make sure there is a free output for reconnection
+	for ( Gaffer::RecursiveOutputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
+	{
+		Gaffer::Plug *p = cIt->get();
+		for ( Gaffer::Plug::OutputContainer::const_iterator oIt = p->outputs().begin(); oIt != p->outputs().end(); ++oIt )
+		{
+			NodeGadget *oNodeGadget = nodeGadget( (*oIt)->node() );
+			if ( oNodeGadget && oNodeGadget->nodule( *oIt ) )
+			{
+				return;
+			}
+		}
+		
+		// make sure its corresponding input is also free
+		if ( Gaffer::DependencyNode *depNode = IECore::runTimeCast<Gaffer::DependencyNode>( node ) )
+		{
+			Gaffer::Plug *in = depNode->correspondingInput( p );
+			if ( in && in->getInput<Gaffer::Plug>() )
+			{
+				return;
+			}
+		}
 	}
 	
 	m_dragReconnectCandidate = reconnectionGadgetAt( selNodeGadget, event.line );
