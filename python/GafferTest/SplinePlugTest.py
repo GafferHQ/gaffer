@@ -103,6 +103,46 @@ class SplinePlugTest( unittest.TestCase ) :
 		sn.execute( se )
 		
 		self.assertEqual( sn["n"]["p"].getValue(), s )
+		
+	def testSerialisationWithNonDefaultValue( self ) :
+	
+		defaultSpline = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+	
+		sn = Gaffer.ScriptNode()
+		sn["n"] = Gaffer.Node()
+		sn["n"]["p"] = Gaffer.SplineffPlug( "a", defaultValue=defaultSpline, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		self.assertEqual( sn["n"]["p"].getValue(), defaultSpline )
+		
+		valueSpline = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+		
+		sn["n"]["p"].setValue( valueSpline )
+		self.assertEqual( sn["n"]["p"].getValue(), valueSpline )
+		
+		se = sn.serialise()
+		
+		sn = Gaffer.ScriptNode()
+		sn.execute( se )
+		
+		self.assertEqual( sn["n"]["p"].getValue(), valueSpline )	
 
 	def testPointAccess( self ) :
 	
