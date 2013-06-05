@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/lexical_cast.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "IECore/CachedReader.h"
 #include "IECore/VectorTypedData.h"
@@ -45,10 +46,12 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/SplinePlug.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 
 using namespace std;
+using namespace boost;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -386,6 +389,37 @@ static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std:
 
 }
 
+template<typename PlugType>
+static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const FloatVectorData *defaultPositions, const Data *defaultValues )
+{	
+	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
+	if( existingPlug )
+	{
+		return;
+	}
+	
+	typedef typename PlugType::YPlugType::ValueType YValueType;
+	typedef std::vector<YValueType> YValueVector;
+	typedef TypedData<YValueVector> YValueData;
+	
+	const YValueData *typedDefaultValues = static_cast<const YValueData *>( defaultValues );
+	size_t numPoints = std::min( defaultPositions->readable().size(), typedDefaultValues->readable().size() );
+
+	typename PlugType::ValueType defaultValue;
+	for( size_t i = 0; i < numPoints; ++i )
+	{
+		defaultValue.points.insert( 
+			typename PlugType::ValueType::Point(
+				defaultPositions->readable()[i],
+				typedDefaultValues->readable()[i]
+			)
+		);
+	}
+		
+	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, Plug::Default | Plug::Dynamic );
+	parametersPlug->setChild( name, plug );
+}
+
 void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
 {	
 	const CompoundData *typeHints = shader->blindData()->member<CompoundData>( "ri:parameterTypeHints", true );
@@ -398,31 +432,66 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 	
 	const CompoundData *annotations = shader->blindData()->member<CompoundData>( "ri:annotations", true );
 	
-	// remove plugs we don't need - either because we're not preserving existing values or because
-	// the parameter doesn't exist any more.
+	// if we're not preserving existing values then remove all existing parameter plugs - the various
+	// plug creators above know that if a plug exists then they should preserve its values.
 	
-	std::vector<PlugPtr> toRemove;
-	for( PlugIterator pIt( parametersPlug->children().begin(), parametersPlug->children().end() ); pIt!=pIt.end(); pIt++ )
+	if( !keepExistingValues )
 	{
-		if( !keepExistingValues || !shader->parametersData()->member<Data>( (*pIt)->getName() ) )
+		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
 		{
-			toRemove.push_back( *pIt );
+			parametersPlug->removeChild( parametersPlug->getChild<GraphComponent>( i ) );
 		}
-	}
-	
-	for( std::vector<PlugPtr>::const_iterator pIt = toRemove.begin(), eIt = toRemove.end(); pIt != eIt; pIt++ )
-	{
-		parametersPlug->removeChild( *pIt );
 	}
 	
 	// make sure we have a plug to represent each parameter, reusing plugs wherever possible.
 	
+	set<string> validPlugNames;
 	for( vector<string>::const_iterator it = orderedParameterNames.begin(), eIt = orderedParameterNames.end(); it != eIt; it++ )
 	{
 		if( std::find( outputParameterNames.begin(), outputParameterNames.end(), *it ) != outputParameterNames.end() )
 		{
 			continue;
 		}
+	
+		// splines are represented by two parameters matched by a naming convention, and we map
+		// those two parameters to a single SplinePlug.
+	
+		const bool endsWithValues = ends_with( *it, "Values" );
+		const bool endsWithPositions = ends_with( *it, "Positions" );
+		if( endsWithPositions || endsWithValues )
+		{
+			string plugName( *it, 0, it->size() - ( endsWithValues ? 6 : 9 ) );
+			if( validPlugNames.find( plugName ) != validPlugNames.end() )
+			{
+				continue;
+			}
+			
+			const FloatVectorData *positions = shader->parametersData()->member<FloatVectorData>( plugName + "Positions" );
+			const Data *values = shader->parametersData()->member<Data>( plugName + "Values" );
+			
+			if( positions && values )
+			{
+				switch( values->typeId() )
+				{
+					case FloatVectorDataTypeId  :
+						loadSplineParameter<SplineffPlug>( parametersPlug, plugName, positions, values );
+						break;
+					case Color3fVectorDataTypeId :
+						loadSplineParameter<SplinefColor3fPlug>( parametersPlug, plugName, positions, values );
+						break;
+					default :
+						msg(
+							Msg::Warning, "RenderManShader::loadShaderParameters",
+							boost::format( "Spline \"%s\" has unsupported value type \"%s\"" ) % plugName % values->typeName()
+						);
+				}
+				validPlugNames.insert( plugName );
+				continue;
+			}
+			
+		}
+	
+		// the other parameter types map more simply to a single plug each.
 	
 		const StringData *typeHint = typeHints->member<StringData>( *it, false );
 		const Data *defaultValue = shader->parametersData()->member<Data>( *it );
@@ -472,7 +541,24 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 					boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % *it % defaultValue->typeName()
 				);
 		}
+		
+		validPlugNames.insert( *it );
 	}
+	
+	// remove any old plugs which it turned out we didn't need
+	
+	if( keepExistingValues )
+	{
+		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
+		{
+			GraphComponent *child = parametersPlug->getChild<GraphComponent>( i );
+			if( validPlugNames.find( child->getName().string() ) == validPlugNames.end() )
+			{
+				parametersPlug->removeChild( child );
+			}
+		}
+	}
+	
 }
 
 

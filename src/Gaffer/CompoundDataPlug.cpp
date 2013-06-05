@@ -35,11 +35,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/SplineData.h"
+
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/SplinePlug.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -336,6 +339,10 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();		
 		case Color3fVectorDataPlugTypeId :
 			return static_cast<const Color3fVectorDataPlug *>( plug )->getValue()->copy();
+		case SplineffPlugTypeId :
+			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue() );
+		case SplinefColor3fPlugTypeId :
+			return new SplinefColor3fData( static_cast<const SplinefColor3fPlug *>( plug )->getValue() );	
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
