@@ -67,6 +67,12 @@ class screengrab( Gaffer.Application ) :
 					extensions = "png",
 					allowEmptyString = False,
 				),
+				
+				IECore.StringParameter(
+					name = "cmd",
+					description = "Command(s) to execute after session is launched. 'script' node is available to interact with script contents",
+					defaultValue = "",
+				),
 			]
 			
 		)
@@ -81,13 +87,13 @@ class screengrab( Gaffer.Application ) :
 		
 		#load the specified gfr file
 		fileName = str(args["script"])
-		scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( fileName ) )[0] )
-		scriptNode["fileName"].setValue( os.path.abspath( fileName ) )
-		scriptNode.load()
-		self.root()["scripts"].addChild( scriptNode )
+		script = Gaffer.ScriptNode( os.path.splitext( os.path.basename( fileName ) )[0] )
+		script["fileName"].setValue( os.path.abspath( fileName ) )
+		script.load()
+		self.root()["scripts"].addChild( script )
 		
 		#get a hook into the target window
-		self.__primaryWindow = GafferUI.ScriptWindow.acquire( scriptNode )
+		self.__primaryWindow = GafferUI.ScriptWindow.acquire( script )
 		
 		#set up target to write to
 		self.__image = str(args["image"])
@@ -96,6 +102,9 @@ class screengrab( Gaffer.Application ) :
 		if not os.path.exists(targetdir):
 			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % (targetdir) )
 			os.makedirs(targetdir)
+		
+		#execute any commands passed as arguments prior to doing the screengrab
+		exec(str(args["cmd"]))
 		
 		#register the function to run when the app is idle.
 		self.__idleCount = 0
