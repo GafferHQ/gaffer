@@ -56,7 +56,7 @@ GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), 
 
 # ImageStats
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageStats.staticTypeId(), "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-GafferUI.Nodule.registerNodule( GafferImage.ImageStats.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
+GafferUI.Nodule.registerNodule( GafferImage.ImageStats.staticTypeId(), "channels", __noduleCreator )
 
 # ChannelDataProcessor
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )

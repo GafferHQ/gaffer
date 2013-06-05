@@ -51,6 +51,8 @@
 namespace GafferImage
 {
 
+/// Provides statistics on an image's colour profile. 
+/// The ImageStats node outputs the minimum, maximum and average values of the pixel values within a region of interest in the image.
 class ImageStats : public Gaffer::ComputeNode
 {
 
@@ -65,7 +67,7 @@ class ImageStats : public Gaffer::ComputeNode
 		
 	protected :
 	
-		/// Implemented to hash the area we are sampling along with the channel context and roi.
+		/// Implemented to hash the area we are sampling along with the channel context and regionOfInterest.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
 		/// Computes the min, max and average plugs by analyzing the input ImagePlug.
@@ -75,8 +77,8 @@ class ImageStats : public Gaffer::ComputeNode
 		const GafferImage::ImagePlug *inPlug() const;
 		ChannelMaskPlug *channelsPlug();
 		const ChannelMaskPlug *channelsPlug() const;
-		Gaffer::Box2iPlug *roiPlug();
-		const Gaffer::Box2iPlug *roiPlug() const;
+		Gaffer::Box2iPlug *regionOfInterestPlug();
+		const Gaffer::Box2iPlug *regionOfInterestPlug() const;
 		Gaffer::Color4fPlug *averagePlug();
 		const Gaffer::Color4fPlug *averagePlug() const;
 		Gaffer::Color4fPlug *minPlug();

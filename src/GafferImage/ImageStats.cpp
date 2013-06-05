@@ -64,7 +64,7 @@ ImageStats::ImageStats( const std::string &name )
 			Gaffer::Plug::Default & ~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
 		)
 	);
-	addChild( new Box2iPlug( "roi", Gaffer::Plug::In ) );
+	addChild( new Box2iPlug( "regionOfInterest", Gaffer::Plug::In ) );
 	addChild( new Color4fPlug( "average", Gaffer::Plug::Out ) );
 	addChild( new Color4fPlug( "min", Gaffer::Plug::Out ) );
 	addChild( new Color4fPlug( "max", Gaffer::Plug::Out ) );
@@ -95,12 +95,12 @@ const ChannelMaskPlug *ImageStats::channelsPlug() const
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
 
-Box2iPlug *ImageStats::roiPlug()
+Box2iPlug *ImageStats::regionOfInterestPlug()
 {
 	return getChild<Box2iPlug>( g_firstPlugIndex + 2 );
 }
 
-const Box2iPlug *ImageStats::roiPlug() const
+const Box2iPlug *ImageStats::regionOfInterestPlug() const
 {
 	return getChild<Box2iPlug>( g_firstPlugIndex + 2 );
 }
@@ -137,10 +137,19 @@ const Color4fPlug *ImageStats::maxPlug() const
 
 void ImageStats::inputChanged( Gaffer::Plug *plug )
 {
-	const Imath::Box2i roi( roiPlug()->getValue() );
-	if( plug->isInstanceOf( ImagePlug::staticTypeId() ) && inPlug()->formatPlug()->getValue().getDisplayWindow().hasVolume() && !roi.hasVolume() )
+	const Imath::Box2i regionOfInterest( regionOfInterestPlug()->getValue() );
+	if( plug->isInstanceOf( ImagePlug::staticTypeId() ) && !regionOfInterest.hasVolume() )
 	{
-		roiPlug()->setValue( inPlug()->formatPlug()->getValue().getDisplayWindow() );
+		Imath::Box2i box( inPlug()->formatPlug()->getValue().getDisplayWindow() );
+		if( box.isEmpty() )
+		{
+			Gaffer::ScriptNode *s( scriptNode() );
+			if( s )
+			{
+				box = GafferImage::Format::getDefaultFormat( s ).getDisplayWindow();
+			}
+		}
+		regionOfInterestPlug()->setValue( box );
 	}
 }
 
@@ -150,7 +159,7 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	if (
 			input == channelsPlug() ||
 			input->ancestor<ImagePlug>() == inPlug() ||
-			input->ancestor<Box2iPlug>() == roiPlug()
+			input->ancestor<Box2iPlug>() == regionOfInterestPlug()
 	   ) 
 	{
 		for( unsigned int i = 0; i < 4; ++i )
@@ -167,8 +176,8 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 {
 	ComputeNode::hash( output, context, h);
 
-	const Imath::Box2i &roi( roiPlug()->getValue() );
-	roiPlug()->hash( h );
+	const Imath::Box2i &regionOfInterest( regionOfInterestPlug()->getValue() );
+	regionOfInterestPlug()->hash( h );
 	inPlug()->channelNamesPlug()->hash( h );
 	inPlug()->dataWindowPlug()->hash( h );
 
@@ -187,7 +196,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 		if ( !channel.empty() )
 		{
 			h.append( channel );	
-			Sampler s( inPlug(), channel, roi );
+			Sampler s( inPlug(), channel, regionOfInterest );
 			s.hash( h );
 			return;
 		}
@@ -258,8 +267,8 @@ void ImageStats::setOutputToDefault( FloatPlug *output ) const
 
 void ImageStats::compute( ValuePlug *output, const Context *context ) const
 {
-	const Imath::Box2i &roi( roiPlug()->getValue() );
-	if( !roi.hasVolume() )
+	const Imath::Box2i &regionOfInterest( regionOfInterestPlug()->getValue() );
+	if( !regionOfInterest.hasVolume() )
 	{
 		setOutputToDefault( static_cast<FloatPlug*>( output ) );
 		return;
@@ -281,16 +290,16 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	Context::Scope scopedContext( tmpContext );
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, roi );	
+	Sampler s( inPlug(), channelName, regionOfInterest );	
 
 	float min = std::numeric_limits<float>::max();
 	float max = std::numeric_limits<float>::min();
 	float average = 0.f;
 
 	double sum = 0.;
-	for( int y = roi.min.y; y <= roi.max.y; ++y )
+	for( int y = regionOfInterest.min.y; y <= regionOfInterest.max.y; ++y )
 	{
-		for( int x = roi.min.x; x <= roi.max.x; ++x )
+		for( int x = regionOfInterest.min.x; x <= regionOfInterest.max.x; ++x )
 		{
 			float v = s.sample( x, y );
 			min = std::min( v, min );
@@ -298,7 +307,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 			sum += v;
 		}
 	}
-	average = sum / double( (roi.size().x+1) * (roi.size().y+1) );
+	average = sum / double( (regionOfInterest.size().x+1) * (regionOfInterest.size().y+1) );
 
 	if ( minPlug()->getChild( channelIndex ) == output )
 	{
