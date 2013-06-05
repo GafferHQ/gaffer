@@ -306,7 +306,7 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 	
 	Format initialFormatValue( 1920, 1080, 1. ); // The initial value that the default format will start with when gaffer is opened.
 	
-	// If the plug hasn't been created already then it is likely that this script wasn't loaded. We deduce this becuase the
+	// If the plug hasn't been created already then it is likely that this script wasn't loaded. We deduce this because the
 	// default format plug on the script node is dynamic and therefore if we loaded the script, it would have been created.
 	if (!plug)
 	{
