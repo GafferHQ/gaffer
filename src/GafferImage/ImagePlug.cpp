@@ -286,10 +286,6 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 
 IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile ) const
 {
-	if( direction()==In && !getInput<Plug>() )
-	{
-		throw IECore::Exception( "ImagePlug::channelData called on unconnected input plug" );
-	}
 	ContextPtr tmpContext = new Context( *Context::current() );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
