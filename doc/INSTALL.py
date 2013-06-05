@@ -2,12 +2,28 @@
 
 import os,sys
 
-build_root = os.getcwd()
+def getPythonInstructions(pyfile):
+	retstr = ''
+	handle = open(pyfile, 'r')
+	contents = handle.readlines()
+	handle.close()
+	for line in contents:
+		#get rid of newlines
+		line = line.rstrip('\n')
+		#strip any comments from end of line
+		line = line.split('#')[0]
+		line = line.strip()
+		
+		retstr += '%s;' % (line)
+		
+	return retstr
 
 gp_cmd = 'gaffer python'
 ad_cmd = 'asciidoc -v'
-sg_cmd = 'gaffer screenGrabber'
+sg_cmd = 'gaffer screengrab'
 pdf_cmd = 'prince -v'
+
+build_root = os.getcwd()
 
 
 #build the node reference
@@ -42,6 +58,12 @@ for source in os.listdir( source_dir ):
 		target_img = source[:-4] + ".png"
 		sg_cmd_full = "%s -script %s -image %s" % \
 						(sg_cmd, os.path.join( source_dir, source ), os.path.join( target_dir, target_img ) )
+		
+		pythonfile = os.path.join( source_dir, source[:-4] + '.py' )
+		if os.path.exists( pythonfile ):
+			#there is a corresponding post launch python file
+			sg_cmd_full = '%s -cmd "%s"' % ( sg_cmd_full, getPythonInstructions(pythonfile))
+			
 		print( sg_cmd_full )
 		os.system( sg_cmd_full )
     
@@ -53,4 +75,3 @@ print '%s Postconverting html to pdf...' % (messageHeader)
 os.system( pdf_cmd + " GafferUserGuide.html GafferUserGuide.pdf" )
 
 print '%s Done.' % (messageHeader)
-
