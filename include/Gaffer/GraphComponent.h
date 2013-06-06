@@ -93,9 +93,8 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		std::string relativeName( const GraphComponent *ancestor ) const;
 		/// A signal which is emitted whenever a name is changed.
 		UnarySignal &nameChangedSignal();
-		/// We want the default name for GraphComponents to be derived from
-		/// the staticTypeName(), but with any namespace prefixes stripped off -
-		/// which is what this function returns.
+		/// Returns T::staticTypeName() without namespace prefixes, for use as the
+		/// default name in GraphComponent constructors.
 		template<typename T>
 		static std::string defaultName();
 		//@}
