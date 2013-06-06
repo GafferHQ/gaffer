@@ -59,7 +59,7 @@ class CompoundNumericPlug : public CompoundPlug
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( CompoundNumericPlug<T>, CompoundPlug );
 
 		CompoundNumericPlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<CompoundNumericPlug>(),
 			Direction direction=In,
 			T defaultValue = T( 0 ),
 			T minValue = T( Imath::limits<typename T::BaseType>::min() ),

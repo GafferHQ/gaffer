@@ -50,9 +50,9 @@ class Plane : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Plane, PlaneTypeId, ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Plane, PlaneTypeId, ObjectSource );
 
-		Plane( const std::string &name=staticTypeName() );
+		Plane( const std::string &name=defaultName<Plane>() );
 		virtual ~Plane();
 		
 		Gaffer::V2fPlug *dimensionsPlug();

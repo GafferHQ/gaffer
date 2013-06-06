@@ -56,7 +56,7 @@ class StandardNodule : public Nodule
 		StandardNodule( Gaffer::PlugPtr plug );
 		virtual ~StandardNodule();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardNodule, StandardNoduleTypeId, Nodule );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodule, StandardNoduleTypeId, Nodule );
 
 		void setLabelVisible( bool labelVisible );
 		bool getLabelVisible() const;

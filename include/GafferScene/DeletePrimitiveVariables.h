@@ -47,10 +47,10 @@ class DeletePrimitiveVariables : public PrimitiveVariableProcessor
 
 	public :
 
-		DeletePrimitiveVariables( const std::string &name=staticTypeName() );
+		DeletePrimitiveVariables( const std::string &name=defaultName<DeletePrimitiveVariables>() );
 		virtual ~DeletePrimitiveVariables();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
 					
 	protected :
 		

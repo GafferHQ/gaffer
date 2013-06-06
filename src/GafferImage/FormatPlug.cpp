@@ -49,7 +49,7 @@ using namespace GafferImage;
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatPlug, FormatPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatPlug, FormatPlugTypeId )
 
 template<>
 Format FormatPlug::getValue() const

@@ -51,10 +51,10 @@ class SceneProcessor : public SceneNode
 
 	public :
 
-		SceneProcessor( const std::string &name=staticTypeName() );
+		SceneProcessor( const std::string &name=defaultName<SceneProcessor>() );
 		virtual ~SceneProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneProcessor, SceneProcessorTypeId, SceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneProcessor, SceneProcessorTypeId, SceneNode );
 		
 		/// Scene elements enter the node through inPlug() and are output in processed form on SceneNode::outPlug().
 		/// If the node is disabled via enabledPlug(), then the inPlug() is automatically passed through directly

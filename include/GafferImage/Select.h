@@ -51,10 +51,10 @@ class Select : public FilterProcessor
 
 	public :
 		
-		Select( const std::string &name=staticTypeName() );
+		Select( const std::string &name=defaultName<Select>() );
 		virtual ~Select();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Select, SelectTypeId, FilterProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Select, SelectTypeId, FilterProcessor );
 		
 		Gaffer::IntPlug *selectPlug();
 		const Gaffer::IntPlug *selectPlug() const;

@@ -55,7 +55,7 @@ class ContextProcessor : public BaseType
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextProcessor<BaseType>, BaseType );
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextProcessor<BaseType> );
 		
-		ContextProcessor( const std::string &name=staticTypeName() );
+		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
 		virtual ~ContextProcessor();
 
 		virtual void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;

@@ -61,7 +61,7 @@ class View : public Gaffer::Node
 
 		virtual ~View();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( View, ViewTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::View, ViewTypeId, Gaffer::Node );
 
 		/// The contents for the view are provided by the input to this plug.
 		/// The view can be switched by connecting a new input - this is how

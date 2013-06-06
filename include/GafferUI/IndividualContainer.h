@@ -53,7 +53,7 @@ class IndividualContainer : public ContainerGadget
 		IndividualContainer( GadgetPtr child=0 );
 		virtual ~IndividualContainer();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( IndividualContainer, IndividualContainerTypeId, ContainerGadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::IndividualContainer, IndividualContainerTypeId, ContainerGadget );
 
 		/// Accepts the child only if there are currently no children.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;

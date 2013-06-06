@@ -64,7 +64,7 @@ class NumericPlugTest( unittest.TestCase ) :
 		f = Gaffer.FloatPlug( defaultValue=10, name="a" )
 		self.assertEqual( f.defaultValue(), 10 )
 		self.assertEqual( f.getName(), "a" )
-		self.assertEqual( f.typeName(), "FloatPlug" )
+		self.assertEqual( f.typeName(), "Gaffer::FloatPlug" )
 		self.assertEqual( f.getValue(), 10 )
 	
 	def testHaveMinMaxValues( self ) :

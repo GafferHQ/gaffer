@@ -54,9 +54,9 @@ class ProceduralHolder : public ParameterisedHolderComputeNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ProceduralHolder, ProceduralHolderTypeId, ParameterisedHolderComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ProceduralHolder, ProceduralHolderTypeId, ParameterisedHolderComputeNode );
 
-		ProceduralHolder( const std::string &name=staticTypeName() );
+		ProceduralHolder( const std::string &name=defaultName<ProceduralHolder>() );
 			
 		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised );
 		

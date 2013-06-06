@@ -49,9 +49,9 @@ class Cube : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Cube, CubeTypeId, ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Cube, CubeTypeId, ObjectSource );
 
-		Cube( const std::string &name=staticTypeName() );
+		Cube( const std::string &name=defaultName<Cube>() );
 		virtual ~Cube();
 		
 		Gaffer::V3fPlug *dimensionsPlug();

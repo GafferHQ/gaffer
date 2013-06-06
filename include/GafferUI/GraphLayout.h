@@ -71,7 +71,7 @@ class GraphLayout : public IECore::RunTimeTyped
 
 		virtual ~GraphLayout();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GraphLayout, GraphLayoutTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::GraphLayout, GraphLayoutTypeId, IECore::RunTimeTyped );
 
 		/// Attempts to connect the specified node to the specified input nodes. Returns true
 		/// if any connections were made and false otherwise.

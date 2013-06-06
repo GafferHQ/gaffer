@@ -47,10 +47,10 @@ class OpenGLRender : public ExecutableRender
 
 	public :
 
-		OpenGLRender( const std::string &name=staticTypeName() );
+		OpenGLRender( const std::string &name=defaultName<OpenGLRender>() );
 		virtual ~OpenGLRender();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenGLRender, OpenGLRenderTypeId, ExecutableRender );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLRender, OpenGLRenderTypeId, ExecutableRender );
 	
 	protected :
 	

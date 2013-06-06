@@ -49,10 +49,10 @@ class ArnoldOptions : public GafferScene::Options
 
 	public :
 
-		ArnoldOptions( const std::string &name=staticTypeName() );
+		ArnoldOptions( const std::string &name=defaultName<ArnoldOptions>() );
 		virtual ~ArnoldOptions();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldOptions, ArnoldOptionsTypeId, GafferScene::Options );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldOptions, ArnoldOptionsTypeId, GafferScene::Options );
 				
 };
 

@@ -53,7 +53,7 @@ class TextGadget : public Gadget
 		TextGadget( const std::string &text );
 		virtual ~TextGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TextGadget, TextGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::TextGadget, TextGadgetTypeId, Gadget );
 		
 		const std::string &getText() const;
 		void setText( const std::string &text );

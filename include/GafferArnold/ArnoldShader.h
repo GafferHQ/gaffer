@@ -50,10 +50,10 @@ class ArnoldShader : public GafferScene::Shader
 
 	public :
 
-		ArnoldShader( const std::string &name=staticTypeName() );
+		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
 		virtual ~ArnoldShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
 		
 		void loadShader( const std::string &shaderName );
 

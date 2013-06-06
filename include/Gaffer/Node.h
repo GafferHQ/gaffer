@@ -60,10 +60,10 @@ class Node : public GraphComponent
 
 	public :
 
-		Node( const std::string &name=staticTypeName() );
+		Node( const std::string &name=defaultName<Node>() );
 		virtual ~Node();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Node, NodeTypeId, GraphComponent );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Node, NodeTypeId, GraphComponent );
 
 		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
 		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;

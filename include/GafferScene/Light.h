@@ -49,9 +49,9 @@ class Light : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Light, LightTypeId, ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Light, LightTypeId, ObjectSource );
 
-		Light( const std::string &name=staticTypeName() );
+		Light( const std::string &name=defaultName<Light>() );
 		virtual ~Light();
 		
 		Gaffer::CompoundPlug *parametersPlug();

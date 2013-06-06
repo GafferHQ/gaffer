@@ -49,9 +49,9 @@ class Sphere : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Sphere, SphereTypeId, ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Sphere, SphereTypeId, ObjectSource );
 
-		Sphere( const std::string &name=staticTypeName() );
+		Sphere( const std::string &name=defaultName<Sphere>() );
 		virtual ~Sphere();
 		
 		enum Type

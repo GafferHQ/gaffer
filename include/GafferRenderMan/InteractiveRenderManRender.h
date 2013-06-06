@@ -49,10 +49,10 @@ class InteractiveRenderManRender : public GafferScene::InteractiveRender
 
 	public :
 
-		InteractiveRenderManRender( const std::string &name=staticTypeName() );
+		InteractiveRenderManRender( const std::string &name=defaultName<InteractiveRenderManRender>() );
 		virtual ~InteractiveRenderManRender();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( InteractiveRenderManRender, InteractiveRenderManRenderTypeId, GafferScene::InteractiveRender );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::InteractiveRenderManRender, InteractiveRenderManRenderTypeId, GafferScene::InteractiveRender );
 		
 	protected :
 	

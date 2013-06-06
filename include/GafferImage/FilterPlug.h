@@ -48,10 +48,10 @@ class FilterPlug : public Gaffer::StringPlug
 {
 	public:
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( FilterPlug, FilterPlugTypeId, Gaffer::StringPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::FilterPlug, FilterPlugTypeId, Gaffer::StringPlug );
 		
 		FilterPlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<FilterPlug>(),
 			Direction direction=In,
 			std::string defaultValue = Filter::defaultFilter(),
 			unsigned flags = Default

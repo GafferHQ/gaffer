@@ -50,10 +50,10 @@ class AlembicSource : public FileSource
 
 	public :
 
-		AlembicSource( const std::string &name=staticTypeName() );
+		AlembicSource( const std::string &name=defaultName<AlembicSource>() );
 		virtual ~AlembicSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( AlembicSource, AlembicSourceTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::AlembicSource, AlembicSourceTypeId, FileSource )
 		
 	private :
 

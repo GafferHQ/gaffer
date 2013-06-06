@@ -69,7 +69,7 @@ class Filter : public IECore::RunTimeTyped
 
 public :
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Filter, FilterTypeId, RunTimeTyped );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Filter, FilterTypeId, RunTimeTyped );
 	
 	/// Constructor	
 	/// @param radius Half the width of the kernel at a scale of 1.
@@ -189,7 +189,7 @@ class BoxFilter : public Filter
 
 public:
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BoxFilter, BoxFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BoxFilter, BoxFilterTypeId, Filter );
 
 	BoxFilter( double scale = 1. )
 		: Filter( .5, scale )
@@ -214,7 +214,7 @@ class BilinearFilter : public Filter
 
 public:
 
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BilinearFilter, BilinearFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BilinearFilter, BilinearFilterTypeId, Filter );
 	
 	BilinearFilter( double scale = 1. )
 		: Filter( 1, scale )
@@ -242,7 +242,7 @@ class SincFilter : public Filter
 
 public:
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SincFilter, SincFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SincFilter, SincFilterTypeId, Filter );
 
 	SincFilter( double scale = 1. )
 		: Filter( 2., scale )
@@ -276,7 +276,7 @@ class HermiteFilter : public Filter
 
 public:
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( HermiteFilter, HermiteFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::HermiteFilter, HermiteFilterTypeId, Filter );
 
 	HermiteFilter( double scale = 1. )
 		: Filter( 1, scale )
@@ -304,7 +304,7 @@ class LanczosFilter : public Filter
 
 public:
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( LanczosFilter, LanczosFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LanczosFilter, LanczosFilterTypeId, Filter );
 
 	LanczosFilter( double scale = 1. )
 		: Filter( 3., scale )
@@ -339,7 +339,7 @@ class SplineFilter : public Filter
 
 public:
 
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SplineFilter, SplineFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SplineFilter, SplineFilterTypeId, Filter );
 	
 	SplineFilter( double B, double C, double scale = 1. )
 		: Filter( 2, scale ),
@@ -380,7 +380,7 @@ class MitchellFilter : public SplineFilter
 
 public:
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MitchellFilter, MitchellFilterTypeId, SplineFilter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
 	MitchellFilter( double scale = 1. )
 		: SplineFilter( 1./3., 1./3., scale )
@@ -398,7 +398,7 @@ class BSplineFilter : public SplineFilter
 
 public:
 	
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BSplineFilter, BSplineFilterTypeId, SplineFilter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
 	BSplineFilter( double scale = 1. )
 		: SplineFilter( 1., 0., scale )
@@ -416,7 +416,7 @@ class CatmullRomFilter : public SplineFilter
 
 public:
 
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
 	
 	CatmullRomFilter( double scale = 1. )
 		: SplineFilter( 0., .5, scale )
@@ -434,7 +434,7 @@ class CubicFilter : public Filter
 
 public:
 
-	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CubicFilter, CubicFilterTypeId, Filter );
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CubicFilter, CubicFilterTypeId, Filter );
 	
 	CubicFilter( double scale = 1. )
 		: Filter( 3., scale )

@@ -194,7 +194,7 @@ static GraphComponentPtr commonAncestor( GraphComponent &g, const GraphComponent
 
 static std::string repr( const GraphComponent *g )
 {
-	return Serialisation::modulePath( g ) + "." + g->typeName() + "( \"" + g->getName().string() + "\" )";
+	return Serialisation::classPath( g ) + "( \"" + g->getName().string() + "\" )";
 }
 
 struct UnarySlotCaller

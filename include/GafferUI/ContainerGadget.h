@@ -48,10 +48,10 @@ class ContainerGadget : public Gadget
 
 	public :
 
-		ContainerGadget( const std::string &name=staticTypeName() );
+		ContainerGadget( const std::string &name=defaultName<ContainerGadget>() );
 		virtual ~ContainerGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ContainerGadget, ContainerGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ContainerGadget, ContainerGadgetTypeId, Gadget );
 
 		/// ContainerGadgets accept any number of other Gadgets as children. Derived classes
 		/// may further restrict this if they wish, but they must not accept non-Gadget children.

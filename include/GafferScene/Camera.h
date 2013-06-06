@@ -48,9 +48,9 @@ class Camera : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Camera, CameraTypeId, ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Camera, CameraTypeId, ObjectSource );
 
-		Camera( const std::string &name=staticTypeName() );
+		Camera( const std::string &name=defaultName<Camera>() );
 		virtual ~Camera();
 		
 		Gaffer::StringPlug *projectionPlug();

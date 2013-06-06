@@ -77,8 +77,8 @@ class TypedPlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.BoolPlug( "b" )
 		
-		self.assertEqual( p.typeName(), "BoolPlug" )
-		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( p.typeId() ), "BoolPlug" )
+		self.assertEqual( p.typeName(), "Gaffer::BoolPlug" )
+		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( p.typeId() ), "Gaffer::BoolPlug" )
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
 
 	def testSetToDefault( self ) :

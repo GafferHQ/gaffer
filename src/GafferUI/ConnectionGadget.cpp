@@ -57,7 +57,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( ConnectionGadget );
 
 ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	Gadget( staticTypeName() ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
+	:	Gadget( defaultName<ConnectionGadget>() ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
 {
 	setNodules( srcNodule, dstNodule );
 	

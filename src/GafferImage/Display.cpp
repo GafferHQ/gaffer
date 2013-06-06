@@ -78,7 +78,7 @@ class GafferDisplayDriver : public IECore::ImageDisplayDriver
 
 	public :
 	
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDisplayDriver, GafferDisplayDriverTypeId, ImageDisplayDriver );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::GafferDisplayDriver, GafferDisplayDriverTypeId, ImageDisplayDriver );
 
 		GafferDisplayDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow,
 			const vector<string> &channelNames, ConstCompoundDataPtr parameters )

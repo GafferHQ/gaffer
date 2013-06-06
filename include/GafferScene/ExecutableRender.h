@@ -51,10 +51,10 @@ class ExecutableRender : public Render, public Gaffer::Executable
 
 	public :
 
-		ExecutableRender( const std::string &name=staticTypeName() );
+		ExecutableRender( const std::string &name=defaultName<ExecutableRender>() );
 		virtual ~ExecutableRender();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableRender, ExecutableRenderTypeId, Render );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExecutableRender, ExecutableRenderTypeId, Render );
 		
 		virtual void executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const;
 		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;

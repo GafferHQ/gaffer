@@ -230,9 +230,9 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificat
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderNode, ParameterisedHolderNodeTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderNode, ParameterisedHolderNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeTypeId )
 
 }
 

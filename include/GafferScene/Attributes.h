@@ -50,10 +50,10 @@ class Attributes : public SceneElementProcessor
 
 	public :
 
-		Attributes( const std::string &name=staticTypeName() );
+		Attributes( const std::string &name=defaultName<Attributes>() );
 		virtual ~Attributes();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Attributes, AttributesTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Attributes, AttributesTypeId, SceneElementProcessor );
 		
 		Gaffer::CompoundDataPlug *attributesPlug();
 		const Gaffer::CompoundDataPlug *attributesPlug() const;

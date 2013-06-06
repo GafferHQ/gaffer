@@ -48,8 +48,8 @@ class StandardSetTest( unittest.TestCase ) :
 	def testRunTimeTyped( self ) :
 	
 		s = Gaffer.StandardSet()
-		self.assertEqual( s.typeName(), "StandardSet" )
-		self.assertEqual( s.staticTypeName(), "StandardSet" )
+		self.assertEqual( s.typeName(), "Gaffer::StandardSet" )
+		self.assertEqual( s.staticTypeName(), "Gaffer::StandardSet" )
 		self.assert_( s.isInstanceOf, IECore.TypeId.RunTimeTyped )
 	
 	def testBasicMethods( self ) :

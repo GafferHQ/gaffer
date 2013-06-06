@@ -48,10 +48,10 @@ class SceneContextProcessorBase : public SceneProcessor
 
 	public :
 
-		SceneContextProcessorBase( const std::string &name=staticTypeName() );
+		SceneContextProcessorBase( const std::string &name=defaultName<SceneContextProcessorBase>() );
 		virtual ~SceneContextProcessorBase();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneContextProcessorBase, SceneContextProcessorBaseTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneContextProcessorBase, SceneContextProcessorBaseTypeId, SceneProcessor );
 		
 	private :
 	

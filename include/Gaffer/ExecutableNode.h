@@ -52,9 +52,9 @@ class ExecutableNode : public Node, public Executable
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableNode, ExecutableNodeTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode, ExecutableNodeTypeId, Node );
 
-		ExecutableNode( const std::string &name=staticTypeName() );
+		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
 	
 		virtual ~ExecutableNode();
 };

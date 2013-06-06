@@ -62,7 +62,7 @@ class ParameterisedHolder : public BaseType
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ParameterisedHolder<BaseType>, BaseType );
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ParameterisedHolder<BaseType> );		
 
-		ParameterisedHolder( const std::string &name=staticTypeName() );
+		ParameterisedHolder( const std::string &name=GraphComponent::defaultName<ParameterisedHolder>() );
 		virtual ~ParameterisedHolder();
 		
 		/// May be overridden by derived classes, but they must call the base class implementation

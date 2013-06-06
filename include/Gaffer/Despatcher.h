@@ -65,7 +65,7 @@ class Despatcher : public IECore::RunTimeTyped
 
 		virtual ~Despatcher();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Despatcher, DespatcherTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Despatcher, DespatcherTypeId, IECore::RunTimeTyped );
 
 		typedef boost::signal<void (const Despatcher *, const std::vector< NodePtr > &)> DespatchSignal;
 

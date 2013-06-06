@@ -49,10 +49,10 @@ class ImageTransform : public ImageProcessor
 
 	public :
 
-		ImageTransform( const std::string &name=staticTypeName() );
+		ImageTransform( const std::string &name=defaultName<ImageTransform>() );
 		virtual ~ImageTransform();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageTransform, ImageTransformTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageTransform, ImageTransformTypeId, ImageProcessor );
 	
 		/// Plug accessors.	
 		Gaffer::Transform2DPlug *transformPlug();

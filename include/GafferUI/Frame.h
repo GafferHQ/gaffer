@@ -52,7 +52,7 @@ class Frame : public IndividualContainer
 		Frame( GadgetPtr child );
 		virtual ~Frame();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Frame, FrameTypeId, IndividualContainer );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Frame, FrameTypeId, IndividualContainer );
 
 		virtual Imath::Box3f bound() const;
 	

@@ -47,9 +47,9 @@ class ObjectToImage : public ImagePrimitiveNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
 
-		ObjectToImage( const std::string &name = staticTypeName() );
+		ObjectToImage( const std::string &name = defaultName<ObjectToImage>() );
 		virtual ~ObjectToImage();
 		
 		Gaffer::ObjectPlug *objectPlug();

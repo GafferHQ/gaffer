@@ -104,7 +104,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneView );
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
 SceneView::SceneView()
-	:	View3D( staticTypeName(), new GafferScene::ScenePlug() ),
+	:	View3D( defaultName<SceneView>(), new GafferScene::ScenePlug() ),
 		m_renderableGadget( new RenderableGadget )
 {
 	viewportGadget()->setChild( m_renderableGadget );

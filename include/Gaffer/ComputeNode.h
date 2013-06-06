@@ -58,10 +58,10 @@ class ComputeNode : public DependencyNode
 
 	public :
 
-		ComputeNode( const std::string &name=staticTypeName() );
+		ComputeNode( const std::string &name=defaultName<ComputeNode>() );
 		virtual ~ComputeNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ComputeNode, ComputeNodeTypeId, DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ComputeNode, ComputeNodeTypeId, DependencyNode );
 		
 	protected :
 		

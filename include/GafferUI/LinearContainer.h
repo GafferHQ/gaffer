@@ -71,12 +71,12 @@ class LinearContainer : public ContainerGadget
 			Decreasing
 		};
 		
-		LinearContainer( const std::string &name=staticTypeName(), Orientation orientation=X,
+		LinearContainer( const std::string &name=defaultName<LinearContainer>(), Orientation orientation=X,
 			Alignment alignment=Centre, float spacing = 0.0f, Direction=Increasing );
 			
 		virtual ~LinearContainer();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( LinearContainer, LinearContainerTypeId, ContainerGadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::LinearContainer, LinearContainerTypeId, ContainerGadget );
 
 		void setOrientation( Orientation orientation );
 		Orientation getOrientation() const;

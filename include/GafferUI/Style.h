@@ -66,7 +66,7 @@ class Style : public IECore::RunTimeTyped
 		Style();
 		virtual ~Style();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Style, StyleTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Style, StyleTypeId, IECore::RunTimeTyped );
 		
 		enum State
 		{

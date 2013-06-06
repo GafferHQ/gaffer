@@ -49,10 +49,10 @@ class OpenColorIO : public FilterProcessor
 
 	public :
 
-		OpenColorIO( const std::string &name=staticTypeName() );
+		OpenColorIO( const std::string &name=defaultName<OpenColorIO>() );
 		virtual ~OpenColorIO();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenColorIO, OpenColorIOTypeId, FilterProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIO, OpenColorIOTypeId, FilterProcessor );
 
 		Gaffer::StringPlug *inputSpacePlug();
 		const Gaffer::StringPlug *inputSpacePlug() const;

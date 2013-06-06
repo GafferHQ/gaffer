@@ -40,7 +40,7 @@
 namespace IECore
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( PathMatcherData, GafferScene::PathMatcherDataTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( IECore::PathMatcherData, GafferScene::PathMatcherDataTypeId )
 
 template<>
 void PathMatcherData::save( SaveContext *context ) const

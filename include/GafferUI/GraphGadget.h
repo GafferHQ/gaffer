@@ -67,8 +67,6 @@ class GraphGadget : public ContainerGadget
 
 	public :
 
-		IE_CORE_FORWARDDECLARE( Filter )
-
 		/// Creates a graph showing the children of root, optionally
 		/// filtered by the specified set. Nodes are only displayed if
 		/// they are both a child of root and a member of filter.
@@ -76,7 +74,7 @@ class GraphGadget : public ContainerGadget
 		
 		virtual ~GraphGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GraphGadget, GraphGadgetTypeId, ContainerGadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::GraphGadget, GraphGadgetTypeId, ContainerGadget );
 
 		Gaffer::Node *getRoot();
 		const Gaffer::Node *getRoot() const;

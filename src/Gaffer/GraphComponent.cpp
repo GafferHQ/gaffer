@@ -445,3 +445,14 @@ void GraphComponent::storeIndexOfNextChild( size_t &index ) const
 		index = m_children.size();
 	}
 }
+
+std::string GraphComponent::unprefixedTypeName( const char *typeName )
+{
+	string result( typeName );
+	string::size_type colonPos = result.find_last_of( ':' );
+	if( colonPos != string::npos )
+	{
+		result.erase( 0, colonPos + 1 );
+	}
+	return result;
+}

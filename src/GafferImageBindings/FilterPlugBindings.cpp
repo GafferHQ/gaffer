@@ -67,7 +67,7 @@ void bindFilterPlug()
 	IECorePython::RunTimeTypedClass<FilterPlug>()
 		.def( init<const char *, Gaffer::Plug::Direction, std::string, unsigned>(
 				(
-					boost::python::arg_( "name" )=FilterPlug::staticTypeName(),
+					boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<FilterPlug>(),
 					boost::python::arg_( "direction" )=Gaffer::Plug::In,
 					boost::python::arg_( "defaultValue" )="Box",
 					boost::python::arg_( "flags" )=Gaffer::Plug::Default

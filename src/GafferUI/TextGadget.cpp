@@ -47,7 +47,7 @@ using namespace boost;
 IE_CORE_DEFINERUNTIMETYPED( TextGadget );
 
 TextGadget::TextGadget( const std::string &text )
-	:	Gadget( staticTypeName() )
+	:	Gadget( defaultName<TextGadget>() )
 {
 	setText( text );
 }

@@ -50,10 +50,10 @@ class Source : public SceneNode
 
 	public :
 
-		Source( const std::string &name=staticTypeName() );
+		Source( const std::string &name=defaultName<Source>() );
 		virtual ~Source();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Source, SourceTypeId, SceneNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Source, SourceTypeId, SceneNode );
 				
 	protected :
 				

@@ -48,10 +48,10 @@ class ShaderAssignment : public SceneElementProcessor
 
 	public :
 
-		ShaderAssignment( const std::string &name=staticTypeName() );
+		ShaderAssignment( const std::string &name=defaultName<ShaderAssignment>() );
 		virtual ~ShaderAssignment();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
 		
 		Gaffer::Plug *shaderPlug();
 		const Gaffer::Plug *shaderPlug() const;

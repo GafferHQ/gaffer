@@ -39,7 +39,7 @@
 namespace GafferImage
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ImagePrimitiveNode, ImagePrimitiveNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImagePrimitiveNode, ImagePrimitiveNodeTypeId )
 
 // explicit instantiation
 template class GafferImage::ImagePrimitiveSource<ImageNode>;

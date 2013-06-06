@@ -57,9 +57,9 @@ class Filter : public Gaffer::ComputeNode
 			Match = 2
 		};
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Filter, FilterTypeId, Gaffer::ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
 
-		Filter( const std::string &name=staticTypeName() );
+		Filter( const std::string &name=defaultName<Filter>() );
 		virtual ~Filter();
 		
 		Gaffer::IntPlug *matchPlug();

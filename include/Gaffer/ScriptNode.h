@@ -71,10 +71,10 @@ class ScriptNode : public Node
 
 	public :
 
-		ScriptNode( const std::string &name=staticTypeName() );
+		ScriptNode( const std::string &name=defaultName<Node>() );
 		virtual ~ScriptNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ScriptNode, ScriptNodeTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ScriptNode, ScriptNodeTypeId, Node );
 				
 		/// Accepts parenting only to a ScriptContainer.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;

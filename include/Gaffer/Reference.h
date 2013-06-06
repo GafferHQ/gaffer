@@ -47,10 +47,10 @@ class Reference : public Node
 
 	public :
 
-		Reference( const std::string &name=staticTypeName() );
+		Reference( const std::string &name=defaultName<Reference>() );
 		virtual ~Reference();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Reference, ReferenceTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Reference, ReferenceTypeId, Node );
 		
 		/// The plugs that stores the name of the file being
 		/// referenced. This should be considered read-only, and the
