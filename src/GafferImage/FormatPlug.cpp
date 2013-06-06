@@ -76,6 +76,23 @@ IECore::MurmurHash FormatPlug::hash() const
 	if( direction()==Plug::In && !getInput<ValuePlug>() )
 	{
 		Format v = getValue();
+		if( v.getDisplayWindow().isEmpty() )
+		{
+			const Gaffer::Node *n( node() );
+			if( n )
+			{
+				const Gaffer::ScriptNode *s( n->scriptNode() );
+				if ( s )
+				{
+					const GafferImage::FormatPlug *p( s->getChild<FormatPlug>( GafferImage::Format::defaultFormatPlugName ) );
+					if ( p )
+					{
+						v = p->getValue();
+					}
+				}
+			}
+		}
+
 		result.append( v.getDisplayWindow().min );
 		result.append( v.getDisplayWindow().max );
 		result.append( v.getPixelAspect() );
