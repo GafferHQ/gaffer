@@ -38,8 +38,14 @@
 #define GAFFERIMAGE_SAMPLER_H
 
 #include <vector>
+
+#include "IECore/FastFloat.h"
+#include "IECore/BoxAlgo.h"
+#include "IECore/BoxOps.h"
+
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Filter.h"
+#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {
@@ -63,29 +69,42 @@ public :
 	/// @param channelName The channel to sample.
 	/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
 	/// @param boundingMode The method of handling samples that fall out of the sample window.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
 
 	/// Samples a colour value from the channel at x, y.
-	float sample( int x, int y );
+	inline float sample( int x, int y );
 
 	/// Sub-samples the image using a filter.
-	float sample( float x, float y, Filter *filter );
+	inline float sample( float x, float y );
 
 	/// Accumulates the hashes of the tiles that it accesses.
 	void hash( IECore::MurmurHash &h ) const;
 
 private:
 
+	/// Cached data access
+	/// @param p Any point within the cache that we wish to retrieve the data for.
+	/// @param tileData Is set to the tile's channel data.
+	/// @param tileOrigin The coordinate of the tile's  minimum corner.
+	/// @param tileIndex XY indices that can be used to access the colour value of point 'p' from tileData.
+	inline void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tileOrigin, Imath::V2i &tileIndex );
+
 	const ImagePlug *m_plug;
 	const std::string m_channelName;
 	Imath::Box2i m_sampleWindow;
-	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
-	bool m_valid;
+
+	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;	
+	Imath::Box2i m_cacheWindow;
+	int m_cacheWidth;
+
 	BoundingMode m_boundingMode;
+	ConstFilterPtr m_filter;
 
 };
 
 }; // namespace GafferImage
+
+#include "GafferImage/Sampler.inl"
 
 #endif
 

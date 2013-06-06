@@ -77,6 +77,7 @@ enum TypeId
 	SincFilterTypeId = 110781,
 	LanczosFilterTypeId = 110782,
 	ImageStatsTypeId = 110783,
+	ImageTransformImplementationTypeId = 110784,
 	
 	LastTypeId = 110849
 };
