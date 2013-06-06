@@ -168,8 +168,8 @@ from NameWidget import NameWidget
 from NameLabel import NameLabel
 from NodeSetEditor import NodeSetEditor
 from NodeEditor import NodeEditor
+from Layouts import Layouts
 import FileMenu
-import Layouts
 import LayoutMenu
 import EditMenu
 import NodeMenu
