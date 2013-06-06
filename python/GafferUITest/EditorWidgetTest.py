@@ -77,10 +77,11 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 	
 		scriptNode = Gaffer.ScriptNode()
 		
+		layouts = GafferUI.Layouts.acquire( Gaffer.Application( "Layout tester" ) )
 		for type in GafferUI.EditorWidget.types() :
 			editor = GafferUI.EditorWidget.create( type, scriptNode )
-			GafferUI.Layouts.add( "testLayout", editor )
-			editor2 = GafferUI.Layouts.create( "testLayout", scriptNode )
+			layouts.add( "testLayout", editor )
+			editor2 = layouts.create( "testLayout", scriptNode )
 			self.failUnless( editor2.scriptNode() is scriptNode )
 			
 if __name__ == "__main__":
