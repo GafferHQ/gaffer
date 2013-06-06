@@ -451,6 +451,14 @@ class _Menu( QtGui.QMenu ) :
 	
 	def keyPressEvent( self, qEvent ) :
 		
+		if qEvent.key() == QtCore.Qt.Key_Escape :
+			parent = self.parentWidget()
+			while isinstance( parent, _Menu ) :
+				parent.close()
+				parent = parent.parentWidget()
+			
+			return
+		
 		if not self.keyboardMode == _Menu.KeyboardMode.Grab :
 			
 			if qEvent.key() == QtCore.Qt.Key_Up or qEvent.key() == QtCore.Qt.Key_Down :
