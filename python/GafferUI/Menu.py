@@ -456,6 +456,8 @@ class _Menu( QtGui.QMenu ) :
 			while isinstance( parent, _Menu ) :
 				parent.close()
 				parent = parent.parentWidget()
+			
+			return
 		
 		if not self.keyboardMode == _Menu.KeyboardMode.Grab :
 			
