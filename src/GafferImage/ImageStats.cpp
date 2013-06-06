@@ -214,7 +214,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 		if ( !channel.empty() )
 		{
 			h.append( channel );	
-			Sampler s( inPlug(), channel, regionOfInterest );
+			Sampler s( inPlug(), channel, regionOfInterest, Filter::create( Filter::defaultFilter() ) );
 			s.hash( h );
 			return;
 		}
@@ -308,7 +308,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	Context::Scope scopedContext( tmpContext );
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, regionOfInterest );	
+	Sampler s( inPlug(), channelName, regionOfInterest, Filter::create( Filter::defaultFilter() ) );	
 
 	float min = std::numeric_limits<float>::max();
 	float max = std::numeric_limits<float>::min();
