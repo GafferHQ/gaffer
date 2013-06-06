@@ -42,6 +42,19 @@ import Gaffer
 import GafferImage
 
 class FormatPlugTest( unittest.TestCase ) :
+
+	def testSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["f"] = GafferImage.FormatPlug( "testPlug", defaultValue = GafferImage.Format( 10, 5, .5  ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		se = s.serialise()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( se )
+
+		self.failUnless( s2["n"]["f"].isInstanceOf( GafferImage.FormatPlug.staticTypeId() ) )
 	
 	def testInputPlug( self ) :
 		n = Gaffer.Node()
