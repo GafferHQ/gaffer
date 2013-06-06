@@ -145,7 +145,7 @@ Imath::Box2i FilterProcessor::computeDataWindow( const Gaffer::Context *context,
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it != end; it++ )
 	{
-		// We don't need to check that the plug is connected here as unconnected plugs don't have data winodws.
+		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
 		IECore::boxExtend( dataWindow, (*it)->dataWindowPlug()->getValue() );
 	}
 	return dataWindow;

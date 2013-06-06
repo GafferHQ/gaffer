@@ -106,7 +106,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 
 	## Sets which items are selected.
 	# If a list is provided then the current selection is replaced with the valid elements within the list.
-	# If a single element is proveded then it is appended to the current selection unless multiple selections
+	# If a single element is provided then it is appended to the current selection unless multiple selections
 	# are not enabled in which case the selection is replaced.
 	def setSelection( self, labels ) :
 		

@@ -51,6 +51,7 @@ from SamplerTest import SamplerTest
 from ReformatTest import ReformatTest
 from FilterTest import FilterTest
 from DisplayTest import DisplayTest
+from ImageStatsTest import ImageStatsTest
 
 if __name__ == "__main__":
 	import unittest
