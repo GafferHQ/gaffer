@@ -41,6 +41,7 @@
 #include "boost/format.hpp"
 
 #include "IECore/MessageHandler.h"
+#include "IECorePython/ScopedGILLock.h"
 
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/GraphComponentBinding.h"
@@ -57,6 +58,8 @@ using namespace boost::python;
 Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName, const Gaffer::Set *filter )
 	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter )
 {
+	IECorePython::ScopedGILLock gilLock;
+	
 	const Serialiser *parentSerialiser = serialiser( parent );
 	for( GraphComponent::ChildIterator it = parent->children().begin(), eIt = parent->children().end(); it != eIt; it++ )
 	{
