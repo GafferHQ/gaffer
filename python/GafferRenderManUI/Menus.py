@@ -35,6 +35,8 @@
 ##########################################################################
 
 import os
+import re
+import fnmatch
 import string
 
 import IECore
@@ -59,8 +61,11 @@ def __shaderCreator( shaderName ) :
 	
 	return node
 
-def __shaderSubMenu() :
-
+def _shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
+	
+	if isinstance( matchExpression, str ) :
+		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
+	
 	shaders = set()
 	for path in GafferRenderMan.RenderManShader.shaderLoader().searchPath.paths :
 
@@ -68,7 +73,7 @@ def __shaderSubMenu() :
 			for file in files :
 				if os.path.splitext( file )[1] == ".sdl" :
 					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
-					if shaderPath not in shaders :
+					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
 						shaders.add( os.path.splitext( shaderPath )[0] )
 	
 	shaders = sorted( list( shaders ) )
@@ -96,7 +101,7 @@ def __shaderSubMenu() :
 		
 	return result
 
-GafferUI.NodeMenu.definition().append( "/RenderMan/Shader", { "subMenu" : __shaderSubMenu } )
+GafferUI.NodeMenu.definition().append( "/RenderMan/Shader", { "subMenu" : _shaderSubMenu } )
 
 GafferUI.NodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
 GafferUI.NodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
