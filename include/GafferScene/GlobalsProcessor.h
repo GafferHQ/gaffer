@@ -50,10 +50,10 @@ class GlobalsProcessor : public SceneProcessor
 
 	public :
 
-		GlobalsProcessor( const std::string &name=staticTypeName() );
+		GlobalsProcessor( const std::string &name=defaultName<GlobalsProcessor>() );
 		virtual ~GlobalsProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
 		
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;

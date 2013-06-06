@@ -58,9 +58,9 @@ class ExecutableOpHolder : public ParameterisedHolderNode, public Executable
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderNode );
 
-		ExecutableOpHolder( const std::string &name=staticTypeName() );
+		ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
 			
 		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
 		

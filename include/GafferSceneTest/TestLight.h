@@ -49,10 +49,10 @@ class TestLight : public GafferScene::Light
 
 	public :
 
-		TestLight( const std::string &name=staticTypeName() );
+		TestLight( const std::string &name=defaultName<TestLight>() );
 		virtual ~TestLight();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TestLight, TestLightTypeId, GafferScene::Light );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
 		
 	protected :
 

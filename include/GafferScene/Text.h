@@ -47,9 +47,9 @@ class Text : public ObjectSource
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Text, TextTypeId, ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Text, TextTypeId, ObjectSource );
 
-		Text( const std::string &name=staticTypeName() );
+		Text( const std::string &name=defaultName<Text>() );
 		virtual ~Text();
 		
 		Gaffer::StringPlug *textPlug();

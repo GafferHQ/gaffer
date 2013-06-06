@@ -151,7 +151,13 @@ const T *GraphComponent::commonAncestor( const GraphComponent *other ) const
 {
 	return static_cast<const T *>( commonAncestor( other, T::staticTypeId() ) );
 }
-		
+
+template<typename T>
+std::string GraphComponent::defaultName()
+{
+	return unprefixedTypeName( T::staticTypeName() );
+}
+
 } // namespace Gaffer
 
 #endif // GAFFER_GRAPHCOMPONENT_INL

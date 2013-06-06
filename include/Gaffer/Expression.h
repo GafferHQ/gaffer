@@ -49,10 +49,10 @@ class Expression : public ComputeNode
 
 	public :
 
-		Expression( const std::string &name=staticTypeName() );
+		Expression( const std::string &name=defaultName<Expression>() );
 		virtual ~Expression();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Expression, ExpressionTypeId, ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Expression, ExpressionTypeId, ComputeNode );
 		
 		StringPlug *enginePlug();
 		const StringPlug *enginePlug() const;

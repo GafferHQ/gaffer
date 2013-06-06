@@ -50,10 +50,10 @@ class Displays : public GlobalsProcessor
 
 	public :
 
-		Displays( const std::string &name=staticTypeName() );
+		Displays( const std::string &name=defaultName<Displays>() );
 		virtual ~Displays();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Displays, DisplaysTypeId, GlobalsProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Displays, DisplaysTypeId, GlobalsProcessor );
 		
 		Gaffer::CompoundPlug *displaysPlug();
 		const Gaffer::CompoundPlug *displaysPlug() const;

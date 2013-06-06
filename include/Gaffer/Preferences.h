@@ -48,10 +48,10 @@ class Preferences : public Node
 
 	public :
 
-		Preferences( const std::string &name=staticTypeName() );
+		Preferences( const std::string &name=defaultName<Preferences>() );
 		virtual ~Preferences();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Preferences, PreferencesTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Preferences, PreferencesTypeId, Node );
 		
 		/// Accepts only Plugs.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;

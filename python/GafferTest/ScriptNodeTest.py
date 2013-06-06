@@ -60,7 +60,7 @@ class ScriptNodeTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		self.assertEqual( s.getName(), "ScriptNode" )
 		
-		self.assertEqual( s["fileName"].typeName(), "StringPlug" )
+		self.assertEqual( s["fileName"].typeName(), "Gaffer::StringPlug" )
 		
 	def testExecution( self ) :
 	
@@ -96,7 +96,7 @@ class ScriptNodeTest( unittest.TestCase ) :
 		self.assertEqual( ScriptNodeTest.lastResult, 100 )
 				
 		p = s.evaluate( "Gaffer.IntPlug()" )
-		self.assertEqual( p.typeName(), "IntPlug" )
+		self.assertEqual( p.typeName(), "Gaffer::IntPlug" )
 		self.assertEqual( ScriptNodeTest.lastNode, s )
 		self.assertEqual( ScriptNodeTest.lastScript, "Gaffer.IntPlug()" )
 		self.assert_( p.isSame( ScriptNodeTest.lastResult ) )
@@ -262,7 +262,7 @@ class ScriptNodeTest( unittest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( se )
 		
-		self.assertEqual( s2["in"].typeName(), "Node" )
+		self.assertEqual( s2["in"].typeName(), "Gaffer::Node" )
 	
 	# Executing the result of serialise() shouldn't leave behind any residue.
 	def testSerialisationPollution( self ) :

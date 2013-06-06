@@ -47,10 +47,10 @@ class Prune : public FilteredSceneProcessor
 
 	public :
 
-		Prune( const std::string &name=staticTypeName() );
+		Prune( const std::string &name=defaultName<Prune>() );
 		virtual ~Prune();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Prune, PruneTypeId, FilteredSceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Prune, PruneTypeId, FilteredSceneProcessor );
 		
 		Gaffer::BoolPlug *adjustBoundsPlug();
 		const Gaffer::BoolPlug *adjustBoundsPlug() const;

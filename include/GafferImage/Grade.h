@@ -55,10 +55,10 @@ class Grade : public ChannelDataProcessor
 
 	public :
 		
-		Grade( const std::string &name=staticTypeName() );
+		Grade( const std::string &name=defaultName<Grade>() );
 		virtual ~Grade();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Grade, GradeTypeId, ChannelDataProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Grade, GradeTypeId, ChannelDataProcessor );
 		
         //! @name Plug Accessors
         /// Returns a pointer to the node's plugs.

@@ -54,10 +54,10 @@ class CompoundObjectSource : public GafferScene::Source
 
 	public :
 
-		CompoundObjectSource( const std::string &name=staticTypeName() );
+		CompoundObjectSource( const std::string &name=defaultName<CompoundObjectSource>() );
 		virtual ~CompoundObjectSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::Source );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::Source );
 
 		Gaffer::ObjectPlug *inPlug();
 		const Gaffer::ObjectPlug *inPlug() const;

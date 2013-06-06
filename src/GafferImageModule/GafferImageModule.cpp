@@ -87,7 +87,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 			init< const std::string &, Gaffer::Plug::Direction, unsigned >
 			(
 				(
-					arg( "name" ) = ImagePlug::staticTypeName(),
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<ImagePlug>(),
 					arg( "direction" ) = Gaffer::Plug::In,
 					arg( "flags" ) = Gaffer::Plug::Default
 				)

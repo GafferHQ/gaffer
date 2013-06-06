@@ -70,7 +70,7 @@ static IECore::InternedString g_wireframeColorName( "renderableGadget:wireframeC
 static IECore::InternedString g_drawWireframeName( "renderableGadget:drawWireframe" );
 
 RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
-	: Gadget( staticTypeName() ),
+	: Gadget( defaultName<RenderableGadget>() ),
 	  m_renderable( 0 ),
 	  m_scene( 0 ),
 	  m_baseState( new IECoreGL::State( true ) ),

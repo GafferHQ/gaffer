@@ -47,10 +47,10 @@ class OpenGLShader : public GafferScene::Shader
 
 	public :
 
-		OpenGLShader( const std::string &name=staticTypeName() );
+		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
 		virtual ~OpenGLShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
 		
 		void loadShader( const std::string &shaderName );
 

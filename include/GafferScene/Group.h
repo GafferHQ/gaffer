@@ -50,10 +50,10 @@ class Group : public SceneProcessor
 
 	public :
 
-		Group( const std::string &name=staticTypeName() );
+		Group( const std::string &name=defaultName<Group>() );
 		virtual ~Group();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Group, GroupTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Group, GroupTypeId, SceneProcessor );
 		
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;

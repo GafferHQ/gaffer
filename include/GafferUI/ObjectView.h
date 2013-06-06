@@ -51,9 +51,9 @@ class ObjectView : public View3D
 
 	public :
 
-		ObjectView( const std::string &name = staticTypeName() );
+		ObjectView( const std::string &name = defaultName<ObjectView>() );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ObjectView, ObjectViewTypeId, View3D );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ObjectView, ObjectViewTypeId, View3D );
 
 	protected :
 

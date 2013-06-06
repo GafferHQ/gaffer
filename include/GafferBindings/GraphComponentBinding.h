@@ -52,7 +52,7 @@ class GraphComponentWrapper : public WrappedType, public IECorePython::Wrapper<W
 
 	public :
 	
-		GraphComponentWrapper( PyObject *self, const std::string &name=WrappedType::staticTypeName() )
+		GraphComponentWrapper( PyObject *self, const std::string &name=Gaffer::GraphComponent::defaultName<WrappedType>() )
 			:	WrappedType( name ), IECorePython::Wrapper<WrappedType>( self, this )
 		{
 		}

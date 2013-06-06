@@ -39,8 +39,8 @@
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ContextProcessorComputeNode, ContextProcessorComputeNodeTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( TimeWarpComputeNode, TimeWarpComputeNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ContextProcessorComputeNode, ContextProcessorComputeNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::TimeWarpComputeNode, TimeWarpComputeNodeTypeId )
 
 }
 

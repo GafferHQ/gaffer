@@ -52,10 +52,10 @@ class SceneWriter : public Gaffer::Node
 
 	public :
 
-		SceneWriter( const std::string &name=staticTypeName() );
+		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
 		virtual ~SceneWriter();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneWriter, SceneWriterTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, Node );
 		
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;

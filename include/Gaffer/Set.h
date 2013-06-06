@@ -56,7 +56,7 @@ class Set : public IECore::RunTimeTyped, public boost::signals::trackable
 		Set();
 		virtual ~Set();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Set, SetTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Set, SetTypeId, IECore::RunTimeTyped );
 	
 		typedef IECore::RunTimeTyped Member;
 		typedef Member::Ptr MemberPtr;

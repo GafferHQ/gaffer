@@ -58,7 +58,7 @@ class ConnectionGadget : public Gadget
 		ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 		virtual ~ConnectionGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ConnectionGadget, ConnectionGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, Gadget );
 		
 		/// Accepts only GraphGadgets as parent.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		

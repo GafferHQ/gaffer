@@ -56,9 +56,9 @@ class OpHolder : public ParameterisedHolderComputeNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpHolder, OpHolderTypeId, ParameterisedHolderComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::OpHolder, OpHolderTypeId, ParameterisedHolderComputeNode );
 
-		OpHolder( const std::string &name=staticTypeName() );
+		OpHolder( const std::string &name=defaultName<OpHolder>() );
 			
 		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
 		

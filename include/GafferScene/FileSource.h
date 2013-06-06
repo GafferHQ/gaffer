@@ -50,10 +50,10 @@ class FileSource : public Source
 
 	public :
 
-		FileSource( const std::string &name=staticTypeName() );
+		FileSource( const std::string &name=defaultName<FileSource>() );
 		virtual ~FileSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( FileSource, FileSourceTypeId, Source )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FileSource, FileSourceTypeId, Source )
 		
 		/// Holds the name of the file to be loaded.
 		Gaffer::StringPlug *fileNamePlug();

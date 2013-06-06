@@ -49,10 +49,10 @@ class RenderManAttributes : public GafferScene::Attributes
 
 	public :
 
-		RenderManAttributes( const std::string &name=staticTypeName() );
+		RenderManAttributes( const std::string &name=defaultName<RenderManAttributes>() );
 		virtual ~RenderManAttributes();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManAttributes, RenderManAttributesTypeId, GafferScene::Attributes );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManAttributes, RenderManAttributesTypeId, GafferScene::Attributes );
 				
 };
 

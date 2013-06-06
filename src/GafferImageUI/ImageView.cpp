@@ -76,7 +76,7 @@ class ImageViewGadget : public GafferUI::Gadget
 	public :
 
 		ImageViewGadget( IECore::ConstImagePrimitivePtr image )
-			:	Gadget( staticTypeName() ),
+			:	Gadget( defaultName<ImageViewGadget>() ),
 				m_displayBound( image->bound() ),
 				m_displayWindow( image->getDisplayWindow() ),
 				m_dataWindow( image->getDataWindow() ),

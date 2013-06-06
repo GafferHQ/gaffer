@@ -59,7 +59,7 @@ static void bind()
 	IECorePython::RunTimeTypedClass<T>()
 		.def( init<const std::string &, Plug::Direction, const V &, unsigned>( 
 				(
-					boost::python::arg_( "name" )=T::staticTypeName(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
 					boost::python::arg_( "flags" )=Plug::Default

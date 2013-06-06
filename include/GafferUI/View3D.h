@@ -47,7 +47,7 @@ class View3D : public View
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( View3D, View3DTypeId, View );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::View3D, View3DTypeId, View );
 			
 	protected :
 

@@ -57,10 +57,10 @@ class ImagePlug : public Gaffer::CompoundPlug
 
 	public :
 			
-		ImagePlug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
+		ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ImagePlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImagePlug, ImagePlugTypeId, CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImagePlug, ImagePlugTypeId, CompoundPlug );
 
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;

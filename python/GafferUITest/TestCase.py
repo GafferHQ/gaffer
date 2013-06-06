@@ -37,10 +37,11 @@
 import sys
 import unittest
 
+import GafferTest
 import GafferUI
 
 ## A useful base class for creating test cases for the ui.
-class TestCase( unittest.TestCase ) :
+class TestCase( GafferTest.TestCase ) :
 		
 	def tearDown( self ) :
 	

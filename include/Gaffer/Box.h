@@ -57,10 +57,10 @@ class Box : public Node
 
 	public :
 
-		Box( const std::string &name=staticTypeName() );
+		Box( const std::string &name=defaultName<Box>() );
 		virtual ~Box();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Box, BoxTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, Node );
 		
 		/// Returns true if promotePlug() can be used with the
 		/// specified descendant.

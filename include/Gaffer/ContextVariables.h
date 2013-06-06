@@ -52,7 +52,7 @@ class ContextVariables : public ContextProcessor<BaseType>
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ContextVariables<BaseType>, ContextProcessor<BaseType> );
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextVariables<BaseType> );
 
-		ContextVariables( const std::string &name=staticTypeName() );
+		ContextVariables( const std::string &name=GraphComponent::defaultName<ContextVariables>() );
 		virtual ~ContextVariables();
 		
 		CompoundDataPlug *variablesPlug();

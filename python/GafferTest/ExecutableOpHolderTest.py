@@ -58,7 +58,7 @@ class ExecutableOpHolderTest( unittest.TestCase ) :
 	def testType( self ) :
 	
 		n = Gaffer.ExecutableOpHolder()
-		self.assertEqual( n.typeName(), "ExecutableOpHolder" )
+		self.assertEqual( n.typeName(), "Gaffer::ExecutableOpHolder" )
 		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
 

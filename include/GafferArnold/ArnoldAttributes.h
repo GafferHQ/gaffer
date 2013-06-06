@@ -49,10 +49,10 @@ class ArnoldAttributes : public GafferScene::Attributes
 
 	public :
 
-		ArnoldAttributes( const std::string &name=staticTypeName() );
+		ArnoldAttributes( const std::string &name=defaultName<ArnoldAttributes>() );
 		virtual ~ArnoldAttributes();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldAttributes, ArnoldAttributesTypeId, GafferScene::Attributes );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAttributes, ArnoldAttributesTypeId, GafferScene::Attributes );
 				
 };
 

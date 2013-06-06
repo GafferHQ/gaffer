@@ -66,10 +66,10 @@ class Gadget : public Gaffer::GraphComponent
 
 	public :
 
-		Gadget( const std::string &name=staticTypeName() );
+		Gadget( const std::string &name=defaultName<Gadget>() );
 		virtual ~Gadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gadget, GadgetTypeId, Gaffer::GraphComponent );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );
 
 		/// Returns the Gadget with the specified name, where name has been retrieved
 		/// from an IECoreGL::HitRecord after rendering some Gadget in GL_SELECT mode.

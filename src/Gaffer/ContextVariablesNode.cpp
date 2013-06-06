@@ -39,7 +39,7 @@
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ContextVariablesComputeNode, ContextVariablesComputeNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ContextVariablesComputeNode, ContextVariablesComputeNodeTypeId )
 
 }
 

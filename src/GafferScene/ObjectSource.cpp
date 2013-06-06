@@ -39,7 +39,7 @@
 namespace GafferScene
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( ObjectSource, ObjectSourceTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::ObjectSource, ObjectSourceTypeId )
 
 // explicit instantiation
 template class GafferScene::ObjectSourceBase<Source>;

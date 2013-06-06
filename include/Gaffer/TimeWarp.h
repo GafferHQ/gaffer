@@ -52,7 +52,7 @@ class TimeWarp : public ContextProcessor<BaseType>
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TimeWarp<BaseType>, ContextProcessor<BaseType> );
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TimeWarp<BaseType> );
 
-		TimeWarp( const std::string &name=staticTypeName() );
+		TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
 		virtual ~TimeWarp();
 		
 		FloatPlug *speedPlug();

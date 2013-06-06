@@ -42,8 +42,8 @@ using namespace GafferScene;
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( SceneContextProcessor, SceneContextProcessorTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( SceneTimeWarp, SceneTimeWarpTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextProcessor, SceneContextProcessorTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneTimeWarp, SceneTimeWarpTypeId )
 
 }
 

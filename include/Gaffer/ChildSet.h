@@ -52,7 +52,7 @@ class ChildSet : public Gaffer::Set
 		ChildSet( GraphComponentPtr parent );
 		virtual ~ChildSet();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChildSet, ChildSetTypeId, Gaffer::Set );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ChildSet, ChildSetTypeId, Gaffer::Set );
 		
 		/// @name Implementation of the Set interface
 		////////////////////////////////////////////////////////////////////

@@ -49,10 +49,10 @@ class MultiplyNode : public Gaffer::ComputeNode
 
 	public :
 
-		MultiplyNode( const std::string &name=staticTypeName() );
+		MultiplyNode( const std::string &name=defaultName<MultiplyNode>() );
 		virtual ~MultiplyNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferTest::MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		

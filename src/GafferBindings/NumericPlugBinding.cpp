@@ -53,7 +53,7 @@ using namespace Gaffer;
 template<typename T>
 static std::string repr( const T *plug )
 {
-	std::string result = std::string( "Gaffer." ) + plug->typeName() + "( \"" + plug->getName().string() + "\", ";
+	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{
@@ -93,7 +93,7 @@ static void bind()
 	IECorePython::RunTimeTypedClass<T>()
 		.def( init<const char *, Plug::Direction, typename T::ValueType, typename T::ValueType, typename T::ValueType, unsigned>(
 				(
-					boost::python::arg_( "name" )=T::staticTypeName(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
 					boost::python::arg_( "minValue" )=Imath::limits<V>::min(),

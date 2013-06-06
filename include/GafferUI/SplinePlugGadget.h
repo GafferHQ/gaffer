@@ -52,10 +52,10 @@ class SplinePlugGadget : public Gadget
 
 	public :
 
-		SplinePlugGadget( const std::string &name=staticTypeName() );
+		SplinePlugGadget( const std::string &name=defaultName<SplinePlugGadget>() );
 		virtual ~SplinePlugGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SplinePlugGadget, SplinePlugGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::SplinePlugGadget, SplinePlugGadgetTypeId, Gadget );
 
 		/// The splines to be edited
 		Gaffer::StandardSetPtr splines();

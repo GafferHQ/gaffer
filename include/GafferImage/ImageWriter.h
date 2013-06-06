@@ -56,10 +56,10 @@ class ImageWriter : public Gaffer::ExecutableNode
 			Tile = 1
 		};
 
-		ImageWriter( const std::string &name=staticTypeName() );
+		ImageWriter( const std::string &name=defaultName<ImageWriter>() );
 		virtual ~ImageWriter();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageWriter, ImageWriterTypeId, ExecutableNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageWriter, ImageWriterTypeId, ExecutableNode );
 		
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;

@@ -42,10 +42,11 @@ import subprocess
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferArnold
 
-class ArnoldRenderTest( unittest.TestCase ) :
+class ArnoldRenderTest( GafferTest.TestCase ) :
 
 	__scriptFileName = "/tmp/test.gfr"
 	
@@ -165,7 +166,16 @@ class ArnoldRenderTest( unittest.TestCase ) :
 			
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( "/tmp/test.%04d.tif" % i ) )		
-		
+	
+	def testTypeNamePrefixes( self ) :
+	
+		self.assertTypeNamesArePrefixed( GafferArnold )
+	
+	def testDefaultNames( self ) :
+	
+		self.assertDefaultNamesAreCorrect( GafferArnold )
+	
+	
 	def setUp( self ) :
 	
 		if os.path.exists( "/tmp/test.tif" ) :

@@ -54,10 +54,10 @@ class DependencyNode : public Node
 
 	public :
 
-		DependencyNode( const std::string &name=staticTypeName() );
+		DependencyNode( const std::string &name=defaultName<DependencyNode>() );
 		virtual ~DependencyNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( DependencyNode, DependencyNodeTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::DependencyNode, DependencyNodeTypeId, Node );
 
 		typedef std::vector<const Plug *> AffectedPlugsContainer;
 		

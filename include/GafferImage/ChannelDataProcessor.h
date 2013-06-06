@@ -51,10 +51,10 @@ class ChannelDataProcessor : public ImageProcessor
 
 	public :
 
-		ChannelDataProcessor( const std::string &name=staticTypeName() );
+		ChannelDataProcessor( const std::string &name=defaultName<ChannelDataProcessor>() );
 		virtual ~ChannelDataProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		

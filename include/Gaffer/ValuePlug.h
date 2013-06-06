@@ -58,7 +58,7 @@ class ValuePlug : public Plug
 	
 		virtual ~ValuePlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ValuePlug, ValuePlugTypeId, Plug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
 
 		/// Accepts the input only if it is derived from ValuePlug.
 		/// Derived classes may accept more types provided they

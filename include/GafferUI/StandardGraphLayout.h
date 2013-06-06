@@ -63,7 +63,7 @@ class StandardGraphLayout : public GraphLayout
 		StandardGraphLayout();		
 		virtual ~StandardGraphLayout();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardGraphLayout, StandardGraphLayoutTypeId, GraphLayout );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardGraphLayout, StandardGraphLayoutTypeId, GraphLayout );
 
 		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const;
 		virtual bool connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const;

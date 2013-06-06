@@ -47,10 +47,10 @@ class Constraint : public SceneElementProcessor
 
 	public :
 
-		Constraint( const std::string &name=staticTypeName() );
+		Constraint( const std::string &name=defaultName<Constraint>() );
 		virtual ~Constraint();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Constraint, ConstraintTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Constraint, ConstraintTypeId, SceneElementProcessor );
 		
 		enum TargetMode
 		{

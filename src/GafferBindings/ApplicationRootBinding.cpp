@@ -62,7 +62,7 @@ class ApplicationRootWrapper : public ApplicationRoot, public IECorePython::Wrap
 
 	public :
 
-		ApplicationRootWrapper( PyObject *self, const std::string &name = staticTypeName() )
+		ApplicationRootWrapper( PyObject *self, const std::string &name = defaultName<ApplicationRoot>() )
 			:	ApplicationRoot( name ), IECorePython::Wrapper<ApplicationRoot>( self, this )
 		{
 		}

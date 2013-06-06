@@ -85,7 +85,7 @@ class StandardSet : public Gaffer::Set
 		StandardSet();
 		virtual ~StandardSet();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardSet, StandardSetTypeId, Gaffer::Set );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StandardSet, StandardSetTypeId, Gaffer::Set );
 		
 		typedef boost::signal<bool ( const StandardSet *, const Member * ), Detail::MemberAcceptanceCombiner> MemberAcceptanceSignal;
 		/// This signal is emitted to determine whether or not a member is eligible

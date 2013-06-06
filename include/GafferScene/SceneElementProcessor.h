@@ -50,10 +50,10 @@ class SceneElementProcessor : public FilteredSceneProcessor
 
 	public :
 
-		SceneElementProcessor( const std::string &name=staticTypeName(), Filter::Result filterDefault = Filter::Match );
+		SceneElementProcessor( const std::string &name=defaultName<SceneElementProcessor>(), Filter::Result filterDefault = Filter::Match );
 		virtual ~SceneElementProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );
 				
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;

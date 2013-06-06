@@ -45,7 +45,7 @@ import Gaffer
 
 class WriteNode( Gaffer.ExecutableNode ) :
 
-	def __init__( self, name="Write" ) :
+	def __init__( self, name="WriteNode" ) :
 	
 		Gaffer.ExecutableNode.__init__( self, name )
 		

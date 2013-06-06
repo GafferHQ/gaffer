@@ -58,7 +58,7 @@ class ViewportGadget : public IndividualContainer
 		ViewportGadget( GadgetPtr child=0 );
 		virtual ~ViewportGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ViewportGadget, ViewportGadgetTypeId, IndividualContainer );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, IndividualContainer );
 
 		/// Accepts no parents - the ViewportGadget must always be the topmost Gadget.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;

@@ -59,7 +59,7 @@ class BoxPlug : public CompoundPlug
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( BoxPlug<T>, CompoundPlug );
 
 		BoxPlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<BoxPlug>(),
 			Direction direction=In,
 			T defaultValue = T(),
 			unsigned flags = Default

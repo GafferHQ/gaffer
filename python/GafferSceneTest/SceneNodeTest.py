@@ -40,10 +40,11 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class SceneNodeTest( unittest.TestCase ) :
+class SceneNodeTest( GafferTest.TestCase ) :
 
 	def testRootConstraints( self ) :
 	
@@ -82,6 +83,14 @@ class SceneNodeTest( unittest.TestCase ) :
 		)
 		
 		self.assertEqual( node["out"].attributes( "/" ), IECore.CompoundObject() )
+
+	def testTypeNamePrefixes( self ) :
 	
+		self.assertTypeNamesArePrefixed( GafferScene, namesToIgnore = set( ( "IECore::PathMatcherData", ) ) )
+
+	def testDefaultNames( self ) :
+	
+		self.assertDefaultNamesAreCorrect( GafferScene )
+
 if __name__ == "__main__":
 	unittest.main()

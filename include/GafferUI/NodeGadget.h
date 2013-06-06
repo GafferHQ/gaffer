@@ -56,7 +56,7 @@ class NodeGadget : public IndividualContainer
 
 		virtual ~NodeGadget();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( NodeGadget, NodeGadgetTypeId, ContainerGadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NodeGadget, NodeGadgetTypeId, ContainerGadget );
 		
 		Gaffer::Node *node();
 		const Gaffer::Node *node() const;

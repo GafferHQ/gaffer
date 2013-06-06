@@ -149,6 +149,23 @@ std::string Serialisation::modulePath( boost::python::object &o )
 	return sanitisedModulePath;
 }
 
+std::string Serialisation::classPath( const IECore::RefCounted *object )
+{
+	boost::python::object o( RefCountedPtr( const_cast<RefCounted *>( object ) ) ); // we can only push non-const objects to python so we need the cast
+	return classPath( o );
+}
+
+std::string Serialisation::classPath( boost::python::object &object )
+{
+	std::string result = modulePath( object );
+	if( result.size() )
+	{
+		result += ".";
+	}
+	result += extract<std::string>( object.attr( "__class__" ).attr( "__name__" ) );
+	return result;
+}
+
 void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier )
 {
 	const Serialiser *parentSerialiser = serialiser( parent );

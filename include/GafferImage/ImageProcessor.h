@@ -50,10 +50,10 @@ class ImageProcessor : public ImageNode
 
 	public :
 
-		ImageProcessor( const std::string &name=staticTypeName() );
+		ImageProcessor( const std::string &name=defaultName<ImageProcessor>() );
 		virtual ~ImageProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageProcessor, ImageProcessorTypeId, ImageNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageProcessor, ImageProcessorTypeId, ImageNode );
 		
 		/// Images enter the node through inPlug() and are output in processed form on ImageNode::outPlug()
 		ImagePlug *inPlug();

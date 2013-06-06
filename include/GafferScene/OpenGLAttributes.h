@@ -47,10 +47,10 @@ class OpenGLAttributes : public GafferScene::Attributes
 
 	public :
 
-		OpenGLAttributes( const std::string &name=staticTypeName() );
+		OpenGLAttributes( const std::string &name=defaultName<OpenGLAttributes>() );
 		virtual ~OpenGLAttributes();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( OpenGLAttributes, OpenGLAttributesTypeId, Attributes );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLAttributes, OpenGLAttributesTypeId, Attributes );
 				
 };
 

@@ -63,7 +63,11 @@ class Serialisation
 		static std::string modulePath( const IECore::RefCounted *object );
 		/// As above, but returns the empty string for built in python types.
 		static std::string modulePath( boost::python::object &object );
-	
+		/// Convenience function to return the name of the class which object is an instance of.
+		static std::string classPath( const IECore::RefCounted *object );
+		/// Convenience function to return the name of the class which object is an instance of.
+		static std::string classPath( boost::python::object &object );
+				
 		/// The Serialiser class may be implemented differently for specific types to customise
 		/// their serialisation.
 		class Serialiser : public IECore::RefCounted

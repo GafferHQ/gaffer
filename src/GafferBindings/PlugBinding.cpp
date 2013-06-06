@@ -51,7 +51,7 @@ using namespace Gaffer;
 
 static std::string repr( const Plug *plug )
 {
-	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName().string() + "\", ";
+	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{
@@ -176,7 +176,7 @@ void GafferBindings::bindPlug()
 	c.def(  init< const std::string &, Plug::Direction, unsigned >
 			(
 				(
-					arg( "name" ) = Plug::staticTypeName(),
+					arg( "name" ) = GraphComponent::defaultName<Plug>(),
 					arg( "direction" ) = Plug::In,
 					arg( "flags" ) = Plug::Default
 				)

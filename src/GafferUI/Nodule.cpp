@@ -47,7 +47,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Nodule );
 
 Nodule::Nodule( Gaffer::PlugPtr plug )
-	:	Gadget( staticTypeName() ), m_plug( plug )
+	:	Gadget( defaultName<Nodule>() ), m_plug( plug )
 {
 }
 

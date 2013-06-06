@@ -42,7 +42,7 @@ using namespace GafferScene;
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( SceneContextVariables, SceneContextVariablesTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextVariables, SceneContextVariablesTypeId )
 
 }
 
