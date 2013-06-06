@@ -41,7 +41,7 @@ using namespace GafferUI;
 IE_CORE_DEFINERUNTIMETYPED( IndividualContainer );
 
 IndividualContainer::IndividualContainer( GadgetPtr child )
-	:	ContainerGadget( staticTypeName() )
+	:	ContainerGadget( defaultName<IndividualContainer>() )
 {
 	setChild( child );
 }

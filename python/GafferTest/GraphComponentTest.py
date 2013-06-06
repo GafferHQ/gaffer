@@ -44,7 +44,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class GraphComponentTest( unittest.TestCase ) :
+class GraphComponentTest( GafferTest.TestCase ) :
 
 	def testName( self ) :
 	
@@ -646,6 +646,14 @@ class GraphComponentTest( unittest.TestCase ) :
 		a = Gaffer.GraphComponent()
 		self.assertRaises( RuntimeError, a.addChild, a )
 		
+	def testTypeNamePrefixes( self ) :
+	
+		self.assertTypeNamesArePrefixed( Gaffer )
+		
+	def testDefaultNames( self ) :
+	
+		self.assertDefaultNamesAreCorrect( Gaffer )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

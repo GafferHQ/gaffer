@@ -49,10 +49,10 @@ class Transform : public SceneElementProcessor
 
 	public :
 
-		Transform( const std::string &name=staticTypeName() );
+		Transform( const std::string &name=defaultName<Transform>() );
 		virtual ~Transform();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Transform, TransformTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Transform, TransformTypeId, SceneElementProcessor );
 		
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;

@@ -53,9 +53,9 @@ class Display : public ImagePrimitiveNode
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Display, DisplayTypeId, ImagePrimitiveNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Display, DisplayTypeId, ImagePrimitiveNode );
 
-		Display( const std::string &name = staticTypeName() );
+		Display( const std::string &name = defaultName<Display>() );
 		virtual ~Display();
 		
 		Gaffer::IntPlug *portPlug();

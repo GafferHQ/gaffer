@@ -47,10 +47,10 @@ class StandardAttributes : public Attributes
 
 	public :
 
-		StandardAttributes( const std::string &name=staticTypeName() );
+		StandardAttributes( const std::string &name=defaultName<StandardAttributes>() );
 		virtual ~StandardAttributes();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardAttributes, StandardAttributesTypeId, Attributes );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::StandardAttributes, StandardAttributesTypeId, Attributes );
 				
 };
 

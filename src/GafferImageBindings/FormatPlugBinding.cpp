@@ -162,7 +162,7 @@ void GafferImageBindings::bindFormatPlug()
 	IECorePython::RunTimeTypedClass<FormatPlug>()
 		.def( init<const std::string &, Plug::Direction, const Format &, unsigned>(
 				(
-					boost::python::arg_( "name" )=FormatPlug::staticTypeName(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<FormatPlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=Format(),
 					boost::python::arg_( "flags" )=Plug::Default

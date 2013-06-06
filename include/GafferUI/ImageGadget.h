@@ -65,7 +65,7 @@ class ImageGadget : public Gadget
 		ImageGadget( const IECore::ConstImagePrimitivePtr image );
 		virtual ~ImageGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageGadget, ImageGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ImageGadget, ImageGadgetTypeId, Gadget );
 
 		virtual Imath::Box3f bound() const;
 			

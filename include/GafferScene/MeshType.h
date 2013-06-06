@@ -48,10 +48,10 @@ class MeshType : public SceneElementProcessor
 
 	public :
 
-		MeshType( const std::string &name=staticTypeName() );
+		MeshType( const std::string &name=defaultName<MeshType>() );
 		virtual ~MeshType();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( MeshType, MeshTypeTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::MeshType, MeshTypeTypeId, SceneElementProcessor );
 		
 		Gaffer::StringPlug *meshTypePlug();
 		const Gaffer::StringPlug *meshTypePlug() const;

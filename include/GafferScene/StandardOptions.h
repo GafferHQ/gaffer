@@ -48,10 +48,10 @@ class StandardOptions : public Options
 
 	public :
 
-		StandardOptions( const std::string &name=staticTypeName() );
+		StandardOptions( const std::string &name=defaultName<StandardOptions>() );
 		virtual ~StandardOptions();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardOptions, StandardOptionsTypeId, Options );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::StandardOptions, StandardOptionsTypeId, Options );
 				
 };
 

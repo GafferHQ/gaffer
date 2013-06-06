@@ -117,6 +117,10 @@ class GadgetTest( GafferUITest.TestCase ) :
 		
 		self.failUnless( g.style().isSame( s ) )
 		self.failUnless( l.style().isSame( s ) )	
+
+	def testTypeNamePrefixes( self ) :
+	
+		self.assertTypeNamesArePrefixed( GafferUI )
 	
 if __name__ == "__main__":
 	unittest.main()

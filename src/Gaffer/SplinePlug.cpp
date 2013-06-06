@@ -293,8 +293,8 @@ namespace Gaffer
 {
 
 // RunTimeTyped specialisation
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( SplineffPlug, SplineffPlugTypeId )
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( SplinefColor3fPlug, SplinefColor3fPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplineffPlug, SplineffPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor3fPlug, SplinefColor3fPlugTypeId )
 
 }
 

@@ -53,10 +53,10 @@ class RenderManShader : public GafferScene::Shader
 
 	public :
 
-		RenderManShader( const std::string &name=staticTypeName() );
+		RenderManShader( const std::string &name=defaultName<RenderManShader>() );
 		virtual ~RenderManShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
 		
 		/// \undoable.
 		/// \todo Make this method virtual and define it on the Shader base class.

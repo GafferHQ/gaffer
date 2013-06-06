@@ -55,7 +55,7 @@ void GafferBindings::bindTransform2DPlug()
 			init< const std::string &, Gaffer::Plug::Direction, unsigned >
 			(
 				(
-					arg( "name" ) = Gaffer::Transform2DPlug::staticTypeName(),
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<Transform2DPlug>(),
 					arg( "direction" ) = Gaffer::Plug::In,
 					arg( "flags" ) = Gaffer::Plug::Default
 				)

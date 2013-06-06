@@ -82,7 +82,7 @@ void GafferBindings::bindCompoundPlug()
 		.def(	init< const std::string &, Plug::Direction, unsigned >
 				(
 					(
-						arg( "name" ) = CompoundPlug::staticTypeName(),
+						arg( "name" ) = GraphComponent::defaultName<CompoundPlug>(),
 						arg( "direction" ) = Plug::In,
 						arg( "flags" ) = Plug::Default
 					)

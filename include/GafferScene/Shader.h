@@ -55,10 +55,10 @@ class Shader : public Gaffer::DependencyNode
 
 	public :
 
-		Shader( const std::string &name=staticTypeName() );
+		Shader( const std::string &name=defaultName<Shader>() );
 		virtual ~Shader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Shader, ShaderTypeId, Gaffer::DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Shader, ShaderTypeId, Gaffer::DependencyNode );
 		
 		/// A plug defining the name of the shader.
 		Gaffer::StringPlug *namePlug();

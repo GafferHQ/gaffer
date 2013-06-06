@@ -54,10 +54,10 @@ class Transform2DPlug : public CompoundPlug
 
 	public :
 
-		Transform2DPlug( const std::string &name = staticTypeName(), Direction direction=In, unsigned flags = Default );
+		Transform2DPlug( const std::string &name = defaultName<Transform2DPlug>(), Direction direction=In, unsigned flags = Default );
 		virtual ~Transform2DPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Transform2DPlug, Transform2DPlugTypeId, CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Transform2DPlug, Transform2DPlugTypeId, CompoundPlug );
 
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;

@@ -63,7 +63,7 @@ class StandardStyle : public Style
 		StandardStyle();
 		virtual ~StandardStyle();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( StandardStyle, StandardStyleTypeId, Style );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardStyle, StandardStyleTypeId, Style );
 
 		virtual void bind( const Style *currentStyle=0 ) const;
 

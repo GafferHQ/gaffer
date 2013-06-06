@@ -48,10 +48,10 @@ class ModelCacheSource : public FileSource
 
 	public :
 
-		ModelCacheSource( const std::string &name=staticTypeName() );
+		ModelCacheSource( const std::string &name=defaultName<ModelCacheSource>() );
 		virtual ~ModelCacheSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ModelCacheSource, ModelCacheSourceTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ModelCacheSource, ModelCacheSourceTypeId, FileSource )
 		
 	private :
 	

@@ -52,10 +52,10 @@ class ImageNode : public Gaffer::ComputeNode
 
 	public :
 
-		ImageNode( const std::string &name=staticTypeName() );
+		ImageNode( const std::string &name=defaultName<ImageNode>() );
 		virtual ~ImageNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
 		
 		/// All ImageNodes have at least one output ImagePlug for passing on their result. More
 		/// may be added by derived classes if necessary.

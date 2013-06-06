@@ -92,7 +92,7 @@ void GafferBindings::bindCompoundDataPlug()
 	IECorePython::RunTimeTypedClass<CompoundDataPlug>()
 		.def( "__init__", make_constructor( compoundDataPlugConstructor, default_call_policies(),  
 				(
-					arg( "name" ) = CompoundDataPlug::staticTypeName(),
+					arg( "name" ) = GraphComponent::defaultName<CompoundDataPlug>(),
 					arg( "direction" ) = Gaffer::Plug::In,
 					arg( "flags" ) = Gaffer::Plug::Default,
 					arg( "children" ) = tuple()

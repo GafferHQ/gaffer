@@ -49,9 +49,9 @@ class RenderManLight : public GafferScene::Light
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderManLight, RenderManLightTypeId, GafferScene::Light );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManLight, RenderManLightTypeId, GafferScene::Light );
 
-		RenderManLight( const std::string &name=staticTypeName() );
+		RenderManLight( const std::string &name=defaultName<RenderManLight>() );
 		virtual ~RenderManLight();
 
 		void loadShader( const std::string &shaderName );

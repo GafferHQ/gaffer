@@ -58,7 +58,7 @@ class TypedPlug : public ValuePlug
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TypedPlug<T>, ValuePlug );
 
 		TypedPlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<TypedPlug>(),
 			Direction direction=In,
 			const T &defaultValue = T(),
 			unsigned flags = Default

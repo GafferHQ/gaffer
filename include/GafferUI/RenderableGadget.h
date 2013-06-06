@@ -66,7 +66,7 @@ class RenderableGadget : public Gadget
 		RenderableGadget( IECore::VisibleRenderablePtr renderable = 0 );
 		virtual ~RenderableGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( RenderableGadget, RenderableGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::RenderableGadget, RenderableGadgetTypeId, Gadget );
 
 		virtual Imath::Box3f bound() const;
 		

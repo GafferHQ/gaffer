@@ -90,7 +90,7 @@ void GafferUIBindings::bindLinearContainer()
 	// python values for the default arguments
 	c.def( init< optional<const std::string &, LinearContainer::Orientation, LinearContainer::Alignment, float, LinearContainer::Direction> >(
 			(
-				arg_( "name" )=LinearContainer::staticTypeName(),
+				arg_( "name" )=Gaffer::GraphComponent::defaultName<LinearContainer>(),
 				arg_( "orientation" )=LinearContainer::X,
 				arg_( "alignment" )=LinearContainer::Centre,
 				arg_( "spacing" )=0.0f,

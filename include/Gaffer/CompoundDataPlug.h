@@ -55,13 +55,13 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 	public :
 		
 		CompoundDataPlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<CompoundDataPlug>(),
 			Direction direction=In,
 			unsigned flags = Default
 		);
 		virtual ~CompoundDataPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::CompoundPlug );
 
 		/// Accepts only children that can generate values for the CompoundData.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;

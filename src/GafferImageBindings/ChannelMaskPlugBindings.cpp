@@ -86,7 +86,7 @@ namespace GafferImageBindings
 		IECorePython::RunTimeTypedClass<ChannelMaskPlug>()
 			.def( "__init__", make_constructor( constructChannelMask, default_call_policies(),
 						(
-						 boost::python::arg_( "name" )=ChannelMaskPlug::staticTypeName(),
+						 boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<ChannelMaskPlug>(),
 						 boost::python::arg_( "direction" )=Gaffer::Plug::In,
 						 boost::python::arg_( "defaultValue" ),
 						 boost::python::arg_( "flags" )=Gaffer::Plug::Default

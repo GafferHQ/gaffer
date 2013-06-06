@@ -52,7 +52,7 @@ class NameGadget : public TextGadget
 		NameGadget( Gaffer::GraphComponentPtr object );
 		virtual ~NameGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( NameGadget, NameGadgetTypeId, TextGadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NameGadget, NameGadgetTypeId, TextGadget );
 
 	private :
 	

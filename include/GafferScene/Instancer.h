@@ -48,10 +48,10 @@ class Instancer : public BranchCreator
 
 	public :
 
-		Instancer( const std::string &name=staticTypeName() );
+		Instancer( const std::string &name=defaultName<Instancer>() );
 		virtual ~Instancer();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Instancer, InstancerTypeId, BranchCreator );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Instancer, InstancerTypeId, BranchCreator );
 		
 		ScenePlug *instancePlug();
 		const ScenePlug *instancePlug() const;

@@ -57,10 +57,10 @@ class Render : public Gaffer::Node
 
 	public :
 
-		Render( const std::string &name=staticTypeName() );
+		Render( const std::string &name=defaultName<Render>() );
 		virtual ~Render();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Render, RenderTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Render, RenderTypeId, Gaffer::Node );
 		
 		/// The scene to be rendered.
 		ScenePlug *inPlug();

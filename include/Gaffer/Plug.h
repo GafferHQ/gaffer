@@ -95,10 +95,10 @@ class Plug : public GraphComponent
 			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | ReadOnly
 		};
 	
-		Plug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
+		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~Plug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Plug, PlugTypeId, GraphComponent );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Plug, PlugTypeId, GraphComponent );
 
 		/// @name Parent-child relationships
 		//////////////////////////////////////////////////////////////////////

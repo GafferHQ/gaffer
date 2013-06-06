@@ -49,10 +49,10 @@ class InteractiveRender : public Render
 
 	public :
 
-		InteractiveRender( const std::string &name=staticTypeName() );
+		InteractiveRender( const std::string &name=defaultName<InteractiveRender>() );
 		virtual ~InteractiveRender();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( InteractiveRender, InteractiveRenderTypeId, Render );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::InteractiveRender, InteractiveRenderTypeId, Render );
 		
 		enum State
 		{

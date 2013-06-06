@@ -55,7 +55,7 @@ using namespace Gaffer;
 
 static std::string repr( const Plug *plug )
 {
-	std::string result = Serialisation::modulePath( plug ) + "." + plug->typeName() + "( \"" + plug->getName().string() + "\", ";
+	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{

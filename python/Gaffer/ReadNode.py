@@ -43,7 +43,7 @@ import Gaffer
 
 class ReadNode( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="Read" ) :
+	def __init__( self, name="ReadNode" ) :
 	
 		Gaffer.ComputeNode.__init__( self, name )
 		

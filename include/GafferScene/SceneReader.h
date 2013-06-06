@@ -47,10 +47,10 @@ class SceneReader : public FileSource
 
 	public :
 
-		SceneReader( const std::string &name=staticTypeName() );
+		SceneReader( const std::string &name=defaultName<SceneReader>() );
 		virtual ~SceneReader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneReader, SceneReaderTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneReader, SceneReaderTypeId, FileSource )
 		
 				
 	protected :

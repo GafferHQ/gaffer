@@ -62,7 +62,7 @@ class SplinePlug : public CompoundPlug
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( SplinePlug<T> );
 
 		SplinePlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<SplinePlug>(),
 			Direction direction=In,
 			const T &defaultValue = T(),
 			unsigned flags = Default

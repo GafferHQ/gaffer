@@ -55,10 +55,10 @@ class ScenePlug : public Gaffer::CompoundPlug
 
 	public :
 			
-		ScenePlug( const std::string &name=staticTypeName(), Direction direction=In, unsigned flags=Default );
+		ScenePlug( const std::string &name=defaultName<ScenePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ScenePlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ScenePlug, ScenePlugTypeId, CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ScenePlug, ScenePlugTypeId, CompoundPlug );
 
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;

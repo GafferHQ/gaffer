@@ -52,10 +52,10 @@ class SceneNode : public Gaffer::ComputeNode
 
 	public :
 
-		SceneNode( const std::string &name=staticTypeName() );
+		SceneNode( const std::string &name=defaultName<SceneNode>() );
 		virtual ~SceneNode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SceneNode, SceneNodeTypeId, Gaffer::ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneNode, SceneNodeTypeId, Gaffer::ComputeNode );
 		
 		/// All SceneNodes have at least one output ScenePlug for passing on their result. More
 		/// may be added by derived classes if necessary.

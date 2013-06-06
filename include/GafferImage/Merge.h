@@ -49,10 +49,10 @@ class Merge : public FilterProcessor
 
 	public :
 		
-		Merge( const std::string &name=staticTypeName() );
+		Merge( const std::string &name=defaultName<Merge>() );
 		virtual ~Merge();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Merge, MergeTypeId, FilterProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, FilterProcessor );
 		
         //! @name Plug Accessors
         /// Returns a pointer to the node's plugs.

@@ -39,9 +39,10 @@ import unittest
 
 import IECore
 import Gaffer
+import GafferTest
 import GafferImage
 
-class ImagePlugTest( unittest.TestCase ) :
+class ImagePlugTest( GafferTest.TestCase ) :
 
 	def testTileOrigin( self ) :
 
@@ -112,6 +113,14 @@ class ImagePlugTest( unittest.TestCase ) :
 		
 		self.assertTrue( isinstance( s["n"]["p"], GafferImage.ImagePlug ) )
 		self.assertEqual( s["n"]["p"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+	def testTypeNamePrefixes( self ) :
+	
+		self.assertTypeNamesArePrefixed( GafferImage, namesToIgnore = set( ( "IECore::FormatData", ) ) )
+
+	def testDefaultNames( self ) :
+	
+		self.assertDefaultNamesAreCorrect( GafferImage )
 	
 if __name__ == "__main__":
 	unittest.main()

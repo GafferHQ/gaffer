@@ -51,10 +51,10 @@ class ImageView : public GafferUI::View
 
 	public :
 
-		ImageView( const std::string &name = staticTypeName() );
+		ImageView( const std::string &name = defaultName<ImageView>() );
 		virtual ~ImageView();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageView, ImageViewTypeId, GafferUI::View );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
 	
 	protected :
 

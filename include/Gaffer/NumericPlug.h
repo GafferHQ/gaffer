@@ -58,7 +58,7 @@ class NumericPlug : public ValuePlug
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( NumericPlug<T>, ValuePlug );
 
 		NumericPlug(
-			const std::string &name = staticTypeName(),
+			const std::string &name = defaultName<NumericPlug>(),
 			Direction direction=In,
 			T defaultValue = T(),
 			T minValue = Imath::limits<T>::min(),

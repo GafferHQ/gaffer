@@ -52,10 +52,10 @@ class SubTree : public SceneProcessor
 
 	public :
 
-		SubTree( const std::string &name=staticTypeName() );
+		SubTree( const std::string &name=defaultName<SubTree>() );
 		virtual ~SubTree();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SubTree, SubTreeTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SubTree, SubTreeTypeId, SceneProcessor );
 		
 		Gaffer::StringPlug *rootPlug();
 		const Gaffer::StringPlug *rootPlug() const;

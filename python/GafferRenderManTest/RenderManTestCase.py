@@ -37,6 +37,7 @@
 import os
 
 import GafferSceneTest
+import GafferRenderMan
 
 class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
 
@@ -59,6 +60,14 @@ class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
 		self.__compiledShaders.add( outputFileName )
 
 		return os.path.splitext( outputFileName )[0]
+
+	def testTypeNamePrefixes( self ) :
+	
+		self.assertTypeNamesArePrefixed( GafferRenderMan )
+
+	def testDefaultNames( self ) :
+	
+		self.assertDefaultNamesAreCorrect( GafferRenderMan )
 
 	def tearDown( self ) :
 	

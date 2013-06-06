@@ -50,10 +50,10 @@ class ApplicationRoot : public GraphComponent
 
 	public :
 	
-		ApplicationRoot( const std::string &name = staticTypeName() );
+		ApplicationRoot( const std::string &name = defaultName<ApplicationRoot>() );
 		virtual ~ApplicationRoot();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ApplicationRoot, ApplicationRootTypeId, GraphComponent );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ApplicationRoot, ApplicationRootTypeId, GraphComponent );
 
 		/// Accepts no user added children.				
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;

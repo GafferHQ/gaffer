@@ -49,7 +49,7 @@ namespace Detail
 template<typename T, typename Ptr>
 void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<boost::mpl::not_< boost::is_abstract<typename Ptr::element_type> > >::type *enabler = 0 )
 {
-	cls.def( boost::python::init< const std::string & >( boost::python::arg( "name" ) = T::staticTypeName() ) );
+	cls.def( boost::python::init< const std::string & >( boost::python::arg( "name" ) = Gaffer::GraphComponent::defaultName<T>() ) );
 }
 	
 template<typename T, typename Ptr>

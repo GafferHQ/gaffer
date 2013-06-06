@@ -50,10 +50,10 @@ class Options : public GlobalsProcessor
 
 	public :
 
-		Options( const std::string &name=staticTypeName() );
+		Options( const std::string &name=defaultName<Options>() );
 		virtual ~Options();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Options, OptionsTypeId, GlobalsProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Options, OptionsTypeId, GlobalsProcessor );
 		
 		Gaffer::CompoundDataPlug *optionsPlug();
 		const Gaffer::CompoundDataPlug *optionsPlug() const;

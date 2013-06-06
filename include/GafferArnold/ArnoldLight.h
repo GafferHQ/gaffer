@@ -49,9 +49,9 @@ class ArnoldLight : public GafferScene::Light
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
 
-		ArnoldLight( const std::string &name=staticTypeName() );
+		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
 		virtual ~ArnoldLight();
 
 		void loadShader( const std::string &shaderName );

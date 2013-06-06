@@ -69,7 +69,7 @@ class CompoundNodule : public Nodule
 			float spacing = 0.0f, LinearContainer::Direction direction=LinearContainer::InvalidDirection );
 		virtual ~CompoundNodule();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( CompoundNodule, CompoundNoduleTypeId, Nodule );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
 
 		virtual Imath::Box3f bound() const;
 

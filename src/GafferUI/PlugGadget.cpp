@@ -48,7 +48,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( PlugGadget );
 
 PlugGadget::PlugGadget( Gaffer::PlugPtr plug )
-	:	ContainerGadget( staticTypeName() ), m_plug( 0 )
+	:	ContainerGadget( defaultName<PlugGadget>() ), m_plug( 0 )
 {
 	setPlug( plug );
 }

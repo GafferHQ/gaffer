@@ -175,7 +175,7 @@ void GafferSceneBindings::bindScenePlug()
 	IECorePython::RunTimeTypedClass<ScenePlug>()
 		.def( init<const std::string &, Plug::Direction, unsigned>(
 				(
-					arg( "name" ) = ScenePlug::staticTypeName(),
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<ScenePlug>(),
 					arg( "direction" ) = Gaffer::Plug::In,
 					arg( "flags" ) = Gaffer::Plug::Default
 				)

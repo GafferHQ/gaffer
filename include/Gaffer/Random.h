@@ -51,10 +51,10 @@ class Random : public ComputeNode
 
 	public :
 
-		Random( const std::string &name=staticTypeName() );
+		Random( const std::string &name=defaultName<Random>() );
 		virtual ~Random();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Random, RandomTypeId, ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Random, RandomTypeId, ComputeNode );
 		
 		IntPlug *seedPlug();
 		const IntPlug *seedPlug() const;

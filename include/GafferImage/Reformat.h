@@ -51,10 +51,10 @@ class Reformat : public ImageProcessor
 
 	public :
 
-		Reformat( const std::string &name=staticTypeName() );
+		Reformat( const std::string &name=defaultName<Reformat>() );
 		virtual ~Reformat();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Reformat, ReformatTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Reformat, ReformatTypeId, ImageProcessor );
 	
 		/// Plug accessors.	
 		GafferImage::FormatPlug *formatPlug();

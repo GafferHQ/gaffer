@@ -52,7 +52,7 @@ using namespace Gaffer;
 template<typename T>
 static std::string compoundNumericPlugRepr( const T *plug )
 {
-	std::string result = std::string( "Gaffer." ) + plug->typeName() + "( \"" + plug->getName().string() + "\", ";
+	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
 	if( plug->direction()!=Plug::In )
 	{
@@ -96,7 +96,7 @@ static void bind()
 	IECorePython::RunTimeTypedClass<T>()
 		.def( init<const char *, Plug::Direction, V, V, V, unsigned>(
 				(
-					boost::python::arg_( "name" )=T::staticTypeName(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V( 0 ),
 					boost::python::arg_( "minValue" )=V(Imath::limits<typename V::BaseType>::min()),

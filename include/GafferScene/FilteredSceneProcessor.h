@@ -51,10 +51,10 @@ class FilteredSceneProcessor : public SceneProcessor
 
 	public :
 
-		FilteredSceneProcessor( const std::string &name=staticTypeName(), Filter::Result filterDefault = Filter::Match );
+		FilteredSceneProcessor( const std::string &name=defaultName<FilteredSceneProcessor>(), Filter::Result filterDefault = Filter::Match );
 		virtual ~FilteredSceneProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
 		
 		Gaffer::IntPlug *filterPlug();
 		const Gaffer::IntPlug *filterPlug() const;

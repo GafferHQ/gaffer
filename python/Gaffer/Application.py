@@ -111,4 +111,5 @@ class Application( IECore.Parameterised ) :
 	
 		self.__executeStartupFiles()
 		return self._run( args )
-			
+
+IECore.registerRunTimeTyped( Application )		

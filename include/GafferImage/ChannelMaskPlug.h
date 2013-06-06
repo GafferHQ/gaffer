@@ -47,7 +47,7 @@ class ChannelMaskPlug : public Gaffer::StringVectorDataPlug
 {
 	public:
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ChannelMaskPlug, ChannelMaskPlugTypeId, Gaffer::StringVectorDataPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ChannelMaskPlug, ChannelMaskPlugTypeId, Gaffer::StringVectorDataPlug );
 		
 		/// A copy of defaultValue is taken - it must not be null.
 		ChannelMaskPlug(

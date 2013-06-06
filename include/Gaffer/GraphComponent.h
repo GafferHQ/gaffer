@@ -64,10 +64,10 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 
 	public :
 
-		GraphComponent( const std::string &name=staticTypeName() );
+		GraphComponent( const std::string &name=defaultName<GraphComponent>() );
 		virtual ~GraphComponent();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
 		typedef boost::signal<void (GraphComponent *)> UnarySignal;
 		typedef boost::signal<void (GraphComponent *, GraphComponent *)> BinarySignal;
@@ -93,6 +93,10 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		std::string relativeName( const GraphComponent *ancestor ) const;
 		/// A signal which is emitted whenever a name is changed.
 		UnarySignal &nameChangedSignal();
+		/// Returns T::staticTypeName() without namespace prefixes, for use as the
+		/// default name in GraphComponent constructors.
+		template<typename T>
+		static std::string defaultName();
 		//@}
 		
 		/// @name Parent-child relationships
@@ -230,8 +234,10 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// from instance to instance, and storeIndexOfNextChild() will error
 		/// if it discovers that not to be the case.
 		void storeIndexOfNextChild( size_t &index ) const;
-		
+				
 	private :
+	
+		static std::string unprefixedTypeName( const char *typeName );
 
 		void throwIfChildRejected( const GraphComponent *potentialChild ) const;
 		void setNameInternal( const IECore::InternedString &name );

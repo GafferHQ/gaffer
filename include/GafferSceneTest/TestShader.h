@@ -49,10 +49,10 @@ class TestShader : public GafferScene::Shader
 
 	public :
 
-		TestShader( const std::string &name=staticTypeName() );
+		TestShader( const std::string &name=defaultName<TestShader>() );
 		virtual ~TestShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TestShader, TestShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestShader, TestShaderTypeId, GafferScene::Shader );
 		
 	protected :
 

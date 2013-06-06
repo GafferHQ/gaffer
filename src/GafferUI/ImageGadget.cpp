@@ -83,7 +83,7 @@ static Box3f boundGetter( const std::string &fileName, size_t cost )
 }
 
 ImageGadget::ImageGadget( const std::string &fileName )
-	:	Gadget( staticTypeName() )
+	:	Gadget( defaultName<ImageGadget>() )
 {
 	
 	// we'll load the actual texture later when we're sure a GL context exists,
@@ -97,7 +97,7 @@ ImageGadget::ImageGadget( const std::string &fileName )
 }
 
 ImageGadget::ImageGadget( IECore::ConstImagePrimitivePtr image )
-	:	Gadget( staticTypeName() ), m_bound( image->bound() ), m_imageOrTextureOrFileName( image->copy() )
+	:	Gadget( defaultName<ImageGadget>() ), m_bound( image->bound() ), m_imageOrTextureOrFileName( image->copy() )
 {
 }
 

@@ -50,10 +50,10 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 
 	public :
 
-		PrimitiveVariableProcessor( const std::string &name=staticTypeName() );
+		PrimitiveVariableProcessor( const std::string &name=defaultName<PrimitiveVariableProcessor>() );
 		virtual ~PrimitiveVariableProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneElementProcessor );
 		
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;
