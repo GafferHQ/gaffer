@@ -53,6 +53,10 @@
 #define _USE_MATH_DEFINES
 #include "math.h"
 	
+#define GAFFERIMAGE_FILTER_DECLAREFILTER( CLASS_NAME )\
+static FilterRegistration<CLASS_NAME> m_registration;\
+template<typename T> friend struct Filter::FilterRegistration;
+
 namespace GafferImage
 {
 
@@ -76,11 +80,6 @@ public :
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Filter, FilterTypeId, RunTimeTyped );
 	
-	/// Constructor	
-	/// @param radius Half the width of the kernel at a scale of 1.
-	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
-	Filter( float radius, float scale = 1. );
-		
 	virtual ~Filter(){};
 
 	//! @name Accessors
@@ -204,8 +203,17 @@ protected :
 	float m_scale;
 	float m_scaledRadius;
 
+	/// Constructor	
+	/// The constructor is protected as only the factory function create() should be able to construct filters as it needs to initialise the LUT.
+	/// @param radius Half the width of the kernel at a scale of 1.
+	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
+	Filter( float radius, float scale = 1. );
+
+	template<typename T> friend struct FilterRegistration;
+
 private:
 
+		
 	/// Registration mechanism for Filter classes.
 	/// We keep a vector of the names so that we can maintain an order. 
 	static std::vector< CreatorFn >& creators()
@@ -239,23 +247,26 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BoxFilter, BoxFilterTypeId, Filter );
 
-	BoxFilter( float scale = 1. )
-		: Filter( .5, scale )
-	{
-	}
-	
 	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		return ( delta <= 0.5 );
 	}
 
-private:
+protected:
 
+	BoxFilter( float scale = 1. )
+		: Filter( .5, scale )
+	{
+	}
+	
+private:
+	
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<BoxFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( BoxFilter )
 
 };
+
 
 class BilinearFilter : public Filter
 {
@@ -264,10 +275,6 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BilinearFilter, BilinearFilterTypeId, Filter );
 	
-	BilinearFilter( float scale = 1. )
-		: Filter( 1, scale )
-	{}
-
 	float weight( float delta ) const
 	{
 		delta = fabs(delta);
@@ -278,10 +285,16 @@ public:
 		return 0.;
 	}
 
+protected:	
+	
+	BilinearFilter( float scale = 1. )
+		: Filter( 1, scale )
+	{}
+
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<BilinearFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( BilinearFilter )
 
 };
 
@@ -291,10 +304,6 @@ class SincFilter : public Filter
 public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SincFilter, SincFilterTypeId, Filter );
-
-	SincFilter( float scale = 1. )
-		: Filter( 2., scale )
-	{}
 
 	float weight( float delta ) const
 	{
@@ -312,10 +321,16 @@ public:
 		return sin( PI*delta ) / ( PI*delta );
 	}
 
+protected:
+
+	SincFilter( float scale = 1. )
+		: Filter( 2., scale )
+	{}
+
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<SincFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( SincFilter )
 
 };
 
@@ -325,10 +340,6 @@ class HermiteFilter : public Filter
 public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::HermiteFilter, HermiteFilterTypeId, Filter );
-
-	HermiteFilter( float scale = 1. )
-		: Filter( 1, scale )
-	{}
 
 	float weight( float delta ) const
 	{
@@ -340,10 +351,16 @@ public:
 		return 0.;
 	}
 
+protected:
+
+	HermiteFilter( float scale = 1. )
+		: Filter( 1, scale )
+	{}
+
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<HermiteFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( HermiteFilter )
 
 };
 
@@ -353,10 +370,6 @@ class LanczosFilter : public Filter
 public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LanczosFilter, LanczosFilterTypeId, Filter );
-
-	LanczosFilter( float scale = 1. )
-		: Filter( 3., scale )
-	{}
 
 	float weight( float delta ) const
 	{
@@ -374,11 +387,18 @@ public:
 		const float PI = M_PI;
 		return ( m_radius * (1./PI) * (1./PI) ) / ( delta*delta) * sin( PI * delta ) * sin( PI*delta * (1./m_radius) );
 	}
+	
+protected:
+
+	LanczosFilter( float scale = 1. )
+		: Filter( 3., scale )
+	{}
+
 
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<LanczosFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( LanczosFilter )
 
 };
 
@@ -389,13 +409,6 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SplineFilter, SplineFilterTypeId, Filter );
 	
-	SplineFilter( float B, float C, float scale = 1. )
-		: Filter( 2, scale ),
-		m_B( B ),
-		m_C( C )
-	{
-	}
-
 	float weight( float delta ) const
 	{
 		delta = fabs(delta);
@@ -415,6 +428,15 @@ public:
 
 		return 0.;
 	}
+	
+protected:
+	
+	SplineFilter( float B, float C, float scale = 1. )
+		: Filter( 2, scale ),
+		m_B( B ),
+		m_C( C )
+	{
+	}
 
 private:
 
@@ -430,6 +452,8 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
+protected:
+
 	MitchellFilter( float scale = 1. )
 		: SplineFilter( 1./3., 1./3., scale )
 	{}
@@ -437,7 +461,7 @@ public:
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<MitchellFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( MitchellFilter )
 
 };
 
@@ -448,6 +472,8 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
+protected:
+
 	BSplineFilter( float scale = 1. )
 		: SplineFilter( 1., 0., scale )
 	{}
@@ -455,7 +481,7 @@ public:
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<BSplineFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( BSplineFilter )
 
 };
 
@@ -466,6 +492,8 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
 	
+protected:
+
 	CatmullRomFilter( float scale = 1. )
 		: SplineFilter( 0., .5, scale )
 	{}
@@ -473,7 +501,7 @@ public:
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<CatmullRomFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( CatmullRomFilter )
 
 };
 
@@ -488,6 +516,8 @@ public:
 		: Filter( 3., scale )
 	{
 	}
+
+protected:
 
 	float weight( float delta ) const 
 	{
@@ -515,7 +545,7 @@ public:
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<CubicFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( CubicFilter )
 
 };
 
