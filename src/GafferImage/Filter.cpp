@@ -46,36 +46,19 @@
 namespace GafferImage
 {
 
-Filter::Filter( double radius, double scale )
+Filter::Filter( float radius, float scale )
 	: m_radius( radius )
 {
 	setScale( scale );
 }
 
-void Filter::setScale( double scale )
+void Filter::setScale( float scale )
 {
-	m_scale = std::max( scale, 1. ); 
+	m_scale = std::max( scale, 1.f ); 
 	m_scaledRadius = m_radius * m_scale;
-	m_weights.resize( width() );
 }
 
-int Filter::construct( double center )
-{
-	int l, absx;
-	l = absx = (int)( center - m_scaledRadius );
-	
-	std::vector<double>::iterator it( m_weights.begin() );
-	std::vector<double>::iterator end( m_weights.end() );
-	
-	while ( it != end )
-	{
-		double t = ( center - l++ - .5 ) / m_scale;
-		*it++ = weight( t );
-	}
-	return absx;
-}
-
-FilterPtr Filter::create( const std::string &name, double scale )
+FilterPtr Filter::create( const std::string &name, float scale )
 {
 	// Check to see whether the requested Filter is registered and if not, throw an exception.
 	std::vector<std::string>::iterator it( filterList().begin() );

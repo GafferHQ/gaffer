@@ -41,13 +41,22 @@
 #include <vector>
 #include <string>
 
+#include "tbb/mutex.h"
+#include "boost/weak_ptr.hpp"
+
 #include "GafferImage/TypeIds.h"
+
 #include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
+#include "IECore/Lookup.h"
 
 #define _USE_MATH_DEFINES
 #include "math.h"
 	
+#define GAFFERIMAGE_FILTER_DECLAREFILTER( CLASS_NAME )\
+static FilterRegistration<CLASS_NAME> m_registration;\
+template<typename T> friend struct Filter::FilterRegistration;
+
 namespace GafferImage
 {
 
@@ -55,12 +64,12 @@ IE_CORE_FORWARDDECLARE( Filter );
 
 /// Interpolation class for filtering an image.
 ///
-/// The filter class represents a 1D convolution of radius().
-/// For simplicity we only implement separable kernels.
-/// We do the following to convolve a 2D image (I) by 1D kernel (g):
+/// The filter class represents a 1D separable kernel which 
+/// provides methods for convolution with a set of pixel samples.
+/// We can convolve a 2D image (I) by 1D kernel (g) by:
 /// C(x,y) = g*I = (g2 *y (g1 *x I))(x,y)
 /// Where *x and *y denotes convolution in the x and y directions.
-///
+/// 
 /// A good overview of image sampling and the variety of filters is:
 /// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
 /// Arun N.Netravali, AT&T Bell Laboratories.
@@ -71,47 +80,46 @@ public :
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Filter, FilterTypeId, RunTimeTyped );
 	
-	/// Constructor	
-	/// @param radius Half the width of the kernel at a scale of 1.
-	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
-	Filter( double radius, double scale = 1. );
-		
 	virtual ~Filter(){};
 
+	//! @name Accessors
+	/// A set of methods to access the members of the filter.
+	//////////////////////////////////////////////////////////////
+	//@{
 	/// Resizes the kernel to a new scale.
-	void setScale( double scale );
-
+	void setScale( float scale );
 	/// Returns the current scale of the kernel.
-	inline double getScale() const { return m_scale; }
-	
-	/// Accessors of the kernel weights.
-	inline double operator[]( int idx ) const
-	{
-		return m_weights[idx];
-	};
-
-	/// Returns a reference to the list of weights.
-	inline const std::vector<double> &weights() const
-	{
-		return m_weights;
-	}
-
-	/// Returns the width of the filter.
+	inline float getScale() const { return m_scale; }
+	//@}
+	//! @name Filter Convolution
+	/// A set of methods that create a simple interface to allow the
+	/// filter to be convolved with a discreet array (such as a set of pixels).
+	//////////////////////////////////////////////////////////////
+	//@{
+	/// Returns the width of the filter in pixels.
 	inline int width() const
 	{
 		return int( m_scaledRadius*2. + 1. );
 	};
-
-	/// Builds the kernel of weights.
-	/// This method is should be called to initialize the filter.
-	/// It does this by making successive calls to weight() to
-	/// populate the vector of weights.
-	/// @param center The position of the center of the filter kernel.
-	/// @return Returns the index of the first pixel sample.
-	int construct( double center );
-
-	// Returns a weight for a delta in the range of 0 to m_radius.
-	virtual double weight( double delta ) const = 0;
+	/// Returns the weight of a pixel to be convolved with the filter
+	/// given the center of the filter and the position of the pixel to be sampled.  
+	/// @param center The center of the kernel.
+	/// @param samplePosition The position of the sample to return the weight for.
+	//  @return The weight of the sample.
+	inline float weight( float center, int samplePosition ) const
+	{
+		float t = ( center - samplePosition - .5 ) / m_scale;
+		return (*m_lut)( fabs( t ) );
+	}
+	/// Returns the position of the first sample influenced by the kernel.
+	/// Use this function to get the index of the first pixel to convolve
+	/// the filter with.
+	/// "Center" must be positive.
+	inline int tap( float center ) const
+	{
+		return int( center - m_scaledRadius );
+	}
+	//@}
 
 	//! @name Filter Registry
 	/// A set of methods to query the available Filters and create them.
@@ -120,7 +128,7 @@ public :
 	/// Instantiates a new Filter and initialises it to the desired scale.
 	/// @param filterName The name of the filter within the registry.
 	/// @param scale The scale to create the filter at.
-	static FilterPtr create( const std::string &filterName, double scale = 1. );
+	static FilterPtr create( const std::string &filterName, float scale = 1. );
 
 	/// Returns a vector of the available filters.
 	static const std::vector<std::string> &filters()
@@ -138,7 +146,10 @@ public :
 
 protected :
 
-	typedef FilterPtr (*CreatorFn)( double scale );
+	// Returns a weight for a delta in the range of 0 to m_radius.
+	virtual float weight( float delta ) const = 0;
+
+	typedef FilterPtr (*CreatorFn)( float scale );
 
 	template<class T>
 	struct FilterRegistration
@@ -152,20 +163,57 @@ protected :
 			}
 
 		private:
-			/// Returns a new instance of the Filter class.
-			static FilterPtr creator( double scale = 1. )
+
+			static float calculateLutWeight( float value )
 			{
-				return new T( scale );
+				T filter;
+				if (value >= filter.m_radius ) return 0;
+				return filter.weight( value );
+			}
+
+			/// Returns a new instance of the Filter class and initializes it's LUT if it does not exist or just grabs a shared_ptr to one if it does.
+			static FilterPtr creator( float scale = 1. )
+			{
+				T* filter = new T( scale );
+				const std::string &filterName( filter->typeName() );
+				
+				tbb::mutex::scoped_lock lock;
+				lock.acquire( lutMutex() );
+				std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap( Filter::lutMap() );
+				boost::shared_ptr<IECore::Lookupff> lutPtr( lutMap[filterName].lock() );
+				if ( !lutPtr )
+				{
+					lutPtr.reset( new IECore::Lookupff( calculateLutWeight, 0.f, filter->m_radius, 256 ) );
+					lutMap[filterName] = lutPtr;
+				}
+				lock.release();
+
+				filter->m_lut = lutPtr;
+				return FilterPtr( filter );
+			}
+
+			static tbb::mutex& lutMutex()
+			{
+				static tbb::mutex g_mutex;
+				return g_mutex;
 			}
 	};
 
-	const double m_radius;
-	double m_scale;
-	double m_scaledRadius;
-	std::vector<double> m_weights;
+	const float m_radius;
+	float m_scale;
+	float m_scaledRadius;
+
+	/// Constructor	
+	/// The constructor is protected as only the factory function create() should be able to construct filters as it needs to initialise the LUT.
+	/// @param radius Half the width of the kernel at a scale of 1.
+	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
+	Filter( float radius, float scale = 1. );
+
+	template<typename T> friend struct FilterRegistration;
 
 private:
 
+		
 	/// Registration mechanism for Filter classes.
 	/// We keep a vector of the names so that we can maintain an order. 
 	static std::vector< CreatorFn >& creators()
@@ -179,6 +227,14 @@ private:
 		static std::vector< std::string > g_filters;
 		return g_filters;
 	}
+	
+	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap()
+	{
+		static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > l;
+		return l;
+	}
+	
+	boost::shared_ptr<IECore::Lookupff> m_lut;
 
 };
 
@@ -191,23 +247,26 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BoxFilter, BoxFilterTypeId, Filter );
 
-	BoxFilter( double scale = 1. )
-		: Filter( .5, scale )
-	{
-	}
-	
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		return ( delta <= 0.5 );
 	}
 
-private:
+protected:
 
+	BoxFilter( float scale = 1. )
+		: Filter( .5, scale )
+	{
+	}
+	
+private:
+	
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<BoxFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( BoxFilter )
 
 };
+
 
 class BilinearFilter : public Filter
 {
@@ -216,11 +275,7 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BilinearFilter, BilinearFilterTypeId, Filter );
 	
-	BilinearFilter( double scale = 1. )
-		: Filter( 1, scale )
-	{}
-
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1. )
@@ -230,10 +285,16 @@ public:
 		return 0.;
 	}
 
+protected:	
+	
+	BilinearFilter( float scale = 1. )
+		: Filter( 1, scale )
+	{}
+
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<BilinearFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( BilinearFilter )
 
 };
 
@@ -244,11 +305,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SincFilter, SincFilterTypeId, Filter );
 
-	SincFilter( double scale = 1. )
-		: Filter( 2., scale )
-	{}
-
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta > m_radius )
@@ -260,14 +317,20 @@ public:
 			return 1.;
 		}
 
-		const double PI = M_PI;
+		const float PI = M_PI;
 		return sin( PI*delta ) / ( PI*delta );
 	}
+
+protected:
+
+	SincFilter( float scale = 1. )
+		: Filter( 2., scale )
+	{}
 
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<SincFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( SincFilter )
 
 };
 
@@ -278,11 +341,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::HermiteFilter, HermiteFilterTypeId, Filter );
 
-	HermiteFilter( double scale = 1. )
-		: Filter( 1, scale )
-	{}
-
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		if ( delta < 1 )
@@ -292,10 +351,16 @@ public:
 		return 0.;
 	}
 
+protected:
+
+	HermiteFilter( float scale = 1. )
+		: Filter( 1, scale )
+	{}
+
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<HermiteFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( HermiteFilter )
 
 };
 
@@ -306,11 +371,7 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LanczosFilter, LanczosFilterTypeId, Filter );
 
-	LanczosFilter( double scale = 1. )
-		: Filter( 3., scale )
-	{}
-
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
 		
@@ -323,14 +384,21 @@ public:
 			return 1.;
 		}
 		
-		const double PI = M_PI;
+		const float PI = M_PI;
 		return ( m_radius * (1./PI) * (1./PI) ) / ( delta*delta) * sin( PI * delta ) * sin( PI*delta * (1./m_radius) );
 	}
+	
+protected:
+
+	LanczosFilter( float scale = 1. )
+		: Filter( 3., scale )
+	{}
+
 
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<LanczosFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( LanczosFilter )
 
 };
 
@@ -341,17 +409,10 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SplineFilter, SplineFilterTypeId, Filter );
 	
-	SplineFilter( double B, double C, double scale = 1. )
-		: Filter( 2, scale ),
-		m_B( B ),
-		m_C( C )
-	{
-	}
-
-	double weight( double delta ) const
+	float weight( float delta ) const
 	{
 		delta = fabs(delta);
-		double delta2 = delta*delta;
+		float delta2 = delta*delta;
 
 		if ( delta < 1. )
 		{
@@ -367,11 +428,20 @@ public:
 
 		return 0.;
 	}
+	
+protected:
+	
+	SplineFilter( float B, float C, float scale = 1. )
+		: Filter( 2, scale ),
+		m_B( B ),
+		m_C( C )
+	{
+	}
 
 private:
 
-	const double m_B;
-	const double m_C;
+	const float m_B;
+	const float m_C;
 
 };
 
@@ -382,14 +452,16 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
-	MitchellFilter( double scale = 1. )
+protected:
+
+	MitchellFilter( float scale = 1. )
 		: SplineFilter( 1./3., 1./3., scale )
 	{}
 
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<MitchellFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( MitchellFilter )
 
 };
 
@@ -400,14 +472,16 @@ public:
 	
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
-	BSplineFilter( double scale = 1. )
+protected:
+
+	BSplineFilter( float scale = 1. )
 		: SplineFilter( 1., 0., scale )
 	{}
 
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<BSplineFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( BSplineFilter )
 
 };
 
@@ -418,14 +492,16 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
 	
-	CatmullRomFilter( double scale = 1. )
+protected:
+
+	CatmullRomFilter( float scale = 1. )
 		: SplineFilter( 0., .5, scale )
 	{}
 
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<CatmullRomFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( CatmullRomFilter )
 
 };
 
@@ -436,15 +512,17 @@ public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CubicFilter, CubicFilterTypeId, Filter );
 	
-	CubicFilter( double scale = 1. )
+	CubicFilter( float scale = 1. )
 		: Filter( 3., scale )
 	{
 	}
 
-	double weight( double delta ) const 
+protected:
+
+	float weight( float delta ) const 
 	{
 		delta = fabs( delta );
-		double delta2 = delta*delta;
+		float delta2 = delta*delta;
 
 		if ( delta <= 1. )
 		{
@@ -467,7 +545,7 @@ public:
 private:
 
 	/// Register this filter so that it can be created using the Filter::create method.
-	static FilterRegistration<CubicFilter> m_registration;
+	GAFFERIMAGE_FILTER_DECLAREFILTER( CubicFilter )
 
 };
 

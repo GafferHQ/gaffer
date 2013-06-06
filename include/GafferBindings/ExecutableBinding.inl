@@ -35,7 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python/list.hpp"
-
+#include "IECorePython/ScopedGILRelease.h"
 #include "Gaffer/Executable.h"
 
 namespace GafferBindings
@@ -72,6 +72,7 @@ void ExecutableBinding<PythonClass,NodeClass>::execute( NodeClass &n, const boos
 	{
 		contexts.push_back( boost::python::extract<Gaffer::ConstContextPtr>( contextList[i] ) );
 	}
+	IECorePython::ScopedGILRelease gilRelease;
 	n.execute( contexts );
 }
 
