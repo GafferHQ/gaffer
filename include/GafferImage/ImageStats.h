@@ -61,17 +61,9 @@ class ImageStats : public Gaffer::ComputeNode
 		ImageStats( const std::string &name=staticTypeName() );
 		virtual ~ImageStats();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
 		
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		
-	protected :
-	
-		/// Implemented to hash the area we are sampling along with the channel context and regionOfInterest.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		
-		/// Computes the min, max and average plugs by analyzing the input ImagePlug.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 		GafferImage::ImagePlug *inPlug();
 		const GafferImage::ImagePlug *inPlug() const;
@@ -85,6 +77,14 @@ class ImageStats : public Gaffer::ComputeNode
 		const Gaffer::Color4fPlug *minPlug() const;
 		Gaffer::Color4fPlug *maxPlug();
 		const Gaffer::Color4fPlug *maxPlug() const;
+
+	protected :
+	
+		/// Implemented to hash the area we are sampling along with the channel context and regionOfInterest.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
+		/// Computes the min, max and average plugs by analyzing the input ImagePlug.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 	private :
 		
@@ -102,6 +102,8 @@ class ImageStats : public Gaffer::ComputeNode
 		static size_t g_firstPlugIndex;
 		
 };
+
+IE_CORE_DECLAREPTR( ImageStats );
 
 } // namespace GafferImage
 

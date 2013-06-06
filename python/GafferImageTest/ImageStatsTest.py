@@ -162,7 +162,7 @@ class ImageStatsTest( unittest.TestCase ) :
 		with script.context() :
 			reader["fileName"].setValue( self.__rgbFilePath )
 			stats["in"].setInput( reader["out"] )
-			self.assertEqual( stats["roi"].getValue(), reader["out"]["format"].getValue().getDisplayWindow() )
+			self.assertEqual( stats["regionOfInterest"].getValue(), reader["out"]["format"].getValue().getDisplayWindow() )
 
 	def testStats( self ) :
 		
@@ -173,7 +173,7 @@ class ImageStatsTest( unittest.TestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		
-		s["roi"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 0 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
@@ -188,12 +188,12 @@ class ImageStatsTest( unittest.TestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		
-		s["roi"].setValue( IECore.Box2i( IECore.V2i( 20, 76 ), IECore.V2i( 24, 79 ) ) )
+		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 76 ), IECore.V2i( 24, 79 ) ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		
-		s["roi"].setValue( IECore.Box2i( IECore.V2i( 20, 70 ), IECore.V2i( 40, 79 ) ) )
+		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 70 ), IECore.V2i( 40, 79 ) ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0, 0.75 ) )

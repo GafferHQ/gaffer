@@ -61,7 +61,7 @@ ImageStats::ImageStats( const std::string &name )
 			"channels",
 			Gaffer::Plug::In,
 			inPlug()->channelNamesPlug()->defaultValue(),
-			Gaffer::Plug::Default & ~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
+			Gaffer::Plug::Default
 		)
 	);
 	addChild( new Box2iPlug( "regionOfInterest", Gaffer::Plug::In ) );
@@ -138,7 +138,7 @@ const Color4fPlug *ImageStats::maxPlug() const
 void ImageStats::inputChanged( Gaffer::Plug *plug )
 {
 	const Imath::Box2i regionOfInterest( regionOfInterestPlug()->getValue() );
-	if( plug->isInstanceOf( ImagePlug::staticTypeId() ) && !regionOfInterest.hasVolume() )
+	if( plug->isInstanceOf( ImagePlug::staticTypeId() ) && regionOfInterest.isEmpty() )
 	{
 		Imath::Box2i box( inPlug()->formatPlug()->getValue().getDisplayWindow() );
 		if( box.isEmpty() )
@@ -158,8 +158,8 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	ComputeNode::affects( input, outputs );
 	if (
 			input == channelsPlug() ||
-			input->ancestor<ImagePlug>() == inPlug() ||
-			input->ancestor<Box2iPlug>() == regionOfInterestPlug()
+			input->parent<ImagePlug>() == inPlug() ||
+			regionOfInterestPlug()->isAncestorOf( input )
 	   ) 
 	{
 		for( unsigned int i = 0; i < 4; ++i )
@@ -175,8 +175,26 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h);
+	
+	bool earlyOut = true;
+	for( int i = 0; i < 4; ++i )
+	{
+		if (
+				output == minPlug()->getChild(i) ||
+				output == maxPlug()->getChild(i) ||
+				output == averagePlug()->getChild(i)
+		   )
+		{
+			earlyOut = false;
+			break;
+		}
+	}
+	if( earlyOut )
+	{
+		return;
+	}
 
-	const Imath::Box2i &regionOfInterest( regionOfInterestPlug()->getValue() );
+	const Imath::Box2i regionOfInterest( regionOfInterestPlug()->getValue() );
 	regionOfInterestPlug()->hash( h );
 	inPlug()->channelNamesPlug()->hash( h );
 	inPlug()->dataWindowPlug()->hash( h );
@@ -209,11 +227,11 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 			output == averagePlug()->getChild(3)
 	  )
 	{
-		h.append( 1 );
+		h.append( 0 );
 	}
 	else
 	{
-		h.append( 2 );
+		h.append( 1 );
 	}
 }
 
@@ -268,7 +286,7 @@ void ImageStats::setOutputToDefault( FloatPlug *output ) const
 void ImageStats::compute( ValuePlug *output, const Context *context ) const
 {
 	const Imath::Box2i &regionOfInterest( regionOfInterestPlug()->getValue() );
-	if( !regionOfInterest.hasVolume() )
+	if( regionOfInterest.isEmpty() )
 	{
 		setOutputToDefault( static_cast<FloatPlug*>( output ) );
 		return;
