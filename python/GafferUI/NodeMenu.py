@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import re
+import fnmatch
 import inspect
 
 import IECore
@@ -111,9 +113,12 @@ def nodeCreatorWrapper( nodeCreator ) :
 				
 ## Utility function to append menu items to definition. One item will
 # be created for each class found on the specified search path.
-def appendParameterisedHolders( path, parameterisedHolderType, searchPathEnvVar ) :
-
-	definition().append( path, { "subMenu" : IECore.curry( __parameterisedHolderMenu, parameterisedHolderType, searchPathEnvVar ) } )
+def appendParameterisedHolders( path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
+	
+	if isinstance( matchExpression, str ) :
+		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
+	
+	definition().append( path, { "subMenu" : IECore.curry( __parameterisedHolderMenu, parameterisedHolderType, searchPathEnvVar, matchExpression ) } )
 
 def __parameterisedHolderCreator( parameterisedHolderType, className, classVersion, searchPathEnvVar ) :
 
@@ -123,13 +128,14 @@ def __parameterisedHolderCreator( parameterisedHolderType, className, classVersi
 
 	return node
 
-def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar ) :
+def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar, matchExpression ) :
 
 	c = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
 	d = IECore.MenuDefinition()
 	for n in c.classNames() :
-		nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
-		v = c.getDefaultVersion( n )
-		d.append( "/" + nc, { "command" : nodeCreatorWrapper( IECore.curry( __parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
+		if matchExpression.match( n ) :
+			nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
+			v = c.getDefaultVersion( n )
+			d.append( "/" + nc, { "command" : nodeCreatorWrapper( IECore.curry( __parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
 
 	return d
