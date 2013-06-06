@@ -122,6 +122,22 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 		}
 	}
 
+	if( !descendantPlug->getFlags( Plug::Serialisable ) )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it is not serialisable." ) % descendantPlug->fullName()
+				)
+			);
+		}
+	}
+	
 	if( !descendantPlug->getFlags( Plug::AcceptsInputs ) )
 	{
 		if( !throwExceptions )

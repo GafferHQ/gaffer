@@ -366,6 +366,16 @@ class BoxTest( unittest.TestCase ) :
 		
 		self.assertTrue( isinstance( s["Box"]["user"]["n_c"], Gaffer.Color3fPlug ) )
 		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["user"]["n_c"] ) )
+	
+	def testCantPromoteNonSerialisablePlugs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		self.assertEqual( b.canPromotePlug( b["n"]["p"] ), False )
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["p"] )
 		
 if __name__ == "__main__":
 	unittest.main()
