@@ -43,31 +43,37 @@ import IECoreArnold
 import GafferUI
 import GafferArnold
 
+def appendShaders( menuDefinition, prefix="/Arnold" ) :
+
+	with IECoreArnold.UniverseBlock() :
+
+		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
+
+		while not arnold.AiNodeEntryIteratorFinished( it ) :
+
+			nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
+			shaderName = arnold.AiNodeEntryGetName( nodeEntry )
+			displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+
+			if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
+				menuPath = prefix + "/Shader/" + displayName
+			else :
+				menuPath = prefix + "/Light/" + displayName
+				
+			menuDefinition.append(
+				menuPath,
+				{
+					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shaderName, GafferArnold.ArnoldShader ) ),
+				}
+			)
+
+		arnold.AiNodeEntryIteratorDestroy( it )
+
+		arnold.AiEnd()
+
 def __shaderCreator( name, nodeType ) :
 
 	shader = nodeType( name )
 	shader.loadShader( name )
 	return shader
 
-with IECoreArnold.UniverseBlock() :
-
-	it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
-	
-	while not arnold.AiNodeEntryIteratorFinished( it ) :
-		
-		nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
-		shaderName = arnold.AiNodeEntryGetName( nodeEntry )
-		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
-		
-		if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
-			GafferUI.NodeMenu.append( "/Arnold/Shader/" + displayName, IECore.curry( __shaderCreator, shaderName, GafferArnold.ArnoldShader ) )
-		else :
-			GafferUI.NodeMenu.append( "/Arnold/Light/" + displayName, IECore.curry( __shaderCreator, shaderName, GafferArnold.ArnoldLight ) )
-			
-	arnold.AiNodeEntryIteratorDestroy( it )
-	
-	arnold.AiEnd()
-
-GafferUI.NodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
-GafferUI.NodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
-GafferUI.NodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender, searchText = "ArnoldRender" )

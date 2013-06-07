@@ -68,7 +68,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		
 		self.__gadgetWidget._qtWidget().installEventFilter( _eventFilter )
 		
-		self._nodeMenu = GafferUI.Menu( GafferUI.NodeMenu.definition(), searchable=True )
+		self._nodeMenu = GafferUI.Menu( GafferUI.NodeMenu.acquire( scriptNode.applicationRoot() ).definition(), searchable=True )
 	
 	## Returns the internal GadgetWidget holding the GraphGadget.	
 	def graphGadgetWidget( self ) :
