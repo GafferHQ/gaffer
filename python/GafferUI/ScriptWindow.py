@@ -56,8 +56,10 @@ class ScriptWindow( GafferUI.Window ) :
 		
 		self.__listContainer.append( m )
 		
-		if "Default" in GafferUI.Layouts.names() :
-			self.setLayout( GafferUI.Layouts.create( "Default", script ) )
+		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+		layouts = GafferUI.Layouts.acquire( applicationRoot ) if applicationRoot is not None else None
+		if layouts is not None and "Default" in layouts.names() :
+			self.setLayout( layouts.create( "Default", script ) )
 		else :
 			self.setLayout( GafferUI.CompoundEditor( script ) )
 		
