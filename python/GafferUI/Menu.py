@@ -452,7 +452,7 @@ class _Menu( QtGui.QMenu ) :
 	def keyPressEvent( self, qEvent ) :
 		
 		if qEvent.key() == QtCore.Qt.Key_Escape :
-			parent = self.parentWidget()
+			parent = self
 			while isinstance( parent, _Menu ) :
 				parent.close()
 				parent = parent.parentWidget()
