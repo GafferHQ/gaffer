@@ -349,7 +349,7 @@ class Menu( GafferUI.Widget ) :
 			matchIndexMap[info["pos"]].append( ( name, info["actions"] ) )
 		
 		numActions = 0
-		maxActions = 50
+		maxActions = 30
 		overflowMenu = None
 		
 		# sorting again alphabetically within each match position
