@@ -785,7 +785,6 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 	NodeGadget *selNodeGadget = nodeGadget( node );
 	if ( !node || !selNodeGadget )
 	{
-		m_dragReconnectCandidate = 0;
 		return;
 	}
 	
@@ -804,32 +803,79 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 		return;
 	}
 	
-	for( Gaffer::RecursiveInputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
+	Gaffer::DependencyNode *depNode = IECore::runTimeCast<Gaffer::DependencyNode>( node );
+	for ( Gaffer::RecursiveOutputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
 	{
+		// must be compatible
 		Gaffer::Plug *p = cIt->get();
-		if( !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
+		if ( !dstPlug->acceptsInput( p ) )
 		{
-			m_dragReconnectDstNodule = selNodeGadget->nodule( p );
+			continue;
+		}
+		
+		// must have a nodule
+		m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
+		if ( !m_dragReconnectSrcNodule )
+		{
+			continue;
+		}
+		
+		// must not be connected to a nodule
+		for ( Gaffer::Plug::OutputContainer::const_iterator oIt = p->outputs().begin(); oIt != p->outputs().end(); ++oIt )
+		{
+			NodeGadget *oNodeGadget = nodeGadget( (*oIt)->node() );
+			if ( oNodeGadget && oNodeGadget->nodule( *oIt ) )
+			{
+				m_dragReconnectSrcNodule = 0;
+				break;
+			}
+		}
+		
+		if ( !m_dragReconnectSrcNodule )
+		{
+			continue;
+		}
+		
+		if ( !depNode )
+		{
+			// found the best option
+			break;
+		}
+		
+		// make sure its corresponding input is also free
+		if ( Gaffer::Plug *in = depNode->correspondingInput( p ) )
+		{
+			if ( in->getInput<Gaffer::Plug>() )
+			{
+				m_dragReconnectSrcNodule = 0;
+				continue;
+			}
+			
+			m_dragReconnectDstNodule = selNodeGadget->nodule( in );
 			if ( m_dragReconnectDstNodule )
 			{
 				break;
 			}
 		}
 	}
-
-	for( Gaffer::RecursiveOutputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
+	
+	// check input plugs on non-dependencyNodes
+	if ( !depNode && !m_dragReconnectDstNodule )
 	{
-		Gaffer::Plug *p = cIt->get();
-		if( dstPlug->acceptsInput( p ) )
+		for ( Gaffer::RecursiveInputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
 		{
-			m_dragReconnectSrcNodule = selNodeGadget->nodule( p );
-			if ( m_dragReconnectSrcNodule )
+			Gaffer::Plug *p = cIt->get();
+			if ( !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
 			{
-				break;
+				m_dragReconnectDstNodule = selNodeGadget->nodule( p );
+				if ( m_dragReconnectDstNodule )
+				{
+					break;
+				}
 			}
 		}
 	}
-		
+	
 	if ( !m_dragReconnectSrcNodule && !m_dragReconnectDstNodule )
 	{
 		m_dragReconnectCandidate = 0;
