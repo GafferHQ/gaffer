@@ -1330,9 +1330,9 @@ def installer( target, source, env ) :
 	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in manifest ] ) )	
 	copyTree( str( source[0] ), str( target[0] ), regex )
 
-if env["PLATFORM"] == "darwin" :
+if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 	
-	# build an app bundle
+	# if the packaging will make a disk image, then build an os x app bundle
 
 	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer )
 	env.AlwaysBuild( install )
@@ -1353,19 +1353,22 @@ else :
 
 	env.Alias( "install", install )
 
-
 #########################################################################################################
 # Packaging
 #########################################################################################################
 
-## \todo Use hdiutil to create a disk image for OS X
 def packager( target, source, env ) :
 
-	installDir = env.subst( "$INSTALL_DIR" )
-	b = os.path.basename( installDir )
-	d = os.path.dirname( installDir )
-	runCommand( env.subst( "tar -czf $PACKAGE_FILE -C %s %s" % ( d, b ) ) )
+	target = str( target[0] )
+	source = str( source[0] )
+	b = os.path.basename( source )
+	d = os.path.dirname( source )
 	
-package = env.Command( "$PACKAGE_FILE", install, packager )
+	if target.endswith( ".dmg" ) :
+		runCommand( "hdiutil create -volname '%s' -srcfolder '%s' -ov -format UDZO '%s'" % ( os.path.basename( target ), source, target ) )				
+	else :
+		runCommand( "tar -czf %s -C %s %s" % ( target, d, b ) )
+	
+package = env.Command( "$PACKAGE_FILE", "$INSTALL_DIR", packager )
 env.NoCache( package )
 env.Alias( "package", package )
