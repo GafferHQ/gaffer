@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/tokenizer.hpp"
+
 #include "IECore/Exception.h"
 #include "IECore/NullObject.h"
 
@@ -357,4 +359,14 @@ IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return childNamesPlug()->hash();
+}
+
+void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
+{
+	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	Tokenizer tokenizer( s, boost::char_separator<char>( "/" ) );	
+	for( Tokenizer::const_iterator it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
+	{
+		path.push_back( *it );
+	}
 }

@@ -85,9 +85,7 @@ class Render : public Gaffer::Node
 		IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur ) const;
 		
 	private :
-	
-		void stringToPath( const std::string &s, ScenePlug::ScenePath &path ) const;
-	
+		
 		static size_t g_firstPlugIndex;
 		
 };

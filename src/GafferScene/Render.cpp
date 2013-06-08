@@ -34,8 +34,6 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
-
 #include "IECore/PreWorldRenderable.h"
 #include "IECore/Camera.h"
 #include "IECore/MatrixMotionTransform.h"
@@ -119,7 +117,7 @@ void Render::outputCamera( const ScenePlug *scene, const IECore::CompoundObject 
 	if( cameraPathData )
 	{
 		ScenePlug::ScenePath cameraPath;
-		stringToPath( cameraPathData->readable(), cameraPath );
+		ScenePlug::stringToPath( cameraPathData->readable(), cameraPath );
 		
 		IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
 		if( constCamera )
@@ -180,7 +178,7 @@ void Render::outputLights( const ScenePlug *scene, const IECore::CompoundObject 
 		}
 		
 		ScenePlug::ScenePath path;
-		stringToPath( it->first.string(), path );
+		ScenePlug::stringToPath( it->first.string(), path );
 		
 		IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
 		if( !constLight )
@@ -271,14 +269,4 @@ IECore::TransformPtr Render::transform( const ScenePlug *scene, const ScenePlug:
 	}
 
 	return result;
-}
-
-void Render::stringToPath( const std::string &s, ScenePlug::ScenePath &path ) const
-{
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer tokenizer( s, boost::char_separator<char>( "/" ) );	
-	for( Tokenizer::const_iterator it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
-	{
-		path.push_back( *it );
-	}
 }
