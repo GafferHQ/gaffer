@@ -78,6 +78,7 @@
 #include "GafferScene/Cube.h"
 #include "GafferScene/Sphere.h"
 #include "GafferScene/Text.h"
+#include "GafferScene/MapProjection.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -162,6 +163,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Transform>();
 	GafferBindings::DependencyNodeClass<Prune>();
 	GafferBindings::DependencyNodeClass<Text>();
+	GafferBindings::DependencyNodeClass<MapProjection>();
 	
 	{
 		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
