@@ -52,25 +52,15 @@ Clamp::Clamp( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new Color4fPlug( "minimum" ) );
-	addChild( new Color4fPlug( "maximum" ) );
-	addChild( new Color4fPlug( "minClampTo" ) );
-	addChild( new Color4fPlug( "maxClampTo" ) );
+	addChild( new Color4fPlug( "minimum", Plug::In, Imath::Color4f(0.f, 0.f, 0.f, 0.f) ) );
+	addChild( new Color4fPlug( "maximum", Plug::In, Imath::Color4f(1.f, 1.f, 1.f, 1.f) ) );
+	addChild( new Color4fPlug( "minClampTo", Plug::In, Imath::Color4f(0.f, 0.f, 0.f, 0.f) ) );
+	addChild( new Color4fPlug( "maxClampTo", Plug::In, Imath::Color4f(1.f, 1.f, 1.f, 1.f) ) );
 
-	addChild( new BoolPlug( "minimumEnabled" ) );
-	addChild( new BoolPlug( "maximumEnabled" ) );
-	addChild( new BoolPlug( "minClampToEnabled" ) );
-	addChild( new BoolPlug( "maxClampToEnabled" ) );
-
-	minimumPlug()->setValue( Imath::Color4f(0.f, 0.f, 0.f, 0.f) );
-	maximumPlug()->setValue( Imath::Color4f(1.f, 1.f, 1.f, 1.f) );
-	minClampToPlug()->setValue( Imath::Color4f(0.f, 0.f, 0.f, 0.f) );
-	maxClampToPlug()->setValue( Imath::Color4f(1.f, 1.f, 1.f, 1.f) );
-
-	minimumEnabledPlug()->setValue( true );
-	maximumEnabledPlug()->setValue( true );
-	minClampToEnabledPlug()->setValue( false );
-	maxClampToEnabledPlug()->setValue( false );
+	addChild( new BoolPlug( "minimumEnabled", Plug::In, true ) );
+	addChild( new BoolPlug( "maximumEnabled", Plug::In, true ) );
+	addChild( new BoolPlug( "minClampToEnabled", Plug::In, false ) );
+	addChild( new BoolPlug( "maxClampToEnabled", Plug::In, false ) );
 }
 
 Clamp::~Clamp()
