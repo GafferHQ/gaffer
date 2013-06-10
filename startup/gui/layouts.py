@@ -39,6 +39,19 @@ import GafferUI
 
 layouts = GafferUI.Layouts.acquire( application )
 
+# register the editors we want to be available to the user
+
+layouts.registerEditor( "Viewer" )
+layouts.registerEditor( "NodeEditor" )
+layouts.registerEditor( "NodeGraph" )
+layouts.registerEditor( "SceneHierarchy" )
+layouts.registerEditor( "SceneInspector" )
+layouts.registerEditor( "ScriptEditor" )
+layouts.registerEditor( "Browser" )
+layouts.registerEditor( "Timeline" )
+
+# register some predefined layouts
+
 layouts.add( "Default", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.5, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.NodeGraph( scriptNode ),) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( (GafferUI.NodeEditor( scriptNode ),), (GafferUI.ScriptEditor( scriptNode ),) ) ) ) ) )" )
 layouts.add( "Scene", "GafferUI.CompoundEditor( scriptNode, children = ( GafferUI.SplitContainer.Orientation.Horizontal, 0.772664, ( ( GafferUI.SplitContainer.Orientation.Horizontal, 0.255898, ( (GafferSceneUI.SceneHierarchy( scriptNode ),), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( ( GafferUI.SplitContainer.Orientation.Vertical, 1.000000, ( (GafferUI.Viewer( scriptNode ),), (GafferUI.Timeline( scriptNode ),) ) ), (GafferUI.NodeGraph( scriptNode ),) ) ) ) ), ( GafferUI.SplitContainer.Orientation.Vertical, 0.500000, ( (GafferUI.NodeEditor( scriptNode ),), (GafferSceneUI.SceneInspector( scriptNode ),) ) ) ) ) )" )
 layouts.add( "Empty", "GafferUI.CompoundEditor( scriptNode )" )

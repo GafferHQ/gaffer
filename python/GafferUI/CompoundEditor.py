@@ -145,7 +145,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 	
 		m = IECore.MenuDefinition()
 
-		for c in GafferUI.EditorWidget.types() :
+		layouts = GafferUI.Layouts.acquire( self.scriptNode().applicationRoot() )
+		for c in layouts.registeredEditors() :
 			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : IECore.curry( self.__addChild, splitContainer, c ) } )
 
 		m.append( "/divider", { "divider" : True } )
