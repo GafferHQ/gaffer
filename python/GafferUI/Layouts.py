@@ -49,6 +49,13 @@ import GafferUI
 # Layouts.acquire() method.
 class Layouts :
 	
+	## Typically acquire() should be used in preference
+	# to this constructor.
+	def __init__( self ) :
+	
+		self.__namedLayouts = {}
+		self.__registeredEditors = []
+	
 	## Acquires the set of layouts for the specified application.
 	@classmethod
 	def acquire( cls, applicationOrApplicationRoot ) :
@@ -65,7 +72,6 @@ class Layouts :
 			pass
 		
 		applicationRoot.__layouts = Layouts()
-		applicationRoot.__layouts.__namedLayouts = {}
 
 		return applicationRoot.__layouts
 		
@@ -128,3 +134,23 @@ class Layouts :
 		# tidy up by deleting the temporary variable, keeping the namespace clean for
 		# subsequently executed config files.
 		fileObject.write( "del layouts\n" )
+
+	## The EditorWidget factory provides access to every single registered subclass of
+	# editor, but specific applications may wish to only provide a subset of those
+	# editors to the user. This method is used from config files to define the subset
+	# of editors to use in the application.
+	def registerEditor( self, editorName ) :
+	
+		if editorName not in self.__registeredEditors :
+			self.__registeredEditors.append( editorName )
+	
+	## Deregisters a previously registered editor, this makes it unavailable to the 
+	# user when creating new layouts.
+	def deregisterEditor( self, editorName ) :
+	
+		self.__registeredEditors.remove( editorName )
+	
+	## Returns the names of all currently registered editors.
+	def registeredEditors( self ) :
+	
+		return self.__registeredEditors
