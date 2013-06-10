@@ -213,9 +213,8 @@ void Clamp::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaf
 
 void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	const int dataWidth = ImagePlug::tileSize()*ImagePlug::tileSize();
-
 	int channelIndex = ChannelMaskPlug::channelIndex( channel );
+
 	const float minimum = minimumPlug()->getValue()[channelIndex];
 	const float maximum = maximumPlug()->getValue()[channelIndex];
 	const float minClampTo = minClampToPlug()->getValue()[channelIndex];
@@ -225,17 +224,43 @@ void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug 
 	const bool minClampToEnabled = minClampToEnabledPlug()->getValue();
 	const bool maxClampToEnabled = maxClampToEnabledPlug()->getValue();
 
-	float *outPtr = &(outData->writable()[0]);
-	const float *END = outPtr + dataWidth;
+	std::vector<float> &out = outData->writable();
 
-	while (outPtr != END)
+	std::vector<float>::iterator outDataIterator;
+
+	for (outDataIterator = out.begin(); outDataIterator != out.end(); ++outDataIterator)
 	{
-		float colour = *outPtr;
 
-		if ( minimumEnabled && colour < minimum ) colour = (minClampToEnabled ? minClampTo : minimum);
-		if ( maximumEnabled && colour > maximum ) colour = (maxClampToEnabled ? maxClampTo : maximum);
+		if (minimumEnabled)
+		{
+			if (*outDataIterator < minimum)
+			{
+				if (minClampToEnabled)
+				{
+					*outDataIterator = minClampTo;
+				}
+				else
+				{
+					*outDataIterator = minimum;
+				}
+			}
+		}
 
-		*outPtr++ = colour;	
+		if (maximumEnabled) 
+		{
+			if (*outDataIterator > maximum)
+			{
+				if (maxClampToEnabled)
+				{
+					*outDataIterator = maxClampTo;
+				}
+				else
+				{
+					*outDataIterator = maximum;
+				}
+			}
+		}
+
 	}
 }
 
