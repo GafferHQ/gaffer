@@ -5,6 +5,7 @@ This section contains additional material to be referenced whilst using Gaffer.
 It is composed of the following appendices:
 
 * xref:appendices_hotkeys[Appendix A: Hotkeys]
+* xref:appendices_scriptingNuggets[Appendix B: Scripting Nuggets]
 
 
 
@@ -80,3 +81,28 @@ Also, as nodes are described by plain text you can cut and paste into emails/IM 
 |CTRL+v    |Paste
 |enter     |Execute selected input text
 |=======================
+
+
+=== Scripting Nuggets anchor:appendices_scriptingNuggets[]
+These one or two-liners achieve simple tasks via the python scripting interface, and serve as examples to build from.
+More complete details of the gaffer api are available !!!!HERE!!!!
+
+* Using the current frame to drive a plug. Enter in an expression for constant update.
+[source, python]
+------------------------------------
+parent['RenderManOptions']['options']['pixelSamples']['value']['y'] = int(context.getFrame())
+------------------------------------
+
+* Looping over a frame range.
+[source, python]
+------------------------------------
+for i in range(1,120):
+	script.context().setFrame(i)
+------------------------------------
+
+* Execute an named executable node - i.e. render
+[source, python]
+------------------------------------
+script['RenderManRender'].execute( [script.context()] )
+------------------------------------
+
