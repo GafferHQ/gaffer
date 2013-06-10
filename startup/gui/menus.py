@@ -140,6 +140,7 @@ import GafferImageUI
 nodeMenu.append( "/Image/Source/Display", GafferImage.Display )
 nodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
 nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/Color/Clamp", GafferImage.Clamp )
 nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
 nodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )

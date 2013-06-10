@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,54 +34,64 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_CLAMP_H
+#define GAFFERIMAGE_CLAMP_H
+
+#include "GafferImage/ChannelDataProcessor.h"
+#include "GafferImage/ImagePlug.h"
+#include "Gaffer/PlugType.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class Clamp : public ChannelDataProcessor
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772,
-	BoxFilterTypeId = 110773,
-	BilinearFilterTypeId = 110774,
-	SplineFilterTypeId = 110775,
-	BSplineFilterTypeId = 110776,
-	HermiteFilterTypeId = 110777,
-	CubicFilterTypeId = 110778,
-	MitchellFilterTypeId = 110779,
-	CatmullRomFilterTypeId = 110780,
-	SincFilterTypeId = 110781,
-	LanczosFilterTypeId = 110782,
-	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
-	ClampTypeId = 110785,
+
+	public :
+		
+		Clamp( const std::string &name=defaultName<Clamp>() );
+		virtual ~Clamp();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Clamp, ClampTypeId, ChannelDataProcessor );
+		
+        //! @name Plug Accessors
+        /// Returns a pointer to the node's plugs.
+        //////////////////////////////////////////////////////////////
+        //@{	
+		Gaffer::Color4fPlug *minimumPlug();
+		const Gaffer::Color4fPlug *minimumPlug() const;
+		Gaffer::Color4fPlug *maximumPlug();
+		const Gaffer::Color4fPlug *maximumPlug() const;
+		Gaffer::Color4fPlug *minClampToPlug();
+		const Gaffer::Color4fPlug *minClampToPlug() const;
+		Gaffer::Color4fPlug *maxClampToPlug();
+		const Gaffer::Color4fPlug *maxClampToPlug() const;
+
+		Gaffer::BoolPlug *minimumEnabledPlug();
+		const Gaffer::BoolPlug *minimumEnabledPlug() const;
+		Gaffer::BoolPlug *maximumEnabledPlug();
+		const Gaffer::BoolPlug *maximumEnabledPlug() const;
+		Gaffer::BoolPlug *minClampToEnabledPlug();
+		const Gaffer::BoolPlug *minClampToEnabledPlug() const;
+		Gaffer::BoolPlug *maxClampToEnabledPlug();
+		const Gaffer::BoolPlug *maxClampToEnabledPlug() const;
+        //@}
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 	
-	LastTypeId = 110849
+	protected :
+
+		virtual bool channelEnabled( const std::string &channel ) const;
+		
+		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;
+
+	private :
+		
+		static size_t g_firstPlugIndex;
+		
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_CLAMP_H
