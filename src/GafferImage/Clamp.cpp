@@ -167,17 +167,14 @@ void Clamp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 {
 	ChannelDataProcessor::affects( input, outputs );
 
-	for( unsigned int i = 0; i < 4; ++i )
+	if ( input->ancestor<Color4fPlug>() == minimumPlug() ||  
+		 input->ancestor<Color4fPlug>() == maximumPlug() ||
+		 input->ancestor<Color4fPlug>() == minClampToPlug() ||
+		 input->ancestor<Color4fPlug>() == maxClampToPlug()
+	  )
 	{
-		if ( input == minimumPlug()->getChild(i) ||
-			 input == maximumPlug()->getChild(i) ||
-			 input == minClampToPlug()->getChild(i) ||
-			 input == maxClampToPlug()->getChild(i)
-		  )
-		{
-			outputs.push_back( outPlug()->channelDataPlug() );	
-			return;
-		}
+		outputs.push_back( outPlug()->channelDataPlug() );	
+		return;
 	}
 
 	if( input == inPlug()->channelDataPlug() ||
