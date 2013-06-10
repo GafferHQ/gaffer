@@ -153,6 +153,21 @@ void ImageStats::inputChanged( Gaffer::Plug *plug )
 	}
 }
 
+void ImageStats::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	// Initialise the default format and setup any format knobs that are on this node.
+	if( newParent )
+	{
+		if ( static_cast<Gaffer::TypeId>(newParent->typeId()) == ScriptNodeTypeId )
+		{
+			ScriptNode *scriptNode =  static_cast<Gaffer::ScriptNode*>( newParent );
+			Format::addDefaultFormatPlug( scriptNode );
+		}
+	}
+	
+	ComputeNode::parentChanging( newParent );
+}
+
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
@@ -214,7 +229,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 		if ( !channel.empty() )
 		{
 			h.append( channel );	
-			Sampler s( inPlug(), channel, regionOfInterest, Filter::create( Filter::defaultFilter() ) );
+			Sampler s( inPlug(), channel, regionOfInterest );
 			s.hash( h );
 			return;
 		}
@@ -308,7 +323,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	Context::Scope scopedContext( tmpContext );
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, regionOfInterest, Filter::create( Filter::defaultFilter() ) );	
+	Sampler s( inPlug(), channelName, regionOfInterest );	
 
 	float min = std::numeric_limits<float>::max();
 	float max = std::numeric_limits<float>::min();

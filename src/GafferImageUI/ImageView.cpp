@@ -75,15 +75,18 @@ class ImageViewGadget : public GafferUI::Gadget
 
 	public :
 
-		ImageViewGadget( IECore::ConstImagePrimitivePtr image )
+		ImageViewGadget( IECore::ConstImagePrimitivePtr image, GafferImage::ImageStatsPtr imageStats )
 			:	Gadget( defaultName<ImageViewGadget>() ),
 				m_displayBound( image->bound() ),
 				m_displayWindow( image->getDisplayWindow() ),
 				m_dataWindow( image->getDataWindow() ),
 				m_image( image->copy() ),
 				m_texture( 0 ),
-				m_sampleColour( Color4f( 0.f, 0.f, 0.f, 0.f ) ),
-				m_dragSelecting( false )
+				m_mousePos( 0 ),
+				m_sampleColour( 0.f),
+				m_dragSelecting( false ),
+				m_drawSelection( false ),
+				m_imageStats( imageStats )
 		{
 			Box2i dataWindow( image->getDataWindow() );
 			V3f dataMin( dataWindow.min.x, dataWindow.min.y, 0.0 );
@@ -98,11 +101,25 @@ class ImageViewGadget : public GafferUI::Gadget
 			);
 
 			buttonPressSignal().connect( boost::bind( &ImageViewGadget::buttonPress, this, ::_1,  ::_2 ) );
+			buttonReleaseSignal().connect( boost::bind( &ImageViewGadget::buttonRelease, this, ::_1,  ::_2 ) );
 			dragBeginSignal().connect( boost::bind( &ImageViewGadget::dragBegin, this, ::_1, ::_2 ) );
 			dragEnterSignal().connect( boost::bind( &ImageViewGadget::dragEnter, this, ::_1, ::_2 ) );
 			dragMoveSignal().connect( boost::bind( &ImageViewGadget::dragMove, this, ::_1, ::_2 ) );
 			dragEndSignal().connect( boost::bind( &ImageViewGadget::dragEnd, this, ::_1, ::_2 ) );
 			mouseMoveSignal().connect( boost::bind( &ImageViewGadget::mouseMove, this, ::_1, ::_2 ) );
+
+			// Create some useful structs that we will use to hold information needed
+			// to draw the UI elements that display the colour readouts to the screen.	
+			m_colourUiElements.resize(4);
+			m_colourUiElements[0].name = "RGBA"; // The colour under the mouse pointer.
+			m_colourUiElements[0].draw = true;
+			m_colourUiElements[0].position = V2i( 110, 0 );
+			m_colourUiElements[1].name = "Min"; // The minimum colour within a selection.
+			m_colourUiElements[1].position = V2i( 110, 19 );
+			m_colourUiElements[2].name = "Max"; // The maximum colour within a selection.
+			m_colourUiElements[2].position = V2i( 360, 19 );
+			m_colourUiElements[3].name = "Mean"; // The mean colour within a selection.
+			m_colourUiElements[3].position = V2i( 610, 19 );
 		}
 
 		virtual ~ImageViewGadget()
@@ -111,6 +128,9 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		virtual Imath::Box3f bound() const
 		{
+			///\todo: Return an extended bounding box here which includes the infoBox() UI element.
+			/// This allows the image to be framed properly when the "f" button has been pressed to
+			/// focus the viewer on an image.
 			return m_displayBound;
 		}
 		
@@ -199,24 +219,50 @@ class ImageViewGadget : public GafferUI::Gadget
 			return colour;
 		};
 
+		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
+		{
+			return false;
+		}
+
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		{
 			if( event.buttons != ButtonEvent::Left )
 			{
 				return false;
 			}
+		
+			V3f mouseGadgetPos( event.line.p0.x, event.line.p0.y, 0.f );
+			m_mousePos = gadgetToDisplaySpace( mouseGadgetPos );
 			
-			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
-			m_dragColour = m_sampleColour = sampleColour( m_mousePos);
+			/// Check to see if the user is clicking on one of the swatches...	
+			if ( ( event.modifiers & ModifiableEvent::Shift ) == false )
+			{
+				const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+				V2f mouseRasterPos( viewportGadget->gadgetToRasterSpace( mouseGadgetPos, this ) );
+				for( unsigned int i = 0; i < 4; ++i )
+				{
+					V2f origin( m_colourUiElements[i].position + infoBox().min );
+					Box2f swatchBox( m_colourUiElements[i].swatchBox.min + origin, m_colourUiElements[i].swatchBox.max + origin );
+					if( boxIntersects( swatchBox, mouseRasterPos ) )
+					{
+						m_sampleColour = m_colourUiElements[i].colour;
+						renderRequestSignal()( this );
+						return true;
+					}
+				}
+			}
+
+			m_drawSelection = m_colourUiElements[1].draw = m_colourUiElements[2].draw = m_colourUiElements[3].draw = false;
+			m_colourUiElements[0].colour = m_sampleColour = sampleColour( m_mousePos );
 			renderRequestSignal()( this );
-			
+
 			return true;
 		}
 		
 		bool mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		{
 			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
-			m_dragColour = sampleColour( m_mousePos );
+			m_colourUiElements[0].colour = sampleColour( m_mousePos );
 			renderRequestSignal()( this );
 			return true;
 		}
@@ -237,14 +283,41 @@ class ImageViewGadget : public GafferUI::Gadget
 			// Update the selection box.
 			if ( m_dragSelecting )
 			{				
+				m_drawSelection = m_colourUiElements[1].draw = m_colourUiElements[2].draw = m_colourUiElements[3].draw = true;
+				
 				Box3f selectionBox;
 				selectionBox.extendBy( m_dragStartPosition );
 				selectionBox.extendBy( m_lastDragPosition );
 				setSelectionArea( selectionBox );
+
+				/// Set the region of interest on our internal ImageStats node and
+				/// get the min, max and average value of the image.	
+				const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+				Box2f roif(
+					V2f( viewportGadget->gadgetToRasterSpace( m_sampleWindow.min, this ) ),
+					V2f( viewportGadget->gadgetToRasterSpace( m_sampleWindow.max, this ) )
+				);
+				roif = rasterToDisplaySpace( roif );
+
+				Box2i roi(
+					V2i(
+						fastFloatRound( roif.min.x - .5 ) + 1,
+						m_displayWindow.size().y - ( fastFloatRound( roif.max.y - .5 ) ) + 1
+					),
+					V2i(
+						fastFloatRound( roif.max.x - .5 ),
+						m_displayWindow.size().y - ( fastFloatRound( roif.min.y - .5 ) )
+					)
+				);
+				m_imageStats->regionOfInterestPlug()->setValue( roi );
+		
+				m_colourUiElements[1].colour = m_imageStats->minPlug()->getValue();
+				m_colourUiElements[2].colour = m_imageStats->maxPlug()->getValue();
+				m_colourUiElements[3].colour = m_imageStats->averagePlug()->getValue();
 			}
 
 			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
-			m_dragColour = sampleColour( m_mousePos );
+			m_colourUiElements[0].colour = sampleColour( m_mousePos );
 			renderRequestSignal()( this );
 			return true;
 		}
@@ -256,7 +329,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				return false;
 			}
 			m_dragSelecting = false;
-
+			
 			renderRequestSignal()( this );
 			return true;
 		}
@@ -318,6 +391,21 @@ class ImageViewGadget : public GafferUI::Gadget
 			
 			style->renderText( Style::LabelText, rasterWindowMinStr );
 			glLoadIdentity();
+		}
+
+		Box2f infoBox() const
+		{
+			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+			V2i viewportWH( viewportGadget->getViewport() );
+			Box2f infoBox(
+					V2f( 0.f, viewportWH.y-20),
+					viewportWH
+				);
+			if ( m_drawSelection )
+			{
+				infoBox.min.y = viewportWH.y-40;
+			}
+			return infoBox;
 		}
 
 		virtual void doRender( const Style *style ) const
@@ -432,7 +520,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			}
 
 			/// Draw the selection window.
-			if( m_dragSelecting )
+			if( m_drawSelection )
 			{
 				Box2f rasterBox(
 					V2i( viewportGadget->gadgetToRasterSpace( m_sampleWindow.min, this ) ),
@@ -444,33 +532,74 @@ class ImageViewGadget : public GafferUI::Gadget
 				drawWindow( rasterBox, style );
 			}
 
-			/// Draw the colour info bar.	
+			// Draw the colour information bar.	
 			colour = Color4f( 0.f, 0.f, 0.f, 1.f );
 			glColor( colour );
-			V2i viewportWH( viewportGadget->getViewport() );
-
-			Box2f infoBox(
-				V2f( 0.f, viewportWH.y-20 ), 
-				viewportWH
-			);
-			style->renderSolidRectangle( infoBox );
+			style->renderSolidRectangle( infoBox() );
+			glColor( Color4f( .29804, .29804, .29804, .90 ) );
+			style->renderRectangle( infoBox() );
 
 			// Draw the mouse's XY position.
-			glTranslatef( infoBox.min.x+10, infoBox.min.y+14, 0.f );
+			glTranslatef( infoBox().min.x+10, infoBox().min.y+14, 0.f );
 			glScalef( 10.f, -10.f, 1.f );
 			std::string mousePosStr = std::string( boost::str( boost::format( "XY: %d, %d" ) % fastFloatRound( m_mousePos.x - .5 ) % fastFloatRound( m_mousePos.y - .5 ) ) );
 			style->renderText( Style::LabelText, mousePosStr );
 			glLoadIdentity();
 			
-			glTranslatef( infoBox.min.x+130, infoBox.min.y+14, 0.f );
-			glScalef( 10.f, -10.f, 1.f );
-			std::string colourStr = std::string( boost::str( boost::format( "RGBA: %.4f, %.4f, %.4f, %.4f" ) % m_dragColour[0] % m_dragColour[1] % m_dragColour[2] % m_dragColour[3] ) );
-			style->renderText( Style::LabelText, colourStr );
-			glLoadIdentity();
+			for( unsigned int i = 0; i < m_colourUiElements.size(); ++i )
+			{
+				if( m_colourUiElements[i].draw )
+				{
+					V2f origin( m_colourUiElements[i].position + infoBox().min );
+					
+					// Render a little swatch of the colour.
+					Box2f swatchBox( m_colourUiElements[i].swatchBox );
+					swatchBox.min += origin;
+					swatchBox.max += origin;
+
+					glColor( Color4f( 0.f, 0.f, 0.f, 1.f ) );
+					style->renderSolidRectangle( swatchBox );
+					glColor( Color4f( 1.f ) );
+					style->renderSolidRectangle( Box2f( swatchBox.min, swatchBox.min + ( swatchBox.size() / V2f( 2. ) ) ) );
+					style->renderSolidRectangle( Box2f( swatchBox.min + ( swatchBox.size() / V2f( 2. ) ), swatchBox.max ) );
+					glColor( m_colourUiElements[i].colour );
+					style->renderSolidRectangle( swatchBox );
+					glColor( Color4f( .29804, .29804, .29804, .90 ) );
+					style->renderRectangle( swatchBox );
+					
+					// Render the text next to the swatch.
+					V2f textPos( swatchBox.max.x + 5.f, origin.y + 14.f );
+					glTranslatef( textPos.x, textPos.y, 0.f );
+					glScalef( 10.f, -10.f, 1.f );
+					std::string infoStr = std::string(
+							boost::str(
+								boost::format( "%s: %.4f, %.4f, %.4f, %.4f" )
+								% m_colourUiElements[i].name.c_str()
+								% m_colourUiElements[i].colour[0]
+								% m_colourUiElements[i].colour[1]
+								% m_colourUiElements[i].colour[2]
+								% m_colourUiElements[i].colour[3]
+								)
+							);
+					style->renderText( Style::LabelText, infoStr );
+					glLoadIdentity();
+				}
+			}
 		}
 
 	private :
 		
+		/// A simple struct that we use to hold the information required to draw a UI element that displays information about a colour.
+		struct ColorUiElement
+		{
+			ColorUiElement(): draw( false ), name( "RGBA" ), colour( 0.f ), position( 0.f ), swatchBox( V2f( 0.f, 5.f ), V2f( 10.f, 15.f ) ) {}
+			bool draw;
+			std::string name;
+			Color4f colour;
+			Imath::V2f position;
+			Imath::Box2f swatchBox;
+		};
+
 		Imath::Box3f m_displayBound;
 		Imath::Box3f m_dataBound;
 		Imath::Box2i m_displayWindow;
@@ -482,10 +611,12 @@ class ImageViewGadget : public GafferUI::Gadget
 		Imath::V3f m_dragStartPosition;
 		Imath::V3f m_lastDragPosition;
 		Color4f m_sampleColour;
-		Color4f m_dragColour;
 		bool m_dragSelecting;
-		
+		bool m_drawSelection;
+
 		Imath::Box3f m_sampleWindow;
+		GafferImage::ImageStatsPtr m_imageStats;
+		std::vector<ColorUiElement> m_colourUiElements;
 };
 
 IE_CORE_DECLAREPTR( ImageViewGadget );
@@ -502,18 +633,38 @@ IE_CORE_DEFINERUNTIMETYPED( ImageView );
 
 ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 
+size_t ImageView::g_firstChildIndex = 0;
+
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() )
 {
+	storeIndexOfNextChild( g_firstChildIndex );
+	
+	// Create an internal ImageStats node 
+	addChild( new GafferImage::ImageStats( "imageStats" ) );
 }
 
 ImageView::ImageView( const std::string &name, Gaffer::PlugPtr input )
 	:	View( name, input )
 {
+	storeIndexOfNextChild( g_firstChildIndex );
+	
+	// Create an internal ImageStats node 
+	addChild( new GafferImage::ImageStats( "imageStats" ) );
 }
 
 ImageView::~ImageView()
 {
+}
+
+GafferImage::ImageStats *ImageView::imageStatsNode()
+{
+	return getChild<GafferImage::ImageStats>( g_firstChildIndex );
+}
+
+const GafferImage::ImageStats *ImageView::imageStatsNode() const
+{
+	return getChild<GafferImage::ImageStats>( g_firstChildIndex );
 }
 
 void ImageView::update()
@@ -531,7 +682,16 @@ void ImageView::update()
 
 	if( image )
 	{
-		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image );
+		GafferImage::ImagePlug *imagePlug( inPlug<ImagePlug>() );
+		if( !imagePlug )
+		{
+			throw IECore::Exception("ImageView: Failed to find an ImagePlug as inPlug()");
+		}
+
+		imageStatsNode()->inPlug()->setInput( imagePlug );
+		imageStatsNode()->channelsPlug()->setInput( imagePlug->channelNamesPlug() );
+
+		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode() );
 		bool hadChild = viewportGadget()->getChild<Gadget>();
 		viewportGadget()->setChild( imageViewGadget );
 		if( !hadChild )
