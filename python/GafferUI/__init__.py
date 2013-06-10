@@ -169,10 +169,10 @@ from NameLabel import NameLabel
 from NodeSetEditor import NodeSetEditor
 from NodeEditor import NodeEditor
 from Layouts import Layouts
+from NodeMenu import NodeMenu
 import FileMenu
 import LayoutMenu
 import EditMenu
-import NodeMenu
 from Viewer import Viewer
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget

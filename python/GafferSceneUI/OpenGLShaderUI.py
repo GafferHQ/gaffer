@@ -85,9 +85,7 @@ def shaderSubMenu() :
 		for root, dirs, files in os.walk( path ) :
 			for file in files :
 				if os.path.splitext( file )[1] in ( ".vert", ".frag" ) :
-					shaderPath = os.path.join( root, file )
-					shaderPath = os.path.realpath( shaderPath )
-					shaderPath = os.path.relpath( shaderPath, path )					
+					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
 					shaders.add( os.path.splitext( shaderPath )[0] )
 	
 	result = IECore.MenuDefinition()

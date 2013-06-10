@@ -42,22 +42,11 @@ import IECore
 
 import Gaffer
 import GafferScene
-
-## \todo We can't simply import every module during startup - perhaps we should have
-# a plugin autoload mechanism accessible in the preferences? It's important that we
-# don't make that too complicated though, and that plugins remain as standard python
-# modules and nothing more.
 import GafferUI
 import GafferSceneUI
-try :
-	import GafferArnoldUI
-except Exception, m :
-	stacktrace = traceback.format_exc()
-	IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading GafferArnoldUI - \"%s\".\n %s" % ( m, stacktrace ) )
 
-import GafferRenderManUI
-	
 # ScriptWindow menu
+##########################################################################
 
 scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition()
 
@@ -67,67 +56,112 @@ GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.ExecuteUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
-# Node menu
+## Node creation menu
+###########################################################################
 
-GafferUI.NodeMenu.append( "/Scene/Source/SceneReader", GafferScene.SceneReader )
-GafferUI.NodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
-GafferUI.NodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
-GafferUI.NodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
-GafferUI.NodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
-GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
-GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )
-GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Sphere", GafferScene.Sphere )
-GafferUI.NodeMenu.append( "/Scene/Source/Primitive/Text", GafferScene.Text )
-GafferUI.NodeMenu.append( "/Scene/Object/Generators/Seeds", GafferScene.Seeds )
-GafferUI.NodeMenu.append( "/Scene/Object/Generators/Instancer", GafferScene.Instancer )
-GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.AttributeCache )
-GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
-GafferUI.NodeMenu.append( "/Scene/Object/Modifiers/Mesh Type", GafferScene.MeshType, searchText = "MeshType"  )
-GafferUI.NodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
-GafferUI.NodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
-GafferUI.NodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes )
-GafferUI.NodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )
-GafferUI.NodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
-GafferUI.NodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree )
-GafferUI.NodeMenu.append( "/Scene/Scene/Prune", GafferScene.Prune )
-GafferUI.NodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
-GafferUI.NodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, searchText = "AimConstraint" )
-GafferUI.NodeMenu.append( "/Scene/Context/TimeWarp", GafferScene.SceneTimeWarp )
-GafferUI.NodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables )
-GafferUI.NodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )
-GafferUI.NodeMenu.append( "/Scene/Globals/Standard Options", GafferScene.StandardOptions, searchText = "StandardOptions" )
-GafferUI.NodeMenu.append( "/Scene/Globals/Options", GafferScene.Options )
-GafferUI.NodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
-GafferUI.NodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
-GafferUI.NodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = "OpenGLRender" )
+nodeMenu = GafferUI.NodeMenu.acquire( application )
 
-try :	
-	import GafferImage
-	import GafferImageUI
+# Arnold nodes
 
-	GafferUI.NodeMenu.append( "/Image/Source/Display", GafferImage.Display )
-	GafferUI.NodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
-	GafferUI.NodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
-	GafferUI.NodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
-	GafferUI.NodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
-	GafferUI.NodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )
-	GafferUI.NodeMenu.append( "/Image/Filter/Merge", GafferImage.Merge )
-	GafferUI.NodeMenu.append( "/Image/Filter/Reformat", GafferImage.Reformat )
-	GafferUI.NodeMenu.append( "/Image/Filter/ImageTransform", GafferImage.ImageTransform )
-	GafferUI.NodeMenu.append( "/Image/Utility/Select", GafferImage.Select )
-	GafferUI.NodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
-except ImportError :
-	pass
+try :
+
+	import GafferArnold
+	import GafferArnoldUI
 	
-GafferUI.NodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
-GafferUI.NodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
+	GafferArnoldUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+	
+	nodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
+	nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
+	nodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender, searchText = "ArnoldRender" )
+
+except Exception, m :
+
+	stacktrace = traceback.format_exc()
+	IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Arnold module - \"%s\".\n %s" % ( m, stacktrace ) )
+
+# RenderMan nodes
+
+try :
+
+	import GafferRenderMan
+	import GafferRenderManUI
+
+	GafferRenderManUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+	
+	nodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
+	nodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
+	nodeMenu.append( "/RenderMan/Render", GafferRenderMan.RenderManRender, searchText = "RenderManRender" )
+	nodeMenu.append( "/RenderMan/InteractiveRender", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRender" )
+
+except Exception, m :
+
+	stacktrace = traceback.format_exc()
+	IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading RenderMan module - \"%s\".\n %s" % ( m, stacktrace ) )
+
+# Scene nodes
+
+nodeMenu.append( "/Scene/Source/SceneReader", GafferScene.SceneReader )
+nodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
+nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
+nodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
+nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
+nodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
+nodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )
+nodeMenu.append( "/Scene/Source/Primitive/Sphere", GafferScene.Sphere )
+nodeMenu.append( "/Scene/Source/Primitive/Text", GafferScene.Text )
+nodeMenu.append( "/Scene/Object/Generators/Seeds", GafferScene.Seeds )
+nodeMenu.append( "/Scene/Object/Generators/Instancer", GafferScene.Instancer )
+nodeMenu.append( "/Scene/Object/Modifiers/AttributeCache", GafferScene.AttributeCache )
+nodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
+nodeMenu.append( "/Scene/Object/Modifiers/Mesh Type", GafferScene.MeshType, searchText = "MeshType"  )
+nodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
+nodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
+nodeMenu.append( "/Scene/Attributes/Attributes", GafferScene.Attributes )
+nodeMenu.append( "/Scene/Filters/PathFilter", GafferScene.PathFilter )
+nodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
+nodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree )
+nodeMenu.append( "/Scene/Scene/Prune", GafferScene.Prune )
+nodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
+nodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, searchText = "AimConstraint" )
+nodeMenu.append( "/Scene/Context/TimeWarp", GafferScene.SceneTimeWarp )
+nodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables )
+nodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )
+nodeMenu.append( "/Scene/Globals/Standard Options", GafferScene.StandardOptions, searchText = "StandardOptions" )
+nodeMenu.append( "/Scene/Globals/Options", GafferScene.Options )
+nodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
+nodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
+nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = "OpenGLRender" )
+
+# Image nodes
+
+import GafferImage
+import GafferImageUI
+
+nodeMenu.append( "/Image/Source/Display", GafferImage.Display )
+nodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
+nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
+nodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
+nodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO )
+nodeMenu.append( "/Image/Filter/Merge", GafferImage.Merge )
+nodeMenu.append( "/Image/Filter/Reformat", GafferImage.Reformat )
+nodeMenu.append( "/Image/Filter/ImageTransform", GafferImage.ImageTransform )
+nodeMenu.append( "/Image/Utility/Select", GafferImage.Select )
+nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
+
+# Cortex nodes
+	
+nodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
+nodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
 
 # \todo have a method for dynamically choosing between Gaffer.OpHolder and Gaffer.ExecutableOpHolder
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
-GafferUI.NodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
+nodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )
+nodeMenu.appendParameterisedHolders( "/Cortex/Procedurals", Gaffer.ProceduralHolder, "IECORE_PROCEDURAL_PATHS" )
 
-GafferUI.NodeMenu.append( "/Utility/Expression", Gaffer.Expression )
-GafferUI.NodeMenu.append( "/Utility/Node", Gaffer.Node )
-GafferUI.NodeMenu.append( "/Utility/Random", Gaffer.Random )
-GafferUI.NodeMenu.append( "/Utility/Box", GafferUI.BoxUI.nodeMenuCreateCommand )
-GafferUI.NodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateCommand )
+# Utility nodes
+
+nodeMenu.append( "/Utility/Expression", Gaffer.Expression )
+nodeMenu.append( "/Utility/Node", Gaffer.Node )
+nodeMenu.append( "/Utility/Random", Gaffer.Random )
+nodeMenu.append( "/Utility/Box", GafferUI.BoxUI.nodeMenuCreateCommand )
+nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateCommand )
