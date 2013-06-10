@@ -46,96 +46,128 @@ import IECore
 import Gaffer
 import GafferUI
 
-## Returns a menu definition used for the creation of nodes. This is
-# initially empty but is expected to be populated during the gaffer
-# startup routine.
-def definition() :
+## The NodeMenu class provides a menu for the creation of new nodes. To allow
+# different applications to coexist happily in the same process, separate node
+# menus are maintained per application, and NodeMenu.acquire() is used to
+# obtain the appropriate menu.
+class NodeMenu :
 
-	return __definition
-
-__definition = IECore.MenuDefinition()
-
-## Utility function to append a menu item to definition.
-# nodeCreator must be a callable that returns a Gaffer.Node.	
-def append( path, nodeCreator, **kw ) :
-
-	item = IECore.MenuItemDefinition( command = nodeCreatorWrapper( nodeCreator=nodeCreator ), **kw )
-	definition().append( path, item )
-
-## Utility function which takes a callable that creates a node, and returns a new
-# callable which will add the node to the graph.
-def nodeCreatorWrapper( nodeCreator ) :
-
-	def f( menu ) :
-				
-		nodeGraph = menu.ancestor( GafferUI.NodeGraph )
-		assert( nodeGraph is not None )
-		gadgetWidget = nodeGraph.graphGadgetWidget()
-		graphGadget = gadgetWidget.getViewportGadget().getChild()
-		
-		script = nodeGraph.scriptNode()
-
-		commandArgs = []
-		with IECore.IgnoredExceptions( TypeError ) :
-			commandArgs = inspect.getargspec( nodeCreator )[0]
-		
-		with Gaffer.UndoContext( script ) :
-			
-			if "menu" in commandArgs :
-				node = nodeCreator( menu = menu )
-			else :
-				node = nodeCreator()
-
-			if node.parent() is None :
-				graphGadget.getRoot().addChild( node )
-			
-			graphGadget.getLayout().connectNode( graphGadget, node, script.selection() )
-
-		# if no connections were made, we can't expect the graph layout to
-		# know where to put the node, so we'll try to position it based on
-		# the click location that opened the menu.
-		## \todo This positioning doesn't work very well when the menu min
-		# is not where the mouse was clicked to open the window (when the menu
-		# has been moved to keep it on screen).
-		menuPosition = menu.bound( relativeTo=gadgetWidget ).min
-		fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
-			IECore.V2f( menuPosition.x, menuPosition.y ),
-			gadget = graphGadget
-		).p0
-		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
-
-		graphGadget.getLayout().positionNode( graphGadget, node, fallbackPosition )
-			
-		script.selection().clear()
-		script.selection().add( node )
-
-	return f
-				
-## Utility function to append menu items to definition. One item will
-# be created for each class found on the specified search path.
-def appendParameterisedHolders( path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
+	## Chances are you want to use acquire() to get the NodeMenu for a
+	# specific application, rather than construct one directly.
+	def __init__( self ) :
 	
-	if isinstance( matchExpression, str ) :
-		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
+		self.__definition = IECore.MenuDefinition()
+
+	## Acquires the NodeMenu for the specified application.
+	@staticmethod
+	def acquire( applicationOrApplicationRoot ) :
 	
-	definition().append( path, { "subMenu" : IECore.curry( __parameterisedHolderMenu, parameterisedHolderType, searchPathEnvVar, matchExpression ) } )
+		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
+			applicationRoot = applicationOrApplicationRoot.root()
+		else :
+			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
+			applicationRoot = applicationOrApplicationRoot
+			
+		nodeMenu = getattr( applicationRoot, "_nodeMenu", None )
+		if nodeMenu :
+			return nodeMenu
+			
+		nodeMenu = NodeMenu()
+		applicationRoot._nodeMenu = nodeMenu
+		
+		return nodeMenu
 
-def __parameterisedHolderCreator( parameterisedHolderType, className, classVersion, searchPathEnvVar ) :
+	## Returns a menu definition used for the creation of nodes. This is
+	# initially empty but is expected to be populated during the gaffer
+	# startup routine.
+	def definition( self ) :
 
-	nodeName = className.rpartition( "/" )[-1]
-	node = parameterisedHolderType( nodeName )
-	node.setParameterised( className, classVersion, searchPathEnvVar )
+		return self.__definition
 
-	return node
+	## Utility function to append a menu item to definition.
+	# nodeCreator must be a callable that returns a Gaffer.Node.	
+	def append( self, path, nodeCreator, **kw ) :
 
-def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar, matchExpression ) :
+		item = IECore.MenuItemDefinition( command = self.nodeCreatorWrapper( nodeCreator=nodeCreator ), **kw )
+		self.definition().append( path, item )
 
-	c = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
-	d = IECore.MenuDefinition()
-	for n in c.classNames() :
-		if matchExpression.match( n ) :
-			nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
-			v = c.getDefaultVersion( n )
-			d.append( "/" + nc, { "command" : nodeCreatorWrapper( IECore.curry( __parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
+	## Utility function which takes a callable that creates a node, and returns a new
+	# callable which will add the node to the graph.
+	@staticmethod
+	def nodeCreatorWrapper( nodeCreator ) :
 
-	return d
+		def f( menu ) :
+
+			nodeGraph = menu.ancestor( GafferUI.NodeGraph )
+			assert( nodeGraph is not None )
+			gadgetWidget = nodeGraph.graphGadgetWidget()
+			graphGadget = gadgetWidget.getViewportGadget().getChild()
+
+			script = nodeGraph.scriptNode()
+
+			commandArgs = []
+			with IECore.IgnoredExceptions( TypeError ) :
+				commandArgs = inspect.getargspec( nodeCreator )[0]
+
+			with Gaffer.UndoContext( script ) :
+
+				if "menu" in commandArgs :
+					node = nodeCreator( menu = menu )
+				else :
+					node = nodeCreator()
+
+				if node.parent() is None :
+					graphGadget.getRoot().addChild( node )
+
+				graphGadget.getLayout().connectNode( graphGadget, node, script.selection() )
+
+			# if no connections were made, we can't expect the graph layout to
+			# know where to put the node, so we'll try to position it based on
+			# the click location that opened the menu.
+			## \todo This positioning doesn't work very well when the menu min
+			# is not where the mouse was clicked to open the window (when the menu
+			# has been moved to keep it on screen).
+			menuPosition = menu.bound( relativeTo=gadgetWidget ).min
+			fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
+				IECore.V2f( menuPosition.x, menuPosition.y ),
+				gadget = graphGadget
+			).p0
+			fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+
+			graphGadget.getLayout().positionNode( graphGadget, node, fallbackPosition )
+
+			script.selection().clear()
+			script.selection().add( node )
+
+		return f
+
+	## Utility function to append menu items to definition. One item will
+	# be created for each class found on the specified search path.
+	def appendParameterisedHolders( self, path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
+
+		if isinstance( matchExpression, str ) :
+			matchExpression = re.compile( fnmatch.translate( matchExpression ) )
+
+		self.definition().append( path, { "subMenu" : IECore.curry( self.__parameterisedHolderMenu, parameterisedHolderType, searchPathEnvVar, matchExpression ) } )
+
+	@staticmethod
+	def __parameterisedHolderCreator( parameterisedHolderType, className, classVersion, searchPathEnvVar ) :
+
+		nodeName = className.rpartition( "/" )[-1]
+		node = parameterisedHolderType( nodeName )
+		node.setParameterised( className, classVersion, searchPathEnvVar )
+
+		return node
+
+	@staticmethod
+	def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar, matchExpression ) :
+
+		c = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
+		d = IECore.MenuDefinition()
+		for n in c.classNames() :
+			if matchExpression.match( n ) :
+				nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
+				v = c.getDefaultVersion( n )
+				d.append( "/" + nc, { "command" : NodeMenu.nodeCreatorWrapper( IECore.curry( NodeMenu.__parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
+
+		return d

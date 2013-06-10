@@ -46,6 +46,12 @@ import GafferUI
 
 import GafferRenderMan
 
+## Appends menu items for the creation of all renderman shaders founds on the searchpath, optionally
+# filtered by filename based on matchExpression.
+def appendShaders( menuDefinition, prefix="/RenderMan/Shader", matchExpression = re.compile( ".*" ) ) :
+
+	menuDefinition.append( prefix, { "subMenu" : __shaderSubMenu } )
+
 def __shaderCreator( shaderName ) :
 
 	nodeName = os.path.split( shaderName )[-1]
@@ -61,7 +67,7 @@ def __shaderCreator( shaderName ) :
 	
 	return node
 
-def _shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
+def __shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
 	
 	if isinstance( matchExpression, str ) :
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
@@ -101,9 +107,3 @@ def _shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
 		
 	return result
 
-GafferUI.NodeMenu.definition().append( "/RenderMan/Shader", { "subMenu" : _shaderSubMenu } )
-
-GafferUI.NodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
-GafferUI.NodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
-GafferUI.NodeMenu.append( "/RenderMan/Render", GafferRenderMan.RenderManRender, searchText = "RenderManRender" )
-GafferUI.NodeMenu.append( "/RenderMan/InteractiveRender", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRender" )
