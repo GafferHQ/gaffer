@@ -78,6 +78,11 @@ static void bindTypedFilter()
 	;
 }
 
+std::string defaultFilter()
+{
+	return Filter::defaultFilter();
+}
+
 GafferImage::FilterPtr create1( std::string name ){ return GafferImage::Filter::create( name ); };
 GafferImage::FilterPtr create2( std::string name, float scale ){ return GafferImage::Filter::create( name ); };
 float weight( Filter& filter, float center, int pos ){ return filter.weight( center, pos  ); };
@@ -96,6 +101,7 @@ void bindFilters()
 	bind.def( "filters", &filterList ).staticmethod("filters");
 	bind.def( "create", &create1 );
 	bind.def( "create", &create2 ).staticmethod( "create" );
+	bind.def( "defaultFilter", &defaultFilter ).staticmethod( "defaultFilter" );
 	
 	RunTimeTypedClass<SplineFilter>();
 	RunTimeTypedClass<BoxFilter>();

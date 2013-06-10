@@ -137,12 +137,8 @@ public :
 	}
 	//@}
 	
-	/// Returns the default filter.
-	static const IECore::InternedString &defaultFilter()
-	{
-		static const IECore::InternedString g_defaultFilter( "Bilinear" );
-		return g_defaultFilter;
-	}
+	/// Returns the name of the default filter.
+	static const IECore::InternedString &defaultFilter();
 
 protected :
 

@@ -42,7 +42,12 @@ import GafferImage
 import os
 
 class FilterTest( unittest.TestCase ) :
-	
+
+	def testDefaultFilter( self ) :
+		filters = GafferImage.Filter.filters()
+		default = GafferImage.Filter.defaultFilter()
+		self.assertTrue( default in filters )
+		
 	def testFilterList( self ) : 
 		filters = GafferImage.Filter.filters()
 		self.assertTrue( len(filters) == 9 )

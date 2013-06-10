@@ -63,13 +63,25 @@ public :
 		Black = 0,
 		Clamp = 1
 	};
-		
+	
 	/// Sampler Constructor
+	/// @param plug The image plug to sample from.
+	/// @param channelName The channel to sample.
+	/// @param boundingMode The method of handling samples that fall out of the sample window.
+	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
+		
+	/// Sampler Constructor (with a filter)
 	/// @param plug The image plug to sample from.
 	/// @param channelName The channel to sample.
 	/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
 	/// @param boundingMode The method of handling samples that fall out of the sample window.
 	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
+
+	/// Sets the sample area that the sampler can access.
+	void setSampleWindow( const Imath::Box2i &window );
+	
+	/// Returns the valid sample area.	
+	inline Imath::Box2i getSampleWindow() const;
 
 	/// Samples a colour value from the channel at x, y.
 	inline float sample( int x, int y );
@@ -92,6 +104,7 @@ private:
 	const ImagePlug *m_plug;
 	const std::string m_channelName;
 	Imath::Box2i m_sampleWindow;
+	Imath::Box2i m_userSampleWindow;
 
 	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;	
 	Imath::Box2i m_cacheWindow;

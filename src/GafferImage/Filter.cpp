@@ -52,6 +52,12 @@ Filter::Filter( float radius, float scale )
 	setScale( scale );
 }
 
+const IECore::InternedString &Filter::defaultFilter()
+{
+	static const IECore::InternedString g_defaultFilter( "Bilinear" );
+	return g_defaultFilter;
+}
+
 void Filter::setScale( float scale )
 {
 	m_scale = std::max( scale, 1.f ); 
