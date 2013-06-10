@@ -142,7 +142,7 @@ void Shader::shaderHash( IECore::MurmurHash &h ) const
 			}
 			// fall through to hash plug value
 		}
-		
+	
 		ConstValuePlugPtr vplug = IECore::runTimeCast< const ValuePlug >( (*it) );
 		if( vplug )
 		{

@@ -52,7 +52,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		GafferRenderManTest.RenderManTestCase.setUp( self )
 		
 		GafferRenderMan.RenderManShader.shaderLoader().clear()
-
+	
 	def test( self ) :
 	
 		n = GafferRenderMan.RenderManShader()
