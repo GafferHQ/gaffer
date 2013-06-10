@@ -128,7 +128,8 @@ void Shader::shaderHash( IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
 	namePlug()->hash( h );
-	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	
+	for( InputPlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		const Plug *inputPlug = (*it)->getInput<Plug>();
 		if( inputPlug )
@@ -141,7 +142,12 @@ void Shader::shaderHash( IECore::MurmurHash &h ) const
 			}
 			// fall through to hash plug value
 		}
-		(*it)->hash( h );
+		
+		ConstValuePlugPtr vplug = IECore::runTimeCast< const ValuePlug >( (*it) );
+		if( vplug )
+		{
+			vplug->hash( h );
+		}
 	}
 }
 

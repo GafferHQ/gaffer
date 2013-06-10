@@ -120,6 +120,29 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		n["parameters"]["Kd"].setValue( 0.25 )
 		self.assertNotEqual( n.stateHash(), h1 )
+		
+	def testCoshaderHash( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+	
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertTrue( "coshaderParameter" in shaderNode["parameters"] )
+		self.assertEqual( shaderNode["parameters"]["coshaderParameter"].typeId(), Gaffer.Plug.staticTypeId() )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
+		
+		h1 = shaderNode.stateHash()
+		
+		coshaderNode["parameters"]["floatParameter"].setValue( 0.25 )
+		
+		self.assertNotEqual( shaderNode.stateHash(), h1 )
 	
 	def testParameterOrdering( self ) :
 	
