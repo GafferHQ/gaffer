@@ -50,7 +50,7 @@ import GafferRenderMan
 # filtered by filename based on matchExpression.
 def appendShaders( menuDefinition, prefix="/RenderMan/Shader", matchExpression = re.compile( ".*" ) ) :
 
-	menuDefinition.append( prefix, { "subMenu" : __shaderSubMenu } )
+	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, matchExpression ) } )
 
 def __shaderCreator( shaderName ) :
 
