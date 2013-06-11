@@ -55,7 +55,7 @@ def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
 
-	enabledPlug = node.enabledPlug()
+	enabledPlug = node.enabledPlug() if isinstance( node, Gaffer.DependencyNode ) else None
 	if enabledPlug is not None and enabledPlug.settable() :
 		menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 		menuDefinition.append( "/Disable" if enabledPlug.getValue() else "/Enable", { "command" : IECore.curry( __toggleEnabled, node ) } )
