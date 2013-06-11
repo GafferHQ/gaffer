@@ -49,7 +49,7 @@ GafferScene.Displays.registerDisplay(
 			"driverType" : "ClientDisplayDriver",
 			"displayHost" : "localhost",
 			"displayPort" : "1559",
-			"remoteDisplayType" : "GafferDisplayDriver",
+			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 		}
 	)
