@@ -114,15 +114,17 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		
 		with self.__column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) :
-				GafferUI.Label( "Node Name" )
+				GafferUI.Label( "<h4>Node Name</h4>" )
 				GafferUI.NameWidget( node )
-				infoIcon = GafferUI.Image( "info.png" )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
+					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
+					GafferUI.Image( "info.png" )
 				toolTip = "<h3>" + node.typeName() + "</h3>"
 				description = GafferUI.Metadata.nodeDescription( node )
 				if description :
 					toolTip += "\n\n" + description
-				infoIcon.setToolTip( toolTip )
-						
+				infoSection.setToolTip( toolTip )
+					
 		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 		self.__column.append( frame, expand=True )
 		frame.setChild( GafferUI.NodeUI.create( node ) )
