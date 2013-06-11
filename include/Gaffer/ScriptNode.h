@@ -63,9 +63,6 @@ IE_CORE_DECLAREPTR( ScriptContainer );
 
 /// The ScriptNode class represents a script - that is a single collection of
 /// nodes which are stored in a single file.
-/// \todo fileValid() plug or summink - bool which is true when the file is saved and
-/// false when it's modified in memory. this means attaching a plugchanged callback to every
-/// node (or having the Node find its parent script and set the value - I think that might be better).
 class ScriptNode : public Node
 {
 
