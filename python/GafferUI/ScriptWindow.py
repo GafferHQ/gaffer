@@ -52,7 +52,7 @@ class ScriptWindow( GafferUI.Window ) :
 		
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 		
-		m = GafferUI.MenuBar( self.menuDefinition() )
+		m = GafferUI.MenuBar( self.menuDefinition( script.applicationRoot() ) )
 		
 		self.__listContainer.append( m )
 		
@@ -142,16 +142,27 @@ class ScriptWindow( GafferUI.Window ) :
 		
 		return ScriptWindow( script )
 
-	## Returns an IECore.MenuDefinition which is used to define the menu bars for all ScriptWindows.
-	# This can be edited at any time to modify subsequently created ScriptWindows - typically editing
-	# would be done as part of gaffer startup.
+	## Returns an IECore.MenuDefinition which is used to define the menu bars for all ScriptWindows
+	# created as part of the specified application. This can be edited at any time to modify subsequently
+	# created ScriptWindows - typically editing would be done as part of gaffer startup.
 	@staticmethod
-	def menuDefinition() :
+	def menuDefinition( applicationOrApplicationRoot ) :
 	
-		return ScriptWindow.__menuDefinition
+		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
+			applicationRoot = applicationOrApplicationRoot.root()
+		else :
+			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
+			applicationRoot = applicationOrApplicationRoot
+			
+		menuDefinition = getattr( applicationRoot, "_scriptWindowMenuDefinition", None )
+		if menuDefinition :
+			return menuDefinition
+			
+		menuDefinition = IECore.MenuDefinition()
+		applicationRoot._scriptWindowMenuDefinition = menuDefinition
+		
+		return menuDefinition
 	
-	__menuDefinition = IECore.MenuDefinition()	
-
 	## This function provides the top level functionality for instantiating
 	# the UI. Once called, new ScriptWindows will be instantiated for each
 	# script added to the application, and EventLoop.mainEventLoop().stop() will
