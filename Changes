@@ -1,3 +1,22 @@
+0.66.0
+======
+
+* Fixed interactive display.
+* Fixed APIs to make UI resources per-application. When applications are updated to use these new APIS, they will no longer pollute each other's interfaces (#351, #225).
+* Refactored GafferImage::Filter to have a better interface whilst removing the need for the construct() method.
+* Added python bindings and enhancements for the GafferImage::Filter class.
+* Fixed hash() bug in RenderMan coshader, which in turn fixes an interactive rerendering bug.
+* Reduced occurences of accidental connection snatching (#313, #325).
+* Fixed escape-to-close menu bug.
+* Added an ImageStats node.
+* Fixed deadlock when writing image files to disk.
+* Op. Procedural and RenderMan shader menus may now be filtered to show fewer options.
+* Added "cmd" parameter to screen grab app.
+* Fixed GafferImage::FormatPlug::hash()
+* Fixed duplicate typename errors (#330).
+* Prevented promotion of non-serialisable plugs to Box level (#347).
+* Fixed a bug in ImageProcessor that was causing a segfault when the node has an output that is not an ImagePlug.
+
 0.65.0
 ======
 
