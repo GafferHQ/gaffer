@@ -38,6 +38,8 @@
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/Shader.h"
 
+#include "Gaffer/Box.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -93,7 +95,19 @@ bool ShaderAssignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plu
 	
 	if( plug == shaderPlug() )
 	{
-		return inputPlug->source<Plug>()->ancestor<Shader>();
+		ConstPlugPtr sourcePlug = inputPlug->source<Plug>();
+		if( sourcePlug->ancestor<Shader>() )
+		{
+			return true;
+		}
+		else if( sourcePlug->ancestor<Box>() )
+		{
+			// should also be able to accept the unconnected inputs and outputs
+			// of boxes, so you can wrap shader assignments in boxes without
+			// connecting the other side
+			return true;
+		}
+		return false;
 	}
 	return true;
 }
