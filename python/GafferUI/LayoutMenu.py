@@ -46,7 +46,7 @@ import GafferUI
 # contains commands to facilitate the administration of different UI layouts.
 def appendDefinitions( menuDefinition, name="" ) :
 
-	menuDefinition.append( name, { "subMenu" : __layoutMenu } )
+	menuDefinition.append( name, { "subMenu" : layoutMenuCallable } )
 
 ## A function suitable as the command for a Layout/Name menu item which restores a named layout.
 # It must be invoked from a menu which has a ScriptWindow in its ancestry. 
@@ -117,8 +117,11 @@ def fullScreenCheckBox( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )	
 	return scriptWindow.getFullScreen()	
-	
-def __layoutMenu( menu ) :
+
+## The callable used to generate the submenu created by appendDefinitions().
+# This is exposed publicly so it can be called by alternative submenus and
+# the result edited before being given to a Menu.
+def layoutMenuCallable( menu ) :
 
 	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
 
