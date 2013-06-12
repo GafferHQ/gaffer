@@ -262,6 +262,7 @@ class Menu( GafferUI.Widget ) :
 			titleWidget.setObjectName( "gafferMenuTitle" )
 			titleWidgetAction = QtGui.QWidgetAction( qtMenu )
 			titleWidgetAction.setDefaultWidget( titleWidget )
+			titleWidgetAction.setEnabled( False )
 			qtMenu.insertAction( qtMenu.actions()[0], titleWidgetAction )
 			
 			# qt stylesheets ignore the padding-bottom for menus and
@@ -271,6 +272,7 @@ class Menu( GafferUI.Widget ) :
 			spacerWidget.setFixedSize( 5, 5 )
 			spacerWidgetAction = QtGui.QWidgetAction( qtMenu )
 			spacerWidgetAction.setDefaultWidget( spacerWidget )
+			spacerWidgetAction.setEnabled( False )
 			qtMenu.addAction( spacerWidgetAction )
 
 	def __buildAction( self, item, name, parent, activeOverride=None ) :

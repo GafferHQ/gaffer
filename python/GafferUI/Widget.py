@@ -729,6 +729,12 @@ class Widget( object ) :
 			
 		}
 		
+		QLabel#gafferMenuTitle:disabled {
+		
+			color: $foreground;
+			
+		}
+		
 		QMenu::item {
 
 			background-color: transparent;
