@@ -16,7 +16,7 @@ We want our new feature to be easily accessible to the user, so we'll put it in 
 
 [source,python]
 ------------------------------------
-GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
+GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ------------------------------------
 
 image::images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png[align="center"]
@@ -95,5 +95,5 @@ def __iWantAPony( menu ) :
         script.selection().add( read )
         script.selection().add( objectToScene )
         
-GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
+GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ------------------------------------
