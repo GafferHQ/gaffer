@@ -41,6 +41,8 @@
 #include "GafferUI/View.h"
 
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageStats.h"
+
 #include "GafferImageUI/TypeIds.h"
 
 namespace GafferImageUI
@@ -65,8 +67,17 @@ class ImageView : public GafferUI::View
 		ImageView( const std::string &name, Gaffer::PlugPtr input );
 
 		virtual void update();
-	
+		
+		GafferImage::ImageStats *imageStatsNode();
+		const GafferImage::ImageStats *imageStatsNode() const;
+		
 		static ViewDescription<ImageView> g_viewDescription;
+
+	private :	
+		
+		GafferImage::ImageStatsPtr m_imageStats;
+
+		static size_t g_firstChildIndex;
 	
 };
 
