@@ -96,6 +96,7 @@ enum TypeId
 	CubeTypeId = 110551,
 	SphereTypeId = 110552,
 	TextTypeId = 110553,
+	MapProjectionTypeId = 110554,
 	
 	LastTypeId = 110650
 };

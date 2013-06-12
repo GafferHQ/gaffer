@@ -138,6 +138,11 @@ class ScenePlug : public Gaffer::CompoundPlug
 		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;		
 		//@}
 	
+		/// Utility function to convert a string into a path by splitting on '/'.
+		/// \todo Many of the places we use this, it would be preferable if the source data was already
+		/// a path. Perhaps a ScenePathPlug could take care of this for us?
+		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
+
 };
 
 IE_CORE_DECLAREPTR( ScenePlug );
