@@ -380,5 +380,15 @@ def __plugDescription( plug ) :
 
 	return d.value if d is not None else ""
 
+def __plugLabel( plug ) :
+
+	annotations = _shaderAnnotations( plug.node() )
+	d = annotations.get( plug.getName() + ".label", None )
+	
+	return d.value if d is not None else None
+
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
+
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "label", __plugLabel )
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "label", __plugLabel )

@@ -80,6 +80,9 @@ class PlugWidget( GafferUI.Widget ) :
 		# interface. Perhaps we should have a SizeableContainer or something?
 		self.__label.label()._qtWidget().setFixedWidth( self.labelWidth() )
 
+		if label is None :
+			label = GafferUI.Metadata.plugValue( plug, "label" )
+			
 		if label is not None :
 			self.__label.label().setText( label )
 
