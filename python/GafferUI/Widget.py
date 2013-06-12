@@ -708,6 +708,27 @@ class Widget( object ) :
 
 		}
 
+		QMenu[gafferHasTitle=\"true\"] {
+		
+			/* make sure the title widget sits at the very top.
+			   infuriatingly, qt uses padding-top for the bottom
+			   as well, and is ignoring padding-bottom. that makes
+			   menus with title just a little bit poorly padded
+			   at the bottom. we hack around that by adding a little
+			   spacing widget in GafferUI.Menu. */
+			padding-top: 0px;
+			
+		}
+		
+		QLabel#gafferMenuTitle {
+		
+			background-color: $backgroundDarkest;
+			font-weight: bold;
+			padding: 5px 25px 5px 20px;
+			margin-bottom: 6px;
+			
+		}
+		
 		QMenu::item {
 
 			background-color: transparent;
