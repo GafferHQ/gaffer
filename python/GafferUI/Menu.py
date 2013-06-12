@@ -50,12 +50,16 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Menu( GafferUI.Widget ) :
 
-	def __init__( self, definition, _qtParent=None, searchable=False, **kw ) :
+	def __init__( self, definition, _qtParent=None, searchable=False, title=None, **kw ) :
 	
 		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
 		
 		self.__definition = definition
 		self.__searchable = searchable
+		
+		self.__title = title
+		# this property is used by the stylesheet
+		self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( title is not None ) )
 		
 		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
 		
@@ -250,6 +254,27 @@ class Menu( GafferUI.Widget ) :
 				
 				done.add( name )
 	
+		# add a title if required.
+		if self.__title is not None and qtMenu is self._qtWidget() :
+		
+			titleWidget = QtGui.QLabel( self.__title )
+			titleWidget.setIndent( 0 )
+			titleWidget.setObjectName( "gafferMenuTitle" )
+			titleWidgetAction = QtGui.QWidgetAction( qtMenu )
+			titleWidgetAction.setDefaultWidget( titleWidget )
+			titleWidgetAction.setEnabled( False )
+			qtMenu.insertAction( qtMenu.actions()[0], titleWidgetAction )
+			
+			# qt stylesheets ignore the padding-bottom for menus and
+			# use padding-top instead. we need padding-top to be 0 when
+			# we have a title, so we have to fake the bottom padding like so.
+			spacerWidget = QtGui.QWidget()
+			spacerWidget.setFixedSize( 5, 5 )
+			spacerWidgetAction = QtGui.QWidgetAction( qtMenu )
+			spacerWidgetAction.setDefaultWidget( spacerWidget )
+			spacerWidgetAction.setEnabled( False )
+			qtMenu.addAction( spacerWidgetAction )
+
 	def __buildAction( self, item, name, parent, activeOverride=None ) :
 		
 		label = name

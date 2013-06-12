@@ -178,14 +178,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
 			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
 			menuDefinition.append( "/Remove input", { "command" : Gaffer.WeakMethod( self.__removeInput ) } )
-		if hasattr( self.getPlug(), "defaultValue" ) :
+		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
 			menuDefinition.append(
 				"/Default", {
 					"command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
 					"active" : self._editable()
 				}
 			)
-			
+					
 		self.popupMenuSignal()( menuDefinition, self )
 		
 		return menuDefinition
@@ -356,8 +356,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 		menuDefinition = self._popupMenuDefinition()
 		if not len( menuDefinition.items() ) :
 			return False
-		
-		self.__popupMenu = GafferUI.Menu( menuDefinition )
+
+		title = self.getPlug().relativeName( self.getPlug().node() )
+		title = ".".join( [ IECore.CamelCase.join( IECore.CamelCase.split( x ) ) for x in title.split( "." ) ] )
+
+		self.__popupMenu = GafferUI.Menu( menuDefinition, title = title )
 		self.__popupMenu.popup()
 		
 		return True
