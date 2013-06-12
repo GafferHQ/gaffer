@@ -1,4 +1,18 @@
 == Introduction to Gaffer anchor:introduction_introductionToGaffer[]
+
+Gaffer is a vfx/cg-animation application built around a core concept of defining scenes procedurally by means of networks of nodes. +
+Its primary use is as a lighting and look development tool; however, the modular nature of Gaffer's design provides the potential for expansion into other aspects of vfx production.
+
+
+It provides non-destructive methods for constructing and modifying scenes and sending the resulting scenes to render. Gaffer is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. +
+In addition to processing of 3D scenes Gaffer has simple 2D compositing functionality, allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
+
+
+The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
+
+
+
+////
 !!!!Welcome. This would be some text introducing people to Gaffer and its capabilities.!!!!
 
 Gaffer is a 3D content creation application !!!!that is built around procedurally defined scenes!!!!. Its primary use is as a lighting and look-development (shading) tool, but its modular nature allows for customisation and expansion for use in other aspects of CGI production.   !!!!into other    areas.!!!!
@@ -8,19 +22,9 @@ Gaffer is a 3D content creation application !!!!that is built around procedurall
 
 
 
+Gaffer is a vfx/cg-animation application built around a core concept of defining scenes procedurally by means of networks of nodes.
+Its primary use is as a lighting and look development tool - however, the modular nature of Gaffer's design provides the potential for it to be expanded into other aspects of vfx production.
 
-
-
-
-
-
-
-
-
-
-
-
-Gaffer is a ... application built around the core concept of scenes defined procedurally by networks of nodes.
 
 but due to its modular nature its possible to expand the app to tackle a range of tasks.
 
@@ -30,18 +34,11 @@ the app as potential to be expanded into other cgi fields  aspects  tasks
 
 
 
-
-
-
-
-
-
-It provides non-destructive methods for constructing and modifying scenes and sending the resulting scenes to render. Gaffer is not tied to any specific renderer, and can be 
-extended to support any renderer currently implemented in the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.
-In addition to processing of 3D scenes Gaffer has simple 2D compositing functionality, allowing for renders and other imagery to be combined, and for the application of basic image manipulations.
+It provides non-destructive methods for constructing and modifying scenes and sending the resulting scenes to render. Gaffer is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the <a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. !!!!and in fact can be extended to support any renderer implemented in the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.!!!
+In addition to processing of 3D scenes Gaffer has simple 2D compositing functionality, allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
 
 The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
-
+////
 
 === Design Overview anchor:introduction_designOverview[]
 !!!!What is the core design philosophy of Gaffer and how should users approach it?
