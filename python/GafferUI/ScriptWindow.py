@@ -52,9 +52,8 @@ class ScriptWindow( GafferUI.Window ) :
 		
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 		
-		m = GafferUI.MenuBar( self.menuDefinition( script.applicationRoot() ) )
-		
-		self.__listContainer.append( m )
+		menuDefinition = self.menuDefinition( script.applicationRoot() ) if script.applicationRoot() else IECore.MenuDefinition()
+		self.__listContainer.append( GafferUI.MenuBar( menuDefinition ) )
 		
 		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 		layouts = GafferUI.Layouts.acquire( applicationRoot ) if applicationRoot is not None else None

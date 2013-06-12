@@ -68,8 +68,8 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		
 		self.__gadgetWidget._qtWidget().installEventFilter( _eventFilter )
 		
-		self._nodeMenu = GafferUI.Menu( GafferUI.NodeMenu.acquire( scriptNode.applicationRoot() ).definition(), searchable=True )
-	
+		self.__nodeMenu = None
+		
 	## Returns the internal GadgetWidget holding the GraphGadget.	
 	def graphGadgetWidget( self ) :
 	
@@ -166,6 +166,13 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		return "GafferUI.NodeGraph( scriptNode )"	
 
+	def _nodeMenu( self ) :
+	
+		if self.__nodeMenu is None :
+			self.__nodeMenu = GafferUI.Menu( GafferUI.NodeMenu.acquire( self.scriptNode().applicationRoot() ).definition(), searchable=True )
+	
+		return self.__nodeMenu
+	
 	def __buttonPress( self, widget, event ) :
 				
 		if event.buttons & GafferUI.ButtonEvent.Buttons.Right :
@@ -197,7 +204,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 					self._m.popup( self )
 					return True
 			
-			self._nodeMenu.popup( self )
+			self._nodeMenu().popup( self )
 			
 			return True
 	
@@ -312,7 +319,7 @@ class _EventFilter( QtCore.QObject ) :
 			
 			nodeGraph = GafferUI.Widget._owner( qObject ).ancestor( NodeGraph )
 			if nodeGraph :
-				nodeGraph._nodeMenu.popup( nodeGraph )
+				nodeGraph._nodeMenu().popup( nodeGraph )
 				return True
 		
 		return False
