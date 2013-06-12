@@ -98,6 +98,9 @@ class ImageStats : public Gaffer::ComputeNode
 
 		/// A convenience function to just set the plug to 0 or 1 depending on what it's index is.
 		void setOutputToDefault( Gaffer::FloatPlug *output ) const;
+		
+		/// Implemented to initialize the default format settings if they don't exist already.
+		void parentChanging( Gaffer::GraphComponent *newParent );
 
 		static size_t g_firstPlugIndex;
 		
