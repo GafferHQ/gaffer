@@ -781,7 +781,7 @@ libraries = {
 	
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene" ],
@@ -813,7 +813,7 @@ libraries = {
 	
 	"GafferImage" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage" ],
@@ -827,7 +827,7 @@ libraries = {
 	
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferImage", "GafferUI" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUI", "GafferImageUI" ],
@@ -854,11 +854,14 @@ libraries = {
 
 	"GafferRenderMan" : {
 		"envAppends" : {
-			"LIBS" : [ "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
+			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferBindings", "GafferRenderMan" ],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferRenderMan" ],
+			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
 		},
+		"requiredOptions" : [ "RMAN_ROOT" ],
 	},
 
 	"GafferRenderManUI" : {},
@@ -938,10 +941,12 @@ libraries = {
 
 }
 
-if env["PLATFORM"] == "darwin" :
-	libraries["GafferUI"]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
-else :
-	libraries["GafferUI"]["envAppends"]["LIBS"].append( "GL" )
+# Add on OpenGL libraries to definitions - these vary from platform to platform
+for library in ( "GafferUI", "GafferImageUI" ) :
+	if env["PLATFORM"] == "darwin" :
+		libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
+	else :
+		libraries[library]["envAppends"]["LIBS"].append( "GL" )
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules
@@ -1085,7 +1090,7 @@ def buildGraphics( target, source, env ) :
 				)
 			)
 
-graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "graphics/graphics.svg", buildGraphics )
+graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "resources/graphics.svg", buildGraphics )
 env.NoCache( graphicsBuild )
 env.Alias( "build", graphicsBuild )
 
@@ -1321,15 +1326,32 @@ def installer( target, source, env ) :
 						os.symlink( os.readlink( srcName ), dstName )
 					else:
 						shutil.copy2( srcName, dstName )
-				
+	
 	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in manifest ] ) )	
-	copyTree( env.subst( "$BUILD_DIR" ), env.subst( "$INSTALL_DIR" ), regex )
-										
-install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
-env.AlwaysBuild( install )
-env.NoCache( install )
+	copyTree( str( source[0] ), str( target[0] ), regex )
 
-env.Alias( "install", install )
+if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
+	
+	# if the packaging will make a disk image, then build an os x app bundle
+
+	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer )
+	env.AlwaysBuild( install )
+	env.NoCache( install )
+	env.Alias( "install", install )
+
+	plistInstall = env.Install( "$INSTALL_DIR/Gaffer.app/Contents", "resources/Info.plist" )
+	env.Alias( "install", plistInstall )
+	
+	gafferLink = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/MacOS/gaffer", "", "ln -s ../Resources/bin/gaffer $TARGET" )
+	env.Alias( "install", gafferLink )
+	
+else :
+
+	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
+	env.AlwaysBuild( install )
+	env.NoCache( install )
+
+	env.Alias( "install", install )
 
 #########################################################################################################
 # Packaging
@@ -1337,11 +1359,16 @@ env.Alias( "install", install )
 
 def packager( target, source, env ) :
 
-	installDir = env.subst( "$INSTALL_DIR" )
-	b = os.path.basename( installDir )
-	d = os.path.dirname( installDir )
-	runCommand( env.subst( "tar -czf $PACKAGE_FILE -C %s %s" % ( d, b ) ) )
+	target = str( target[0] )
+	source = str( source[0] )
+	b = os.path.basename( source )
+	d = os.path.dirname( source )
 	
-package = env.Command( "$PACKAGE_FILE", install, packager )
+	if target.endswith( ".dmg" ) :
+		runCommand( "hdiutil create -volname '%s' -srcfolder '%s' -ov -format UDZO '%s'" % ( os.path.basename( target ), source, target ) )				
+	else :
+		runCommand( "tar -czf %s -C %s %s" % ( target, d, b ) )
+	
+package = env.Command( "$PACKAGE_FILE", "$INSTALL_DIR", packager )
 env.NoCache( package )
 env.Alias( "package", package )

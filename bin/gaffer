@@ -73,7 +73,7 @@ popd &> /dev/null
 # Make sure resource paths are set appropriately
 ##########################################################################
 
-export IECOREGL_SHADER_PATHS=$GAFFER_ROOT/shaders${IECOREGL_SHADER_PATHS:+:}${IECOREGL_SHADER_PATHS:-}
+export IECOREGL_SHADER_PATHS=$GAFFER_ROOT/glsl${IECOREGL_SHADER_PATHS:+:}${IECOREGL_SHADER_PATHS:-}
 export IECOREGL_SHADER_INCLUDE_PATHS=$GAFFER_ROOT/glsl${IECOREGL_SHADER_INCLUDE_PATHS:+:}${IECOREGL_SHADER_INCLUDE_PATHS:-}
 export IECORE_FONT_PATHS=$GAFFER_ROOT/fonts${IECORE_FONT_PATHS:+:}${IECORE_FONT_PATHS:-}
 export IECORE_OP_PATHS=~/gaffer/ops:$GAFFER_ROOT/ops${IECORE_OP_PATHS:+:}${IECORE_OP_PATHS:-}
