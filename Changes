@@ -1,3 +1,18 @@
+0.67.0
+======
+
+* Fixed potential lockup with NumericPlugs.
+* Fixed RenderMan ShaderMenu match expressions (broken in 0.66.0)
+* Reintroduced the node name into the NodeEditor header.
+* Exposed LayoutMenu submenu callable publicly.
+* Implemented in-place renaming for user plugs (#213).
+* Added support for RSL "parameterName.label" annotation (#372).
+* Added a MapProjection node.
+* Added sample window to the ImageViewer.
+* Fixed UI test cases broken by the per-application menu commits.
+* Can once again build for OS X.
+* Added support for packaging as .dmg on OS X.
+
 0.66.0
 ======
 
