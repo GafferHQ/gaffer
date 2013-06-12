@@ -87,7 +87,7 @@ def shaderSubMenu() :
 				if os.path.splitext( file )[1] in ( ".vert", ".frag" ) :
 					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
 					shaders.add( os.path.splitext( shaderPath )[0] )
-	
+
 	result = IECore.MenuDefinition()
 	for shader in sorted( list( shaders ) ) :
 		result.append( "/" + IECore.CamelCase.toSpaced( shader ), { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shader ) ) } )

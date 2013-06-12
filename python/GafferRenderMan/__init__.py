@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,6 +34,23 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  
 ##########################################################################
+
+def __setupEnvironment() :
+
+	import os
+	
+	def prependToPath( envVar, prefix ) :
+	
+		e = os.environ.get( envVar, "" )
+		if e :
+			e = ":" + e
+		e = prefix + e
+		os.environ[envVar] = os.path.expandvars( e )
+		
+	prependToPath( "DL_DISPLAYS_PATH", "$GAFFER_ROOT/renderMan/displayDrivers" )
+	prependToPath( "DL_PROCEDURALS_PATH", "$GAFFER_ROOT/renderMan/procedurals" )
+		
+__setupEnvironment()
 
 from _GafferRenderMan import *
 
