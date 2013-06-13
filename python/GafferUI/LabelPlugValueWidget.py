@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 ## A simple PlugValueWidget which just displays the name of the plug,
@@ -58,6 +59,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__label.setToolTip( toolTip )
 				
 		self._addPopupMenu( self.__label )
+		
+		self._updateFromPlug()
 
 	def label( self ) :
 	
@@ -71,4 +74,4 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 	
-		self.__label.setEnabled( self._editable() )
+		self.__label.setEnabled( not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
