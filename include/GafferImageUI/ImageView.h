@@ -72,12 +72,6 @@ class ImageView : public GafferUI::View
 		const GafferImage::ImageStats *imageStatsNode() const;
 		
 		static ViewDescription<ImageView> g_viewDescription;
-
-	private :	
-		
-		GafferImage::ImageStatsPtr m_imageStats;
-
-		static size_t g_firstChildIndex;
 	
 };
 

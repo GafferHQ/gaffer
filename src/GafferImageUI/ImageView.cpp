@@ -633,13 +633,9 @@ IE_CORE_DEFINERUNTIMETYPED( ImageView );
 
 ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 
-size_t ImageView::g_firstChildIndex = 0;
-
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() )
 {
-	storeIndexOfNextChild( g_firstChildIndex );
-	
 	// Create an internal ImageStats node 
 	addChild( new GafferImage::ImageStats( "imageStats" ) );
 }
@@ -647,8 +643,6 @@ ImageView::ImageView( const std::string &name )
 ImageView::ImageView( const std::string &name, Gaffer::PlugPtr input )
 	:	View( name, input )
 {
-	storeIndexOfNextChild( g_firstChildIndex );
-	
 	// Create an internal ImageStats node 
 	addChild( new GafferImage::ImageStats( "imageStats" ) );
 }
@@ -659,12 +653,12 @@ ImageView::~ImageView()
 
 GafferImage::ImageStats *ImageView::imageStatsNode()
 {
-	return getChild<GafferImage::ImageStats>( g_firstChildIndex );
+	return getChild<ImageStats>( "imageStats" );
 }
 
 const GafferImage::ImageStats *ImageView::imageStatsNode() const
 {
-	return getChild<GafferImage::ImageStats>( g_firstChildIndex );
+	return getChild<ImageStats>( "imageStats" );
 }
 
 void ImageView::update()
@@ -682,10 +676,10 @@ void ImageView::update()
 
 	if( image )
 	{
-		GafferImage::ImagePlug *imagePlug( inPlug<ImagePlug>() );
+		GafferImage::ImagePlug *imagePlug( inPlug<ImagePlug>() ? inPlug<ImagePlug>() : preprocessedInPlug<ImagePlug>() );
 		if( !imagePlug )
 		{
-			throw IECore::Exception("ImageView: Failed to find an ImagePlug as inPlug()");
+			throw IECore::Exception("ImageView: Failed to find an input ImagePlug");
 		}
 
 		imageStatsNode()->inPlug()->setInput( imagePlug );
