@@ -129,8 +129,13 @@ def __promoteToBox( box, plug ) :
 	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 		box.promotePlug( plug )
 
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+def __unpromoteFromBox( box, plug ) :
 
+	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		box.unpromotePlug( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+	
 	plug = plugValueWidget.getPlug()
 	node = plug.node()
 	if node is None :
@@ -140,10 +145,19 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	if box is None :
 		return
 
-	if not box.canPromotePlug( plug ) :
-		return
+	if box.canPromotePlug( plug ) :
+		
+		menuDefinition.append( "/BoxDivider", { "divider" : True } )
+		menuDefinition.append( "/Promote to %s" % box.getName(), { "command" : IECore.curry( __promoteToBox, box, plug ) } )
 
-	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Promote to %s" % box.getName(), { "command" : IECore.curry( __promoteToBox, box, plug ) } )
-
+	elif box.plugIsPromoted( plug ) :
+	
+		# Add a menu item to unpromote the plug, replacing the "Remove input" menu item if it exists
+		
+		with IECore.IgnoredExceptions( Exception ) :
+			menuDefinition.remove( "/Remove input" )
+			
+		menuDefinition.append( "/BoxDivider", { "divider" : True } )
+		menuDefinition.append( "/Unpromote from %s" % box.getName(), { "command" : IECore.curry( __unpromoteFromBox, box, plug ) } )
+			
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
