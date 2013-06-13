@@ -104,6 +104,42 @@ bool Box::plugIsPromoted( const Plug *descendantPlug ) const
 	return input && input->node() == this;
 }
 
+void Box::unpromotePlug( Plug *promotedDescendantPlug )
+{
+	if( !plugIsPromoted( promotedDescendantPlug ) )
+	{
+		throw IECore::Exception(
+			boost::str(
+				boost::format( "Cannot unpromote plug \"%s\" as it has not been promoted." ) % promotedDescendantPlug->fullName()
+			)
+		);
+	}
+	
+	Plug *inputPlug = promotedDescendantPlug->getInput<Plug>();
+	promotedDescendantPlug->setInput( 0 );
+
+	// remove the top level plug that provided the input, but only if
+	// all the children are unused too in the case of a compound plug.
+	bool remove = true;
+	Plug *plugToRemove = inputPlug;
+	while( plugToRemove->parent<Plug>() && plugToRemove->parent<Plug>() != userPlug() )
+	{
+		plugToRemove = plugToRemove->parent<Plug>();
+		for( PlugIterator it( plugToRemove ); it != it.end(); ++it )
+		{
+			if( (*it)->outputs().size() )
+			{
+				remove = false;
+				break;
+			}
+		}
+	}
+	if( remove )
+	{
+		plugToRemove->parent<GraphComponent>()->removeChild( plugToRemove );
+	}
+}
+
 bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const
 {
 	if( descendantPlug->direction() != Plug::In )
