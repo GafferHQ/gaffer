@@ -716,6 +716,37 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		self.assertTrue( c[0].dstNodule().plug().isSame( script["add2"]["op1"] ) )
 		self.assertTrue( c[1].srcNodule().plug().isSame( script["add2"]["sum"] ) )
 		self.assertTrue( c[1].dstNodule().plug().isSame( script["add4"]["op2"] ) )
+	
+	def testInternalConnectionsNotShown( self ) :
+	
+		# make sure they're not shown when they exist before graph visualisation
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add1"]["sum"].setInput( script["add1"]["op1"] )
+		script["add1"]["op1"].setInput( script["add1"]["op2"] )
+		
+		g = GafferUI.GraphGadget( script )
+
+		self.assertEqual( len( g.connectionGadgets( script["add1"] ) ), 0 )
+		self.assertEqual( g.connectionGadget( script["add1"]["sum"] ), None )
+		self.assertEqual( g.connectionGadget( script["add1"]["op1"] ), None )
+		self.assertEqual( g.connectionGadget( script["add1"]["op2"] ), None )
+		
+		# make sure they're not shown when they're made after graph visualisation
+	
+		script = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( script )
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add1"]["sum"].setInput( script["add1"]["op1"] )
+		script["add1"]["op1"].setInput( script["add1"]["op2"] )
+		
+		self.assertEqual( len( g.connectionGadgets( script["add1"] ) ), 0 )
+		self.assertEqual( g.connectionGadget( script["add1"]["sum"] ), None )
+		self.assertEqual( g.connectionGadget( script["add1"]["op1"] ), None )
+		self.assertEqual( g.connectionGadget( script["add1"]["op2"] ), None )
 		
 if __name__ == "__main__":
 	unittest.main()

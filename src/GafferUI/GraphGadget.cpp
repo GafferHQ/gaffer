@@ -1221,25 +1221,32 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
 		
 void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 {
-	Gaffer::PlugPtr srcPlug = dstPlug->getInput<Gaffer::Plug>();
+	Gaffer::Plug *srcPlug = dstPlug->getInput<Gaffer::Plug>();
 	if( !srcPlug )
 	{
 		// there is no connection
 		return;
 	}
 	
-	Gaffer::NodePtr dstNode = dstPlug->node();
-	NodulePtr dstNodule = findNodeGadget( dstNode.get() )->nodule( dstPlug );
+	Gaffer::Node *dstNode = dstPlug->node();
+	Nodule *dstNodule = findNodeGadget( dstNode )->nodule( dstPlug );
 	if( !dstNodule )
 	{
 		// the destination connection point is not represented in the graph
 		return;
 	}
 	
+	Gaffer::Node *srcNode = srcPlug->node();
+	if( srcNode == dstNode )
+	{
+		// we don't want to visualise connections between plugs
+		// on the same node.
+		return;
+	}
+	
 	// find the input nodule for the connection if there is one
-	Gaffer::NodePtr srcNode = srcPlug->node();
-	NodeGadgetPtr srcNodeGadget = findNodeGadget( srcNode.get() );
-	NodulePtr srcNodule = 0;
+	NodeGadget *srcNodeGadget = findNodeGadget( srcNode );
+	Nodule *srcNodule = 0;
 	if( srcNodeGadget )
 	{
 		srcNodule = srcNodeGadget->nodule( srcPlug );
