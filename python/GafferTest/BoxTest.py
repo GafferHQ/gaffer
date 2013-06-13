@@ -376,6 +376,79 @@ class BoxTest( unittest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
 		self.assertEqual( b.canPromotePlug( b["n"]["p"] ), False )
 		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["p"] )
+	
+	def testUnpromoting( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		p = b.promotePlug( b["n1"]["op1"] )
+		self.assertTrue( b.plugIsPromoted( b["n1"]["op1"] ) )
+		self.assertTrue( p.node().isSame( b ) )
+		
+		b.unpromotePlug( b["n1"]["op1"] )
+		self.assertFalse( b.plugIsPromoted( b["n1"]["op1"] ) )
+		self.assertTrue( p.node() is None )
+	
+	def testColorUnpromoting( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.Color3fPlug()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		p = b.promotePlug( b["n"]["c"] )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["r"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["g"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["b"] ) )
+		self.assertTrue( p.node().isSame( b ) )
+		
+		b.unpromotePlug( b["n"]["c"] )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["r"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["g"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["b"] ) )
+		self.assertTrue( p.node() is None )
+		
+	def testIncrementalUnpromoting( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.Color3fPlug()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		p = b.promotePlug( b["n"]["c"] )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["r"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["g"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["b"] ) )
+		self.assertTrue( p.node().isSame( b ) )
+		
+		b.unpromotePlug( b["n"]["c"]["r"] )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["r"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["g"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["b"] ) )
+		self.assertTrue( p.node().isSame( b ) )
+		
+		b.unpromotePlug( b["n"]["c"]["g"] )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["r"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["g"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["c"]["b"] ) )
+		self.assertTrue( p.node().isSame( b ) )
+		
+		b.unpromotePlug( b["n"]["c"]["b"] )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["r"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["g"] ) )
+		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["b"] ) )
+		self.assertTrue( p.node() is None )
 		
 if __name__ == "__main__":
 	unittest.main()
