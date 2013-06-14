@@ -62,7 +62,11 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def numericWidget( self ) :
 	
 		return self.__numericWidget
-		
+	
+	def setHighlighted( self, highlighted ) :
+	
+		self.numericWidget().setHighlighted( highlighted )
+	
 	def _updateFromPlug( self ) :
 
 		plug = self.getPlug()

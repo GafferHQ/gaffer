@@ -51,6 +51,11 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			w = GafferUI.NumericPlugValueWidget( p )
 			self.__row.append( w )
 	
+	def setHighlighted( self, highlighted ) :
+	
+		for i in range( 0, len( self.getPlug() ) ) :
+			self.__row[i].setHighlighted( highlighted )
+
 	def setReadOnly( self, readOnly ) :
 	
 		if readOnly == self.getReadOnly() :

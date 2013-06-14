@@ -72,6 +72,12 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.__label.setGraphComponent( plug )
 
+	def setHighlighted( self, highlighted ) :
+	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+		
+		self.__label.setHighlighted( highlighted )
+
 	def _updateFromPlug( self ) :
 	
 		self.__label.setEnabled( not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )

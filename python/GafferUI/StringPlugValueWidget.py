@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def textWidget( self ) :
 	
 		return self.__textWidget
+
+	def setHighlighted( self, highlighted ) :
+	
+		self.textWidget().setHighlighted( highlighted )
 
 	def _updateFromPlug( self ) :
 	
