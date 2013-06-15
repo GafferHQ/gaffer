@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -108,6 +108,7 @@ boost::python::class_<Signal, boost::noncopyable> SignalBinder<Signal, SignalCal
 
 	boost::python::class_<Signal, boost::noncopyable> c( className );
 		c.def( "connect", &Connection::create<Signal, SlotCaller>, boost::python::return_value_policy<boost::python::manage_new_object>() )
+		.def( "connect", &Connection::createInGroup<Signal, SlotCaller>, boost::python::return_value_policy<boost::python::manage_new_object>() )
 		.def( "__call__", &SignalCaller::call )
 	;
 
