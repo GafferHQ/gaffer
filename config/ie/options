@@ -210,7 +210,7 @@ BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSpl
 
 OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 # Houdini currently uses an OpenEXR version that we can't install centrally
-if targetApp == "houdini" :
+if targetApp in ["houdini" , "nuke"]:
 	OPENEXR_LIB_SUFFIX = ""
 
 CORTEX_LIB_SUFFIX = "-" + cortexMajorVersion
