@@ -1,3 +1,11 @@
+0.68.0
+======
+* Improved speed of renderman shader menu.
+* Image stats node in ImageView now uses the preprocessed input plug if the raw input is not an ImagePlug
+* Removed right-click layout context menu.
+* Added "Unpromote from Box" item to plug popup menu.
+* Fixed menu title so it doesn't interfere with menu keyboard navigation.
+
 0.67.0
 ======
 
