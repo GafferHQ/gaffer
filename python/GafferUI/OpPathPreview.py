@@ -85,6 +85,7 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 	def __executeClicked( self, button ) :
 	
 		with GafferUI.ErrorDialogue.ExceptionHandler( parentWindow=self.ancestor( GafferUI.Window ) ) :
+			self.__node.setParameterisedValues()
 			self.__node.getParameterised()[0]()
 		
 GafferUI.PathPreviewWidget.registerType( "Op", OpPathPreview )
