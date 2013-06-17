@@ -50,22 +50,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__label, plug, **kw )
-	
-		toolTip = "<h3>" + plug.relativeName( plug.node() ) + "</h3>"
-		description = GafferUI.Metadata.plugDescription( plug )
-		if description :
-			toolTip += "\n\n" + description
 			
-		self.__label.setToolTip( toolTip )
-		
 		# connecting at group 0 so we're called before the slot
 		# connected by the NameLabel class.
 		self.__dragBeginConnection = self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ) )
 		
 		self._addPopupMenu( self.__label )
 		
-		self._updateFromPlug()
-
+		self.setPlug( plug )
+		
 	def label( self ) :
 	
 		return self.__label
@@ -75,12 +68,28 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setPlug( self, plug )
 	
 		self.__label.setGraphComponent( plug )
+		
+		label = GafferUI.Metadata.plugValue( plug, "label" )
+		if label is not None :
+			self.__label.setText( label )
 
 	def setHighlighted( self, highlighted ) :
 	
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		
 		self.__label.setHighlighted( highlighted )
+		
+	def getToolTip( self ) :
+	
+		result = GafferUI.PlugValueWidget.getToolTip( self )
+		
+		result += "<ul>"
+		result += "<li>Left drag to connect</li>"
+		if hasattr( self.getPlug(), "getValue" ) :
+			result += "<li>Shift-left or middle drag to transfer value</li>"
+		result += "<ul>"
+
+		return result
 
 	def _updateFromPlug( self ) :
 	

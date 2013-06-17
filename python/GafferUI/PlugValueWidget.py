@@ -118,6 +118,27 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def hasLabel( self ) :
 	
 		return False
+	
+	## Implemented to return a tooltip containing the plug name and description.
+	def getToolTip( self ) :
+	
+		result = GafferUI.Widget.getToolTip( self )
+		if result :
+			return result
+	
+		plug = self.getPlug()
+		input = plug.getInput()
+		
+		inputText = ""
+		if input is not None :
+			inputText = " &lt;- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent.staticTypeId() ) )
+		
+		result = "<h3>" + plug.relativeName( plug.node() ) + inputText + "</h3>"
+		description = GafferUI.Metadata.plugDescription( plug )
+		if description :
+			result += "\n\n" + description
+			
+		return result
 			
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plug. To temporarily suspend calls to this function, use

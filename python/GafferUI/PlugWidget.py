@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import warnings
+
 import IECore
 
 import Gaffer
@@ -47,9 +49,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## \todo This could provide functionality for arbitrary Widgets to be placed
 ## on the right, which combined with the ability to find a 
 ## PlugWidget given a Plug could be quite useful for many things.
-## \todo Remove label and description capabilities - label should /always/
-## be the plug name and description should always be supplied via the
-## Metadata mechanism.
+## \todo Remove deprecated label and description capabilities.
 class PlugWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugOrWidget, label=None, description=None, **kw ) :
@@ -63,8 +63,8 @@ class PlugWidget( GafferUI.Widget ) :
 		self._qtWidget().setLayout( layout )
 
 		if isinstance( plugOrWidget, Gaffer.Plug ) :
-			self.__valueWidget = GafferUI.PlugValueWidget.create( plugOrPlugValueWidget )
-			plug = plugOrPlugValueWidget
+			self.__valueWidget = GafferUI.PlugValueWidget.create( plugOrWidget )
+			plug = plugOrWidget
 		else :
 			assert( isinstance( plugOrWidget, GafferUI.PlugValueWidget ) or hasattr( plugOrWidget, "plugValueWidget" ) )
 			self.__valueWidget = plugOrWidget
@@ -79,14 +79,21 @@ class PlugWidget( GafferUI.Widget ) :
 		## \todo Decide how we allow this sort of tweak using the public
 		# interface. Perhaps we should have a SizeableContainer or something?
 		self.__label.label()._qtWidget().setFixedWidth( self.labelWidth() )
-
-		if label is None :
-			label = GafferUI.Metadata.plugValue( plug, "label" )
 			
 		if label is not None :
+			warnings.warn(
+				"The PlugWidget label parameter is deprecated. Use Metadata instead.",
+				DeprecationWarning,
+				2
+			)
 			self.__label.label().setText( label )
-
+			
 		if description is not None :
+			warnings.warn(
+				"The PlugWidget description parameter is deprecated. Use Metadata instead.",
+				DeprecationWarning,
+				2
+			)
 			self.__label.label().setToolTip( description )
 
 		layout.addWidget( self.__label._qtWidget() )
