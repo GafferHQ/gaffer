@@ -92,10 +92,10 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 		}
 		else
 		{
-			// standard parameter - input must not be another
-			// shader.
+			// standard parameter - input must not be the
+			// output of another shader.
 			const Shader *inputShader = inputPlug->ancestor<Shader>();
-			return !inputShader;
+			return !inputShader || inputPlug != inputShader->outPlug();
 		}
 	}
 	

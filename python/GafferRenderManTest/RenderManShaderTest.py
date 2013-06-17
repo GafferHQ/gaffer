@@ -515,6 +515,19 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		self.assertFalse( n4["parameters"]["fixedShaderArray"]["in1"].acceptsInput( n2["out"] ) )
 		self.assertTrue( n4["parameters"]["fixedShaderArray"]["in1"].acceptsInput( n3["out"] ) )
+	
+	def testConnectionsBetweenParameters( self ) :
+	
+		s = GafferRenderMan.RenderManShader()
+		s.loadShader( "plastic" )
 		
+		s["parameters"]["Kd"].setValue( 0.25 )
+		s["parameters"]["Ks"].setInput( s["parameters"]["Kd"] )
+		
+		shader = s.state()[0]
+		
+		self.assertEqual( shader.parameters["Kd"].value, 0.25 )
+		self.assertEqual( shader.parameters["Ks"].value, 0.25 )
+	
 if __name__ == "__main__":
 	unittest.main()
