@@ -65,6 +65,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__popupMenuConnections = []
 		self.__readOnly = False
 		
+		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		
 	def setPlug( self, plug ) :
 	
 		self.__setPlugInternal( plug, callUpdateFromPlug=True )
@@ -378,4 +382,55 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setInput( None )
+	
+	# drag and drop stuff
+	
+	def __dragEnter( self, widget, event ) :
+
+		if isinstance( event.data, Gaffer.Plug ) :
+			if self.getPlug().acceptsInput( event.data ) :
+				self.setHighlighted( True )
+				return True
+		elif hasattr( self.getPlug(), "setValue" ) and self._dropValue( event ) is not None :
+			if self.getPlug().settable() :
+				self.setHighlighted( True )
+				return True		
 			
+		return False
+
+	def __dragLeave( self, widget, event ) :
+
+		self.setHighlighted( False )
+
+	def __drop( self, widget, event ) :
+
+		self.setHighlighted( False )
+
+		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
+			if isinstance( event.data, Gaffer.Plug ) :
+				self.getPlug().setInput( event.data )
+			else :
+				self.getPlug().setValue( self._dropValue( event ) )
+			
+		return True
+			
+	## Called from a dragEnter slot to see if the drag data can
+	# be converted to a value suitable for a plug.setValue() call.
+	# If this returns a non-None value then the drag will be accepted
+	# and plug.setValue() will be called in the drop event. May be
+	# reimplemented by derived classes to provide conversions of the
+	# drag data to the type needed for setValue().
+	def _dropValue( self, dragDropEvent ) :
+	
+		if hasattr( self.getPlug(), "defaultValue" ) :
+			plugValueType = type( self.getPlug().defaultValue() )
+			if isinstance( dragDropEvent.data, plugValueType ) :
+				return dragDropEvent.data
+			elif isinstance( dragDropEvent.data, IECore.Data ) and hasattr( dragDropEvent.data, "value" ) :
+				if isinstance( dragDropEvent.data.value, plugValueType ) :
+					return dragDropEvent.data.value
+				else :
+					with IECore.IgnoredExceptions( Exception ) :
+						return plugValueType( dragDropEvent.data.value )
+		
+		return None

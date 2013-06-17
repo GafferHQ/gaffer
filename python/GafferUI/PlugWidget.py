@@ -97,6 +97,14 @@ class PlugWidget( GafferUI.Widget ) :
 		if plug.node()["user"].isAncestorOf( plug ) :
 			self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )
 			self.__editableLabel = None
+		
+		# The plugValueWidget() may have smarter drop behaviour than the labelPlugValueWidget(),
+		# because it has specialised PlugValueWidget._dropValue(). It's also more meaningful to the
+		# user if we highlight the plugValueWidget() on dragEnter rather than the label. So we
+		# forward the dragEnter/dragLeave/drop signals from the labelPlugValueWidget() to the plugValueWidget().
+		self.__dragEnterConnection = self.__label.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__labelDragEnter ) )
+		self.__dragLeaveConnection = self.__label.dragLeaveSignal().connect( 0, Gaffer.WeakMethod( self.__labelDragLeave ) )
+		self.__dropConnection = self.__label.dropSignal().connect( 0, Gaffer.WeakMethod( self.__labelDrop ) )
 
 	def plugValueWidget( self ) :
 	
@@ -133,3 +141,15 @@ class PlugWidget( GafferUI.Widget ) :
 	
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )
+
+	def __labelDragEnter( self, label, event ) :
+			
+		return self.plugValueWidget().dragEnterSignal()( self.plugValueWidget(), event )
+		
+	def __labelDragLeave( self, label, event ) :
+	
+		return self.plugValueWidget().dragLeaveSignal()( self.plugValueWidget(), event )
+		
+	def __labelDrop( self, label, event ) :
+	
+		return self.plugValueWidget().dropSignal()( self.plugValueWidget(), event )
