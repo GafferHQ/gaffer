@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 ## A simple PlugValueWidget which just displays the name of the plug,
@@ -49,16 +50,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__label, plug, **kw )
-	
-		toolTip = "<h3>" + plug.relativeName( plug.node() ) + "</h3>"
-		description = GafferUI.Metadata.plugDescription( plug )
-		if description :
-			toolTip += "\n\n" + description
 			
-		self.__label.setToolTip( toolTip )
-				
+		# connecting at group 0 so we're called before the slot
+		# connected by the NameLabel class.
+		self.__dragBeginConnection = self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ) )
+		
 		self._addPopupMenu( self.__label )
-
+		
+		self.setPlug( plug )
+		
 	def label( self ) :
 	
 		return self.__label
@@ -68,7 +68,48 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setPlug( self, plug )
 	
 		self.__label.setGraphComponent( plug )
+		
+		label = GafferUI.Metadata.plugValue( plug, "label" )
+		if label is not None :
+			self.__label.setText( label )
+
+	def setHighlighted( self, highlighted ) :
+	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+		
+		self.__label.setHighlighted( highlighted )
+		
+	def getToolTip( self ) :
+	
+		result = GafferUI.PlugValueWidget.getToolTip( self )
+		
+		result += "<ul>"
+		result += "<li>Left drag to connect</li>"
+		if hasattr( self.getPlug(), "getValue" ) :
+			result += "<li>Shift-left or middle drag to transfer value</li>"
+		result += "<ul>"
+
+		return result
 
 	def _updateFromPlug( self ) :
 	
-		self.__label.setEnabled( self._editable() )
+		self.__label.setEnabled( not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+
+	def __dragBegin( self, widget, event ) :
+		
+		# initiate a drag containing the value of the plug,
+		# but only if it's a shift-left drag or a middle drag.
+		# otherwise we allow the NameLabel class to initiate a
+		# drag containing the plug itself.
+		
+		if not hasattr( self.getPlug(), "getValue" ) :
+			return None
+		
+		shiftLeft = event.Buttons.Left and ( event.modifiers & event.Modifiers.Shift )
+		middle = event.buttons == event.Buttons.Middle
+		if not ( shiftLeft or middle ) :
+			return None
+			
+		with self.getContext() :
+			return self.getPlug().getValue()
+		

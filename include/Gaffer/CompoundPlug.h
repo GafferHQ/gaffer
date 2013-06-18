@@ -64,6 +64,9 @@ class CompoundPlug : public ValuePlug
 		/// Makes connections between the corresponding child Plugs of
 		/// input and this Plug.
 		virtual void setInput( PlugPtr input );
+		
+		/// Only returns true if all child plugs are settable.
+		virtual bool settable() const;
 
 		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );

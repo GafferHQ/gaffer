@@ -425,6 +425,11 @@ class PlugTest( unittest.TestCase ) :
 		self.assertTrue( p1.source().isSame( p1 ) )
 		self.assertTrue( p2.source().isSame( p1 ) )
 		self.assertTrue( p3.source().isSame( p1 ) )
+	
+	def testRejectsInputFromSelf( self ) :
+	
+		p = Gaffer.Plug()
+		self.assertFalse( p.acceptsInput( p ) )
 		
 if __name__ == "__main__":
 	unittest.main()

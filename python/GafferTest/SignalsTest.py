@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -310,7 +310,37 @@ class SignalsTest( unittest.TestCase ) :
 		self.numCalls = 0
 		self.assertEqual( s(), True )
 		self.assertEqual( self.numCalls, 1 )	
-			
+	
+	def testGroupingAndOrdering( self ) :
+	
+		values = []
+		def f( value ) :
+		
+			values.append( value )
+		
+		s = Gaffer.Signal0()
+		c1 = s.connect( IECore.curry( f, "one" ) )
+		c2 = s.connect( IECore.curry( f, "two" ) )
+		s()
+		
+		self.assertEqual( values, [ "one", "two" ] )
+		
+		del values[:]
+		
+		c1 = s.connect( 1, IECore.curry( f, "one" ) )
+		c2 = s.connect( 0, IECore.curry( f, "two" ) )
+		s()
+		
+		self.assertEqual( values, [ "two", "one" ] )
+
+		del values[:]
+		
+		c1 = s.connect( IECore.curry( f, "one" ) )
+		c2 = s.connect( 0, IECore.curry( f, "two" ) )
+		s()
+		
+		self.assertEqual( values, [ "two", "one" ] )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

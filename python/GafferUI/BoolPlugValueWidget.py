@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -55,6 +55,10 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 						
 		self._updateFromPlug()
+
+	def setHighlighted( self, highlighted ) :
+	
+		self.__checkBox.setHighlighted( highlighted )
 		
 	def _updateFromPlug( self ) :
 		

@@ -266,5 +266,18 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		
 		self.assertTrue( "ArnoldShader.out" in [ x[0].fullName() for x in cs ] )
 	
+	def testConnectionsBetweenParameters( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "flat" )
+		
+		s["parameters"]["color"].setValue( IECore.Color3f( 0.1, 0.2, 0.3 ) )
+		s["parameters"]["opacity"].setInput( s["parameters"]["color"] )
+		
+		shader = s.state()[0]
+		
+		self.assertEqual( shader.parameters["color"].value, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+		self.assertEqual( shader.parameters["opacity"].value, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+	
 if __name__ == "__main__":
 	unittest.main()

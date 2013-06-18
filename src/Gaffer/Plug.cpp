@@ -139,6 +139,11 @@ bool Plug::acceptsInput( const Plug *input ) const
 		return false;
 	}
 	
+	if( input == this )
+	{
+		return false;
+	}
+	
 	if( const Node *n = node() )
 	{
 		if( !n->acceptsInput( this, input ) )
@@ -146,8 +151,6 @@ bool Plug::acceptsInput( const Plug *input ) const
 			return false;
 		}
 	}
-	/// \todo Possibly allow in->out connections as long
-	/// as the Plugs share the same parent (for internal shortcuts).
 	return !getFlags( ReadOnly );
 }
 
