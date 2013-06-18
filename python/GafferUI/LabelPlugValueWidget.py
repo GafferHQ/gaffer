@@ -51,9 +51,10 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__label, plug, **kw )
 			
-		# connecting at group 0 so we're called before the slot
+		# connecting at group 0 so we're called before the slots
 		# connected by the NameLabel class.
 		self.__dragBeginConnection = self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__dragEndConnection = self.__label.dragEndSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnd ) )
 		
 		self._addPopupMenu( self.__label )
 		
@@ -97,19 +98,23 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __dragBegin( self, widget, event ) :
 		
-		# initiate a drag containing the value of the plug,
-		# but only if it's a shift-left drag or a middle drag.
-		# otherwise we allow the NameLabel class to initiate a
-		# drag containing the plug itself.
-		
-		if not hasattr( self.getPlug(), "getValue" ) :
-			return None
+		# initiate a drag containing the value of the plug
+		# for shift-left drag or a middle drag. initiate a
+		# drag containing the plug for any other type of drag.
 		
 		shiftLeft = event.Buttons.Left and ( event.modifiers & event.Modifiers.Shift )
 		middle = event.buttons == event.Buttons.Middle
-		if not ( shiftLeft or middle ) :
-			return None
-			
-		with self.getContext() :
-			return self.getPlug().getValue()
+		if shiftLeft or middle :
+			if not hasattr( self.getPlug(), "getValue" ) :
+				return None
+			GafferUI.Pointer.setFromFile( "values.png" )
+			with self.getContext() :
+				return self.getPlug().getValue()
+		else :
+			GafferUI.Pointer.setFromFile( "plug.png" )
+			return self.getPlug()
+
+	def __dragEnd( self, widget, event ) :
+		
+		GafferUI.Pointer.set( None )
 		
