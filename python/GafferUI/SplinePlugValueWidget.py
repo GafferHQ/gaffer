@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -46,9 +46,26 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget, plug, **kw )
 
+		self.__splineWidget._qtWidget().setFixedHeight( 20 )
+
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		
 		self.__editorWindow = None
+
+		self.setPlug( plug )
+
+	def splineWidget( self ) :
+	
+		return self.__splineWidget
+
+	def setPlug( self, plug ) :
+		
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+		
+		if isinstance( plug, Gaffer.SplinefColor3fPlug ) :
+			self.__splineWidget.setDrawMode( GafferUI.SplineWidget.DrawMode.Ramp )
+		else :
+			self.__splineWidget.setDrawMode( GafferUI.SplineWidget.DrawMode.Splines )
 
 	def _updateFromPlug( self ) :
 	

@@ -147,6 +147,7 @@ from PopupWindow import PopupWindow
 from ConfirmationDialogue import ConfirmationDialogue
 from DisplayTransform import DisplayTransform
 import _Pointer
+from SplineWidget import SplineWidget
 
 # then stuff specific to graph uis
 
@@ -199,6 +200,7 @@ from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 from UserPlugValueWidget import UserPlugValueWidget
 import PreferencesUI
+from SplinePlugValueWidget import SplinePlugValueWidget
 
 # then stuff specific to parameterised objects
 
