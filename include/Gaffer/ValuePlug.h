@@ -71,7 +71,7 @@ class ValuePlug : public Plug
 		/// Returns true if it is valid to call setFrom(), setToDefault(),
 		/// or setValue() on this plug. False will be returned if the plug
 		/// has an input connection or the ReadOnly flag is set.
-		bool settable() const;
+		virtual bool settable() const;
 
 		/// Must be implemented to set the value of this Plug from the other Plug,
 		/// performing any necessary conversions on the input value. Should throw

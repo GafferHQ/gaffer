@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -206,6 +206,15 @@ Connection *Connection::create( Signal &s, boost::python::object &slot )
 	Connection *connection = new Connection;
 	connection->m_slot = slot;	
 	connection->m_connection = s.connect( Slot<Signal, SlotCaller>( connection ) );
+	return connection;
+}
+
+template<typename Signal, typename SlotCaller>
+Connection *Connection::createInGroup( Signal &s, int group, boost::python::object &slot )
+{
+	Connection *connection = new Connection;
+	connection->m_slot = slot;	
+	connection->m_connection = s.connect( group, Slot<Signal, SlotCaller>( connection ) );
 	return connection;
 }
 

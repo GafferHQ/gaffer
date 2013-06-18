@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -52,9 +52,11 @@ class Connection : public boost::noncopyable
 		
 		~Connection();
 		
-		/// This is bound as the connect() method of signals.
+		/// These are bound as the connect() method of signals.
 		template<typename Signal, typename SlotCaller>
 		static Connection *create( Signal &s, boost::python::object &slot );
+		template<typename Signal, typename SlotCaller>
+		static Connection *createInGroup( Signal &s, int group, boost::python::object &slot );
 		
 		void disconnect() const;
 		bool connected() const;

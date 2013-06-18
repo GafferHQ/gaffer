@@ -73,7 +73,18 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def pathWidget( self ) :
 	
 		return self.__row[0]
+	
+	def getToolTip( self ) :
+	
+		result = GafferUI.PlugValueWidget.getToolTip( self )
 		
+		result += "<ul>"
+		result += "<li>Tab to auto-complete</li>"
+		result += "<li>Cursor down to list</li>"
+		result += "<ul>"
+
+		return result
+	
 	def _updateFromPlug( self ) :
 
 		with self.getContext() :

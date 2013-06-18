@@ -684,6 +684,12 @@ class Widget( object ) :
 			
 		}
 
+		QLabel[gafferHighlighted=\"true\"] {
+		
+			color: $brightColor;
+		
+		}
+
 		QMenuBar {
 		
 			background-color: $backgroundDarkest;
@@ -804,7 +810,7 @@ class Widget( object ) :
 
 		}
 
-		QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus {
+		QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted=\"true\"] {
 
 			border: 2px solid $brightColor;
 			padding: 0px;
@@ -1280,10 +1286,14 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
 		}
 		
-		QCheckBox::indicator:unchecked:hover, QCheckBox::indicator:unchecked:focus {
+		QCheckBox::indicator:unchecked:hover,
+		QCheckBox::indicator:unchecked:focus,
+		QCheckBox[gafferHighlighted=\"true\"]::indicator:unchecked {
 			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);
 		}
-		QCheckBox::indicator:checked:hover, QCheckBox::indicator:checked:focus {
+		QCheckBox::indicator:checked:hover,
+		QCheckBox::indicator:checked:focus,
+		QCheckBox[gafferHighlighted=\"true\"]::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
 		}
 		

@@ -301,7 +301,31 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		] :
 			plug = plugType()
 			self.assertEqual( plug.keys(), childNames )
-			
+	
+	def testSettable( self ) :
+	
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.Color3fPlug()
+		n["p2"] = Gaffer.Color3fPlug()
+		
+		self.assertTrue( n["p1"].settable() )
+		self.assertTrue( n["p2"].settable() )
+		
+		n["p2"].setInput( n["p1"] )
+		
+		self.assertTrue( n["p1"].settable() )
+		self.assertFalse( n["p2"].settable() )
+		
+		# partially connected plugs should not be considered
+		# settable, because all the children are not settable
+				
+		n["p2"]["r"].setInput( None )
+		self.assertEqual( n["p2"]["r"].getInput(), None )
+		self.assertEqual( n["p2"].getInput(), None )
+		
+		self.assertTrue( n["p1"].settable() )
+		self.assertFalse( n["p2"].settable() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

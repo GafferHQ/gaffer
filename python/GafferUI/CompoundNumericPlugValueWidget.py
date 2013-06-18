@@ -1,7 +1,7 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -51,6 +53,11 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			w = GafferUI.NumericPlugValueWidget( p )
 			self.__row.append( w )
 	
+	def setHighlighted( self, highlighted ) :
+	
+		for i in range( 0, len( self.getPlug() ) ) :
+			self.__row[i].setHighlighted( highlighted )
+
 	def setReadOnly( self, readOnly ) :
 	
 		if readOnly == self.getReadOnly() :
@@ -71,7 +78,26 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _row( self ) :
 	
 		return self.__row	
+	
+	# Reimplemented to perform casting between vector and color types.	
+	def _dropValue( self, dragDropEvent ) :
+	
+		result = GafferUI.PlugValueWidget._dropValue( self, dragDropEvent )
+		if result is not None :
+			return result
+	
+		if isinstance( dragDropEvent.data, IECore.Data ) and hasattr( dragDropEvent.data, "value" ) :
+			value = dragDropEvent.data.value
+			if hasattr( value, "dimensions" ) and isinstance( value.dimensions(), int ) :
+				with self.getContext() :
+					result = self.getPlug().getValue()
+				componentType = type( result[0] )
+				for i in range( 0, min( result.dimensions(), value.dimensions() ) ) :
+					result[i] = componentType( value[i] )
+				return result
 		
+		return None
+			
 GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V2iPlug.staticTypeId(), CompoundNumericPlugValueWidget )

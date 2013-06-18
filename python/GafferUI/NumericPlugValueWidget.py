@@ -62,7 +62,21 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def numericWidget( self ) :
 	
 		return self.__numericWidget
+	
+	def setHighlighted( self, highlighted ) :
+	
+		self.numericWidget().setHighlighted( highlighted )
+	
+	def getToolTip( self ) :
+	
+		result = GafferUI.PlugValueWidget.getToolTip( self )
 		
+		result += "<ul>"
+		result += "<li>Cursor up/down to increment/decrement</li>"
+		result += "<ul>"
+
+		return result
+
 	def _updateFromPlug( self ) :
 
 		plug = self.getPlug()

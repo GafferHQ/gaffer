@@ -163,6 +163,20 @@ PlugPtr CompoundPlug::createCounterpart( const std::string &name, Direction dire
 	return result;
 }
 
+bool CompoundPlug::settable() const
+{
+	ChildContainer::const_iterator it, eIt;
+	for( it=children().begin(), eIt=children().end(); it!=eIt; ++it )
+	{
+		ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
+		if( !valuePlug || !valuePlug->settable() )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void CompoundPlug::setToDefault()
 {
 	ChildContainer::const_iterator it;
