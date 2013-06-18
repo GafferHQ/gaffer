@@ -194,31 +194,22 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 		}
 	}
 	
-	std::vector<float> interleaved;
-	interleaved.resize( ImagePlug::tileSize() * ImagePlug::tileSize() * spec->channelnames.size() );
+	// Create the output data buffer.
+	FloatVectorDataPtr resultData = new FloatVectorData;
+	vector<float> &result = resultData->writable();	
+	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+
+	size_t channelIndex = channelIt - spec->channelnames.begin();
 	imageCache()->get_pixels(
 		uFileName,
 		0, 0, // subimage, miplevel
 		tileOrigin.x, tileOrigin.x + ImagePlug::tileSize(),
 		tileOrigin.y, tileOrigin.y + ImagePlug::tileSize(),
 		0, 1,
+		channelIndex, channelIndex + 1,
 		TypeDesc::FLOAT,
-		&(interleaved[0])
+		&(result[0])
 	);
-	
-	// extract just the channel we want.
-	/// \todo See about getting a version of get_pixels() that just loads a single channel.
-	FloatVectorDataPtr resultData = new FloatVectorData;
-	vector<float> &result = resultData->writable();
-	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-	size_t srcIndex = channelIt - spec->channelnames.begin();
-	size_t srcStep = spec->channelnames.size();
-	size_t dstIndex = 0;
-	for( int i=0; i<ImagePlug::tileSize() * ImagePlug::tileSize(); i++ )
-	{
-		result[dstIndex++] = interleaved[srcIndex];
-		srcIndex += srcStep;
-	}
 	
 	return resultData;
 }
