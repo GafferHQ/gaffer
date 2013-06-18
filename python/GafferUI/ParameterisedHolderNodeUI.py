@@ -66,7 +66,12 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 				parameters.plugValueWidget().setReadOnly( readOnly )
 				
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), ParameterisedHolderNodeUI )
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), ParameterisedHolderNodeUI )
+
+##########################################################################
+# Nodules
+##########################################################################
 
 def __parameterNoduleCreator( plug ) :
 	
@@ -76,7 +81,30 @@ def __parameterNoduleCreator( plug ) :
 		return None
 
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
 
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+
+##########################################################################
+# Metadata
+##########################################################################
+
+def __plugDescription( plug ) :
+
+	## \todo There should really be a method to map from plug to parameter.
+	# The logic exists in ParameterisedHolder.plugSet() but isn't public.
+	parameter = plug.node().parameterHandler().parameter()
+	for name in plug.relativeName( plug.node() ).split( "." )[1:] :
+		if not isinstance( parameter, IECore.CompoundParameter ) :
+			return None
+		else :
+			parameter = parameter[name]
+	
+	return parameter.description
+
+GafferUI.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderNode, "parameters.*", __plugDescription )
+GafferUI.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderComputeNode, "parameters.*", __plugDescription )
+GafferUI.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderDependencyNode, "parameters.*", __plugDescription )

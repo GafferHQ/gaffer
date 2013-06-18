@@ -87,9 +87,6 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 		self.__parameterHandler = parameterHandler
 		
-		if self._collapsible() is not None :
-			self._collapsible().setToolTip( self._parameterToolTip( self.__parameterHandler ) )
-
 	def _childPlugWidget( self, childPlug ) :
 
 		childParameter = self.__parameterHandler.parameter()[childPlug.getName()]
@@ -105,12 +102,8 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 			
 		if isinstance( valueWidget, CompoundParameterValueWidget ) :
 			return valueWidget
-					
-		return GafferUI.PlugWidget(
-			valueWidget, 
-			self._parameterLabelText( childParameterHandler ),
-			self._parameterToolTip( childParameterHandler ),
-		)
+						
+		return GafferUI.PlugWidget( valueWidget )
 		
 	def _parameter( self ) :
 	
