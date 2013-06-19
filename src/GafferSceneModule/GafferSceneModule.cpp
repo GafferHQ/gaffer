@@ -41,7 +41,6 @@
 
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/FileSource.h"
-#include "GafferScene/ModelCacheSource.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/AttributeCache.h"
@@ -99,7 +98,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<SceneNode>();
 	GafferBindings::DependencyNodeClass<Source>();
 	GafferBindings::DependencyNodeClass<FileSource>();
-	GafferBindings::DependencyNodeClass<ModelCacheSource>();
 	GafferBindings::DependencyNodeClass<SceneProcessor>();
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();

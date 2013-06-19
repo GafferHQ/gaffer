@@ -103,16 +103,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-# ModelCacheSource
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.ModelCacheSource.staticTypeId(),
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "mdc" ] ) )
-	)
-)
-
 # AlembicSource
 
 GafferUI.PlugValueWidget.registerCreator(
