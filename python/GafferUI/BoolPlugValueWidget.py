@@ -58,6 +58,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def setHighlighted( self, highlighted ) :
 	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.__checkBox.setHighlighted( highlighted )
 		
 	def _updateFromPlug( self ) :
