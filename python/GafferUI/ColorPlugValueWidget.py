@@ -42,6 +42,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
+
 class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -57,6 +59,7 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		
 		self.__colorChooserDialogue = None
+		self.__blinkBehaviour = None
 		
 		self._updateFromPlug()
 		
@@ -72,6 +75,13 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 	def __buttonPress( self, widget, event ) :
 		
 		if not self._editable() :
+		
+			if self.__blinkBehaviour is not None :
+				self.__blinkBehaviour.stop()
+			widgets = [ w for w in self._row()[:len( self.getPlug() )] if not w._editable() ]
+			self.__blinkBehaviour = _BlinkBehaviour( widgets )
+			self.__blinkBehaviour.start()
+			
 			return False
 				
 		# we only store a weak reference to the dialogue, because we want to allow it
@@ -148,3 +158,45 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	
 		self.parent().removeChild( self )
 		return False # to remove idle callback
+
+## \todo Consider if this is something that might be useful elsewhere, if
+# there are other such things, and what a Behaviour base class for them
+# might look like.
+class _BlinkBehaviour( object ) :
+
+	def __init__( self, targetWidgets, blinks = 2 ) :
+	
+		self.__targetWidgets = [ weakref.ref( w ) for w in targetWidgets ]
+		self.__initialStates = [ w.getHighlighted() for w in targetWidgets ]
+		
+		self.__blinks = blinks
+		self.__toggleCount = 0
+		self.__timer = QtCore.QTimer()
+		self.__timer.timeout.connect( self.__blink )
+		
+	def start( self ) :
+	
+		self.__toggleCount = 0
+		self.__blink()
+		self.__timer.start( 250 )
+		
+	def stop( self ) :
+	
+		self.__timer.stop()
+		for widget, initialState in zip( self.__targetWidgets, self.__initialStates ) :
+			widget = widget()
+			if widget :
+				widget.setHighlighted( initialState )
+		
+	def __blink( self ) :
+			
+		self.__toggleCount += 1
+
+		for widget, initialState in zip( self.__targetWidgets, self.__initialStates ) :
+			widget = widget()
+			if widget :
+				widget.setHighlighted( bool( ( int( initialState ) + self.__toggleCount ) % 2 ) )
+
+		if self.__toggleCount >= self.__blinks * 2 :
+			self.__timer.stop()
+		
