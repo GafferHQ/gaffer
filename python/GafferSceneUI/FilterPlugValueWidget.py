@@ -151,7 +151,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			result.append( "/RemoveDivider", { "divider" : True } )
 		
 		for filterType in GafferScene.Filter.__subclasses__() :
-			result.append( "/" + filterType.staticTypeName(), { "command" : IECore.curry( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
+			result.append( "/" + filterType.staticTypeName().rpartition( ":" )[2], { "command" : IECore.curry( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
 		
 		result.append( "/AddDivider", { "divider" : True } )
 		result.append( "/Link...", { "command" : Gaffer.WeakMethod( self.__linkFilter ), "active" : False } )

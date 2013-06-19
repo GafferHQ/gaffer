@@ -119,7 +119,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 					GafferUI.Image( "info.png" )
-				toolTip = "<h3>" + node.typeName() + "</h3>"
+				toolTip = "<h3>" + node.typeName().rpartition( ":" )[2] + "</h3>"
 				description = GafferUI.Metadata.nodeDescription( node )
 				if description :
 					toolTip += "\n\n" + description
