@@ -101,7 +101,6 @@ except Exception, m :
 # Scene nodes
 
 nodeMenu.append( "/Scene/Source/SceneReader", GafferScene.SceneReader )
-nodeMenu.append( "/Scene/Source/ModelCache", GafferScene.ModelCacheSource )
 nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
 nodeMenu.append( "/Scene/Source/ObjectToScene", GafferScene.ObjectToScene )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )

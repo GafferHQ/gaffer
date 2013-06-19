@@ -46,7 +46,7 @@ enum TypeId
 	ScenePlugTypeId = 110501,
 	SceneNodeTypeId = 110502,
 	FileSourceTypeId = 110503,
-	ModelCacheSourceTypeId = 110504,
+	ModelCacheSourceTypeId = 110504, // obsolete - available for reuse
 	SceneProcessorTypeId = 110505,
 	SceneElementProcessorTypeId = 110506,
 	AttributeCacheTypeId = 110507,

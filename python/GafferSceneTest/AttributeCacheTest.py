@@ -45,7 +45,7 @@ class AttributeCacheTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstructWithInputs( self ) :
 	
-		m = GafferScene.ModelCacheSource()
+		m = GafferScene.SceneReader()
 		a = GafferScene.AttributeCache()
 		a["in"]["bound"].setInput( m["out"]["bound"] )
 		a["in"]["transform"].setInput( m["out"]["transform"] )
@@ -55,7 +55,7 @@ class AttributeCacheTest( GafferSceneTest.SceneTestCase ) :
 	def testSerialisationOfMasterConnection( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["m"] = GafferScene.ModelCacheSource()
+		s["m"] = GafferScene.SceneReader()
 		s["a"] = GafferScene.AttributeCache()
 		
 		s["a"]["in"].setInput( s["m"]["out"] )
@@ -71,7 +71,7 @@ class AttributeCacheTest( GafferSceneTest.SceneTestCase ) :
 	def testSerialisationOfMasterConnectionWhenInputNotSerialised( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["m"] = GafferScene.ModelCacheSource()
+		s["m"] = GafferScene.SceneReader()
 		s["a"] = GafferScene.AttributeCache()
 		
 		s["a"]["in"].setInput( s["m"]["out"] )
