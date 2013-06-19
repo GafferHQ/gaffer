@@ -70,7 +70,7 @@ class SceneProceduralTest( unittest.TestCase ) :
 		# This test actually exposed a crash bug in IECoreGL, but it's important
 		# that Gaffer isn't susceptible to triggering that bug.
 	
-		mc = GafferScene.ModelCacheSource()
+		mc = GafferScene.SceneReader()
 		mc["fileName"].setValue( "iDontExist" )
 		
 		renderer = IECoreGL.Renderer()
