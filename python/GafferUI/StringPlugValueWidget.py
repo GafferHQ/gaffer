@@ -67,6 +67,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def setHighlighted( self, highlighted ) :
 	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.textWidget().setHighlighted( highlighted )
 
 	def _updateFromPlug( self ) :

@@ -65,6 +65,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 	def setHighlighted( self, highlighted ) :
 	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.numericWidget().setHighlighted( highlighted )
 	
 	def getToolTip( self ) :
