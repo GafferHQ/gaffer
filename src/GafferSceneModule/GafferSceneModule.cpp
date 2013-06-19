@@ -133,7 +133,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	
 	GafferBindings::DependencyNodeClass<Options>();
 	
-	GafferBindings::NodeClass<Shader>()
+	GafferBindings::DependencyNodeClass<Shader>()
 		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
 		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
 		.def( "state", &Shader::state )

@@ -49,7 +49,7 @@ using namespace GafferArnold;
 BOOST_PYTHON_MODULE( _GafferArnold )
 {
 	
-	GafferBindings::NodeClass<ArnoldShader>()
+	GafferBindings::DependencyNodeClass<ArnoldShader>()
 		.def( "loadShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::loadShader )
 	;
 	
