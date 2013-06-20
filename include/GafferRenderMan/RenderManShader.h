@@ -57,7 +57,12 @@ class RenderManShader : public GafferScene::Shader
 		virtual ~RenderManShader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
-		
+			
+		/// Implemented for outPlug(), returning the parameter named in the "primaryInput"
+		/// shader annotation if it has been specified.
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+
 		/// \undoable.
 		/// \todo Make this method virtual and define it on the Shader base class.
 		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
@@ -70,7 +75,8 @@ class RenderManShader : public GafferScene::Shader
 	
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
+		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
+		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
 	
 	private :
 	

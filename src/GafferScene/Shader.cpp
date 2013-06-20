@@ -39,6 +39,7 @@
 
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 #include "GafferScene/Shader.h"
 
@@ -57,6 +58,7 @@ Shader::Shader( const std::string &name )
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "type" ) );
 	addChild( new CompoundPlug( "parameters" ) );
+	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 }
 
 Shader::~Shader()
@@ -104,58 +106,39 @@ const Gaffer::Plug *Shader::outPlug() const
 {
 	return getChild<Plug>( "out" );
 }
-		
+
+Gaffer::BoolPlug *Shader::enabledPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *Shader::enabledPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+	
 IECore::MurmurHash Shader::stateHash() const
 {
-	IECore::MurmurHash h;
-	stateHash( h );
-	return h;
+	NetworkBuilder networkBuilder( this );
+	return networkBuilder.stateHash();
 }
 
 void Shader::stateHash( IECore::MurmurHash &h ) const
 {
-	shaderHash( h );
+	h.append( stateHash() );
 }
 
-IECore::ObjectVectorPtr Shader::state() const
+IECore::ConstObjectVectorPtr Shader::state() const
 {
-	NetworkBuilder networkBuilder;
-	networkBuilder.shader( this );
-	return networkBuilder.m_state;
-}
-
-void Shader::shaderHash( IECore::MurmurHash &h ) const
-{
-	h.append( typeId() );
-	namePlug()->hash( h );
-	
-	for( InputPlugIterator it( parametersPlug() ); it!=it.end(); it++ )
-	{
-		const Plug *inputPlug = (*it)->getInput<Plug>();
-		if( inputPlug )
-		{
-			const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
-			if( n )
-			{
-				n->shaderHash( h );
-				continue;
-			}
-			// fall through to hash plug value
-		}
-	
-		ConstValuePlugPtr vplug = IECore::runTimeCast< const ValuePlug >( (*it) );
-		if( vplug )
-		{
-			vplug->hash( h );
-		}
-	}
+	NetworkBuilder networkBuilder( this );
+	return networkBuilder.state();
 }
 
 void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );
 		
-	if( parametersPlug()->isAncestorOf( input ) )
+	if( parametersPlug()->isAncestorOf( input ) || input == enabledPlug() )
 	{
 		const Plug *out = outPlug();
 		if( out )
@@ -178,34 +161,153 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 	}
 }
 
+void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
+{
+	const Plug *inputPlug = parameterPlug->getInput<Plug>();
+	if( inputPlug )
+	{
+		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
+		if( n )
+		{
+			h.append( network.shaderHash( n ) );
+			return;
+		}
+		// fall through to hash plug value
+	}
+
+	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );
+	if( vplug )
+	{
+		vplug->hash( h );
+	}
+	else
+	{
+		h.append( parameterPlug->typeId() );
+	}
+}
+
+IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
+{
+	if( const Gaffer::ValuePlug *valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
+	{
+		return Gaffer::CompoundDataPlug::extractDataFromPlug( valuePlug );
+	}
+	return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // NetworkBuilder implementation
 //////////////////////////////////////////////////////////////////////////
 
-Shader::NetworkBuilder::NetworkBuilder()
-	:	m_state( new IECore::ObjectVector )
+Shader::NetworkBuilder::NetworkBuilder( const Shader *rootNode )
+	:	m_rootNode( rootNode )
 {
+}
+
+IECore::MurmurHash Shader::NetworkBuilder::stateHash()
+{
+	return shaderHash( m_rootNode );
+}
+
+IECore::ConstObjectVectorPtr Shader::NetworkBuilder::state()
+{
+	if( !m_state )
+	{
+		m_state = new IECore::ObjectVector;
+		shader( m_rootNode );
+	}
+	return m_state;
+}
+
+IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode )
+{
+	shaderNode = effectiveNode( shaderNode );
+	if( !shaderNode )
+	{
+		IECore::MurmurHash h;
+		h.append( Shader::staticTypeId() );
+		return h;
+	}
+	
+	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
+	if( shaderAndHash.hash != IECore::MurmurHash() )
+	{
+		return shaderAndHash.hash;
+	}
+	
+	shaderAndHash.hash.append( shaderNode->typeId() );
+	shaderNode->namePlug()->hash( shaderAndHash.hash );
+	shaderNode->typePlug()->hash( shaderAndHash.hash );
+	
+	for( InputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); ++it )
+	{
+		shaderNode->parameterHash( *it, *this, shaderAndHash.hash );
+	}
+	
+	return shaderAndHash.hash;
 }
 
 IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 {
-	ShaderMap::const_iterator it = m_shaders.find( shaderNode );
-	if( it != m_shaders.end() )
+	shaderNode = effectiveNode( shaderNode );
+	if( !shaderNode )
 	{
-		return it->second;
+		return 0;
 	}
 	
-	IECore::ShaderPtr s = shaderNode->shader( *this );
-	m_state->members().push_back( s );
-	m_shaders[shaderNode] = s;
-	return s;
+	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
+	if( shaderAndHash.shader )
+	{
+		return shaderAndHash.shader;
+	}
+	
+	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
+	for( InputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); it++ )
+	{
+		IECore::DataPtr value = shaderNode->parameterValue( *it, *this );
+		if( value )
+		{
+			shaderAndHash.shader->parameters()[(*it)->getName()] = value;
+		}
+	}
+
+	m_state->members().push_back( shaderAndHash.shader );
+	return shaderAndHash.shader;
 }
 
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
 {
 	IECore::Shader *s = shader( shaderNode );
+	if( !s )
+	{
+		static std::string emptyString;
+		return emptyString;
+	}
+	
 	s->setType( "shader" );
 	IECore::StringDataPtr handleData = new IECore::StringData( boost::lexical_cast<std::string>( shaderNode ) );
 	s->parameters()["__handle"] = handleData;
 	return handleData->readable();
+}
+
+const Shader *Shader::NetworkBuilder::effectiveNode( const Shader *shaderNode ) const
+{
+	if( shaderNode->enabledPlug()->getValue() )
+	{
+		return shaderNode;
+	}
+
+	const Plug *correspondingInput = shaderNode->correspondingInput( shaderNode->outPlug() );
+	if( !correspondingInput )
+	{
+		return 0;
+	}
+	
+	const Plug *source = correspondingInput->source<Plug>();
+	if( source == correspondingInput )
+	{
+		return 0;
+	}
+	
+	return source->ancestor<Shader>();
 }

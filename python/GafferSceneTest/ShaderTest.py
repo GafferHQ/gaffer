@@ -59,6 +59,21 @@ class ShaderTest( unittest.TestCase ) :
 		self.assertTrue( "s.out.r" in d )
 		self.assertTrue( "s.out.g" in d )
 		self.assertTrue( "s.out.b" in d )
+	
+	def testDisabling( self ) :
+	
+		s = GafferSceneTest.TestShader()
+		
+		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
+		self.assertEqual( s.correspondingInput( s["out"] ), None )
+		
+		h = s.stateHash()
+		self.assertEqual( len( s.state() ), 1 )
+		
+		s["enabled"].setValue( False )
+		
+		self.assertEqual( len( s.state() ), 0 )
+		self.assertNotEqual( s.stateHash(), h )
 		
 if __name__ == "__main__":
 	unittest.main()

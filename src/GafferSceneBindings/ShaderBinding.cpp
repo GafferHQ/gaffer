@@ -34,34 +34,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPENGLSHADER_H
-#define GAFFERSCENE_OPENGLSHADER_H
+#include "boost/python.hpp"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferScene/Shader.h"
 
-namespace GafferScene
+#include "GafferSceneBindings/ShaderBinding.h"
+
+using namespace boost::python;
+
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
+
+static IECore::ObjectVectorPtr state( const Shader &s )
+{
+	return s.state()->copy();
+}
+
+void GafferSceneBindings::bindShader()
 {
 
-class OpenGLShader : public GafferScene::Shader
-{
+	GafferBindings::DependencyNodeClass<Shader>()
+		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
+		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
+		.def( "state", &state )
+	;
 
-	public :
-
-		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
-		virtual ~OpenGLShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
-		
-		void loadShader( const std::string &shaderName );
-
-	protected :
-	
-		/// Reimplemented to allow ImageNodes to be plugged in to texture parameters.
-		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
-					
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_OPENGLSHADER_H
+}

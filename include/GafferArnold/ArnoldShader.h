@@ -59,15 +59,8 @@ class ArnoldShader : public GafferScene::Shader
 
 	protected :
 	
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;
-		
-	private :
-		
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug, NetworkBuilder &network ) const;
-		
-		template<typename T>
-		IECore::DataPtr parameterValue( const Gaffer::ValuePlug *plug ) const;
-					
+		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *plug, NetworkBuilder &network ) const;
+
 };
 
 } // namespace GafferArnold
