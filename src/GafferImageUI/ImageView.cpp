@@ -246,7 +246,9 @@ class ImageViewGadget : public GafferUI::Gadget
 			return Box2f( gadgetToDisplaySpace( box.min ), gadgetToDisplaySpace( box.max ) );
 		}
 
-		/// Samples a color from the image.		
+		/// Samples a color from the image.
+		///\todo: This method currently samples a pixel from the ImagePrimitive and this means that the sampled colour is the result of the image preprocessor.
+		/// Instead we should really be sampling from the input image plug so that the user is presented with raw colour data.
 		Color4f sampleColor( const V2f &point ) const
 		{
 			V2i samplePos(
