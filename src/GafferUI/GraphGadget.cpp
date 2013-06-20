@@ -59,6 +59,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/StandardGraphLayout.h"
+#include "GafferUI/Pointer.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -657,6 +658,7 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 		if( nodeGadget )
 		{
 			m_dragMode = Sending;
+			Pointer::setFromFile( "nodes.png" );
 			if( m_scriptNode->selection()->contains( nodeGadget->node() ) )
 			{
 				return m_scriptNode->selection();
@@ -886,6 +888,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	DragMode dragMode = m_dragMode;
 	m_dragMode = None;
+	Pointer::set( 0 );
 	
 	if( !m_scriptNode )
 	{

@@ -57,6 +57,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 				allowMultipleSelection = True,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
+			self.__pathListing.setDragPointer( "objects.png" )
 			
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )

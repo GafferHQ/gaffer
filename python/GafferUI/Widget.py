@@ -1756,7 +1756,17 @@ class _EventFilter( QtCore.QObject ) :
 	
 		if self.__lastButtonPressWidget is None :
 			return False
-				
+		
+		if qEvent.buttons() == QtCore.Qt.NoButton :
+			# sometimes Qt can fail to give us a mouse button release event
+			# for the widget that received the mouse button press - in particular
+			# this appears to happen when a context menu is raised in the press
+			# event. this can mean we end up here, with a __lastButtonPressWidget
+			# we don't want, attempting to start a drag when no buttons are down.
+			# so we fix that.
+			self.__lastButtonPressWidget = None
+			return False
+			
 		sourceWidget = self.__lastButtonPressWidget()
 		if sourceWidget is None :
 			# the widget died

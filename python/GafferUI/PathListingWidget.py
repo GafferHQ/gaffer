@@ -144,6 +144,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.__dragPointer = "paths.png"
 		
 		self.__path = None
 		self.setPath( path )
@@ -301,7 +303,15 @@ class PathListingWidget( GafferUI.Widget ) :
 	def pathSelectedSignal( self ) :
 	
 		return self.__pathSelectedSignal
-			
+	
+	def setDragPointer( self, dragPointer ) :
+	
+		self.__dragPointer = dragPointer
+		
+	def getDragPointer( self ) :
+	
+		return self.__dragPointer
+		
 	def __update( self ) :
 				
 		# update the listing if necessary. when the path itself changes, we only
@@ -460,12 +470,17 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__borrowedButtonPress = None
 		selectedPaths = self.getSelectedPaths()
-		if len( selectedPaths ) :		
+		if len( selectedPaths ) :	
+			GafferUI.Pointer.setFromFile( self.__dragPointer )	
 			return IECore.StringVectorData(
 				[ str( p ) for p in selectedPaths ],
 			)
 		
 		return None
+		
+	def __dragEnd( self, widget, event ) :
+	
+		GafferUI.Pointer.set( None )
 		
 	def __emitButtonPress( self, event ) :
 	
