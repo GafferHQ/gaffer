@@ -82,9 +82,11 @@ class NameLabel( GafferUI.Label ) :
 		
 	def __dragBegin( self, widget, event ) :
 	
-		GafferUI.Pointer.setFromFile( "nodes.png" )
+		if event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
+			GafferUI.Pointer.setFromFile( "nodes.png" )
+			return self.getGraphComponent()
 		
-		return self.getGraphComponent()
+		return None
 
 	def __dragEnd( self, widget, event ) :
 	
