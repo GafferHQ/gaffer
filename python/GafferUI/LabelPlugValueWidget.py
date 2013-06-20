@@ -100,17 +100,18 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		# initiate a drag containing the value of the plug
 		# for shift-left drag or a middle drag. initiate a
-		# drag containing the plug for any other type of drag.
+		# drag containing the plug for a straight left-drag.
 		
-		shiftLeft = event.Buttons.Left and ( event.modifiers & event.Modifiers.Shift )
+		shift = event.modifiers & event.Modifiers.Shift
+		left = event.buttons == event.Buttons.Left
 		middle = event.buttons == event.Buttons.Middle
-		if shiftLeft or middle :
+		if ( shift and left ) or middle :
 			if not hasattr( self.getPlug(), "getValue" ) :
 				return None
 			GafferUI.Pointer.setFromFile( "values.png" )
 			with self.getContext() :
 				return self.getPlug().getValue()
-		else :
+		elif left :
 			GafferUI.Pointer.setFromFile( "plug.png" )
 			return self.getPlug()
 
