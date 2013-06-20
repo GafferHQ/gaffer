@@ -79,6 +79,16 @@ class Shader : public Gaffer::DependencyNode
 		Gaffer::Plug *outPlug();
 		const Gaffer::Plug *outPlug() const;
 		
+		/// Shaders can be enabled and disabled. A disabled shader
+		/// returns an empty object from the state() method, causing
+		/// any downstream ShaderAssignments to act as if they've been
+		/// disabled. If a shader in the middle of a network is disabled
+		/// then by default its output connections are ignored on any
+		/// downstream nodes. Derived classes may implement correspondingInput( outPlug() )
+		/// to allow disabled shaders to act as a pass-through instead. 
+		virtual Gaffer::BoolPlug *enabledPlug();
+		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		
 		/// Implemented so that the children of parametersPlug() affect
 		/// outPlug().
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
@@ -99,16 +109,20 @@ class Shader : public Gaffer::DependencyNode
 			
 				NetworkBuilder( const Shader *rootNode );
 				
-				const IECore::MurmurHash &stateHash();
+				IECore::MurmurHash stateHash();
 				IECore::ConstObjectVectorPtr state();
 				
-				const IECore::MurmurHash &shaderHash( const Shader *shaderNode ); 
-				const std::string &shaderHandle( const Shader *shaderNode ); 
+				IECore::MurmurHash shaderHash( const Shader *shaderNode );
+				/// May return an empty string if a shader has been disabled.
+				const std::string &shaderHandle( const Shader *shaderNode );
 			
 			private :
 				
 				NetworkBuilder();
 			
+				// Returns the node that should be used taking into account
+				// enabledPlug() and correspondingInput().
+				const Shader *effectiveNode( const Shader *shaderNode ) const;
 				IECore::Shader *shader( const Shader *shaderNode );
 				
 				const Shader *m_rootNode;

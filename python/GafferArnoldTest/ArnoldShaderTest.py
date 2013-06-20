@@ -279,5 +279,55 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		self.assertEqual( shader.parameters["color"].value, IECore.Color3f( 0.1, 0.2, 0.3 ) )
 		self.assertEqual( shader.parameters["opacity"].value, IECore.Color3f( 0.1, 0.2, 0.3 ) )
 	
+	def testDisabling( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "standard" )
+				
+		stateHash = s.stateHash()
+		state = s.state()
+		self.assertEqual( len( state ), 1 )
+		self.assertEqual( state[0].name, "standard" )
+		
+		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
+						
+		s["enabled"].setValue( False )
+		
+		stateHash2 = s.stateHash()
+		self.assertNotEqual( stateHash2, stateHash )
+		
+		state2 = s.state()
+		self.assertEqual( len( state2 ), 0 )
+
+	def testDisablingInNetwork( self ) :
+	
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "standard" )
+		
+		f = GafferArnold.ArnoldShader()
+		f.loadShader( "flat" )
+		
+		s["parameters"]["Ks_color"].setInput( f["out"] )
+		
+		stateHash = s.stateHash()
+		state = s.state()
+		self.assertEqual( len( state ), 2 )
+		self.assertEqual( state[1].name, "standard" )
+		self.assertEqual( state[0].name, "flat" )
+		
+		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
+		
+		f["enabled"].setValue( False )
+		
+		stateHash2 = s.stateHash()
+		self.assertNotEqual( stateHash2, stateHash )
+		
+		state2 = s.state()
+		self.assertEqual( len( state2 ), 1 )
+		
+		for key in state[1].parameters.keys() :
+			if key != "Ks_color" :
+				self.assertEqual( state[1].parameters[key], state2[0].parameters[key] )
+		
 if __name__ == "__main__":
 	unittest.main()

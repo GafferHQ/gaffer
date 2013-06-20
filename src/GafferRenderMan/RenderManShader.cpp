@@ -66,6 +66,66 @@ RenderManShader::~RenderManShader()
 {
 }
 
+Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *output )
+{
+	// better to do a few harmless casts than manage a duplicate implementation
+	return const_cast<Gaffer::Plug *>(
+		const_cast<const RenderManShader *>( this )->correspondingInput( output )
+	);
+}
+
+const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *output ) const
+{
+	if( output != outPlug() )
+	{
+		return Shader::correspondingInput( output );
+	}
+
+	std::string shaderName = namePlug()->getValue();
+	if( !shaderName.size() )
+	{
+		return 0;
+	}
+	
+	IECore::ConstShaderPtr shader = 0;
+	try
+	{
+		shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
+	}
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", e.what() );
+		return 0;
+	}
+	
+	const CompoundData *annotations = shader->blindData()->member<CompoundData>( "ri:annotations" );
+	if( !annotations )
+	{
+		return 0;
+	}
+	
+	const StringData *primaryInput = annotations->member<StringData>( "primaryInput" );
+	if( !primaryInput )
+	{
+		return 0;
+	}
+	
+	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
+	if( !result )
+	{
+		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
+		return 0;
+	}
+	
+	if( result->typeId() != Gaffer::Plug::staticTypeId() )
+	{
+		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" is not of type shader" ) % primaryInput->readable() );
+		return 0;
+	}
+	
+	return result;
+}
+
 void RenderManShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
@@ -129,11 +189,11 @@ IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPl
 			const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
 			if( inputShader )
 			{
-				return new StringData( network.shaderHandle( inputShader ) );
-			}
-			else
-			{
-				return 0;
+				const std::string &handle = network.shaderHandle( inputShader );
+				if( handle.size() )
+				{
+					return new StringData( handle );
+				}
 			}
 		}
 	}

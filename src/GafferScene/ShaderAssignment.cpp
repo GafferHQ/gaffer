@@ -139,7 +139,10 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 		// temporary const_cast needed to put it into the result is justified -
 		// we never change the object and nor can anyone after it is returned.
 		ObjectVectorPtr state = constPointerCast<ObjectVector>( shader->state() );
-		result->members()["shader"] = state;
+		if( state->members().size() )
+		{
+			result->members()["shader"] = state;
+		}
 	}
 	
 	return result;

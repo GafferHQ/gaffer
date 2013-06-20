@@ -154,7 +154,12 @@ IECore::DataPtr ArnoldShader::parameterValue( const Gaffer::Plug *plug, NetworkB
 		const ArnoldShader *n = IECore::runTimeCast<const ArnoldShader>( inputPlug->node() );
 		if( n && inputPlug == n->outPlug() )
 		{
-			return new IECore::StringData( "link:" + network.shaderHandle( n ) );
+			const std::string &shaderHandle = network.shaderHandle( n );
+			if( shaderHandle.size() )
+			{
+				return new IECore::StringData( "link:" + shaderHandle );
+			}
+			return 0;
 		}
 	}
 

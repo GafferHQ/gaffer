@@ -58,6 +58,7 @@ Shader::Shader( const std::string &name )
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "type" ) );
 	addChild( new CompoundPlug( "parameters" ) );
+	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 }
 
 Shader::~Shader()
@@ -105,7 +106,17 @@ const Gaffer::Plug *Shader::outPlug() const
 {
 	return getChild<Plug>( "out" );
 }
-		
+
+Gaffer::BoolPlug *Shader::enabledPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *Shader::enabledPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+	
 IECore::MurmurHash Shader::stateHash() const
 {
 	NetworkBuilder networkBuilder( this );
@@ -127,7 +138,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	DependencyNode::affects( input, outputs );
 		
-	if( parametersPlug()->isAncestorOf( input ) )
+	if( parametersPlug()->isAncestorOf( input ) || input == enabledPlug() )
 	{
 		const Plug *out = outPlug();
 		if( out )
@@ -193,7 +204,7 @@ Shader::NetworkBuilder::NetworkBuilder( const Shader *rootNode )
 {
 }
 
-const IECore::MurmurHash &Shader::NetworkBuilder::stateHash()
+IECore::MurmurHash Shader::NetworkBuilder::stateHash()
 {
 	return shaderHash( m_rootNode );
 }
@@ -208,8 +219,16 @@ IECore::ConstObjectVectorPtr Shader::NetworkBuilder::state()
 	return m_state;
 }
 
-const IECore::MurmurHash &Shader::NetworkBuilder::shaderHash( const Shader *shaderNode )
+IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode )
 {
+	shaderNode = effectiveNode( shaderNode );
+	if( !shaderNode )
+	{
+		IECore::MurmurHash h;
+		h.append( Shader::staticTypeId() );
+		return h;
+	}
+	
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
 	if( shaderAndHash.hash != IECore::MurmurHash() )
 	{
@@ -230,6 +249,12 @@ const IECore::MurmurHash &Shader::NetworkBuilder::shaderHash( const Shader *shad
 
 IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 {
+	shaderNode = effectiveNode( shaderNode );
+	if( !shaderNode )
+	{
+		return 0;
+	}
+	
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
 	if( shaderAndHash.shader )
 	{
@@ -253,8 +278,36 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
 {
 	IECore::Shader *s = shader( shaderNode );
+	if( !s )
+	{
+		static std::string emptyString;
+		return emptyString;
+	}
+	
 	s->setType( "shader" );
 	IECore::StringDataPtr handleData = new IECore::StringData( boost::lexical_cast<std::string>( shaderNode ) );
 	s->parameters()["__handle"] = handleData;
 	return handleData->readable();
+}
+
+const Shader *Shader::NetworkBuilder::effectiveNode( const Shader *shaderNode ) const
+{
+	if( shaderNode->enabledPlug()->getValue() )
+	{
+		return shaderNode;
+	}
+
+	const Plug *correspondingInput = shaderNode->correspondingInput( shaderNode->outPlug() );
+	if( !correspondingInput )
+	{
+		return 0;
+	}
+	
+	const Plug *source = correspondingInput->source<Plug>();
+	if( source == correspondingInput )
+	{
+		return 0;
+	}
+	
+	return source->ancestor<Shader>();
 }
