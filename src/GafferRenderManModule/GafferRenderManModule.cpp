@@ -71,7 +71,7 @@ class RenderManShaderSerialiser : public GafferBindings::NodeSerialiser
 BOOST_PYTHON_MODULE( _GafferRenderMan )
 {
 	
-	GafferBindings::NodeClass<RenderManShader>()
+	GafferBindings::DependencyNodeClass<RenderManShader>()
 		.def( "loadShader", &RenderManShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "shaderLoader", &RenderManShader::shaderLoader, return_value_policy<reference_existing_object>() )
 		.staticmethod( "shaderLoader" )

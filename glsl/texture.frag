@@ -38,6 +38,10 @@ uniform float mult;
 uniform vec4 tint;
 uniform sampler2D texture;
 
+#if __VERSION__ <= 120
+#define in varying
+#endif
+
 in vec2 fragmentst;
 
 void main()

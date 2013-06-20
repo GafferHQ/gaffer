@@ -79,15 +79,26 @@ class Shader : public Gaffer::DependencyNode
 		Gaffer::Plug *outPlug();
 		const Gaffer::Plug *outPlug() const;
 		
+		/// Shaders can be enabled and disabled. A disabled shader
+		/// returns an empty object from the state() method, causing
+		/// any downstream ShaderAssignments to act as if they've been
+		/// disabled. If a shader in the middle of a network is disabled
+		/// then by default its output connections are ignored on any
+		/// downstream nodes. Derived classes may implement correspondingInput( outPlug() )
+		/// to allow disabled shaders to act as a pass-through instead. 
+		virtual Gaffer::BoolPlug *enabledPlug();
+		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		
 		/// Implemented so that the children of parametersPlug() affect
 		/// outPlug().
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
+		/// Returns a hash representing the result of state().
 		IECore::MurmurHash stateHash() const;
 		void stateHash( IECore::MurmurHash &h ) const;
 		/// Returns a series of IECore::StateRenderables suitable for specifying this
 		/// shader (and it's inputs) to an IECore::Renderer.
-		IECore::ObjectVectorPtr state() const;
+		IECore::ConstObjectVectorPtr state() const;
 			
 	protected :
 		
@@ -96,25 +107,45 @@ class Shader : public Gaffer::DependencyNode
 		
 			public :
 			
-				IECore::Shader *shader( const Shader *shaderNode );
-				const std::string &shaderHandle( const Shader *shaderNode ); 
+				NetworkBuilder( const Shader *rootNode );
+				
+				IECore::MurmurHash stateHash();
+				IECore::ConstObjectVectorPtr state();
+				
+				IECore::MurmurHash shaderHash( const Shader *shaderNode );
+				/// May return an empty string if a shader has been disabled.
+				const std::string &shaderHandle( const Shader *shaderNode );
 			
 			private :
 				
 				NetworkBuilder();
+			
+				// Returns the node that should be used taking into account
+				// enabledPlug() and correspondingInput().
+				const Shader *effectiveNode( const Shader *shaderNode ) const;
+				IECore::Shader *shader( const Shader *shaderNode );
 				
+				const Shader *m_rootNode;
 				IECore::ObjectVectorPtr m_state;
-				typedef std::map<const Shader *, IECore::Shader *> ShaderMap;
-				ShaderMap m_shaders;
-		
-				friend class Shader;
 				
+				struct ShaderAndHash
+				{
+				 	IECore::ShaderPtr shader;
+				 	IECore::MurmurHash hash;
+				};
+				
+				typedef std::map<const Shader *, ShaderAndHash> ShaderMap;
+				ShaderMap m_shaders;
+						
 		};
 		
-		virtual void shaderHash( IECore::MurmurHash &h ) const;
-		/// \todo Try to implement this here in a way that can be shared by
-		/// the derived classes.
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const = 0;	
+		/// Called when computing the hash for this node. May be reimplemented in derived classes
+		/// to deal with special cases, in which case parameterValue() should be reimplemented too.
+		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
+		/// Called for each parameter plug when constructing an IECore::Shader from this node.
+		/// May be reimplemented in derived classes to deal with special cases, and must currently
+		/// be reimplemented to deal with shader connections.
+		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
 
 	private :
 	

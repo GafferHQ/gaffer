@@ -90,6 +90,25 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		i["color"]["r"].setValue( 0.1 )
 		
 		self.assertTrue( "OpenGLShader.out" in [ x[0].fullName() for x in cs ] )
+	
+	def testHash( self ) :
+	
+		s = GafferScene.OpenGLShader()
+		s.loadShader( "texture" )
+		
+		h1 = s.stateHash()
+		
+		i = GafferImage.Constant()
+		s["parameters"]["texture"].setInput( i["out"] )
+		
+		h2 = s.stateHash()
+		self.assertNotEqual( h2, h1 )
+		
+		i["color"].setValue( IECore.Color4f( 1, 0, 1, 0 ) )
+
+		h3 = s.stateHash()
+		self.assertNotEqual( h3, h2 )
+		self.assertNotEqual( h3, h1 )
 		
 if __name__ == "__main__":
 	unittest.main()

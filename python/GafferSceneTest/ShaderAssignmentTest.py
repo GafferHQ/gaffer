@@ -134,6 +134,37 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s["a"]["enabled"].setValue( False )
 		
 		self.assertTrue( "shader" not in s["a"]["out"].attributes( "/plane" ) )		
+	
+	def testAssignDisabledShader( self ) :
+	
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+		
+		s["s"] = GafferSceneTest.TestShader()
+		s["s"]["name"].setValue( "test" )
+		
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["p"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		
+		self.assertTrue( "shader" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertEqual( s["a"]["out"].attributes( "/plane" )["shader"][-1].name, "test" )
+			
+		s["s2"] = GafferSceneTest.TestShader()
+		s["s2"]["name"].setValue( "test2" )
+	
+		s["a2"] = GafferScene.ShaderAssignment()
+		s["a2"]["in"].setInput( s["a"]["out"] )
+		s["a2"]["shader"].setInput( s["s2"]["out"] )
+		
+		self.assertTrue( "shader" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["shader"][-1].name, "test2" )
+		
+		s["s2"]["enabled"].setValue( False )
+		
+		self.assertTrue( "shader" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["shader"][-1].name, "test" )
 		
 if __name__ == "__main__":
 	unittest.main()
