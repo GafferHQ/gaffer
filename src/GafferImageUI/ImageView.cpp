@@ -220,11 +220,11 @@ class ImageViewGadget : public GafferUI::Gadget
 		V2f rasterToDisplaySpace( const V2f &point ) const
 		{
 			Box2f dispRasterBox( displayRasterBox() );
-			V2f wh( dispRasterBox.max - dispRasterBox.min + V2f(1.f) );
-			V2f t = ( point - dispRasterBox.min ) / wh;
+			V2f wh( ( dispRasterBox.max.x - dispRasterBox.min.x ) + 1.f, ( dispRasterBox.min.y - dispRasterBox.max.y ) + 1.f );
+			V2f t( ( point[0] - dispRasterBox.min.x ) / wh[0], ( point[1] - dispRasterBox.max.y ) / wh[1] );
 			return V2f(
 				float( m_displayWindow.min.x ) + t.x * ( m_displayWindow.size().x + 1.f ),
-				float( m_displayWindow.min.y ) + t.y * ( m_displayWindow.size().y + 1.f )
+				float( m_displayWindow.max.y + 1.f ) - ( t.y * ( m_displayWindow.size().y + 1.f ) )
 			);
 		}
 	
@@ -253,9 +253,9 @@ class ImageViewGadget : public GafferUI::Gadget
 		{
 			V2i samplePos(
 				fastFloatRound( point.x - .5 ) - m_dataWindow.min.x,
-				m_dataWindow.size().y - ( fastFloatRound( point.y - .5 ) - m_dataWindow.min.y )
+				( ( m_displayWindow.max.y - fastFloatRound( point.y - .5 ) ) - m_dataWindow.min.y )
 			);
-				
+			
 			if ( samplePos.x < 0 || samplePos.y < 0 || samplePos.x > m_dataWindow.size().x || samplePos.y > m_dataWindow.size().y )
 			{
 				return Color4f( 0.f, 0.f, 0.f, 0.f );
@@ -363,12 +363,12 @@ class ImageViewGadget : public GafferUI::Gadget
 
 				Box2i roi(
 					V2i(
-						fastFloatRound( roif.min.x - .5 ) + 1,
-						m_displayWindow.size().y - ( fastFloatRound( roif.max.y - .5 ) ) + 1
+						fastFloatRound( roif.min.x ),
+						fastFloatRound( roif.min.y )
 					),
 					V2i(
-						fastFloatRound( roif.max.x - .5 ),
-						m_displayWindow.size().y - ( fastFloatRound( roif.min.y - .5 ) )
+						fastFloatRound( roif.max.x ) - 1,
+						fastFloatRound( roif.max.y ) - 1
 					)
 				);
 				m_imageStats->regionOfInterestPlug()->setValue( roi );
