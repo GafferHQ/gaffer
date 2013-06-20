@@ -188,12 +188,12 @@ class ImageStatsTest( unittest.TestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		
-		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 76 ), IECore.V2i( 24, 79 ) ) )
+		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 24, 24 ) ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		
-		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 70 ), IECore.V2i( 40, 79 ) ) )
+		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 40, 29 ) ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0, 0.75 ) )
