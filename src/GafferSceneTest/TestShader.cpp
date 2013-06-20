@@ -54,8 +54,3 @@ TestShader::TestShader( const std::string &name )
 TestShader::~TestShader()
 {
 }
-
-IECore::ShaderPtr TestShader::shader( NetworkBuilder &network ) const
-{
-	return new IECore::Shader();
-}

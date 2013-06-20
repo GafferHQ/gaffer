@@ -53,10 +53,6 @@ class TestShader : public GafferScene::Shader
 		virtual ~TestShader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestShader, TestShaderTypeId, GafferScene::Shader );
-		
-	protected :
-
-		virtual IECore::ShaderPtr shader( NetworkBuilder &network ) const;	
 
 };
 

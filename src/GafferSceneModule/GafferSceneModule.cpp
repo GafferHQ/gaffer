@@ -86,6 +86,7 @@
 #include "GafferSceneBindings/SceneProceduralBinding.h"
 #include "GafferSceneBindings/PathMatcherDataBinding.h"
 #include "GafferSceneBindings/RenderBinding.h"
+#include "GafferSceneBindings/ShaderBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -128,17 +129,10 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindDisplays();
 	bindPathMatcher();
 	bindPathMatcherData();
-
 	bindSceneProcedural();
+	bindShader();
 	
-	GafferBindings::DependencyNodeClass<Options>();
-	
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &Shader::state )
-	;
-	
+	GafferBindings::DependencyNodeClass<Options>();	
 	GafferBindings::DependencyNodeClass<ShaderAssignment>();
 	
 	{

@@ -143,54 +143,42 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 	typePlug()->setValue( "gl:surface" );
 }
 
-void OpenGLShader::shaderHash( IECore::MurmurHash &h ) const
+void OpenGLShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
 {
-	/// \todo Rejig base class and sibling classes so we don't need to
-	/// totally reimplement the base class method as we do here.
-	h.append( typeId() );
-	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
-		if( const GafferImage::ImagePlug *imagePlug = runTimeCast<GafferImage::ImagePlug>( it->get() ) )
-		{
-			h.append( imagePlug->imageHash() );
-		}
-		else
-		{
-			(*it)->hash( h );
-		}
+		h.append( imagePlug->imageHash() );
 	}
-	namePlug()->hash( h );
+	else
+	{
+		Shader::parameterHash( parameterPlug, network, h );
+	}
 }
 
-IECore::ShaderPtr OpenGLShader::shader( NetworkBuilder &network ) const
+IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
 {
-	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), typePlug()->getValue() );
-	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
-		if( GafferImage::ImagePlug *imagePlug = runTimeCast<GafferImage::ImagePlug>( it->get() ) )
+		IECore::ImagePrimitivePtr image = imagePlug->image();
+		if( image )
 		{
-			IECore::ImagePrimitivePtr image = imagePlug->image();
-			if( image )
+			CompoundDataPtr value = new CompoundData;
+			value->writable()["displayWindow"] = new Box2iData( image->getDisplayWindow() );
+			value->writable()["dataWindow"] = new Box2iData( image->getDataWindow() );
+			CompoundDataPtr channelData = new CompoundData;
+			vector<string> channelNames;
+			image->channelNames( channelNames );
+			for( vector<string>::const_iterator cIt = channelNames.begin(), eCIt = channelNames.end(); cIt != eCIt; cIt++ )
 			{
-				CompoundDataPtr value = new CompoundData;
-				value->writable()["displayWindow"] = new Box2iData( image->getDisplayWindow() );
-				value->writable()["dataWindow"] = new Box2iData( image->getDataWindow() );
-				CompoundDataPtr channelData = new CompoundData;
-				vector<string> channelNames;
-				image->channelNames( channelNames );
-				for( vector<string>::const_iterator cIt = channelNames.begin(), eCIt = channelNames.end(); cIt != eCIt; cIt++ )
-				{
-					channelData->writable()[*cIt] = image->variableData<Data>( *cIt );
-				}
-				value->writable()["channels"] = channelData;
-				result->parameters()[(*it)->getName()] = value;
+				channelData->writable()[*cIt] = image->variableData<Data>( *cIt );
 			}
+			value->writable()["channels"] = channelData;
+			return value;
 		}
-		else
-		{
-			result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( *it );
-		}
+		return 0;
 	}
-	return result;
+	else
+	{
+		return Shader::parameterValue( parameterPlug, network );
+	}
 }
-

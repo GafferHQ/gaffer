@@ -102,50 +102,62 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	return true;
 }
 
-IECore::ShaderPtr RenderManShader::shader( NetworkBuilder &network ) const
+void RenderManShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
 {
-	ShaderPtr result = new IECore::Shader( namePlug()->getValue(), typePlug()->getValue() );
-	for( InputPlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	if( parameterPlug->typeId() == CompoundPlug::staticTypeId() )
 	{
-		if( (*it)->typeId() == Plug::staticTypeId() )
+		// coshader array parameter
+		for( InputPlugIterator cIt( parameterPlug ); cIt != cIt.end(); ++cIt )
 		{
-			// coshader parameter
-			const Plug *inputPlug = (*it)->source<Plug>();
-			if( inputPlug && inputPlug != *it )
-			{
-				const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
-				if( inputShader )
-				{
-					result->parameters()[(*it)->getName()] = new StringData( network.shaderHandle( inputShader ) );
-				}
-			}
-		}
-		else if( (*it)->typeId() == CompoundPlug::staticTypeId() )
-		{
-			// coshader array parameter
-			StringVectorDataPtr value = new StringVectorData();
-			for( InputPlugIterator cIt( *it ); cIt != cIt.end(); ++cIt )
-			{
-				const Plug *inputPlug = (*cIt)->source<Plug>();
-				const RenderManShader *inputShader = inputPlug && inputPlug != *cIt ? inputPlug->parent<RenderManShader>() : 0;
-				if( inputShader )
-				{
-					value->writable().push_back( network.shaderHandle( inputShader ) );
-				}
-				else
-				{
-					value->writable().push_back( "" );
-				}
-			}
-			result->parameters()[(*it)->getName()] = value;
-		}
-		else
-		{
-			// standard shader parameter
-			result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( static_cast<const ValuePlug *>( it->get() ) );
+			Shader::parameterHash( cIt->get(), network, h );
 		}
 	}
-	return result;
+	else
+	{
+		Shader::parameterHash( parameterPlug, network, h );
+	}
+}
+
+IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
+{
+	if( parameterPlug->typeId() == Plug::staticTypeId() )
+	{
+		// coshader parameter
+		const Plug *inputPlug = parameterPlug->source<Plug>();
+		if( inputPlug && inputPlug != parameterPlug )
+		{
+			const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
+			if( inputShader )
+			{
+				return new StringData( network.shaderHandle( inputShader ) );
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	else if( parameterPlug->typeId() == CompoundPlug::staticTypeId() )
+	{
+		// coshader array parameter
+		StringVectorDataPtr value = new StringVectorData();
+		for( InputPlugIterator cIt( parameterPlug ); cIt != cIt.end(); ++cIt )
+		{
+			const Plug *inputPlug = (*cIt)->source<Plug>();
+			const RenderManShader *inputShader = inputPlug && inputPlug != *cIt ? inputPlug->parent<RenderManShader>() : 0;
+			if( inputShader )
+			{
+				value->writable().push_back( network.shaderHandle( inputShader ) );
+			}
+			else
+			{
+				value->writable().push_back( "" );
+			}
+		}
+		return value;
+	}
+	
+	return Shader::parameterValue( parameterPlug, network );
 }
 
 IECore::CachedReader *RenderManShader::shaderLoader()

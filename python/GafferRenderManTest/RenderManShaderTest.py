@@ -528,6 +528,37 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		self.assertEqual( shader.parameters["Kd"].value, 0.25 )
 		self.assertEqual( shader.parameters["Ks"].value, 0.25 )
+
+	def testFixedCoshaderArrayParameterHash( self ) :
 	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader )
+		
+		h1 = n.stateHash()
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		n["parameters"]["fixedShaderArray"]["in1"].setInput( coshaderNode["out"] )
+	
+		h2 = n.stateHash()
+		self.assertNotEqual( h2, h1 )
+		
+		n["parameters"]["fixedShaderArray"]["in2"].setInput( coshaderNode["out"] )
+		
+		h3 = n.stateHash()
+		self.assertNotEqual( h3, h2 )
+		self.assertNotEqual( h3, h1 )
+
+		n["parameters"]["fixedShaderArray"]["in2"].setInput( None )
+		n["parameters"]["fixedShaderArray"]["in3"].setInput( coshaderNode["out"] )
+
+		h4 = n.stateHash()
+		self.assertNotEqual( h4, h3 )
+		self.assertNotEqual( h4, h2 )
+		self.assertNotEqual( h4, h1 )
+		
 if __name__ == "__main__":
 	unittest.main()

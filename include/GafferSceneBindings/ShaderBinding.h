@@ -34,34 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPENGLSHADER_H
-#define GAFFERSCENE_OPENGLSHADER_H
+#ifndef GAFFERSCENEBINDINGS_SHADERBINDING_H
+#define GAFFERSCENEBINDINGS_SHADERBINDING_H
 
-#include "GafferScene/Shader.h"
-
-namespace GafferScene
+namespace GafferSceneBindings
 {
 
-class OpenGLShader : public GafferScene::Shader
-{
+void bindShader();
 
-	public :
+} // namespace GafferSceneBindings
 
-		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
-		virtual ~OpenGLShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
-		
-		void loadShader( const std::string &shaderName );
-
-	protected :
-	
-		/// Reimplemented to allow ImageNodes to be plugged in to texture parameters.
-		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
-					
-};
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_OPENGLSHADER_H
+#endif // GAFFERSCENEBINDINGS_SHADERBINDING_H
