@@ -44,6 +44,13 @@
 namespace GafferImage
 {
 
+/// The clamp node implements a channel-wise clamping operation
+/// with the option to have an override on the clamp-to value
+/// The logic used is:
+///
+/// If the min/max clamp is enabled, if the channel value is outside the range,
+/// either clamp to range or, if enabled, clamp to the provided value
+//
 class Clamp : public ChannelDataProcessor
 {
 
@@ -54,10 +61,10 @@ class Clamp : public ChannelDataProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Clamp, ClampTypeId, ChannelDataProcessor );
 		
-        //! @name Plug Accessors
-        /// Returns a pointer to the node's plugs.
-        //////////////////////////////////////////////////////////////
-        //@{	
+		//! @name Plug Accessors
+		/// Returns a pointer to the node's plugs.
+		//////////////////////////////////////////////////////////////
+		//@{	
 		Gaffer::Color4fPlug *minimumPlug();
 		const Gaffer::Color4fPlug *minimumPlug() const;
 		Gaffer::Color4fPlug *maximumPlug();
