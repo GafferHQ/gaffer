@@ -224,3 +224,17 @@ GafferScene.Cube,
 "Controls size of the cube.",
 
 )
+
+# PathFilter
+
+def __pathsPlugWidgetCreator( plug ) :
+
+	result = GafferUI.VectorDataPlugValueWidget( plug )
+	result.vectorDataWidget().setDragPointer( "objects.png" )
+	return result
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.PathFilter.staticTypeId(),
+	"paths",
+	__pathsPlugWidgetCreator,
+)

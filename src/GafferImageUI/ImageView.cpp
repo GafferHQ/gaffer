@@ -35,27 +35,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include <math.h>
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/format.hpp"
+
+#include "IECore/FastFloat.h"
+#include "IECore/BoxOps.h"
+#include "IECore/BoxAlgo.h"
+
+#include "IECoreGL/ToGLTextureConverter.h"
+#include "IECoreGL/TextureLoader.h"
+#include "IECoreGL/Texture.h"
 
 #include "Gaffer/Context.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/StandardStyle.h"
+#include "GafferUI/Pointer.h"
+
 #include "GafferImage/Format.h"
 
 #include "GafferImageUI/ImageView.h"
 
-#include "IECoreGL/ToGLTextureConverter.h"
-#include "IECoreGL/TextureLoader.h"
-#include "IECoreGL/Texture.h"
-#include "IECore/FastFloat.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
-
-using namespace boost;
+using namespace boost;	
 using namespace IECoreGL;
 using namespace IECore;
 using namespace Imath;
@@ -324,6 +329,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		{
+			Pointer::set( 0 );
 			if( !m_dragSelecting )
 			{
 				return false;
@@ -343,6 +349,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				return this;
 			}
 
+			Pointer::setFromFile( "rgba.png" );
 			return new Color4fData( m_sampleColor );
 		}
 	

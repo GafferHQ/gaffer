@@ -138,6 +138,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 			removeButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) ),
 		]
 		
+		self.__dragPointer = "values.png"
+		
 		# stuff for drag begin
 		
 		self.__borrowedButtonPress = None
@@ -145,6 +147,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__buttonPressConnection = self.__tableViewHolder.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.__tableViewHolder.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.__dragBeginConnection = self.__tableViewHolder.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__dragEndConnection = self.__tableViewHolder.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 		# final setup
 		
@@ -257,6 +260,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def getSizeEditable( self ) :
 	
 		return self.__sizeEditable
+	
+	def setDragPointer( self, dragPointer ) :
+	
+		self.__dragPointer = dragPointer
+		
+	def getDragPointer( self ) :
+	
+		return self.__dragPointer
 	
 	## Returns a signal which is emitted whenever the data is edited.
 	# The signal is /not/ emitted when setData() is called.
@@ -488,9 +499,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 			result = IECore.Object.create( data.typeId() )
 			for i in selectedIndices :
 				result.append( data[i] )
+			GafferUI.Pointer.setFromFile( self.__dragPointer )
 			return result
 			
 		return None
+		
+	def __dragEnd( self, widget, event ) :
+	
+		GafferUI.Pointer.set( None )
 		
 	def __emitButtonPress( self, event ) :
 	

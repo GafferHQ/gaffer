@@ -57,6 +57,7 @@
 #include "GafferUI/RenderableGadget.h"
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/Style.h"
+#include "GafferUI/Pointer.h"
 
 using namespace std;
 using namespace Imath;
@@ -349,6 +350,7 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 			// drag the selection somewhere
 			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
 			dragData->writable().insert( dragData->writable().end(), m_selection.begin(), m_selection.end() );
+			Pointer::setFromFile( "objects.png" );
 			return dragData;
 		}
 	}
@@ -369,6 +371,7 @@ bool RenderableGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
+	Pointer::set( 0 );
 	if( !m_dragSelecting )
 	{
 		return false;
