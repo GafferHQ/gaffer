@@ -64,15 +64,15 @@ class SamplerTest( unittest.TestCase ) :
 		c["image:channelName"] = 'R'
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		with c:
-			sample = sampler.sample( bounds.min.x+8.5, bounds.min.y+8.5 )
-			self.assertEqual( sample, 0.5 )
+			sample = sampler.sample( bounds.min.x+8.5, bounds.max.y-8.5 )
+			self.assertTrue( round( sample - 0.5, 6 ) == 0 ) # Assert that sample == .5 (to 6 decimal places).
 				
 			# Set the sample window, sample outside of it and check that the result is 0.
 			sampler.setSampleWindow( IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 40 ) ) )
 			self.assertEqual( sampler.getSampleWindow(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 40 ) ) )
 			
-			sample = sampler.sample( bounds.min.x+8.5, bounds.min.y+8.5 )
-			self.assertEqual( sample, 0. )
+			sample = sampler.sample( bounds.min.x+8.5, bounds.max.y-8.5 )
+			self.assertAlmostEqual( sample, 0. )
 
 
 	def testConstructors( self ) :
