@@ -49,6 +49,20 @@ class ImageReaderTest( unittest.TestCase ) :
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
 
+	def testInternalImageSpaceConversion( self ) :
+		
+		r = IECore.EXRImageReader( self.negativeDataWindowFileName )
+		image = r.read()
+		exrDisplayWindow = image.displayWindow
+		exrDataWindow = image.dataWindow
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.negativeDataWindowFileName )
+		internalDisplayWindow = n["out"]["format"].getValue().getDisplayWindow()
+		internalDataWindow = n["out"]["dataWindow"].getValue()
+		expectedDataWindow = IECore.Box2i( IECore.V2i( exrDataWindow.min.x, exrDisplayWindow.max.y - exrDataWindow.max.y ), IECore.V2i( exrDataWindow.max.x, exrDisplayWindow.max.y - exrDataWindow.min.y ) )
+		self.assertEqual( internalDisplayWindow, exrDisplayWindow )
+		self.assertEqual( internalDataWindow, expectedDataWindow )
+
 	def test( self ) :
 	
 		n = GafferImage.ImageReader()
@@ -76,7 +90,7 @@ class ImageReaderTest( unittest.TestCase ) :
 	
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )		
-		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, 30 ), IECore.V2i( 174, 179 ) ) )
+		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 174, 119 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 	
 		channelNames = n["out"]["channelNames"].getValue()
@@ -88,10 +102,12 @@ class ImageReaderTest( unittest.TestCase ) :
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.negativeDataWindowFileName ).read()
 		
-		image.blindData().clear()
-		image2.blindData().clear()
-		
-		self.assertEqual( image, image2 )
+		op = IECore.ImageDiffOp()
+		res = op(
+			imageA = image,
+			imageB = image2
+		)
+		self.assertFalse( res.value )   	
 
 	def testTileSize( self ) :
 	
