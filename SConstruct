@@ -1299,6 +1299,9 @@ manifest = [
 	"include/OpenEXR",
 	"include/python*",
 	"include/tbb",
+	
+	"renderMan",
+	
 ]
 
 def installer( target, source, env ) :
