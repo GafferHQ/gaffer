@@ -235,13 +235,13 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		}
 		
 		// Specify the display window.
-		spec.full_x = 0;
-		spec.full_y = 0;
+		spec.full_x = displayWindow.min.x;
+		spec.full_y = displayWindow.min.y;
 		spec.full_width = displayWindowWidth;
 		spec.full_height = displayWindowHeight;
 		spec.x = dataWindow.min.x;
-		spec.y = dataWindow.min.y;
-
+		spec.y = displayWindow.max.y - dataWindow.max.y; 
+			
 		if ( !out->open( fileName, spec ) )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
@@ -256,14 +256,17 @@ void ImageWriter::execute( const Contexts &contexts ) const
 			float scanline[ nChannels*dataWindowWidth ];
 		
 			// Interleave the channel data and write it by scanline to the file.	
-			for ( int y = dataWindow.min.y; y <= dataWindow.max.y; ++y )
+			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
 			{
-				float *outPtr = &scanline[0];	
-				for ( int x = 0; x < dataWindowWidth; ++x )
+				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 				{
-					for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+					float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
+					// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
+					const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
+					const int inc = channelPtrs.size();
+					for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
 					{
-						*outPtr++ = *(*channelDataIt)++;
+						*outPtr = *inRowPtr++;
 					}
 				}
 
@@ -280,7 +283,7 @@ void ImageWriter::execute( const Contexts &contexts ) const
 			const int tileSize = ImagePlug::tileSize();
 			float tile[ nChannels*tileSize*tileSize ];
 		
-			// Interleave the channel data and write it by scanline to the file.	
+			// Interleave the channel data and write it to the file tile-by-tile.
 			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
 			{
 				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
@@ -292,16 +295,18 @@ void ImageWriter::execute( const Contexts &contexts ) const
 
 					for ( int y = 0; y < t; ++y )
 					{
-						for ( int x = 0; x < r; ++x )
+						for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 						{
-							for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+							const int inc = channelPtrs.size();
+							const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
+							for ( int x = 0; x < r; ++x, outPtr += inc )
 							{
-								*outPtr++ = (**channelDataIt)+dataWindowWidth*(tileY+y)+(tileX+x);
+								*outPtr = *inRowPtr+(tileX+x);
 							}
 						}
 					}
 
-					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+dataWindow.min.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
 					{
 						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
 					}
