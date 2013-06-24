@@ -45,6 +45,7 @@ import GafferImage
 class ObjectToImageTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
 
 	def test( self ) :
 	
@@ -55,6 +56,16 @@ class ObjectToImageTest( unittest.TestCase ) :
 		n["object"].setValue( i )
 		
 		self.assertEqual( n["out"].image(), i )
-				
+	
+	def testImageWithANegativeDataWindow( self ) :
+		
+		i = IECore.Reader.create( self.negFileName ).read()
+		i.blindData().clear()
+	
+		n = GafferImage.ObjectToImage()
+		n["object"].setValue( i )
+		
+		self.assertEqual( n["out"].image(), i )
+
 if __name__ == "__main__":
 	unittest.main()

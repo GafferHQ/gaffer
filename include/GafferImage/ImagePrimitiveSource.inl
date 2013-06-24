@@ -175,7 +175,11 @@ Imath::Box2i ImagePrimitiveSource<BaseType>::computeDataWindow( const Gaffer::Co
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
+		Imath::Box2i displayWindow = image->getDisplayWindow();
 		result = image->getDataWindow();
+		const int yOffset = displayWindow.min.y + ( displayWindow.size().y + 1 ) - result.min.y;
+		result.min.y = yOffset - ( result.size().y + 1 );
+		result.max.y = yOffset - 1;
 	}
 	return result;
 }
@@ -220,14 +224,18 @@ IECore::ConstFloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelDa
 	std::vector<float> &result = resultData->writable();
 	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize(), 0.0f );
 	
+	Imath::Box2i displayWindow = image->getDisplayWindow();
 	Imath::Box2i dataWindow = image->getDataWindow();
+	const int yOffset = displayWindow.min.y + ( displayWindow.size().y + 1 ) - dataWindow.min.y;
+	dataWindow.min.y = yOffset - ( dataWindow.size().y + 1 );
+	dataWindow.max.y = yOffset - 1;
 	Imath::Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() - 1 ) );
 	Imath::Box2i bound = IECore::boxIntersection( tileBound, dataWindow );
 	
 	for( int y = bound.min.y; y<=bound.max.y; y++ )
 	{
-		size_t srcIndex = (y - dataWindow.min.y ) * ( dataWindow.size().x + 1 ) + bound.min.x - dataWindow.min.x;
-		size_t dstIndex = (y - tileBound.min.y) * GafferImage::ImagePlug::tileSize() + bound.min.x - tileBound.min.x;
+		size_t srcIndex = ( dataWindow.size().y - ( y - dataWindow.min.y ) ) * ( dataWindow.size().x + 1 ) + bound.min.x - dataWindow.min.x;
+		size_t dstIndex = ( y - tileBound.min.y ) * GafferImage::ImagePlug::tileSize() + bound.min.x - tileBound.min.x;
 		const size_t srcEndIndex = srcIndex + bound.size().x;
 		while( srcIndex <= srcEndIndex )
 		{
