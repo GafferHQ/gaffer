@@ -277,6 +277,12 @@ options.Add(
 )
 
 options.Add(
+	"CORTEX_POINTDISTRIBUTION_TILESET",
+	"The tile set file to be used with the IECore::PointDistribution class.",
+	"$DEPENDENCIES_SRC_DIR/tileset_2048.dat",
+)
+
+options.Add(
 	"RMAN_ROOT",
 	"The directory in which your RenderMan renderer is installed. Used to build IECoreRI.",
 	"/usr/local",
@@ -513,7 +519,7 @@ locatingDependencies = False
 for o in options.options :
 	if o.key.startswith( "BUILD_DEPENDENC" ) and str( env.subst( "$" + o.key ) ) != str( env.subst( o.default ) ) :
 		buildingDependencies = True
-	elif o.key.startswith( "LOCATE_DEPENDENCY" ) and str( env.subst( "$" + o.key ) ) != str( env.subst( o.default ) ) :
+	elif o.key.startswith( "LOCATE_DEPENDENCY" ) and len( env.subst( "$" + o.key ) ) :
 		locatingDependencies = True
 
 if buildingDependencies and locatingDependencies :
@@ -632,6 +638,8 @@ if depEnv["BUILD_DEPENDENCY_ALEMBIC"] :
 	
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
 	runCommand( "cd $CORTEX_SRC_DIR; scons install installDoc -j 3 BUILD_CACHEDIR=$BUILD_CACHEDIR CXXFLAGS='$CXXFLAGS' PYTHONCXXFLAGS='$CXXFLAGS' PYTHON_LINK_FLAGS='$PYTHON_LINK_FLAGS' INSTALL_DOC_DIR=$BUILD_DIR/doc/cortex INSTALL_PREFIX=$BUILD_DIR INSTALL_RMANPROCEDURAL_NAME=$BUILD_DIR/renderMan/procedurals/iePython INSTALL_RMANDISPLAY_NAME=$BUILD_DIR/renderMan/displayDrivers/ieDisplay INSTALL_PYTHON_DIR=$BUILD_DIR/python INSTALL_ARNOLDPROCEDURAL_NAME=$BUILD_DIR/arnold/procedurals/ieProcedural.so INSTALL_ARNOLDOUTPUTDRIVER_NAME=$BUILD_DIR/arnold/outputDrivers/ieOutputDriver.so INSTALL_IECORE_OPS='' PYTHON_CONFIG=$BUILD_DIR/bin/python-config BOOST_INCLUDE_PATH=$BUILD_DIR/include/boost LIBPATH=$BUILD_DIR/lib BOOST_LIB_SUFFIX='' OPENEXR_INCLUDE_PATH=$BUILD_DIR/include FREETYPE_INCLUDE_PATH=$BUILD_DIR/include/freetype2 RMAN_ROOT=$DELIGHT WITH_GL=1 GLEW_INCLUDE_PATH=$BUILD_DIR/include/GL RMAN_ROOT=$RMAN_ROOT NUKE_ROOT=$NUKE_ROOT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS='' DOXYGEN=$DOXYGEN ENV_VARS_TO_IMPORT='LD_LIBRARY_PATH' SAVE_OPTIONS=gaffer.options $CORTEX_BUILD_ARGS" )
+	runCommand( "mkdir -p $BUILD_DIR/resources/cortex" )
+	runCommand( "cp $CORTEX_POINTDISTRIBUTION_TILESET $BUILD_DIR/resources/cortex" )
 	
 if depEnv["BUILD_DEPENDENCY_GL"] :
 	runCommand( "cd $PYOPENGL_SRC_DIR && python setup.py install --prefix $BUILD_DIR --install-lib $BUILD_DIR/python" )
@@ -1270,6 +1278,7 @@ manifest = [
 	"fonts",
 	"ops",
 	"procedurals",
+	"resources",
 
 	"openColorIO",
 
