@@ -24,6 +24,7 @@ if IEEnv.platform() == "cent6.x86_64" :
 	build( [ "APP=maya", "APP_VERSION=2013" ] )
 	build( [ "APP=houdini", "APP_VERSION=12.1.230" ] )
 	build( [ "APP=nuke", "APP_VERSION=6.3v7" ] )
+	build( [ "APP=nuke", "APP_VERSION=7.0v8" ] )
 	
 else :
 
