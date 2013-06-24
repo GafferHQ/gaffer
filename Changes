@@ -1,5 +1,29 @@
+0.69.0
+======
+
+* Implemented drag and drop between plugs in the NodeEditor (#285)
+    Drags are initiated on the label for the plug.
+    Left drag initiates a drag for connecting plugs.
+    Shift-left drag and middle drag initiate a drag for transferring values between plugs.
+    Colours may now also be dragged from the viewer onto a plug.
+    There are custom pointer icons for each type of drag (#44)
+* Added blinking indication for plugs preventing the opening of a colour picker (#185).
+* Implemented enabling/disabling for shader nodes (#327).
+    By default disabled shaders behave as if their output connections didn't exist.
+    RenderMan shaders may act as a pass-through by defining a "primaryInput" annotation naming an input coshader parameter.
+* LinkedScene files (.lscc) are now previewable in the browser
+* ImageReader only reads the necessary channel from the OpenImageIO cache
+* Reverted non-gui ExecutableRender::execute() to block until the render is complete (#353).
+* Fixed Nuke link error
+* Fixed browser op mode
+* Fixed missing Recent Files bug (#378).
+* Fixed some bugs with extraneous dragBegins
+* Removed namespace prefixes from typenames for displaying to the user (#389).
+* Removed deperecated ModelCacheSource
+
 0.68.0
 ======
+
 * Improved speed of renderman shader menu.
 * Image stats node in ImageView now uses the preprocessed input plug if the raw input is not an ImagePlug
 * Removed right-click layout context menu.
