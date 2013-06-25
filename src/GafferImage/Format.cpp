@@ -310,7 +310,7 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 	// default format plug on the script node is dynamic and therefore if we loaded the script, it would have been created.
 	if (!plug)
 	{
-		registerFormat( initialFormatValue, "HD (1920x1080) 1920x1080 1" );
+		registerFormat( initialFormatValue, "HD 1080p 1920x1080 1" );
 		
 		// Add a new plug to the script node to hold the default format and connect up the valueSet signal to our slot that will add the value to the context.
 		FormatPlug *defaultFormatPlug( new FormatPlug( defaultFormatPlugName, Gaffer::Plug::In, Format(), Gaffer::Plug::Dynamic | Gaffer::Plug::Default | Gaffer::Plug::Serialisable ) );
@@ -380,3 +380,4 @@ void Format::setDefaultFormat( ScriptNode *scriptNode, const std::string &name )
 	Format format( getFormat( name ) );
 	plug->setValue( format );
 }
+
