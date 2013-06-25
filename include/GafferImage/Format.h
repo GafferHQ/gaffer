@@ -60,6 +60,11 @@ class Format
 			m_displayWindow = Imath::Box2i( Imath::V2i( 0, 0 ), Imath::V2i( width-1, height-1 ) );
 		}
 		
+		Format( const Imath::Box2i &displayWindow, double aspect = 1. ):
+			m_displayWindow( displayWindow ),
+			m_aspect( aspect )
+		{}
+		
 		Format():
 			m_aspect( 1. )
 		{
@@ -73,7 +78,7 @@ class Format
 		int width() const;
 		int height() const;
 		
-		/// Overloaded OStream operator to write the the formats name to the ostream.
+		/// Overloaded OStream operator to write the formats name to the ostream.
 		friend std::ostream& operator<<(std::ostream& os, GafferImage::Format const& format);
 		
 		/// Equality operators
