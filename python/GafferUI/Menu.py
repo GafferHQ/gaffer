@@ -449,6 +449,9 @@ class Menu( GafferUI.Widget ) :
 	def __menuActionTriggered( self, action ) :
 		
 		self.__lastAction = action if action.objectName() != "GafferUI.Menu.__searchWidget" else None
+		if self.__lastAction is not None :
+			self.__searchMenu.addAction( self.__lastAction )
+		
 		self._qtWidget().hide()
 
 class _Menu( QtGui.QMenu ) :
