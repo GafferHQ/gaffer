@@ -1,3 +1,9 @@
+0.69.1
+======
+
+* Fixed bug with top level actions breaking searchable menus
+* Fixed node reconnection crashes in ScriptNode::deleteNodes and StandardGraphLayout::ConnectNodeInternal
+
 0.69.0
 ======
 
