@@ -295,7 +295,9 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		if( correspondingOutput )
 		{
 			bool allCompatible = true;
-			const Plug::OutputContainer &outputs = firstConnectionSrc->outputs();
+			
+			// This is a copy of (*it)->outputs() rather than a reference, as reconnection can modify (*it)->outputs()...
+			Plug::OutputContainer outputs = firstConnectionSrc->outputs();
 			for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
 			{
 				if( !(*it)->acceptsInput( correspondingOutput ) )
