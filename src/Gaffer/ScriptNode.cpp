@@ -254,7 +254,9 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 						continue;
 					}
 					
-					const Plug::OutputContainer &outputs = (*it)->outputs();
+					// record this plug's current outputs, and reconnect them. This is a copy of (*it)->outputs() rather
+					// than a reference, as reconnection can modify (*it)->outputs()...
+					Plug::OutputContainer outputs = (*it)->outputs();
 					for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); )
 					{
 						Plug *dstPlug = *oIt;
