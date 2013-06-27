@@ -84,7 +84,7 @@ class Reformat : public ImageProcessor
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 		
 		// Computes the output scale factor from the input and output formats.
-		Imath::V2f scale() const;
+		Imath::V2d scale() const;
 
 	private :
 
