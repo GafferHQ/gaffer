@@ -103,16 +103,26 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_channelMask( colorMask ),
 				m_imageStats( imageStats )
 		{
-			Box2i dataWindow( image->getDataWindow() );
-			V3f dataMin( dataWindow.min.x, dataWindow.min.y, 0.0 );
-			V3f dataMax( dataWindow.max.x + 1.f, dataWindow.max.y + 1.f, 0.0 );
-			V3f dataCenter = (dataMin + dataMax) / 2.0;
-			V3f dispCenter = ( m_displayBound.size() ) / V3f( 2. );
-			V3f dataOffset( dispCenter - dataCenter );
+			V3f dataMin( m_dataWindow.min.x, m_dataWindow.min.y, 0.f );
+			V3f dataMax( 1.f + m_dataWindow.max.x, 1.f + m_dataWindow.max.y, 0.f );
+			V3f dataCenter = ( dataMin + dataMax ) / 2.f;
 			
+			V3f dispMin( m_displayWindow.min.x, m_displayWindow.min.y, 0.f );
+			V3f dispMax( 1.f + m_displayWindow.max.x, 1.f + m_displayWindow.max.y, 0.f );
+			V3f dispCenter = ( dispMin + dispMax ) / 2.f;
+
+			const int yOffset = ( m_displayWindow.min.y + m_displayWindow.size().y + 1 ) - m_dataWindow.min.y;
 			m_dataBound = Box3f(
-				V3f( dataMin.x - dispCenter.x, dataMin.y - dispCenter.y + dataOffset.y * 2, 0. ),
-				V3f( dataMax.x - dispCenter.x, dataMax.y - dispCenter.y + dataOffset.y * 2, 0. )
+				V3f(
+					dataMin.x - dispCenter.x,
+					( yOffset - ( m_dataWindow.size().y + 1 ) ) - dispCenter.y,
+					0.f
+				),
+				V3f(
+					dataMax.x - dispCenter.x,
+					( yOffset ) - dispCenter.y,
+					0.f
+				)
 			);
 
 			keyPressSignal().connect( boost::bind( &ImageViewGadget::keyPress, this, ::_1,  ::_2 ) );

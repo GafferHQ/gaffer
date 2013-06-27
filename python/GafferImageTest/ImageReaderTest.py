@@ -48,6 +48,7 @@ class ImageReaderTest( unittest.TestCase ) :
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/negativeDisplayWindow.exr" )
 
 	def testInternalImageSpaceConversion( self ) :
 		
@@ -86,8 +87,17 @@ class ImageReaderTest( unittest.TestCase ) :
 		
 		self.assertEqual( image, image2 )
 
+	def testNegativeDisplayWindowRead( self ) :
+
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.negativeDisplayWindowFileName )
+		f = n["out"]["format"].getValue()
+		d = n["out"]["dataWindow"].getValue()
+		self.assertEqual( f.getDisplayWindow(), IECore.Box2i( IECore.V2i( -5, -5 ), IECore.V2i( 20, 20 ) ) )
+		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -9 ), IECore.V2i( 35, 24 ) ) )
+
 	def testNegativeDataWindow( self ) :
-	
+		
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )		
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 174, 119 ) ) )
@@ -131,7 +141,7 @@ class ImageReaderTest( unittest.TestCase ) :
 			t1 = n["out"]["channelData"].getValue( _copy=False )
 			t2 = n["out"]["channelData"].getValue( _copy=False )
 		
-		# we dont want the separate computations to result in the
+		# we don't want the separate computations to result in the
 		# same value, because the ImageReader has its own cache in
 		# OIIO, so doing any caching on top of that would be wasteful.
 		self.failIf( t1.isSame( t2 ) )

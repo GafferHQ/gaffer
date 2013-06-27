@@ -303,13 +303,17 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 {
 	Box2i format = formatPlug()->getValue().getDisplayWindow();
 	Box2i dataWindow = dataWindowPlug()->getValue();
+	Box2i newDataWindow( Imath::V2i(0) );
 	
 	if( dataWindow.isEmpty() )
 	{
 		dataWindow = Box2i( Imath::V2i(0) );
 	}
+	else
+	{
+		newDataWindow = Box2i( V2i( dataWindow.min.x, format.max.y - dataWindow.max.y ), V2i( dataWindow.max.x, format.max.y - dataWindow.min.y ) );
+	}
 	
-	Box2i newDataWindow( V2i( dataWindow.min.x, format.max.y - dataWindow.max.y ), V2i( dataWindow.max.x, format.max.y - dataWindow.min.y ) );
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format );
 
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();

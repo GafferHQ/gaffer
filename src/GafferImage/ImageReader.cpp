@@ -155,13 +155,13 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
 
-	//\todo: Once we can set formats that have arbitrary windows, set it to the following:
-	// format.min.x = spec->full_x	
-	// format.max.x = spec->full_x + spec->full_width - 1;
-	// format.min.y = spec->full_y	
-	// format.max.y = spec->full_y + spec->full_height - 1;
-	GafferImage::Format format( spec->full_width, spec->full_height );
-	
+	GafferImage::Format format(
+		Imath::Box2i(
+			Imath::V2i( spec->full_x, spec->full_y ),
+			Imath::V2i( spec->full_x + spec->full_width - 1, spec->full_y + spec->full_height - 1 )
+		),
+		1.
+	);
 	return GafferImage::Format::registerFormat( format );
 }
 
