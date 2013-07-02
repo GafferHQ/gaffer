@@ -73,6 +73,24 @@ class SplinePlugSerialiser : public CompoundPlugSerialiser
 };
 
 template<typename T>
+static CompoundPlugPtr pointPlug( T &s, size_t index )
+{
+	return s.pointPlug( index );
+}
+
+template<typename T>
+static typename T::XPlugType::Ptr pointXPlug( T &s, size_t index )
+{
+	return s.pointXPlug( index );
+}
+
+template<typename T>
+static typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
+{
+	return s.pointYPlug( index );
+}
+
+template<typename T>
 static void bind()
 {
 	typedef typename T::ValueType V;
@@ -95,9 +113,9 @@ static void bind()
 		.def( "addPoint", &T::addPoint )
 		.def( "removePoint", &T::removePoint )
 		.def( "clearPoints", &T::clearPoints )
-		.def( "pointPlug", (CompoundPlugPtr (T::*)( unsigned ))&T::pointPlug )
-		.def( "pointXPlug", (typename T::XPlugType::Ptr (T::*)( unsigned ))&T::pointXPlug )
-		.def( "pointYPlug", (typename T::YPlugType::Ptr (T::*)( unsigned ))&T::pointYPlug )
+		.def( "pointPlug",  &pointPlug<T> )
+		.def( "pointXPlug", &pointXPlug<T> )
+		.def( "pointYPlug", &pointYPlug<T> )
 	;
 
 	Serialisation::registerSerialiser( T::staticTypeId(), new SplinePlugSerialiser );

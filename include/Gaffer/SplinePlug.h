@@ -81,12 +81,12 @@ class SplinePlug : public CompoundPlug
 		void setValue( const T &value );
 		T getValue() const;
 		
-		CompoundPlugPtr basisPlug();
-		ConstCompoundPlugPtr basisPlug() const;
-		M44fPlugPtr basisMatrixPlug();
-		ConstM44fPlugPtr basisMatrixPlug() const;
-		IntPlugPtr basisStepPlug();
-		ConstIntPlugPtr basisStepPlug() const;
+		CompoundPlug *basisPlug();
+		const CompoundPlug *basisPlug() const;
+		M44fPlug *basisMatrixPlug();
+		const M44fPlug *basisMatrixPlug() const;
+		IntPlug *basisStepPlug();
+		const IntPlug *basisStepPlug() const;
 		
 		unsigned numPoints() const;
 		/// \undoable
@@ -96,12 +96,12 @@ class SplinePlug : public CompoundPlug
 		/// \undoable
 		void clearPoints();
 
-		CompoundPlugPtr pointPlug( unsigned pointIndex );
-		ConstCompoundPlugPtr pointPlug( unsigned pointIndex ) const;
-		typename XPlugType::Ptr pointXPlug( unsigned pointIndex );
-		typename XPlugType::ConstPtr pointXPlug( unsigned pointIndex ) const;
-		typename YPlugType::Ptr pointYPlug( unsigned pointIndex );
-		typename YPlugType::ConstPtr pointYPlug( unsigned pointIndex ) const;
+		CompoundPlug *pointPlug( unsigned pointIndex );
+		const CompoundPlug *pointPlug( unsigned pointIndex ) const;
+		XPlugType *pointXPlug( unsigned pointIndex );
+		const XPlugType *pointXPlug( unsigned pointIndex ) const;
+		YPlugType *pointYPlug( unsigned pointIndex );
+		const YPlugType *pointYPlug( unsigned pointIndex ) const;
 
 	private :
 

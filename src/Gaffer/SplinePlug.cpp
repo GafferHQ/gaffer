@@ -164,37 +164,37 @@ T SplinePlug<T>::getValue() const
 }
 
 template<typename T>
-CompoundPlugPtr SplinePlug<T>::basisPlug()
+CompoundPlug *SplinePlug<T>::basisPlug()
 {
 	return getChild<CompoundPlug>( "basis" );
 }
 
 template<typename T>
-ConstCompoundPlugPtr SplinePlug<T>::basisPlug() const
+const CompoundPlug *SplinePlug<T>::basisPlug() const
 {	
 	return getChild<CompoundPlug>( "basis" );
 }
 
 template<typename T>
-M44fPlugPtr SplinePlug<T>::basisMatrixPlug()
+M44fPlug *SplinePlug<T>::basisMatrixPlug()
 {
 	return basisPlug()->getChild<M44fPlug>( "matrix" );
 }
 
 template<typename T>
-ConstM44fPlugPtr SplinePlug<T>::basisMatrixPlug() const
+const M44fPlug *SplinePlug<T>::basisMatrixPlug() const
 {
 	return basisPlug()->getChild<M44fPlug>( "matrix" );
 }
 
 template<typename T>
-IntPlugPtr SplinePlug<T>::basisStepPlug()
+IntPlug *SplinePlug<T>::basisStepPlug()
 {
 	return basisPlug()->getChild<IntPlug>( "step" );
 }
 
 template<typename T>
-ConstIntPlugPtr SplinePlug<T>::basisStepPlug() const
+const IntPlug *SplinePlug<T>::basisStepPlug() const
 {
 	return basisPlug()->getChild<IntPlug>( "step" );
 }
@@ -246,7 +246,7 @@ void SplinePlug<T>::clearPoints()
 }
 
 template<typename T>
-CompoundPlugPtr SplinePlug<T>::pointPlug( unsigned pointIndex )
+CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex )
 {
 	if( pointIndex >= numPoints() )
 	{
@@ -256,7 +256,7 @@ CompoundPlugPtr SplinePlug<T>::pointPlug( unsigned pointIndex )
 }
 
 template<typename T>
-ConstCompoundPlugPtr SplinePlug<T>::pointPlug( unsigned pointIndex ) const
+const CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 {
 	if( pointIndex >= numPoints() )
 	{
@@ -266,7 +266,7 @@ ConstCompoundPlugPtr SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 }
 
 template<typename T>
-typename SplinePlug<T>::XPlugType::Ptr SplinePlug<T>::pointXPlug( unsigned pointIndex )
+typename SplinePlug<T>::XPlugType *SplinePlug<T>::pointXPlug( unsigned pointIndex )
 {
 	typename XPlugType::Ptr p = pointPlug( pointIndex )->getChild<XPlugType>( "x" );
 	if( !p )
@@ -277,7 +277,7 @@ typename SplinePlug<T>::XPlugType::Ptr SplinePlug<T>::pointXPlug( unsigned point
 }
 
 template<typename T>
-typename SplinePlug<T>::XPlugType::ConstPtr SplinePlug<T>::pointXPlug( unsigned pointIndex ) const
+const typename SplinePlug<T>::XPlugType *SplinePlug<T>::pointXPlug( unsigned pointIndex ) const
 {
 	typename XPlugType::ConstPtr p = pointPlug( pointIndex )->getChild<XPlugType>( "x" );
 	if( !p )
@@ -288,7 +288,7 @@ typename SplinePlug<T>::XPlugType::ConstPtr SplinePlug<T>::pointXPlug( unsigned 
 }
 
 template<typename T>
-typename SplinePlug<T>::YPlugType::Ptr SplinePlug<T>::pointYPlug( unsigned pointIndex )
+typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned pointIndex )
 {
 	typename YPlugType::Ptr p = pointPlug( pointIndex )->getChild<YPlugType>( "y" );
 	if( !p )
@@ -299,7 +299,7 @@ typename SplinePlug<T>::YPlugType::Ptr SplinePlug<T>::pointYPlug( unsigned point
 }
 
 template<typename T>
-typename SplinePlug<T>::YPlugType::ConstPtr SplinePlug<T>::pointYPlug( unsigned pointIndex ) const
+const typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned pointIndex ) const
 {
 	typename YPlugType::ConstPtr p = pointPlug( pointIndex )->getChild<YPlugType>( "y" );
 	if( !p )
