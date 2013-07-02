@@ -110,6 +110,7 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "na
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "type", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "enabled", None )
 
 ##########################################################################
 # NodeGadgets and Nodules
@@ -128,6 +129,7 @@ def __parametersNoduleCreator( plug ) :
 GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "parameters", __parametersNoduleCreator )
 GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "name", lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "type", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "enabled", lambda plug : None )
 
 # we leave it to the derived class uis to register creators for the parameters.* plugs, because only the derived classes know whether
 # or not networkability makes sense in each case.
