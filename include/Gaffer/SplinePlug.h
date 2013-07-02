@@ -72,6 +72,7 @@ class SplinePlug : public CompoundPlug
 		/// Implemented to only accept children which are suitable for use as points
 		/// in the spline.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		const T &defaultValue() const;
 		virtual void setToDefault();

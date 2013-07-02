@@ -45,11 +45,32 @@
 
 #include "GafferBindings/SplinePlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
+#include "GafferBindings/CompoundPlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+namespace GafferBindings
+{
+namespace Detail
+{
+
+class SplinePlugSerialiser : public CompoundPlugSerialiser
+{
+
+	public :
+	
+		virtual std::string postConstructor( const Gaffer::GraphComponent *child, const std::string &identifier, const Serialisation &serialisation ) const
+		{
+			// this isn't ideal, but the newly constructed spline plug will already have child plugs representing the points for the
+			// default value - so we get rid of those so the real value can be loaded appropriately (using the usual mechanism for
+			// dynamic plugs). the alternative would be to have a special private SplinePlug constructor used only by the serialisation,
+			// which wouldn't make the plugs in the first place.
+			return CompoundPlugSerialiser::postConstructor( child, identifier, serialisation ) + identifier + ".clearPoints()\n";
+		}
+		
+};
 
 template<typename T>
 static void bind()
@@ -78,10 +99,17 @@ static void bind()
 		.def( "pointXPlug", (typename T::XPlugType::Ptr (T::*)( unsigned ))&T::pointXPlug )
 		.def( "pointYPlug", (typename T::YPlugType::Ptr (T::*)( unsigned ))&T::pointYPlug )
 	;
+
+	Serialisation::registerSerialiser( T::staticTypeId(), new SplinePlugSerialiser );
+
 }
 
-void GafferBindings::bindSplinePlug()
+} // namespace Detail
+
+void bindSplinePlug()
 {
-	bind<SplineffPlug>();
-	bind<SplinefColor3fPlug>();
+	Detail::bind<SplineffPlug>();
+	Detail::bind<SplinefColor3fPlug>();
 }
+
+} // namespace GafferBindings

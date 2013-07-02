@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -76,6 +77,15 @@ bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
+	
+	if( c->children().size()==0 )
+	{
+		// when we're getting loaded from a serialisation, the point plugs are
+		// added before the point.x and point.y plugs are added, so we have to
+		// make this concession.
+		return true;
+	}
+	
 	if( c->children().size()!=2 )
 	{
 		return false;
@@ -89,6 +99,14 @@ bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 		return false;
 	}
 	return true;
+}
+
+template<typename T>
+PlugPtr SplinePlug<T>::createCounterpart( const std::string &name, Direction direction ) const
+{
+	Ptr result = new SplinePlug<T>( name, direction, defaultValue(), getFlags() );
+	result->setValue( getValue() );
+	return result;
 }
 
 template<typename T>
@@ -190,14 +208,16 @@ unsigned SplinePlug<T>::numPoints() const
 template<typename T>
 unsigned SplinePlug<T>::addPoint()
 {
-	unsigned n = numPoints();
+	const unsigned n = numPoints();
 	CompoundPlugPtr p = new CompoundPlug( "p0", direction() );
+	p->setFlags( Plug::Dynamic, true );
+	
 	typename XPlugType::Ptr x = new XPlugType( "x", direction(), typename T::XType( 0 ) );
-	x->setFlags( Plug::Dynamic );
+	x->setFlags( Plug::Dynamic, true );
 	p->addChild( x );
 	
 	typename YPlugType::Ptr y = new YPlugType( "y", direction(), typename T::YType( 0 ) );
-	y->setFlags( Plug::Dynamic );
+	y->setFlags( Plug::Dynamic, true );
 	p->addChild( y );
 	
 	addChild( p );
