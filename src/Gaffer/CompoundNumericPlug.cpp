@@ -177,6 +177,62 @@ const char **CompoundNumericPlug<T>::childNames()
 	return names;
 }
 
+template<typename T>
+bool CompoundNumericPlug<T>::canGang() const
+{
+	for( size_t i = 1, e = std::min( (size_t)3, children().size() ); i < e; ++i )
+	{
+		if( !getChild( i )->acceptsInput( getChild( 0 ) ) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+template<typename T>
+void CompoundNumericPlug<T>::gang()
+{
+	// ignore any 4th children - these are alpha values and ganging them
+	// doesn't really make any sense.
+	for( size_t i = 1, e = std::min( (size_t)3, children().size() ); i < e; ++i )
+	{
+		getChild( i )->setInput( getChild( 0 ) );
+	}
+}
+
+template<typename T>
+bool CompoundNumericPlug<T>::isGanged() const
+{
+	for( size_t i = 1, e = children().size(); i < e; ++i )
+	{
+		if( const Plug *input = getChild( i )->getInput<Plug>() )
+		{
+			if( input->parent<Plug>() == this )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+template<typename T>
+void CompoundNumericPlug<T>::ungang()
+{
+	for( size_t i = 1, e = children().size(); i < e; ++i )
+	{
+		Plug *child = getChild( i );
+		if( const Plug *input = child->getInput<Plug>() )
+		{
+			if( input->parent<Plug>() == this )
+			{
+				child->setInput( 0 );
+			}
+		}
+	}
+}
+
 // specialisations
 
 namespace Gaffer

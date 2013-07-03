@@ -52,6 +52,8 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for p in componentPlugs :
 			w = GafferUI.NumericPlugValueWidget( p )
 			self.__row.append( w )
+			
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 	
 	def setHighlighted( self, highlighted ) :
 	
@@ -99,9 +101,53 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				return result
 		
 		return None
+	
+	def __keyPress( self, widget, event ) :
+	
+		if event.key == "G" and event.modifiers & event.Modifiers.Control :
+			if self.getPlug().isGanged() :
+				self.__ungang()
+			elif self.getPlug().canGang() :
+				self.__gang()
 			
+			return True
+			
+		return False
+
+	def __gang( self ) :
+	
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().gang()
+		
+	def __ungang( self ) :
+	
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().ungang()
+
+	@staticmethod
+	def _popupMenu( menuDefinition, plugValueWidget ) :
+	
+		compoundNumericPlugValueWidget = None
+		if isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
+			compoundNumericPlugValueWidget = plugValueWidget
+		else :
+			plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
+			if plugWidget is not None and isinstance( plugWidget.plugValueWidget(), GafferUI.CompoundNumericPlugValueWidget ) :
+				compoundNumericPlugValueWidget = plugWidget.plugValueWidget()
+	
+		if compoundNumericPlugValueWidget is None :
+			return
+	
+		if compoundNumericPlugValueWidget.getPlug().isGanged() :
+			menuDefinition.append( "/GangDivider", { "divider" : True } )
+			menuDefinition.append( "/Ungang", { "command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ), "shortCut" : "Ctrl+G", } )		
+		elif compoundNumericPlugValueWidget.getPlug().canGang() :
+			menuDefinition.append( "/GangDivider", { "divider" : True } )
+			menuDefinition.append( "/Gang", { "command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ), "shortCut" : "Ctrl+G", } )	
+
+__popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu )			
+	
 GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V2iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-
