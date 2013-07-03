@@ -141,6 +141,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		# members for implementing drag and drop
 		self.__emittingButtonPress = False
+		self.__borrowedButtonPress = None
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
