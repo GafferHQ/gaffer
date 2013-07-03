@@ -42,6 +42,7 @@ import string
 import IECore
 import IECoreRI
 
+import Gaffer
 import GafferUI
 
 import GafferRenderMan
@@ -67,6 +68,19 @@ def __shaderCreator( shaderName ) :
 	
 	return node
 
+def __loadFromFile( menu ) :
+
+	path = Gaffer.FileSystemPath( os.getcwd() )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "slo", "sdl" ] ) )
+
+	dialogue = GafferUI.PathChooserDialogue( path, title="Load RenderMan Shader", confirmLabel = "Load" )
+	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.ScriptWindow ) )
+	
+	if not path :
+		return None
+		
+	return __shaderCreator( os.path.splitext( str( path ) )[0] )
+	
 def __shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
 	
 	if isinstance( matchExpression, str ) :
@@ -118,6 +132,9 @@ def __shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
 				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shader ) )
 			}
 		)
+	
+	result.append( "/LoadDivider", { "divider" : True } )
+	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( __loadFromFile ) } )
 		
 	return result
 
