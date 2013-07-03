@@ -91,6 +91,21 @@ class CompoundNumericPlug : public CompoundPlug
 		/// of the result.
 		T getValue() const;
 		
+		/// @name Ganging
+		/// CompoundNumericPlugs may be ganged by connecting the child plugs
+		/// together so their values are driven by the first child. These
+		/// methods allow the children to be ganged and unganged, and for their
+		/// ganging status to be queried.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		bool canGang() const;
+		/// \undoable
+		void gang();
+		bool isGanged() const;
+		/// \undoable
+		void ungang();
+		//@}
+		
 	private :
 	
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( CompoundNumericPlug<T> );

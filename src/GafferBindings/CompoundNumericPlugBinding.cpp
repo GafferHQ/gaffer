@@ -114,6 +114,10 @@ static void bind()
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )
 		.def( "__repr__", &compoundNumericPlugRepr<T> )
+		.def( "canGang", &T::canGang )
+		.def( "gang", &T::gang )
+		.def( "isGanged", &T::isGanged )
+		.def( "ungang", &T::ungang )
 	;
 
 }
