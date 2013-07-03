@@ -325,6 +325,25 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		
 		self.assertTrue( n["p1"].settable() )
 		self.assertFalse( n["p2"].settable() )
+	
+	def testGanging( self ) :
+	
+		p = Gaffer.Color4fPlug()
+		
+		self.assertFalse( p.isGanged() )
+		self.assertTrue( p.canGang() )
+		p.gang()
+		self.assertTrue( p.isGanged() )
+		self.assertTrue( p[0].getInput() is None )
+		self.assertTrue( p[1].getInput().isSame( p[0] ) )
+		self.assertTrue( p[2].getInput().isSame( p[0] ) )
+		self.assertTrue( p[3].getInput() is None )
+		
+		p.ungang()
+		for c in p.children() :
+			self.assertTrue( c.getInput() is None )
+		self.assertFalse( p.isGanged() )
+		self.assertTrue( p.canGang() )
 		
 if __name__ == "__main__":
 	unittest.main()
