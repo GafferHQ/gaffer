@@ -65,7 +65,6 @@ class Menu( GafferUI.Widget ) :
 		
 		if searchable :
 			self._qtWidget().aboutToHide.connect( Gaffer.WeakMethod( self.__hide ) )
-			self._qtWidget().triggered.connect( Gaffer.WeakMethod( self.__menuActionTriggered ) )
 			self.__lastAction = None
 		
 		self._setStyleSheet()		
@@ -166,7 +165,6 @@ class Menu( GafferUI.Widget ) :
 			searchWidget.setObjectName( "GafferUI.Menu.__searchWidget" )
 			self.__searchMenu = _Menu( self._qtWidget(), "" )
 			self.__searchMenu.aboutToShow.connect( Gaffer.WeakMethod( self.__searchMenuShow ) )
-			self.__searchMenu.triggered.connect( Gaffer.WeakMethod( self.__menuActionTriggered ) )
 			self.__searchLine = QtGui.QLineEdit()
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
@@ -298,6 +296,9 @@ class Menu( GafferUI.Widget ) :
 			else :
 				signal = qtAction.triggered[bool]
 			
+			if self.__searchable :
+				signal.connect( IECore.curry( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
+
 			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command, item.active ) )
 		
 		active = item.active if activeOverride is None else activeOverride
@@ -446,7 +447,7 @@ class Menu( GafferUI.Widget ) :
 		if self.__searchMenu and self.__searchMenu.defaultAction() :
 			self.__searchMenu.defaultAction().trigger()
 	
-	def __menuActionTriggered( self, action ) :
+	def __menuActionTriggered( self, action, checked ) :
 		
 		self.__lastAction = action if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 		if self.__lastAction is not None :

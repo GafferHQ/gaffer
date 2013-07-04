@@ -116,6 +116,9 @@ class NodeMenu :
 				else :
 					node = nodeCreator()
 
+				if node is None :
+					return
+
 				if node.parent() is None :
 					graphGadget.getRoot().addChild( node )
 
