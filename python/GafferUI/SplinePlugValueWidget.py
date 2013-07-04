@@ -67,6 +67,12 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.__splineWidget.setDrawMode( GafferUI.SplineWidget.DrawMode.Splines )
 
+	def setHighlighted( self, highlighted ) :
+	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+		
+		self.splineWidget().setHighlighted( highlighted )
+
 	def _updateFromPlug( self ) :
 	
 		plug = self.getPlug()
