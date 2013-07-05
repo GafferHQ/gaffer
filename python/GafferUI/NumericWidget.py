@@ -48,21 +48,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 class NumericWidget( GafferUI.TextWidget ) :
 
 	def __init__( self, value, **kw ) :
-	
-		assert( isinstance( value, int ) or isinstance( value, float ) )
-		self.__numericType = type( value )
 		
-		GafferUI.TextWidget.__init__( self, self.__valueToText( value ), **kw )
-		
-		if self.__numericType is int :
-			validator = QtGui.QIntValidator( self._qtWidget() )
-		else :
-			validator = QtGui.QDoubleValidator( self._qtWidget() )
-			validator.setDecimals( 4 )
-			validator.setNotation( QtGui.QDoubleValidator.StandardNotation )
-		
-		self._qtWidget().setValidator( validator )
-		
+		GafferUI.TextWidget.__init__( self, "", **kw )
+						
 		self.__dragValue = None
 		self.__dragStart = None
 		
@@ -73,8 +61,28 @@ class NumericWidget( GafferUI.TextWidget ) :
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
 		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 	
+		self.__numericType = None
+		self.setValue( value )
+	
 	def setValue( self, value ) :
 	
+		# update our validator based on the type of the value
+		numericType = type( value )
+		assert( numericType is int or numericType is float )
+		if self.__numericType is not numericType :
+		
+			self.__numericType = numericType
+		
+			if self.__numericType is int :
+				validator = QtGui.QIntValidator( self._qtWidget() )
+			else :
+				validator = QtGui.QDoubleValidator( self._qtWidget() )
+				validator.setDecimals( 4 )
+				validator.setNotation( QtGui.QDoubleValidator.StandardNotation )
+
+			self._qtWidget().setValidator( validator )
+
+		# update our textual value
 		text = self.__valueToText( value )
 		if text == self.getText() :
 			return
