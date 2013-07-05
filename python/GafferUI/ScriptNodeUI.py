@@ -49,3 +49,16 @@ GafferUI.PlugValueWidget.registerCreator(
 	"frameRange",
 	GafferUI.CompoundNumericPlugValueWidget
 )
+
+GafferUI.PlugValueWidget.registerCreator(
+	Gaffer.ScriptNode.staticTypeId(),
+	"variables",
+	lambda plug : GafferUI.CompoundDataPlugValueWidget( plug, collapsed=None ),
+)
+
+GafferUI.Metadata.registerPlugValue( 
+	Gaffer.ScriptNode.staticTypeId(),
+	"variables",
+	"nodeUI:section",
+	"Variables",
+)

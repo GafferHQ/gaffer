@@ -968,6 +968,33 @@ a = A()"""
 		# undo was merged, so a new one wasn't added
 		self.assertEqual( len( cs ), 2 )
 		self.assertTrue( cs[1][0].isSame( s ) )
+
+	def testCustomVariables( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		p = s["variables"].addMember( "test", IECore.IntData( 10 ) )
+		self.assertEqual( s.context().get( "test" ), 10 )
+		p["value"].setValue( 20 )
+		self.assertEqual( s.context().get( "test" ), 20 )
+	
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s2 = Gaffer.ScriptNode()
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.load()
+		
+		self.assertEqual( s2["variables"][p.getName()]["value"].getValue(), 20 )
+		self.assertEqual( s2.context().get( "test" ), 20 )
+	
+	def testFileNameVariables( self ) :
+	
+		s = Gaffer.ScriptNode()
+		self.assertEqual( s.context().get( "script:name" ), "" )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		self.assertEqual( s.context().get( "script:name" ), "test" )
 		
 	def tearDown( self ) :
 	
