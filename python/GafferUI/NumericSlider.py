@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,7 +43,7 @@ import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## The NumericSlider extends the slider class to provide a mapping between the position
+## The NumericSlider extends the slider class to provide a mapping between the positions
 # and a range defined by a minimum and maximum value.
 class NumericSlider( GafferUI.Slider ) :
 
@@ -51,36 +52,57 @@ class NumericSlider( GafferUI.Slider ) :
 	# By default, values outside this range will be clamped, but hardMin and hardMax
 	# may be specified to move the point at which the clamping happens outside of the
 	# slider itself.
-	def __init__( self, value=0, min=0, max=1, hardMin=None, hardMax=None, **kw ) :
+	def __init__( self, value=None, min=0, max=1, hardMin=None, hardMax=None, values=None, **kw ) :
 	
 		GafferUI.Slider.__init__( self, **kw )
+		
+		assert( ( value is None ) or ( values is None) )
 		
 		self.__min = min
 		self.__max = max
 		self.__hardMin = hardMin if hardMin is not None else self.__min
 		self.__hardMax = hardMax if hardMax is not None else self.__max
 		
-		# It would be nice to not store value, but always infer it from position.
-		# This isn't possible though, as the range may be 0 length and then we
-		# would lose the value.
-		self.__value = value
+		# It would be nice to not store the values, but always infer them from
+		# the positions. This isn't possible though, as the range may be 0 length
+		# and then we would lose the values.
+		if values is not None :
+			self.__values = values
+		else :
+			self.__values = [ 0 if value is None else value ]
 		
-		self.__setPosition()
+		self.__setPositions()
 	
-	def setPosition( self, position ) :
+	def setPositions( self, positions ) :
 		
-		# change it into a setValue call so we can apply clamping etc.
-		self.setValue( self.__min + position * ( self.__max - self.__min ) )
+		# change it into a setValues call so we can apply clamping etc.
+		self.setValues( 
+			[ self.__min + x * ( self.__max - self.__min ) for x in positions ]
+		)
 	
+	## Convenience function to call setValues( [ value ] )
 	def setValue( self, value ) :
 		
-		value = max( self.__hardMin, min( self.__hardMax, value ) )
+		self.setValues( [ value ] )
+					
+	## Convenience function returning getValues()[0] if there
+	# is only one value, and raising ValueError if not.		
+	def getValue( self ) :
+	
+		if len( self.__values ) != 1 :
+			raise ValueError
+			
+		return self.__values[0]
+
+	def setValues( self, values ) :	
+	
+		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
 		
-		if value == self.__value :
+		if values == self.__values :
 			return
 
-		self.__value = value
-		self.__setPosition()
+		self.__values = values
+		self.__setPositions()
 		
 		try :
 			signal = self.__valueChangedSignal
@@ -88,10 +110,10 @@ class NumericSlider( GafferUI.Slider ) :
 			return
 		
 		signal( self )
-			
-	def getValue( self ) :
+
+	def getValues( self ) :
 	
-		return self.__value
+		return self.__values
 		
 	def setRange( self, min, max, hardMin=None, hardMax=None ) :
 	
@@ -108,9 +130,9 @@ class NumericSlider( GafferUI.Slider ) :
 		self.__hardMin = hardMin
 		self.__hardMax = hardMax
 		
-		self.setValue( self.__value ) # reclamps the value to the range if necessary
-		self.__setPosition() # updates the position in the case that setValue() didn't
-		# __setPosition() won't trigger an update if the position is the same - if
+		self.setValues( self.__values ) # reclamps the value to the range if necessary
+		self.__setPositions() # updates the position in the case that setValue() didn't
+		# __setPositions() won't trigger an update if the position is the same - if
 		# the position is at one end of the range, and that end is the same as before.
 		self._qtWidget().update()
 		
@@ -127,13 +149,13 @@ class NumericSlider( GafferUI.Slider ) :
 			
 		return self.__valueChangedSignal
 	
-	def __setPosition( self ) :
+	def __setPositions( self ) :
 	
 		range = self.__max - self.__min
 		if range == 0 :
-			GafferUI.Slider.setPosition( self, 0 )
+			GafferUI.Slider.setPositions( self, [ 0 ] * len( self.__values ) )
 		else :
-			GafferUI.Slider.setPosition( self, float(self.__value - self.__min) / range )		
+			GafferUI.Slider.setPositions( self, [ float( x - self.__min ) / range for x in self.__values ] )		
 	
   	def _drawBackground( self, painter ) :
   		  		

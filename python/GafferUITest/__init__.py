@@ -86,6 +86,7 @@ from MetadataTest import MetadataTest
 from StandardGraphLayoutTest import StandardGraphLayoutTest
 from StandardNodeUITest import StandardNodeUITest
 from ViewTest import ViewTest
+from SliderTest import SliderTest
 from NumericPlugValueWidgetTest import NumericPlugValueWidgetTest
 from CompoundNumericPlugValueWidgetTest import CompoundNumericPlugValueWidgetTest
 
