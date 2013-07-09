@@ -891,7 +891,7 @@ class Widget( object ) :
 
 		}
 
-		QPushButton#gafferWithFrame:hover, QComboBox:hover {
+		QPushButton#gafferWithFrame:hover, QPushButton#gafferWithFrame:focus, QComboBox:hover {
 
 			border: 2px solid $brightColor;
 			margin: 0px;
