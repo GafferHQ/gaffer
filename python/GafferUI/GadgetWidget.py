@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -62,6 +62,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		
 		GLWidget.__init__( self, bufferOptions, **kw )
 		
+		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+
 		# Force the IECoreGL lazy loading to kick in /now/. Otherwise we can get IECoreGL objects
 		# being returned from the GafferUIBindings without the appropriate boost::python converters
 		# having been registered first.
@@ -69,6 +71,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 						
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
+		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__keyReleaseConnection = self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ) )
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
@@ -124,7 +128,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def _draw( self ) :
 		
 		self.__viewportGadget.render()
-					
+			
+	def __enter( self, widget ) :
+	
+		self._qtWidget().setFocus()
+	
+	def __leave( self, widget ) :
+	
+		self._qtWidget().clearFocus()
+				
 	def __renderRequest( self, gadget ) :
 	
 		self._redraw()
