@@ -88,7 +88,6 @@ class GLWidget( GafferUI.Widget ) :
 		
 		self._qtWidget().resizeGL = Gaffer.WeakMethod( self.__resizeGL )
 		self._qtWidget().paintGL = Gaffer.WeakMethod( self.__paintGL )
-		self._qtWidget().setFocusPolicy( QtCore.Qt.StrongFocus )
 
 	## Called whenever the widget is resized. May be reimplemented by derived
 	# classes if necessary.
