@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -347,6 +347,28 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		l2 = GafferUI.ListContainer()
 		l2.append( b )
 		self.assertEqual( b.getVisible(), True )
+	
+	def testFocusOrder( self ) :
+	
+		l = GafferUI.ListContainer()
+		
+		c = []
+		for i in range( 0, 10 ) :
+			c.append( GafferUI.TextWidget() )
+			
+		l[:] = c
+		
+		for i in range( 0, 9 ) :
+			self.assertTrue( l[i]._qtWidget().nextInFocusChain() is l[i+1]._qtWidget() )
+
+	def testSliceSetItemAtEnd( self ) :
+	
+		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		c.append( TestWidget( "a" ) )
+			
+		c[1:] = [ TestWidget( "b" ) ]
+		self.assertEqual( c[0].s, "a" )
+		self.assertEqual( c[1].s, "b" )
 		
 if __name__ == "__main__":
 	unittest.main()

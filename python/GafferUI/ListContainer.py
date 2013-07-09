@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -126,9 +126,25 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 		del self[index]
 		
-		for i in range( len( children ) - 1, -1, -1 ) :
-			self.insert( insertionIndex, children[i], expands[i] )
-	
+		# It's very important that we insert widgets in the order in which
+		# they are to appear visually, because qt will define the tab-focus
+		# chain order based on order of insertion, and not based on the order
+		# of visual appearance. It's still possible to make several calls to
+		# __setitem__ out of sequence and end up with bad focus orders, but
+		# at least this way a slice set at one time will be in the correct order.
+		#
+		# Investigation into a method of achieving perfect ordering all the
+		# time didn't yield anything better than this. One attempt called
+		# setTabOrder() for every child, starting with the last child - this
+		# worked when the children of the ListContainer where childless,
+		# but not when they had children. Another possibility was to reimplement 
+		# QWidget.focusNextPrevChild() at the GafferUI.Window level, iterating
+		# through the focus chain as for QApplicationPrivate::focusNextPrevChild_helper(),
+		# but using knowledge of Container order to override the sequence where
+		# necessary. This seemed like it might have promise, but is not straightforward.
+		for i in range( 0, len( children ) ) :
+			self.insert( insertionIndex + i, children[i], expands[i] )
+						
 	def __getitem__( self, index ) :
 	
 		return self.__widgets[index]
