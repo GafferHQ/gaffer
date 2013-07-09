@@ -55,6 +55,8 @@ SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const T
 	basis->addChild( basisStep );
 	addChild( basis );
 
+	addChild( new IntPlug( "endPointMultiplicity", direction, endPointMultiplicity( defaultValue ), 1 ) );
+
 	setValue( defaultValue );
 }
 
@@ -66,9 +68,9 @@ SplinePlug<T>::~SplinePlug()
 template<typename T>
 bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	if( !children().size() )
+	if( children().size() < 2 )
 	{
-		// to let the basis plug through during construction
+		// to let the basis and endPointMultiplicity plugs through during construction
 		return true;
 	}
 
@@ -127,9 +129,20 @@ void SplinePlug<T>::setValue( const T &value )
 	basisMatrixPlug()->setValue( value.basis.matrix );
 	basisStepPlug()->setValue( value.basis.step );
 	
+	const size_t multiplicity = endPointMultiplicity( value );
+	endPointMultiplicityPlug()->setValue( multiplicity );
+	
+	typename T::PointContainer::const_iterator it = value.points.begin();
+	typename T::PointContainer::const_iterator eIt = value.points.end();
+	if( multiplicity )
+	{
+		advance( it, multiplicity - 1 );
+		advance( eIt, - (multiplicity - 1) );
+	}
+	
 	unsigned existingPoints = numPoints();
 	unsigned i = 0;
-	for( typename T::PointContainer::const_iterator it=value.points.begin(); it!=value.points.end(); it++ )
+	for( ; it!=eIt; ++it )
 	{
 		if( i >= existingPoints )
 		{
@@ -160,6 +173,16 @@ T SplinePlug<T>::getValue() const
 		result.points.insert( typename T::PointContainer::value_type( pointXPlug( i )->getValue(), pointYPlug( i )->getValue() ) );
 	}
 	
+	const size_t multiplicity = endPointMultiplicityPlug()->getValue();
+	if( multiplicity && n )
+	{
+		for( size_t i = 0; i < multiplicity - 1; ++i )
+		{
+			result.points.insert( *result.points.begin() );
+			result.points.insert( *result.points.rbegin() );
+		}
+	}
+		
 	return result;
 }
 
@@ -202,7 +225,7 @@ const IntPlug *SplinePlug<T>::basisStepPlug() const
 template<typename T>
 unsigned SplinePlug<T>::numPoints() const
 {
-	return children().size() - 1;
+	return children().size() - 2;
 }
 
 template<typename T>
@@ -252,7 +275,7 @@ CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex )
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<CompoundPlug>( pointIndex + 1 ); // plus one is to skip basis plug
+	return getChild<CompoundPlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
 }
 
 template<typename T>
@@ -262,7 +285,7 @@ const CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<CompoundPlug>( pointIndex + 1 ); // plus one is to skip basis plug
+	return getChild<CompoundPlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
 }
 
 template<typename T>
@@ -307,6 +330,51 @@ const typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned poi
 		throw IECore::Exception( "Child Plug for y point position has been removed." );
 	}
 	return p;
+}
+
+template<typename T>
+IntPlug *SplinePlug<T>::endPointMultiplicityPlug()
+{
+	return getChild<IntPlug>( "endPointMultiplicity" );
+}
+
+template<typename T>
+const IntPlug *SplinePlug<T>::endPointMultiplicityPlug() const
+{
+	return getChild<IntPlug>( "endPointMultiplicity" );
+}
+
+template<typename T>
+size_t SplinePlug<T>::endPointMultiplicity( const T &value ) const
+{
+	size_t startMultiplicity = 0;
+	for( typename T::PointContainer::const_iterator it=value.points.begin(); it!=value.points.end(); ++it )
+	{
+		if( *it != *value.points.begin() )
+		{
+			break;
+		}
+		startMultiplicity++;
+	}
+	
+	size_t endMultiplicity = 0;
+	for( typename T::PointContainer::const_reverse_iterator it=value.points.rbegin(); it!=value.points.rend(); ++it )
+	{
+		if( *it != *value.points.rbegin() )
+		{
+			break;
+		}
+		endMultiplicity++;
+	}
+	
+	if( startMultiplicity == endMultiplicity )
+	{
+		return startMultiplicity;
+	}
+	else
+	{
+		return 1;
+	}
 }
 
 namespace Gaffer

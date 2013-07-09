@@ -161,7 +161,7 @@ class SplinePlugTest( unittest.TestCase ) :
 		)
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags=Gaffer.Plug.Flags.Dynamic )
 
-		self.assertEqual( p.numPoints(), 6 )
+		self.assertEqual( p.numPoints(), 4 )
 		for i in range( p.numPoints() ) :
 			self.assert_( p.pointXPlug( i ).isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
 			self.assert_( p.pointYPlug( i ).isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
@@ -169,9 +169,9 @@ class SplinePlugTest( unittest.TestCase ) :
 			self.assert_( p.pointYPlug( i ).parent().isSame( p.pointPlug( i ) ) )
 
 		# accessing nonexistent points should raise exceptions
-		self.assertRaises( Exception, p.pointPlug, 6 )
-		self.assertRaises( Exception, p.pointXPlug, 6 )
-		self.assertRaises( Exception, p.pointYPlug, 6 )
+		self.assertRaises( Exception, p.pointPlug, 4 )
+		self.assertRaises( Exception, p.pointXPlug, 4 )
+		self.assertRaises( Exception, p.pointYPlug, 4 )
 
 	def testPointDeletion( self ) :
 	
@@ -188,7 +188,7 @@ class SplinePlugTest( unittest.TestCase ) :
 		)
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags=Gaffer.Plug.Flags.Dynamic )
 
-		self.assertEqual( p.numPoints(), 6 )
+		self.assertEqual( p.numPoints(), 4 )
 		for i in range( p.numPoints() ) :
 			self.assert_( p.pointPlug( i ) )
 			self.assert_( p.pointXPlug( i ) )
@@ -196,7 +196,7 @@ class SplinePlugTest( unittest.TestCase ) :
 	
 		p.removePoint( 0 )
 
-		self.assertEqual( p.numPoints(), 5 )
+		self.assertEqual( p.numPoints(), 3 )
 		for i in range( p.numPoints() ) :
 			self.assert_( p.pointPlug( i ) )
 			self.assert_( p.pointXPlug( i ) )
@@ -204,7 +204,7 @@ class SplinePlugTest( unittest.TestCase ) :
 				
 		p.removeChild( p.pointPlug( 0 ) )
 		
-		self.assertEqual( p.numPoints(), 4 )
+		self.assertEqual( p.numPoints(), 2 )
 		for i in range( p.numPoints() ) :
 			self.assert_( p.pointPlug( i ) )
 			self.assert_( p.pointXPlug( i ) )
@@ -472,6 +472,42 @@ class SplinePlugTest( unittest.TestCase ) :
 		
 		self.assertEqual( s["n"]["p"].getValue(), s2 )
 	
+	def testEndPointMultiplicity( self ) :
+	
+		s1 = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+		
+		s2 = IECore.Splineff(
+			IECore.CubicBasisf.linear(),
+			(
+				( 0, 0 ),
+				( 1, 1 ),
+			)
+		)
+		
+		p = Gaffer.SplineffPlug( defaultValue = s1 )
+		self.assertEqual( p.getValue(), s1 )
+		self.assertEqual( p["endPointMultiplicity"].defaultValue(), 2 )
+		self.assertEqual( p["endPointMultiplicity"].getValue(), 2 )
+		self.assertEqual( p.numPoints(), 2 )
+		
+		p.setValue( s2 )
+		self.assertEqual( p.getValue(), s2 )
+		self.assertEqual( p["endPointMultiplicity"].getValue(), 1 )
+		self.assertEqual( p.numPoints(), 2 )
+	
+	def testDefaultConstructor( self ) :
+	
+		p = Gaffer.SplineffPlug()
+		p.getValue()
+		
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -48,6 +48,18 @@
 namespace Gaffer
 {
 
+/// The SplinePlug allows IECore::Splines to be represented and
+/// manipulated. Rather than storing a value atomically, the
+/// points and basis matrix are represented as individual plugs,
+/// allowing the positions of individual points to have input
+/// connections from other nodes. For many common splines, it's
+/// useful to repeat the endpoint values to force interpolation
+/// all the way to the first and last values, but dealing with
+/// such repeated endpoints in scripting and via the user interface
+/// would be awkward. For this reason, the setValue() method removes
+/// duplicate endpoints, storing the number of duplicates in the
+/// endPointMultiplicity plug. When calling getValue(), the
+/// endPointMultiplicity is then used to restore the duplicate endpoints.
 template<typename T>
 class SplinePlug : public CompoundPlug
 {
@@ -77,8 +89,13 @@ class SplinePlug : public CompoundPlug
 		const T &defaultValue() const;
 		virtual void setToDefault();
 		
+		/// Sets the value of all the child plugs by decomposing
+		/// the passed spline and storing it in the basis, points,
+		/// and endPointMultiplicity plug.
 		/// \undoable
 		void setValue( const T &value );
+		/// Recreates the spline by retrieving its basis and points
+		/// from the basis, points and endPointMultiplicity plugs.
 		T getValue() const;
 		
 		CompoundPlug *basisPlug();
@@ -88,6 +105,10 @@ class SplinePlug : public CompoundPlug
 		IntPlug *basisStepPlug();
 		const IntPlug *basisStepPlug() const;
 		
+		/// Returns the number of point plugs - note that
+		/// because duplicate endpoints are not stored directly as
+		/// plugs, this may differ from the number of points
+		/// in the spline passed to setValue().
 		unsigned numPoints() const;
 		/// \undoable
 		unsigned addPoint();
@@ -102,8 +123,13 @@ class SplinePlug : public CompoundPlug
 		const XPlugType *pointXPlug( unsigned pointIndex ) const;
 		YPlugType *pointYPlug( unsigned pointIndex );
 		const YPlugType *pointYPlug( unsigned pointIndex ) const;
-
+		
+		IntPlug *endPointMultiplicityPlug();
+		const IntPlug *endPointMultiplicityPlug() const;
+		
 	private :
+
+		size_t endPointMultiplicity( const T &value ) const;
 
 		T m_defaultValue;
 
