@@ -203,7 +203,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 		elif event.modifiers == GafferUI.ModifiableEvent.Modifiers.ShiftControl :
 			offset = 0.00001 * math.pow( move, 3 )
 		
-		self.setValue( self.__dragValue + offset )
+		self.setValue( self.__numericType( float( self.__dragValue ) + offset ) )
 		return True
 	
 	def __dragEnd( self, widget, event ) :
