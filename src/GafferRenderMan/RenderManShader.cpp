@@ -398,24 +398,35 @@ static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std
 		return;
 	}
 	
+	typedef typename PlugType::XPlugType::ValueType XValueType;
 	typedef typename PlugType::YPlugType::ValueType YValueType;
 	typedef std::vector<YValueType> YValueVector;
 	typedef TypedData<YValueVector> YValueData;
 	
+	typename PlugType::ValueType defaultValue;
+	
 	const YValueData *typedDefaultValues = static_cast<const YValueData *>( defaultValues );
 	size_t numPoints = std::min( defaultPositions->readable().size(), typedDefaultValues->readable().size() );
-
-	typename PlugType::ValueType defaultValue;
-	for( size_t i = 0; i < numPoints; ++i )
+	if( numPoints )
 	{
-		defaultValue.points.insert( 
-			typename PlugType::ValueType::Point(
-				defaultPositions->readable()[i],
-				typedDefaultValues->readable()[i]
-			)
-		);
+		for( size_t i = 0; i < numPoints; ++i )
+		{
+			defaultValue.points.insert( 
+				typename PlugType::ValueType::Point(
+					defaultPositions->readable()[i],
+					typedDefaultValues->readable()[i]
+				)
+			);
+		}
 	}
-		
+	else
+	{
+		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 0 ), YValueType( 0 ) ) );
+		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 0 ), YValueType( 0 ) ) );
+		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
+		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
+	}
+			
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, Plug::Default | Plug::Dynamic );
 	parametersPlug->setChild( name, plug );
 }
