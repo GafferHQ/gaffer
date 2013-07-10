@@ -62,11 +62,6 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		
 		self._qtWidget().setUsesScrollButtons( False )
 		self._qtWidget().setElideMode( QtCore.Qt.ElideNone )
-		# this size policy allows TabbedContainers to be cropped when placed inside SplitContainers -
-		# otherwise they stubbornly stay at a minimum width and then suddenly collapse. might it turn
-		# out that we'd be better off setting this size policy automatically when any child is added
-		# to a SplitContainer? and resetting it on removal?
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored )
 		
 		self.__widgets = []
 		

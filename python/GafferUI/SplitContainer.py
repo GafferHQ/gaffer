@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -76,6 +76,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		if oldParent is not None :
 			oldParent.removeChild( child )
 			
+		self.__applySizePolicy( child )
 		self.__widgets.append( child )
 		self._qtWidget().addWidget( child._qtWidget() )
 		child._applyVisibility()
@@ -93,6 +94,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		if oldParent :
 			oldParent.removeChild( child )
 			
+		self.__applySizePolicy( child )
 		self.__widgets.insert( index, child )
 		self._qtWidget().insertWidget( index,  child._qtWidget() )
 		child._applyVisibility()
@@ -109,6 +111,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	def removeChild( self, child ) :
 	
 		assert( child in self.__widgets )
+		child._qtWidget().setSizePolicy( child.__originalSizePolicy )
 		child._qtWidget().setParent( None )
 		child._applyVisibility()
 		self.__widgets.remove( child )
@@ -194,6 +197,14 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	def __len__( self ) :
 		
 		return len( self.__widgets )
+		
+	def __applySizePolicy( self, widget ) :
+	
+		# this size policy allows the children to be cropped to any size - otherwise some stubbornly
+		# stay at a minimum size and then suddenly collapse to nothing when moving the splitter all
+		# the way. we store the original size policy on the widget and reapply it in removeChild().
+		widget.__originalSizePolicy = widget._qtWidget().sizePolicy()
+		widget._qtWidget().setSizePolicy( QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored )
 
 # We inherit from QSplitter purely so that the handles can be created
 # in Python rather than C++. This seems to help PyQt and PySide in tracking
