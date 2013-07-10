@@ -201,6 +201,7 @@ from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 from UserPlugValueWidget import UserPlugValueWidget
 import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
+from RampPlugValueWidget import RampPlugValueWidget
 
 # then stuff specific to parameterised objects
 

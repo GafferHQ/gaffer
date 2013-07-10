@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+import weakref
+
 import Gaffer
 import GafferUI
 
@@ -84,25 +86,20 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		if event.buttons & event.Buttons.Left :
 						
-			if self.__editorWindow is None :
+			if self.__editorWindow is None or self.__editorWindow() is None :
 			
-				self.__editorWindow = GafferUI.Window()
-				self.__editor = GafferUI.SplineEditor( None )
-				self.__editorWindow.setChild( self.__editor )
-				self.__editorWindowClosedConnection = self.__editorWindow.closedSignal().connect( Gaffer.WeakMethod( self.__editorWindowClosed ) )
-			
-			scriptNode = self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() )
+				## \todo This could perhaps be improved if it derived from a PlugValueDialogue
+				# base class shared with the _ColorPlugValueDialogue.
+				window = GafferUI.Window(
+					title = self.getPlug().relativeName( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ),
+					borderWidth = 8,
+				)	
+				window.setChild( GafferUI.RampPlugValueWidget( self.getPlug() ) )
 				
-			self.ancestor( GafferUI.Window ).addChildWindow( self.__editorWindow )
-			self.__editorWindow.setTitle( self.getPlug().relativeName( scriptNode ) )
-			self.__editor.splines().clear()
-			self.__editor.splines().add( self.getPlug() )
-			
-			self.__editorWindow.setVisible( True )
-				
-	def __editorWindowClosed( self, window ) :
-	
-		self.__editorWindow = None
+				self.ancestor( GafferUI.Window ).addChildWindow( window )
+				self.__editorWindow = weakref.ref( window )
 
+			self.__editorWindow().setVisible( True )
+				
 GafferUI.PlugValueWidget.registerType( Gaffer.SplineffPlug.staticTypeId(), SplinePlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor3fPlug.staticTypeId(), SplinePlugValueWidget )
