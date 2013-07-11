@@ -344,6 +344,16 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 			self.assertTrue( c.getInput() is None )
 		self.assertFalse( p.isGanged() )
 		self.assertTrue( p.canGang() )
+
+	def testNoRedundantSetValueCalls( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.V3fPlug()
+		s["n"]["p"].setValue( IECore.V3f( 1, 2, 3 ) )
+		
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
+		self.assertEqual( ss.count( "setValue" ), 3 )
 		
 if __name__ == "__main__":
 	unittest.main()

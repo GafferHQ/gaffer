@@ -193,8 +193,15 @@ def __parametersPlugValueWidgetCreator( plug ) :
 		## \todo Ideally we'd get the plug ordering to match in
 		# RenderManShader::loadShader(), and then the ordering of
 		# connections in the node graph would be correct too.
-		parameterNames = shader.blindData()["ri:orderedParameterNames"]
-		parameterNames = [ p for p in parameterNames if p in plug ]
+		orderedParameterNames = shader.blindData()["ri:orderedParameterNames"]
+		parameterNames = []
+		for name in orderedParameterNames :
+			if name.endswith( "Values" ) and name[:-6] + "Positions" in shader.parameters :
+				name = name[:-6]
+			elif name.endswith( "Positions" ) and name[:-9] + "Values" in shader.parameters :
+				continue
+			if name in plug :
+				parameterNames.append( name )
 	else :
 		# we still want to present some sort of ui, even if we couldn't
 		# load the shader for some reason.

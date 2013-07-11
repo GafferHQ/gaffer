@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,25 +34,21 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_COMPOUNDPLUGBINDING_H
-#define GAFFERBINDINGS_COMPOUNDPLUGBINDING_H
+surface splineParameters(
 
-#include "GafferBindings/ValuePlugBinding.h"
+	float floatSplinePositions[] = { 0, 0, 1, 1 };
+	float floatSplineValues[] = { 0, 0, 1, 1 };
 
-namespace GafferBindings
-{
+	color colorSplineValues[] = { 0, 0, 1, 1 };
+	float colorSplinePositions[] = { 0, 0, 1, 1 };
 
-void bindCompoundPlug();
-
-class CompoundPlugSerialiser : public ValuePlugSerialiser
-{
-
-	public :
+	color colorSpline2Values[] = {};
+#pragma annotation "colorSpline2Values.defaultValue" "{ 1, color( 1 ) , color( 1, 0.5, 0.25 	), color( 0, 0, 0 ), 0 }"
+	float colorSpline2Positions[] = {};
+#pragma annotation "colorSpline2Positions.defaultValue" "{ 0, 0, 0.5, 1, 1 }"
 	
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
-		
-};
-
-} // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_COMPOUNDPLUGBINDING_H
+)
+{
+	Ci = 1;
+	Oi = 1;
+}

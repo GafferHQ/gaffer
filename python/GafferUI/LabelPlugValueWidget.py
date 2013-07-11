@@ -70,7 +70,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.__label.setGraphComponent( plug )
 		
-		label = GafferUI.Metadata.plugValue( plug, "label" )
+		label = GafferUI.Metadata.plugValue( plug, "label" ) if plug is not None else None
 		if label is not None :
 			self.__label.setText( label )
 
@@ -84,17 +84,21 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 		
-		result += "<ul>"
-		result += "<li>Left drag to connect</li>"
-		if hasattr( self.getPlug(), "getValue" ) :
-			result += "<li>Shift-left or middle drag to transfer value</li>"
-		result += "<ul>"
+		if self.getPlug() is not None :
+			result += "<ul>"
+			result += "<li>Left drag to connect</li>"
+			if hasattr( self.getPlug(), "getValue" ) :
+				result += "<li>Shift-left or middle drag to transfer value</li>"
+			result += "<ul>"
 
 		return result
 
 	def _updateFromPlug( self ) :
 	
-		self.__label.setEnabled( not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.__label.setEnabled(
+			self.getPlug() is not None and
+			not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+		)
 
 	def __dragBegin( self, widget, event ) :
 		

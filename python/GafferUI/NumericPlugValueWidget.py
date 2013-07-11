@@ -48,7 +48,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 	
-		self.__numericWidget = GafferUI.NumericWidget( plug.getValue() )
+		self.__numericWidget = GafferUI.NumericWidget( 0 )
 			
 		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug, **kw )
 
@@ -72,9 +72,10 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 		
-		result += "<ul>"
-		result += "<li>Cursor up/down to increment/decrement</li>"
-		result += "<ul>"
+		if self.getPlug() is not None :
+			result += "<ul>"
+			result += "<li>Cursor up/down to increment/decrement</li>"
+			result += "<ul>"
 
 		return result
 

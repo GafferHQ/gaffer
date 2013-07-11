@@ -834,6 +834,17 @@ class Widget( object ) :
 			margin-right: 4px;
 		}
 		
+		QWidget#gafferSplineWidget
+		{
+			border: 1px solid $backgroundDark;			
+		}
+		
+		QWidget#gafferSplineWidget[gafferHighlighted=\"true\"] {
+
+			border: 1px solid $brightColor;
+		
+		}
+		 
 		QDateTimeEdit {
 
 			background-color: $backgroundLighter;
@@ -1436,7 +1447,7 @@ class Widget( object ) :
 			background-color: $brightColor;
 		
 		}
-		
+
 		"""
 		
 	).substitute( {

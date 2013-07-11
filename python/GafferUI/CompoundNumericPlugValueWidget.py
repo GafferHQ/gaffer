@@ -55,6 +55,15 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 	
+	def setPlug( self, plug ) :
+	
+		assert( len( plug ) == len( self.getPlug() ) )
+	
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+	
+		for index, plug in enumerate( plug.children() ) :
+			self.__row[index].setPlug( plug )
+	
 	def setHighlighted( self, highlighted ) :
 	
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
