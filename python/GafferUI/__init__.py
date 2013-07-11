@@ -146,6 +146,7 @@ from MenuButton import MenuButton
 from PopupWindow import PopupWindow
 from ConfirmationDialogue import ConfirmationDialogue
 from DisplayTransform import DisplayTransform
+from Divider import Divider
 import _Pointer
 
 # then stuff specific to graph uis
