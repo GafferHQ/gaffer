@@ -42,6 +42,11 @@ surface splineParameters(
 	color colorSplineValues[] = { 0, 0, 1, 1 };
 	float colorSplinePositions[] = { 0, 0, 1, 1 };
 
+	color colorSpline2Values[] = {};
+#pragma annotation "colorSpline2Values.defaultValue" "{ 1, color( 1 ) , color( 1, 0.5, 0.25 	), color( 0, 0, 0 ), 0 }"
+	float colorSpline2Positions[] = {};
+#pragma annotation "colorSpline2Positions.defaultValue" "{ 0, 0, 0.5, 1, 1 }"
+	
 )
 {
 	Ci = 1;

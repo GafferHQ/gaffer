@@ -36,6 +36,8 @@
 
 #include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/spirit/include/qi.hpp"
+#include "boost/fusion/adapted/struct.hpp"
 
 #include "IECore/CachedReader.h"
 #include "IECore/VectorTypedData.h"
@@ -56,6 +58,9 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferRenderMan;
+
+namespace qi = boost::spirit::qi;
+namespace ascii = boost::spirit::ascii;
 
 IE_CORE_DEFINERUNTIMETYPED( RenderManShader );
 
@@ -407,7 +412,7 @@ static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std
 	
 	const YValueData *typedDefaultValues = static_cast<const YValueData *>( defaultValues );
 	size_t numPoints = std::min( defaultPositions->readable().size(), typedDefaultValues->readable().size() );
-	if( numPoints )
+	if( numPoints >= 4 )
 	{
 		for( size_t i = 0; i < numPoints; ++i )
 		{
@@ -421,6 +426,14 @@ static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std
 	}
 	else
 	{
+		if( numPoints )
+		{
+			// looks like someone attempted to provide a default but didn't provide enough values
+			msg(
+				Msg::Warning, "RenderManShader::loadShaderParameters",
+				boost::format( "Default value for parameter \"%s\" has less than 4 points" ) % name
+			);
+		}
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 0 ), YValueType( 0 ) ) );
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 0 ), YValueType( 0 ) ) );
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
@@ -429,6 +442,100 @@ static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std
 			
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, Plug::Default | Plug::Dynamic );
 	parametersPlug->setChild( name, plug );
+}
+
+static IECore::FloatVectorDataPtr parseFloats( const std::string &value )
+{
+	FloatVectorDataPtr result = new FloatVectorData;
+
+	string::const_iterator first = value.begin();
+	bool r = qi::phrase_parse(
+
+		first, value.end(),
+
+		/////////////////
+		qi::omit[ -qi::char_( '{' ) ] >>
+		(
+			qi::float_ % ','
+		) >>
+		qi::omit[ -qi::char_( '}' ) ]
+		,
+		/////////////////
+
+		ascii::space,
+		result->writable()
+
+	);
+
+	if( !r || first != value.end() )
+	{
+		return 0;
+	}
+
+	return result;
+}
+
+BOOST_FUSION_ADAPT_STRUCT(
+	Imath::Color3f,
+	(float, x)
+	(float, y)
+	(float, z)
+)
+
+template <typename Iterator>
+struct ColorGrammar : qi::grammar<Iterator, std::vector<Imath::Color3f>(), ascii::space_type>
+{
+
+	ColorGrammar() : ColorGrammar::base_type(start)
+	{
+
+		color1 %=
+			qi::lit("color")
+			>> '('
+			>>  qi::float_
+			>>  ')'
+		;
+
+		color3 %=
+			qi::lit("color")
+			>> '('
+			>>  qi::float_ >> ','
+			>>  qi::float_ >> ','
+			>>  qi::float_
+			>>  ')'
+		;
+
+		color = qi::float_ | color1 | color3;
+
+		start %=
+			qi::omit[ -qi::char_( '{' ) ] >>
+				color % "," >>
+			qi::omit[ -qi::char_( '}' ) ]
+		;
+	}
+
+	qi::rule<Iterator, Imath::Color3f(), ascii::space_type> color1;
+	qi::rule<Iterator, Imath::Color3f(), ascii::space_type> color3;
+	qi::rule<Iterator, Imath::Color3f(), ascii::space_type> color;
+
+	qi::rule<Iterator, std::vector<Imath::Color3f>(), ascii::space_type> start;
+
+};
+
+static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
+{
+	Color3fVectorDataPtr result = new Color3fVectorData;
+
+	ColorGrammar<string::const_iterator> grammar;
+
+	std::string::const_iterator first = value.begin();
+	bool r = qi::phrase_parse( first, value.end(), grammar, ascii::space, result->writable() );
+
+	if( !r || first != value.end() )
+	{
+		return 0;
+	}
+	return result;
 }
 
 void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
@@ -477,11 +584,56 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 				continue;
 			}
 			
-			const FloatVectorData *positions = shader->parametersData()->member<FloatVectorData>( plugName + "Positions" );
-			const Data *values = shader->parametersData()->member<Data>( plugName + "Values" );
+			// must use a smart pointers here because we may assign the data the parser creates (and which we therefore own)
+			ConstFloatVectorDataPtr positions = shader->parametersData()->member<FloatVectorData>( plugName + "Positions" );
+			ConstDataPtr values = shader->parametersData()->member<Data>( plugName + "Values" );
 			
 			if( positions && values )
 			{
+				const StringData *defaultValuesAnnotation = annotations->member<StringData>( plugName + "Values.defaultValue" );
+				const StringData *defaultPositionsAnnotation = annotations->member<StringData>( plugName + "Positions.defaultValue" );
+
+				if( defaultValuesAnnotation )
+				{
+					DataPtr parsedValues;
+					if( values->isInstanceOf( Color3fVectorData::staticTypeId() ) )
+					{
+						parsedValues = parseColors( defaultValuesAnnotation->readable() );
+					}
+					else
+					{
+						parsedValues = parseFloats( defaultValuesAnnotation->readable() );
+					}
+
+					if( parsedValues )
+					{
+						values = parsedValues;
+					}
+					else
+					{
+						msg(
+							Msg::Warning, "RenderManShader::loadShaderParameters",
+							boost::format( "Unable to parse default value \"%s\" for parameter \"%s\"" ) % defaultValuesAnnotation->readable() % ( plugName + "Values" )
+						);
+					}
+				}
+
+				if( defaultPositionsAnnotation )
+				{
+					FloatVectorDataPtr parsedPositions = parseFloats( defaultPositionsAnnotation->readable() );
+					if( parsedPositions )
+					{
+						positions = parsedPositions;
+					}
+					else
+					{
+						msg(
+							Msg::Warning, "RenderManShader::loadShaderParameters",
+							boost::format( "Unable to parse default value \"%s\" for parameter \"%s\"" ) % defaultPositionsAnnotation->readable() % ( plugName + "Positions" )
+						);
+					}
+				}
+
 				switch( values->typeId() )
 				{
 					case FloatVectorDataTypeId  :

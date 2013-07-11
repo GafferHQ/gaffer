@@ -728,7 +728,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n = GafferRenderMan.RenderManShader()
 		n.loadShader( shader )
 		
-		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline" ] )
+		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline", "colorSpline2" ] )
 		
 		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
@@ -840,6 +840,31 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 					( 0, 0 ),
 					( 1, 2 ),
 					( 1, 2 ),		
+				]
+			),
+		)
+
+	def testSplineParameterDefaultValueAnnotation( self ) :
+		
+		# because variable length parameters must be initialised
+		# with a zero length array, we have to pass the defaults we actually
+		# want via an annotation.
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.sl" )
+		
+		n = GafferRenderMan.RenderManShader()
+		n.loadShader( shader )
+	
+		self.assertEqual(
+			n["parameters"]["colorSpline2"].getValue(),
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, IECore.Color3f( 1 ) ),
+					( 0, IECore.Color3f( 1 ) ),
+					( 0.5, IECore.Color3f( 1, 0.5, 0.25 ) ),
+					( 1, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 0 ) ),		
 				]
 			),
 		)
