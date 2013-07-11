@@ -1321,6 +1321,10 @@ class Widget( object ) :
 			padding: 2px;
 		}
 		
+		.QFrame#gafferDivider {
+			color: $backgroundDark;
+		}
+		
 		QToolTip {
 			background-clip: border;
 			color: $backgroundDarkest;

@@ -215,6 +215,8 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				widget = self.__childPlugUIs[childPlug.getName()]
 			if widget is not None :	
 				orderedChildUIs.append( widget )
+				if GafferUI.Metadata.plugValue( childPlug, "divider" ) :
+					orderedChildUIs.append( GafferUI.Divider() )
 		
 		# add header and footer
 		headerWidget = self._headerWidget()
