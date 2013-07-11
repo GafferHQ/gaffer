@@ -172,6 +172,9 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			sectionColumn = self.__sectionColumn( sectionName )
 			sectionColumn.append( widget )
 
+			if GafferUI.Metadata.plugValue( plug, "divider" ) :
+				sectionColumn.append( GafferUI.Divider() )
+
 	def __currentTabChanged( self, tabbedContainer, current ) :
 
 		assert( tabbedContainer is self.__tabbedContainer )

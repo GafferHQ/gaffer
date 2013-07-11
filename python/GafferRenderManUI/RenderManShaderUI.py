@@ -387,8 +387,20 @@ def __plugLabel( plug ) :
 	
 	return d.value if d is not None else None
 
+def __plugDivider( plug ) :
+
+	annotations = _shaderAnnotations( plug.node() )
+	d = annotations.get( plug.getName() + ".divider", None )
+	if d is None :
+		return False
+		
+	return d.value.lower() in ( "True", "true", "1" )	
+
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
 
 GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "label", __plugLabel )
 GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "label", __plugLabel )
+
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "divider", __plugDivider )
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "divider", __plugDivider )
