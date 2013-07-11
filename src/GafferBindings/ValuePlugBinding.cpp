@@ -113,7 +113,10 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
 	const Plug *plug = static_cast<const Plug *>( graphComponent );
-	if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) )
+	// output a setValue() call if the plug is serialisable and has no input.
+	// we don't do this for non-leaf plugs, since some children may have connections
+	// which make setting the value inappropriate.
+	if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) && !plug->children().size() )
 	{
 		if( !serialisation.identifier( plug->getInput<Plug>() ).size() )
 		{

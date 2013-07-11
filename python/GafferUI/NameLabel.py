@@ -63,9 +63,12 @@ class NameLabel( GafferUI.Label ) :
 
 	def setGraphComponent( self, graphComponent ) :
 	
-		self.__graphComponent = graphComponent	
-		self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) )
-		
+		self.__graphComponent = graphComponent
+		if self.__graphComponent is not None :
+			self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) )
+		else :
+			self.__nameChangedConnection = None
+			
 		self.__setText()
 		
 	def getGraphComponent( self ) :
@@ -74,11 +77,12 @@ class NameLabel( GafferUI.Label ) :
 	
 	def __setText( self, *unwantedArgs ) :
 	
-		GafferUI.Label.setText( self, IECore.CamelCase.toSpaced( self.__graphComponent.getName() ) )
+		if self.getGraphComponent() is not None :
+			GafferUI.Label.setText( self, IECore.CamelCase.toSpaced( self.__graphComponent.getName() ) )
 
 	def __buttonPress( self, widget, event ) :
 			
-		return event.buttons & ( event.Buttons.Left | event.Buttons.Middle )
+		return self.getGraphComponent() is not None and event.buttons & ( event.Buttons.Left | event.Buttons.Middle )
 		
 	def __dragBegin( self, widget, event ) :
 	

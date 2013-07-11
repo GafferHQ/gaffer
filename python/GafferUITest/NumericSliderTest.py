@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -169,6 +170,15 @@ class NumericSliderTest( unittest.TestCase ) :
 		s.setRange( 1, 2 )
 		self.assertEqual( s.getPosition(), 0 )
 		self.assertEqual( s.getValue(), 1 )
+	
+	def testMultipleValues( self ) :
+	
+		self.assertRaises( Exception, GafferUI.NumericSlider, value = 0, values = [ 1, 2 ] )
+		
+		s = GafferUI.NumericSlider( values = [ 1, 1.5 ], min = 0, max = 2 )
+		self.assertEqual( s.getValues(), [ 1, 1.5 ] )
+		self.assertEqual( s.getPositions(), [ 0.5, 0.75 ] )
+		self.assertRaises( ValueError, s.getValue )
 		
 if __name__ == "__main__":
 	unittest.main()

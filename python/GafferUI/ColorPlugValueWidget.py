@@ -62,6 +62,13 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 		self.__blinkBehaviour = None
 		
 		self._updateFromPlug()
+	
+	def setPlug( self, plug ) :
+	
+		GafferUI.CompoundNumericPlugValueWidget.setPlug( self, plug )
+		
+		if self.__colorChooserDialogue is not None and self.__colorChooserDialogue() is not None :
+			self.__colorChooserDialogue().setPlug( plug )
 		
 	def _updateFromPlug( self ) :
 	
@@ -89,7 +96,7 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 		# can be useful for the user - they can bring up a node editor to get access to
 		# the color chooser, and then close the node editor but keep the floating color
 		# chooser. the only reason we keep a reference to the dialogue at all is so that
-		# we can avoid opening two at the same time.
+		# we can avoid opening two at the same time, and update the plug in self.setPlug().
 		if self.__colorChooserDialogue is None or self.__colorChooserDialogue() is None :
 			self.__colorChooserDialogue = weakref.ref(
 				_ColorPlugValueDialogue(
@@ -106,7 +113,8 @@ GafferUI.PlugValueWidget.registerType( Gaffer.Color3fPlug.staticTypeId(), ColorP
 GafferUI.PlugValueWidget.registerType( Gaffer.Color4fPlug.staticTypeId(), ColorPlugValueWidget )
 
 ## \todo Perhaps we could make this a part of the public API and give it an acquire()
-# method which the ColorPlugValueWidget uses?
+# method which the ColorPlugValueWidget uses? Perhaps we could also make a PlugValueDialogue
+# base class to share some of the work with the dialogue made by the SplinePlugValueWidget.
 ## \todo Support undo properly, with concatenation of repeated operations.
 class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
@@ -114,15 +122,10 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	
 		GafferUI.ColorChooserDialogue.__init__( 
 			self,
-			title = plug.relativeName( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ),
 			color = plug.getValue()
 		)
-
-		self.__plug = plug
-
-		node = plug.node()
-		self.__nodeParentChangedConnection = node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
-		self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+		
+		self.setPlug( plug )
 		
 		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
 		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
@@ -131,6 +134,22 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 		parentWindow.addChildWindow( self )
 
+	def setPlug( self, plug ) :
+	
+		self.__plug = plug
+
+		node = plug.node()
+		self.__nodeParentChangedConnection = node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+		self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+		
+		self.setTitle( plug.relativeName( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) )
+		
+		self.__plugSet( plug )
+		
+	def getPlug( self ) :
+	
+		return self.__plug
+
 	def __plugSet( self, plug ) :
 		
 		if plug.isSame( self.__plug ) :
@@ -138,7 +157,8 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 	def __colorChanged( self, colorChooser ) :
 	
-		self.__plug.setValue( self.colorChooser().getColor() )
+		with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.__plug.setValue( self.colorChooser().getColor() )
 	
 	def __buttonClicked( self, button ) :
 		

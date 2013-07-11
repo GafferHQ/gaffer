@@ -69,6 +69,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		
+	## Note that it is acceptable to pass None to setPlug() (and to the constructor)
+	# and that derived classes should be implemented to cope with this eventuality.
 	def setPlug( self, plug ) :
 	
 		self.__setPlugInternal( plug, callUpdateFromPlug=True )
@@ -127,6 +129,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return result
 	
 		plug = self.getPlug()
+		if plug is None :
+			return ""
+			
 		input = plug.getInput()
 		
 		inputText = ""
@@ -377,6 +382,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return False
 		
 	def __contextMenu( self, *unused ) :
+		
+		if self.getPlug() is None :
+			return False
 			
 		menuDefinition = self._popupMenuDefinition()
 		if not len( menuDefinition.items() ) :

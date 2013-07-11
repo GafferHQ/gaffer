@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -53,7 +53,12 @@ class SplineWidget( GafferUI.Widget ) :
 
 	def __init__( self, spline=None, drawMode=DrawMode.Splines, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+		# using QFrame rather than QWidget because it supports computing the contentsRect() based on
+		# the stylesheet.
+		GafferUI.Widget.__init__( self, QtGui.QFrame(), **kw )
+		
+		self._qtWidget().setSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding )
+		self._qtWidget().setObjectName( "gafferSplineWidget" )
 				
 		self.setDrawMode( drawMode )
 
@@ -70,6 +75,8 @@ class SplineWidget( GafferUI.Widget ) :
 			
 		self.setSpline( spline )
 
+		self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
+
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 	def setSpline( self, spline ) :
@@ -82,6 +89,7 @@ class SplineWidget( GafferUI.Widget ) :
 					
 		self.__spline = spline
 		self.__splinesToDraw = None
+		self.__gradientToDraw = None
 		self._qtWidget().update()
 		
 	def getSpline( self ) :
@@ -98,34 +106,48 @@ class SplineWidget( GafferUI.Widget ) :
 			
 		self.__drawMode = drawMode
 		self._qtWidget().update()
+		
+	def getDrawMode( self ) :
+	
+		return self.__drawMode
 
 	def __paintEvent( self, event ) :
 	
 		painter = QtGui.QPainter( self._qtWidget() )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 		
+		o = QtGui.QStyleOption()
+		o.initFrom( self._qtWidget() )
+		self._qtWidget().style().drawPrimitive( QtGui.QStyle.PE_Widget, o, painter, self._qtWidget() )   	
+
 		if self.__drawMode == self.DrawMode.Ramp :
 			self.__paintRamp( painter )
 		elif self.__drawMode == self.DrawMode.Splines :
 			self.__paintSplines( painter )
-		
+					
 	def __paintRamp( self, painter ) :
 	
-		size = self.size()
-		
-		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
+		if self.__gradientToDraw is None :		
+			self.__gradientToDraw = QtGui.QLinearGradient( 0, 0, 1, 0 )
+			self.__gradientToDraw.setCoordinateMode( self.__gradientToDraw.ObjectBoundingMode )
+			
+			displayTransform = GafferUI.DisplayTransform.get()
 
-		numStops = 50
-		for i in range( 0, numStops ) :
-			t = float( i ) / ( numStops - 1 )
-			c = self.__spline( t )
-			if isinstance( c, float ) :
-				grad.setColorAt( t, self._qtColor( IECore.Color3f( c, c, c ) ) )
-			elif isinstance( c, I( ECore.Color3f, IECore.Color4f ) ) :
-				grad.setColorAt( t, self._qtColor( c ) )	
+			numStops = 500
+			for i in range( 0, numStops ) :
+				t = float( i ) / ( numStops - 1 )
+				c = self.__spline( t )
+				if isinstance( c, float ) :
+					c = IECore.Color3f( c, c, c )
+				else :
+					c = IECore.Color3f( c[0], c[1], c[2] )
+			
+				c = displayTransform( c )	
+				self.__gradientToDraw.setColorAt( t, self._qtColor( c ) )	
 		
-		brush = QtGui.QBrush( grad )
-		painter.fillRect( 0, 0, size.x, size.y, brush )
+		brush = QtGui.QBrush( self.__gradientToDraw )
+		rect = self._qtWidget().contentsRect()
+		painter.fillRect( rect, brush )
 				
 	def __paintSplines( self, painter ) :
 	
@@ -174,15 +196,21 @@ class SplineWidget( GafferUI.Widget ) :
 				self.__splineBound = self.__splineBound.united( s.path.controlPointRect() )
 				
 		# draw the splines		
-		size = self._qtWidget().size()
+		rect = self._qtWidget().contentsRect()
 		transform = QtGui.QTransform()
 		if self.__splineBound.width() :
-			transform.scale( size.width() / self.__splineBound.width(), 1 )
+			transform.translate( rect.x(), 0 )
+			transform.scale( rect.width() / self.__splineBound.width(), 1 )
 		if self.__splineBound.height() :
-			transform.scale( 1, size.height() / self.__splineBound.height() )
+			transform.translate( 0, rect.y() + rect.height() )
+			transform.scale( 1, -rect.height() / self.__splineBound.height() )
 			
 		painter.setTransform( transform )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
 			painter.setPen( pen )
 			painter.drawPath( s.path )
+
+	def __displayTransformChanged( self ) :
+	
+		self._qtWidget().update()
