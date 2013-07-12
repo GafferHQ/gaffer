@@ -444,13 +444,20 @@ class ImageViewGadget : public GafferUI::Gadget
 			m_sampleWindow = selectionBox;
 		}
 
-		void drawWindow( Box2f &rasterWindow, const Style *style ) const
+		void drawWindow( Box2f &rasterWindow,  const Style *style ) const
+		{
+			V2f minPt( rasterToDisplaySpace( rasterWindow.min ) );
+			V2f maxPt( rasterToDisplaySpace( rasterWindow.max ) );
+			drawWindow( rasterWindow, minPt, maxPt, style );
+		}
+
+		void drawWindow( Box2f &rasterWindow, const V2f &bottomLeftPoint, const V2f &topRightPoint, const Style *style ) const
 		{
 			V2f minPt( rasterToDisplaySpace( rasterWindow.min ) );
 			V2f maxPt( rasterToDisplaySpace( rasterWindow.max ) );
 				
-			std::string rasterWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( minPt.x ) % fastFloatRound( minPt.y ) ) );
-			std::string rasterWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( maxPt.x ) % fastFloatRound( maxPt.y ) ) );
+			std::string rasterWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( bottomLeftPoint.x ) % fastFloatRound( bottomLeftPoint.y ) ) );
+			std::string rasterWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( topRightPoint.x ) % fastFloatRound( topRightPoint.y ) ) );
 				
 			// Draw the box around the data window.
 			style->renderRectangle( rasterWindow );
@@ -590,7 +597,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				color = Color4f( .2f, .2f, .2f, 1.f );
 				glColor( color );
-				drawWindow( dataRasterBox, style );
+				drawWindow( dataRasterBox, m_dataWindow.min, m_dataWindow.max, style );
 			}
 
 			/// Draw the selection window.
