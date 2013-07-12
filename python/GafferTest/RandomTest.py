@@ -142,6 +142,10 @@ class RandomTest( GafferTest.TestCase ) :
 		self.assertTrue( "outColor.r" in o )
 		self.assertTrue( "outColor.g" in o )
 		self.assertTrue( "outColor.b" in o )
+
+		o = [ x.relativeName( r ) for x in r.affects( r["floatRange"][0] ) ]
+		
+		self.assertEqual( o, [ "outFloat" ] )
 	
 	def testNegativeSeeds( self ) :	
 		

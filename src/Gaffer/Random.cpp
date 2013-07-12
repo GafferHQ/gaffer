@@ -176,7 +176,7 @@ void Random::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 			outputs.push_back( componentIt->get() );
 		}
 	}
-	else if( input == floatRangePlug() )
+	else if( input->parent<Plug>() == floatRangePlug() )
 	{
 		outputs.push_back( outFloatPlug() );
 	}
