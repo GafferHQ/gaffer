@@ -295,7 +295,7 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 
 	// The rotation component.	
 	Imath::M33f r;
-	r.rotate( IECore::degreesToRadians( transformPlug()->rotatePlug()->getValue() ) );
+	r.rotate( -IECore::degreesToRadians( transformPlug()->rotatePlug()->getValue() ) );
 	
 	// The translation component.
 	Imath::M33f t;
