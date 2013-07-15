@@ -54,21 +54,14 @@ Grade::Grade( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Color3fPlug( "blackPoint" ) );
-	addChild( new Color3fPlug( "whitePoint" ) );
+	addChild( new Color3fPlug( "whitePoint", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
 	addChild( new Color3fPlug( "lift" ) );
-	addChild( new Color3fPlug( "gain" ) );
-	addChild( new Color3fPlug( "multiply" ) );
+	addChild( new Color3fPlug( "gain", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
+	addChild( new Color3fPlug( "multiply", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
 	addChild( new Color3fPlug( "offset" ) );
-	addChild( new Color3fPlug( "gamma" ) );
-	addChild( new BoolPlug( "blackClamp" ) );
+	addChild( new Color3fPlug( "gamma", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
+	addChild( new BoolPlug( "blackClamp", Gaffer::Plug::In, true ) );
 	addChild( new BoolPlug( "whiteClamp" ) );
-
-	// Set the default values of the plugs.
-	whitePointPlug()->setValue( Imath::V3f(1.f, 1.f, 1.f) );
-	gainPlug()->setValue( Imath::V3f(1.f, 1.f, 1.f) );
-	multiplyPlug()->setValue( Imath::V3f(1.f, 1.f, 1.f) );
-	gammaPlug()->setValue( Imath::V3f(1.f, 1.f, 1.f) );
-	blackClampPlug()->setValue( true );
 }
 
 Grade::~Grade()
