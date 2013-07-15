@@ -109,6 +109,8 @@ enum TypeId
 	Color3fVectorDataPlugTypeId = 110062,
 	ActionTypeId = 110063,
 	SimpleActionTypeId = 110064,
+	SetValueActionTypeId = 110065,
+	CompoundActionTypeId = 110066,
 	LastTypeId = 110200,
 	
 };

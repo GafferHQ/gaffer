@@ -109,9 +109,7 @@ class ScriptNode : public Node
 		/// performed within an UndoContext.
 		/// \todo Have methods on Actions to provide a textual description
 		/// of what is being done, for use in Undo/Redo menu items, history
-		/// displays etc. Also have a CompoundAction so it's easy to tell what
-		/// actions were performed together undo a single UndoContext (I think
-		/// CompoundAction would replace ActionVector).
+		/// displays etc.
 		ActionSignal &actionSignal();
 		//@}
 		
@@ -231,18 +229,24 @@ class ScriptNode : public Node
 		bool selectionSetAcceptor( const Set *s, const Set::Member *m );
 		StandardSetPtr m_selection;
 
+		IE_CORE_FORWARDDECLARE( CompoundAction );
+
 		friend class Action;
 		friend class UndoContext;
 		
+		// Called by the UndoContext and Action classes to
+		// implement the undo system.
+		void pushUndoState( UndoContext::State state, const std::string &mergeGroup );
+		void addAction( ActionPtr action );
+		void popUndoState();
+		
 		typedef std::stack<UndoContext::State> UndoStateStack;
-		typedef std::vector<ActionPtr> ActionVector;
-		typedef boost::shared_ptr<ActionVector> ActionVectorPtr;
-		typedef std::list<ActionVectorPtr> UndoList;
+		typedef std::list<CompoundActionPtr> UndoList;
 		typedef UndoList::iterator UndoIterator;
 		
 		ActionSignal m_actionSignal;
 		UndoStateStack m_undoStateStack; // pushed and popped by the creation and destruction of UndoContexts
-		ActionVectorPtr m_actionAccumulator; // Actions are accumulated here until the state stack hits 0 size
+		CompoundActionPtr m_actionAccumulator; // Actions are accumulated here until the state stack hits 0 size
 		UndoList m_undoList; // then the accumulated actions are transferred to this list for storage
 		UndoIterator m_undoIterator; // points to the next thing to redo
 			

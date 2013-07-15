@@ -107,6 +107,19 @@ class Action : public IECore::RunTimeTyped
 		/// call the base class implementation before
 		/// performing their own work.
 		virtual void undoAction() = 0;
+
+		/// May be reimplemented by derived classes to return
+		/// true if it is valid to call merge( other ).
+		/// Implementations must only return true if the base
+		/// class implementation also returns true.
+		virtual bool canMerge( const Action *other ) const = 0;
+		/// May be implemented to merge another action into
+		/// this one, so that doAction() now has the effect
+		/// of having performed both actions (other second),
+		/// and undoAction has the effect of undoing both.
+		/// Implementations must call the base class
+		/// implementation before performing their own merging.
+		virtual void merge( const Action *other ) = 0;
 		
 	private :
 

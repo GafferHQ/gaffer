@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,14 +41,15 @@ class UndoContext() :
 
 	State = _UndoContext.State
 
-	def __init__( self, script, state=_UndoContext.State.Enabled ) :
+	def __init__( self, script, state=_UndoContext.State.Enabled, mergeGroup="" ) :
 	
 		self.__script = script
 		self.__state = state
+		self.__mergeGroup = mergeGroup
 
 	def __enter__( self ) :
 
-		self.__context = _UndoContext( self.__script, self.__state )
+		self.__context = _UndoContext( self.__script, self.__state, self.__mergeGroup )
 		
 	def __exit__( self, type, value, traceBack ) :
 

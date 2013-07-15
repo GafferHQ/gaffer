@@ -66,31 +66,15 @@ void Action::enact( ActionPtr action )
 		s = action->subject()->ancestor<ScriptNode>();
 	}
 	
-	if( s && s->m_actionAccumulator && s->m_undoStateStack.top() == UndoContext::Enabled )
+	if( s )
 	{
-		action->doAction();
-		s->m_actionAccumulator->push_back( action );
-		{
-			UndoContext undoDisabled( s, UndoContext::Disabled );
-			s->unsavedChangesPlug()->setValue( true );
-		}
-		s->actionSignal()( s, action.get(), Do );
+		s->addAction( action );
 	}
 	else
 	{
-		action->doAction();
-		/// \todo I don't think non-undoable actions should modify
-		/// the unsavedChanges plug. Currently moving the nodes
-		/// around in the NodeGraph isn't undoable, and that's the only
-		/// reason we're doing this. It has lots of side effects where
-		/// various hidden plugs used by the ui will set unsavedChanges
-		/// unnecessarily.
-		if( s && action->subject() != s->unsavedChangesPlug() )
-		{
-			s->unsavedChangesPlug()->setValue( true );
-		}
+		action->doAction();	
 	}
-	
+		
 }
 	
 void Action::doAction()
@@ -109,6 +93,15 @@ void Action::undoAction()
 		throw IECore::Exception( "Action cannot be undone without being done first." );
 	}
 	m_done = false;
+}
+
+bool Action::canMerge( const Action *other ) const
+{
+	return true;
+}
+
+void Action::merge( const Action *other )
+{
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -130,6 +123,8 @@ class SimpleAction : public Action
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::SimpleAction, SimpleActionTypeId, Action );
 
+	protected :
+
 		virtual GraphComponent *subject() const
 		{
 			return m_subject.get();
@@ -147,6 +142,15 @@ class SimpleAction : public Action
 			m_undoFn();
 		}
 
+		bool canMerge( const Action *other ) const
+		{
+			return false;
+		}
+
+		void merge( const Action *other )
+		{
+		}
+		
 	private :
 	
 		GraphComponentPtr m_subject;

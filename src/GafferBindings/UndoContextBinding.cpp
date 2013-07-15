@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,6 +52,7 @@ void bindUndoContext()
 {	
 	scope s = class_<UndoContext>( "_UndoContext", init<ScriptNodePtr>() )
 		.def( init<ScriptNodePtr, UndoContext::State>() )
+		.def( init<ScriptNodePtr, UndoContext::State, const std::string &>() )
 	;
 
 	enum_<UndoContext::State>( "State" )
