@@ -461,7 +461,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			if( !m_texture )
 			{
 				// convert image to texture
-				ToGLTextureConverterPtr converter = new ToGLTextureConverter( staticPointerCast<const ImagePrimitive>( m_image ) );
+				ToGLTextureConverterPtr converter = new ToGLTextureConverter( staticPointerCast<const ImagePrimitive>( m_image ), true );
 				m_texture = IECore::runTimeCast<IECoreGL::Texture>( converter->convert() );
 
 				{
