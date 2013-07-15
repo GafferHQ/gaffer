@@ -302,6 +302,11 @@ void ScriptNode::popUndoState()
 			
 			m_undoIterator = m_undoList.end();
 			
+			if( !merged )
+			{
+				undoAddedSignal()( this );
+			}
+			
 			UndoContext undoDisabled( this, UndoContext::Disabled );
 			unsavedChangesPlug()->setValue( true );
 		}
@@ -350,6 +355,11 @@ void ScriptNode::redo()
 ScriptNode::ActionSignal &ScriptNode::actionSignal()
 {
 	return m_actionSignal;
+}
+
+ScriptNode::UndoAddedSignal &ScriptNode::undoAddedSignal()
+{
+	return m_undoAddedSignal;
 }
 
 void ScriptNode::copy( const Node *parent, const Set *filter )

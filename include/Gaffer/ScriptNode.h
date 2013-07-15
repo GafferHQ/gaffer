@@ -100,6 +100,7 @@ class ScriptNode : public Node
 		////////////////////////////////////////////////////////////////////
 		//@{
 		typedef boost::signal<void ( ScriptNode *, const Action *, Action::Stage stage )> ActionSignal;
+		typedef boost::signal<void ( ScriptNode * )> UndoAddedSignal;
 		bool undoAvailable() const;
 		void undo();
 		bool redoAvailable() const;
@@ -111,6 +112,8 @@ class ScriptNode : public Node
 		/// of what is being done, for use in Undo/Redo menu items, history
 		/// displays etc.
 		ActionSignal &actionSignal();
+		/// A signal emitted when an item is added to the undo stack.
+		UndoAddedSignal &undoAddedSignal();
 		//@}
 		
 		//! @name Editing
@@ -245,6 +248,7 @@ class ScriptNode : public Node
 		typedef UndoList::iterator UndoIterator;
 		
 		ActionSignal m_actionSignal;
+		UndoAddedSignal m_undoAddedSignal;
 		UndoStateStack m_undoStateStack; // pushed and popped by the creation and destruction of UndoContexts
 		CompoundActionPtr m_actionAccumulator; // Actions are accumulated here until the state stack hits 0 size
 		UndoList m_undoList; // then the accumulated actions are transferred to this list for storage

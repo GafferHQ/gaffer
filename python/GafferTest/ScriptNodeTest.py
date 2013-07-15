@@ -939,6 +939,35 @@ a = A()"""
 
 		s.redo()
 		self.assertEqual( values, [ 10, 20, 10, 0, 10, 20 ] )
+	
+	def testUndoAddedSignal( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		cs = GafferTest.CapturingSlot( s.undoAddedSignal() )
+		
+		s["n"] = Gaffer.Node()	
+		self.assertEqual( cs, [] )
+		
+		with Gaffer.UndoContext( s ) :
+			s["n"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["n"]["p"].setValue( 100 )
+			
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0].isSame( s ) )
+		
+		with Gaffer.UndoContext( s, mergeGroup = "test" ) :
+			s["n"]["p"].setValue( 200 )
+		
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[1][0].isSame( s ) )
+		
+		with Gaffer.UndoContext( s, mergeGroup = "test" ) :
+			s["n"]["p"].setValue( 300 )
+		
+		# undo was merged, so a new one wasn't added
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[1][0].isSame( s ) )
 		
 	def tearDown( self ) :
 	
