@@ -115,7 +115,6 @@ GafferUI.PlugValueWidget.registerType( Gaffer.Color4fPlug.staticTypeId(), ColorP
 ## \todo Perhaps we could make this a part of the public API and give it an acquire()
 # method which the ColorPlugValueWidget uses? Perhaps we could also make a PlugValueDialogue
 # base class to share some of the work with the dialogue made by the SplinePlugValueWidget.
-## \todo Support undo properly, with concatenation of repeated operations.
 class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 	def __init__( self, plug, parentWindow ) :
@@ -125,12 +124,16 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			color = plug.getValue()
 		)
 		
-		self.setPlug( plug )
+		# we use these to decide which actions to merge into a single undo
+		self.__lastChangedReason = None
+		self.__mergeGroupId = 0
 		
 		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
 		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
 		self.__confirmClickedConnection = self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__cancelClickedConnection = self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+
+		self.setPlug( plug )
 
 		parentWindow.addChildWindow( self )
 
@@ -153,17 +156,28 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	def __plugSet( self, plug ) :
 		
 		if plug.isSame( self.__plug ) :
-			self.colorChooser().setColor( self.__plug.getValue() )
+			with Gaffer.BlockedConnection( self.__colorChangedConnection ) :
+				self.colorChooser().setColor( self.__plug.getValue() )
 
-	def __colorChanged( self, colorChooser ) :
+	def __colorChanged( self, colorChooser, reason ) :
 	
-		with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			self.__plug.setValue( self.colorChooser().getColor() )
-	
+		if not GafferUI.Slider.changesShouldBeMerged( self.__lastChangedReason, reason ) :
+			self.__mergeGroupId += 1
+		self.__lastChangedReason = reason
+				
+		with Gaffer.UndoContext(
+			self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() ),
+			mergeGroup = "ColorPlugValueDialogue%d%d" % ( id( self, ), self.__mergeGroupId )
+		) :
+		
+			with Gaffer.BlockedConnection( self.__plugSetConnection ) :
+				self.__plug.setValue( self.colorChooser().getColor() )
+			
 	def __buttonClicked( self, button ) :
 		
 		if button is self.cancelButton :
-			self.__plug.setValue( self.colorChooser().getInitialColor() )
+			with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+				self.__plug.setValue( self.colorChooser().getInitialColor() )
 		
 		# ideally we'd just remove ourselves from our parent immediately, but that would
 		# trigger this bug :
