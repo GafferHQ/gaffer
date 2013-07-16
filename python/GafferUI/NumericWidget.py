@@ -87,6 +87,23 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 		return self.__valueChangedSignal
 
+	## Returns True if a user would expect the specified sequence
+	# of changes to be merged into a single undoable event.
+	@classmethod
+	def changesShouldBeMerged( cls, firstReason, secondReason ) :
+	
+		if type( firstReason ) != type( secondReason ) :
+			return False
+	
+		return ( firstReason, secondReason ) in (
+			# drag
+			( cls.ValueChangedReason.DragBegin, cls.ValueChangedReason.DragMove ),
+			( cls.ValueChangedReason.DragMove, cls.ValueChangedReason.DragMove ),
+			( cls.ValueChangedReason.DragMove, cls.ValueChangedReason.DragEnd ),
+			# increment
+			( cls.ValueChangedReason.Increment, cls.ValueChangedReason.Increment ),			
+		)
+
 	def __valueToText( self, value ) :
 
 		value = self.__numericType( value )

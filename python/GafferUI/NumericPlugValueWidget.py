@@ -54,7 +54,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__numericWidget )
 
-		# we use this to avoid merging undo actions we don't want to merge
+		# we use these to decide which actions to merge into a single undo
+		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
@@ -114,25 +115,15 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return False
 		
 	def __valueChanged( self, widget, reason ) :
-				
-		reasonMergeGroups = {
-			GafferUI.NumericWidget.ValueChangedReason.DragBegin : "Drag",
-			GafferUI.NumericWidget.ValueChangedReason.DragMove : "Drag",
-			GafferUI.NumericWidget.ValueChangedReason.DragEnd : "Drag",
-			GafferUI.NumericWidget.ValueChangedReason.Increment : "Increment",		
-		}
-				
+							
 		if self._editable() :
 			
-			mergeGroup = reasonMergeGroups.get( reason, "" )
-			if mergeGroup :
-				mergeGroup = str( id( self ) ) + mergeGroup + str( self.__mergeGroupId )
-			
-			self.__setPlugValue( mergeGroup )
-		
-			if not mergeGroup or reason == GafferUI.NumericWidget.ValueChangedReason.DragEnd :
+			if not widget.changesShouldBeMerged( self.__lastChangedReason, reason ) :
 				self.__mergeGroupId += 1
-			
+			self.__lastChangedReason = reason
+	
+			self.__setPlugValue( mergeGroup = "NumericPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId ) )
+					
 		return False
 	
 	def __setPlugValue( self, mergeGroup="" ) :
