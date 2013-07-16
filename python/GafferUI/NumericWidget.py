@@ -82,7 +82,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 		try :
 			return self.__valueChangedSignal
 		except AttributeError :
-			self.__valueChangedSignal = GafferUI.WidgetEventSignal()
+			self.__valueChangedSignal = Gaffer.Signal2()
 			self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 
 		return self.__valueChangedSignal
