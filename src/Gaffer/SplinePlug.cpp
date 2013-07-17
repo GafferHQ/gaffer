@@ -129,7 +129,7 @@ void SplinePlug<T>::setValue( const T &value )
 	basisMatrixPlug()->setValue( value.basis.matrix );
 	basisStepPlug()->setValue( value.basis.step );
 	
-	const size_t multiplicity = endPointMultiplicity( value );
+	const int multiplicity = endPointMultiplicity( value );
 	endPointMultiplicityPlug()->setValue( multiplicity );
 	
 	typename T::PointContainer::const_iterator it = value.points.begin();
