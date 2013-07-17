@@ -160,15 +160,7 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 				}
 			}
 			
-			const IECore::Data *d = 0;
-			try
-			{
-				d = get<IECore::Data>( variableName );
-			}
-			catch( ... )
-			{
-			}
-			
+			const IECore::Data *d = get<IECore::Data>( variableName, 0 );
 			if( d )
 			{
 				switch( d->typeId() )
@@ -190,6 +182,11 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 						break;
 				}
 			}
+			else if( const char *v = getenv( variableName.c_str() ) )
+			{
+				// variable not in context - try environment
+				result += v;
+			}
 		}
 		else if( s[i] == '#' )
 		{
@@ -203,6 +200,14 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 			std::ostringstream padder;
 			padder << std::setw( padding ) << std::setfill( '0' ) << frame;
 			result += padder.str();
+		}
+		else if( s[i] == '~' && result.size()==0 )
+		{
+			if( const char *v = getenv( "HOME" ) )
+			{
+				result += v;
+			}
+			i++;
 		}
 		else
 		{

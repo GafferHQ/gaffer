@@ -37,6 +37,7 @@
 
 from __future__ import with_statement
 
+import os
 import unittest
 
 import IECore
@@ -114,6 +115,42 @@ class StringPlugTest( GafferTest.TestCase ) :
 		
 		with context :
 			self.assertRaises( RuntimeError, n["out"].getValue )
+	
+	def testTildeExpansion( self ) :
+	
+		n = GafferTest.StringInOutNode()
+		
+		n["in"].setValue( "~" )
+		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~" ) )
+
+		n["in"].setValue( "~/something.tif" )
+		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~/something.tif" ) )
+		
+		# ~ shouldn't be expanded unless it's at the front - it would
+		# be meaningless in other cases.
+		n["in"].setValue( "in ~1900" )
+		self.assertEqual( n["out"].getValue(), "in ~1900" )
+	
+	def testEnvironmentExpansion( self ) :
+	
+		n = GafferTest.StringInOutNode()
+		
+		n["in"].setValue( "${A}" )
+		h1 = n["out"].hash()
+		self.assertEqual( n["out"].getValue(), "" )
+		
+		os.environ["A"] = "a"
+		self.assertEqual( n["out"].getValue(), "a" )
+		h2 = n["out"].hash()
+		self.assertNotEqual( h1, h2 )
+		
+		context = Gaffer.Context()
+		context["A"] = "b"
+		with context :
+			# context should win against environment
+			self.assertEqual( n["out"].getValue(), "b" )
+			self.assertNotEqual( n["out"].hash(), h1 )
+			self.assertNotEqual( n["out"].hash(), h2 )
 		
 if __name__ == "__main__":
 	unittest.main()
