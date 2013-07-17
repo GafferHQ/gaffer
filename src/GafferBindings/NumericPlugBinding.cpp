@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,14 +45,14 @@
 #include "Gaffer/Node.h"
 
 #include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
 template<typename T>
-static std::string repr( const T *plug )
+static std::string maskedRepr( const T *plug, unsigned flagsMask )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
@@ -76,9 +76,10 @@ static std::string repr( const T *plug )
 		result += "maxValue = " + boost::lexical_cast<std::string>( plug->maxValue() ) + ", ";
 	}
 	
-	if( plug->getFlags() != Plug::Default )
+	const unsigned flags = plug->getFlags() & flagsMask;
+	if( flags != Plug::Default )
 	{
-		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
+		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
 	}
 		
 	result += ")";
@@ -86,6 +87,11 @@ static std::string repr( const T *plug )
 	return result;
 }
 
+template<typename T>
+static std::string repr( const T *plug )
+{
+	return maskedRepr( plug, Plug::All );
+}
 
 template<typename T>
 static void setValue( T *plug, const typename T::ValueType value )
@@ -96,6 +102,18 @@ static void setValue( T *plug, const typename T::ValueType value )
 	plug->setValue( value );
 }
 
+template<typename T>
+class NumericPlugSerialiser : public ValuePlugSerialiser
+{
+
+	public :
+	
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		{
+			return maskedRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+		}
+
+};
 
 template<typename T>
 static void bind()
@@ -124,6 +142,8 @@ static void bind()
 		.def( "getValue", &T::getValue )
 		.def( "__repr__", &repr<T> )
 	;
+	
+	Serialisation::registerSerialiser( T::staticTypeId(), new NumericPlugSerialiser<T>() );	
 
 }
 

@@ -430,7 +430,50 @@ class PlugTest( unittest.TestCase ) :
 	
 		p = Gaffer.Plug()
 		self.assertFalse( p.acceptsInput( p ) )
+	
+	def testReadOnlySerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p2"] = Gaffer.Plug( direction=Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].setInput( s["n"]["p2"] )
+		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		ss = s.serialise()
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+				
+		self.assertTrue( s2["n"]["p"].getInput().isSame( s2["n"]["p2"] ) )
+		self.assertEqual( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
+	
+	def testReadOnlyRepr( self ) :
+	
+		p1 = Gaffer.Plug(
+			"p",
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly,
+		)
 		
+		p2 = eval( repr( p1 ) )
+		
+		self.assertEqual( p1.getName(), p2.getName() )
+		self.assertEqual( p1.direction(), p2.direction() )
+		self.assertEqual( p1.getFlags(), p2.getFlags() )
+	
+	def testNoFlagsRepr( self ) :
+	
+		p1 = Gaffer.Plug(
+			"p",
+			Gaffer.Plug.Direction.Out,
+			Gaffer.Plug.Flags.None,
+		)
+		
+		p2 = eval( repr( p1 ) )
+		
+		self.assertEqual( p1.getName(), p2.getName() )
+		self.assertEqual( p1.direction(), p2.direction() )
+		self.assertEqual( p1.getFlags(), p2.getFlags() )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

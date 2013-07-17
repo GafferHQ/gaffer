@@ -61,7 +61,7 @@ class CompoundPlugWrapper : public PlugWrapper<CompoundPlug>
 };
 
 IE_CORE_DECLAREPTR( CompoundPlugWrapper );
-	
+
 bool CompoundPlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 {
 	// cast is safe because of constraints maintained by CompoundPlug.
