@@ -135,6 +135,12 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 					self.getPlug().setValue( self.__numericWidget.getValue() )
 				except :
 					pass
+			
+			# now any changes that were made in the numeric widget have been transferred
+			# into the global undo queue, we remove the text editing changes from the
+			# widget's private text editing undo queue. it will then ignore undo shortcuts,
+			# allowing them to fall through to the global undo shortcut.
+			self.__numericWidget.clearUndo()
 
 			# we always need to update the ui from the plug after trying to set it,
 			# because the plug might clamp the value to something else. furthermore
