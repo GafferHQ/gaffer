@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -89,6 +90,30 @@ class StringPlugTest( GafferTest.TestCase ) :
 		# non-computation context
 		n["in"].setValue( "testyTesty.##.exr" )
 		self.assertEqual( n["in"].getValue(), "testyTesty.##.exr" )
+	
+	def testRecursiveExpansion( self ) :
+	
+		n = GafferTest.StringInOutNode()
+		n["in"].setValue( "$a" )
+		
+		context = Gaffer.Context()
+		context["a"] = "a$b"
+		context["b"] = "b"
+		
+		with context :
+			self.assertEqual( n["out"].getValue(), "ab" )
+	
+	def testRecursiveExpansionCycles( self ) :
+	
+		n = GafferTest.StringInOutNode()
+		n["in"].setValue( "$a" )
+		
+		context = Gaffer.Context()
+		context["a"] = "a$b"
+		context["b"] = "b$a"
+		
+		with context :
+			self.assertRaises( RuntimeError, n["out"].getValue )
 		
 if __name__ == "__main__":
 	unittest.main()
