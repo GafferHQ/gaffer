@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -136,6 +136,14 @@ class TextWidget( GafferUI.Widget ) :
 	
 		return self._qtWidget().getCharacterWidth()
 	
+	## Clears the undo stack local to this widget - when
+	# the stack is empty the widget will ignore any
+	# undo/redo shortcuts, allowing any equivalent shortcuts
+	# elsewhere to be triggered.
+	def clearUndo( self ) :
+	
+		self._qtWidget().setModified( False )
+		
 	## \todo Should this be moved to the Widget class?
 	def grabFocus( self ) :
 	
@@ -343,3 +351,15 @@ class _LineEdit( QtGui.QLineEdit ) :
 			result.setWidth( width + 6 )
 			
 		return result
+		
+	def event(self, event):
+       
+		if event.type() == event.ShortcutOverride :
+			if event == QtGui.QKeySequence.Undo :
+				if not self.isModified() or not self.isUndoAvailable() :
+					return False
+			elif event == QtGui.QKeySequence.Redo :
+				if not self.isModified() or not self.isRedoAvailable() :
+					return False
+           
+		return QtGui.QLineEdit.event( self, event )

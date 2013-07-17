@@ -54,6 +54,10 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__numericWidget )
 
+		# we use these to decide which actions to merge into a single undo
+		self.__lastChangedReason = None
+		self.__mergeGroupId = 0
+
 		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 						
@@ -110,22 +114,33 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		return False
 		
-	def __valueChanged( self, widget ) :
-				
+	def __valueChanged( self, widget, reason ) :
+							
 		if self._editable() :
-			self.__setPlugValue()
 			
+			if not widget.changesShouldBeMerged( self.__lastChangedReason, reason ) :
+				self.__mergeGroupId += 1
+			self.__lastChangedReason = reason
+	
+			self.__setPlugValue( mergeGroup = "NumericPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId ) )
+					
 		return False
 	
-	def __setPlugValue( self ) :
-			
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	def __setPlugValue( self, mergeGroup="" ) :
+				
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ), mergeGroup=mergeGroup ) :
 
 			with Gaffer.BlockedConnection( self._plugConnections() ) :
 				try :
 					self.getPlug().setValue( self.__numericWidget.getValue() )
 				except :
 					pass
+			
+			# now any changes that were made in the numeric widget have been transferred
+			# into the global undo queue, we remove the text editing changes from the
+			# widget's private text editing undo queue. it will then ignore undo shortcuts,
+			# allowing them to fall through to the global undo shortcut.
+			self.__numericWidget.clearUndo()
 
 			# we always need to update the ui from the plug after trying to set it,
 			# because the plug might clamp the value to something else. furthermore

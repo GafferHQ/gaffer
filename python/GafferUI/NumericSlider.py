@@ -39,6 +39,7 @@ import math
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -66,20 +67,12 @@ class NumericSlider( GafferUI.Slider ) :
 		# It would be nice to not store the values, but always infer them from
 		# the positions. This isn't possible though, as the range may be 0 length
 		# and then we would lose the values.
+		self.__values = []
 		if values is not None :
-			self.__values = values
+			self.__setValuesInternal( values, self.PositionChangedReason.SetPositions )
 		else :
-			self.__values = [ 0 if value is None else value ]
+			self.__setValuesInternal( [ 0 if value is None else value ], self.PositionChangedReason.SetPositions )
 		
-		self.__setPositions()
-	
-	def setPositions( self, positions ) :
-		
-		# change it into a setValues call so we can apply clamping etc.
-		self.setValues( 
-			[ self.__min + x * ( self.__max - self.__min ) for x in positions ]
-		)
-	
 	## Convenience function to call setValues( [ value ] )
 	def setValue( self, value ) :
 		
@@ -96,20 +89,7 @@ class NumericSlider( GafferUI.Slider ) :
 
 	def setValues( self, values ) :	
 	
-		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
-		
-		if values == self.__values :
-			return
-
-		self.__values = values
-		self.__setPositions()
-		
-		try :
-			signal = self.__valueChangedSignal
-		except :
-			return
-		
-		signal( self )
+		self.__setValuesInternal( values, self.PositionChangedReason.SetPositions )
 
 	def getValues( self ) :
 	
@@ -130,9 +110,8 @@ class NumericSlider( GafferUI.Slider ) :
 		self.__hardMin = hardMin
 		self.__hardMax = hardMax
 		
-		self.setValues( self.__values ) # reclamps the value to the range if necessary
-		self.__setPositions() # updates the position in the case that setValue() didn't
-		# __setPositions() won't trigger an update if the position is the same - if
+		self.__setValuesInternal( self.__values, self.PositionChangedReason.Invalid ) # reclamps the values to the range if necessary
+		# __setValuesInternal() won't trigger an update if the position is the same - if
 		# the position is at one end of the range, and that end is the same as before.
 		self._qtWidget().update()
 		
@@ -145,17 +124,47 @@ class NumericSlider( GafferUI.Slider ) :
 		try :
 			return self.__valueChangedSignal
 		except :
-			self.__valueChangedSignal = GafferUI.WidgetSignal()
+			self.__valueChangedSignal = Gaffer.Signal2()
 			
 		return self.__valueChangedSignal
+
+	def _setPositionsInternal( self, positions, reason ) :
+		
+		# change it into a __setValuesInternal call so we can apply clamping etc.
+		# __setValuesInternal will call Slider._setPositionsInternal for us.
+		self.__setValuesInternal( 
+			[ self.__min + x * ( self.__max - self.__min ) for x in positions ],
+			reason
+		)
+		
+	def __setValuesInternal( self, values, reason ) :
 	
-	def __setPositions( self ) :
-	
+		# clamp values
+		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
+		
+		# convert them to positions
 		range = self.__max - self.__min
 		if range == 0 :
-			GafferUI.Slider.setPositions( self, [ 0 ] * len( self.__values ) )
+			positions = [ 0 ] * len( values )
 		else :
-			GafferUI.Slider.setPositions( self, [ float( x - self.__min ) / range for x in self.__values ] )		
+			positions = [ float( x - self.__min ) / range for x in values ]		
+		
+		# store values. we do this before storing positions so they'll
+		# be in sync when the position change is signalled.
+		dragBeginOrEnd = reason in ( self.PositionChangedReason.DragBegin, self.PositionChangedReason.DragEnd )
+		valueChangedSignal = None
+		if values != self.__values or dragBeginOrEnd :
+			self.__values = values
+			with IECore.IgnoredExceptions( AttributeError ) :
+				valueChangedSignal = self.__valueChangedSignal
+		
+		# store positions.
+		GafferUI.Slider._setPositionsInternal( self, positions, reason )
+		
+		# signal value change if necessary. we do this after storing
+		# positions so that the positions are in sync.
+		if valueChangedSignal is not None :
+			valueChangedSignal( self, reason )		
 	
   	def _drawBackground( self, painter ) :
   		  		

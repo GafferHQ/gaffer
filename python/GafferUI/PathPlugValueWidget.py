@@ -101,6 +101,11 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 								
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( str( self.__path ) )
+		
+		# now we've transferred the text changes to the global undo queue, we remove them
+		# from the widget's private text editing undo queue. it will then ignore undo shortcuts,
+		# allowing them to fall through to the global undo shortcut.
+		self.pathWidget().clearUndo()
 
 	def __buttonClicked( self, widget ) :
 	

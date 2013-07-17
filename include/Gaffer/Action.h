@@ -40,16 +40,25 @@
 
 #include "boost/function.hpp"
 
-#include "IECore/RefCounted.h"
+#include "IECore/RunTimeTyped.h"
+
+#include "Gaffer/TypeIds.h"
 
 namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( GraphComponent );
 IE_CORE_FORWARDDECLARE( ScriptNode );
+IE_CORE_FORWARDDECLARE( Action );
 
-/// The Action class forms the basis of the undo system.
-class Action : public IECore::RefCounted
+/// The Action class forms the basis of the undo system - all
+/// methods which wish to support undo must be implemented by
+/// calling Action::enact(). Note that client code never creates Actions
+/// explicitly - instead they are created implicitly whenever an UndoContext
+/// is active and an undoable method is called. Because Actions are
+/// essentially an implementation detail of the undo system, subclasses
+/// shouldn't be exposed in the public headers.
+class Action : public IECore::RunTimeTyped
 {
 
 	public :
@@ -63,27 +72,59 @@ class Action : public IECore::RefCounted
 			Redo
 		};
 	
-		IE_CORE_DECLAREMEMBERPTR( Action )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Action, ActionTypeId, IECore::RunTimeTyped );
 
 		typedef boost::function<void ()> Function;
 
+		/// Enacts the specified action by calling doAction() and
+		/// adding it to the undo queue in the appropriate ScriptNode.
+		static void enact( ActionPtr action );
+		/// Convenience function to enact a simple action without
+		/// needing to create a new Action subclass. The callables
+		/// passed will form the implementation of doAction() and
+		/// undoAction(). Typically the callables would be constructed
+		/// by using boost::bind with private member functions of the class
+		/// implementing the undoable method.
 		static void enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn );
 
 	protected :
 
-		Action( const Function &doFn, const Function &undoFn );
+		Action();
 		virtual ~Action();
 		
-		void doAction();
-		void undoAction();
+		/// Must be implemented by derived classes to
+		/// return the subject of the work they perform -
+		/// this is used to find the ScriptNode in which
+		/// to store the action.
+		virtual GraphComponent *subject() const = 0;
+		/// Must be implemented by derived classes to
+		/// perform the action. Implementations should
+		/// call the base class implementation before
+		/// performing their own work.
+		virtual void doAction() = 0;
+		/// Must be implemented by derived classes to
+		/// undo the effects of doAction(). Implementations should
+		/// call the base class implementation before
+		/// performing their own work.
+		virtual void undoAction() = 0;
 
+		/// May be reimplemented by derived classes to return
+		/// true if it is valid to call merge( other ).
+		/// Implementations must only return true if the base
+		/// class implementation also returns true.
+		virtual bool canMerge( const Action *other ) const = 0;
+		/// May be implemented to merge another action into
+		/// this one, so that doAction() now has the effect
+		/// of having performed both actions (other second),
+		/// and undoAction has the effect of undoing both.
+		/// Implementations must call the base class
+		/// implementation before performing their own merging.
+		virtual void merge( const Action *other ) = 0;
+		
 	private :
 
 		friend class ScriptNode;
-
-		Function m_doFn;
-		Function m_undoFn;
-	
+		
 		bool m_done;
 
 };

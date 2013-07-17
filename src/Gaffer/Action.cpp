@@ -43,8 +43,14 @@
 
 using namespace Gaffer;
 
-Action::Action( const Function &doFn, const Function &undoFn )
-	:	m_doFn( doFn ), m_undoFn( undoFn ), m_done( false )
+//////////////////////////////////////////////////////////////////////////
+// Action implementation
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( Action );
+
+Action::Action()
+	:	m_done( false )
 {
 }
 
@@ -52,34 +58,23 @@ Action::~Action()
 {
 }
 
-void Action::enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
+void Action::enact( ActionPtr action )
 {
-	ScriptNodePtr s = IECore::runTimeCast<ScriptNode>( subject );
+	ScriptNodePtr s = IECore::runTimeCast<ScriptNode>( action->subject() );
 	if( !s )
 	{
-		s = subject->ancestor<ScriptNode>();
+		s = action->subject()->ancestor<ScriptNode>();
 	}
 	
-	if( s && s->m_actionAccumulator && s->m_undoStateStack.top() == UndoContext::Enabled )
+	if( s )
 	{
-		ActionPtr a = new Action( doFn, undoFn );
-		a->doAction();
-		s->m_actionAccumulator->push_back( a );
-		{
-			UndoContext undoDisabled( s, UndoContext::Disabled );
-			s->unsavedChangesPlug()->setValue( true );
-		}
-		s->actionSignal()( s, a.get(), Do );
+		s->addAction( action );
 	}
 	else
 	{
-		doFn();
-		if( s && subject != s->unsavedChangesPlug() )
-		{
-			s->unsavedChangesPlug()->setValue( true );
-		}
+		action->doAction();	
 	}
-	
+		
 }
 	
 void Action::doAction()
@@ -88,7 +83,6 @@ void Action::doAction()
 	{
 		throw IECore::Exception( "Action cannot be done again without being undone first." );
 	}
-	m_doFn();
 	m_done = true;
 }
 
@@ -98,6 +92,82 @@ void Action::undoAction()
 	{
 		throw IECore::Exception( "Action cannot be undone without being done first." );
 	}
-	m_undoFn();
 	m_done = false;
 }
+
+bool Action::canMerge( const Action *other ) const
+{
+	return true;
+}
+
+void Action::merge( const Action *other )
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+// SimpleAction implementation and Action::enact() convenience overload.
+//////////////////////////////////////////////////////////////////////////
+
+namespace Gaffer
+{
+
+class SimpleAction : public Action
+{
+
+	public :
+	
+		SimpleAction( const GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
+			:	m_subject( subject ), m_doFn( doFn ), m_undoFn( undoFn )
+		{
+		}
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::SimpleAction, SimpleActionTypeId, Action );
+
+	protected :
+
+		virtual GraphComponent *subject() const
+		{
+			return m_subject.get();
+		}
+
+		void doAction()
+		{
+			Action::doAction();
+			m_doFn();
+		}
+
+		void undoAction()
+		{
+			Action::undoAction();
+			m_undoFn();
+		}
+
+		bool canMerge( const Action *other ) const
+		{
+			return false;
+		}
+
+		void merge( const Action *other )
+		{
+		}
+		
+	private :
+	
+		GraphComponentPtr m_subject;
+		Function m_doFn;
+		Function m_undoFn;
+
+};
+
+IE_CORE_DEFINERUNTIMETYPED( SimpleAction );
+
+void Action::enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
+{
+	/// \todo We might want to optimise away the construction of a SimpleAction
+	/// when we know that enact() will just call doFn and throw it away (when undo
+	/// is disabled). If we do that we should make it easy for other subclasses to do
+	/// the same.
+	enact( new SimpleAction( subject, doFn, undoFn ) );	
+}
+
+} // namespace Gaffer
