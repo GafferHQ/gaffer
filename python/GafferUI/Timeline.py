@@ -142,7 +142,7 @@ class Timeline( GafferUI.EditorWidget ) :
 		self.__frame.setValue( frame )
 		self.getContext().setFrame( frame )
 	
-	def __sliderChanged( self, slider ) :
+	def __sliderChanged( self, slider, reason ) :
 		
 		assert( slider is self.__slider )
 		## \todo Have the rounding come from NumericSlider, and allow the shift

@@ -217,6 +217,65 @@ ValuePlug::Computation::ThreadSpecificComputationStack ValuePlug::Computation::g
 ValuePlug::Computation::ValueCache ValuePlug::Computation::g_valueCache( nullGetter, 1024 * 1024 * 500 );
 
 //////////////////////////////////////////////////////////////////////////
+// SetValueAction implementation
+//////////////////////////////////////////////////////////////////////////
+
+class ValuePlug::SetValueAction : public Gaffer::Action
+{
+
+	public :
+	
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug::SetValueAction, SetValueActionTypeId, Gaffer::Action );
+
+		SetValueAction( ValuePlugPtr plug, IECore::ConstObjectPtr value )
+			:	m_plug( plug ), m_doValue( value ), m_undoValue( plug->m_staticValue )
+		{
+		}
+
+	protected :
+
+		virtual GraphComponent *subject() const
+		{
+			return m_plug.get();
+		}
+		
+		virtual void doAction()
+		{
+			m_plug->setValueInternal( m_doValue, true );
+		}
+		
+		virtual void undoAction()
+		{
+			m_plug->setValueInternal( m_undoValue, true );
+		}
+
+		virtual bool canMerge( const Action *other ) const
+		{
+			if( !Action::canMerge( other ) )
+			{
+				return false;
+			}
+			const SetValueAction *setValueAction = IECore::runTimeCast<const SetValueAction>( other );
+			return setValueAction && setValueAction->m_plug == m_plug;
+		}
+		
+		virtual void merge( const Action *other )
+		{
+			const SetValueAction *setValueAction = static_cast<const SetValueAction *>( other );
+			m_doValue = setValueAction->m_doValue;
+		}
+
+	private :
+
+		ValuePlugPtr m_plug;
+		IECore::ConstObjectPtr m_doValue;
+		IECore::ConstObjectPtr m_undoValue;
+		
+};
+
+IE_CORE_DEFINERUNTIMETYPED( ValuePlug::SetValueAction );
+
+//////////////////////////////////////////////////////////////////////////
 // ValuePlug implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -387,11 +446,7 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 		// plugDirtiedSignal.
 		if( value->isNotEqualTo( m_staticValue ) )
 		{
-			Action::enact( 
-				this,
-				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), value, true ),
-				boost::bind( &ValuePlug::setValueInternal, Ptr( this ), m_staticValue, true )
-			);
+			Action::enact( new SetValueAction( this, value ) );
 		}		
 		return;
 	}

@@ -40,6 +40,7 @@
 
 #include "IECore/Exception.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/TypedPlug.h"
@@ -52,12 +53,136 @@
 
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// ScriptContainer implementation
+//////////////////////////////////////////////////////////////////////////
+
 namespace Gaffer
 {
 
 GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
 
 }
+
+//////////////////////////////////////////////////////////////////////////
+// CompoundAction implementation. We use this to group up all the actions
+// that will become a single undo/redo event.
+//////////////////////////////////////////////////////////////////////////
+
+class ScriptNode::CompoundAction : public Gaffer::Action
+{
+
+	public :
+	
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ScriptNode::CompoundAction, CompoundActionTypeId, Gaffer::Action );
+
+		CompoundAction( ScriptNode *subject, const std::string &mergeGroup )
+			:	m_subject( subject ), m_mergeGroup( mergeGroup )
+		{
+		}
+		
+		void addAction( ActionPtr action )
+		{
+			m_actions.push_back( action );
+		}
+		
+		size_t numActions() const
+		{
+			return m_actions.size();
+		}
+		
+	protected :
+
+		friend class ScriptNode;
+
+		virtual GraphComponent *subject() const
+		{
+			return m_subject;
+		}
+		
+		virtual void doAction()
+		{
+			for( std::vector<ActionPtr>::const_iterator it = m_actions.begin(), eIt = m_actions.end(); it != eIt; ++it )
+			{
+				(*it)->doAction();
+				// we know we're only ever being redone, because the ScriptNode::addAction()
+				// performs the original Do.
+				m_subject->actionSignal()( m_subject, it->get(), Action::Redo );
+			}
+		}
+		
+		virtual void undoAction()
+		{
+			for( std::vector<ActionPtr>::const_reverse_iterator it = m_actions.rbegin(), eIt = m_actions.rend(); it != eIt; ++it )
+			{
+				(*it)->undoAction();
+				m_subject->actionSignal()( m_subject, it->get(), Action::Undo );
+			}
+		}
+		
+		virtual bool canMerge( const Action *other ) const
+		{
+			if( !Action::canMerge( other ) )
+			{
+				return false;
+			}
+			
+			if( !m_mergeGroup.size() )
+			{
+				return false;
+			}
+			
+			const CompoundAction *compoundAction = IECore::runTimeCast<const CompoundAction>( other );
+			if( !compoundAction )
+			{
+				return false;
+			}
+			
+			if( m_mergeGroup != compoundAction->m_mergeGroup )
+			{
+				return false;
+			}
+			
+			if( m_actions.size() != compoundAction->m_actions.size() )
+			{
+				return false;
+			}
+			
+			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
+			{
+				if( !m_actions[i]->canMerge( compoundAction->m_actions[i] ) )
+				{
+					return false;
+				}
+			}
+			
+			return true;
+		}
+		
+		virtual void merge( const Action *other )
+		{
+			const CompoundAction *compoundAction = static_cast<const CompoundAction *>( other );
+			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
+			{
+				m_actions[i]->merge( compoundAction->m_actions[i] );
+			}
+		}
+
+	private :
+
+		// this can't be a smart pointer because then we'd get
+		// a reference cycle between us and the script.
+		ScriptNode *m_subject;
+		std::string m_mergeGroup;
+		std::vector<ActionPtr> m_actions;
+		
+};
+
+IE_CORE_DEFINERUNTIMETYPED( ScriptNode::CompoundAction );
+
+//////////////////////////////////////////////////////////////////////////
+// ScriptNode implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 
@@ -123,6 +248,73 @@ const StandardSet *ScriptNode::selection() const
 	return m_selection;
 }
 
+void ScriptNode::pushUndoState( UndoContext::State state, const std::string &mergeGroup )
+{
+	if( m_undoStateStack.size() == 0 )
+	{
+		assert( m_actionAccumulator==0 );
+		m_actionAccumulator = new CompoundAction( this, mergeGroup );
+	}
+	m_undoStateStack.push( state );
+}
+
+void ScriptNode::addAction( ActionPtr action )
+{
+	action->doAction();
+	if( m_actionAccumulator && m_undoStateStack.top() == UndoContext::Enabled )
+	{
+		m_actionAccumulator->addAction( action );
+		actionSignal()( this, action.get(), Action::Do );
+	}
+}
+
+void ScriptNode::popUndoState()
+{
+	if( !m_undoStateStack.size() )
+	{
+		IECore::msg( IECore::Msg::Warning, "ScriptNode::popUndoState", "Bad undo stack nesting detected" );
+		return;
+	}
+	
+	m_undoStateStack.pop();
+	
+	if( m_undoStateStack.size()==0 )
+	{
+		if( m_actionAccumulator->numActions() )
+		{
+			m_undoList.erase( m_undoIterator, m_undoList.end() );
+			
+			bool merged = false;
+			if( !m_undoList.empty() )
+			{
+				CompoundAction *lastAction = m_undoList.rbegin()->get();
+				if( lastAction->canMerge( m_actionAccumulator ) )
+				{
+					lastAction->merge( m_actionAccumulator );
+					merged = true;
+				}
+			}
+			
+			if( !merged )
+			{
+				m_undoList.insert( m_undoList.end(), m_actionAccumulator );		
+			}
+			
+			m_undoIterator = m_undoList.end();
+			
+			if( !merged )
+			{
+				undoAddedSignal()( this );
+			}
+			
+			UndoContext undoDisabled( this, UndoContext::Disabled );
+			unsavedChangesPlug()->setValue( true );
+		}
+		m_actionAccumulator = 0;
+	}
+	
+}	
+
 bool ScriptNode::undoAvailable() const
 {
 	return m_undoIterator != m_undoList.begin();
@@ -135,15 +327,10 @@ void ScriptNode::undo()
 		throw IECore::Exception( "Nothing to undo" );
 	}
 	m_undoIterator--;
-	for( ActionVector::reverse_iterator it=(*m_undoIterator)->rbegin(); it!=(*m_undoIterator)->rend(); it++ )
-	{
-		(*it)->undoAction();
-		{
-			UndoContext undoDisabled( this, UndoContext::Disabled );
-			unsavedChangesPlug()->setValue( true );
-		}
-		actionSignal()( this, it->get(), Action::Undo );
-	}
+	(*m_undoIterator)->undoAction();
+	
+	UndoContext undoDisabled( this, UndoContext::Disabled );
+	unsavedChangesPlug()->setValue( true );
 }
 
 bool ScriptNode::redoAvailable() const
@@ -157,21 +344,22 @@ void ScriptNode::redo()
 	{
 		throw IECore::Exception( "Nothing to redo" );
 	}
-	for( ActionVector::iterator it=(*m_undoIterator)->begin(); it!=(*m_undoIterator)->end(); it++ )
-	{
-		(*it)->doAction();
-		{
-			UndoContext undoDisabled( this, UndoContext::Disabled );
-			unsavedChangesPlug()->setValue( true );
-		}
-		actionSignal()( this, it->get(), Action::Redo );
-	}
+	
+	(*m_undoIterator)->doAction();
 	m_undoIterator++;
+	
+	UndoContext undoDisabled( this, UndoContext::Disabled );
+	unsavedChangesPlug()->setValue( true );
 }
 
 ScriptNode::ActionSignal &ScriptNode::actionSignal()
 {
 	return m_actionSignal;
+}
+
+ScriptNode::UndoAddedSignal &ScriptNode::undoAddedSignal()
+{
+	return m_undoAddedSignal;
 }
 
 void ScriptNode::copy( const Node *parent, const Set *filter )

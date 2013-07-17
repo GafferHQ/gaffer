@@ -275,7 +275,141 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
 		self.assertEqual( p2.minValue(), p1.minValue() )
 		self.assertEqual( p2.maxValue(), p1.maxValue() )
+	
+	def testNoUndoMergingForDefaultMergeGroup( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug()
+		
+		self.assertFalse( s.undoAvailable() )
+		
+		s["n"]["p"].setValue( 10 )
+		
+		self.assertFalse( s.undoAvailable() )
+		
+		with Gaffer.UndoContext( s ) :
+			s["n"]["p"].setValue( 20 )
 			
+		self.assertTrue( s.undoAvailable() )
+			
+		with Gaffer.UndoContext( s ) :
+			s["n"]["p"].setValue( 30 )
+		
+		self.assertTrue( s.undoAvailable() )
+		
+		s.undo()
+		self.assertTrue( s.undoAvailable() )
+		self.assertEqual( s["n"]["p"].getValue(), 20 )
+		
+		s.undo()
+		self.assertEqual( s["n"]["p"].getValue(), 10 )
+		self.assertFalse( s.undoAvailable() )
+	
+	def testUndoMerging( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug()
+		
+		self.assertEqual( s["n"]["p"].getValue(), 0 )
+		self.assertFalse( s.undoAvailable() )
+		
+		cs = GafferTest.CapturingSlot( s["n"].plugSetSignal() )
+		
+		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+			s["n"]["p"].setValue( 1 )
+		
+		self.assertEqual( len( cs ), 1 )	
+		self.assertEqual( s["n"]["p"].getValue(), 1 )
+		self.assertTrue( s.undoAvailable() )
+				
+		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+			s["n"]["p"].setValue( 2 )
+		
+		self.assertEqual( len( cs ), 2 )	
+		self.assertEqual( s["n"]["p"].getValue(), 2 )
+		self.assertTrue( s.undoAvailable() )
+
+		with Gaffer.UndoContext( s, mergeGroup="test2" ) :
+			s["n"]["p"].setValue( 3 )
+		
+		self.assertEqual( len( cs ), 3 )	
+		self.assertEqual( s["n"]["p"].getValue(), 3 )
+		self.assertTrue( s.undoAvailable() )
+		
+		s.undo()
+		
+		self.assertEqual( len( cs ), 4 )	
+		self.assertEqual( s["n"]["p"].getValue(), 2 )
+		self.assertTrue( s.undoAvailable() )
+		
+		s.undo()
+		
+		self.assertEqual( len( cs ), 5 )	
+		self.assertEqual( s["n"]["p"].getValue(), 0 )
+		self.assertFalse( s.undoAvailable() )
+		
+		s.redo()
+		
+		self.assertEqual( len( cs ), 6 )	
+		self.assertEqual( s["n"]["p"].getValue(), 2 )
+		self.assertTrue( s.undoAvailable() )
+		
+		s.undo()
+
+		self.assertEqual( len( cs ), 7 )	
+		self.assertEqual( s["n"]["p"].getValue(), 0 )
+		self.assertFalse( s.undoAvailable() )
+		
+		s.redo()
+		s.redo()
+
+		self.assertEqual( len( cs ), 9 )	
+		self.assertEqual( s["n"]["p"].getValue(), 3 )
+		self.assertTrue( s.undoAvailable() )
+
+		s.undo()
+		s.undo()
+		self.assertEqual( len( cs ), 11 )	
+		self.assertEqual( s["n"]["p"].getValue(), 0 )
+		self.assertFalse( s.undoAvailable() )
+
+	def testNoUndoMergingForDifferentPlugs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p1"] = Gaffer.IntPlug()
+		s["n"]["p2"] = Gaffer.IntPlug()
+		
+		self.assertFalse( s.undoAvailable() )
+				
+		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+			s["n"]["p1"].setValue( 20 )
+			
+		self.assertTrue( s.undoAvailable() )
+		self.assertEqual( s["n"]["p1"].getValue(), 20 )
+		self.assertEqual( s["n"]["p2"].getValue(), 0 )
+			
+		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+			s["n"]["p2"].setValue( 30 )
+		
+		self.assertTrue( s.undoAvailable() )
+		self.assertEqual( s["n"]["p1"].getValue(), 20 )
+		self.assertEqual( s["n"]["p2"].getValue(), 30 )
+		
+		s.undo()
+
+		self.assertTrue( s.undoAvailable() )
+		self.assertEqual( s["n"]["p1"].getValue(), 20 )
+		self.assertEqual( s["n"]["p2"].getValue(), 0 )
+		
+		s.undo()
+
+		self.assertFalse( s.undoAvailable() )
+		self.assertEqual( s["n"]["p1"].getValue(), 0 )
+		self.assertEqual( s["n"]["p2"].getValue(), 0 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

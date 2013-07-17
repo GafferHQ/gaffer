@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,6 +38,8 @@
 #ifndef GAFFER_UNDOCONTEXT_H
 #define GAFFER_UNDOCONTEXT_H
 
+#include <string>
+
 #include "IECore/RefCounted.h"
 
 namespace Gaffer
@@ -44,6 +47,8 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( ScriptNode );
 
+/// The UndoContext class is used to control the creation of
+/// items on the undo stack held in a ScriptNode.
 class UndoContext
 {
 
@@ -57,14 +62,20 @@ class UndoContext
 		};
 
 		/// Script can be 0, in which case the subsequent actions
-		/// will not be undoable.
-		UndoContext( ScriptNodePtr script, State state=Enabled );
+		/// will not be undoable regardless of the specified state.
+		///
+		/// If mergeGroup is specified and matches the group used by
+		/// the previous UndoContext, then the actions performed will
+		/// be merged with the previous entry on the undo stack if
+		/// possible. This can be used by UI elements to compress a
+		/// series of individual editing events into a single item
+		/// on the undo stack.
+		UndoContext( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
 		~UndoContext();
 
 	private :
 	
 		ScriptNodePtr m_script;
-		unsigned m_stateStackSize;
 
 };
 

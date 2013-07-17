@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2013, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -100,5 +100,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			text = self.__textWidget.getText()
 			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 				self.getPlug().setValue( text )
+
+			# now we've transferred the text changes to the global undo queue, we remove them
+			# from the widget's private text editing undo queue. it will then ignore undo shortcuts,
+			# allowing them to fall through to the global undo shortcut.
+			self.__textWidget.clearUndo()
 
 GafferUI.PlugValueWidget.registerType( Gaffer.StringPlug.staticTypeId(), StringPlugValueWidget )

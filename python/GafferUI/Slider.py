@@ -53,6 +53,8 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # end of the scale along with hard minimum and maximum values.
 class Slider( GafferUI.Widget ) :
 
+	PositionChangedReason = IECore.Enum.create( "Invalid", "SetPositions", "Click", "IndexAdded", "IndexRemoved", "DragBegin", "DragMove", "DragEnd", "Increment" )
+
 	def __init__( self, position=None, positions=None, **kw ) :
 	
 		GafferUI.Widget.__init__( self, _Widget(), **kw )
@@ -76,6 +78,7 @@ class Slider( GafferUI.Widget ) :
 		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		
 	## Convenience function to call setPositions( [ position ] )	
@@ -94,29 +97,41 @@ class Slider( GafferUI.Widget ) :
 
 	def setPositions( self, positions ) :
 	
-		if positions == self.__positions :
-			return
+		self._setPositionsInternal( positions, self.PositionChangedReason.SetPositions )
 				
-		self.__positions = positions
-		self._qtWidget().update()
-			
-		signal = getattr( self, "_positionChangedSignal", None )
-		if signal is not None :
-			signal( self )
-		
 	def getPositions( self ) :
 	
 		return self.__positions
-		
+	
+	## A signal emitted whenever a position has been changed. Slots should
+	# have the signature slot( Slider, PositionChangedReason ).
 	def positionChangedSignal( self ) :
 	
 		signal = getattr( self, "_positionChangedSignal", None )
 		if signal is None :
-			signal = GafferUI.WidgetSignal()
+			signal = Gaffer.Signal2()
 			self._positionChangedSignal = signal
 			
 		return signal
-		
+	
+	## Returns True if a user would expect the specified sequence
+	# of changes to be merged into one undoable event.
+	@classmethod
+	def changesShouldBeMerged( cls, firstReason, secondReason ) :
+	
+		if type( firstReason ) != type( secondReason ) :
+			return False
+	
+		return ( firstReason, secondReason ) in (
+			# click and drag
+			( cls.PositionChangedReason.Click, cls.PositionChangedReason.DragBegin ),
+			( cls.PositionChangedReason.DragBegin, cls.PositionChangedReason.DragMove ),
+			( cls.PositionChangedReason.DragMove, cls.PositionChangedReason.DragMove ),
+			( cls.PositionChangedReason.DragMove, cls.PositionChangedReason.DragEnd ),
+			# increment
+			( cls.PositionChangedReason.Increment, cls.PositionChangedReason.Increment ),			
+		)
+	
 	def indexRemovedSignal( self ) :
 	
 		signal = getattr( self, "_indexRemovedSignal", None )
@@ -175,6 +190,24 @@ class Slider( GafferUI.Widget ) :
 	
 		return self.__minimumSize
 	
+	## May be overridden by derived classes if necessary, but
+	# implementations must call the base class implementation
+	# after performing their own work, as the base class is
+	# responsible for emitting positionChangedSignal().
+	def _setPositionsInternal( self, positions, reason ) :
+	
+		dragBeginOrEnd = reason in ( self.PositionChangedReason.DragBegin, self.PositionChangedReason.DragEnd )
+		if positions == self.__positions and not dragBeginOrEnd :
+			# early out if the positions haven't changed, but not if the
+			# reason is either end of a drag - we always signal those so
+			# that they will always come in matching pairs.
+			return
+				
+		self.__positions = positions
+		self._qtWidget().update()
+		
+		self.__emitPositionChanged( reason )
+
 	## \todo Colours should come from some unified style somewhere
 	def _drawBackground( self, painter ) :
 	
@@ -268,11 +301,11 @@ class Slider( GafferUI.Widget ) :
 		if index is not None :
 			self.setSelectedIndex( index )
 			if len( self.getPositions() ) == 1 :
-				self.__setPosition( index, event.line.p0.x  )
+				self.__setPositionInternal( index, event.line.p0.x, self.PositionChangedReason.Click  )
 		elif self.getSizeEditable() :
 			positions = self.getPositions()[:]
 			positions.append( float( event.line.p0.x ) / self.size().x )
-			self.setPositions( positions )
+			self._setPositionsInternal( positions, self.PositionChangedReason.IndexAdded )
 			self.setSelectedIndex( len( positions ) - 1 )
 			
 		return True
@@ -286,11 +319,19 @@ class Slider( GafferUI.Widget ) :
 		
 	def __dragEnter( self, widget, event ) :
 	
-		return event.sourceWidget is self
+		if event.sourceWidget is self :
+			self.__setPositionInternal( self.getSelectedIndex(), event.line.p0.x, self.PositionChangedReason.DragBegin )
+			return True
+			
+		return False
 		
 	def __dragMove( self, widget, event ) :
 	
-		self.__setPosition( self.getSelectedIndex(), event.line.p0.x )
+		self.__setPositionInternal( self.getSelectedIndex(), event.line.p0.x, self.PositionChangedReason.DragMove )
+
+	def __dragEnd( self, widget, event ) :
+	
+		self.__setPositionInternal( self.getSelectedIndex(), event.line.p0.x, self.PositionChangedReason.DragEnd )
 		
 	def __keyPress( self, widget, event ) :
 	
@@ -301,7 +342,7 @@ class Slider( GafferUI.Widget ) :
 			
 			x = self.getPositions()[self.getSelectedIndex()] * self.size().x
 			x += 1 if event.key in ( "Right", "Up" ) else - 1
-			self.__setPosition( self.getSelectedIndex(), x )
+			self.__setPositionInternal( self.getSelectedIndex(), x, self.PositionChangedReason.Increment )
 			return True
 		
 		elif event.key in ( "Backspace", "Delete" ) :
@@ -313,20 +354,24 @@ class Slider( GafferUI.Widget ) :
 				signal = getattr( self, "_indexRemovedSignal", None )
 				if signal is not None :
 					signal( self, index )
-				signal = getattr( self, "_positionChangedSignal", None )
-				if signal is not None :
-					signal( self )
+				self.__emitPositionChanged( self.PositionChangedReason.IndexRemoved )
 				
 				self._qtWidget().update()
 				return True
 					
 		return False
 		
-	def __setPosition( self, index, widgetX ) :
+	def __setPositionInternal( self, index, widgetX, reason ) :
 
 		positions = self.getPositions()[:]
 		positions[index] = float( widgetX ) / self.size().x
-		self.setPositions( positions )
+		self._setPositionsInternal( positions, reason )
+		
+	def __emitPositionChanged( self, reason ) :
+	
+		signal = getattr( self, "_positionChangedSignal", None )
+		if signal is not None :
+			signal( self, reason )
 		
 class _Widget( QtGui.QWidget ) :
 

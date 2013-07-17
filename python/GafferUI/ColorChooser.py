@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -110,6 +110,8 @@ class ColorSlider( GafferUI.NumericSlider ) :
 				
 class ColorChooser( GafferUI.Widget ) :
 
+	ColorChangedReason = IECore.Enum.create( "Invalid", "SetColor", "Reset" )
+
 	def __init__( self, color=IECore.Color3f( 1 ) ) :
 	
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
@@ -149,7 +151,7 @@ class ColorChooser( GafferUI.Widget ) :
 		swatchRow.append( self.__colorSwatch, expand=True )
 		self.__column.append( swatchRow, expand=True )
 
-		self.__colorChangedSignal = GafferUI.WidgetSignal()
+		self.__colorChangedSignal = Gaffer.Signal2()
 		
 		self.__setSlidersFromColor()
 	
@@ -166,26 +168,26 @@ class ColorChooser( GafferUI.Widget ) :
 		
 	def setColor( self, color ) :
 	
-		if color!=self.__color :
-		
-			self.__color = color
-			self.__setSlidersFromColor()
-			self.__colorSwatch.setColor( color )
-			self.__colorChangedSignal( self )
+		self.__setColorInternal( color, self.ColorChangedReason.SetColor )
 			
 	def getColor( self ) :
 	
 		return self.__color
 
+	## A signal emitted whenever the color is changed. Slots should
+	# have the signature slot( ColorChooser, reason ). The reason
+	# argument may be passed either a ColorChooser.ColorChangedReason
+	# or a Slider.PositionChangedReason to describe the reason for the
+	# change.
 	def colorChangedSignal( self ) :
 	
 		return self.__colorChangedSignal
 
 	def __initialColorPress( self, button, event ) :
 	
-		self.setColor( self.getInitialColor() )
+		self.__setColorInternal( self.getInitialColor(), self.ColorChangedReason.Reset )
 
-	def __sliderChanged( self, slider ) :
+	def __sliderChanged( self, slider, reason ) :
 		
 		newColor = self.__color.__class__( self.__color )	
 		if slider.component in ( "r", "g", "b", "a" ) :
@@ -200,7 +202,22 @@ class ColorChooser( GafferUI.Widget ) :
 		for slider in self.__sliders.values() :
 			slider.setColor( newColor )		
 
-		self.setColor( newColor )
+		self.__setColorInternal( newColor, reason )
+	
+	def __setColorInternal( self, color, reason ) :
+	
+		dragBeginOrEnd = reason in (
+			GafferUI.NumericSlider.PositionChangedReason.DragBegin,
+			GafferUI.NumericSlider.PositionChangedReason.DragEnd
+		)
+		if color != self.__color or dragBeginOrEnd :
+			# we never optimise away drag begin or end, because it's important
+			# that they emit in pairs.		
+			self.__color = color
+			self.__setSlidersFromColor()
+			self.__colorSwatch.setColor( color )
+		
+			self.__colorChangedSignal( self, reason )
 		
 	def __setSlidersFromColor( self ) :
 	
