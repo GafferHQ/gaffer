@@ -1,3 +1,25 @@
+0.70.0
+======
+
+* Added Ganging for CompoundNumericPlugs (#402)
+* Added menu item for loading renderman shaders from file (#125)
+* Added color ramp editing support (#286)
+* Added spline parameter support to RenderManShader::loadShader()
+* Added shader annotations for passing default values to RenderManShader splines
+* Added dividers in the NodeEditor, available to RenderMan shaders via the annotation "parameterName.divider" (#288)
+* Added API for undo merging. 
+* Added ScriptNode::undoAddedSignal() (#103)
+* Fixed hiding of Menu when using the search box
+* Fixed tab focus ordering in NodeEditor (#107)
+* Improved GadgetWidget focus behaviour (#119)
+* Fixed redundant CompoundNumericPlug serialisation (#2)
+* Fixed scrubbing of values for IntPlugs
+* Fixed size issues caused by TabbedContainer size policy (Settings and About window)
+* Fixed bug in Random::affects()
+* Fixed multiple undo entries in virtual sliders, cursor up/down nudging, color choser, and ramps (#400)
+* Fixed Ctrl+C copy shortcut in non-editable MultiLineTextWidgets
+* Hid Shader enabled plug in the UI (#398)
+
 0.69.1
 ======
 
