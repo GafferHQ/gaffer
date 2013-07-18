@@ -96,19 +96,25 @@ def open( menu ) :
 def __open( currentScript, fileName ) :
 
 	application = currentScript.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
-	
-	currentNodes = [ n for n in currentScript.children() if n.isInstanceOf( Gaffer.Node.staticTypeId() ) ]
-	if not currentNodes and not currentScript["fileName"].getValue() :
-		script = currentScript
-	else :	
-		script = Gaffer.ScriptNode()
-
+		
+	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( fileName )
 	script.load()
 
 	application["scripts"].addChild( script )
 	
 	addRecentFile( application, fileName )
+
+	if not currentScript["fileName"].getValue() and not currentScript["unsavedChanges"].getValue() :
+		# the current script is empty - the user will think of the operation as loading
+		# the new script into the current window, rather than adding a new window. so make it
+		# look like that.
+		currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+		newWindow = GafferUI.ScriptWindow.acquire( script )
+		## \todo We probably want a way of querying and setting geometry in the public API
+		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
+		
+		application["scripts"].removeChild( currentScript )
 
 ## A function suitable as the submenu callable for a File/OpenRecent menu item. It must be invoked
 # from a menu which has a ScriptWindow in its ancestry.
