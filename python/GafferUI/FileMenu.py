@@ -53,7 +53,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/OpenDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S" } )
 	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
-	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved } )
+	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved, "active" : __revertToSavedAvailable } )
 	menuDefinition.append( prefix + "/SaveDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Export Selection...", { "command" : exportSelection, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Import...", { "command" : importFile } )
@@ -222,11 +222,17 @@ def revertToSaved( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 
-	if script["fileName"].getValue() :
-		script.load()
-	else :
-		## \todo Warn
-		pass
+	script.load()
+	
+def __revertToSavedAvailable( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	script = scriptWindow.scriptNode()
+	
+	if script["fileName"].getValue() and script["unsavedChanges"].getValue() :
+		return True
+		
+	return False
 
 ## A function suitable as the command for a File/Export Selection... menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.
