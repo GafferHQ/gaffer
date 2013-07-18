@@ -90,9 +90,11 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 	for( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
 	{
 		Context::Scope scopedContext( it->get() );
-		IECore::RendererPtr renderer = createRenderer();
-		
 		ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+
+		createDisplayDirectories( globals );
+
+		IECore::RendererPtr renderer = createRenderer();		
 		outputOptions( globals, renderer );
 		outputCamera( scene, globals, renderer );
 		{
