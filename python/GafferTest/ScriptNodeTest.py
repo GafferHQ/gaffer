@@ -995,6 +995,20 @@ a = A()"""
 		
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		self.assertEqual( s.context().get( "script:name" ), "test" )
+	
+	def testReloadWithCustomVariables( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["variables"].addMember( "test", IECore.IntData( 10 ) )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s["variables"][0]["value"].setValue( 100 )
+		s.load()
+		
+		self.assertEqual( len( s["variables"] ), 1 )
+		self.assertEqual( s["variables"][0]["value"].getValue(), 10 )
 		
 	def tearDown( self ) :
 	
