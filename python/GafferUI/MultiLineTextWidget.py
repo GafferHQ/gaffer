@@ -49,7 +49,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, **kw ) :
 	
-		GafferUI.Widget.__init__( self, QtGui.QPlainTextEdit(), **kw )
+		GafferUI.Widget.__init__( self, _PlainTextEdit(), **kw )
 
 		## \todo This should come from the Style when we get Styles applied to Widgets
 		# (and not just Gadgets as we have currently).
@@ -311,7 +311,25 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def __drop( self, widget, event ) :
 			
 		self.insertText( self.__dropText( event.data ) )
-			
+
+class _PlainTextEdit( QtGui.QPlainTextEdit ) :
+
+	def __init__( self, parent = None ) :
+		
+		QtGui.QPlainTextEdit.__init__( self, parent )
+	
+	def event( self, event ) :
+       
+		if event.type() == event.ShortcutOverride and event == QtGui.QKeySequence.Copy :
+			# QPlainTextEdit doesn't accept this when it's
+			# read only. so we accept it ourselves, which is
+			# enough to reenable copying from a read only
+			# widget with Ctrl+C.
+			event.accept()
+			return True
+
+		return QtGui.QPlainTextEdit.event( self, event )
+		
 class _FocusOutEventFilter( QtCore.QObject ) :
 
 	def __init__( self ) :
