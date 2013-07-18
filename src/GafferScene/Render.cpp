@@ -34,12 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/filesystem.hpp"
+
 #include "IECore/PreWorldRenderable.h"
 #include "IECore/Camera.h"
 #include "IECore/MatrixMotionTransform.h"
 #include "IECore/WorldBlock.h"
 #include "IECore/Light.h"
 #include "IECore/AttributeBlock.h"
+#include "IECore/Display.h"
 
 #include "Gaffer/Context.h"
 
@@ -217,6 +220,23 @@ void Render::outputLights( const ScenePlug *scene, const IECore::CompoundObject 
 		}
 		
 		renderer->illuminate( light->getHandle(), true );
+	}
+}
+
+void Render::createDisplayDirectories( const IECore::CompoundObject *globals ) const
+{
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )
+	{
+		if( const Display *d = runTimeCast<Display>( it->second.get() ) )
+		{
+			boost::filesystem::path fileName( d->getName() );
+			boost::filesystem::path directory = fileName.parent_path();
+			if( !directory.empty() )
+			{
+				boost::filesystem::create_directories( directory );
+			}
+		}
 	}
 }
 

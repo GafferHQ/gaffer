@@ -49,7 +49,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static std::string repr( const Plug *plug )
+static std::string maskedRepr( const Plug *plug, unsigned flagsMask )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
@@ -57,15 +57,21 @@ static std::string repr( const Plug *plug )
 	{
 		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
-		
-	if( plug->getFlags() != Plug::Default )
+	
+	const unsigned flags = plug->getFlags() & flagsMask;
+	if( flags != Plug::Default )
 	{
-		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
+		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
 	}
 		
 	result += ")";
 
 	return result;
+}
+
+static std::string repr( const Plug *plug )
+{
+	return maskedRepr( plug, Plug::All );
 }
 
 static boost::python::tuple outputs( Plug &p )
@@ -84,15 +90,29 @@ static NodePtr node( Plug &p )
 	return p.node();
 }
 
+std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
+{
+	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+}
+
 std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
 	const Plug *plug = static_cast<const Plug *>( graphComponent );
 	if( plug->getFlags( Plug::Serialisable ) )
 	{
+		std::string result;
 		std::string inputIdentifier = serialisation.identifier( plug->getInput<Plug>() );
 		if( inputIdentifier.size() )
 		{
-			return identifier + ".setInput( " + inputIdentifier + " )\n";
+			result += identifier + ".setInput( " + inputIdentifier + " )\n";
+		}
+		if( plug->getFlags( Plug::ReadOnly ) )
+		{
+			result += identifier + ".setFlags( Gaffer.Plug.Flags.ReadOnly, True )\n";
+		}
+		if( result.size() )
+		{
+			return result;
 		}
 	}
 	return "";
@@ -116,6 +136,10 @@ std::string PlugSerialiser::flagsRepr( unsigned flags )
 	if( flags == Plug::Default )
 	{
 		return "Gaffer.Plug.Flags.Default";
+	}
+	else if( flags == Plug::None )
+	{
+		return "Gaffer.Plug.Flags.None";	
 	}
 	
 	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::None };

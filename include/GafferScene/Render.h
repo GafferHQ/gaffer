@@ -78,6 +78,9 @@ class Render : public Gaffer::Node
 		/// Outputs the lights from the scene.
 		void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer ) const;
 		
+		/// Creates the directories necessary to receive the Displays in globals.
+		void createDisplayDirectories( const IECore::CompoundObject *globals ) const;
+		
 		/// Calculates the shutter specified by the globals.
 		Imath::V2f shutter( const IECore::CompoundObject *globals ) const;
 		/// Calculates the full transform for the specified location in the scene, sampling motion according to the attributes at that

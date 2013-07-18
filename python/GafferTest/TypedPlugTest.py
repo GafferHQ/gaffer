@@ -157,6 +157,38 @@ class TypedPlugTest( unittest.TestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
 		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
 		self.assertEqual( p2.getFlags(), p1.getFlags() )
+	
+	def testRepr( self ) :
+	
+		p1 = Gaffer.StringPlug(
+			"p",
+			Gaffer.Plug.Direction.In,
+			"defaultValue",
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly
+		)
+		
+		p2 = eval( repr( p1 ) )
+		
+		self.assertEqual( p2.getName(), p1.getName() )
+		self.assertEqual( p2.direction(), p1.direction() )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
+		self.assertEqual( p2.getFlags(), p1.getFlags() )
+	
+	def testReadOnlySerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.StringPlug( defaultValue = "defaultValue", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].setValue( "apple" )
+		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		ss = s.serialise()
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+				
+		self.assertEqual( s2["n"]["p"].defaultValue(), "defaultValue" )
+		self.assertEqual( s2["n"]["p"].getValue(), "apple" )
+		self.assertEqual( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
 		
 if __name__ == "__main__":
 	unittest.main()

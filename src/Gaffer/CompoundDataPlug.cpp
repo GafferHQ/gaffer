@@ -159,6 +159,14 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const CompoundPlug *paramet
 		}
 	}
 
+	if( parameterPlug->children().size() < 2 )
+	{
+		// we can end up here either if someone has very naughtily deleted
+		// some plugs, or if we're being called during loading and the
+		// child plugs haven't been fully constructed.
+		return 0;
+	}
+
 	name = parameterPlug->getChild<StringPlug>( 0 )->getValue();
 	if( !name.size() )
 	{

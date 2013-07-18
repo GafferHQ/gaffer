@@ -49,46 +49,6 @@ using namespace GafferBindings;
 using namespace GafferImage;
 using namespace GafferImageBindings;
 
-static std::string repr( const Plug *plug )
-{
-	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-	
-	object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
-	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
-	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		object r = pythonDefaultValue.attr( "__repr__" )();
-		extract<std::string> defaultValueExtractor( r );
-		std::string defaultValue = defaultValueExtractor();
-		if( defaultValue.size() && defaultValue[0] != '<' )
-		{
-			result += "defaultValue = " + defaultValue + ", ";
-		}
-		else
-		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Default value for plug \"%s\" cannot be serialised" ) % plug->fullName()	
-				)
-			);
-		}
-	}
-	
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
-	}
-		
-	result += ")";
-
-	return result;
-}
-
 std::string FormatPlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
 {
 	object o( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
@@ -173,7 +133,6 @@ void GafferImageBindings::bindFormatPlug()
 		.def( "defaultValue", &FormatPlug::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &FormatPlug::setValue )
 		.def( "getValue", &FormatPlug::getValue )
-		.def( "__repr__", &repr )
 	;
 	
 	Serialisation::registerSerialiser( static_cast<IECore::TypeId>(FormatPlugTypeId), new FormatPlugSerialiser );

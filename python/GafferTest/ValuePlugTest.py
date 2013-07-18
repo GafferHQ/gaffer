@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -122,7 +122,24 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( o2, IECore.StringData( "pig" ) )
 		self.assertEqual( o3, IECore.StringData( "pig" ) )
 		self.failIf( o2.isSame( o3 ) ) # they shouldn't share cache entries
-		
+	
+	def testReadOnlySerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug( defaultValue = 10, maxValue = 1000, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].setValue( 100 )
+		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		ss = s.serialise()
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+				
+		self.assertEqual( s2["n"]["p"].defaultValue(), 10 )
+		self.assertEqual( s2["n"]["p"].maxValue(), 1000 )
+		self.assertEqual( s2["n"]["p"].getValue(), 100 )
+		self.assertEqual( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
+	
 	def setUp( self ) :
 	
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

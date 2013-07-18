@@ -54,3 +54,15 @@ GafferScene.Displays.registerDisplay(
 		}
 	)
 )
+
+GafferScene.Displays.registerDisplay( 
+	"Batch/Beauty",
+	IECore.Display( 
+		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
+		"exr",
+		"rgba",
+		{
+			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+		}
+	)
+)

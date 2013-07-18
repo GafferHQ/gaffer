@@ -175,11 +175,52 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 	
 		self.assertDefaultNamesAreCorrect( GafferArnold )
 	
+	def testDirectoryCreation( self ) :
 	
+		s = Gaffer.ScriptNode()
+		s["variables"].addMember( "renderDirectory", "/tmp/renderTests" )
+		s["variables"].addMember( "assDirectory", "/tmp/assTests" )
+		
+		s["plane"] = GafferScene.Plane()
+		
+		s["displays"] = GafferScene.Displays()
+		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["displays"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"$renderDirectory/test.####.exr",
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+		
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["fileName"].setValue( "$assDirectory/test.####.ass" )
+		s["render"]["mode"].setValue( "generate" )
+		
+		self.assertFalse( os.path.exists( "/tmp/renderTests" ) )
+		self.assertFalse( os.path.exists( "/tmp/assTests" ) )
+		self.assertFalse( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["render"].execute( [ s.context() ] )
+		
+		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/assTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
+
+		# check it can cope with everything already existing
+
+		s["render"].execute( [ s.context() ] )
+		
+		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/assTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
+		
 	def setUp( self ) :
-	
-		if os.path.exists( "/tmp/test.tif" ) :
-			os.remove( "/tmp/test.tif" )
 				
 		for i in range( 1, 4 ) :
 			if os.path.exists( "/tmp/test.%d.ass" % i ) :
@@ -188,6 +229,21 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 				os.remove( "/tmp/test.%04d.ass" % i )
 			if os.path.exists( "/tmp/test.%04d.tif" % i ) :
 				os.remove( "/tmp/test.%04d.tif" % i )
+
+		for f in (
+			"/tmp/renderTests",
+			"/tmp/assTests/test.0001.ass",
+			"/tmp/assTests",
+			"/tmp/test.tif",
+		) :
+			if os.path.isfile( f ) :
+				os.remove( f )
+			elif os.path.isdir( f ) :
+				os.rmdir( f ) 
+
+	def tearDown( self ) :
+	
+		self.setUp()
 				
 if __name__ == "__main__":
 	unittest.main()

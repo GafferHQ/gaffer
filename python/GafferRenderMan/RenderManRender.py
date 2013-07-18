@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import os
+
 import IECore
 import IECoreRI
 
@@ -62,7 +64,19 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 				
 	def _createRenderer( self ) :
 	
-		return IECoreRI.Renderer( self.__fileName() )
+		fileName = self.__fileName()
+		directory = os.path.dirname( fileName )		
+		if directory :
+			try :
+				os.makedirs( directory )
+			except OSError :
+				# makedirs very unhelpfully raises an exception if
+				# the directory already exists, but it might also
+				# raise if it fails. we reraise only in the latter case.
+				if not os.path.isdir( directory ) :
+					raise
+				
+		return IECoreRI.Renderer( fileName )
 		
 	def _outputWorldProcedural( self, scenePlug, renderer ) :
 			

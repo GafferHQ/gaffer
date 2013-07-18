@@ -37,6 +37,8 @@
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+#include "boost/filesystem/path.hpp"
+#include "boost/filesystem/convenience.hpp"
 
 #include "IECore/Exception.h"
 #include "IECore/SimpleTypedData.h"
@@ -50,6 +52,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 using namespace Gaffer;
 
@@ -202,6 +205,10 @@ ScriptNode::ScriptNode( const std::string &name )
 	frameRangePlug->addChild( frameStartPlug );
 	frameRangePlug->addChild( frameEndPlug );
 	addChild( frameRangePlug );
+	
+	addChild( new CompoundDataPlug( "variables" ) );
+	
+	m_context->set( "script:name", std::string( "" ) );
 	
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
@@ -542,6 +549,16 @@ const Context *ScriptNode::context() const
 	return m_context.get();
 }
 
+CompoundDataPlug *ScriptNode::variablesPlug()
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
+}
+
+const CompoundDataPlug *ScriptNode::variablesPlug() const
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
+}
+
 IntPlug *ScriptNode::frameStartPlug()
 {
 	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
@@ -578,5 +595,19 @@ void ScriptNode::plugSet( Plug *plug )
 	else if( plug == frameEndPlug() )
 	{
 		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );	
+	}
+	else if( plug == variablesPlug() )
+	{
+		IECore::CompoundDataMap values;
+		variablesPlug()->fillCompoundData( values );
+		for( IECore::CompoundDataMap::const_iterator it = values.begin(), eIt = values.end(); it != eIt; ++it )
+		{
+			context()->set( it->first, it->second.get() );
+		}
+	}
+	else if( plug == fileNamePlug() )
+	{
+		boost::filesystem::path fileName( fileNamePlug()->getValue() );
+		context()->set( "script:name", boost::filesystem::basename( fileName ) );
 	}
 }

@@ -57,6 +57,7 @@ IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( ApplicationRoot );
 IE_CORE_FORWARDDECLARE( Context );
 IE_CORE_FORWARDDECLARE( StandardSet );
+IE_CORE_FORWARDDECLARE( CompoundDataPlug );
 
 typedef Container<GraphComponent, ScriptNode> ScriptContainer;
 IE_CORE_DECLAREPTR( ScriptContainer );
@@ -207,14 +208,20 @@ class ScriptNode : public Node
 		//@}
 
 		//! @name Computation context
-		/// This is a default context for computations to be performed in when
-		/// no other context has been specified. There's no requirement to use it,
-		/// and in fact when requesting output from Nodes any context may be used.
-		/// The default context is typically used by the ui components.
+		/// The ScriptNode provides a default context for computations to be
+		/// performed in, and allows the user to define custom variables in
+		/// it via a plug. It also maps the value of fileNamePlug() into
+		/// the script:name variable.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		/// The default context - all computations should be performed
+		/// with this context, or one which inherits its variables.
 		Context *context();
 		const Context *context() const;
+		/// All members of this plug are mapped into custom variables
+		/// in the context.
+		CompoundDataPlug *variablesPlug();
+		const CompoundDataPlug *variablesPlug() const;
 		//@}
 		
 		//! @name Frame range
