@@ -653,7 +653,20 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testDefaultNames( self ) :
 	
 		self.assertDefaultNamesAreCorrect( Gaffer )
-			
+		
+	def testClearChildren( self ) :
+	
+		p = Gaffer.GraphComponent()
+		
+		for i in range( 0, 10 ) :
+			p.addChild( Gaffer.GraphComponent() )
+		
+		self.assertEqual( len( p ), 10 )
+		
+		p.clearChildren()
+		
+		self.assertEqual( len( p ), 0 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
