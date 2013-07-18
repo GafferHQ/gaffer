@@ -86,15 +86,15 @@ class NodeMenu :
 
 	## Utility function to append a menu item to definition.
 	# nodeCreator must be a callable that returns a Gaffer.Node.	
-	def append( self, path, nodeCreator, **kw ) :
+	def append( self, path, nodeCreator, plugValues={}, **kw ) :
 
-		item = IECore.MenuItemDefinition( command = self.nodeCreatorWrapper( nodeCreator=nodeCreator ), **kw )
+		item = IECore.MenuItemDefinition( command = self.nodeCreatorWrapper( nodeCreator=nodeCreator, plugValues=plugValues ), **kw )
 		self.definition().append( path, item )
 
 	## Utility function which takes a callable that creates a node, and returns a new
 	# callable which will add the node to the graph.
 	@staticmethod
-	def nodeCreatorWrapper( nodeCreator ) :
+	def nodeCreatorWrapper( nodeCreator, plugValues={} ) :
 
 		def f( menu ) :
 
@@ -118,7 +118,10 @@ class NodeMenu :
 
 				if node is None :
 					return
-
+				
+				for plugName, plugValue in plugValues.items() :
+					node.descendant( plugName ).setValue( plugValue )
+				
 				if node.parent() is None :
 					graphGadget.getRoot().addChild( node )
 

@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,34 +34,16 @@
 #  
 ##########################################################################
 
-import IECore
+import Gaffer
 
-import GafferScene
+def __scriptAdded( container, script ) :
 
-GafferScene.Displays.registerDisplay( 
-	"Interactive/Beauty",
-	IECore.Display( 
-		"beauty",
-		"ieDisplay",
-		"rgba",
-		{
-			"driverType" : "ClientDisplayDriver",
-			"displayHost" : "localhost",
-			"displayPort" : "1559",
-			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-	)
-)
+	variables = script["variables"]
+	if "projectName" not in variables :
+		projectName = variables.addMember( "project:name", IECore.StringData( "default" ), "projectName" )
+		projectName["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+	if "projectRootDirectory" not in variables :
+		projectRoot = variables.addMember( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory" )
+		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
-GafferScene.Displays.registerDisplay( 
-	"Batch/Beauty",
-	IECore.Display( 
-		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
-		"exr",
-		"rgba",
-		{
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-	)
-)
+__scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
