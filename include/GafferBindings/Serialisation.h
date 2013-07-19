@@ -64,6 +64,8 @@ class Serialisation
 		/// As above, but returns the empty string for built in python types.
 		static std::string modulePath( boost::python::object &object );
 		/// Convenience function to return the name of the class which object is an instance of.
+		/// \note This function can not handle nested classes correctly - Python prior to 3.3
+		/// simply does not provide the information to do so. See http://www.python.org/dev/peps/pep-3155/
 		static std::string classPath( const IECore::RefCounted *object );
 		/// Convenience function to return the name of the class which object is an instance of.
 		static std::string classPath( boost::python::object &object );
