@@ -53,7 +53,7 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 	def _childPlugWidget( self, childPlug ) :
 	
-		return _ChildPlugWidget( childPlug, self._label( childPlug ) )
+		return _MemberPlugValueWidget( childPlug, self._label( childPlug ) )
 		
 	def _footerWidget( self ) :
 	
@@ -93,25 +93,26 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().addOptionalMember( name, value, enabled=True )
 
-class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
+class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, childPlug, label ) :
+	def __init__( self, childPlug, label=None ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 	
 		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
 				
-		if label is not None :
+		if label is not None or not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
 			nameWidget = GafferUI.LabelPlugValueWidget( 
 				childPlug,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 			)
-			nameWidget.label().setText( label )
-			nameWidget.label()._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
+			if label is not None :
+				nameWidget.label().setText( label )
+			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( childPlug["name"] )
-			nameWidget.textWidget()._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
+			nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 			
 		self.__row.append( nameWidget )
 		
@@ -121,6 +122,24 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ), expand = True )
 		
 		self._updateFromPlug()
+	
+	def setPlug( self, plug ) :
+	
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+		
+		if isinstance( self.__row[0], GafferUI.LabelPlugValueWidget ) :
+			self.__row[0].setPlug( plug )
+		else :
+			self.__row[0].setPlug( plug["name"] )
+		
+		if "enabled" in plug :
+			self.__row[1].setPlug( plug["enabled"] )
+		
+		self.__row[-1].setPlug( plug["value"] )
+		
+	def hasLabel( self ) :
+	
+		return True
 		
 	def _updateFromPlug( self ) :
 	
@@ -132,3 +151,4 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 			self.__row[-1].setEnabled( enabled )
 						
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.staticTypeId(), CompoundDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.MemberPlug.staticTypeId(), _MemberPlugValueWidget )
