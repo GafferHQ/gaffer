@@ -39,11 +39,11 @@ import IECore
 
 import Gaffer
 
-class BadNode( Gaffer.DependencyNode ) :
+class BadNode( Gaffer.ComputeNode ) :
 		
 	def __init__( self, name="BadNode" ) :
 
-		Gaffer.DependencyNode.__init__( self, name )
+		Gaffer.ComputeNode.__init__( self, name )
 
 		self.addChild( Gaffer.IntPlug( "in1", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.IntPlug( "in2", Gaffer.Plug.Direction.In ) )
@@ -57,10 +57,17 @@ class BadNode( Gaffer.DependencyNode ) :
 		outputs = []
 		if input.getName() == "in1" :
 			outputs.append( self["out1"] )
-		elif input.getName() == "in1" :
+		elif input.getName() == "in2" :
 			outputs.append( self["out2"] )
 			
 		return outputs
+
+	def hash( self, output, context, h ) :
+	
+		if output.isSame( self["out1"] ) :
+			self["in1"].hash( h )
+		elif output.isSame( self["out2"] ) :
+			self["in2"].hash( h )		
 
 	def compute( self, plug, context ) :
 
