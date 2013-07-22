@@ -47,6 +47,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/CompoundDataPlug.h"
 
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -131,7 +132,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 			const std::string s = readFile( fileNamePlug()->getValue() );
 			
-			deleteNodes();			
+			deleteNodes();
+			variablesPlug()->clearChildren();
+
 			execute( s );
 			
 			UndoContext undoDisabled( this, UndoContext::Disabled );

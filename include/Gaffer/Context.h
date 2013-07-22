@@ -125,6 +125,8 @@ class Context : public IECore::RefCounted
 		static const Context *current();
 		
 	private :
+
+		void substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const;
 	
 		IECore::CompoundDataPtr m_data;
 		ChangedSignal *m_changedSignal;

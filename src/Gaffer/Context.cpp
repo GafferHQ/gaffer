@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -121,9 +122,19 @@ bool Context::operator != ( const Context &other ) const
 std::string Context::substitute( const std::string &s ) const
 {
 	std::string result;
-	size_t size = s.size();
-	result.reserve( size ); // might need more or less, but this is a decent ballpark
-	for( size_t i=0; i<size; )
+	result.reserve( s.size() ); // might need more or less, but this is a decent ballpark
+	substituteInternal( s, result, 0 );
+	return result;
+}
+
+void Context::substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const
+{
+	if( recursionDepth > 8 )
+	{
+		throw IECore::Exception( "Context::substitute() : maximum recursion depth reached." );
+	}
+
+	for( size_t i=0, size=s.size(); i<size; )
 	{
 		if( s[i] == '$' )
 		{
@@ -149,21 +160,13 @@ std::string Context::substitute( const std::string &s ) const
 				}
 			}
 			
-			const IECore::Data *d = 0;
-			try
-			{
-				d = get<IECore::Data>( variableName );
-			}
-			catch( ... )
-			{
-			}
-			
+			const IECore::Data *d = get<IECore::Data>( variableName, 0 );
 			if( d )
 			{
 				switch( d->typeId() )
 				{
 					case IECore::StringDataTypeId :
-						result += static_cast<const IECore::StringData *>( d )->readable();
+						substituteInternal( static_cast<const IECore::StringData *>( d )->readable(), result, recursionDepth + 1 );
 						break;
 					case IECore::FloatDataTypeId :
 						result += boost::lexical_cast<std::string>(
@@ -179,6 +182,11 @@ std::string Context::substitute( const std::string &s ) const
 						break;
 				}
 			}
+			else if( const char *v = getenv( variableName.c_str() ) )
+			{
+				// variable not in context - try environment
+				result += v;
+			}
 		}
 		else if( s[i] == '#' )
 		{
@@ -193,14 +201,20 @@ std::string Context::substitute( const std::string &s ) const
 			padder << std::setw( padding ) << std::setfill( '0' ) << frame;
 			result += padder.str();
 		}
+		else if( s[i] == '~' && result.size()==0 )
+		{
+			if( const char *v = getenv( "HOME" ) )
+			{
+				result += v;
+			}
+			i++;
+		}
 		else
 		{
 			result.push_back( s[i] );
 			i++;
 		}
 	}
-
-	return result;
 }
 
 //////////////////////////////////////////////////////////////////////////

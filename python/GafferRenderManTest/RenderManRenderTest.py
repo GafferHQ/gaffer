@@ -202,15 +202,70 @@ class RenderManRenderTest( unittest.TestCase ) :
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "DynamicLoad" in rib )
 		self.assertFalse( "Polygon" in rib )
+	
+	def testDirectoryCreation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["variables"].addMember( "renderDirectory", "/tmp/renderTests" )
+		s["variables"].addMember( "ribDirectory", "/tmp/ribTests" )
+		
+		s["plane"] = GafferScene.Plane()
+		
+		s["displays"] = GafferScene.Displays()
+		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["displays"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"$renderDirectory/test.####.exr",
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+		
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["ribFileName"].setValue( "$ribDirectory/test.####.rib" )
+		s["render"]["mode"].setValue( "generate" )
+		
+		self.assertFalse( os.path.exists( "/tmp/renderTests" ) )
+		self.assertFalse( os.path.exists( "/tmp/ribTests" ) )
+		self.assertFalse( os.path.exists( "/tmp/ribTests/test.0001.rib" ) )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["render"].execute( [ s.context() ] )
+		
+		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/ribTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/ribTests/test.0001.rib" ) )
+
+		# check that having the directories already exist is ok too
+		
+		s["render"].execute( [ s.context() ] )
+
+		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/ribTests" ) )
+		self.assertTrue( os.path.exists( "/tmp/ribTests/test.0001.rib" ) )
 		
 	def setUp( self ) :
 	
 		for f in (
 			"/tmp/test.tif",
-			"/tmp/test.rib"
+			"/tmp/test.rib",
+			"/tmp/test.gfr",
+			"/tmp/renderTests",
+			"/tmp/ribTests/test.0001.rib",
+			"/tmp/ribTests",			
 		) :
-			if os.path.exists( f ) :
+			if os.path.isfile( f ) :
 				os.remove( f )
+			elif os.path.isdir( f ) :
+				os.rmdir( f )
+
+	def tearDown( self ) :
+	
+		self.setUp()
 				
 if __name__ == "__main__":
 	unittest.main()

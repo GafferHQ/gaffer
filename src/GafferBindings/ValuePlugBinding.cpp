@@ -53,7 +53,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static std::string repr( const Plug *plug )
+static std::string maskedRepr( const Plug *plug, unsigned flagsMask )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 	
@@ -83,14 +83,21 @@ static std::string repr( const Plug *plug )
 		}
 	}
 	
-	if( plug->getFlags() != Plug::Default )
+	const unsigned flags = plug->getFlags() & flagsMask;
+	if( flags != Plug::Default )
 	{
-		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
+		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
 	}
-		
+			
 	result += ")";
 
 	return result;
+
+}
+
+static std::string repr( const Plug *plug )
+{
+	return maskedRepr( plug, Plug::All );
 }
 
 void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
@@ -108,6 +115,11 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 			modules.insert( module );
 		}
 	}
+}
+
+std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
+{
+	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 }
 
 std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const

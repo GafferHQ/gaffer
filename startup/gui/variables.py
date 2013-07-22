@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -36,29 +35,15 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode.staticTypeId(),
-	"unsavedChanges",
-	None
-)
+def __scriptAdded( container, script ) :
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode.staticTypeId(),
-	"frameRange",
-	GafferUI.CompoundNumericPlugValueWidget
-)
+	variables = script["variables"]
+	if "projectName" not in variables :
+		projectName = variables.addMember( "project:name", IECore.StringData( "default" ), "projectName" )
+		projectName["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+	if "projectRootDirectory" not in variables :
+		projectRoot = variables.addMember( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory" )
+		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode.staticTypeId(),
-	"variables",
-	lambda plug : GafferUI.CompoundDataPlugValueWidget( plug, collapsed=None ),
-)
-
-GafferUI.Metadata.registerPlugValue( 
-	Gaffer.ScriptNode.staticTypeId(),
-	"variables",
-	"nodeUI:section",
-	"Variables",
-)
+__scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )

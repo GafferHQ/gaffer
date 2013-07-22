@@ -51,32 +51,6 @@ using namespace GafferBindings;
 using namespace Gaffer;
 
 template<typename T>
-static std::string typedPlugRepr( const T *plug )
-{
-	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
-	
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-	
-	typename T::ValueType defaultValue = plug->defaultValue();
-	if( defaultValue!=typename T::ValueType() )
-	{
-		result += "defaultValue = " + IECorePython::repr( defaultValue ) + ", ";
-	}
-	
-	if( plug->getFlags() != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
-	}
-	
-	result += ")";
-
-	return result;
-}
-
-template<typename T>
 static void bind()
 {
 	typedef typename T::ValueType V;
@@ -95,7 +69,6 @@ static void bind()
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )
-		.def( "repr", &typedPlugRepr<T> )
 	;
 	
 }

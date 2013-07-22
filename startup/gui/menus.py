@@ -72,7 +72,14 @@ try :
 	
 	nodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
 	nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
-	nodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender, searchText = "ArnoldRender" )
+	nodeMenu.append(
+		"/Arnold/Render", GafferArnold.ArnoldRender,
+		plugValues = {
+			## \todo Remove the nonsensical leading slash once Gaffer.Path does relative paths properly.
+			"fileName" : "/${project:rootDirectory}/asses/${script:name}/${script:name}.####.ass",
+		},
+		searchText = "ArnoldRender"
+	)
 
 except Exception, m :
 
@@ -90,7 +97,14 @@ try :
 	
 	nodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
 	nodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
-	nodeMenu.append( "/RenderMan/Render", GafferRenderMan.RenderManRender, searchText = "RenderManRender" )
+	nodeMenu.append(
+		"/RenderMan/Render", GafferRenderMan.RenderManRender,
+		plugValues = {
+			## \todo Remove the nonsensical leading slash once Gaffer.Path does relative paths properly.
+			"ribFileName" : "/${project:rootDirectory}/ribs/${script:name}/${script:name}.####.rib",
+		},
+		searchText = "RenderManRender"
+	)
 	nodeMenu.append( "/RenderMan/InteractiveRender", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRender" )
 
 except Exception, m :

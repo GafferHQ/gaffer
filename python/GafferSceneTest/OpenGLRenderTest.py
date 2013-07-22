@@ -96,24 +96,55 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		self.assertAlmostEqual( r.floatPrimVar( e.R() ), 0.666666, 5 )
 		self.assertAlmostEqual( r.floatPrimVar( e.G() ), 0.666666, 5 )
 		self.assertEqual( r.floatPrimVar( e.B() ), 0 )
+
+	def testDisplayDirectoryCreation( self ) :
+				
+		s = Gaffer.ScriptNode()
+		s["variables"].addMember( "renderDirectory", "/tmp/openGLRenderTest" )
+		
+		s["plane"] = GafferScene.Plane()
+		
+		s["displays"] = GafferScene.Displays()
+		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["displays"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"$renderDirectory/test.####.exr",
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+		
+		s["render"] = GafferScene.OpenGLRender()
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		
+		self.assertFalse( os.path.exists( "/tmp/openGLRenderTest" ) )
+		self.assertFalse( os.path.exists( "/tmp/openGLRenderTest/test.0001.exr" ) )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["render"].execute( [ s.context() ] )
+		
+		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest" ) )
+		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest/test.0001.exr" ) )
 				
 	def setUp( self ) :
 			
 		for f in (
 			"/tmp/test.exr",
-			"/tmp/test.gfr"
+			"/tmp/test.gfr",
+			"/tmp/openGLRenderTest/test.0001.exr",
+			"/tmp/openGLRenderTest",
 		) :
-			if os.path.exists( f ) :
+			if os.path.isfile( f ) :
 				os.remove( f )
-	
+			elif os.path.isdir( f ) :
+				os.rmdir( f )
+				
 	def tearDown( self ) :
 	
-		for f in (
-			"/tmp/test.exr",
-			"/tmp/test.gfr"
-		) :
-			if os.path.exists( f ) :
-				os.remove( f )
+		self.setUp()
 				
 if __name__ == "__main__":
 	unittest.main()
