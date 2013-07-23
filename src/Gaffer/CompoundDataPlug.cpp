@@ -65,23 +65,28 @@ bool CompoundDataPlug::MemberPlug::acceptsChild( const Gaffer::GraphComponent *p
 	{
 		return false;
 	}
-	
-	if( children().size() >= 3 )
-	{
-		return false;
-	}
-	
-	if( potentialChild->isInstanceOf( StringPlug::staticTypeId() ) &&
-		potentialChild->getName() == "name" )
+		
+	if(
+		potentialChild->isInstanceOf( StringPlug::staticTypeId() ) &&
+		potentialChild->getName() == "name" &&
+		!getChild<Plug>( "name" )
+	)
 	{
 		return true;
 	}
-	else if( potentialChild->isInstanceOf( ValuePlug::staticTypeId() ) &&
-			 potentialChild->getName() == "value" )
+	else if(
+		potentialChild->isInstanceOf( ValuePlug::staticTypeId() ) &&
+		potentialChild->getName() == "value" &&
+		!getChild<Plug>( "value" )
+	)
 	{
 		return true;
-	} else if( potentialChild->isInstanceOf( BoolPlug::staticTypeId() ) &&
-			   potentialChild->getName() == "enabled" )
+	}
+	else if(
+		potentialChild->isInstanceOf( BoolPlug::staticTypeId() ) &&
+		potentialChild->getName() == "enabled" &&
+		!getChild<Plug>( "enabled" )
+	)
 	{
 		return true;
 	}

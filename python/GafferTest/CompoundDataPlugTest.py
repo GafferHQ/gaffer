@@ -209,7 +209,10 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		self.assertRaises( RuntimeError, p.addChild, Gaffer.CompoundPlug() )
 		
 		m = p.addMember( "a", IECore.IntData( 10 ) )
-		self.assertRaises( RuntimeError, p.addChild, Gaffer.IntPlug() )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug() )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.StringPlug( "name" ) )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug( "name" ) )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug( "value" ) )
 		
 	def testSerialisation( self ) :
 	
