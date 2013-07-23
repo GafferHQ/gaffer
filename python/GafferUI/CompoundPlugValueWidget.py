@@ -166,7 +166,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _childPlugWidget( self, childPlug ) :
 	
 		result = GafferUI.PlugValueWidget.create( childPlug )
-		if result is not None and not isinstance( result, CompoundPlugValueWidget ) :
+		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() :
 			result = GafferUI.PlugWidget( result )
 
 		return result

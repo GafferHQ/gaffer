@@ -98,7 +98,7 @@ template<typename BaseType>
 void ContextVariables<BaseType>::processContext( Context *context ) const
 {
 	std::string name;
-	for( CompoundPlugIterator it( variablesPlug() ); it != it.end(); it++ )
+	for( CompoundDataPlug::MemberPlugIterator it( variablesPlug() ); it != it.end(); it++ )
 	{
 		IECore::DataPtr data = variablesPlug()->memberDataAndName( *it, name );
 		if( data )

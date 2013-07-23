@@ -121,6 +121,24 @@ GafferUI.NodeUI.registerNodeUI( Gaffer.Box.staticTypeId(), BoxNodeUI )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "out[0-9]*" ), None )
 
+def __plugValueWidgetCreator( plug ) :
+
+	# when a plug has been promoted, we get the widget that would
+	# have been used to represent the internal plug, and then 
+	# call setPlug() with the external plug. this allows us to
+	# transfer custom uis from inside the box to outside the box.	
+	box = plug.node()
+	for output in plug.outputs() :
+		if box.plugIsPromoted( output ) :
+			widget = GafferUI.PlugValueWidget.create( output )
+			if widget is not None :
+				widget.setPlug( plug )
+			return widget
+			
+	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+		
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), "user.*" , __plugValueWidgetCreator )
+
 # Plug promotion
 ##########################################################################
 

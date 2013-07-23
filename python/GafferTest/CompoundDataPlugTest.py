@@ -169,12 +169,14 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		m1 = p1.addMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
 
 		p2 = p1.createCounterpart( "c", Gaffer.Plug.Direction.Out )
+		self.assertEqual( p2.typeName(), p1.typeName() )
 		self.assertEqual( p2.getName(), "c" )
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
 		self.assertEqual( len( p2 ), len( p1 ) )
 		self.assertEqual( p2.getFlags(), p1.getFlags() )
 		
 		m2 = p2["member1"]
+		self.assertEqual( m2.typeName(), m1.typeName() )
 		self.assertEqual( m2.getFlags(), m1.getFlags() )
 		self.assertEqual( m2.direction(), Gaffer.Plug.Direction.Out )
 		self.assertEqual( m2.keys(), m1.keys() )
@@ -198,7 +200,45 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		self.assertEqual( m2.getFlags(), Gaffer.Plug.Flags.Default )
 		
 		self.assertEqual( p.memberDataAndName( m2 ), ( IECore.IntData( 5 ), "b" ) )
+	
+	def testAdditionalChildrenRejected( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
 		
+		self.assertRaises( RuntimeError, p.addChild, Gaffer.IntPlug() )
+		self.assertRaises( RuntimeError, p.addChild, Gaffer.CompoundPlug() )
+		
+		m = p.addMember( "a", IECore.IntData( 10 ) )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug() )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.StringPlug( "name" ) )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug( "name" ) )
+		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug( "value" ) )
+		
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].addMember( "a", IECore.IntData( 10 ), "a" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+				
+		self.assertEqual(
+			s["n"]["p"].memberDataAndName( s["n"]["p"]["a"] ), 
+			s2["n"]["p"].memberDataAndName( s2["n"]["p"]["a"] ), 
+		)
+	
+	def testMemberPlugRepr( self ) :
+	
+		p = Gaffer.CompoundDataPlug.MemberPlug( "mm", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		p2 = eval( repr( p ) )
+		
+		self.assertEqual( p.getName(), p2.getName() )
+		self.assertEqual( p.direction(), p2.direction() )
+		self.assertEqual( p.getFlags(), p2.getFlags() )
+				
 if __name__ == "__main__":
 	unittest.main()
 	
