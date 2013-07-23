@@ -48,7 +48,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static std::string memberPlugRepr( const CompoundDataPlug::MemberPlug *plug )
+static std::string maskedMemberPlugRepr( const CompoundDataPlug::MemberPlug *plug, unsigned flagsMask )
 {
 	// the only reason we have a different __repr__ implementation than Gaffer::Plug is
 	// because we can't determine the nested class name from a PyObject.
@@ -59,14 +59,20 @@ static std::string memberPlugRepr( const CompoundDataPlug::MemberPlug *plug )
 		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
 	
-	if( plug->getFlags() != Plug::Default )
+	const unsigned flags = plug->getFlags() & flagsMask;
+	if( flags != Plug::Default )
 	{
-		result += "flags = " + PlugSerialiser::flagsRepr( plug->getFlags() ) + ", ";
+		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
 	}
 		
 	result += ")";
 
 	return result;
+}
+
+static std::string memberPlugRepr( const CompoundDataPlug::MemberPlug *plug )
+{
+	return maskedMemberPlugRepr( plug, Plug::All );
 }
 
 static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::Direction direction, unsigned flags, tuple children )
@@ -113,6 +119,11 @@ class MemberPlugSerialiser : public CompoundPlugSerialiser
 
 	public :
 	
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		{
+			return maskedMemberPlugRepr( static_cast<const CompoundDataPlug::MemberPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+		}
+		
 		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 		{
 			// if the parent is dynamic then all the children will need construction.
