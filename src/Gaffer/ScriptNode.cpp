@@ -192,7 +192,7 @@ IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 size_t ScriptNode::g_firstPlugIndex = 0;
 
 ScriptNode::ScriptNode( const std::string &name )
-	:	Node( name ), m_selection( new StandardSet ), m_undoIterator( m_undoList.end() ), m_context( new Context )
+	:	Node( name ), m_selection( new StandardSet ), m_selectionOrphanRemover( m_selection ), m_undoIterator( m_undoList.end() ), m_context( new Context )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -212,7 +212,6 @@ ScriptNode::ScriptNode( const std::string &name )
 	
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
-	childRemovedSignal().connect( boost::bind( &ScriptNode::childRemoved, this, ::_1, ::_2 ) );
 	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
 }
 
@@ -579,15 +578,9 @@ const IntPlug *ScriptNode::frameEndPlug() const
 	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
-void ScriptNode::childRemoved( GraphComponent *parent, GraphComponent *child )
-{
-	m_selection->remove( child );
-}
-
 void ScriptNode::plugSet( Plug *plug )
 {
-	/// \todo Should we introduce some plug constraints classes to assist in managing these
-	/// kinds of relationships?
+	/// \todo Implement this min/max behaviour enforcement as a Behaviour subclass.
 	if( plug == frameStartPlug() )
 	{
 		frameEndPlug()->setValue( std::max( frameEndPlug()->getValue(), frameStartPlug()->getValue() ) );

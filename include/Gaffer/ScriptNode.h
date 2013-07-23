@@ -47,6 +47,7 @@
 #include "Gaffer/Set.h"
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/Action.h"
+#include "Gaffer/Behaviours/OrphanRemover.h"
 
 typedef struct _object PyObject;
 
@@ -238,6 +239,7 @@ class ScriptNode : public Node
 		
 		bool selectionSetAcceptor( const Set *s, const Set::Member *m );
 		StandardSetPtr m_selection;
+		Behaviours::OrphanRemover m_selectionOrphanRemover;
 
 		IE_CORE_FORWARDDECLARE( CompoundAction );
 
@@ -266,7 +268,6 @@ class ScriptNode : public Node
 			
 		ContextPtr m_context;
 		
-		void childRemoved( GraphComponent *parent, GraphComponent *child );
 		void plugSet( Plug *plug );
 
 		static size_t g_firstPlugIndex;
