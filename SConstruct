@@ -485,7 +485,7 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "70",
+	GAFFER_MINOR_VERSION = "71",
 	GAFFER_PATCH_VERSION = "0",
 
 )
