@@ -65,7 +65,14 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	# added to and removed from the set, the UI will be updated automatically
 	# to show them. If the set is not scriptNode.selection(), then an OrphanRemover
 	# will be applied automatically to the set so that deleted nodes are not
-	# visible in the UI.	
+	# visible in the UI.
+	# \todo Although the OrphanRemover behaviour is convenient for our current use cases
+	# where it prevents the callers of setNodeSet() from having to worry about nodes
+	# being deleted, it might not be ideal in all cases. For instance the same set may be
+	# reused across multiple NodeSetEditors and end up with multiple OrphanRemovers applied.
+	# We might like to consider an API where the behaviours applied to a given object can be
+	# queried, or we could make it the responsibility of the caller to apply an OrphanRemover
+	# explicitly where appropriate.
 	def setNodeSet( self, nodeSet ) :
 	
 		self.__setNodeSetInternal( nodeSet, callUpdateFromSet=True )
