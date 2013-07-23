@@ -39,6 +39,7 @@
 
 #include "IECorePython/IECoreBinding.h"
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 
@@ -109,6 +110,16 @@ class CompoundNumericPlugSerialiser : public CompoundPlugSerialiser
 };
 
 template<typename T>
+static void setValue( T *plug, const typename T::ValueType value )
+{
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	plug->setValue( value );
+}
+
+
+template<typename T>
 static void bind()
 {
 	typedef typename T::ValueType V;
@@ -131,7 +142,7 @@ static void bind()
 		.def( "hasMaxValue", &T::hasMaxValue )
 		.def( "minValue", &T::minValue )
 		.def( "maxValue", &T::maxValue )
-		.def( "setValue", &T::setValue )
+		.def( "setValue", &setValue<T> )
 		.def( "getValue", &T::getValue )
 		.def( "__repr__", &compoundNumericPlugRepr<T> )
 		.def( "canGang", &T::canGang )
