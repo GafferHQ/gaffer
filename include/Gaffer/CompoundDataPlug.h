@@ -67,19 +67,39 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
+		/// The plug type used to represent the data members.
+		class MemberPlug : public CompoundPlug
+		{
+	
+			public :
+
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug::MemberPlug, CompoundDataMemberPlugTypeId, Gaffer::CompoundPlug );
+
+				MemberPlug( const std::string &name=defaultName<MemberPlug>(), Direction direction=In, unsigned flags=Default );
+				
+				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+				virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+	
+		};
+		
+		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, MemberPlug> > MemberPlugIterator;
+		IE_CORE_DECLAREPTR( MemberPlug )
+
 		/// Adds a CompoundPlug to represent a CompoundData member with the specified name and value.
-		Gaffer::CompoundPlug *addMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );
-		Gaffer::CompoundPlug *addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1" );
+		/// \todo Consider replacing all these add*Member() methods with convenience constructors on MemberPlug,
+		/// and a simple addChild( new MemberPlug( ... ) ).
+		MemberPlug *addMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );
+		MemberPlug *addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1" );
 		/// As above, but adds an additional BoolPlug to allow the user to control whether or not
 		/// this particular member is enabled.
-		Gaffer::CompoundPlug *addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic, bool enabled = false );
-		Gaffer::CompoundPlug *addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1", bool enabled = false );
+		MemberPlug *addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic, bool enabled = false );
+		MemberPlug *addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1", bool enabled = false );
 		void addMembers( const IECore::CompoundData *parameters );
 		
 		/// Returns the value for the member specified by the child parameterPlug, and fills name with the
 		/// name for the member. If the user has disabled the member or the name is the empty string, then
 		/// 0 is returned.
-		IECore::DataPtr memberDataAndName( const CompoundPlug *parameterPlug, std::string &name ) const;
+		IECore::DataPtr memberDataAndName( const MemberPlug *parameterPlug, std::string &name ) const;
 
 		/// Fills the CompoundDataMap with values based on the child plugs of this node.
 		void fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const;
