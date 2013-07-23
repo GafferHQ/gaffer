@@ -6,6 +6,7 @@ It is composed of the following appendices:
 
 * xref:appendices_hotkeys[Appendix A: Hotkeys]
 * xref:appendices_scriptingNuggets[Appendix B: Scripting Nuggets]
+* xref:appendices_rendermanShaderWriting[Appendix C: RenderMan Shader Writing]
 
 
 
@@ -104,5 +105,126 @@ for i in range(1,120):
 [source, python]
 ------------------------------------
 script['RenderManRender'].execute( [script.context()] )
+------------------------------------
+
+* Get the file name of the open script
+[source, python]
+------------------------------------
+script['fileName'].getValue()
+------------------------------------
+
+* Create a RenderManShader node pointing to a specific shader on disk
+[source, python]
+------------------------------------
+import GafferRenderMan
+import os
+
+shaderNode = GafferRenderMan.RenderManShader("shaderNode")
+script.addChild( shaderNode )
+shaderNode["name"].setValue('myShaderNode')
+shaderNode["type"].setValue('ri:surface')
+shaderNode.loadShader( '/path/to/my/shader' )
+------------------------------------
+
+
+
+=== RenderMan Shader Writing anchor:appendices_rendermanShaderWriting[]
+
+Gaffer allows RenderMan shader writers to provide information about shaders and their parameters in the form of *annotations*. This metadata is then used by Gaffer to draw suitable shader interface elements in its various Editor panels. In this manner GUIs for shaders can be provided to end users.
+
+The annotation system is derived from the metadata section of the +++<a href="https://github.com/imageworks/OpenShadingLanguage/blob/master/src/doc/osl-languagespec.pdf?raw=true">OSL Language Spec</a>+++. Gaffer supports a subset of these tags, and introduces the extensions *activator* and *divider*.
+
+Annotations are optional and Gaffer will provide default appearances for all shader parameter types if given no other instruction.
+
+.Available Annotations
+[options="header",cols="20%,80%"]
+|=======================
+|Annotation|Use
+|label		|Can be used to override the label drawn for the plug. Value of label will be displayed as-is (i.e. you must include your own <space> characters)
+|help		|Allows small documentation strings to be attached to parameters. The help strings are shown in popup tooltips when users hovers over a parameter labels.
+|page		|Parameters can be arranged into collapsible boxes by specifying 'page' annotations. Matching page values result in those parameters appearing grouped together.
+|widget		|Allows parameters to drawn as one of the specific widget types. The available widgets are:
+
+mapper : A pop-up menu with associative choices (an enumerated type, if the values are integers). This widget further the annotation "options", a ‘\|’-delimited string with “key:value” pairs.
+
+popup : A pop-up menu of literal choices. This widget further the annotation "options", a ‘\|’-delimited string with “key:value” pairs. 
+
+checkBox : A boolean widget displayed as a checkbox.
+
+filename : Treats a string as a file path. Adds file browser button, and enables Gaffer's in place path editing.
+
+null : Hides the parameter.
+|min		|Minimum value a numeric parameter can have.
+|max		|Maximum value a numeric parameter can have.
+|divider	|A horizontal divider bar is drawn below any parameters with this annotation. 
+|======================
+
+------------------------------------
+Example shader:
+
+surface annotationsExample(
+
+uniform float labelParam = 1;
+#pragma annotation "labelParam.label" "Special Label"
+
+
+uniform float helpParam = 1;
+#pragma annotation "helpParam.help" "This is some help."
+
+
+uniform float mapperParam = 1;
+#pragma annotation "mapperParam.widget" "mapper"
+#pragma annotation "mapperParam.options" "Mode A:1|Mode B:2"
+
+uniform string popupParam = "this";
+#pragma annotation "popupParam.widget" "popup"
+#pragma annotation "popupParam.options" "this|that|theOther"
+
+uniform float checkBoxParam = 1;
+#pragma annotation "checkBoxParam.widget" "checkBox"
+
+uniform string fileNameParam = "/foo/bar";
+#pragma annotation "fileNameParam.widget" "filename"
+
+uniform float nullParam = 1;
+#pragma annotation "nullParam.widget" "null"
+
+
+uniform float minMaxParam = 1;
+#pragma annotation "minMaxParam.min" "-5"
+#pragma annotation "minMaxParam.max" "5"
+
+
+uniform float dividerParam = 1;
+#pragma annotation "dividerParam.divider" "1"
+
+
+uniform float activatorParamA = 1;
+uniform float activatorParamB = 0;
+#pragma annotation "activator.activator1.expression" "activatorParamA"
+#pragma annotation "activator.activator2.expression" "activatorParamA and activatorParamB"
+
+uniform string enabledParam = "foo";
+#pragma annotation "enabledParam.activator" "activator1"
+uniform string disabledParam = "foo";
+#pragma annotation "disabledParam.activator" "activator2"
+
+
+uniform float pageParam1 = 1;
+uniform float pageParam2 = 1;
+#pragma annotation "pageParam1.page" "My Page A"
+#pragma annotation "pageParam2.page" "My Page A"
+#pragma annotation "page.My Page B.collapsed" "True"
+
+uniform float pageParam3 = 1;
+uniform float pageParam4 = 1;
+#pragma annotation "pageParam3.page" "My Page B"
+#pragma annotation "pageParam4.page" "My Page B"
+#pragma annotation "page.My Page B.collapsed" "False"
+)
+{
+	Oi = 1;
+	Ci = 1;
+}
 ------------------------------------
 

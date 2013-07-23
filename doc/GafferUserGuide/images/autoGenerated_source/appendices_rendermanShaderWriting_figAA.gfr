@@ -1,0 +1,12 @@
+import Gaffer
+import GafferRenderMan
+import IECore
+
+__children = {}
+
+parent["frameRange"]["start"].setValue( 1 )
+parent["frameRange"]["end"].setValue( 100 )
+
+
+del __children
+
