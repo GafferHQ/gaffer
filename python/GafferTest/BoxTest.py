@@ -449,6 +449,27 @@ class BoxTest( unittest.TestCase ) :
 		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["g"] ) )
 		self.assertFalse( b.plugIsPromoted( b["n"]["c"]["b"] ) )
 		self.assertTrue( p.node() is None )
+	
+	def testDeletedNodesAreUnselected( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"], s["n2"] ] ) )
+		
+		s.selection().add( b["n1"] )
+		s.selection().add( b["n2"] )
+		
+		self.assertEqual( len( s.selection() ), 2 )
+		
+		n1 = b["n1"]
+		del b["n1"]
+		
+		self.assertTrue( b["n2"] in s.selection() )
+		self.assertFalse( n1 in s.selection() )
+		self.assertEqual( len( s.selection() ), 1 )
 		
 if __name__ == "__main__":
 	unittest.main()
