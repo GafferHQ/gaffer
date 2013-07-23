@@ -60,7 +60,12 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		# allow derived classes to call _updateFromSet() themselves after construction,
 		# to avoid being called when they're only half constructed.
 		self.__setNodeSetInternal( self.scriptNode().selection(), callUpdateFromSet=False )
-		
+	
+	## Sets the nodes that will be displayed by this editor. As members are
+	# added to and removed from the set, the UI will be updated automatically
+	# to show them. If the set is not scriptNode.selection(), then an OrphanRemover
+	# will be applied automatically to the set so that deleted nodes are not
+	# visible in the UI.	
 	def setNodeSet( self, nodeSet ) :
 	
 		self.__setNodeSetInternal( nodeSet, callUpdateFromSet=True )
@@ -150,10 +155,18 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		
 	def __setNodeSetInternal( self, nodeSet, callUpdateFromSet ) :
 	
+		if self.__nodeSet.isSame( nodeSet ) :
+			return
+	
 		prevSet = self.__nodeSet
 		self.__nodeSet = nodeSet
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		
+		if not self.__nodeSet.isSame( self.scriptNode().selection() ) :
+			self.__orphanRemover = Gaffer.Behaviours.OrphanRemover( self.__nodeSet )
+		else :
+			self.__orphanRemover = None
 		
 		if callUpdateFromSet :
 			# only update if the nodes being held have actually changed,
