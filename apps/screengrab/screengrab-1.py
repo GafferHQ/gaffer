@@ -103,6 +103,9 @@ class screengrab( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % (targetdir) )
 			os.makedirs(targetdir)
 		
+		#expose self as a["application"] when running the cmd
+		d = { "application" : self }
+		
 		#execute any commands passed as arguments prior to doing the screengrab
 		exec(str(args["cmd"]))
 		
