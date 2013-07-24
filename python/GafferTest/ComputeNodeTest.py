@@ -195,13 +195,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 	
 		n = GafferTest.BadNode()
 		self.assertRaises( RuntimeError, n["out1"].getValue )
-	
-	@GafferTest.expectedFailure
-	def testWrongPlugPulled( self ) :
-	
-		n = GafferTest.BadNode()
-		self.assertRaises( RuntimeError, n["out2"].getValue )
-	
+		
 	def testPlugNotSet( self ) :
 	
 		n = GafferTest.BadNode()

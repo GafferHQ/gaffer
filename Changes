@@ -1,3 +1,26 @@
+0.71.0
+======
+
+- Variable substitution improvements
+	- Added standard ${script:name} variable (#407)
+	- Added custom script-wide variables accessible via the File->Settings menu (#407)
+	- Added support for variable references within variables (recursive substitution)
+	- Added environment variable and ~ substitution
+	- Added standard ${project:name} and ${project:rootDirectory} variables.
+- Fixed save and load of ReadOnly plugs.
+- Removed Escape hotkey for leaving full screen mode. The same function is served by the ` hotkey.
+- Defined default locations for ribs, ass files and rendered images.
+- Added automatic directory creation for display, rib and ass locations (#59)
+- Added GraphComponent::clearChildren() method
+- Greyed out File->RevertToSaved menu item when it doesn't make sense
+- Improved CompoundDataPlug data representation
+- CompoundPlugValueWidget using PlugValueWidget.hasLabel() to avoid unecessary labelling
+- Fixed UI for promoted plugs (#264)
+- Fixed bug where deleted children of Boxes weren't removed from the selection (#430)
+- Fixed bug where pinned nodes were still visible in the UI after being deleted (#308)
+- Fixed hangs caused by adjusting colours while rerendering
+- Tidied up some test cases
+
 0.70.0
 ======
 

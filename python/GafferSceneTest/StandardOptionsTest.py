@@ -78,5 +78,30 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertNotEqual( o2["out"]["globals"].hash(), h )
 	
+	def testBoxPromotion( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferScene.StandardOptions()
+		s["n"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["n"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		
+		memberDataAndName = s["n"]["options"].memberDataAndName( s["n"]["options"]["renderCamera"] )
+		
+		Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		s["Box"].promotePlug( s["Box"]["n"]["options"]["renderCamera"] )
+	
+		self.assertEqual( 
+			s["Box"]["n"]["options"].memberDataAndName( s["Box"]["n"]["options"]["renderCamera"] ),
+			memberDataAndName,
+		)
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual(
+			s2["Box"]["n"]["options"].memberDataAndName( s2["Box"]["n"]["options"]["renderCamera"] ),
+			memberDataAndName
+		)
+	
 if __name__ == "__main__":
 	unittest.main()

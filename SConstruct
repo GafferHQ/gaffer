@@ -485,7 +485,7 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "70",
+	GAFFER_MINOR_VERSION = "71",
 	GAFFER_PATCH_VERSION = "0",
 
 )
@@ -979,7 +979,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# library
 
-	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) )
+	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) )
 	if librarySource :
 	
 		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
@@ -990,12 +990,19 @@ for libraryName, libraryDef in libraries.items() :
 	
 	# header install
 	
-	headerInstall = libEnv.Install(
-		"$BUILD_DIR/" + "include/" + libraryName,
+	headers = (
 		glob.glob( "include/" + libraryName + "/*.h" ) +
-		glob.glob( "include/" + libraryName + "/*.inl" )
+		glob.glob( "include/" + libraryName + "/*.inl" ) +
+		glob.glob( "include/" + libraryName + "/*/*.h" ) +
+		glob.glob( "include/" + libraryName + "/*/*.inl" )
 	)
-	libEnv.Alias( "build", headerInstall )
+
+	for header in headers :
+		headerInstall = libEnv.Install(
+			"$BUILD_DIR/" + os.path.dirname( header ),
+			header
+		)
+		libEnv.Alias( "build", headerInstall )
 		
 	# bindings library and binary python modules
 

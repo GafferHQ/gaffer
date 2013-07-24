@@ -53,6 +53,12 @@ class TestCase( GafferTest.TestCase ) :
 		# was thrown (and unittest.TestCase will be reporting an error
 		# anyway).
 	
+		if "_ExpectedFailure" in str( sys.exc_info()[0] ) :
+			# the expected failure exception in the unittest module
+			# unhelpfully also hangs on to exceptions, so we remove
+			# that before calling exc_clear().
+			sys.exc_info()[1].exc_info = ( None, None, None )
+		
 		sys.exc_clear()
 				
 		widgetInstances = self.__widgetInstances()
