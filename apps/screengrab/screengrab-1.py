@@ -103,11 +103,15 @@ class screengrab( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % (targetdir) )
 			os.makedirs(targetdir)
 		
-		#expose self as a["application"] when running the cmd
-		d = { "application" : self }
+		#expose some variables when running the cmd
+		d = {
+				"application" 	: self,
+				"script"		: script,
+			}
+		
 		
 		#execute any commands passed as arguments prior to doing the screengrab
-		exec(str(args["cmd"]))
+		exec(str(args["cmd"]), d, d)
 		
 		#register the function to run when the app is idle.
 		self.__idleCount = 0
