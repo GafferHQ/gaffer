@@ -40,6 +40,7 @@ import warnings
 import IECore
 
 import GafferUI
+import Gaffer
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -60,6 +61,16 @@ class Window( GafferUI.ContainerWidget ) :
 		self.__qtLayout = QtGui.QGridLayout()
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		
+		
+		if len( self.__caughtKeys() ):
+			# set up a key press handler, so we can catch various key presses and stop them being handled by the
+			# host application
+			self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		
+		
+		# \todo Does this hurt performance? Maybe keyPressSignal() should set this up when it's called? 
+		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
 		
 		self._qtWidget().setLayout( self.__qtLayout )
 
@@ -230,6 +241,28 @@ class Window( GafferUI.ContainerWidget ) :
 			return True
 		else :
 			return False
+	
+	
+	__caughtKeysSet = None
+	@classmethod
+	def __caughtKeys( cls ):
+		
+		if cls.__caughtKeysSet is None:
+			
+			try:
+				# are we in maya? If so, we need to catch the ctrl and shift key presses to prevent
+				# maya from handling them and doing crazy focus stealing stuff
+				import maya
+				cls.__caughtKeysSet = set( ["Control", "Shift"] )
+			except ImportError:
+				cls.__caughtKeysSet = set()
+		
+		return cls.__caughtKeysSet
+	
+	
+	def __keyPress( self, widget, event ):
+		
+		return event.key in self.__caughtKeys()
 	
 	## Subclasses may override this to deny the closing of a window triggered
 	# either by user action or by a call to close(). Simply return False to
