@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import os
+
 class About :
 
 	@staticmethod
@@ -87,7 +89,7 @@ class About :
 	@staticmethod	
 	def dependencies() :
 	
-		return [
+		result = [
 					
 			{
 				"name" : "boost",
@@ -191,11 +193,23 @@ class About :
 				"url" : "http://qt.nokia.com/",
 				"license" : "$GAFFER_ROOT/doc/licenses/qt",
 			},
+				
+		]
+		
+		if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PyQt4" ) :
 			
-			{
+			result.append( {
 				"name" : "PyQt",
 				"url" : "http://www.riverbankcomputing.co.uk/",
 				"license" : "$GAFFER_ROOT/doc/licenses/pyQt",
-			},
-				
-		]	
+			} )
+			
+		if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PySide" ) :
+			
+			result.append( {
+				"name" : "PySide",
+				"url" : "http://www.pyside.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/pySide",
+			} )
+			
+		return result
