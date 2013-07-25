@@ -25,6 +25,8 @@ targetDoc.write( About.dependenciesPreamble() )
 #write out the dependencies info in asciidoc format
 for dependency in About.dependencies():
 	targetDoc.write( '\n\n===== %s' % (dependency['name']) )
+	if 'credit' in dependency:
+		targetDoc.write( '\n%s\n' % (dependency['credit']) )
 	if 'url' in dependency:
 		targetDoc.write( '\n%s' % (dependency['url']) )
 	if 'license' in dependency:
