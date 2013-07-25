@@ -1,0 +1,28 @@
+import IECore
+from Gaffer import About
+
+import sys,os
+
+#print dir(About)
+#print About.copyright()
+#print About.license()
+
+
+#open file ready to write asciidoc formatted data into
+targetDoc = open('./chapters/appendices_licenses_dynamicContent.txt', 'w')
+
+targetDoc.write( About.dependenciesPreamble() )
+
+#write out the dependencies info in asciidoc format
+for dependency in About.dependencies():
+	targetDoc.write( '\n\n==== %s' % (dependency['name']) )
+	if 'url' in dependency:
+		targetDoc.write( '\n%s' % (dependency['url']) )
+	if 'license' in dependency:
+		#need to find the file from this path and print its contents into here
+		licensePath = dependency['license'].replace( '$GAFFER_ROOT', os.environ['GAFFER_ROOT']  )
+		if os.path.exists( licensePath ):
+			with open( licensePath, 'r' ) as fh:
+				license = fh.read()
+				targetDoc.write( '\n\n%s' % (license) )
+	
