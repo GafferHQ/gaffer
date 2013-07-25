@@ -1,5 +1,9 @@
 surface annotationsExample(
 
+#pragma annotation "primaryInput" "primaryParam"
+shader primaryParam = null;
+
+
 uniform float labelParam = 1;
 #pragma annotation "labelParam.label" "Special Label"
 
@@ -57,6 +61,7 @@ uniform float pageParam4 = 1;
 #pragma annotation "pageParam3.page" "My Page B"
 #pragma annotation "pageParam4.page" "My Page B"
 #pragma annotation "page.My Page B.collapsed" "False"
+
 )
 {
 	Oi = 1;
