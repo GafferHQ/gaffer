@@ -136,6 +136,12 @@ html {
   background: rgb(240,240,232);
 }*/
 
+/*set the scaling the screen grabs are shown at. 96dpi = 1:1. 144dpi looks screen size at 150% zoom in viewer. 192dpi looks screen size at 200% zoom in viewer.*/
+/*prince specific*/
+img {
+	prince-image-resolution: 144dpi;
+}
+
 
 #toc {
   color: #444444;
