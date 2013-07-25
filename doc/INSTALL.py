@@ -48,8 +48,6 @@ class installationTool():
 		
 		(opts, args) = parser.parse_args()
 		
-		print opts
-		
 		#check to see if we have been passed any flags. if no flags, this tmp will stay False
 		tmp = False
 		for opt, value in opts.__dict__.items():
@@ -57,6 +55,7 @@ class installationTool():
 				if value:
 					tmp = True
 		
+		print tmp
 		self.opts = {}
 		
 		if tmp == False or opts.runall_flag:
@@ -71,8 +70,6 @@ class installationTool():
 		else:
 			for opt, value in opts.__dict__.items():
 				self.opts[opt] = value
-		
-		print self.opts
 		
 		self.runCommands()
 		
@@ -142,7 +139,11 @@ class installationTool():
 		if self.opts['runguide_flag']:
 			#build the user guide
 			os.chdir( os.path.join( build_root, 'GafferUserGuide' ))
-			messageHeader = 'GafferUserGuide'
+			self.messageHeader = 'GafferUserGuide'
+			
+			##generate licenses content in asciidoc format
+			self.logit('Generating license data...')
+			os.system( gp_cmd + ' appendicies_licensesGenerator.py' )
 			
 			if self.opts['images_flag']:
 				##generate images from reference scripts
