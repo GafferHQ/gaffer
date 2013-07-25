@@ -55,7 +55,6 @@ class installationTool():
 				if value:
 					tmp = True
 		
-		print tmp
 		self.opts = {}
 		
 		if tmp == False or opts.runall_flag:
