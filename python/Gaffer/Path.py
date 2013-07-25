@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,16 +41,28 @@ import Gaffer
 
 class Path( object ) :
 
-	def __init__( self, path, filter=None ) :
+	## Paths can be constructed either from a "/slash/separated/string"
+	# or a [ "list", "of", "strings" ] relative to a root.
+	## \todo Reimplement the class paths in C++, with three distinct
+	# constructors :
+	#
+	# Path( FilterPtr filter = 0 ) // empty path
+	# Path( const std::string &path, FilterPtr filter = 0 )
+	# Path( const std::vector<InternedString> &path, const std::string &root="/", FilterPtr filter = 0 )
+	def __init__( self, path=None, root="/", filter=None ) :
+	
+		assert( isinstance( root, basestring ) )
 	
 		self.__items = []
+		self.__root = ""
 		
 		if isinstance( path, basestring ) :
 			
 			self.setFromString( path )
 			
-		else :
+		elif path is not None :
 		
+			self.__root = root
 			for p in path :
 					
 				self.__checkElement( p )		
@@ -58,12 +70,23 @@ class Path( object ) :
 				
 		self.__filter = None
 		self.setFilter( filter )
+	
+	## Returns the root of the path - this will be "/" for absolute
+	# paths and "" for relative paths.
+	def root( self ) :
+	
+		return self.__root
+	
+	## Returns true if this path is empty.
+	def isEmpty( self ) :
+	
+		return not len( self ) and not self.__root
 									
 	## Returns true if this path is valid - ie references something
 	# which actually exists.
 	def isValid( self ) :
-	
-		raise NotImplementedError
+		
+		return not self.isEmpty()
 	
 	## If the path is valid, returns a dictionary of information about what
 	# the path points to. If the path is not valid, returns None. The contents
@@ -162,24 +185,34 @@ class Path( object ) :
 			
 		return self.__pathChangedSignal
 
-	def setFromString( self, path ) :
+	## Sets the path root and items from the other
+	# path, leaving the current filter intact.
+	def setFromPath( self, path ) :
 	
-		if len( path ) and path[0]!="/" :
-			raise ValueError( "Paths must be absolute (start with \"/\")." )
-		
-		prev = self.__items
+		if path.__items == self.__items and path.__root == self.__root :
+			return
 			
-		self.__items = path.split( "/" )
-		self.__items = [ x for x in self.__items if x ]
-
-		if prev!=self.__items :
+		self.__items = path.__items[:]
+		self.__root = path.__root
+		self.__emitChangedSignal()
+		
+	## Sets the path root and items from a "/"
+	# separated string.
+	def setFromString( self, path ) :
+		
+		newItems = [ x for x in path.split( "/" ) if x ]
+		newRoot = "/" if path and path[0]=='/' else ""
+				
+		if newItems != self.__items or newRoot != self.__root :
+			self.__items = newItems
+			self.__root = newRoot
 			self.__emitChangedSignal()
 			
 		return self
 	
 	def copy( self ) :
 	
-		c = self.__class__( self.__items )
+		c = self.__class__( self.__items, root=self.__root )
 		c.setFilter( self.__filter )
 		
 		return c
@@ -209,8 +242,8 @@ class Path( object ) :
 		return len( self.__items )
 
 	def __str__( self ) :
-		
-		return "/" + "/".join( self.__items )
+				
+		return self.__root + "/".join( self.__items )
 			
 	def __setitem__( self, index, name ) :
 	
@@ -241,7 +274,7 @@ class Path( object ) :
 		if not isinstance( other, Path ) :
 			return False
 			
-		return self.__items == other.__items
+		return self.__items == other.__items and self.__root == other.__root
 		
 	def __ne__( self, other ) :
 	

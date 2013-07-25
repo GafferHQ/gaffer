@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,9 +40,9 @@ import Gaffer
 
 class ParameterPath( Gaffer.Path ) :
 
-	def __init__( self, rootParameter, path, filter=None, forcedLeafTypes = () ) :
+	def __init__( self, rootParameter, path, root="/", filter=None, forcedLeafTypes = () ) :
 		
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 	
 		assert( isinstance( rootParameter, IECore.Parameter ) )
 		
@@ -82,7 +82,7 @@ class ParameterPath( Gaffer.Path ) :
 		
 	def copy( self ) :
 	
-		return ParameterPath( self.__rootParameter, self[:], self.getFilter(), self.__forcedLeafTypes )
+		return ParameterPath( self.__rootParameter, self[:], self.root(), self.getFilter(), self.__forcedLeafTypes )
 	
 	def _children( self ) :
 	
@@ -92,7 +92,7 @@ class ParameterPath( Gaffer.Path ) :
 			return []
 		
 		if isinstance( p, IECore.CompoundParameter ) and not isinstance( p, self.__forcedLeafTypes ) :
-			return [ ParameterPath( self.__rootParameter, self[:] + [ x ], self.getFilter(), forcedLeafTypes=self.__forcedLeafTypes ) for x in p.keys() ]
+			return [ ParameterPath( self.__rootParameter, self[:] + [ x ], self.root(), self.getFilter(), forcedLeafTypes=self.__forcedLeafTypes ) for x in p.keys() ]
 			
 		return []
 

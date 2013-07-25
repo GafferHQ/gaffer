@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,9 +40,9 @@ import Gaffer
 
 class DictPath( Gaffer.Path ) :
 
-	def __init__( self, dict, path, filter=None, dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject ) ) :
+	def __init__( self, dict, path, root="/", filter=None, dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject ) ) :
 		
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 	
 		assert( isinstance( dict, dictTypes ) )
 		
@@ -82,14 +82,14 @@ class DictPath( Gaffer.Path ) :
 		
 	def copy( self ) :
 	
-		return DictPath( self.__dict, self[:], self.getFilter(), self.__dictTypes )
+		return DictPath( self.__dict, self[:], self.root(), self.getFilter(), self.__dictTypes )
 	
 	def _children( self ) :
 	
 		try :
 			e = self.__dictEntry()
 			if isinstance( e, self.__dictTypes ) :
-				return [ DictPath( self.__dict, self[:] + [ x ], dictTypes=self.__dictTypes ) for x in e.keys() ]
+				return [ DictPath( self.__dict, self[:] + [ x ], self.root(), dictTypes=self.__dictTypes ) for x in e.keys() ]
 		except :
 			return []
 			

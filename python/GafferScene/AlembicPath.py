@@ -41,20 +41,15 @@ import Gaffer
 
 class AlembicPath( Gaffer.Path ) :
 
-	__unique = set()
-
-	def __init__( self, fileNameOrAlembicInput, path, filter=None ) :
+	def __init__( self, fileNameOrAlembicInput, path, root="/", filter=None ) :
 	
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 				
 		if isinstance( fileNameOrAlembicInput, basestring ) :
 			self.__rootInput = IECoreAlembic( fileNameOrAlembicInput )
 		else :
 			assert( isinstance( fileNameOrAlembicInput, IECoreAlembic.AlembicInput ) )
 			self.__rootInput = fileNameOrAlembicInput
-	
-		self.__unique.add( str( self ) )
-		print len( self ), len( self.__unique )
 
 	def isValid( self ) :
 	
@@ -76,11 +71,11 @@ class AlembicPath( Gaffer.Path ) :
 	def _children( self ) :
 	
 		childNames = self.__input().childNames()
-		return [ AlembicPath( self.__rootInput, self[:] + [ x ] ) for x in childNames ]
+		return [ AlembicPath( self.__rootInput, self[:] + [ x ], self.root() ) for x in childNames ]
 			
 	def copy( self ) :
 	
-		return AlembicPath( self.__rootInput, self[:], self.getFilter() )
+		return AlembicPath( self.__rootInput, self[:], self.root(), self.getFilter() )
 		
 	def __input( self ) :
 	

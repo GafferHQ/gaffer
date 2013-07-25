@@ -42,9 +42,9 @@ import GafferScene
 
 class ScenePath( Gaffer.Path ) :
 
-	def __init__( self, scenePlug, context, path, filter=None ) :
+	def __init__( self, scenePlug, context, path, root="/", filter=None ) :
 	
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 	
 		assert( isinstance( scenePlug, GafferScene.ScenePlug ) )
 	
@@ -87,11 +87,11 @@ class ScenePath( Gaffer.Path ) :
 		if childNames is None :
 			return []
 		
-		return [ ScenePath( self.__scenePlug, self.__context, self[:] + [ x.value() ] ) for x in childNames ]
+		return [ ScenePath( self.__scenePlug, self.__context, self[:] + [ x.value() ], self.root() ) for x in childNames ]
 	
 	def copy( self ) :
 	
-		return ScenePath( self.__scenePlug, self.__context, self[:], self.getFilter() )
+		return ScenePath( self.__scenePlug, self.__context, self[:], self.root(), self.getFilter() )
 	
 	def setContext( self, context ) :
 	

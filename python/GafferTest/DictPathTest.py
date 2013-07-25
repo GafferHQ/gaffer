@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -162,6 +162,31 @@ class DictPathTest( unittest.TestCase ) :
 		p = Gaffer.DictPath( d, "/", dictTypes = ( dict, ) )
 		c = p.children()[0]
 		self.assertEqual( c.isLeaf(), True )		
+	
+	def testRelative( self ) :
+	
+		d = {
+			"one" : 1,
+			"two" : 2,
+			"three" : "three",
+			"d" : {
+				"e" : {
+					"four" : 4,
+				},
+				"five" : 5,
+			},
+			"f" : {},
+		}
+		
+		p = Gaffer.DictPath( d, "d" )
+		self.assertEqual( str( p ), "d" )
+		self.assertTrue( "d/e" in [ str( c ) for c in p.children() ] )
+		self.assertTrue( "d/five" in [ str( c ) for c in p.children() ] )
+		
+		p2 = p.copy()
+		self.assertEqual( str( p2 ), "d" )
+		self.assertTrue( "d/e" in [ str( c ) for c in p2.children() ] )
+		self.assertTrue( "d/five" in [ str( c ) for c in p2.children() ] )
 		
 if __name__ == "__main__":
 	unittest.main()

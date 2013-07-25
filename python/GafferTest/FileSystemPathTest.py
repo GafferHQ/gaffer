@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -114,14 +114,68 @@ class FileSystemPathTest( unittest.TestCase ) :
 		# unless they're broken
 		os.remove( str( a ) )
 		self.assertNotEqual( aInfo["fileSystem:size"], l.info()["fileSystem:size"] )
+	
+	def testCopy( self ) :
+	
+		p = Gaffer.FileSystemPath( self.__dir )
+		p2 = p.copy()
+		
+		self.assertEqual( p, p2 )
+		self.assertEqual( str( p ), str( p2 ) )
+	
+	def testEmptyPath( self ) :
+	
+		p = Gaffer.FileSystemPath()
+		self.assertEqual( str( p ), "" )
+		self.assertTrue( p.isEmpty() )
+		self.assertFalse( p.isValid() )
+	
+	def testRelativePath( self ) :
+	
+		os.chdir( self.__dir )
+		
+		with open( self.__dir + "/a", "w" ) as f :
+			f.write( "AAAA" )
+			
+		p = Gaffer.FileSystemPath( "a" )
+		
+		self.assertEqual( str( p ), "a" )
+		self.assertFalse( p.isEmpty() )
+		self.assertTrue( p.isValid() )
+		
+		p2 = Gaffer.FileSystemPath( "nonexistent" )
+		
+		self.assertEqual( str( p2 ), "nonexistent" )
+		self.assertFalse( p2.isEmpty() )
+		self.assertFalse( p2.isValid() )
+	
+	def testRelativePathChildren( self ) :
+	
+		os.chdir( self.__dir )
+		os.mkdir( "dir" )
+		with open( self.__dir + "/dir/a", "w" ) as f :
+			f.write( "AAAA" )
+			
+		p = Gaffer.FileSystemPath( "dir" )		
+		
+		c = p.children()
+		self.assertEqual( len( c ), 1 )
+		self.assertEqual( str( c[0] ), "dir/a" )
+		self.assertTrue( c[0].isValid() )
 		
 	def setUp( self ) :
+		
+		self.__originalCWD = os.getcwd()
 		
 		# clear out old files and make empty directory
 		# to work in
 		if os.path.exists( self.__dir ) :
 			shutil.rmtree( self.__dir )
 		os.mkdir( self.__dir )
+	
+	def tearDown( self ) :
+	
+		os.chdir( self.__originalCWD )
 		
 if __name__ == "__main__":
 	unittest.main()

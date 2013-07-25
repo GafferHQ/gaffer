@@ -53,6 +53,21 @@ class ScenePathTest( unittest.TestCase ) :
 		self.assertEqual( len( c ), 1 )
 		self.assertEqual( str( c[0] ), "/group1" )
 	
+	def testRelative( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+		
+		p = GafferScene.ScenePath( a["out"], Gaffer.Context(), "group1" )
+		self.assertEqual( str( p ), "group1" )
+		self.assertEqual( p.root(), "" )
+		self.assertEqual( [ str( c ) for c in p.children() ], [ "group1/pCube1" ] )
+		
+		p2 = p.copy()
+		self.assertEqual( str( p2 ), "group1" )
+		self.assertEqual( p2.root(), "" )
+		self.assertEqual( [ str( c ) for c in p2.children() ], [ "group1/pCube1" ] )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

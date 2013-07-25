@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,17 +45,11 @@ class PathTest( unittest.TestCase ) :
 
 	class TestPath( Gaffer.Path ) :
 		
-		def __init__( self, p ) :
+		def __init__( self, path=None, root="/", filter=None ) :
 		
-			Gaffer.Path.__init__( self, p )
-			
-		def isValid( self ) :
-			
-			return True
+			Gaffer.Path.__init__( self, path, root, filter )
 			
 	def test( self ) :
-	
-		self.assertRaises( ValueError, Gaffer.Path, "noStartingSlash" )
 
 		p = Gaffer.Path( "/" )
 		self.assertEqual( len( p ), 0 )
@@ -161,6 +155,45 @@ class PathTest( unittest.TestCase ) :
 		self.failUnless( p.setFromString( "/test" ) is p )
 		self.failUnless( p.append( "a" ) is p )
 		self.failUnless( p.truncateUntilValid() is p )
+	
+	def testEmptyPath( self ) :
+	
+		p = self.TestPath()
+		self.assertEqual( str( p ), "" )
+		self.assertTrue( p.isEmpty() )
+		self.assertFalse( p.isValid() )
+		
+		p2 = p.copy()
+		self.assertEqual( str( p ), "" )
+		self.assertTrue( p.isEmpty() )
+		self.assertFalse( p.isValid() )
+	
+		p = self.TestPath( "/" )
+		self.assertFalse( p.isEmpty() )
+		p.setFromString( "" )
+		self.assertTrue( p.isEmpty() )
+	
+	def testRootPath( self ) :
+	
+		p = self.TestPath( "/" )
+		self.assertEqual( str( p ), "/" )
+	
+	def testRelativePath( self ) :
+	
+		p = self.TestPath( "a/b" )
+		self.assertTrue( p.isValid() )
+		self.assertFalse( p.isEmpty() )
+		self.assertEqual( str( p ), "a/b" )
+		
+		p2 = p.copy()
+		self.assertTrue( p2.isValid() )
+		self.assertFalse( p2.isEmpty() )
+		self.assertEqual( str( p2 ), "a/b" )
+	
+	def testRelativePathEquality( self ) :
+	
+		self.assertEqual( self.TestPath( "a/b" ), self.TestPath( "a/b" ) )
+		self.assertNotEqual( self.TestPath( "/a/b" ), self.TestPath( "a/b" ) )
 		
 if __name__ == "__main__":
 	unittest.main()
