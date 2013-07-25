@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -207,7 +207,20 @@ class ParameterPathTest( unittest.TestCase ) :
 		c = p.children()[3]
 		self.assertEqual( str( c ), "/cv" )
 		self.assertEqual( c.isLeaf(), True )		
+	
+	def testRelative( self ) :
+			
+		p = Gaffer.ParameterPath( self.__parameters(), "c", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
+
+		self.assertEqual( str( p ), "c" )
+		self.assertTrue( "c/d" in [ str( c ) for c in p.children() ] )
+		self.assertTrue( "c/e" in [ str( c ) for c in p.children() ] )
 		
+		p2 = p.copy()
+		self.assertEqual( str( p2 ), "c" )
+		self.assertTrue( "c/d" in [ str( c ) for c in p2.children() ] )
+		self.assertTrue( "c/e" in [ str( c ) for c in p2.children() ] )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

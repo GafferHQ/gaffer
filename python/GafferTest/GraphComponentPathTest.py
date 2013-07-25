@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,69 +34,30 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import Gaffer
 
-class ClassLoaderPath( Gaffer.Path ) :
+class GraphComponentPathTest( unittest.TestCase ) :
 
-	def __init__( self, classLoader, path, root="/", filter=None ) :
+	def testRelative( self ) :
+	
+		r = Gaffer.GraphComponent()
+		r["d"] = Gaffer.GraphComponent()
+		r["d"]["e"] = Gaffer.GraphComponent()
+
+		p = Gaffer.GraphComponentPath( r, "d" )
+		self.assertEqual( str( p ), "d" )
+		self.assertEqual( p.root(), "" )
+		self.assertEqual( [ str( c ) for c in p.children() ], [ "d/e" ] )
 		
-		Gaffer.Path.__init__( self, path, root, filter )
-	
-		self.__classLoader = classLoader
-	
-	def isValid( self ) :
+		p2 = p.copy()
+		self.assertEqual( str( p2 ), "d" )
+		self.assertEqual( p2.root(), "" )
+		self.assertEqual( [ str( c ) for c in p2.children() ], [ "d/e" ] )
 		
-		if not len( self ) :
-			# root is always valid
-			return True
-			
-		p = str( self )[1:] # remove leading slash
-		
-		if p in self.__classLoader.classNames() :
-			return True
-		elif self.__classLoader.classNames( p + "/*" ) :
-			return True
-			
-		return False
-		
-	def isLeaf( self ) :
+if __name__ == "__main__":
+	unittest.main()
 	
-		return str( self )[1:] in self.__classLoader.classNames()
-				
-	def info( self ) :
-	
-		result = Gaffer.Path.info( self )
-		if result is None :
-			return None
-		
-		if self.isLeaf() :
-			result["classLoader:versions"] = self.__classLoader.versions( str( self )[1:] )
-		
-		return result
-		
-	def copy( self ) :
-	
-		return ClassLoaderPath( self.__classLoader, self[:], self.root(), self.getFilter() )
-	
-	def classLoader( self ) :
-	
-		return self.__classLoader
-		
-	def load( self, version=None ) :
-	
-		return self.__classLoader.load( str( self )[1:], version )
-	
-	def _children( self ) :
-	
-		result = []
-		added = set()
-		matcher = "/".join( self[:] ) + "/*" if len( self ) else "*"
-		for n in self.__classLoader.classNames( matcher) :
-			child = ClassLoaderPath( self.__classLoader, self.root() + n, filter=self.getFilter() )
-			while len( child ) > len( self ) + 1 :
-				del child[-1]
-			if str( child ) not in added :
-				result.append( child )
-				added.add( str( child ) )
-				
-		return result

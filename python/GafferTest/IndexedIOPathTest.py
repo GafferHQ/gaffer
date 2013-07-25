@@ -112,6 +112,18 @@ class IndexedIOPathTest( unittest.TestCase ) :
 	
 		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/c" )
 		self.assertEqual( p.data(), IECore.StringData( "three" ) )
+		
+	def testRelative( self ) :
+
+		p = Gaffer.IndexedIOPath( self.__fileName, "d1/d2" )
+		self.assertEqual( str( p ), "d1/d2" )
+		self.assertEqual( p.root(), "" )
+		self.assertTrue( "d1/d2/a" in [ str( c ) for c in p.children() ] )
+		
+		p2 = p.copy()
+		self.assertEqual( str( p2 ), "d1/d2" )
+		self.assertEqual( p2.root(), "" )
+		self.assertTrue( "d1/d2/a" in [ str( c ) for c in p2.children() ] )
 			
 	def tearDown( self ) :
 	

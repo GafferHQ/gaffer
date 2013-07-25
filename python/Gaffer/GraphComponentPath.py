@@ -43,9 +43,9 @@ import Gaffer
 # on GraphComponent (otherwise we have to make connections to every child everywhere).
 class GraphComponentPath( Gaffer.Path ) :
 
-	def __init__( self, rootComponent, path, filter=None ) :
+	def __init__( self, rootComponent, path, root="/", filter=None ) :
 		
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 	
 		assert( isinstance( rootComponent, Gaffer.GraphComponent ) )
 	
@@ -80,13 +80,13 @@ class GraphComponentPath( Gaffer.Path ) :
 		
 	def copy( self ) :
 	
-		return GraphComponentPath( self.__rootComponent, self[:], self.getFilter() )
+		return GraphComponentPath( self.__rootComponent, self[:], self.root(), self.getFilter() )
 	
 	def _children( self ) :
 	
 		try :
 			e = self.__graphComponent()
-			return [ GraphComponentPath( self.__rootComponent, self[:] + [ x ] ) for x in e.keys() ]
+			return [ GraphComponentPath( self.__rootComponent, self[:] + [ x ], self.root() ) for x in e.keys() ]
 		except :
 			return []
 			

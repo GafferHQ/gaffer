@@ -40,9 +40,9 @@ import Gaffer
 
 class IndexedIOPath( Gaffer.Path ) :
 
-	def __init__( self, indexedIO, path, filter=None ) :
+	def __init__( self, indexedIO, path, root="/", filter=None ) :
 		
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 	
 		if isinstance( indexedIO, basestring ) :
 			self.__indexedIO = IECore.IndexedIO.create( indexedIO, IECore.IndexedIO.OpenMode.Read )
@@ -84,7 +84,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		
 	def copy( self ) :
 	
-		return IndexedIOPath( self.__indexedIO, self[:], self.getFilter() )
+		return IndexedIOPath( self.__indexedIO, self[:], self.root(), self.getFilter() )
 	
 	def data( self ) :
 	
@@ -99,7 +99,7 @@ class IndexedIOPath( Gaffer.Path ) :
 			return []
 	
 		entries = d.entryIds()
-		result = [ IndexedIOPath( self.__indexedIO, self[:] + [ x.value() ] ) for x in entries ]
+		result = [ IndexedIOPath( self.__indexedIO, self[:] + [ x.value() ], self.root() ) for x in entries ]
 		
 		return result
 
