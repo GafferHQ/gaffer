@@ -40,9 +40,9 @@ import Gaffer
 
 class AttributeCachePath( Gaffer.Path ) :
 
-	def __init__( self, attributeCache, path, filter=None ) :
+	def __init__( self, attributeCache, path, root="/", filter=None ) :
 		
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter=filter )
 	
 		if isinstance( attributeCache, basestring ) :
 			self.__attributeCache = IECore.AttributeCache( attributeCache, IECore.IndexedIO.OpenMode.Read )
@@ -86,7 +86,7 @@ class AttributeCachePath( Gaffer.Path ) :
 		
 	def copy( self ) :
 	
-		return AttributeCachePath( self.__attributeCache, self[:], self.getFilter() )
+		return AttributeCachePath( self.__attributeCache, self[:], self.root(), self.getFilter() )
 	
 	def data( self ) :
 	
@@ -112,4 +112,4 @@ class AttributeCachePath( Gaffer.Path ) :
 			if self[0] == "objects" :
 				paths += [ self[:] + [ a ] for a in self.__attributeCache.attributes( self[1] ) ]
 				
-		return [ AttributeCachePath( self.__attributeCache, path, self.getFilter() ) for path in paths ]
+		return [ AttributeCachePath( self.__attributeCache, path, self.root(), self.getFilter() ) for path in paths ]

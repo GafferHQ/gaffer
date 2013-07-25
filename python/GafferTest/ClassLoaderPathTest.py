@@ -87,6 +87,18 @@ class ClassLoaderPathTest( unittest.TestCase ) :
 		versions = p.info()["classLoader:versions"]
 		self.failUnless( isinstance( versions, list ) )
 		self.failUnless( len( versions ) )
+	
+	def testRelative( self ) :
+	
+		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "files" )
+		self.assertEqual( str( p ), "files" )
+		self.assertEqual( p.root(), "" )		
+		self.assertTrue( "files/sequenceRenumber" in [ str( c ) for c in p.children() ] )
+		
+		p2 = p.copy()
+		self.assertEqual( str( p2 ), "files" )
+		self.assertEqual( p2.root(), "" )
+		self.assertTrue( "files/sequenceRenumber" in [ str( c ) for c in p2.children() ] )
 		
 	def testLoad( self ) :
 	

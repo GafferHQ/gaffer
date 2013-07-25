@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -124,6 +124,17 @@ class SequencePathTest( unittest.TestCase ) :
 	
 		dictPath = self.__dictPath()
 		path = Gaffer.SequencePath( dictPath )
+		
+	def testIsEmpty( self ) :
+	
+		dictPath = self.__dictPath()
+		path = Gaffer.SequencePath( dictPath )
+		
+		path.setFromString( "" )
+		self.assertTrue( path.isEmpty() )
+		
+		path2 = path.copy()
+		self.assertTrue( path2.isEmpty() )
 		
 if __name__ == "__main__":
 	unittest.main()

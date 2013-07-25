@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,17 +44,13 @@ import Gaffer
 
 class FileSystemPath( Gaffer.Path ) :
 
-	def __init__( self, path, filter=None ) :
+	def __init__( self, path=None, root="/", filter=None ) :
 	
-		if isinstance( path, basestring ) :
-			if len( path ) and path[0] != "/" :
-				path = os.path.join( os.getcwd(), path )
-	
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path, root, filter )
 									
 	def isValid( self ) :
 	
-		return os.path.lexists( str( self ) )
+		return Gaffer.Path.isValid( self ) and os.path.lexists( str( self ) )
 	
 	def isLeaf( self ) :
 	
@@ -99,7 +95,7 @@ class FileSystemPath( Gaffer.Path ) :
 		except :
 			return []
 			
-		return [ FileSystemPath( self[:] + [ x ] ) for x in c ]
+		return [ FileSystemPath( self[:] + [ x ], self.root() ) for x in c ]
 
 	@staticmethod
 	def createStandardFilter( extensions=[], extensionsLabel=None ) :

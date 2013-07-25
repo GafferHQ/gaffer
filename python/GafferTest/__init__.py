@@ -124,6 +124,7 @@ from RecursiveChildIteratorTest import RecursiveChildIteratorTest
 from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTest
 from ReferenceTest import ReferenceTest
 from OrphanRemoverTest import OrphanRemoverTest
+from GraphComponentPathTest import GraphComponentPathTest
 
 if __name__ == "__main__":
 	import unittest

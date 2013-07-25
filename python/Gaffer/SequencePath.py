@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -40,12 +40,12 @@ import Gaffer
 
 class SequencePath( Gaffer.Path ) :
 
-	def __init__( self, path, minSequenceSize=1, filter=None ) :
+	def __init__( self, path, root="/", minSequenceSize=1, filter=None ) :
 	
 		if not isinstance( path, Gaffer.Path ) :
-			path = Gaffer.FileSystemPath( path )
+			path = Gaffer.FileSystemPath( path, root )
 		
-		Gaffer.Path.__init__( self, path, filter )
+		Gaffer.Path.__init__( self, path[:], path.root(), filter=filter )
 				
 		# we use the seed for creating base paths whenever we need them
 		self.__basePathSeed = path
@@ -137,17 +137,15 @@ class SequencePath( Gaffer.Path ) :
 		sequences = IECore.findSequences( leafPathStrings, self.__minSequenceSize )
 		
 		result = []
-		for sequence in sequences :
-			result.append( SequencePath( self.__basePath( str( sequence ) ), self.__minSequenceSize, self.getFilter() ) )
-		for path in nonLeafPaths :
-			result.append( SequencePath( self.__basePath( str( path ) ), self.__minSequenceSize, self.getFilter() ) )
-
+		for path in sequences + nonLeafPaths :
+			result.append( SequencePath( self.__basePath( str( path ) ), minSequenceSize=self.__minSequenceSize, filter = self.getFilter() ) )
+			
 		return result
 
 	def copy( self ) :
 	
-		result = SequencePath( self.__basePathSeed, self.__minSequenceSize, self.getFilter() )
-		result[:] = self[:]
+		result = SequencePath( self.__basePathSeed, minSequenceSize = self.__minSequenceSize, filter = self.getFilter() )
+		result.setFromPath( self )
 		return result
 		
 	def __basePath( self, path ) :
@@ -156,7 +154,7 @@ class SequencePath( Gaffer.Path ) :
 		if isinstance( path, basestring ) :
 			result.setFromString( path )
 		else :
-			result[:] = path[:]
+			result.setFromPath( path )
 		
 		return result
 
