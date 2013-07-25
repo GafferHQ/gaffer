@@ -1,3 +1,16 @@
+0.72.0
+======
+
+- Added workaround for weird focus-stealing behaviour in Maya.
+- Added application variable to the scope available to the screen grab command.
+- Added support for empty and relative paths in Gaffer.Path. ( #432, #324 )
+    
+    - Added root parameter to all path constructors. This is used to define the root when the path parameter is passed a list of items. Because python doesn't allow overloaded functions this is slightly awkward - see documentation of Path.__init__ for discussion of how this would break down into overloaded constructors when we move the implementation to C++.
+    - Added Path.root() and Path.isEmpty() methods.
+    - Added Path.setFromPath() method, which copies the elements and the root from another path. This should be used in place of code which formerly did path[:] = otherPath[:].
+    
+    Note that the new root parameter changes the parameter order for all Path (and derived class) constructors - if you were formerly passing a filter as a non-keyword argument you should now pass it as a keyword argument to avoid problems. Additionally, if you implemented a custom Path subclass, you need to add the root parameter to your constructor and update your copy() and children() implementations. The DictPath changes provide a minimal example of what needs changing.
+    
 0.71.0
 ======
 
