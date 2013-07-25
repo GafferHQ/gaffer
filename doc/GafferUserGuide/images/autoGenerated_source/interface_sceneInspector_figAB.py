@@ -1,3 +1,4 @@
+import GafferUI
 scriptWindow = GafferUI.ScriptWindow.acquire( script ) #load a suitable layout - shouldn't need this once layout is stored in script
 layouts = GafferUI.Layouts.acquire( application ) #load a suitable layout - shouldn't need this once layout is stored in script
 layout = layouts.create( 'user:screenGrabTest', scriptWindow.scriptNode() ) #load a suitable layout - shouldn't need this once layout is stored in script

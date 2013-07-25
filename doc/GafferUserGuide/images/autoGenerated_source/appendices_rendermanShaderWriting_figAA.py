@@ -1,3 +1,4 @@
+import GafferUI
 import GafferRenderMan
 import os
 scriptFile = script['fileName'].getValue()
