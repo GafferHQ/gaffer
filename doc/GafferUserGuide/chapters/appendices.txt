@@ -89,7 +89,7 @@ Also, as nodes are described by plain text you can cut and paste into emails/IM 
 These one or two-liners achieve simple tasks via the python scripting interface, and serve as examples to build from.
 More complete details of the gaffer api are available !!!!HERE!!!!
 
-* Using the current frame to drive a plug. Enter in an expression for constant update.
+* Using the current frame to drive a plug (in this case the number of pixel samples). Enter in an expression for constant update.
 [source, python]
 ------------------------------------
 parent['RenderManOptions']['options']['pixelSamples']['value']['y'] = int(context.getFrame())
@@ -102,7 +102,7 @@ for i in range(1,120):
 	script.context().setFrame(i)
 ------------------------------------
 
-* Execute an named executable node - i.e. render
+* Execute a named executable node - i.e. render
 [source, python]
 ------------------------------------
 script['RenderManRender'].execute( [script.context()] )
