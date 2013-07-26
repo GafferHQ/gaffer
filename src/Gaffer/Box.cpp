@@ -289,7 +289,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	{		
 		Node *childNode = static_cast<Node *>( verifiedChildNodes->member( i ) );
 		// reroute any connections to external nodes
-		for( PlugIterator plugIt( childNode ); plugIt != plugIt.end(); plugIt++ )
+		for( RecursivePlugIterator plugIt( childNode ); plugIt != plugIt.end(); plugIt++ )
 		{
 			Plug *plug = plugIt->get();
 			if( plug->direction() == Plug::In )
@@ -307,6 +307,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 						mapIt = plugMap.insert( PlugPair( input, intermediateInput.get() ) ).first;
 					}
 					plug->setInput( mapIt->second );
+					plugIt.prune();
 				}
 			}
 			else
@@ -314,24 +315,28 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 				// take a copy of the outputs, because we might be modifying the
 				// original as we iterate.
 				Plug::OutputContainer outputs = plug->outputs();
-				typedef Plug::OutputContainer::const_iterator OutputIterator;
-				for( OutputIterator oIt = outputs.begin(), eIt = outputs.end(); oIt != eIt; oIt++ )
+				if( !outputs.empty() )
 				{
-					Plug *output = *oIt;
-					const Node *outputNode = output->node();
-					if( outputNode->parent<Node>() == parent && !verifiedChildNodes->contains( outputNode ) )
+					typedef Plug::OutputContainer::const_iterator OutputIterator;
+					for( OutputIterator oIt = outputs.begin(), eIt = outputs.end(); oIt != eIt; oIt++ )
 					{
-						PlugMap::const_iterator mapIt = plugMap.find( plug );
-						if( mapIt == plugMap.end() )
+						Plug *output = *oIt;
+						const Node *outputNode = output->node();
+						if( outputNode->parent<Node>() == parent && !verifiedChildNodes->contains( outputNode ) )
 						{
-							PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
-							intermediateOutput->setFlags( Plug::Dynamic, true );
-							result->addChild( intermediateOutput );
-							intermediateOutput->setInput( plug );
-							mapIt = plugMap.insert( PlugPair( plug, intermediateOutput.get() ) ).first;
+							PlugMap::const_iterator mapIt = plugMap.find( plug );
+							if( mapIt == plugMap.end() )
+							{
+								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
+								intermediateOutput->setFlags( Plug::Dynamic, true );
+								result->addChild( intermediateOutput );
+								intermediateOutput->setInput( plug );
+								mapIt = plugMap.insert( PlugPair( plug, intermediateOutput.get() ) ).first;
+							}
+							output->setInput( mapIt->second );
 						}
-						output->setInput( mapIt->second );
 					}
+					plugIt.prune();
 				}
 			}
 		}
