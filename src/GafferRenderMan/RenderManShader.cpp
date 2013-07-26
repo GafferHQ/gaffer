@@ -151,19 +151,20 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
+		const Plug *sourcePlug = inputPlug->source<Plug>();
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
 			// coshader parameter - input must be another
 			// renderman shader hosting a coshader.
-			const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
-			return inputShader && inputPlug->getName() == "out" && inputShader->typePlug()->getValue() == "ri:shader";
+			const RenderManShader *inputShader = sourcePlug->parent<RenderManShader>();
+			return inputShader && sourcePlug == inputShader->outPlug() && inputShader->typePlug()->getValue() == "ri:shader";
 		}
 		else
 		{
 			// standard parameter - input must not be the
 			// output of another shader.
-			const Shader *inputShader = inputPlug->ancestor<Shader>();
-			return !inputShader || inputPlug != inputShader->outPlug();
+			const Shader *inputShader = sourcePlug->ancestor<Shader>();
+			return !inputShader || sourcePlug != inputShader->outPlug();
 		}
 	}
 	
