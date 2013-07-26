@@ -868,6 +868,30 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 				]
 			),
 		)
-			
+		
+	def testCoshadersInBox( self ) :
+	
+		s = Gaffer.ScriptNode()
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		s["shader"] = GafferRenderMan.RenderManShader()
+		s["shader"].loadShader( shader )
+				
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		s["coshader"] = GafferRenderMan.RenderManShader()
+		s["coshader"].loadShader( coshader )
+
+		s["shader"]["parameters"]["coshaderParameter"].setInput( s["coshader"]["out"] )
+				
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["coshader"] ] ) )
+
+		self.assertTrue( s["shader"]["parameters"]["coshaderParameter"].getInput().parent().isSame( b ) )
+		
+		s = s["shader"].state()
+		
+		self.assertEqual( len( s ), 2 )
+		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
+		self.assertEqual( s[0].name, coshader )
+		
 if __name__ == "__main__":
 	unittest.main()
