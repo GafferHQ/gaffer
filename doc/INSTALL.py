@@ -141,8 +141,15 @@ class installationTool():
 			self.messageHeader = 'GafferUserGuide'
 			
 			##generate licenses content in asciidoc format
-			self.logit('Generating license data...')
-			os.system( gp_cmd + ' appendicies_licensesGenerator.py' )
+			#self.logit('Generating license data...')
+			#os.system( gp_cmd + ' appendicies_licensesGenerator.py' )
+			
+			self.logit('Running any dynamic content generation scripts...')
+			prescripts_dir = os.path.join( build_root, 'GafferUserGuide', 'dynamicContentGenerators' )
+			for script in os.listdir( prescripts_dir  ):
+				self.logit( script )
+				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
+			
 			
 			if self.opts['images_flag']:
 				##generate images from reference scripts
