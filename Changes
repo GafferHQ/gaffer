@@ -1,3 +1,11 @@
+0.72.1
+======
+
+- Updated PySide build.
+- Fixed bug expanding objects in viewer when a custom variable was needed by the computation (#438).
+- Fixed boxing of RenderMan coshaders (#440).
+- Fixed Qt 4.6 compatibility.
+
 0.72.0
 ======
 
