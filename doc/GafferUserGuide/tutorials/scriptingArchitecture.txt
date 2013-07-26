@@ -4,7 +4,7 @@
 ==== Introduction
 All of Gaffer's core functionality is available to be scripted using Python - in fact much of the GUI application itself is written in Python, Gaffer plugins are just Python modules, and the file format itself is simply a Python script with a .gfr extension.
 
-There is a direct one to one correspondence between the C\++ and Python APIs for Gaffer, so if you start out using one, you can easily transfer to the other. This makes it relatively straightforward to prototype in Python, but convert to C\++ if performance becomes an issue, or to spend most of your time hacking away in C\++ but still be comfortable writing some GUI code in Python.
+There is a direct one to one correspondence between the C\++ and Python APIs for Gaffer, so if you start out using one, you can easily transfer to the other. This makes it relatively straightforward to prototype in Python, but convert to C\++ if performance becomes an issue, or to spend most of your time hacking away in C++ but still be comfortable writing some GUI code in Python.
 
 ==== GraphComponents
 The most central classes in the Gaffer API are the GraphComponents - the nodes and plugs which are connected to make up a dependency graph. These are parented together in a hierarchical set of relationships, which nicely map to python's dictionary and list syntax. Plugs may be added to nodes using the familiar dictionary notation :
