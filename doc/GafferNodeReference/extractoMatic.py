@@ -63,6 +63,7 @@ def checkForChildPlugsAndAddToDoc( doc, plug , inDepth ):
 	endPlugs = ['Gaffer::Color3fPlug', 'Gaffer::Color4fPlug', 'Gaffer::V3fPlug']#, 'Gaffer::CompoundDataPlug::MemberPlug']
 	if len(childPlugs) == 0 or isPlugPluggable( plug ) or plug.typeName() in endPlugs:
 		addPlugDefinitionToDoc( doc, plug.getName(), GafferUI.Metadata.plugDescription(plug), plug.typeName(), depth )
+		
 	elif plug.typeName() == 'Gaffer::CompoundDataPlug::MemberPlug':
 		#special case for these compound plugs that have the enable/disable check.
 		#we will promote the type of their child 'value' plug to this level.
@@ -72,6 +73,7 @@ def checkForChildPlugsAndAddToDoc( doc, plug , inDepth ):
 				valueType = cplug.typeName()
 		
 		addPlugDefinitionToDoc( doc, plug.getName()+'.value', GafferUI.Metadata.plugDescription(plug), valueType, depth )
+		
 	else:
 		#we have children so recursively check for more children
 		addPlugDefinitionToDoc( doc, plug.getName(), GafferUI.Metadata.plugDescription(plug), plug.typeName(), depth )
@@ -131,13 +133,12 @@ with open('./dynamicContent.txt', 'w') as targetDoc:
 				assert( str( e ) == "This class cannot be instantiated from Python" )
 				continue
 			
-			
-			#DEBUG temporarily only process specific node(s) for brevity
-			testNodes = ['AimConstraint','Box','ArnoldAttributes','ArnoldLight','ArnoldOptions']
-			if not name in testNodes:
+			#also skip nodes that have been inherited from. these are lowlevel nodes that users wont be expected to interact with
+			#user would interact with the subclasses.
+			if item.__subclasses__():
+				#print item.staticTypeName()
 				continue
-			
-			
+		
 			#now we have all the information we need for this node (including an instance of the node),
 			#so print it into the asciidoc file
 			addNodeDefinitionToDoc( targetDoc, name, node)
