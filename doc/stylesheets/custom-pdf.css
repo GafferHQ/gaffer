@@ -175,7 +175,7 @@ img {
 }
 
 h1, h2, h3, h4, h5, h6,
-div.title, caption.title,
+div.title, caption.title, div.nonimage_title,
 thead, p.table.header,
 #toctitle,
 #author, #revnumber, #revdate, #revremark,
@@ -186,7 +186,11 @@ thead, p.table.header,
   color: #3E4349;
 }
 
-div.title, caption.title { color: #596673; font-weight: bold; font-size:80%; text-align:center }
+div.title, caption.title, div.nonimage_title { color: #596673; font-weight: bold; }
+div.nonimage_title { font-size:100%; text-align:left; }
+div.title, caption.title { font-size:80%; text-align:center; }
+
+
 h1 { font-size: 240%; }
 h2 { font-size: 180%; }
 h3 { font-size: 130%; }
