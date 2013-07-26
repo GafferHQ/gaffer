@@ -52,6 +52,19 @@ namespace GafferImage
 
 /// The ImagePlug is used to pass images between nodes in the gaffer graph. It is a compound
 /// type, with subplugs for different aspects of the image.
+///
+/// Some notes on the Gaffer Image Space:
+/// Images are represented internally to Gaffer with their origin located in the bottom left of the
+/// display window with the positive Y axis ascending towards the top of the image. The reasoning
+/// behind deviating from the OpenEXR and Cortex representation which, defines the origin in the top
+/// left corner of the display window with the positive Y axis pointing downwards, is
+/// to make things more intuitive for the user whilst simplifying node development.
+/// If images were to follow the OpenEXR convention and have their origin in the top left,
+/// values taken from screen space gadgets and plugs such as the Transform2DPlug and Box2iPlug
+/// would require their values to be flipped around the top edge of the image's display window
+/// to transform them into image space. By using the same coordinate axis for both the screen and
+/// image space, the values taken from the transform2DPlug and Box2iPlug can be used directly and
+/// independently of the image's format.
 class ImagePlug : public Gaffer::CompoundPlug
 {
 
@@ -100,6 +113,12 @@ class ImagePlug : public Gaffer::CompoundPlug
 		//@{
 		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
 		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
+		/// coordinate system will be converted to the OpenEXR and Cortex specification
+		/// and have it's origin in the top left of it's display window with the positive
+		/// Y axis pointing downwards rather than Gaffer's internal representation where
+		/// the origin is in the bottom left of the display window with the Y axis
+		/// ascending towards the top of the display window.
 		IECore::ImagePrimitivePtr image() const;
 		IECore::MurmurHash imageHash() const;
 		//@}
