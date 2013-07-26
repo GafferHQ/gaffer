@@ -34,15 +34,22 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_INPUTGENERATOR_H
-#define GAFFERIMAGE_INPUTGENERATOR_H
+#ifndef GAFFER_BEHAVIOURS_INPUTGENERATOR_H
+#define GAFFER_BEHAVIOURS_INPUTGENERATOR_H
 
 #include <vector>
-#include "Gaffer/Plug.h"
-#include "Gaffer/PlugIterator.h"
+
 #include "boost/regex.hpp"
 
+#include "Gaffer/Plug.h"
+#include "Gaffer/PlugIterator.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Behaviours/Behaviour.h"
+
 namespace Gaffer
+{
+
+namespace Behaviours
 {
 
 /// InputGenerator creates and maintains a minimum and optional set of inputs.
@@ -53,7 +60,7 @@ namespace Gaffer
 /// To use the InputGenerator, create a static instance of it within your node and call createInputs within the
 /// node's constructor.
 template< class PlugClass >
-class InputGenerator
+class InputGenerator : public Behaviour
 {
 	public :
 
@@ -124,9 +131,11 @@ class InputGenerator
 
 };
 
-};
+} // namespace Behaviours
+} // namespace Gaffer
 
-#include "Gaffer/InputGenerator.inl"
 
-#endif // GAFFERIMAGE_INPUTGENERATOR_H
+#include "Gaffer/Behaviours/InputGenerator.inl"
+
+#endif // GAFFER_BEHAVIOURS_INPUTGENERATOR_H
 

@@ -38,6 +38,8 @@
 
 namespace Gaffer
 {
+namespace Behaviours
+{
 
 template< typename PlugClass >
 void InputGenerator<PlugClass>::inputAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
@@ -152,5 +154,6 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr pl
 	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputAdded, this, ::_1, ::_2 ) );
 }
 
-} // namespace gaffer
+} // namespace Behaviours
+} // namespace Gaffer
 
