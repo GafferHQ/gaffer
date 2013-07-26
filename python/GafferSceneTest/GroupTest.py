@@ -620,6 +620,27 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( forwardDeclarations ), 2 )
 		self.assertEqual( forwardDeclarations["/group/lightGroup1/light"]["type"].value, IECore.Light.staticTypeId() )
 		self.assertEqual( forwardDeclarations["/group/lightGroup2/light"]["type"].value, IECore.Light.staticTypeId() )
+	
+	def testMakeConnectionAndUndo( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["c"] = GafferScene.Plane()
+		s["g"] = GafferScene.Group()
+		s["g"]["__customPlug"] = Gaffer.V2fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		with Gaffer.UndoContext( s ) :
+			s["g"]["in"].setInput( s["c"]["out"] )
+		
+		self.assertTrue( "__customPlug" in s["g"] )
+		self.assertTrue( "in" in s["g"] )
+		self.assertTrue( "in1" in s["g"] )
+		
+		s.undo()
+		
+		self.assertTrue( "__customPlug" in s["g"] )
+		self.assertTrue( "in" in s["g"] )
+		self.assertFalse( "in1" in s["g"] )
 		
 	def setUp( self ) :
 	
