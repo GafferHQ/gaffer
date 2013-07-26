@@ -335,27 +335,15 @@ options.Add(
 )
 
 options.Add(
-	"APIEXTRACTOR_SRC_DIR",
-	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/apiextractor-0.10.0",
-)
-
-options.Add(
-	"GENERATORRUNNER_SRC_DIR",
-	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/generatorrunner-0.6.6",
-)
-
-options.Add(
 	"SHIBOKEN_SRC_DIR",
 	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/shiboken-1.0.0~rc1",
+	"$DEPENDENCIES_SRC_DIR/shiboken-1.2.0",
 )
 
 options.Add(
 	"PYSIDE_SRC_DIR",
 	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/pyside-qt4.7+1.0.0~rc1",
+	"$DEPENDENCIES_SRC_DIR/pyside-qt4.8+1.2.0",
 )
 
 options.Add(
@@ -655,12 +643,21 @@ if depEnv["BUILD_DEPENDENCY_PYQT"] :
 if "MACOSX_DEPLOYMENT_TARGET" in depEnv["ENV"] :
 	del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
 if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
-	runCommand( "cd $APIEXTRACTOR_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make -j 4 && make install" )
-	runCommand( "cd $GENERATORRUNNER_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
 	if depEnv["PLATFORM"]=="darwin" :
-		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make clean && make && make install" )
-		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers && make VERBOSE=1 && make install" )
+		runCommand(
+			"cd $SHIBOKEN_SRC_DIR && "
+			"rm -rf build && mkdir build && cd build && "
+			"cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_SITE_PACKAGES=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/lib/Python.framework/Headers -DPYTHON_EXECUTABLE=$BUILD_DIR/bin/python -DPYTHON_LIBRARY=$BUILD_DIR/Python.framework/Versions/$PYTHON_VERSION/libpython${PYTHON_VERSION}.dylib && "
+			"make clean && make && make install"
+		)
+		runCommand(
+			"cd $PYSIDE_SRC_DIR && "
+			"rm -rf build && mkdir build && cd build && "
+			"cmake .. -DCMAKE_BUILD_TYPE=Release -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DALTERNATIVE_QT_INCLUDE_DIR=$BUILD_DIR/include && "
+			"make clean && make && make install"
+		)
 	else :
+		## \todo Get the linux build updated too
 		runCommand( "cd $SHIBOKEN_SRC_DIR && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DPYTHON_INCLUDE_DIR=$BUILD_DIR/include/python$PYTHON_VERSION -DCMAKE_USE_PYTHON_VERSION=$PYTHON_VERSION && make clean && make && make install" )
 		runCommand( "cd $PYSIDE_SRC_DIR && cmake -DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR && make clean && make VERBOSE=1 && make install" )
 		
@@ -1115,7 +1112,7 @@ env.Alias( "build", graphicsBuild )
 
 if buildingDependencies :
 
-	for l in [
+	licenses = [
 		( "python", "$PYTHON_SRC_DIR/LICENSE" ),
 		( "boost", "$BOOST_SRC_DIR/LICENSE_1_0.txt" ),
 		( "cortex", "$CORTEX_SRC_DIR/LICENSE" ),
@@ -1132,8 +1129,15 @@ if buildingDependencies :
 		( "hdf5", "$HDF5_SRC_DIR/COPYING" ),
 		( "alembic", "$ALEMBIC_SRC_DIR/LICENSE.txt" ),
 		( "qt", "$QT_SRC_DIR/LICENSE.LGPL" ),
-		( "pyQt", "$PYQT_SRC_DIR/GPL_EXCEPTION.TXT" ),
-	] :
+	]
+	
+	if env["BUILD_DEPENDENCY_PYQT"] :
+		licenses.append( ( "pyQt", "$PYQT_SRC_DIR/GPL_EXCEPTION.TXT" ) )
+	
+	if env["BUILD_DEPENDENCY_PYSIDE"] :
+		licenses.append( ( "pySide", "$PYSIDE_SRC_DIR/COPYING" ) )
+	
+	for l in licenses :
 
 		license = env.InstallAs( "$BUILD_DIR/doc/licenses/" + l[0], l[1] )
 		env.Alias( "build", license )
