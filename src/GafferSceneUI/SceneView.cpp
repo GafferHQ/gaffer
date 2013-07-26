@@ -205,6 +205,8 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 
 void SceneView::expandSelection()
 {
+	Context::Scope scopedContext( getContext() );
+
 	RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
 	
 	vector<string> pathsToSelect;
