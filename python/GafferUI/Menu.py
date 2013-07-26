@@ -169,7 +169,9 @@ class Menu( GafferUI.Widget ) :
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
 			self.__searchLine.setObjectName( "search" )
-			self.__searchLine.setPlaceholderText( "Search..." )
+			if hasattr( self.__searchLine, "setPlaceholderText" ) :
+				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
+				self.__searchLine.setPlaceholderText( "Search..." )
 			if self.__lastAction :
 				self.__searchLine.setText( self.__lastAction.text() )
 				self.__searchMenu.setDefaultAction( self.__lastAction )
