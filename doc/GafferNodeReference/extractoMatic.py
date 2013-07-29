@@ -115,7 +115,7 @@ with open('./dynamicContent.txt', 'w') as targetDoc:
 		#print the module name into the doc
 		addModuleDefinitionToDoc( targetDoc, modules[i] )
 
-		#get all the members for this module	
+		#get all the members for this module
 		moduleContents = dir( imported[i] )
 		
 		#loop over the members
@@ -136,9 +136,8 @@ with open('./dynamicContent.txt', 'w') as targetDoc:
 			#also skip nodes that have been inherited from. these are lowlevel nodes that users wont be expected to interact with
 			#user would interact with the subclasses.
 			if item.__subclasses__():
-				#print item.staticTypeName()
 				continue
-		
+			
 			#now we have all the information we need for this node (including an instance of the node),
 			#so print it into the asciidoc file
 			addNodeDefinitionToDoc( targetDoc, name, node)
@@ -147,7 +146,6 @@ with open('./dynamicContent.txt', 'w') as targetDoc:
 			##sort the tuple of plugs alphabetically by result of getName
 			plugs = node.children()
 			plugs = sorted( plugs, key=lambda x:x.getName() )
-			
 			for plug in plugs:
 				if not plug.getName().startswith('__'): #skip special plugs
 					
