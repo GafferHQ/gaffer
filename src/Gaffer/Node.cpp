@@ -128,12 +128,20 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 	
 	if( !newParent )
 	{
-		for( InputPlugIterator it( this ); it!=it.end(); it++ )
+		// because the InputGenerator code removes plugs when inputs
+		// are removed, we have to take a copy of the current children
+		// and iterate over that - otherwise our iterators are invalidated
+		// and we get crashes. if we see further problems caused by the
+		// InputGenerator creating plugs whenever it sees fit, we should
+		// consider an API where they are instead asked for explicitly
+		// when needed.
+		ChildContainer frozenChildren = children();
+		for( InputPlugIterator it( frozenChildren ); it!=it.end(); it++ )
 		{
 			(*it)->setInput( 0 );
 		}
 
-		for( OutputPlugIterator it( this ); it!=it.end(); it++ )
+		for( OutputPlugIterator it( frozenChildren ); it!=it.end(); it++ )
 		{
 			(*it)->removeOutputs();
 		}

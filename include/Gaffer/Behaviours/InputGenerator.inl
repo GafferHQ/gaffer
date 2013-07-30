@@ -36,122 +36,133 @@
 
 #include "boost/bind.hpp"
 
+#include "Gaffer/UndoContext.h"
+#include "Gaffer/ScriptNode.h"
+
 namespace Gaffer
 {
 namespace Behaviours
 {
 
 template< typename PlugClass >
-void InputGenerator<PlugClass>::inputAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr plugPrototype, size_t minInputs, size_t maxInputs )
+	:
+	m_parent( parent ),
+	m_minimumInputs( std::max( minInputs, size_t( 1 ) ) ),
+	m_maximumInputs( std::max( maxInputs, m_minimumInputs ) ),
+	m_nameValidator( std::string("^") + plugPrototype->getName().string() + std::string("[_0-9]*") ),
+	m_prototype( plugPrototype )
 {
-	if( child->isInstanceOf( PlugClass::staticTypeId() ) && validateName( child->getName() ) )
+	m_parent->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
+	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childAdded, this, ::_1, ::_2 ) );
+	m_parent->childRemovedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childRemoved, this, ::_1, ::_2 ) );
+
+	if( plugPrototype->template parent<GraphComponent>() != m_parent )
 	{
-		// Rebuild our list of input plugs.
-		m_inputs.clear();
-
-		// Iterate over all of the inputs on the parent and add them to our array
-		// if their name is valid.
-		for( InputIterator it( m_parent ); it != it.end(); it++ )
-		{
-			if ( validateName( (*it)->getName() ) )
-			{
-				m_inputs.push_back( (*it).get() );
-			}
-		}
-	}
-}
-
-template< typename PlugClass >
-void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
-{
-	if( plug->isInstanceOf( PlugClass::staticTypeId() ) && validateName( plug->getName() ) )
-	{
-		updateInputs();
-	}
-}
-
-template< typename PlugClass >
-void InputGenerator<PlugClass>::updateInputs()
-{
-	m_lastConnected = -1;
-	m_nConnectedInputs = 0;
-	std::vector<PlugClass *> inputs;
-	for( InputIterator it( m_parent ); it != it.end(); ++it )
-	{
-		if ( validateName( (*it)->getName() ) )
-		{
-			if( (*it)->template getInput<Plug>() )
-			{
-				m_lastConnected = inputs.size();
-				++m_nConnectedInputs;
-			}
-			inputs.push_back( it->get() );
-		}
-	}
-
-	int numInputs = (int)inputs.size();
-
-	if( m_lastConnected == numInputs - 1)
-	{
-		if ( numInputs < (int)m_maximumInputs )
-		{
-			PlugClassPtr p = IECore::runTimeCast<PlugClass>( m_prototype->createCounterpart( m_prototype->getName(), Plug::In ) );
-			m_parent->addChild( p );
-		}
+		m_parent->addChild( plugPrototype );
 	}
 	else
 	{
-		for( int i = std::max( m_lastConnected + 2, (int)m_minimumInputs ); i < numInputs; i++ )
-		{
-			m_parent->removeChild( inputs[i] );
-			m_inputs.erase( m_inputs.begin()+i );
-		}
+		// because the addChild() happened before we were constructed, our childAdded() slot
+		// won't have had a chance to update m_inputs.
+		m_inputs.push_back( plugPrototype );
 	}
+
+	for( size_t i = 1; i < m_minimumInputs; ++i )
+	{
+		PlugClassPtr p = IECore::runTimeCast<PlugClass>( plugPrototype->createCounterpart( plugPrototype->getName(), Plug::In ) );
+		m_parent->addChild( p );
+	}	
 }
 
 template< typename PlugClass >
 typename std::vector< IECore::IntrusivePtr< PlugClass > >::const_iterator InputGenerator<PlugClass>::endIterator() const
 {
-	if ( m_inputs.size() > m_minimumInputs )
+	return m_inputs.end();
+}
+
+template<typename PlugClass>
+size_t InputGenerator<PlugClass>::nConnectedInputs() const
+{
+	size_t result = 0;
+	for( typename std::vector<PlugClassPtr>::const_iterator it = m_inputs.begin(), eIt=m_inputs.end(); it != eIt; ++it )
 	{
-		return m_inputs.begin()+m_lastConnected+1;
+		if( (*it)->template getInput<Gaffer::Plug>() )
+		{
+			result++;
+		}
 	}
-	return m_inputs.begin()+m_minimumInputs;
+	return result;
 }
 
 template< typename PlugClass >
-InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr plugPrototype, size_t min, size_t max ):
-	m_parent( parent ),
-	m_minimumInputs( min ),
-	m_maximumInputs( max ),
-	m_lastConnected( 0 ),
-	m_nConnectedInputs( 0 ),
-	m_nameValidator( std::string("^") + plugPrototype->getName().string() + std::string("[_0-9]*") ),
-	m_prototype( plugPrototype )
+void InputGenerator<PlugClass>::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	// The first of our inputs is always the prototype plug.
-	m_inputs.clear();
-	m_inputs.push_back( plugPrototype );
-
-	// Check whether the parent already has an instance of the plugPrototype and if not, add it to the parent node.
-	if ( !m_parent->isAncestorOf( plugPrototype ) )
+	if( child->isInstanceOf( PlugClass::staticTypeId() ) && validateName( child->getName() ) )
 	{
-		m_parent->addChild( plugPrototype );
+		m_inputs.push_back( static_cast<PlugClass *>( child ) );
 	}
+}
 
-	m_minimumInputs = std::max( min, size_t(1) );
-	m_maximumInputs = std::max( max, m_minimumInputs );
+template<typename PlugClass>
+void InputGenerator<PlugClass>::childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+{
+	m_inputs.erase( std::remove( m_inputs.begin(), m_inputs.end(), child ), m_inputs.end() );
+}
 
-	for ( unsigned int i = 1; i < m_minimumInputs; ++i )
+template< typename PlugClass >
+void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
+{
+	if( !plug->isInstanceOf( PlugClass::staticTypeId() ) )
 	{
-		PlugClassPtr p = IECore::runTimeCast<PlugClass>( plugPrototype->createCounterpart( plugPrototype->getName(), Plug::In ) );
-		m_parent->addChild( p );
-		m_inputs.push_back( p );
+		return;
 	}
 	
-	// Connect up the signals of the parent to our slots.
-	m_parent->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
-	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputAdded, this, ::_1, ::_2 ) );
+	if( !validateName( plug->getName() ) )
+	{
+		return;
+	}
+		
+	if( plug->getInput<Plug>() )
+	{
+		// connection made. if it's the last plug
+		// then we need to add one more.
+		if( plug == *(m_inputs.rbegin()) && m_inputs.size() < m_maximumInputs )
+		{
+			PlugClassPtr p = IECore::runTimeCast<PlugClass>( m_prototype->createCounterpart( m_prototype->getName(), Plug::In ) );
+			p->setFlags( Gaffer::Plug::Dynamic, true );
+			UndoContext undoContext( m_parent->scriptNode(), UndoContext::Disabled );
+			m_parent->addChild( p );
+		}
+	}
+	else
+	{
+		// connection broken. we need to remove any
+		// unneeded unconnected plugs so that we have
+		// only one unconnected plug at the end.
+		std::vector<Plug *> toRemove;
+		for( size_t i = m_inputs.size() - 1; i > m_minimumInputs - 1; --i )
+		{
+			if( m_inputs[i]->template getInput<Plug>() == 0 && m_inputs[i-1]->template getInput<Plug>() == 0 )
+			{
+				toRemove.push_back( m_inputs[i] );
+			}
+			else
+			{
+				break;
+			}
+		}
+		
+		
+		if( toRemove.size() )
+		{
+			UndoContext undoContext( m_parent->scriptNode(), UndoContext::Disabled );
+			for( std::vector<Plug *>::const_iterator it = toRemove.begin(), eIt = toRemove.end(); it != eIt; ++it )
+			{
+				(*it)->parent<Gaffer::GraphComponent>()->removeChild( *it );
+			}
+		}
+	}	
 }
 
 } // namespace Behaviours
