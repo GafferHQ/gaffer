@@ -192,7 +192,13 @@ IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 size_t ScriptNode::g_firstPlugIndex = 0;
 
 ScriptNode::ScriptNode( const std::string &name )
-	:	Node( name ), m_selection( new StandardSet ), m_selectionOrphanRemover( m_selection ), m_undoIterator( m_undoList.end() ), m_context( new Context )
+	:
+	Node( name ),
+	m_selection( new StandardSet ),
+	m_selectionOrphanRemover( m_selection ),
+	m_undoIterator( m_undoList.end() ),
+	m_currentActionStage( Action::Invalid ),
+	m_context( new Context )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -260,6 +266,7 @@ void ScriptNode::pushUndoState( UndoContext::State state, const std::string &mer
 	{
 		assert( m_actionAccumulator==0 );
 		m_actionAccumulator = new CompoundAction( this, mergeGroup );
+		m_currentActionStage = Action::Do;
 	}
 	m_undoStateStack.push( state );
 }
@@ -317,23 +324,29 @@ void ScriptNode::popUndoState()
 			unsavedChangesPlug()->setValue( true );
 		}
 		m_actionAccumulator = 0;
+		m_currentActionStage = Action::Invalid;
 	}
 	
 }	
 
 bool ScriptNode::undoAvailable() const
 {
-	return m_undoIterator != m_undoList.begin();
+	return m_currentActionStage == Action::Invalid && m_undoIterator != m_undoList.begin();
 }
 
 void ScriptNode::undo()
 {
 	if( !undoAvailable() )
 	{
-		throw IECore::Exception( "Nothing to undo" );
+		throw IECore::Exception( "Undo not available" );
 	}
-	m_undoIterator--;
-	(*m_undoIterator)->undoAction();
+	
+	m_currentActionStage = Action::Undo;
+	
+		m_undoIterator--;
+		(*m_undoIterator)->undoAction();
+
+	m_currentActionStage = Action::Invalid;
 	
 	UndoContext undoDisabled( this, UndoContext::Disabled );
 	unsavedChangesPlug()->setValue( true );
@@ -341,21 +354,30 @@ void ScriptNode::undo()
 
 bool ScriptNode::redoAvailable() const
 {
-	return m_undoIterator != m_undoList.end();
+	return m_currentActionStage == Action::Invalid && m_undoIterator != m_undoList.end();
 }
 
 void ScriptNode::redo()
 {
 	if( !redoAvailable() )
 	{
-		throw IECore::Exception( "Nothing to redo" );
+		throw IECore::Exception( "Redo not available" );
 	}
 	
-	(*m_undoIterator)->doAction();
-	m_undoIterator++;
+	m_currentActionStage = Action::Redo;
+
+		(*m_undoIterator)->doAction();
+		m_undoIterator++;
+
+	m_currentActionStage = Action::Invalid;
 	
 	UndoContext undoDisabled( this, UndoContext::Disabled );
 	unsavedChangesPlug()->setValue( true );
+}
+
+Action::Stage ScriptNode::currentActionStage() const
+{
+	return m_currentActionStage;
 }
 
 ScriptNode::ActionSignal &ScriptNode::actionSignal()

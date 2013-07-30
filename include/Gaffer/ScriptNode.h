@@ -107,6 +107,9 @@ class ScriptNode : public Node
 		void undo();
 		bool redoAvailable() const;
 		void redo();
+		/// Can be used to query whether the actions currently being
+		/// performed on the script represent a Do, Undo or Redo.
+		Action::Stage currentActionStage() const;
 		/// A signal emitted after an action is performed on the script or
 		/// one of its children. Note that this is only emitted for actions
 		/// performed within an UndoContext.
@@ -262,7 +265,8 @@ class ScriptNode : public Node
 		CompoundActionPtr m_actionAccumulator; // Actions are accumulated here until the state stack hits 0 size
 		UndoList m_undoList; // then the accumulated actions are transferred to this list for storage
 		UndoIterator m_undoIterator; // points to the next thing to redo
-			
+		Action::Stage m_currentActionStage;
+		
 		ScriptExecutedSignal m_scriptExecutedSignal;
 		ScriptEvaluatedSignal m_scriptEvaluatedSignal;
 			
