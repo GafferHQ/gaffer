@@ -95,7 +95,22 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodule( n["c1"]["c2"]["c3"] ).plug().isSame( n["c1"]["c2"]["c3"] ) )
 		self.assertTrue( g.nodule( n["c1"]["c2"]["c3"]["i3"] ).plug().isSame( n["c1"]["c2"]["c3"]["i3"] ) )
 		
-			
+	def testAddAndRemovePlugs( self ) :
+	
+		n = Gaffer.Node()
+		g = GafferUI.StandardNodeGadget( n )
+		
+		p = Gaffer.IntPlug()
+		n["p"] = p
+		
+		nodule = g.nodule( p )
+		self.assertTrue( nodule is not None )
+		
+		del n["p"]
+		
+		self.assertTrue( g.nodule( p ) is None )
+		self.assertTrue( nodule.parent() is None )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
