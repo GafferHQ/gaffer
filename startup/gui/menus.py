@@ -114,7 +114,7 @@ except Exception, m :
 
 # Scene nodes
 
-nodeMenu.append( "/Scene/Source/Scene Reader", GafferScene.SceneReader, searchText = "Scene Reader" )
+nodeMenu.append( "/Scene/Source/Scene Reader", GafferScene.SceneReader, searchText = "SceneReader" )
 nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
