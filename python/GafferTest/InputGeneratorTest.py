@@ -213,6 +213,84 @@ class InputGeneratorTest( unittest.TestCase ) :
 		n["in2"].setInput( None )
 		
 		self.assertEqual( len( g ), 3 )		
+	
+	def testDeleteAndUndoAndRedo( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferTest.AddNode()
+		s["n"] = GafferTest.InputGeneratorNode()
+		
+		s["n"]["in"].setInput( s["a"]["sum"] )
+		s["n"]["in1"].setInput( s["a"]["sum"] )
+		s["n"]["in2"].setInput( s["a"]["sum"] )
+		
+		self.assertEqual( len( s["n"].inputs ), 4 )
+		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+		
+		with Gaffer.UndoContext( s ) :
+			s.deleteNodes( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		
+		self.assertFalse( "n" in s )
+		
+		s.undo()
+		
+		self.assertEqual( len( s["n"].inputs ), 4 )
+		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+		
+		s.redo()
+		
+		self.assertFalse( "n" in s )
+
+		s.undo()
+		
+		self.assertEqual( len( s["n"].inputs ), 4 )
+		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+	
+	def testDeleteInputNodeAndUndoAndRedo( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferTest.AddNode()
+		s["n"] = GafferTest.InputGeneratorNode()
+		
+		s["n"]["in"].setInput( s["a"]["sum"] )
+		s["n"]["in1"].setInput( s["a"]["sum"] )
+		s["n"]["in2"].setInput( s["a"]["sum"] )
+		
+		n = s["n"]
+		
+		self.assertEqual( len( s["n"].inputs ), 4 )
+		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+		
+		with Gaffer.UndoContext( s ) :
+			s.deleteNodes( s, Gaffer.StandardSet( [ s["a"] ] ) )
+		
+		self.assertFalse( "a" in s )
+		
+		s.undo()
+				
+		self.assertEqual( len( s["n"].inputs ), 4 )
+		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+		
+		s.redo()
+		
+		self.assertFalse( "a" in s )
+
+		s.undo()
+		
+		self.assertEqual( len( s["n"].inputs ), 4 )
+		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
 		
 	def tearDown( self ) :
 		

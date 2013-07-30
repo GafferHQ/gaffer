@@ -36,7 +36,6 @@
 
 #include "boost/bind.hpp"
 
-#include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 
 namespace Gaffer
@@ -122,6 +121,20 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 	{
 		return;
 	}
+	
+	if( const ScriptNode *script = plug->ancestor<ScriptNode>() )
+	{
+		if( script->currentActionStage() == Action::Undo ||
+		    script->currentActionStage() == Action::Redo
+		)
+		{
+			// if we're currently in an undo or redo, we don't
+			// need to do anything, because our previous actions
+			// will be in the undo queue and will be being replayed
+			// for us automatically. 
+			return;
+		}
+	}
 		
 	if( plug->getInput<Plug>() )
 	{
@@ -131,7 +144,6 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 		{
 			PlugClassPtr p = IECore::runTimeCast<PlugClass>( m_prototype->createCounterpart( m_prototype->getName(), Plug::In ) );
 			p->setFlags( Gaffer::Plug::Dynamic, true );
-			UndoContext undoContext( m_parent->scriptNode(), UndoContext::Disabled );
 			m_parent->addChild( p );
 		}
 	}
@@ -156,7 +168,6 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 		
 		if( toRemove.size() )
 		{
-			UndoContext undoContext( m_parent->scriptNode(), UndoContext::Disabled );
 			for( std::vector<Plug *>::const_iterator it = toRemove.begin(), eIt = toRemove.end(); it != eIt; ++it )
 			{
 				(*it)->parent<Gaffer::GraphComponent>()->removeChild( *it );
