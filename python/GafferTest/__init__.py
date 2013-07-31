@@ -82,11 +82,11 @@ from ParameterisedHolderTest import ParameterisedHolderTest
 from ParameterHandlerTest import ParameterHandlerTest
 from ChildSetTest import ChildSetTest
 from PythonApplicationTest import PythonApplicationTest
-from ReadNodeTest import ReadNodeTest
+from ObjectReaderTest import ObjectReaderTest
 from OpHolderTest import OpHolderTest
 from ProceduralHolderTest import ProceduralHolderTest
 from ApplicationRootTest import ApplicationRootTest
-from WriteNodeTest import WriteNodeTest
+from ObjectWriterTest import ObjectWriterTest
 from ExecuteApplicationTest import ExecuteApplicationTest
 from ContextTest import ContextTest
 from CompoundPathFilterTest import CompoundPathFilterTest

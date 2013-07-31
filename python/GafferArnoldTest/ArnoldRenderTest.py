@@ -45,6 +45,7 @@ import Gaffer
 import GafferTest
 import GafferScene
 import GafferArnold
+import GafferArnoldTest
 
 class ArnoldRenderTest( GafferTest.TestCase ) :
 
@@ -170,10 +171,12 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 	def testTypeNamePrefixes( self ) :
 	
 		self.assertTypeNamesArePrefixed( GafferArnold )
+		self.assertTypeNamesArePrefixed( GafferArnoldTest )
 	
 	def testDefaultNames( self ) :
 	
 		self.assertDefaultNamesAreCorrect( GafferArnold )
+		self.assertDefaultNamesAreCorrect( GafferArnoldTest )
 	
 	def testDirectoryCreation( self ) :
 	

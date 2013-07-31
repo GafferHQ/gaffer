@@ -649,10 +649,12 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testTypeNamePrefixes( self ) :
 	
 		self.assertTypeNamesArePrefixed( Gaffer )
+		self.assertTypeNamesArePrefixed( GafferTest )
 		
 	def testDefaultNames( self ) :
 	
 		self.assertDefaultNamesAreCorrect( Gaffer )
+		self.assertDefaultNamesAreCorrect( GafferTest )
 		
 	def testClearChildren( self ) :
 	

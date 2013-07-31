@@ -51,12 +51,12 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 	
 		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
 		
-		read = Gaffer.ReadNode()
+		read = Gaffer.ObjectReader()
 		read["fileName"].setValue( fileName )
 		object = IECore.Reader.create( fileName ).read()
 		
 		objectToScene = GafferScene.ObjectToScene()
-		objectToScene["object"].setInput( read["output"] )
+		objectToScene["object"].setInput( read["out"] )
 		
 		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
 		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )

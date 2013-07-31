@@ -43,8 +43,9 @@ import IECore
 import Gaffer
 import GafferScene
 import GafferRenderMan
+import GafferRenderManTest
 
-class RenderManRenderTest( unittest.TestCase ) :
+class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 	__scriptFileName = "/tmp/test.gfr"
 		
@@ -247,6 +248,16 @@ class RenderManRenderTest( unittest.TestCase ) :
 		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/ribTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/ribTests/test.0001.rib" ) )
+
+	def testTypeNamePrefixes( self ) :
+	
+		self.assertTypeNamesArePrefixed( GafferRenderMan )
+		self.assertTypeNamesArePrefixed( GafferRenderManTest )
+
+	def testDefaultNames( self ) :
+	
+		self.assertDefaultNamesAreCorrect( GafferRenderMan )
+		self.assertDefaultNamesAreCorrect( GafferRenderManTest )
 		
 	def setUp( self ) :
 	

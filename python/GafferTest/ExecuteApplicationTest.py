@@ -59,12 +59,12 @@ class ExecuteApplicationTest( unittest.TestCase ) :
 		self.failUnless( "thisScriptDoesNotExist" in "".join( p.stderr.readlines() ) )
 		self.failUnless( p.returncode )
 	
-	def testExecuteWriteNode( self ) :
+	def testExecuteObjectWriter( self ) :
 	
 		s = Gaffer.ScriptNode()
 		
 		s["sphere"] = GafferTest.SphereNode()
-		s["write"] = Gaffer.WriteNode()
+		s["write"] = Gaffer.ObjectWriter()
 		s["write"]["in"].setInput( s["sphere"]["out"] )
 		s["write"]["fileName"].setValue( self.__outputFileName )
 			

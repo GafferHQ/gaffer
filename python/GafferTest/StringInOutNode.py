@@ -63,4 +63,4 @@ class StringInOutNode( Gaffer.ComputeNode ) :
 		if plug.isSame( self["out"] ) :
 			plug.setValue( self["in"].getValue() )
 			
-IECore.registerRunTimeTyped( StringInOutNode )
+IECore.registerRunTimeTyped( StringInOutNode, typeName = "GafferTest::StringInOutNode" )
