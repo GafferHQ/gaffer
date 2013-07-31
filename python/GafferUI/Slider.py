@@ -258,6 +258,9 @@ class Slider( GafferUI.Widget ) :
 		
 		result = None
 		for i, p in enumerate( self.__positions ) :
+			# clamp position inside 0-1 range so we can select
+			# handles representing points outside the widget.
+			p = max( min( p, 1.0 ), 0.0 )
 			dist = math.fabs( mousePosition - p ) 
 			if result is None or dist < minDist :
 				result = i
