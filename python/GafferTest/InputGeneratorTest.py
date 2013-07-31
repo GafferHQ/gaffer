@@ -206,6 +206,14 @@ class InputGeneratorTest( unittest.TestCase ) :
 		
 		self.assertEqual( len( g ), 3 )
 		
+		# connecting to the middle input shouldn't create
+		# any new inputs, because there is still one free on the end
+		n["in1"].setInput( a["sum"] )
+		self.assertEqual( len( g ), 3 )
+
+		# connecting to the last input should create a new
+		# one - there should always be one free input on the
+		# end (until the maximum is reached).
 		n["in2"].setInput( a["sum"] )
 		
 		self.assertEqual( len( g ), 4 )
