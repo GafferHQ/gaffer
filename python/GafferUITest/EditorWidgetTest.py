@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 	def testLifetime( self ) :
 
 		scriptNode = Gaffer.ScriptNode()
-		scriptNode["write"] = Gaffer.WriteNode()
+		scriptNode["write"] = Gaffer.ObjectWriter()
 		scriptNode.selection().add( scriptNode["write"] )
 				
 		for type in GafferUI.EditorWidget.types() :

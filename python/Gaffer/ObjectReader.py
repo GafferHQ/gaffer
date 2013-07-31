@@ -41,9 +41,9 @@ import IECore
 
 import Gaffer
 
-class ReadNode( Gaffer.ComputeNode ) :
+class ObjectReader( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="ReadNode" ) :
+	def __init__( self, name="ObjectReader" ) :
 	
 		Gaffer.ComputeNode.__init__( self, name )
 		
@@ -53,7 +53,7 @@ class ReadNode( Gaffer.ComputeNode ) :
 		
 		self.addChild( Gaffer.CompoundPlug( "parameters" ) )
 		
-		resultPlug = Gaffer.ObjectPlug( "output", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
+		resultPlug = Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
 		self.addChild( resultPlug )
 				
 		self.__reader = None
@@ -65,20 +65,20 @@ class ReadNode( Gaffer.ComputeNode ) :
 		
 		outputs = []
 		if self["parameters"].isAncestorOf( input ) or input.isSame( self["fileName"] ) :
-			outputs.append( self["output"] )
+			outputs.append( self["out"] )
 
 		return outputs
 	
 	def hash( self, output, context, h ) :
 	
-		assert( output.isSame( self["output"] ) )
+		assert( output.isSame( self["out"] ) )
 
 		self["fileName"].hash( h )
 		self["parameters"].hash( h )
 		
 	def compute( self, plug, context ) :
 	
-		assert( plug.isSame( self["output"] ) )
+		assert( plug.isSame( self["out"] ) )
 		
 		result = None
 		if self.__reader is not None :
@@ -121,5 +121,4 @@ class ReadNode( Gaffer.ComputeNode ) :
 			self.__exposedParameters.clearParameters()
 			self.__parameterHandler.setupPlug( self )
 
-		
-IECore.registerRunTimeTyped( ReadNode, typeName = "Gaffer::ReadNode" )
+IECore.registerRunTimeTyped( ObjectReader, typeName = "Gaffer::ObjectReader" )

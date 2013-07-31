@@ -165,8 +165,8 @@ nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "I
 
 # Cortex nodes
 	
-nodeMenu.append( "/Cortex/File/Read", Gaffer.ReadNode )
-nodeMenu.append( "/Cortex/File/Write", Gaffer.WriteNode )
+nodeMenu.append( "/Cortex/File/Reader", Gaffer.ObjectReader, searchText = "ObjectReader" )
+nodeMenu.append( "/Cortex/File/Writer", Gaffer.ObjectWriter, searchText = "ObjectWriter" )
 
 # \todo have a method for dynamically choosing between Gaffer.OpHolder and Gaffer.ExecutableOpHolder
 nodeMenu.appendParameterisedHolders( "/Cortex/Ops", Gaffer.OpHolder, "IECORE_OP_PATHS" )

@@ -226,8 +226,8 @@ import ParameterPresets
 
 # and specific node uis
 
-import ReadNodeUI
-import WriteNodeUI
+import ObjectReaderUI
+import ObjectWriterUI
 import RandomUI
 import ExpressionUI
 import BoxUI

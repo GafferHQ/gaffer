@@ -43,9 +43,9 @@ import IECore
 
 import Gaffer
 
-class WriteNode( Gaffer.ExecutableNode ) :
+class ObjectWriter( Gaffer.ExecutableNode ) :
 
-	def __init__( self, name="WriteNode" ) :
+	def __init__( self, name="ObjectWriter" ) :
 	
 		Gaffer.ExecutableNode.__init__( self, name )
 		
@@ -122,4 +122,4 @@ class WriteNode( Gaffer.ExecutableNode ) :
 
 		self["parameters"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
-IECore.registerRunTimeTyped( WriteNode, typeName = "Gaffer::WriteNode" )
+IECore.registerRunTimeTyped( ObjectWriter, typeName = "Gaffer::ObjectWriter" )

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -72,7 +72,11 @@ class view( Gaffer.Application ) :
 			
 		self.__script = Gaffer.ScriptNode()
 		
-		readNode = Gaffer.ReadNode()
+		## \todo We need a smarter way of choosing a reader so we
+		# can use ImageReaders and SceneReaders too. Perhaps we should
+		# create an improved ReaderPathPreview and then just use it
+		# as the core of this app.
+		readNode = Gaffer.ObjectReader()
 		readNode["fileName"].setValue( args["files"][0] )
 		
 		self.__script.addChild( readNode )

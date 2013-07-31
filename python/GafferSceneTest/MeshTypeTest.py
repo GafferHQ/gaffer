@@ -53,12 +53,12 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		# We should maybe have a more concise way of achieving this.  How about a cow primitive?
 		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
 
-		read = Gaffer.ReadNode()
+		read = Gaffer.ObjectReader()
 		read["fileName"].setValue( fileName )
 		object = IECore.Reader.create( fileName ).read()
 
 		p = GafferScene.ObjectToScene()
-		p["object"].setInput( read["output"] )
+		p["object"].setInput( read["out"] )
 
 		m = GafferScene.MeshType()
 		m["in"].setInput( p["out"] )
