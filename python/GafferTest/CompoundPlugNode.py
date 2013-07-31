@@ -42,7 +42,7 @@ import Gaffer
 ## This class is used by the CompoundPlugTest.
 class CompoundPlugNode( Gaffer.DependencyNode ) :
 
-	def __init__( self, name="Test" ) :
+	def __init__( self, name="CompoundPlugNode" ) :
 	
 		Gaffer.DependencyNode.__init__( self, name )
 		
@@ -72,4 +72,4 @@ class CompoundPlugNode( Gaffer.DependencyNode ) :
 			
 		return outputs
 		
-IECore.registerRunTimeTyped( CompoundPlugNode )
+IECore.registerRunTimeTyped( CompoundPlugNode, typeName = "GafferTest::CompoundPlugNode" )

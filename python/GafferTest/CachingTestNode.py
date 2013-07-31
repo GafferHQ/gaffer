@@ -66,4 +66,4 @@ class CachingTestNode( Gaffer.ComputeNode ) :
 
 		self["out"].setValue( IECore.StringData( self["in"].getValue() ) )
 
-IECore.registerRunTimeTyped( CachingTestNode )
+IECore.registerRunTimeTyped( CachingTestNode, typeName = "GafferTest::CachingTestNode" )

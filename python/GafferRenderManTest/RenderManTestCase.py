@@ -61,14 +61,6 @@ class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
 
 		return os.path.splitext( outputFileName )[0]
 
-	def testTypeNamePrefixes( self ) :
-	
-		self.assertTypeNamesArePrefixed( GafferRenderMan )
-
-	def testDefaultNames( self ) :
-	
-		self.assertDefaultNamesAreCorrect( GafferRenderMan )
-
 	def tearDown( self ) :
 	
 		for f in self.__compiledShaders :

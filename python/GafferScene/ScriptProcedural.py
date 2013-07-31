@@ -121,4 +121,4 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		
 		return node["out"], context
 
-IECore.registerRunTimeTyped( ScriptProcedural )
+IECore.registerRunTimeTyped( ScriptProcedural, typeName = "GafferScene::ScriptProcedural" )

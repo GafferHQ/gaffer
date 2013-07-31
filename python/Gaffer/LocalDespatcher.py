@@ -77,6 +77,6 @@ class LocalDespatcher( Gaffer.Despatcher ) :
 
 		return LocalDespatcher.__despatcher
 
-IECore.registerRunTimeTyped( LocalDespatcher )
+IECore.registerRunTimeTyped( LocalDespatcher, typeName = "Gaffer::LocalDespatcher" )
 
 Gaffer.Despatcher._registerDespatcher( "local", LocalDespatcher._singleton() )

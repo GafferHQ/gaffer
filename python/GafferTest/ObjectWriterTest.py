@@ -42,7 +42,7 @@ import IECore
 
 import Gaffer
 
-class WriteNodeTest( unittest.TestCase ) :
+class ObjectWriterTest( unittest.TestCase ) :
 
 	__exrFileName = "/tmp/checker.exr"
 	__tifFileName = "/tmp/checker.tif"
@@ -53,7 +53,7 @@ class WriteNodeTest( unittest.TestCase ) :
 		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
 		checker = IECore.Reader.create( checker ).read()
 		
-		node = Gaffer.WriteNode()
+		node = Gaffer.ObjectWriter()
 		node["fileName"].setValue( self.__exrFileName )
 		node["in"].setValue( checker )
 		
@@ -85,7 +85,7 @@ class WriteNodeTest( unittest.TestCase ) :
 		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
 		checker = IECore.Reader.create( checker ).read()
 		
-		node = Gaffer.WriteNode()
+		node = Gaffer.ObjectWriter()
 		node["fileName"].setValue( self.__exrFileName )
 		node["in"].setValue( checker )
 				
@@ -99,7 +99,7 @@ class WriteNodeTest( unittest.TestCase ) :
  	def testExtraneousPlugsAfterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.WriteNode()
+		s["n"] = Gaffer.ObjectWriter()
 		s["n"]["fileName"].setValue( self.__exrFileName )
 
 		self.failUnless( "parameters" in s["n"] )
@@ -118,7 +118,7 @@ class WriteNodeTest( unittest.TestCase ) :
 		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
 		checker = IECore.Reader.create( checker ).read()
 		
-		node = Gaffer.WriteNode()
+		node = Gaffer.ObjectWriter()
 		node["fileName"].setValue( self.__exrSequence.fileName )
 		node["in"].setValue( checker )
 		

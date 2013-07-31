@@ -121,6 +121,7 @@ class GadgetTest( GafferUITest.TestCase ) :
 	def testTypeNamePrefixes( self ) :
 	
 		self.assertTypeNamesArePrefixed( GafferUI )
+		self.assertTypeNamesArePrefixed( GafferUITest )
 	
 if __name__ == "__main__":
 	unittest.main()

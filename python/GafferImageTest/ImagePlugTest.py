@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
 class ImagePlugTest( GafferTest.TestCase ) :
 
@@ -117,10 +118,12 @@ class ImagePlugTest( GafferTest.TestCase ) :
 	def testTypeNamePrefixes( self ) :
 	
 		self.assertTypeNamesArePrefixed( GafferImage, namesToIgnore = set( ( "IECore::FormatData", ) ) )
+		self.assertTypeNamesArePrefixed( GafferImageTest )
 
 	def testDefaultNames( self ) :
 	
 		self.assertDefaultNamesAreCorrect( GafferImage )
+		self.assertDefaultNamesAreCorrect( GafferImageTest )
 	
 if __name__ == "__main__":
 	unittest.main()

@@ -138,4 +138,4 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 		result = Gaffer.Context.current().substitute( result )
 		return result
 		
-IECore.registerRunTimeTyped( ArnoldRender )
+IECore.registerRunTimeTyped( ArnoldRender, typeName = "GafferArnold::ArnoldRender" )

@@ -45,8 +45,8 @@ from PathFilter import PathFilter
 from BlockedConnection import BlockedConnection
 from FileNamePathFilter import FileNamePathFilter
 from UndoContext import UndoContext
-from ReadNode import ReadNode
-from WriteNode import WriteNode
+from ObjectReader import ObjectReader
+from ObjectWriter import ObjectWriter
 from Context import Context
 from CompoundPathFilter import CompoundPathFilter
 from InfoPathFilter import InfoPathFilter

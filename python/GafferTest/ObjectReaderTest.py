@@ -43,13 +43,13 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ReadNodeTest( unittest.TestCase ) :
+class ObjectReaderTest( unittest.TestCase ) :
 
 	def test( self ) :
 	
 		fileName = os.path.dirname( __file__ ) + "/images/checker.exr"
 		
-		node = Gaffer.ReadNode()
+		node = Gaffer.ObjectReader()
 		node["fileName"].setValue( fileName )
 		self.assertEqual( node["fileName"].getValue(), fileName )
 				
@@ -66,7 +66,7 @@ class ReadNodeTest( unittest.TestCase ) :
 		
 		# check that the result is the same as loading it ourselves
 		
-		self.assertEqual( reader.read(), node["output"].getValue() )
+		self.assertEqual( reader.read(), node["out"].getValue() )
 		
 		# check that changing the parameter plugs affects the loading
 		
@@ -75,18 +75,18 @@ class ReadNodeTest( unittest.TestCase ) :
 		node["parameters"]["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 		
 		self.assertEqual( len( dirtyCapturer ), 1 )
-		self.assertEqual( dirtyCapturer[0][0].getName(), "output" )
+		self.assertEqual( dirtyCapturer[0][0].getName(), "out" )
 		
 		reader["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 						
-		self.assertEqual( reader.read(), node["output"].getValue() )				
+		self.assertEqual( reader.read(), node["out"].getValue() )				
 	
 	def testChangingFileType( self ) :
 	
 		imageFileName = os.path.dirname( __file__ ) + "/images/checker.exr"
 		cobFileName = os.path.dirname( __file__ ) + "/cobs/pSphereShape1.cob"
 	
-		node = Gaffer.ReadNode()
+		node = Gaffer.ObjectReader()
 		node["fileName"].setValue( imageFileName )
 		
 		reader = IECore.Reader.create( imageFileName )
@@ -106,12 +106,12 @@ class ReadNodeTest( unittest.TestCase ) :
 			if k != "fileName" :
 				self.failUnless( k in node["parameters"] )
 		
-		self.assertEqual( reader.read(), node["output"].getValue() )
+		self.assertEqual( reader.read(), node["out"].getValue() )
 		
 	def testExtraneousPlugsAfterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.ReadNode()
+		s["n"] = Gaffer.ObjectReader()
 		s["n"]["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
 
 		self.failIf( "parameters1" in s["n"] )
@@ -126,22 +126,22 @@ class ReadNodeTest( unittest.TestCase ) :
 	def testReadAfterSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.ReadNode()
+		s["n"] = Gaffer.ObjectReader()
 		s["n"]["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
 
-		r = s["n"]["output"].getValue()
+		r = s["n"]["out"].getValue()
 		
 		ss = s.serialise()
 		
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.assertEqual( s["n"]["output"].getValue(), r )
+		self.assertEqual( s["n"]["out"].getValue(), r )
 	
 	def testReadNoFilename( self ) :
 	
-		r = Gaffer.ReadNode()
-		self.assertEqual( r["output"].getValue(), r["output"].defaultValue() )
+		r = Gaffer.ObjectReader()
+		self.assertEqual( r["out"].getValue(), r["out"].defaultValue() )
 			
 if __name__ == "__main__":
 	unittest.main()
