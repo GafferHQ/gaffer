@@ -124,4 +124,4 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 		result = Gaffer.Context.current().substitute( result )
 		return result
 
-IECore.registerRunTimeTyped( RenderManRender )
+IECore.registerRunTimeTyped( RenderManRender, typeName = "GafferRenderMan::RenderManRender" )

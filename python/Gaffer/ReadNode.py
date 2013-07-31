@@ -122,4 +122,4 @@ class ReadNode( Gaffer.ComputeNode ) :
 			self.__parameterHandler.setupPlug( self )
 
 		
-IECore.registerRunTimeTyped( ReadNode )
+IECore.registerRunTimeTyped( ReadNode, typeName = "Gaffer::ReadNode" )

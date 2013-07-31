@@ -58,4 +58,4 @@ class TestRender( GafferScene.ExecutableRender ) :
 		self.__renderer = IECore.CapturingRenderer()
 		return self.__renderer
 
-IECore.registerRunTimeTyped( TestRender )
+IECore.registerRunTimeTyped( TestRender, typeName = "GafferSceneTest::TestRender" )

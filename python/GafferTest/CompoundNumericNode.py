@@ -42,10 +42,10 @@ import Gaffer
 ## This class is used by the CompoundNumericPlugTest.
 class CompoundNumericNode( Gaffer.Node ) :
 
-	def __init__( self, name="Test" ) :
+	def __init__( self, name="CompoundNumericNode" ) :
 
 		Gaffer.Node.__init__( self, name )
 
 		self.addChild( Gaffer.V3fPlug( "p", Gaffer.Plug.Direction.In ) )
 
-IECore.registerRunTimeTyped( CompoundNumericNode )
+IECore.registerRunTimeTyped( CompoundNumericNode, typeName = "GafferTest::CompoundNumericNode" )

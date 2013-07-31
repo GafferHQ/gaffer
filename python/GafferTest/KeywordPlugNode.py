@@ -42,7 +42,7 @@ import Gaffer
 ## This class is used by the ScriptNodeTest.
 class KeywordPlugNode( Gaffer.Node ) :
 
-	def __init__( self, name="Test" ) :
+	def __init__( self, name="KeywordPlugNode" ) :
 
 		Gaffer.Node.__init__( self, name )
 
@@ -50,4 +50,4 @@ class KeywordPlugNode( Gaffer.Node ) :
 		# format to be able to cope with that
 		self.addChild( Gaffer.IntPlug( "in", Gaffer.Plug.Direction.In ) )
 		
-IECore.registerRunTimeTyped( KeywordPlugNode )
+IECore.registerRunTimeTyped( KeywordPlugNode, typeName = "GafferTest::KeywordPlugNode" )

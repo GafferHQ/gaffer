@@ -36,15 +36,17 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 
 ## The simplest possible node to use the context during
 # computation - just outputs the current frame.
 class FrameNode( Gaffer.ComputeNode ) :
 
-	def __init__( self ) :
+	def __init__( self, name = "FrameNode" ) :
 	
-		Gaffer.ComputeNode.__init__( self )
+		Gaffer.ComputeNode.__init__( self, name )
 		
 		self.addChild(
 			Gaffer.FloatPlug(
@@ -63,3 +65,5 @@ class FrameNode( Gaffer.ComputeNode ) :
 		assert( isinstance( context, Gaffer.Context ) )
 		
 		plug.setValue( context.getFrame() )
+
+IECore.registerRunTimeTyped( FrameNode, typeName = "GafferTest::FrameNode" )

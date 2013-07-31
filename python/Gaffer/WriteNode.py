@@ -122,4 +122,4 @@ class WriteNode( Gaffer.ExecutableNode ) :
 
 		self["parameters"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
-IECore.registerRunTimeTyped( WriteNode )
+IECore.registerRunTimeTyped( WriteNode, typeName = "Gaffer::WriteNode" )

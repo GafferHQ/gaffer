@@ -41,7 +41,7 @@ import Gaffer
 
 class SphereNode( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="Sphere" ) :
+	def __init__( self, name="SphereNode" ) :
 	
 		Gaffer.ComputeNode.__init__( self, name )
 		
@@ -81,4 +81,4 @@ class SphereNode( Gaffer.ComputeNode ) :
 		result = IECore.SpherePrimitive( self["radius"].getValue(), self["zMin"].getValue(), self["zMax"].getValue(), self["theta"].getValue() )
 		plug.setValue( result )
 
-IECore.registerRunTimeTyped( SphereNode )
+IECore.registerRunTimeTyped( SphereNode, typeName = "GafferTest::SphereNode" )

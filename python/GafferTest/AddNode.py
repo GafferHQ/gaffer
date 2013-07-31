@@ -98,4 +98,4 @@ class AddNode( Gaffer.ComputeNode ) :
 		else :
 			plug.setValue( self.getChild("op1").getValue() )
 
-IECore.registerRunTimeTyped( AddNode )
+IECore.registerRunTimeTyped( AddNode, typeName = "GafferTest::AddNode" )
