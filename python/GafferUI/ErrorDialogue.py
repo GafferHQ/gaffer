@@ -71,16 +71,23 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 								
 		self.__closeButton = self._addButton( "Close" )
 	
-	## Displays the last raised exception in a modal dialogue.	
+	## Displays an exception in a modal dialogue. By default the currently handled exception is displayed
+	# but another exception can be displayed by specifying excInfo in the same format as returned by sys.exc_info()
 	@staticmethod
-	def displayException( title="Error", messagePrefix=None, withDetails=True, parentWindow=None ) :
+	def displayException( title="Error", messagePrefix=None, withDetails=True, parentWindow=None, exceptionInfo=None ) :
 	
-		message = str( sys.exc_info()[1] )
+		if exceptionInfo is None :
+			exceptionInfo = sys.exc_info()
+	
+		if exceptionInfo[0] is None :
+			return
+	
+		message = str( exceptionInfo[1] )
 		if messagePrefix :
 			message = messagePrefix + message
 			
 		if withDetails :
-			details = "".join( traceback.format_exc() )
+			details = "".join( traceback.format_exception( *exceptionInfo ) )
 		else :
 			details = False
 			
@@ -107,5 +114,5 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 		def __exit__( self, type, value, traceback ) :
 		
 			if type is not None :
-				ErrorDialogue.displayException( **self.__kw )
+				ErrorDialogue.displayException( exceptionInfo=( type, value, traceback ), **self.__kw )
 				return True
