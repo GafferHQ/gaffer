@@ -118,11 +118,10 @@ script['fileName'].getValue()
 [source, python]
 ------------------------------------
 import GafferRenderMan
-import os
 
 shaderNode = GafferRenderMan.RenderManShader("MyShaderNode")
-script.addChild( shaderNode )
 shaderNode.loadShader( '/path/to/my/shader' )
+script.addChild( shaderNode )
 ------------------------------------
 
 * Set the current selection to be a specific node
@@ -132,6 +131,21 @@ script.selection().clear()
 script.selection().add(script['MyNodeName'])
 ------------------------------------
 
+* Set the value of a plug
+[source, python]
+------------------------------------
+# 'MySceneReaderNode' is the node name
+# 'fileName' == the plug name
+script['MySceneReaderNode']['fileName'].setValue( '/path/to/my/cache.scc' )
+------------------------------------
+
+* Set the value of a nested plug
+[source, python]
+------------------------------------
+# 'MyStandardOptionsNode' is the node name
+# the plug name would be shown as 'options.renderResolution.value.x' in the Gaffer UI tooltips
+script['MyStandardOptionsNode']['options']['renderResolution']['value']['x'].setValue( 2048 )
+------------------------------------
 
 
 === RenderMan Shader Writing anchor:appendices_rendermanShaderWriting[]
