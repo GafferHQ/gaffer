@@ -52,6 +52,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 			self.__splineWidget = GafferUI.SplineWidget()
 			self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp )
+			self.__splineWidget._qtWidget().setMinimumHeight( 50 )
 			
 			self.__slider = GafferUI.Slider()
 			self.__slider.setSizeEditable( True )
