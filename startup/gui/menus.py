@@ -114,8 +114,8 @@ except Exception, m :
 
 # Scene nodes
 
-nodeMenu.append( "/Scene/Source/Scene Reader", GafferScene.SceneReader, searchText = "SceneReader" )
-nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource )
+nodeMenu.append( "/Scene/Source/Reader", GafferScene.SceneReader, searchText = "SceneReader" )
+nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource, searchText = "AlembicSource" )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
 nodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
@@ -152,16 +152,16 @@ import GafferImage
 import GafferImageUI
 
 nodeMenu.append( "/Image/Source/Display", GafferImage.Display )
-nodeMenu.append( "/Image/Source/Image Reader", GafferImage.ImageReader, searchText = "ImageReader" )
-nodeMenu.append( "/Image/Source/Image Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
+nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
 nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
-nodeMenu.append( "/Image/Color/Open Color IO", GafferImage.OpenColorIO, searchText = "OpenColorIO" )
+nodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO, searchText = "OpenColorIO" )
 nodeMenu.append( "/Image/Filter/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Filter/Reformat", GafferImage.Reformat )
-nodeMenu.append( "/Image/Filter/Image Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
+nodeMenu.append( "/Image/Filter/Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
 nodeMenu.append( "/Image/Utility/Select", GafferImage.Select )
-nodeMenu.append( "/Image/Utility/Image Stats", GafferImage.ImageStats, searchText = "ImageStats" )
+nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
 
 # Cortex nodes
 	
