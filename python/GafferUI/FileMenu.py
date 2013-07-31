@@ -180,7 +180,8 @@ def save( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
-		script.save()
+		with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
+			script.save()
 	else :
 		saveAs( menu )
 
@@ -210,7 +211,8 @@ def saveAs( menu ) :
 		path += ".gfr"
 
 	script["fileName"].setValue( path )
-	script.save()
+	with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
+		script.save()
 	
 	application = script.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 	addRecentFile( application, path )
