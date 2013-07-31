@@ -114,6 +114,12 @@ script['RenderManRender'].execute( [script.context()] )
 script['fileName'].getValue()
 ------------------------------------
 
+* Query value of script variables
+[source, python]
+------------------------------------
+rd = script.context()['project:rootDirectory']
+------------------------------------
+
 * Create a RenderManShader node pointing to a specific shader on disk
 [source, python]
 ------------------------------------
