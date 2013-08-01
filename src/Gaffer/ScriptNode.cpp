@@ -346,6 +346,21 @@ void ScriptNode::undo()
 		m_undoIterator--;
 		(*m_undoIterator)->undoAction();
 
+	/// \todo It's conceivable that an exception from somewhere in
+	/// Action::undoAction() could prevent this cleanup code from running,
+	/// leaving us in a bad state. This could perhaps be addressed
+	/// by using BOOST_SCOPE_EXIT. The most likely cause of such an
+	/// exception would be in an errant slot connected to a signal
+	/// triggered by the action performed. However, currently most
+	/// python slot callers suppress python exceptions (printing
+	/// them to the shell), so it's not even straightforward to
+	/// write a test case for this potential problem. It could be
+	/// argued that we shouldn't be suppressing exceptions in slots,
+	/// but if we don't then well-behaved (and perhaps crucial) slots
+	/// might not get called when badly behaved slots mess up. It seems
+	/// best to simply report errors as we do, and allow the well behaved
+	/// slots to have their turn - we might even want to extend this
+	/// behaviour to the c++ slots.
 	m_currentActionStage = Action::Invalid;
 	
 	UndoContext undoDisabled( this, UndoContext::Disabled );
