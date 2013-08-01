@@ -50,4 +50,4 @@ class InputGeneratorNode( Gaffer.Node ) :
 			maxInputs = 6
 		)
 
-IECore.registerRunTimeTyped( InputGeneratorNode )
+IECore.registerRunTimeTyped( InputGeneratorNode, typeName="GafferTest::InputGeneratorNode" )
