@@ -186,21 +186,25 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			if len( gadgets ) :
 			
 				overrideMenuDefinition = IECore.MenuDefinition()
+				overrideMenuTitle = None
 				
 				if isinstance( gadgets[0], GafferUI.Nodule ) :
 					self.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
+					overrideMenuTitle = gadgets[0].plug().relativeName( self.graphGadget().getRoot() )
 				elif isinstance( gadgets[0], GafferUI.ConnectionGadget ) :
 					self.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
+					overrideMenuTitle = "-> " + gadgets[0].dstNodule().plug().relativeName( self.graphGadget().getRoot() )					
 				else :
 					nodeGadget = gadgets[0]
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
 						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget.staticTypeId() )
 					if nodeGadget is not None :
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
+						overrideMenuTitle = nodeGadget.node().getName()
 			
 				if len( overrideMenuDefinition.items() ) :
 					menuDefinition = overrideMenuDefinition
-					self._m = GafferUI.Menu( menuDefinition )
+					self._m = GafferUI.Menu( menuDefinition, title=overrideMenuTitle )
 					self._m.popup( self )
 					return True
 			
