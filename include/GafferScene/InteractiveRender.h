@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_INTERACTIVERENDER_H
 #define GAFFERSCENE_INTERACTIVERENDER_H
 
+#include "Gaffer/Context.h"
 #include "GafferScene/Render.h"
 
 namespace GafferScene
@@ -70,6 +71,12 @@ class InteractiveRender : public Render
 		Gaffer::BoolPlug *updateShadersPlug();
 		const Gaffer::BoolPlug *updateShadersPlug() const;
 		
+		/// The Context in which the InteractiveRender should operate.
+		Gaffer::Context *getContext();
+		const Gaffer::Context *getContext() const;
+		void setContext( Gaffer::ContextPtr context );
+		
+		
 	protected :
 	
 		/// Must be implemented by derived classes to return the renderer that will be used.
@@ -79,14 +86,17 @@ class InteractiveRender : public Render
 
 		void plugInputChanged( const Gaffer::Plug *plug );
 		void plugSetOrDirtied( const Gaffer::Plug *plug );
-
+		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
+		
 		void start();
 		void update();
 		void updateLights();
 		void updateShaders( const ScenePlug::ScenePath &path = ScenePlug::ScenePath() );
 	
 		IECore::RendererPtr m_renderer;
-
+		
+		Gaffer::ContextPtr m_context;
+		
 		static size_t g_firstPlugIndex;
 		
 };

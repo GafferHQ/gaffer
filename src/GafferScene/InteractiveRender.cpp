@@ -36,6 +36,8 @@
 
 #include "boost/bind.hpp"
 
+#include "Gaffer/ScriptNode.h"
+
 #include "GafferScene/InteractiveRender.h"
 
 using namespace std;
@@ -59,6 +61,9 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	plugInputChangedSignal().connect( boost::bind( &InteractiveRender::plugInputChanged, this, ::_1 ) );
 	plugSetSignal().connect( boost::bind( &InteractiveRender::plugSetOrDirtied, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugSetOrDirtied, this, ::_1 ) );
+	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
+	
+	setContext( new Context() );
 }
 
 InteractiveRender::~InteractiveRender()
@@ -158,10 +163,26 @@ void InteractiveRender::plugSetOrDirtied( const Gaffer::Plug *plug )
 	}
 }
 
+void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *oldParent )
+{
+	ScriptNode *n = ancestor<ScriptNode>();
+	if( n )
+	{
+		setContext( n->context() );
+	}
+	else
+	{
+		setContext( new Context() );
+	}
+}
+
 void InteractiveRender::start()
 {
 	m_renderer = createRenderer();
 	m_renderer->setOption( "editable", new BoolData( true ) );
+	
+	Context::Scope scopedContext( m_context );
+	
 	outputScene( inPlug(), m_renderer.get() );
 }
 
@@ -181,6 +202,8 @@ void InteractiveRender::update()
 
 void InteractiveRender::updateLights()
 {
+	Context::Scope scopedContext( m_context );
+	
 	ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	m_renderer->editBegin( "light", CompoundDataMap() );
 		outputLights( inPlug(), globals, m_renderer );
@@ -189,6 +212,9 @@ void InteractiveRender::updateLights()
 
 void InteractiveRender::updateShaders( const ScenePlug::ScenePath &path )
 {
+
+	Context::Scope scopedContext( m_context );
+	
 	/// \todo Keep a track of the hashes of the shaders at each path,
 	/// and use it to only update the shaders when they've changed.	
 	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
@@ -225,4 +251,19 @@ void InteractiveRender::updateShaders( const ScenePlug::ScenePath &path )
 		childPath[path.size()] = *it;
 		updateShaders( childPath );
 	}
+}
+
+Gaffer::Context *InteractiveRender::getContext()
+{
+	return m_context.get();
+}
+
+const Gaffer::Context *InteractiveRender::getContext() const
+{
+	return m_context.get();
+}
+
+void InteractiveRender::setContext( Gaffer::ContextPtr context )
+{
+	m_context = context;
 }

@@ -108,6 +108,11 @@ class ExecutableRenderWrapper : public NodeWrapper<ExecutableRender>
 
 IE_CORE_DECLAREPTR( ExecutableRenderWrapper )
 
+static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
+{
+	return r.getContext();
+}
+
 void GafferSceneBindings::bindRender()
 {
 
@@ -118,7 +123,9 @@ void GafferSceneBindings::bindRender()
 	
 	GafferBindings::NodeClass<OpenGLRender>();
 	
-	scope s = GafferBindings::NodeClass<InteractiveRender>();
+	scope s = GafferBindings::NodeClass<InteractiveRender>()
+		.def( "getContext", &interactiveRenderGetContext )
+		.def( "setContext", &InteractiveRender::setContext );
 	
 	enum_<InteractiveRender::State>( "State" )
 		.value( "Stopped", InteractiveRender::Stopped )
