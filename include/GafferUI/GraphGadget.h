@@ -119,7 +119,7 @@ class GraphGadget : public ContainerGadget
 		/// Gadgets is not possible.
 		/// \undoable
 		void setNodePosition( Gaffer::Node *node, const Imath::V2f &position );
-		Imath::V2f getNodePosition( Gaffer::Node *node ) const;
+		Imath::V2f getNodePosition( const Gaffer::Node *node ) const;
 		
 		/// May be used to minimise the input connections for a particular node.
 		/// \undoable

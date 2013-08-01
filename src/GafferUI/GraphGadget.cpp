@@ -277,9 +277,9 @@ void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &positio
 	plug->setValue( position );
 }
 
-Imath::V2f GraphGadget::getNodePosition( Gaffer::Node *node ) const
+Imath::V2f GraphGadget::getNodePosition( const Gaffer::Node *node ) const
 {
-	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+	const Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 	return plug ? plug->getValue() : V2f( 0 );
 }
 
