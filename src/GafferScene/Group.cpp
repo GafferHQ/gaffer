@@ -61,7 +61,7 @@ IE_CORE_DEFINERUNTIMETYPED( Group );
 size_t Group::g_firstPlugIndex = 0;
 
 Group::Group( const std::string &name )
-	:	SceneProcessor( name )
+	:	SceneProcessor( name ), m_inPlugs( this, inPlug() )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	
@@ -71,9 +71,6 @@ Group::Group( const std::string &name )
 	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundObject() ) );
 	addChild( new Gaffer::ObjectPlug( "__inputMapping", Gaffer::Plug::In, new CompoundObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
 	inputMappingPlug()->setInput( mappingPlug() );
-	
-	m_plugInputChangedConnection = plugInputChangedSignal().connect( boost::bind( &Group::plugInputChanged, this, ::_1 ) );
-	childAddedSignal().connect( boost::bind( &Group::childAdded, this, ::_1, ::_2 ) );
 }
 
 Group::~Group()
@@ -145,7 +142,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		ContextPtr tmpContext = new Context( *Context::current() );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext );
-		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 		{
 			(*it)->childNamesPlug()->hash( h );
 		}
@@ -157,7 +154,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	if( path.size() == 0 ) // "/"
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
-		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 		{
 			(*it)->boundPlug()->hash( h );
 		}
@@ -169,7 +166,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 		ContextPtr tmpContext = new Context( *Context::current() );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext );
-		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 		{
 			(*it)->boundPlug()->hash( h );
 		}
@@ -259,7 +256,7 @@ void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent
 	SceneProcessor::hashGlobals( context, parent, h );
 		
 	// all input globals affect the output, as does the mapping, because we use it to compute the forwardDeclarations
-	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 	{
 		(*it)->globalsPlug()->hash( h );
 	}
@@ -295,7 +292,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	boost::format namePrefixSuffixFormatter( "%s%d" );
 
 	set<InternedString> allNames;
-	for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 	{
 		ConstInternedStringVectorDataPtr inChildNamesData = (*it)->childNames( ScenePath() );
 		CompoundDataPtr forwardMapping = new CompoundData;
@@ -334,7 +331,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 			
 			CompoundObjectPtr entry = new CompoundObject;
 			entry->members()["n"] = new InternedStringData( *cIt );
-			entry->members()["i"] = new IntData( it - m_inPlugs.begin() );
+			entry->members()["i"] = new IntData( it - m_inPlugs.inputs().begin() );
 			result->members()[name] = entry;
 		}
 	}
@@ -350,7 +347,7 @@ Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *
 	{
 		// either / or /groupName
 		Box3f combinedBound;
-		for( vector<ScenePlug *>::const_iterator it = m_inPlugs.begin(), eIt = m_inPlugs.end(); it!=eIt; it++ )
+		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 		{
 			// we don't need to transform these bounds, because the SceneNode
 			// guarantees that the transform for root nodes is always identity.
@@ -456,10 +453,10 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
 
 	IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
-	for( size_t i = 0, e = m_inPlugs.size(); i < e; i++ )
+	for( size_t i = 0, e = m_inPlugs.inputs().size(); i < e; i++ )
 	{
 		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
-		ConstCompoundObjectPtr inputGlobals = m_inPlugs[i]->globalsPlug()->getValue();
+		ConstCompoundObjectPtr inputGlobals = m_inPlugs.inputs()[i]->globalsPlug()->getValue();
 		const CompoundData *inputForwardDeclarations = inputGlobals->member<CompoundData>( "gaffer:forwardDeclarations" );
 		if( inputForwardDeclarations )
 		{
@@ -497,7 +494,7 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::
 		throw Exception( boost::str( boost::format( "Unable to find mapping for output path" ) ) );
 	}
 		
-	*source = m_inPlugs[entry->member<IntData>( "i" )->readable()];
+	*source = m_inPlugs.inputs()[entry->member<IntData>( "i" )->readable()].get();
 	
 	ScenePath result;
 	result.reserve( outputPath.size() - 1 );
@@ -524,65 +521,4 @@ Gaffer::ObjectPlug *Group::inputMappingPlug()
 const Gaffer::ObjectPlug *Group::inputMappingPlug() const
 {
 	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
-}
-
-void Group::childAdded( GraphComponent *parent, GraphComponent *child )
-{
-	if( child->isInstanceOf( ScenePlug::staticTypeId() ) )
-	{
-		m_inPlugs.clear();
-		for( InputScenePlugIterator it( this ); it != it.end(); it++ )
-		{
-			m_inPlugs.push_back( it->get() );
-		}
-	}
-}
-
-void Group::plugInputChanged( Gaffer::Plug *plug )
-{
-	if( plug->isInstanceOf( ScenePlug::staticTypeId() ) )
-	{
-		addAndRemoveInputs();
-	}
-}
-
-void Group::addAndRemoveInputs()
-{
-	int lastConnected = -1;
-	std::vector<ScenePlug *> inputs;
-	for( InputScenePlugIterator it( this ); it != it.end(); ++it )
-	{
-		if( (*it)->getInput<Plug>() )
-		{
-			lastConnected = inputs.size();
-		}
-		inputs.push_back( it->get() );
-	}
-	
-	if( lastConnected == (int)inputs.size() - 1 )
-	{
-		addChild( new ScenePlug( "in1", Plug::In, Plug::Default | Plug::Dynamic ) );
-	}
-	else
-	{
-		for( int i = lastConnected + 2; i < (int)inputs.size(); i++ )
-		{
-			removeChild( inputs[i] );
-		}
-	}
-}
-
-void Group::parentChanging( Gaffer::GraphComponent *newParent )
-{
-	// we block m_plugInputChangedConnection when we're being unparented, as the
-	// calls to addAndRemoveInputs() it triggers would result in crashes in Node::parentChanging(),
-	// because it iterates over all the plugs and the iterators aren't stable in the face
-	// of plugs being removed mid-iteration.
-	/// \todo I think the whole concept of Group adding and removing plugs on the fly based
-	/// purely on connections/disconnections is flawed. I think we should have a method to
-	/// explicitly request a new input, and a ui which uses that. We could also wrap up the
-	/// multiple inputs behaviour into something we could reuse elsewhere - Plug::createCounterpart()
-	/// might be useful for automatically making new plugs of the appropriate type.
-	BlockedConnection block( m_plugInputChangedConnection, newParent == 0 );
-	SceneProcessor::parentChanging( newParent );
 }

@@ -620,6 +620,51 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( forwardDeclarations ), 2 )
 		self.assertEqual( forwardDeclarations["/group/lightGroup1/light"]["type"].value, IECore.Light.staticTypeId() )
 		self.assertEqual( forwardDeclarations["/group/lightGroup2/light"]["type"].value, IECore.Light.staticTypeId() )
+	
+	def testMakeConnectionAndUndo( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["c"] = GafferScene.Plane()
+		s["g"] = GafferScene.Group()
+		s["g"]["__customPlug"] = Gaffer.V2fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		with Gaffer.UndoContext( s ) :
+			s["g"]["in"].setInput( s["c"]["out"] )
+		
+		self.assertTrue( "__customPlug" in s["g"] )
+		self.assertTrue( "in" in s["g"] )
+		self.assertTrue( "in1" in s["g"] )
+		
+		s.undo()
+		
+		self.assertTrue( "__customPlug" in s["g"] )
+		self.assertTrue( "in" in s["g"] )
+		self.assertFalse( "in1" in s["g"] )
+	
+	def testDeleteInputsAndSerialise( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["s"] = GafferScene.Sphere()
+		s["c"] = GafferScene.Camera()
+		s["p"] = GafferScene.Plane()
+		s["t"] = GafferScene.Transform()
+		s["p1"] = GafferScene.Plane()
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["s"]["out"] )
+		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in2"].setInput( s["p"]["out"] )
+		s["g"]["in3"].setInput( s["t"]["out"] )
+		s["g"]["in4"].setInput( s["p1"]["out"] )
+		
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["s"], s["p"], s["p1"] ] ) )
+		
+		ss = s.serialise()
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
 		
 	def setUp( self ) :
 	

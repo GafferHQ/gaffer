@@ -1008,6 +1008,53 @@ a = A()"""
 		
 		self.assertEqual( len( s["variables"] ), 1 )
 		self.assertEqual( s["variables"][0]["value"].getValue(), 10 )
+	
+	def testCurrentActionStage( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		
+		actionStages = []
+		def f( plug ) :
+		
+			actionStages.append( s.currentActionStage() )
+			
+			if s.currentActionStage() != Gaffer.Action.Stage.Invalid :
+				self.assertFalse( s.undoAvailable() )
+				self.assertFalse( s.redoAvailable() )
+			
+		c = s["n"].plugSetSignal().connect( f )
+		
+		self.assertEqual( s.currentActionStage(), Gaffer.Action.Stage.Invalid )
+		self.assertEqual( len( actionStages ), 0 )
+		
+		s["n"]["op1"].setValue( 10 )
+		
+		self.assertEqual( len( actionStages ), 1 )
+		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Invalid )
+		
+		with Gaffer.UndoContext( s ) :
+			s["n"]["op1"].setValue( 11 )
+			
+		self.assertEqual( len( actionStages ), 2 )
+		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Do )
+		
+		s.undo()
+		
+		self.assertEqual( len( actionStages ), 3 )
+		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Undo )
+		
+		s.redo()
+		
+		self.assertEqual( len( actionStages ), 4 )
+		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Redo )
+		
+		s.undo()
+		
+		self.assertEqual( len( actionStages ), 5 )
+		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Undo )
+		
+		self.assertEqual( s.currentActionStage(), Gaffer.Action.Stage.Invalid )
 		
 	def tearDown( self ) :
 	
