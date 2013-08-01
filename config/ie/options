@@ -136,6 +136,9 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 
 ]
 
+if targetAppVersion :
+	LOCATE_DEPENDENCY_SYSTEMPATH = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ] + LOCATE_DEPENDENCY_SYSTEMPATH
+
 LOCATE_DEPENDENCY_CPPPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" ),
 ]
