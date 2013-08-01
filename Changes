@@ -1,3 +1,17 @@
+0.72.2
+======
+
+- Fixed Box creation with nested connected plugs. This allows the creation of Boxes with shader nodes with input connections.
+- Fixed removal of nodules from nodes in the graph ui when Plugs are removed.
+- Fixed InputGenerator bugs and added python bindings and tests.
+- Fixed Group bugs involving dynamically generated inputs and undo (#179, #210, #302).
+- Tidied up node menu labels.
+- Renamed WriteNode to ObjectWriter and ReadNode to ObjectReader (#17).
+- Fixed minimum height of ramp editor (#445).
+- Fixed empty messages from ErrorDialogue.ExceptionHandler.
+- Added popup error dialogues for file save failures (#449).
+- Fixed context used by interactive render nodes.
+
 0.72.1
 ======
 
