@@ -59,7 +59,8 @@ def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 	if enabledPlug is not None and enabledPlug.settable() :
 		menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 		menuDefinition.append( "/Disable" if enabledPlug.getValue() else "/Enable", { "command" : IECore.curry( __toggleEnabled, node ) } )
-		
+	
+	GafferUI.NodeGraph.appendConnectionVisibilityMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.BoxUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 

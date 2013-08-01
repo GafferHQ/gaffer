@@ -57,7 +57,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( ConnectionGadget );
 
 ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	Gadget( defaultName<ConnectionGadget>() ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
+	:	Gadget( defaultName<ConnectionGadget>() ), m_minimised( false ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
 {
 	setNodules( srcNodule, dstNodule );
 	
@@ -134,6 +134,21 @@ void ConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, GafferUI::Nodu
 	setPositionsFromNodules();
 }
 
+void ConnectionGadget::setMinimised( bool minimised )
+{
+	if( minimised == m_minimised )
+	{
+		return;
+	}
+	m_minimised = minimised;
+	renderRequestSignal()( this );
+}
+
+bool ConnectionGadget::getMinimised() const
+{
+	return m_minimised;
+}
+		
 void ConnectionGadget::setPositionsFromNodules()
 {
 	const Gadget *p = parent<Gadget>();
@@ -185,7 +200,7 @@ void ConnectionGadget::setPositionsFromNodules()
 		// not dragging and don't have a source nodule.
 		// we're a dangling connection because the source
 		// node is hidden.
-		m_srcPos = m_dstPos + m_dstTangent * 4.0f;
+		m_srcPos = m_dstPos + m_dstTangent * 1.5f;
 		m_srcTangent = -m_dstTangent;
 	}
 	
@@ -232,7 +247,15 @@ void ConnectionGadget::doRender( const Style *style ) const
 		}
 	}
 	
-	style->renderConnection( m_srcPos, m_srcTangent, m_dstPos, m_dstTangent, state );
+	V3f adjustedSrcPos = m_srcPos;
+	V3f adjustedSrcTangent = m_srcTangent;
+	if( m_minimised && state != Style::HighlightedState )
+	{
+		adjustedSrcPos = m_dstPos + m_dstTangent * 1.5f;
+		adjustedSrcTangent = -m_dstTangent;
+	}
+		
+	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state );
 }
 
 bool ConnectionGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )

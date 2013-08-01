@@ -68,5 +68,7 @@ void GafferUIBindings::bindConnectionGadget()
 		.def( "srcNodule", &srcNodule )
 		.def( "dstNodule", &dstNodule )
 		.def( "setNodules", &ConnectionGadget::setNodules )
+		.def( "setMinimised", &ConnectionGadget::setMinimised )
+		.def( "getMinimised", &ConnectionGadget::getMinimised )
 	;
 }

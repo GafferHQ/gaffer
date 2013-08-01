@@ -747,6 +747,104 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		self.assertEqual( g.connectionGadget( script["add1"]["sum"] ), None )
 		self.assertEqual( g.connectionGadget( script["add1"]["op1"] ), None )
 		self.assertEqual( g.connectionGadget( script["add1"]["op2"] ), None )
+	
+	def testConnectionMinimisedAccessors( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		script["add3"] = GafferTest.AddNode()
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		script["add3"]["op1"].setInput( script["add2"]["sum"] )
+				
+		g = GafferUI.GraphGadget( script )
+		
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add3"] ) )
+		
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add3"] ) )
+		
+		g.setNodeInputConnectionsMinimised( script["add3"], True )
+		
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add2"] ) )
+		self.assertTrue( g.getNodeInputConnectionsMinimised( script["add3"] ) )
+		
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add3"] ) )
+		
+		g.setNodeOutputConnectionsMinimised( script["add2"], True )
+		
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add2"] ) )
+		self.assertTrue( g.getNodeInputConnectionsMinimised( script["add3"] ) )
+		
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add1"] ) )
+		self.assertTrue( g.getNodeOutputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add3"] ) )
+		
+		g.setNodeOutputConnectionsMinimised( script["add2"], False )
+		
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add2"] ) )
+		self.assertTrue( g.getNodeInputConnectionsMinimised( script["add3"] ) )
+		
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add3"] ) )
+
+		g.setNodeInputConnectionsMinimised( script["add3"], False )
+		
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeInputConnectionsMinimised( script["add3"] ) )
+		
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add1"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add2"] ) )
+		self.assertFalse( g.getNodeOutputConnectionsMinimised( script["add3"] ) )
+	
+	def testConnectionMinimisation( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+		script["add3"] = GafferTest.AddNode()
+		
+		g = GafferUI.GraphGadget( script )
+		
+		g.setNodeOutputConnectionsMinimised( script["add1"], True )
+		
+		script["add2"]["op1"].setInput( script["add1"]["sum"] )
+		
+		c1 = g.connectionGadget( script["add2"]["op1"] )
+		self.assertTrue( c1.getMinimised() )
+		
+		script["add3"]["op1"].setInput( script["add2"]["sum"] )
+		
+		c2 = g.connectionGadget( script["add3"]["op1"] )
+		self.assertFalse( c2.getMinimised() )
+		
+		g.setNodeInputConnectionsMinimised( script["add2"], True )
+		
+		self.assertTrue( c1.getMinimised() )
+		self.assertFalse( c2.getMinimised() )
+		
+		g.setNodeOutputConnectionsMinimised( script["add1"], False )
+		
+		self.assertTrue( c1.getMinimised() )
+		self.assertFalse( c2.getMinimised() )
+		
+		g.setNodeInputConnectionsMinimised( script["add2"], False )
+		
+		self.assertFalse( c1.getMinimised() )
+		self.assertFalse( c2.getMinimised() )
 		
 if __name__ == "__main__":
 	unittest.main()
