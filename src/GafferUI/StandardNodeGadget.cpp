@@ -254,7 +254,7 @@ void StandardNodeGadget::doRender( const Style *style ) const
 Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
 {	
 	const GraphComponent *parent = plug->parent<GraphComponent>();
-	if( parent == node() )
+	if( !parent || parent == node() )
 	{
 		NoduleMap::iterator it = m_nodules.find( plug );
 		if( it != m_nodules.end() )

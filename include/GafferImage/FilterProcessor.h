@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_FILTERPROCESSOR_H
 #define GAFFERIMAGE_FILTERPROCESSOR_H
 
+#include "Gaffer/Behaviours/InputGenerator.h"
+
 #include "GafferImage/ImageProcessor.h"
-#include "Gaffer/InputGenerator.h"
 
 namespace GafferImage
 {
@@ -56,7 +57,7 @@ class FilterProcessor : public ImageProcessor
 
 	public :
 
-		typedef std::vector<Gaffer::InputGenerator<GafferImage::ImagePlug>::PlugClassPtr> ImagePlugList;
+		typedef std::vector<Gaffer::Behaviours::InputGenerator<GafferImage::ImagePlug>::PlugClassPtr> ImagePlugList;
 
 		FilterProcessor( const std::string &name=defaultName<FilterProcessor>(), int minimumInputs = 1, int maximumInputs = 1 );
 		virtual ~FilterProcessor();
@@ -95,7 +96,7 @@ class FilterProcessor : public ImageProcessor
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 	
 		/// A helper class that manages our ImagePlug inputs.
-		Gaffer::InputGenerator<ImagePlug> m_inputs;
+		Gaffer::Behaviours::InputGenerator<ImagePlug> m_inputs;
 
 	private :
 		

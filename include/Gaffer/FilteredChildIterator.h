@@ -75,13 +75,19 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		{
 		}
 
-		FilteredChildIterator( const GraphComponent *parent )
-			:	BaseIterator( parent->children().begin(), parent->children().end() )
+		FilteredChildIterator( GraphComponent::ChildIterator x, GraphComponent::ChildIterator end = GraphComponent::ChildIterator() )
+			:	BaseIterator( x, end )
 		{
 		}
 
-    	FilteredChildIterator( GraphComponent::ChildIterator x, GraphComponent::ChildIterator end = GraphComponent::ChildIterator() )
-			:	BaseIterator( x, end )
+		FilteredChildIterator( const GraphComponent::ChildContainer &children )
+			:	BaseIterator( children.begin(), children.end() )
+			
+		{
+		}
+
+		FilteredChildIterator( const GraphComponent *parent )
+			:	BaseIterator( parent->children().begin(), parent->children().end() )
 		{
 		}
 

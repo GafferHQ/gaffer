@@ -38,6 +38,7 @@
 
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Behaviours/OrphanRemover.h"
+#include "Gaffer/Behaviours/InputGenerator.h"
 
 #include "GafferBindings/BehaviourBinding.h"
 
@@ -46,6 +47,29 @@ using namespace Gaffer;
 using namespace Gaffer::Behaviours;
 using namespace GafferBindings;
 
+static size_t inputGeneratorLen( const InputGenerator<Plug> &g )
+{
+	return g.inputs().size();
+}
+
+static PlugPtr inputGeneratorGetItem( const InputGenerator<Plug> &g, long index )
+{
+	long s = g.inputs().size();
+	
+	if( index < 0 )
+	{
+		index += s;
+	}
+
+	if( index >= s || index < 0 )
+	{
+		PyErr_SetString( PyExc_IndexError, "Index out of range" );
+		throw_error_already_set();
+	}
+	
+	return g.inputs()[index];
+}
+
 void GafferBindings::bindBehaviours()
 {
 	
@@ -53,6 +77,19 @@ void GafferBindings::bindBehaviours()
 	;
 	
 	class_<OrphanRemover>( "OrphanRemover", init<StandardSetPtr>() )
+	;
+	
+	class_<InputGenerator<Plug> >( "InputGenerator", no_init )
+		.def(
+			init<Node *, Plug *, size_t, size_t>( (
+				arg_( "parent" ),
+				arg_( "plugPrototype" ),
+				arg_( "minInputs" ) = 1,
+				arg_( "maxInputs" ) = Imath::limits<size_t>::max() 
+			) )
+		 )
+		.def( "__len__", &inputGeneratorLen )
+		.def( "__getitem__", &inputGeneratorGetItem )
 	;
 	
 }

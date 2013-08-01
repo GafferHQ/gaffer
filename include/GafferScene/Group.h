@@ -39,6 +39,7 @@
 #define GAFFERSCENE_GROUP_H
 
 #include "Gaffer/TransformPlug.h"
+#include "Gaffer/Behaviours/InputGenerator.h"
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -91,18 +92,8 @@ class Group : public SceneProcessor
 		
 		Gaffer::ObjectPlug *inputMappingPlug();
 		const Gaffer::ObjectPlug *inputMappingPlug() const;
-	
-		void childAdded( GraphComponent *parent, GraphComponent *child );
 		
-		void plugInputChanged( Gaffer::Plug *plug );
-		void addAndRemoveInputs();
-		virtual void parentChanging( Gaffer::GraphComponent *newParent );
-		
-		boost::signals::connection m_plugInputChangedConnection;
-	
-		// we keep this up to date in childAdded(), so no matter how
-		// we get the plugs, we can access them quickly.
-		std::vector<ScenePlug *> m_inPlugs;
+		Gaffer::Behaviours::InputGenerator<ScenePlug> m_inPlugs;
 
 		static size_t g_firstPlugIndex;
 			
