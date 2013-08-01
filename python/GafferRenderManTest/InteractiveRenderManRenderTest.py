@@ -285,6 +285,23 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 0.5 ) )
-				
+	
+	def testContext( self ):
+		
+		s = Gaffer.ScriptNode()
+		
+		r = GafferRenderMan.InteractiveRenderManRender()
+		
+		self.assertNotEqual( r.getContext(), None )
+		self.failIf( r.getContext().isSame( s.context() ) )
+		
+		s["r"] = r
+		
+		self.failUnless( r.getContext().isSame( s.context() ) )
+		
+		s.removeChild( r )
+		
+		self.failIf( r.getContext().isSame( s.context() ) )
+		
 if __name__ == "__main__":
 	unittest.main()
