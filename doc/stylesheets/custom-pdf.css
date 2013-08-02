@@ -234,7 +234,9 @@ a:hover {
 
 div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
 td, th ,th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
-ul > li > * { color: #3E4349; }
+
+/* reduce the margin between blocks to keep the items in lists a bit tighter */
+ul > li > * { color: #3E4349; margin-bottom: 0.4em; }
 
 /*reduce the amount of padding in bullet lists*/
 ul { padding-left: 0; margin-left: 3em; }
