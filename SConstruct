@@ -473,8 +473,8 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "72",
-	GAFFER_PATCH_VERSION = "2",
+	GAFFER_MINOR_VERSION = "73",
+	GAFFER_PATCH_VERSION = "0",
 
 )
 

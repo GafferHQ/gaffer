@@ -1,3 +1,12 @@
+0.73.0
+======
+
+- Implemented connection hiding for the NodeGraph. This is accessed by right clicking on a node in the Node Graph and using the new "Show Input Connections" and "Show Output Connections" menu items (#429).
+- Fixed const correctness of GraphGadget::getNodePosition().
+- Fixed connection drag bug. Dragging the endpoint of a connection around and then placing it back where it started was breaking the connection, whereas it should have been having no effect.
+- Replaced Enabled/Disable node menu item with Enabled checkbox.
+- Added titles to the node graph context menus.
+
 0.72.2
 ======
 
