@@ -130,6 +130,44 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	
 		return cls.__nodeContextMenuSignal
 	
+	## May be used from a slot attached to nodeContextMenuSignal() to install some
+	# standard menu items for modifying the connection visibility for a node.
+	@classmethod
+	def appendConnectionVisibilityMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+	
+		menuDefinition.append( "/ConnectionVisibilityDivider", { "divider" : True } )
+		menuDefinition.append(
+			"/Show Input Connections",
+			{
+				"checkBox" : IECore.curry( cls.__getNodeInputConnectionsVisible, nodeGraph.graphGadget(), node ),
+				"command" : IECore.curry( cls.__setNodeInputConnectionsVisible, nodeGraph.graphGadget(), node )
+			}
+		)
+		menuDefinition.append(
+			"/Show Output Connections",
+			{
+				"checkBox" : IECore.curry( cls.__getNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node ),
+				"command" : IECore.curry( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
+			}
+		)
+
+	## May be used from a slot attached to nodeContextMenuSignal() to install a
+	# standard menu item for modifying the enabled state of a node.
+	@classmethod
+	def appendEnabledPlugMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+		
+		enabledPlug = node.enabledPlug() if isinstance( node, Gaffer.DependencyNode ) else None
+		if enabledPlug is not None :
+			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
+			menuDefinition.append(
+				"/Enabled",
+				{
+					"command" : IECore.curry( cls.__setEnabled, node ),
+					"checkBox" : enabledPlug.getValue(),
+					"active" : enabledPlug.settable()
+				}
+			)
+	
 	__nodeDoubleClickSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted whenever a node is double clicked.
 	# Slots should have the signature ( nodeGraph, node ).
@@ -186,21 +224,25 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			if len( gadgets ) :
 			
 				overrideMenuDefinition = IECore.MenuDefinition()
+				overrideMenuTitle = None
 				
 				if isinstance( gadgets[0], GafferUI.Nodule ) :
 					self.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
+					overrideMenuTitle = gadgets[0].plug().relativeName( self.graphGadget().getRoot() )
 				elif isinstance( gadgets[0], GafferUI.ConnectionGadget ) :
 					self.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
+					overrideMenuTitle = "-> " + gadgets[0].dstNodule().plug().relativeName( self.graphGadget().getRoot() )					
 				else :
 					nodeGadget = gadgets[0]
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
 						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget.staticTypeId() )
 					if nodeGadget is not None :
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
+						overrideMenuTitle = nodeGadget.node().getName()
 			
 				if len( overrideMenuDefinition.items() ) :
 					menuDefinition = overrideMenuDefinition
-					self._m = GafferUI.Menu( menuDefinition )
+					self._m = GafferUI.Menu( menuDefinition, title=overrideMenuTitle )
 					self._m.popup( self )
 					return True
 			
@@ -308,6 +350,34 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		# Perhaps we should just signal that we're not valid in some way and the CompoundEditor should
 		# remove us? Consider how this relates to NodeEditor.__deleteWindow() too.
 		self.parent().removeChild( self )
+
+	@classmethod
+	def __getNodeInputConnectionsVisible( cls, graphGadget, node ) :
+
+		return not graphGadget.getNodeInputConnectionsMinimised( node )
+
+	@classmethod
+	def __setNodeInputConnectionsVisible( cls, graphGadget, node, value ) :
+
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			graphGadget.setNodeInputConnectionsMinimised( node, not value )
+
+	@classmethod
+	def __getNodeOutputConnectionsVisible( cls, graphGadget, node ) :
+
+		return not graphGadget.getNodeOutputConnectionsMinimised( node )
+
+	@classmethod
+	def __setNodeOutputConnectionsVisible( cls, graphGadget, node, value ) :
+
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
+
+	@classmethod
+	def __setEnabled( cls, node, value ) :
+
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			node.enabledPlug().setValue( value )
 
 ## Used to capture TAB input since it doesn't make it through to the keyPressSignal
 ## \todo: investigate this further. TextWidget does receive TAB in keyPressSignal

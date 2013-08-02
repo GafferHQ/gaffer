@@ -117,9 +117,20 @@ class GraphGadget : public ContainerGadget
 		/// is created. Note that currently all GraphGadgets share the same node
 		/// positioning, so having the node appear in different places in different
 		/// Gadgets is not possible.
+		/// \undoable
 		void setNodePosition( Gaffer::Node *node, const Imath::V2f &position );
-		Imath::V2f getNodePosition( Gaffer::Node *node ) const;
+		Imath::V2f getNodePosition( const Gaffer::Node *node ) const;
 		
+		/// May be used to minimise the input connections for a particular node.
+		/// \undoable
+		void setNodeInputConnectionsMinimised( Gaffer::Node *node, bool minimised );
+		bool getNodeInputConnectionsMinimised( const Gaffer::Node *node ) const;
+
+		/// May be used to minimise the output connections for a particular node.
+		/// \undoable
+		void setNodeOutputConnectionsMinimised( Gaffer::Node *node, bool minimised );
+		bool getNodeOutputConnectionsMinimised( const Gaffer::Node *node ) const;
+				
 		/// Sets the layout algorithm used by the graph editor. This defaults to
 		/// an instance of StandardGraphLayout.
 		void setLayout( GraphLayoutPtr layout );
@@ -168,9 +179,10 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadgets( const Gaffer::GraphComponent *plugParent );
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
+		void updateConnectionGadgetMinimisation( ConnectionGadget *gadget );
 		ConnectionGadget *reconnectionGadgetAt( NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
 		void updateDragReconnectCandidate( const DragDropEvent &event );
-		
+				
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
 		GraphGadgetSignal m_rootChangedSignal;
