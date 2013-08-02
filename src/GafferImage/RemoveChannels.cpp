@@ -61,8 +61,7 @@ RemoveChannels::RemoveChannels( const std::string &name )
 		new ChannelMaskPlug(
 			"channels",
 			Gaffer::Plug::In,
-			inPlug()->channelNamesPlug()->defaultValue(),
-			~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
+			inPlug()->channelNamesPlug()->defaultValue()
 		)
 	);
 }
@@ -143,10 +142,7 @@ void RemoveChannels::hashChannelNamesPlug( const GafferImage::ImagePlug *output,
 	channelSelectionPlug()->maskChannels( maskChannels );
 
 	modePlug()->hash( h );
-	for( std::vector<std::string>::iterator it( maskChannels.begin() ); maskChannels.end() != it; ++it )
-	{
-		h.append( *it );
-	}
+	h.append( &maskChannels[0], maskChannels.size() );
 }
 
 GafferImage::Format RemoveChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -164,7 +160,7 @@ IECore::ConstStringVectorDataPtr RemoveChannels::computeChannelNames( const Gaff
 	StringVectorDataPtr result = new StringVectorData();
 
 	int mode( modePlug()->getValue() );
-	if( mode == 0 ) // Remove the selected channels
+	if( mode == Remove ) // Remove the selected channels
 	{
 		IECore::ConstStringVectorDataPtr inChannelsData = inPlug()->channelNamesPlug()->getValue();
 		std::vector<std::string> inChannels( inChannelsData->readable() );

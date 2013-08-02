@@ -51,6 +51,12 @@ class RemoveChannels : public ImageProcessor
 
 	public :
 
+		enum RemoveChannelsMode
+		{
+			Remove = 0,
+			Keep = 1
+		};
+
 		RemoveChannels( const std::string &name=defaultName<RemoveChannels>() );
 		virtual ~RemoveChannels();
 
