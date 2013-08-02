@@ -261,7 +261,6 @@ Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, 
 
 Imath::M33f Implementation::computeAdjustedMatrix() const
 {
-	///\todo: We don't handle the pixel aspect of the format here but we should!
 	Format inFormat = inPlug()->formatPlug()->getValue();
 	Format outFormat = outputFormatPlug()->getValue();
 
@@ -275,17 +274,10 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 	);
 
 	// To transform the image correctly we need to first move the image to the pivot point.
-	// However, this is not as trivial as it sounds as the pivot point was specified in relation to the unscaled image
-	// and the image we are manipulating here has already been scaled to the nearest integer data window by the 
-	// reformat node that is place directly upstream. Therefore we first need to scale the pivot point by the actual
-	// input's scale and then convert it from image space to gadget space by flipping it in the Y axis.
-	float inFormatHeight = inFormat.getDisplayWindow().size().y + 1;	
-	Imath::M33f p;
-	Imath::V2f pivotVec = transformPlug()->pivotPlug()->getValue();
-	pivotVec *= trueScale;
-	pivotVec.y = inFormatHeight - pivotVec.y;
-	pivotVec *= Imath::V2f( -1. );
-	p.translate( pivotVec );
+	Imath::M33f pi;
+	Imath::V2f invPivotVec = -transformPlug()->pivotPlug()->getValue();
+	invPivotVec *= trueScale;
+	pi.translate( invPivotVec );
 
 	// As the input was only scaled to the nearest integer bounding box by the reformat node we need to 
 	// do a slight scale adjustment to achieve any sub-pixel scale factor.
@@ -302,14 +294,11 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 	t.translate( transformPlug()->translatePlug()->getValue() );
 
 	// Here we invert the pivot vector and translate the image back.
-	float outFormatHeight = outFormat.getDisplayWindow().size().y + 1;	
-	Imath::M33f pi;
-	Imath::V2f invPivotVec = transformPlug()->pivotPlug()->getValue();
-	invPivotVec.y = outFormatHeight - invPivotVec.y;
-	pi.translate( invPivotVec );
+	Imath::M33f p;
+	p.translate( transformPlug()->pivotPlug()->getValue() );
 
 	// Concatenate the transforms.
-	Imath::M33f result = p * s * r * t * pi;
+	Imath::M33f result = pi * s * r * t * p;
 
 	return result;
 }
