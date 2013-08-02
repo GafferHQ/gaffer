@@ -333,7 +333,10 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 				// new connection above, as removing a connection can trigger an InputGenerator
 				// to remove plugs, possibly including the input plug we're want to connect to.
 				// see issue #302.
-				connection->dstNodule()->plug()->setInput( 0 );
+				if( connection->dstNodule()->plug() != input )
+				{
+					connection->dstNodule()->plug()->setInput( 0 );
+				}
 			}
 			
 		return true;
