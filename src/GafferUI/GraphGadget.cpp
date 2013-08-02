@@ -45,6 +45,7 @@
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedPlug.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/CompoundNumericPlug.h"
@@ -69,6 +70,10 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////////
 // GraphGadget implementation
 //////////////////////////////////////////////////////////////////////////
+
+static const InternedString g_positionPlugName( "__uiPosition" );
+static const InternedString g_inputConnectionsMinimisedPlugName( "__uiInputConnectionsMinimised" );
+static const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnectionsMinimised" );
 
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
@@ -261,7 +266,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<con
 
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
-	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 	if( !plug )
 	{
 		plug = new Gaffer::V2fPlug( "__uiPosition", Gaffer::Plug::In );
@@ -272,12 +277,56 @@ void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &positio
 	plug->setValue( position );
 }
 
-Imath::V2f GraphGadget::getNodePosition( Gaffer::Node *node ) const
+Imath::V2f GraphGadget::getNodePosition( const Gaffer::Node *node ) const
 {
-	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+	const Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 	return plug ? plug->getValue() : V2f( 0 );
 }
 
+void GraphGadget::setNodeInputConnectionsMinimised( Gaffer::Node *node, bool minimised )
+{
+	if( minimised == getNodeInputConnectionsMinimised( node ) )
+	{
+		return;
+	}
+	
+	Gaffer::BoolPlug *p = node->getChild<Gaffer::BoolPlug>( g_inputConnectionsMinimisedPlugName );
+	if( !p )
+	{
+		p = new Gaffer::BoolPlug( g_inputConnectionsMinimisedPlugName, Gaffer::Plug::In, false, Gaffer::Plug::Default | Gaffer::Plug::Dynamic );
+		node->addChild( p );
+	}
+	p->setValue( minimised );
+}
+
+bool GraphGadget::getNodeInputConnectionsMinimised( const Gaffer::Node *node ) const
+{
+	const Gaffer::BoolPlug *p = node->getChild<Gaffer::BoolPlug>( g_inputConnectionsMinimisedPlugName );
+	return p ? p->getValue() : false;
+}
+
+void GraphGadget::setNodeOutputConnectionsMinimised( Gaffer::Node *node, bool minimised )
+{
+	if( minimised == getNodeOutputConnectionsMinimised( node ) )
+	{
+		return;
+	}
+	
+	Gaffer::BoolPlug *p = node->getChild<Gaffer::BoolPlug>( g_outputConnectionsMinimisedPlugName );
+	if( !p )
+	{
+		p = new Gaffer::BoolPlug( g_outputConnectionsMinimisedPlugName, Gaffer::Plug::In, false, Gaffer::Plug::Default | Gaffer::Plug::Dynamic );
+		node->addChild( p );
+	}
+	p->setValue( minimised );
+}
+
+bool GraphGadget::getNodeOutputConnectionsMinimised( const Gaffer::Node *node ) const
+{
+	const Gaffer::BoolPlug *p = node->getChild<Gaffer::BoolPlug>( g_outputConnectionsMinimisedPlugName );
+	return p ? p->getValue() : false;
+}
+		
 void GraphGadget::setLayout( GraphLayoutPtr layout )
 {
 	m_layout = layout;
@@ -532,14 +581,23 @@ void GraphGadget::inputChanged( Gaffer::Plug *dstPlug )
 
 void GraphGadget::plugSet( Gaffer::Plug *plug )
 {
-	const std::string &name = plug->getName();
-	if( name=="__uiPosition" )
+	const InternedString &name = plug->getName();
+	if( name==g_positionPlugName )
 	{
 		Gaffer::Node *node = plug->node();
 		NodeGadget *ng = findNodeGadget( node );
 		if( ng )
 		{
 			updateNodeGadgetTransform( ng );
+		}
+	}
+	else if( name==g_inputConnectionsMinimisedPlugName || name == g_outputConnectionsMinimisedPlugName )
+	{
+		std::vector<ConnectionGadget *> connections;
+		connectionGadgets( plug->node(), connections );
+		for( std::vector<ConnectionGadget *>::const_iterator it = connections.begin(), eIt = connections.end(); it != eIt; ++it )
+		{
+			updateConnectionGadgetMinimisation( *it );
 		}
 	}
 }
@@ -1256,6 +1314,7 @@ void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 	}
 		
 	ConnectionGadgetPtr connection = new ConnectionGadget( srcNodule, dstNodule );
+	updateConnectionGadgetMinimisation( connection.get() );
 	addChild( connection );
 
 	m_connectionGadgets[dstPlug] = connection.get();
@@ -1315,4 +1374,14 @@ ConnectionGadget *GraphGadget::findConnectionGadget( const Gaffer::Plug *plug ) 
 		return 0;
 	}
 	return it->second;
+}
+
+void GraphGadget::updateConnectionGadgetMinimisation( ConnectionGadget *gadget )
+{
+	bool minimised = getNodeInputConnectionsMinimised( gadget->dstNodule()->plug()->node() );
+	if( const Nodule *srcNodule = gadget->srcNodule() )
+	{
+		minimised = minimised || getNodeOutputConnectionsMinimised( srcNodule->plug()->node() );
+	}
+	gadget->setMinimised( minimised );
 }

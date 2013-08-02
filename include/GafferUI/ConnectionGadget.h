@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -75,6 +75,12 @@ class ConnectionGadget : public Gadget
 		/// May be called to change the connection represented by this gadget.
 		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 
+		/// A minimised connection is drawn only as a small stub
+		/// entering the destination nodule - this can be useful in
+		/// uncluttering a complex graph.
+		void setMinimised( bool minimised );
+		bool getMinimised() const;
+
 		/// May be called by the recipient of a drag to set a more appropriate position
 		/// and tangent for the connection as the drag progresses within the destination.
 		/// Throws if this connection is not currently the source of a connection.
@@ -107,6 +113,8 @@ class ConnectionGadget : public Gadget
 		
 		NodulePtr m_srcNodule;
 		NodulePtr m_dstNodule;
+		
+		bool m_minimised;
 		
 		Gaffer::Plug::Direction m_dragEnd;
 		
