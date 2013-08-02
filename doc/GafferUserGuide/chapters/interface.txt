@@ -40,31 +40,35 @@ The mouse can be used to perform most actions in the NodeGraph.
 * To zoom in and out of the graph, you can use the `middle-mouse scrollwheel` if you have one.
 ** Alternatively, hold down the `ALT key` and `right-mouse drag` to zoom.
 
+There are xref:appendices_hotkeys[some hotkeys] available for setting the view. For example, `f` will frame to the current node selection.
+
 ==== Manipulating nodes anchor:interface_manipulatingNodes[]
 
 ===== Creating Nodes
 
-There are two handy ways of creating nodes within the NodeGraph. Both are integrated within the same tool, but each has its own strengths.
+There are two handy ways of creating nodes within the NodeGraph. Both are integrated within the same tool, with each having its own benefits.
 
 Browsing the NodeMenu:
 
 ** You can summon the NodeMenu by `right-clicking` in empty space within the NodeGraph panel.
-*** Additionally, if you `right-click` on a nodule of an existing node, Gaffer will show a context sensitive menu filtered to the relevant results.
+*** Additionally, if you `right-click` on a nodule of an existing node, Gaffer will show a context sensitive menu filtered a relevant subset of results.
 ** The menu is organised hierarchically, with nodes grouped in to modules at the top level (Scene, RenderMan, Arnold, Image etc).
 ** Simply browse the menu and submenus, and select the desired node with a `left-click` to have it added to the node network.
 
-!!!!screen grab of node menu with submenus!!!!
+.!!!!screen grab of node menu with submenus!!!!
+image::images/placeHolder.png[align="center"]
 
 Searching the NodeMenu:
 
 ** Alternatively, nodes can be created by performing quick searches of the available node list.
-** The NodeMenu has a search field built in which sit on top of the menu list.
+** The NodeMenu has a search field built in which sits on top of the menu list.
 ** The quickest way to access it is by pressing `Tab` in the NodeGraph, which will raise the menu and set focus to the search field.
 *** This allows you to start typing straight away, and Gaffer will begin returning fuzzy matches from your first key stroke.
 *** For example: typing "att" will show results including: *'Att'*'ributeCache', *'Att'*'ributes', 'OpenGL'*'Att'*'ributes', 'Standard'*'Att'*'ributes' etc..
 ** Once you have a list of matches, you can use the mouse to select or alternatively you can use the `up-arrow` and `down-arrow` keys combined with `Enter`.
 
-!!!!screen grab of node menu with active search!!!!
+.!!!!screen grab of node menu with active search!!!!
+image::images/placeHolder.png[align="center"]
 
 As another efficiency aid, the NodeMenu will store the type of the last node it created. Next time you open the NodeMenu (either with `Tab` or `right-click`) the search field will be populated with this info, meaning you need only press `Enter` to create another node of that type.
 
@@ -83,14 +87,21 @@ The selection can be cleared by:
 * `left-clicking` in the empty space of the NodeGraph.
 * or pressing `CTRL+SHIFT+a` whilst focus is on the NodeGraph panel.
 
-
-
+When nodes are selected they can be repositioned in within the node graph by `left-click-dragging`. To help with maintaining tidy networks, Gaffer peforms some snapping opertations as you move nodes. If the nodes being re-arranged have connections to any nodes outside the selection, Gaffer will attempt to to snap to their input and outputs such that nodes are centered, connections are horizontal or veritcal, and nodes butt up nicely to each other.
 
 
 
 ===== Duplicating/deleting
 
-The usual system hotkeys for cut/copy-paste and deleting nodes will work.
+The usual system hotkeys for cut/copy-paste and deleting nodes will work. See xref:appendices_hotkeys[the appendices] for more details.
+
+In addition to permanently deleting nodes, users have the option of temprorarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
+
+ * `right-clicking` on a specific node with show a popup menu with an entry for "Enable" which can be checked on/off.
+ * alternatively, the hotkey `d` will toggle the 'enabled' state for all selected nodes.
+
+.!!!!screen grab a disabled node with input and output connections!!!!
+image::images/placeHolder.png[align="center"]
 
 ===== Dragging nodes to other editors
 
@@ -102,11 +113,24 @@ drag from out to in
 
 drag from in to out
 
-
 [NOTE]
 To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
 
-!!!!screen grab of popup plug labels!!!!
+.!!!!screen grab of popup plug labels!!!!
+image::images/placeHolder.png[align="center"]
+
+
+To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
+In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
+
+To hide/unhide connections:
+
+ * `right-click` on a node in the NodeGraph.
+ * In the pop-up menu un-check "Show Input Connections"/"Show Output Connections"
+
+.!!!!screen grab showing before and after of hidden criss crossy connections!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
 
 
 

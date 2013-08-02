@@ -53,10 +53,16 @@ The framework with which the Gaffer tool is built is also available for rapid de
 !!!!What can Gaffer do?!!!!
 
 === Using this guide anchor:introduction_usingThisGuide[]
-!!!!The user guide is structured thusly. Some simple tutorials are included, but extra in depth tutorials are available HERE.  Nodes also have tooltips that contain useful information, and that information is collated in the GafferNodeReference document.!!!!
 
-The GafferUserGuide provides!!!!!!!!
+The user guide is loosely structured in three sections, starting with an overview of Gaffer and how to get up and running in the app. Then there are chapters covering in more depth the use of the various parts of the software. Lastly, the user guide presents a collection of useful tidbits - mini tutorials and references.
 
+[Note]
+In addition to the information available in the user guide, Gaffer features exstensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
+
+As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user. The node listings contain a description of each node's purpose, alongside details of all the plugs available on that node. This NodeReference !!!!!!LINK HERE SOME HOW!!!!!!! can be used as a guide to the tools that can be employed within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
+
+
+==== Terminology 
 
 As the Gaffer workflow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology thoughout the user guide.
 

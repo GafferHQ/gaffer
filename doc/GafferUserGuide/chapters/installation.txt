@@ -1,5 +1,5 @@
 == Installation anchor:installation_installation[]
-Something about how Gaffer should be unpacked and any required + optional env vars.
+!!!Something about how Gaffer should be unpacked and any required + optional env vars.!!!
 
 === Launching Gaffer anchor:installation_launchingGaffer[]
 Once Gaffer is properly installed, simply launch it from the commandline as follows
@@ -13,6 +13,21 @@ Or to load an existing '.gfr' script, specify the path to the file after the gaf
 ------------------------------------
 > gaffer /path/to/script.gfr
 ------------------------------------
+
+The Gaffer app accepts command line flags to modify it's behaviour. To see a list of the flags available:
+
+------------------------------------
+> gaffer -help gui
+------------------------------------
+
+And this is an example of using flags (in this case opening the specified script in full-screen mode)
+
+------------------------------------
+> gaffer /path/to/script.gfr -fullScreen
+------------------------------------
+
+
+
 
 === Customising anchor:installation_customising[]
 Gaffer exposes a number of user configurable preferences, allowing individuals to set various behaviours to suit their current workflow.
