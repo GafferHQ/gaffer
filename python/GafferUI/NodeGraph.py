@@ -150,6 +150,23 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				"command" : IECore.curry( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
 			}
 		)
+
+	## May be used from a slot attached to nodeContextMenuSignal() to install a
+	# standard menu item for modifying the enabled state of a node.
+	@classmethod
+	def appendEnabledPlugMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+		
+		enabledPlug = node.enabledPlug() if isinstance( node, Gaffer.DependencyNode ) else None
+		if enabledPlug is not None :
+			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
+			menuDefinition.append(
+				"/Enabled",
+				{
+					"command" : IECore.curry( cls.__setEnabled, node ),
+					"checkBox" : enabledPlug.getValue(),
+					"active" : enabledPlug.settable()
+				}
+			)
 	
 	__nodeDoubleClickSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted whenever a node is double clicked.
@@ -355,6 +372,12 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
+
+	@classmethod
+	def __setEnabled( cls, node, value ) :
+
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			node.enabledPlug().setValue( value )
 
 ## Used to capture TAB input since it doesn't make it through to the keyPressSignal
 ## \todo: investigate this further. TextWidget does receive TAB in keyPressSignal
