@@ -53,6 +53,7 @@ from FilterTest import FilterTest
 from DisplayTest import DisplayTest
 from ImageStatsTest import ImageStatsTest
 from ImageTransformTest import ImageTransformTest
+from ClampTest import ClampTest
 
 if __name__ == "__main__":
 	import unittest

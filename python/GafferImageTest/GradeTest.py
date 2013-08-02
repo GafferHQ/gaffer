@@ -96,3 +96,6 @@ class GradeTest( unittest.TestCase ) :
 		self.assertEqual( g.correspondingInput( g["in"] ), None )
 		self.assertEqual( g.correspondingInput( g["enabled"] ), None )
 		self.assertEqual( g.correspondingInput( g["gain"] ), None )
+
+
+
