@@ -35,17 +35,19 @@
 #  
 ##########################################################################
 
-from IECore import Enum
-
+import IECore
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
+QtCore = GafferUI._qtImport( "QtCore" )
 
 ## The ListContainer holds a series of Widgets either in a column or a row.
 # It attempts to provide a list like interface for manipulation of the widgets.
 class ListContainer( GafferUI.ContainerWidget ) :
 
-	Orientation = Enum.create( "Vertical", "Horizontal" )
+	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
+	HorizontalAlignment = GafferUI.Enums.HorizontalAlignment
+	VerticalAlignment = GafferUI.Enums.VerticalAlignment
 
 	def __init__( self, orientation=Orientation.Vertical, spacing=0, borderWidth=0, **kw ) :
 	
@@ -69,7 +71,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	
 		return self.__orientation
 		
-	def append( self, child, expand=False ) :
+	def append( self, child, expand=False, horizontalAlignment=None, verticalAlignment=None ) :
 		
 		assert( isinstance( child, GafferUI.Widget ) )
 
@@ -80,14 +82,14 @@ class ListContainer( GafferUI.ContainerWidget ) :
 		self.__widgets.append( child )
 		
 		stretch = 1 if expand else 0
-		self.__qtLayout.addWidget( child._qtWidget(), stretch )	
+		self.__qtLayout.addWidget( child._qtWidget(), stretch, self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )	
 		child._applyVisibility()
 	
 	def remove( self, child ) :
 	
 		self.removeChild( child )
 	
-	def insert( self, index, child, expand=False ) :
+	def insert( self, index, child, expand=False, horizontalAlignment=None, verticalAlignment=None ) :
 	
 		l = len( self.__widgets )
 		if index > l :
@@ -100,7 +102,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 		self.__widgets.insert( index, child )
 
 		stretch = 1 if expand else 0
-		self.__qtLayout.insertWidget( index, child._qtWidget(), stretch )
+		self.__qtLayout.insertWidget( index, child._qtWidget(), stretch, self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )
 		child._applyVisibility()
 		
 	def index( self, child ) :
@@ -166,9 +168,30 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	
 		return len( self.__widgets )
 	
-	def addChild( self, child, expand=False ) :
+	def __convertToQtAlignment( self, horizontalAlignment, verticalAlignment):
 	
-		self.append( child, expand )
+		if not horizontalAlignment and not verticalAlignment:
+			return QtCore.Qt.Alignment( 0 )
+		
+		if verticalAlignment:
+			qtVerticalAlignment = GafferUI.VerticalAlignment._toQt( verticalAlignment )
+		else:
+			qtVerticalAlignment = QtCore.Qt.Alignment( 0 )
+			
+		if horizontalAlignment:
+			qtHorizontalAlignment = GafferUI.HorizontalAlignment._toQt( horizontalAlignment )
+		else:
+			qtHorizontalAlignment = QtCore.Qt.Alignment( 0 )
+
+		return qtHorizontalAlignment | qtVerticalAlignment
+	
+	def addSpacer( self, width=0, height=0, expand=False, horizontalAlignment=None, verticalAlignment=None):
+		
+		self.append( GafferUI.Spacer( IECore.V2i( width, height ) ), expand=expand, horizontalAlignment=horizontalAlignment, verticalAlignment=verticalAlignment )
+	
+	def addChild( self, child, expand=False, horizontalAlignment=None, verticalAlignment=None ) :
+	
+		self.append( child, expand=expand, horizontalAlignment=horizontalAlignment, verticalAlignment=verticalAlignment )
 	
 	def removeChild( self, child ) :
 	
