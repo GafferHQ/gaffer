@@ -940,6 +940,27 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
 		self.assertEqual( s[0].name, coshader )
+	
+	def testNumericTypeAnnotations( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/numericTypeAnnotations.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertTrue( isinstance( shaderNode["parameters"]["floatParameter1"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( shaderNode["parameters"]["floatParameter2"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( shaderNode["parameters"]["intParameter"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( shaderNode["parameters"]["boolParameter"], Gaffer.BoolPlug ) )
+		
+		self.assertEqual( shaderNode["parameters"]["floatParameter1"].defaultValue(), 1.25 )
+		self.assertEqual( shaderNode["parameters"]["floatParameter2"].defaultValue(), 1.5 )
+		self.assertEqual( shaderNode["parameters"]["intParameter"].defaultValue(), 10 )
+		self.assertEqual( shaderNode["parameters"]["boolParameter"].defaultValue(), True )
+		
+		self.assertEqual( shaderNode["parameters"]["floatParameter1"].getValue(), 1.25 )
+		self.assertEqual( shaderNode["parameters"]["floatParameter2"].getValue(), 1.5 )
+		self.assertEqual( shaderNode["parameters"]["intParameter"].getValue(), 10 )
+		self.assertEqual( shaderNode["parameters"]["boolParameter"].getValue(), True )
 		
 if __name__ == "__main__":
 	unittest.main()
