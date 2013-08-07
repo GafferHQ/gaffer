@@ -77,6 +77,8 @@ class RenderManShader : public GafferScene::Shader
 
 		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
 		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
+
+		const IECore::ConstCompoundDataPtr annotations() const;
 	
 	private :
 	
