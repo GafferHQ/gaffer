@@ -1,15 +1,15 @@
 === Scripting Architecture anchor:scriptingArchitecture[]
 
 
-.Introduction
+==== Introduction
 All of Gaffer's core functionality is available to be scripted using Python - in fact much of the GUI application itself is written in Python, Gaffer plugins are just Python modules, and the file format itself is simply a Python script with a .gfr extension.
 
-There is a direct one to one correspondence between the C\++ and Python APIs for Gaffer, so if you start out using one, you can easily transfer to the other. This makes it relatively straightforward to prototype in Python, but convert to C\++ if performance becomes an issue, or to spend most of your time hacking away in C\++ but still be comfortable writing some GUI code in Python.
+There is a direct one to one correspondence between the C\++ and Python APIs for Gaffer, so if you start out using one, you can easily transfer to the other. This makes it relatively straightforward to prototype in Python, but convert to C\++ if performance becomes an issue, or to spend most of your time hacking away in C++ but still be comfortable writing some GUI code in Python.
 
-.GraphComponents
+==== GraphComponents
 The most central classes in the Gaffer API are the GraphComponents - the nodes and plugs which are connected to make up a dependency graph. These are parented together in a hierarchical set of relationships, which nicely map to python's dictionary and list syntax. Plugs may be added to nodes using the familiar dictionary notation :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 node = Gaffer.Node()
 node["firstPlug"] = Gaffer.IntPlug()
@@ -18,18 +18,18 @@ node["secondPlug"] = Gaffer.FloatPlug()
 
 Existing plugs can be accessed by name like a dictionary, or by insertion order like a list :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 node["firstPlug"].setValue( 10 )
 node[1].setValue( 20.5 )
 ------------------------------------
 
-.Undo
+==== Undo
 Undo is a fundamental part of both the C++ and Python APIs for Gaffer. Rather than have a set of non-undoable APIs and layer undo on top of them using some sort of separate command architecture, Gaffer builds undo right into the core APIs. Naturally sometimes you won't want an operation you perform to be undoable, and other times you will, but in both cases you use the exact same calls. To enable undo just make sure to wrap everything in an UndoContext.
 
 So, if you were to set the values of some plugs like this :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 node["plugName"].setValue( 10 )
 node["someOtherPlugName"].setValue( 20 )
@@ -37,7 +37,7 @@ node["someOtherPlugName"].setValue( 20 )
 
 and you wanted to do the same, but generate an entry in the undo list, then you'd simply do this :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
         node["plugName"].setValue( 10 )
@@ -46,7 +46,7 @@ with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 
 Everything which is performed within the indented UndoContext block will be concatenated into a single entry in the undo list. To make a different entry for each operation, just wrap each one in its own UndoContext :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 scriptNode = node.ancestor( Gaffer.ScriptNode.staticTypeId() )
 with Gaffer.UndoContext( scriptNode ) :
@@ -58,7 +58,7 @@ with Gaffer.UndoContext( scriptNode ) :
 
 The ScriptNode passed to the UndoContext is the root node that holds all other nodes forming a graph, so it's responsible for storing the undo list (when Gaffer opens multiple files simultaneously, each file has its own ScriptNode and therefore its own undo list). Undo and redo of previously recorded operations are provided as methods on the ScriptNode itself :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 # ooops
 scriptNode.undo()

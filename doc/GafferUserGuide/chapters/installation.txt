@@ -1,5 +1,5 @@
 == Installation anchor:installation_installation[]
-Something about how Gaffer should be unpacked and any required + optional env vars.
+!!!Something about how Gaffer should be unpacked and any required + optional env vars.!!!
 
 === Launching Gaffer anchor:installation_launchingGaffer[]
 Once Gaffer is properly installed, simply launch it from the commandline as follows
@@ -13,3 +13,28 @@ Or to load an existing '.gfr' script, specify the path to the file after the gaf
 ------------------------------------
 > gaffer /path/to/script.gfr
 ------------------------------------
+
+The Gaffer app accepts command line flags to modify it's behaviour. To see a list of the flags available:
+
+------------------------------------
+> gaffer -help gui
+------------------------------------
+
+And this is an example of using flags (in this case opening the specified script in full-screen mode)
+
+------------------------------------
+> gaffer /path/to/script.gfr -fullScreen
+------------------------------------
+
+
+
+
+=== Customising anchor:installation_customising[]
+Gaffer exposes a number of user configurable preferences, allowing individuals to set various behaviours to suit their current workflow.
+!!!!Link out to preferences here!!!!
+
+Additionally, elements of the user inferface can be arranged and saved as *layouts*. Once saved these layouts can be restored at any time, or can be set to be the default gui arrangement. For more information on manipulating and managing layouts see the xref:interface_layouts[Interface chapter].
+
+For users looking to perform customisations outside of the scope of the built-in preferences and layouts, Gaffer's python foundation offers an extremely flexible hook with which to expand or modify the application. For an introduction to custom config files take a look in the xref:configurationFilesExample[tutorials section].
+
+

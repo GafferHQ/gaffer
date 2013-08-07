@@ -1,13 +1,13 @@
 === Command History And Completion For CLI anchor:commandHistoryAndCompletionForCLI[]
 
 
-.Introduction
+==== Introduction
 Out of the box, the gaffer command line app "gaffer cli" isn't particularly useable - there's no tab-to-complete or history or line editing. This is because the python module responsible for such things isn't compatible with the BSD license, and therefore can't be distributed with Gaffer. This short how-to provides a workaround for that.
 
-.Enabling readline and command completion
+==== Enabling readline and command completion
 Chances are you already have a system install of python, and it has the readline module. If so, the following startup script will locate it and set it up, along with some nice tab-based completion. Just cut and paste the text into a ~/gaffer/startup/cli/completion.py file. 
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ---------------------------------------------------------------------------------------------------
 import imp
 import sys

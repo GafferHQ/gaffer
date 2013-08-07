@@ -1,7 +1,7 @@
 === Application Coding Example anchor:applicationCodingExample[]
 
 
-.Introduction
+==== Introduction
 
 xref:helloWorldCodingExample[Previously] we created a simple hello world script using the GafferUI module. In this example we'll see how to turn that into a command line application using a few niceties that Gaffer provides.
 
@@ -30,10 +30,10 @@ apps/helloWorld
 apps/helloWorld-1.py
 ------------------------------------------------------------------------------
 
-.Writing our application
+==== Writing our application
 In helloWorld-1.py, we start by defining a class called helloWorld (the name must match the name in the filename), and deriving it from Gaffer.Application :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 --------------------------------------------------------------------------------------------------
 import IECore
 import Gaffer
@@ -43,79 +43,79 @@ class helloWorld( Gaffer.Application ) :
 
 We then define our command line arguments in our constructor, specifying them using Cortex parameters. If you're familiar with writing procedurals or ops in Cortex then these will be familiar to you. We'll define some parameters to form the default values for our ui :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 --------------------------------------------------------------------------------------------------
-        def __init__( self ) :
-        
-                Gaffer.Application.__init__( self, "A manufacturer of friendly greetings." )
+def __init__( self ) :
+
+    Gaffer.Application.__init__( self, "A manufacturer of friendly greetings." )
+    
+    self.parameters().addParameters(
+
+        [
+            
+            IECore.StringParameter(
+                name = "greeting",
+                description = "The default greeting",
+                defaultValue = "Hello",
+            ),
+
+            IECore.StringParameter(
+                name = "greetee",
+                description = "The default recipient of the greeting",
+                defaultValue = "World",
+            ),
                 
-                self.parameters().addParameters(
-                
-                        [
-                                
-                                IECore.StringParameter(
-                                        name = "greeting",
-                                        description = "The default greeting",
-                                        defaultValue = "Hello",
-                                ),
-        
-                                IECore.StringParameter(
-                                        name = "greetee",
-                                        description = "The default recipient of the greeting",
-                                        defaultValue = "World",
-                                ),
-                                
-                        ]
-                
-                )
+        ]
+    
+    )
 --------------------------------------------------------------------------------------------------
 
 
 Finally, we just need to define the method _run(), which gaffer will use when it wants to run our application. Gaffer will already have parsed the command line arguments for us, and placed the results in a dictionary called args. Our _run() simply contains the "hello world" script, modified ever so slightly to populate the ui with the values provided in args. We also return a status code to provide the exit status for the application - in this case 0 to indicate general happiness.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 --------------------------------------------------------------------------------------------------
-        def _run( self, args ) :
-        
-                import GafferUI
-        
-                with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
-                                with GafferUI.ListContainer( spacing = 5 ) :
-                                                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
-                                                                GafferUI.Label( "Greeting" )
-                                                                greeting = GafferUI.TextWidget( args["greeting"].value )
-                                                with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
-                                                                GafferUI.Label( "Greetee" )
-                                                                greetee = GafferUI.TextWidget( args["greetee"].value )
-                                                message = GafferUI.TextWidget( "", editable=False )
-                                                                
-                                                button = GafferUI.Button( "Greet" )
-                
-                def greet( button ) :
-                
-                                message.setText( greeting.getText() + " " + greetee.getText() )
-                                
-                clickedConnection = button.clickedSignal().connect( greet )
-        
-                window.setVisible( True )
-                GafferUI.EventLoop.mainEventLoop().start()
-                return 0
+def _run( self, args ) :
+
+    import GafferUI
+
+    with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
+        with GafferUI.ListContainer( spacing = 5 ) :
+            with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                GafferUI.Label( "Greeting" )
+                greeting = GafferUI.TextWidget( args["greeting"].value )
+            with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 5 ) :
+                GafferUI.Label( "Greetee" )
+                greetee = GafferUI.TextWidget( args["greetee"].value )
+            message = GafferUI.TextWidget( "", editable=False )
+                            
+            button = GafferUI.Button( "Greet" )
+    
+    def greet( button ) :
+    
+        message.setText( greeting.getText() + " " + greetee.getText() )
+                    
+    clickedConnection = button.clickedSignal().connect( greet )
+
+    window.setVisible( True )
+    GafferUI.EventLoop.mainEventLoop().start()
+    return 0
 --------------------------------------------------------------------------------------------------
 
-.Running our application
+==== Running our application
 We can now run our application as follows :
 
 ------------------------------------------------------------------
 gaffer helloWorld
 ------------------------------------------------------------------
-image::images/tutorials/applicationCodingExample/helloWorld2.png[]
+image::images/tutorials/applicationCodingExample/helloWorld2.png[align="center"]
 
 Or provide some command line arguments :
 
 ------------------------------------------------------------------
 gaffer helloWorld -greeting "Wotcha" -greetee "Billy"
 ------------------------------------------------------------------
-image::images/tutorials/applicationCodingExample/helloWorld4.png[]
+image::images/tutorials/applicationCodingExample/helloWorld4.png[align="center"]
 
 Or print command line help, automatically generated from the parameters :
 
@@ -152,7 +152,7 @@ Parameters
         Default : world
 ....
 
-.Summary
+==== Summary
 This rather contrived example illustrates the basics of application creation, but really only scratches the surface of the Gaffer libraries - all we've really done is use them as a nice convenient way of defining command line arguments and having them parsed for us.
 
 Take a look at the contents of the apps directory in the gaffer distribution to see more examples, and the other tutorials on this wiki (as and when they appear) to see what's available for producing a slightly more useful (but hopefully not less cheerful) application. 

@@ -1,32 +1,32 @@
 === Creating Nodes Coding Example anchor:creatingNodesCodingExample[]
 
 
-.Introduction
+==== Introduction
 Rumour has it some other application has a feature for creating equestrian playthings on demand. Here we'll address this deficiency in Gaffer while taking the opportunity to learn about the scripted creation of nodes.
 
-.Creating our script
+==== Creating our script
 If you've already read the xref:configurationFilesExample[Configuration Files Example], then you'll know we can add features to Gaffer by creating files it runs automatically on startup. We'll create our script in the following file, and gaffer will load it each time it runs :
 
 ------------------------------------
 ~/gaffer/startup/gui/iWantAPony.py
 ------------------------------------
 
-.Creating a menu item
+==== Creating a menu item
 We want our new feature to be easily accessible to the user, so we'll put it in the main menu for the application, which is hosted in the script window.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
-GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
+GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ------------------------------------
 
-image::images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png[]
+image::images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png[align="center"]
 
 You'll find that most user interfaces in Gaffer can be extended with similar ease. In this case we've simply specified the path to the menu item, and specified that it should run a python function called iWantAPony - we'll define that in the next section.
 
-.Creating some nodes
+==== Creating some nodes
 We want to get on with the business of creating some nodes, but first we have to know where to create them. Gaffer can have multiple scenes (scripts) open at once, so we need to determine which one to operate on right now. We'll do that based on which window our menu was invoked from. Fortunately that turns out to be quite easy :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 def __iWantAPony( menu ) :
 
@@ -37,10 +37,10 @@ def __iWantAPony( menu ) :
 
 Now we can create a read node to load a model, set the values of its plugs, and add it to the script.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 read = Gaffer.ReadNode()
-read["fileName"].setValue( "/Users/john/Documents/cortexData/cow.cob" )
+read["fileName"].setValue( "/path/to/some/cortexData/cow.cob" )
 script.addChild( read )
 ------------------------------------
 
@@ -48,7 +48,7 @@ The astute reader may have noticed that the model looks suspiciously bovine, and
 
 The ReadNode loads in single objects, but is unaware of Gaffer's framework for on demand processing of entire scenes. We can create another node to promote our poor heifer to scene status, and connect this node up to the first.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 objectToScene = GafferScene.ObjectToScene()
 objectToScene["name"].setValue( "daisy" )
@@ -58,7 +58,7 @@ script.addChild( objectToScene )
 
 Finally, we can select the newly created nodes so the user is plainly aware of their gift.
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ------------------------------------
 script.selection().clear()
 script.selection().add( read )
@@ -67,9 +67,9 @@ script.selection().add( objectToScene )
 
 And there we have it. Perhaps not quite suitable for show jumping but nevertheless a valuable source of milk, cheese and finally meat.
 
-image::images/tutorials/creatingNodesCodingExample/iWantAPonyResult.png[]
+image::images/tutorials/creatingNodesCodingExample/iWantAPonyResult.png[align="center"]
 
-.The whole script
+==== The whole script
 Here's the whole script in all its glory.
 [source,python]
 ------------------------------------
@@ -83,7 +83,7 @@ def __iWantAPony( menu ) :
         script = scriptWindow.scriptNode()
         
         read = Gaffer.ReadNode()
-        read["fileName"].setValue( "/Users/john/Documents/cortexData/cow.cob" )
+        read["fileName"].setValue( "/path/to/some/cortexData/cow.cob" )
         script.addChild( read )
         
         objectToScene = GafferScene.ObjectToScene()
@@ -95,7 +95,5 @@ def __iWantAPony( menu ) :
         script.selection().add( read )
         script.selection().add( objectToScene )
         
-GafferUI.ScriptWindow.menuDefinition().append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
-
-#THIS IS A TEST COMMENT FOR PYGMENTS - DELETE
+GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ------------------------------------
