@@ -60,6 +60,15 @@ class ColorSwatch( GafferUI.Widget ) :
 		self.__linearColor = color
 		self.__updateCheckerColors()
 	
+	def setHighlighted( self, highlighted ) :
+
+		if highlighted == self.getHighlighted() :
+			return
+
+		GafferUI.Widget.setHighlighted( self, highlighted )
+
+		self.__updateCheckerColors()
+
 	## Colours are expected to be in linear space, and in the case of Color4fs,
 	# are /not/ expected to be premultiplied.	
 	def setColor( self, color ) :
@@ -85,6 +94,9 @@ class ColorSwatch( GafferUI.Widget ) :
 			color1 = IECore.Color3f( 0.2 ) * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
 			self._qtWidget().color0 = self._qtColor( displayTransform( color0 ) )
 			self._qtWidget().color1 = self._qtColor( displayTransform( color1 ) )
+
+		## \todo Colour should come from the style when we have styles applying to Widgets as well as Gadgets
+		self._qtWidget().borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
 
 		self._qtWidget().update()
 	
@@ -124,3 +136,10 @@ class _Checker( QtGui.QWidget ) :
 		
 			# otherwise just draw a flat colour cos it'll be quicker
 			painter.fillRect( QtCore.QRectF( rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height() ), self.color0 )
+
+		if self.borderColor is not None :
+			pen = QtGui.QPen( self.borderColor )
+			pen.setWidth( 4 )
+			painter.setPen( pen )
+			painter.drawRect( 0, 0, self.width(), self.height() )
+
