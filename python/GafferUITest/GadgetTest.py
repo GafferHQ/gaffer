@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -123,6 +124,28 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertTypeNamesArePrefixed( GafferUI )
 		self.assertTypeNamesArePrefixed( GafferUITest )
 	
+	def testRenderRequestOnStyleChange( self ) :
+	
+		g = GafferUI.Gadget()
+		
+		cs = GafferTest.CapturingSlot( g.renderRequestSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		s = GafferUI.StandardStyle()
+		
+		g.setStyle( s )
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0].isSame( g ) )
+		
+		s2 = GafferUI.StandardStyle()
+		g.setStyle( s2 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[1][0].isSame( g ) )
+		
+		s2.setColor( GafferUI.StandardStyle.Color.BackgroundColor, IECore.Color3f( 1 ) )
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[2][0].isSame( g ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/lexical_cast.hpp"
+#include "boost/bind.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
@@ -90,7 +91,15 @@ void Gadget::setStyle( ConstStylePtr style )
 {
 	if( style!=m_style )
 	{
+		if( m_style )
+		{
+			const_cast<Style *>( m_style.get() )->changedSignal().disconnect( boost::bind( &Gadget::styleChanged, this ) );
+		}
 		m_style = style;
+		if( m_style )
+		{
+			const_cast<Style *>( m_style.get() )->changedSignal().connect( boost::bind( &Gadget::styleChanged, this ) );
+		}
 		renderRequestSignal()( this );
 	}
 }
@@ -293,4 +302,9 @@ Gadget::IdleSignal &Gadget::idleSignalAccessedSignal()
 {
 	static IdleSignal g_idleSignalAccessedSignal;
 	return g_idleSignalAccessedSignal;
+}
+
+void Gadget::styleChanged()
+{
+	renderRequestSignal()( this );
 }

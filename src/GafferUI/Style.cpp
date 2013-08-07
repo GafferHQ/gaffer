@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,11 @@ Style::Style()
 
 Style::~Style()
 {
+}
+
+Style::UnarySignal &Style::changedSignal()
+{
+	return m_changedSignal;
 }
 
 StylePtr Style::getDefaultStyle()

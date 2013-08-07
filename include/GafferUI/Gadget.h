@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -233,6 +233,8 @@ class Gadget : public Gaffer::GraphComponent
 	private :
 		
 		Gadget();
+		
+		void styleChanged();
 		
 		ConstStylePtr m_style;
 		
