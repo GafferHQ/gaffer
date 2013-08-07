@@ -89,30 +89,13 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 		return Shader::correspondingInput( output );
 	}
 
-	std::string shaderName = namePlug()->getValue();
-	if( !shaderName.size() )
+	ConstCompoundDataPtr ann = annotations();
+	if( !ann )
 	{
 		return 0;
 	}
 	
-	IECore::ConstShaderPtr shader = 0;
-	try
-	{
-		shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
-	}
-	catch( const std::exception &e )
-	{
-		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", e.what() );
-		return 0;
-	}
-	
-	const CompoundData *annotations = shader->blindData()->member<CompoundData>( "ri:annotations" );
-	if( !annotations )
-	{
-		return 0;
-	}
-	
-	const StringData *primaryInput = annotations->member<StringData>( "primaryInput" );
+	const StringData *primaryInput = ann->member<StringData>( "primaryInput" );
 	if( !primaryInput )
 	{
 		return 0;
@@ -157,7 +140,39 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 			// coshader parameter - input must be another
 			// renderman shader hosting a coshader.
 			const RenderManShader *inputShader = sourcePlug->parent<RenderManShader>();
-			return inputShader && sourcePlug == inputShader->outPlug() && inputShader->typePlug()->getValue() == "ri:shader";
+			if(
+				!inputShader ||
+				sourcePlug != inputShader->outPlug() ||
+				inputShader->typePlug()->getValue() != "ri:shader"
+			)
+			{
+				return false;
+			}
+			// so far all is good, but we also need to check that
+			// the coshaderType annotations match if present.
+			ConstCompoundDataPtr dstAnnotations = annotations();
+			if( !dstAnnotations )
+			{
+				return true;
+			}
+			InternedString parameterName = plug->getName();
+			if( plug->parent<GraphComponent>() != parametersPlug() )
+			{
+				// array parameter
+				parameterName = plug->parent<GraphComponent>()->getName();
+			}
+			const StringData *dstType = dstAnnotations->member<StringData>( parameterName.string() + ".coshaderType" );
+			if( !dstType )
+			{
+				return true;
+			}
+			ConstCompoundDataPtr srcAnnotations = inputShader->annotations();
+			if( !srcAnnotations )
+			{
+				return false;
+			}
+			const StringData *srcType = srcAnnotations->member<StringData>( "coshaderType" );
+			return srcType && srcType->readable() == dstType->readable();
 		}
 		else
 		{
@@ -228,6 +243,32 @@ IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPl
 	
 	return Shader::parameterValue( parameterPlug, network );
 }
+
+const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
+{
+	std::string shaderName = namePlug()->getValue();
+	if( !shaderName.size() )
+	{
+		return NULL;
+	}
+	
+	IECore::ConstShaderPtr shader = NULL;
+	try
+	{
+		shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
+	}
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::Msg::Error, "RenderManShader::annotations", e.what() );
+		return NULL;
+	}
+	
+	return shader->blindData()->member<CompoundData>( "ri:annotations" );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Loading code
+//////////////////////////////////////////////////////////////////////////
 
 IECore::CachedReader *RenderManShader::shaderLoader()
 {

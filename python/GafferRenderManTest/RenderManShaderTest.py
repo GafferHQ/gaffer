@@ -961,6 +961,48 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( shaderNode["parameters"]["floatParameter2"].getValue(), 1.5 )
 		self.assertEqual( shaderNode["parameters"]["intParameter"].getValue(), 10 )
 		self.assertEqual( shaderNode["parameters"]["boolParameter"].getValue(), True )
+	
+	def testCoshaderTypeAnnotations( self ) :
+	
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		coshaderType1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderType1.sl" )
+		coshaderType1Node = GafferRenderMan.RenderManShader()
+		coshaderType1Node.loadShader( coshaderType1 )
+		
+		coshaderType2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderType2.sl" )
+		coshaderType2Node = GafferRenderMan.RenderManShader()
+		coshaderType2Node.loadShader( coshaderType2 )
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/typedCoshaderParameters.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( coshaderType2Node["out"] ) )
+		
+		self.assertFalse( shaderNode["parameters"]["coshaderParameterType1"].acceptsInput( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderParameterType1"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderParameterType1"].acceptsInput( coshaderType2Node["out"] ) )
+		
+		self.assertFalse( shaderNode["parameters"]["coshaderParameterType2"].acceptsInput( coshaderNode["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderParameterType2"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderParameterType2"].acceptsInput( coshaderType2Node["out"] ) )
+		
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["in1"].acceptsInput( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
+		
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType1"]["in1"].acceptsInput( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType1"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType1"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
+		
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderNode["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
