@@ -11,7 +11,7 @@ import inspect
 import sys,os
 
 
-__PLACEHOLDERSTRING__ = "!!!__EMPTY__!!!"
+__PLACEHOLDERSTRING = "!!!__EMPTY__!!!"
 
 def addModuleDefinitionToDoc( doc, modulename ):
 	#format for asciidoc. First level header
@@ -28,7 +28,7 @@ def addNodeDefinitionToDoc( doc, nodename, node ):
 	
 	#record the node description from the metadata
 	if desc == "":
-		desc = __PLACEHOLDERSTRING__
+		desc = __PLACEHOLDERSTRING
 	string = "%s\n\n" % (desc)
 
 	if len(node.children()) > 1: #if the node has plugs other than 'user' plug:
@@ -45,7 +45,7 @@ def addPlugDefinitionToDoc( doc, plugName, plugDescription, plugType, plugDepth 
 		indentLevel = ';;'
 	
 	if plugDescription == "":
-		plugDescription = __PLACEHOLDERSTRING__
+		plugDescription = __PLACEHOLDERSTRING
 	
 	#include the plug type, then the wordy description. wrap description in an explicit <p> to split it onto a new line
 	plugDescription = "`%s`+++<p>+++%s+++</p>+++" % ( plugType, plugDescription)
