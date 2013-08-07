@@ -29,6 +29,11 @@ uniform string fileNameParam = "/foo/bar";
 uniform float nullParam = 1;
 #pragma annotation "nullParam.widget" "null"
 
+uniform float intParam = 1;
+#pragma annotation "intParam.type" "int"
+
+uniform float boolParam = 1;
+#pragma annotation "boolParam.type" "bool"
 
 uniform float minMaxParam = 1;
 #pragma annotation "minMaxParam.min" "-5"
