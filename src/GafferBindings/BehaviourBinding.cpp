@@ -81,7 +81,7 @@ void GafferBindings::bindBehaviours()
 	
 	class_<InputGenerator<Plug> >( "InputGenerator", no_init )
 		.def(
-			init<Node *, Plug *, size_t, size_t>( (
+			init<GraphComponent *, Plug *, size_t, size_t>( (
 				arg_( "parent" ),
 				arg_( "plugPrototype" ),
 				arg_( "minInputs" ) = 1,

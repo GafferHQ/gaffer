@@ -299,6 +299,30 @@ class InputGeneratorTest( unittest.TestCase ) :
 		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+	
+	def testCompoundPlugParent( self ) :
+	
+		n = Gaffer.Node()
+		n["p"] = Gaffer.CompoundPlug()
+		
+		g = Gaffer.Behaviours.InputGenerator( n["p"], Gaffer.IntPlug( "in" ) )
+		
+		self.assertEqual( len( g ), 1 )
+		self.assertTrue( isinstance( n["p"][0], Gaffer.IntPlug ) )
+		
+		a = GafferTest.AddNode()
+		n["p"]["in"].setInput( a["sum"] )
+		
+		self.assertEqual( len( g ), 2 )
+		self.assertTrue( isinstance( n["p"][0], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( n["p"][1], Gaffer.IntPlug ) )
+		self.assertTrue( n["p"][0].getInput().isSame( a["sum"] ) )
+		self.assertTrue( n["p"][1].getInput() is None )
+		
+		n["p"][0].setInput( None )
+		self.assertEqual( len( g ), 1 )
+		self.assertTrue( isinstance( n["p"][0], Gaffer.IntPlug ) )
+		self.assertTrue( n["p"][0].getInput() is None )
 		
 	def tearDown( self ) :
 		

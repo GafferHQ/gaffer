@@ -44,7 +44,7 @@ namespace Behaviours
 {
 
 template< typename PlugClass >
-InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr plugPrototype, size_t minInputs, size_t maxInputs )
+InputGenerator<PlugClass>::InputGenerator( Gaffer::GraphComponent *parent, PlugClassPtr plugPrototype, size_t minInputs, size_t maxInputs )
 	:
 	m_parent( parent ),
 	m_minimumInputs( std::max( minInputs, size_t( 1 ) ) ),
@@ -52,7 +52,17 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr pl
 	m_nameValidator( std::string("^") + plugPrototype->getName().string() + std::string("[_0-9]*") ),
 	m_prototype( plugPrototype )
 {
-	m_parent->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
+	Node *node = IECore::runTimeCast<Node>( parent );
+	if( !node )
+	{
+		node = parent->ancestor<Node>();
+		if( !node )
+		{
+			throw IECore::Exception( "Parent must be a Node or have an ancestor Node" );
+		}
+	}
+	
+	node->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
 	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childAdded, this, ::_1, ::_2 ) );
 	m_parent->childRemovedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childRemoved, this, ::_1, ::_2 ) );
 
