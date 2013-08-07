@@ -182,6 +182,7 @@ checkBox : A boolean widget displayed as a checkbox.
 filename : Treats a string as a file path. Adds file browser button, and enables Gaffer's in place path editing.
 
 null : Hides the parameter.
+|PARAMETER.type		|Allows numeric shader parameters (which are always floats) to be represented within gaffer as FloatPlugs, IntPlugs or BoolPlugs by specifying a value of "float", "int" or "bool"
 |PARAMETER.min		|Minimum value a numeric parameter can have.
 |PARAMETER.max		|Maximum value a numeric parameter can have.
 |PARAMETER.divider	|A horizontal divider bar is drawn below any parameters with this annotation. 
