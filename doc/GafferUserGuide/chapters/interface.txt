@@ -1,0 +1,245 @@
+== Introduction to the Gaffer UI anchor:interface_introductionToTheGafferUI[]
+
+Gaffer's UI is composed of a number of *editors* that can be created and arranged in panels and tabs. An arrangement of editors in panels and tabs makes up a *layout*. Layouts can be saved and restored, allowing users to configure the workspace for particular tasks.
+
+.!!!!!!!!!!SCREEN GRAB OF A SAMPLE LAYOUT !!!!!!!!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+.!!!!!!!!!!SCREEN GRAB OF ANOTHER SAMPLE LAYOUT !!!!!!!!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+Editors provide ways of viewing and interacting with both the script which defines the scene and the scene itself. For example, Gaffer provides editors for manipulating nodes, viewing 2D images, navigating scenes in 3D, and running python commands to modify the current working file or Gaffer session.
+
+=== Layouts anchor:interface_layouts[]
+
+* how to manipulate panels
+** resizing
+** splitting
+** removing 
+* how to add and remove editors from panels
+* how to save and restore layouts
+
+
+=== NodeGraph anchor:interface_nodeGraph[]
+
+The *NodeGraph* is one of the key parts of the Gaffer interface and is the primary means of constructing and modifying the contents of a script.
+As we have seen previously, the script is composed of nodes connected to form graphs and the NodeGraph provides a visualisation of both these nodes and their connections.
+
+[NOTE]
+Nodes, noodles, and nodules... +
+When discussing Gaffer graphs, you may see references to 'nodes', 'noodes' and 'nodules'. 'Nodes' handily refers to Gaffer nodes. You may see the curvy lines that represent the connections between nodes called 'noodles'. And finally 'nodule' is the name given to the little circles drawn on each node representing the plugs available for connection. +
+It's useful to note that noodles and nodules are a components of the GUI rather than part of the Gaffer core - you can manipulate them visually in the NodeGraph, but they aren't entities with values that you can set by other means. In that way they are distinct from nodes, which are actual Gaffer entities.
+
+
+==== Manipulating the NodeGraph view anchor:interface_manipulatingTheNodeGraphView[]
+
+The mouse can be used to perform most actions in the NodeGraph.
+
+* To pan around, simply click and hold the `middle-mouse button` in empty space (i.e. not on a node)
+** Alternatively, hold down the `ALT key` and `left-mouse drag` to perform the same action.
+* To zoom in and out of the graph, you can use the `middle-mouse scrollwheel` if you have one.
+** Alternatively, hold down the `ALT key` and `right-mouse drag` to zoom.
+
+There are xref:appendices_hotkeys[some hotkeys] available for setting the view. For example, `f` will frame to the current node selection.
+
+==== Manipulating nodes anchor:interface_manipulatingNodes[]
+
+===== Creating Nodes
+
+There are two handy ways of creating nodes within the NodeGraph. Both are integrated within the same tool, with each having its own benefits.
+
+Browsing the NodeMenu:
+
+** You can summon the NodeMenu by `right-clicking` in empty space within the NodeGraph panel.
+*** Additionally, if you `right-click` on a nodule of an existing node, Gaffer will show a context sensitive menu filtered a relevant subset of results.
+** The menu is organised hierarchically, with nodes grouped in to modules at the top level (Scene, RenderMan, Arnold, Image etc).
+** Simply browse the menu and submenus, and select the desired node with a `left-click` to have it added to the node network.
+
+.!!!!screen grab of node menu with submenus!!!!
+image::images/placeHolder.png[align="center"]
+
+Searching the NodeMenu:
+
+** Alternatively, nodes can be created by performing quick searches of the available node list.
+** The NodeMenu has a search field built in which sits on top of the menu list.
+** The quickest way to access it is by pressing `Tab` in the NodeGraph, which will raise the menu and set focus to the search field.
+*** This allows you to start typing straight away, and Gaffer will begin returning fuzzy matches from your first key stroke.
+*** For example: typing "att" will show results including: *'Att'*'ributeCache', *'Att'*'ributes', 'OpenGL'*'Att'*'ributes', 'Standard'*'Att'*'ributes' etc..
+** Once you have a list of matches, you can use the mouse to select or alternatively you can use the `up-arrow` and `down-arrow` keys combined with `Enter`.
+
+.!!!!screen grab of node menu with active search!!!!
+image::images/placeHolder.png[align="center"]
+
+As another efficiency aid, the NodeMenu will store the type of the last node it created. Next time you open the NodeMenu (either with `Tab` or `right-click`) the search field will be populated with this info, meaning you need only press `Enter` to create another node of that type.
+
+===== Selecting and arranging Nodes
+
+Once the NodeGraph is populated, nodes can be selected by:
+
+* `left-clicking` on individual nodes.
+** `Shift+left-click` will add nodes to the selection.
+** `Ctrl+left-click` will remove nodes from the selection.
+* `left-click-dragging` to draw a selection region around a group of nodes.
+* pressing `CTRL+a` to select all nodes.
+
+The selection can be cleared by:
+
+* `left-clicking` in the empty space of the NodeGraph.
+* or pressing `CTRL+SHIFT+a` whilst focus is on the NodeGraph panel.
+
+When nodes are selected they can be repositioned in within the node graph by `left-click-dragging`. To help with maintaining tidy networks, Gaffer peforms some snapping opertations as you move nodes. If the nodes being re-arranged have connections to any nodes outside the selection, Gaffer will attempt to to snap to their input and outputs such that nodes are centered, connections are horizontal or veritcal, and nodes butt up nicely to each other.
+
+
+
+===== Duplicating/deleting
+
+The usual system hotkeys for cut/copy-paste and deleting nodes will work. See xref:appendices_hotkeys[the appendices] for more details.
+
+In addition to permanently deleting nodes, users have the option of temprorarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
+
+ * `right-clicking` on a specific node with show a popup menu with an entry for "Enable" which can be checked on/off.
+ * alternatively, the hotkey `d` will toggle the 'enabled' state for all selected nodes.
+
+.!!!!screen grab a disabled node with input and output connections!!!!
+image::images/placeHolder.png[align="center"]
+
+===== Dragging nodes to other editors
+
+examples: viewers, NodeEditor, ScriptEditor
+
+==== Manipulating noodles anchor:interface_manipulatingNoodles[]
+
+drag from out to in
+
+drag from in to out
+
+[NOTE]
+To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
+
+.!!!!screen grab of popup plug labels!!!!
+image::images/placeHolder.png[align="center"]
+
+
+To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
+In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
+
+To hide/unhide connections:
+
+ * `right-click` on a node in the NodeGraph.
+ * In the pop-up menu un-check "Show Input Connections"/"Show Output Connections"
+
+.!!!!screen grab showing before and after of hidden criss crossy connections!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+
+
+
+
+
+
+
+
+
+
+[NOTE]
+A full listing of the hotkeys available in the NodeGraph can be found in xref:appendices_hotkeys[Appendix A: Hotkeys].
+
+
+
+=== NodeEditor anchor:interface_nodeEditor[]
+
+A node's controls can be viewed and edited in the *NodeEditor* tab.
+
+[NOTE]
+Internally all of the exposed parts of a node ( its label, its input/output slots, its tweakable controls ) are known as *plugs*.  In this user guide we will make reference to both plugs and controls. + 
+'Plugs' will be used in the general case, and 'controls' when we are indicating plugs that expose their values for user modification via the NodeEditor interface.
+
+
+=== Viewer anchor:interface_viewer[]
+!!!!lorem ipsum foo bar doodah!!!!
+
+==== 3D Mode anchor:interface_viewer3D[]
+
+==== 2D Mode anchor:interface_viewer2D[]
+
+
+=== SceneHierarchy anchor:interface_sceneHierarchy[]
+Alongside the 3D navigation provided by the Viewer, users can browse the contents of a scene via the *SceneHierarchy*. This editor provides an expandable tree view of the scene, listing all the items and showing their parent-child relationships.
+Selection of single or multiple scene items can be carried out within the SceneHierarchy, as well as expansion of the tree.
+
+
+representation
+
+=== SceneInspector anchor:interface_sceneInspector[]
+
+The *SceneInspector* provides an interface for viewing and comparing the properties of specific items in the scene graph. These properties are the *attributes* created and modified by nodes in the node graph!!!!Are they really?? some are, but what about BB?? probably can be stated better!!!!. Examples of properties that can be examined in the SceneInspector include bounding boxes, primitive variables, shader assignment, and object type.
+
+In addition the SceneInspector allows for the properties of the *globals* to be viewed. These properties do not belong to specific locations in the scene graph, but instead exist independent of the scene contents. Examples of global properties include render camera, resolution and motion blur settings, along with renderer specific options.
+
+When viewing properties in the SceneInspector, we are seeing a snapshot of what attributes exist and what values they have. This snapshot is defined by the processing applied by the specified node and by all the nodes connected upstream of it. It is important to grasp that the properties you are viewing can and likely will be different at different locations in the node graph. If you were to inspect a node upstream of your current selection, attributes may not exist yet or may have values that are changed at some point further down the graph.
+
+
+To help clarify, consider this useage example for the SceneInspector:
+
+* We have a script where we have set up a ShaderAssignment node. This node should be applying a red plastic material to an object in the scene, ballA.
+
+.!!!!!!!!!!SCREEN GRAB OF NODE GRAPH SHOWING SHADERASSIGNMENTS AT DIFFERENT POINTS IN THE GRAPH - just node graph and 3d viewer, group selected !!!!!!!!!!!!!!!
+image::images/autoGenerated_target/interface_sceneInspector_figAA.png[align="center"]
+
+* When we render the scene ballA is showing up green. This is not intended and it appears that it is picking up the shader destined for a different object, ballB.
+
+.!!!!!!!!!!SCREEN GRAB OF RESULTING RENDER HERE - just viewer, display selected!!!!!!!!!!!!!!!
+image::images/autoGenerated_target/interface_sceneInspector_figAB.png[align="center"]
+
+* If we use the SceneInspector to view the state of ballA at the first shader assignment we can see that the correct shader is infact assigned.
+
+.!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: redPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
+image::images/autoGenerated_target/interface_sceneInspector_figAC.png[align="center"]
+
+* However if we look further down the node graph and inspect the state at the second shader assignment node its clear that the earlier assignment is being overridden. The original value of the shader attribute is being changed to instead point at greenPlastic
+
+.!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: greenPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
+image::images/autoGenerated_target/interface_sceneInspector_figAD.png[align="center"]
+
+* By then checking the properties at the node feeding immediately into the second shader assignment we can see that the shader value was correct just prior to ShaderAssignementB. This indicates that the mistake has been made in ShaderAssignementB and this is where we should look to fix the problem.
+
+.!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: redPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
+image::images/autoGenerated_target/interface_sceneInspector_figAE.png[align="center"]
+
+* In this example, the problem was an incorrect path filter expression which is easily fixed. However, without the SceneInspector it may have been tricky to track down the root cause of the error, with the user having to fall back on trial and error testing to isolate the culpable node.
+
+==== How to use the SceneInspector anchor:interface_howToUserTheSceneInspector[]
+To start, simply select a node from the NodeGraph then pick either one or two scene items. This item selection can be done from within either the 3D Viewer or the SceneHierarchy editor.
+
+In the case where you select just one item from the scene, the SceneInspector will display the properties of that single item. However, if you pick two items the SceneInspector will highlight the differences between them. Properties and/or values unique to the first item selected will be highligted red, and those unqiue to the second item highlighted green.
+
+.!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING SINGLE ITEM !!!!!!!!!!!!!!!!!!!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+.!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING TWO COMPARED ITEMS !!!!!!!!!!!!!!!!!!!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+
+To aid the kind of scene debugging shown in the previous section (where you wish to compare different points in the node graph), the SceneInspector has an additional feature which enables users to display the property state of two nodes simultaneously. Simply select two nodes from any point in the graph with the SceneInspector is un-pinned, then pick a single scene graph item.
+
+[NOTE]
+In this mode the SceneInspector can only display the properties of a single scene graph location, so multiple item selection will not work.
+
+The SceneInspector will list the properties of the selected item indicating any that have been added, removed, or modified by the second node.
+
+* As when comparing two items, additions are shown highlighted in green.
+
+.!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING SINGLE ADDED ATTRIBUTE !!!!!!!!!!!!!!!!!!!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+ * Similarly, if a property has been modified the old value is shown highlighted in red and the new value in green.
+
+.!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING SINGLE MODIFIED ATTRIBUTE !!!!!!!!!!!!!!!!!!!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+=== ScriptEditor anchor:interface_scriptEditor[]
+!!!!lorem ipsum foo bar doodah!!!!
+
+
+=== Timeline anchor:interface_timeline[]
+!!!!lorem ipsum foo bar doodah!!!!

@@ -1,0 +1,277 @@
+/*ben hacks*/
+
+/*testing importing of arb fonts from googlefonts api. to get a font, go to googlefonts, get to the link to css file, go to that link in browser, then copy paste results here*/
+
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: normal;
+  font-weight: 300;
+  src: local('Ubuntu Light'), local('Ubuntu-Light'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/_aijTyevf54tkVDLy-dlnD8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/_xyN3apAT_yRRDeqB3sPRg.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: normal;
+  font-weight: 500;
+  src: local('Ubuntu Medium'), local('Ubuntu-Medium'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/OsJ2DjdpjqFRVUSto6IffD8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Ubuntu Bold'), local('Ubuntu-Bold'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/0ihfXUL2emPh0ROJezvraD8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: italic;
+  font-weight: 300;
+  src: local('Ubuntu Light Italic'), local('Ubuntu-LightItalic'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/DZ_YjBPqZ88vcZCcIXm6VobN6UDyHWBl620a-IRfuBk.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Ubuntu Italic'), local('Ubuntu-Italic'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/kbP_6ONYVgE-bLa9ZRbvvvesZW2xOQ-xsNqO47m55DA.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: italic;
+  font-weight: 500;
+  src: local('Ubuntu Medium Italic'), local('Ubuntu-MediumItalic'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/ohKfORL_YnhBMzkCPoIqwobN6UDyHWBl620a-IRfuBk.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Ubuntu Bold Italic'), local('Ubuntu-BoldItalic'), url(http://themes.googleusercontent.com/static/fonts/ubuntu/v4/OMD20Sg9RTs7sUORCEN-7YbN6UDyHWBl620a-IRfuBk.woff) format('woff');
+}
+
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'), url(http://themes.googleusercontent.com/static/fonts/ubuntumono/v3/ViZhet7Ak-LRXZMXzuAfkYbN6UDyHWBl620a-IRfuBk.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Ubuntu Mono Bold'), local('UbuntuMono-Bold'), url(http://themes.googleusercontent.com/static/fonts/ubuntumono/v3/ceqTZGKHipo8pJj4molytjqR_3kx9_hJXbbyU8S6IN0.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Ubuntu Mono Italic'), local('UbuntuMono-Italic'), url(http://themes.googleusercontent.com/static/fonts/ubuntumono/v3/KAKuHXAHZOeECOWAHsRKA9kZXW4sYc4BjuAIFc1SXII.woff) format('woff');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Ubuntu Mono Bold Italic'), local('UbuntuMono-BoldItalic'), url(http://themes.googleusercontent.com/static/fonts/ubuntumono/v3/n_d8tv_JOIiYyMXR4eaV9QRV2F9RPTaqyJ4QibDfkzM.woff) format('woff');
+}
+
+/*testing for prince*/
+@page {  size: A4;
+         margin: 50pt 40pt 50pt 40pt;
+      }
+
+body {
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: 400;
+  font-size: 9pt;
+  color: #404030;
+  line-height: 1.5em;
+  letter-spacing: 0em;
+  /*padding: 2em;
+  padding-bottom: 6em;*/
+}
+
+
+/*wkhtmltopdf way
+body {
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  color: #404030;
+  line-height: 1.5em;
+  letter-spacing: 0em;
+  padding: 2em;
+  padding-bottom: 6em;
+  width: 900px;
+  margin: 20px auto;
+}*/
+
+/*add some extra padding under each paragraph*/
+p {
+  margin-bottom: 1em;
+}
+
+/*make sure italics follow body colour*/
+em { 
+	font-style: italic;
+	color: #404030; 
+	}
+
+
+/* don't need this bunch - pdf will just have white bg
+body.book{
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(226,226,216);
+  border-radius: 6px;
+  background: rgb(252,252,250);
+}
+
+div {
+  background: rgb(255,0,0);
+}
+
+html {
+  background: rgb(240,240,232);
+}*/
+
+/*set the scaling the screen grabs are shown at. 96dpi = 1:1. 144dpi looks screen size at 150% zoom in viewer. 192dpi looks screen size at 200% zoom in viewer.*/
+/*prince specific*/
+img {
+	prince-image-resolution: 144dpi;
+}
+
+
+#toc {
+  color: #444444;
+  line-height: 1.5;
+  border-right: 0px;
+  padding-top: 1.5em;
+  padding-left: 2em;
+  padding-right: 4em;
+  background: rgb(240,240,232);
+  /*position: relative;
+  width: 13em;
+  left:-13em;
+  float:left;*/
+  /*background: #F9F9F9;
+  width: 10em;*/
+}
+#toctitle {
+  font-size: 16px;
+}
+#toc a {
+    /*border-bottom: 1px dotted #999999;*/
+	border-bottom: 0px;
+    color: #444444 !important;
+    text-decoration: none !important;
+}
+#toc a:hover {
+    /*border-bottom: 1px solid #6D4100;*/
+	border-bottom: 0px;
+    color: #6D4100 !important;
+    text-decoration: none !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title, div.nonimage_title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #3E4349;
+}
+
+div.title, caption.title, div.nonimage_title { color: #596673; font-weight: bold; }
+div.nonimage_title { font-size:100%; text-align:left; }
+div.title, caption.title { font-size:80%; text-align:center; }
+
+
+h1 { font-size: 240%; }
+h2 { font-size: 180%; }
+h3 { font-size: 130%; }
+h4 { font-size: 110%; }
+h5 { font-size: 100%; }
+#header h1 { margin-top: 0; }
+
+h2 { page-break-before: always; } /*force page break for each chapter*/
+
+/*
+div.toclevel1 { margin-top: 0.2em; font-size: 16px; }
+div.toclevel2 { margin-top: 0.15em; font-size: 14px; }
+*/
+
+dt, td.hdlist1 { color: black; }
+
+
+
+/*list definitions*/
+dt {
+  font-weight: 700;
+}
+
+strong { color: #3E4349; }
+
+/*links*/
+a { 
+  color: #004B6B; 
+  text-decoration: none;
+  border-bottom: 1px dotted #004B6B;
+}
+a:visited {
+  color: #615FA0;
+  border-bottom: 1px dotted #615FA0;
+}
+a:hover { 
+  color: #6D4100;
+  border-bottom: 1px solid #6D4100;
+}
+
+
+div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
+td, th ,th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
+
+/* reduce the margin between blocks to keep the items in lists a bit tighter */
+ul > li > * { color: #3E4349; margin-bottom: 0.4em; }
+
+/*reduce the amount of padding in bullet lists*/
+ul { padding-left: 0; margin-left: 3em; }
+
+/*fix unwanted borders round admonitionblock*/
+td.icon, td.content { border: 0px; }
+
+/* scaling table content down a little */
+p.table { font-size: 90%; }
+
+/*code and inset blocks text*/
+pre, code, .monospaced {
+  font-family: 'Ubuntu Mono','Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
+  font-size:90%;
+  /*font-family: 'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
+  font-size:80%;*/
+  line-height: 150%;
+  color: #195057;
+}
+
+tt {
+  font-family: 'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
+}
+
+/*code examples - draw a thick side and overflow:auto to add a bottom scrollbar*/
+div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock > div.content { 
+  border-width: 1px 1px 1px 6px;
+  border-color: rgb(226,226,216);
+  border-radius: 3px;
+  background: rgb(240,240,232);
+  overflow:auto;
+  page-break-inside:avoid;
+}
+
+div.verseblock { border-left-width: 0; margin-left: 3em; }
+div.quoteblock { border-left-width: 3px; margin-left: 0; margin-right: 0;}
+div.admonitionblock td.content { border-left: 3px solid #E8E8E8; }
+

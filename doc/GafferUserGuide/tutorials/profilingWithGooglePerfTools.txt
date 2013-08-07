@@ -1,15 +1,15 @@
 === Profiling With Google Perf Tools anchor:profilingWithGooglePerfTools[]
 
 
-.Introduction
+==== Introduction
 When developing stuff it's often beneficial to easily profile your running code to find performance bottlenecks before optimising the code.
 
 The http://code.google.com/p/gperftools[Google Performance] Tools provide a library called libprofiler which generates profiles rather easily. This page describes a simple configuration file to enable the use of the google profiler from menu items within gaffer.
 
-.Details
+==== Details
 Simply place the following in a file called ~/gaffer/startup/gui/profiler.py :
 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ---------------------------------------------------------------------------------------------------
 import os
 import sys
@@ -21,41 +21,43 @@ __currentProfile = None
 
 def start( fileName=None ) :
 
-        global __currentProfile
+    global __currentProfile
 
-        if __currentProfile is not None :
-                raise RuntimeError( "Profiling already in progress" )
+    if __currentProfile is not None :
+        raise RuntimeError( "Profiling already in progress" )
 
-        if fileName is None :
-                fileName = os.path.join( tempfile.gettempdir(), "gafferProfile" + str( uuid.uuid4() ) + ".prof" )
+    if fileName is None :
+        fileName = os.path.join( tempfile.gettempdir(), "gafferProfile" + str( uuid.uuid4() ) + ".prof" )
 
-        lib = ctypes.CDLL( "libprofiler.so" )
-        lib.ProfilerStart( fileName )
+    lib = ctypes.CDLL( "libprofiler.so" )
+    lib.ProfilerStart( fileName )
 
-        __currentProfile = fileName
+    __currentProfile = fileName
 
 def stop( view=False ) :
 
-        global __currentProfile
+    global __currentProfile
 
-        if __currentProfile is None :
-                raise RuntimeError( "Profiling not in progress" )
+    if __currentProfile is None :
+        raise RuntimeError( "Profiling not in progress" )
 
-        lib = ctypes.CDLL( "libprofiler.so" )
-        lib.ProfilerStop()
+    lib = ctypes.CDLL( "libprofiler.so" )
+    lib.ProfilerStop()
 
-        if view :
-                pdf = os.path.splitext( __currentProfile )[0] + ".pdf"
-                os.system( "pprof --pdf '%s' '%s' > '%s'" % ( sys.executable, __currentProfile, pdf )  )
-                os.system( "evince '%s'&" % pdf )
+    if view :
+        pdf = os.path.splitext( __currentProfile )[0] + ".pdf"
+        os.system( "pprof --pdf '%s' '%s' > '%s'" % ( sys.executable, __currentProfile, pdf )  )
+        os.system( "evince '%s'&" % pdf )
 
-        __currentProfile = None
+    __currentProfile = None
 
 def running() :
 
-        return __currentProfile is not None
+    return __currentProfile is not None
 
 import GafferUI
-GafferUI.ScriptWindow.menuDefinition().append( "/Tools/Profiler/Start", { "command" : start, "active" : lambda : not running() } )
-GafferUI.ScriptWindow.menuDefinition().append( "/Tools/Profiler/Stop", { "command" : IECore.curry( stop, view=True ), "active" : running } )
+GafferUI.ScriptWindow.menuDefinition().append("/Tools/Profiler/Start", \
+    {"command":start, "active":lambda:not running() } )
+GafferUI.ScriptWindow.menuDefinition().append( "/Tools/Profiler/Stop", \
+    {"command":IECore.curry( stop, view=True ), "active":running } )
 ---------------------------------------------------------------------------------------------------

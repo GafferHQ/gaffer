@@ -87,12 +87,23 @@ body {
   font-size: 15px;
   color: #404030;
   line-height: 1.5em;
-  letter-spacing: 0px;
+  letter-spacing: 0em;
   padding: 2em;
   padding-bottom: 6em;
   width: 900px;
   margin: 20px auto;
 }
+
+/*add some extra padding under each paragraph*/
+p {
+  margin-bottom: 1em;
+}
+
+/*make sure italics follow body colour*/
+em { 
+	font-style: italic;
+	color: #404030; 
+	}
 
 body.book{
   border-width: 1px;
@@ -146,22 +157,24 @@ thead, p.table.header,
 #toctitle,
 #author, #revnumber, #revdate, #revremark,
 #footer {
-  /*font-family: Garmond, Georgia, serif;*/
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 15px;
   font-weight: 700;
   color: #3E4349;
 }
 
-div.title, caption.title { color: #596673; font-weight: bold; font-size:110%; }
+div.title, caption.title { color: #596673; font-weight: bold; font-size:80%; text-align:center }
 h1 { font-size: 240%; }
 h2 { font-size: 180%; }
 h3 { font-size: 130%; }
+h3 { font-size: 110%; }
 #header h1 { margin-top: 0; }
 /*
 div.toclevel1 { margin-top: 0.2em; font-size: 16px; }
 div.toclevel2 { margin-top: 0.15em; font-size: 14px; }
 */
 
-em, dt, td.hdlist1 { color: black; }
+dt, td.hdlist1 { color: black; }
 
 /*list definitions*/
 dt {
@@ -203,7 +216,8 @@ div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock
   border-color: rgb(226,226,216);
   border-radius: 3px;
   background: rgb(240,240,232);
-  overflow:auto; 
+  overflow:auto;
+  page-break-inside:avoid; 
 }
 
 div.verseblock { border-left-width: 0; margin-left: 3em; }

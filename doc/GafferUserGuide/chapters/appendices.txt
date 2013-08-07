@@ -1,0 +1,208 @@
+== Appendices anchor:appendices_appendices[]
+
+This section contains additional material to be referenced whilst using Gaffer.
+
+It is composed of the following appendices:
+
+* xref:appendices_hotkeys[Appendix A: Hotkeys]
+* xref:appendices_scriptingNuggets[Appendix B: Scripting Nuggets]
+* xref:appendices_rendermanShaderWriting[Appendix C: RenderMan Shader Writing]
+* xref:appendices_licenses[Appendix D: Licenses]
+
+
+
+
+=== Hotkeys anchor:appendices_hotkeys[]
+
+.Global Hotkeys
+[options="header",cols="20%,80%"]
+|=======================
+|Keypress|Result
+|`right-arrow`|Increment current frame
+|`left-arrow` |Decrement current frame
+|`          |Set Gaffer to run in full-screen mode
+|`CTRL+z`   |Undo last action
+|`SHIFT+CTRL+z`|Redo last undone action
+|`CTRL+n`   |Create blank script in new Gaffer session
+|`CTRL+o`   |Launch dialog to open .gfr script file
+|`CTRL+s`   |Save current script
+|`SHIFT+CTRL+s`|Launch dialog to save current script with new file name
+|`CTRL-q`    |Quit application
+|======================
+
+.NodeGraph Hotkeys
+[options="header",cols="20%,80%"]
+|=======================
+|Keypress|Result
+|`f`       |Frame current node selection, or all nodes if nothing selected
+|`d`       |Disable/enable current node selection 
+|`+`       |Zoom in !!!!not yet implemented!!!!
+|`-`       |Zoom out !!!!not yet implemented!!!!
+|`Tab`     |Raise node creation menu and searchbox
+|`Delete`  |Delete current node selection
+|`Backspace`|Delete current node selection
+|`CTRL+a`  |Select all nodes
+|`SHIFT+CTRL+a`|Clear selection
+|`CTRL+x`  |Cut current node selection
+|`CTRL+c`  |Copy current node selection
+|`CTRL+v`  |Paste node(s)
+|=======================
+
+[NOTE]
+The copy/paste buffer for nodes persists between instances of gaffer, allowing you to quickly duplicate nodes between different scripts.
+Also, as nodes are described by plain text you can cut and paste into emails/IM communications to share nodes with other users.
+
+.Viewer Hotkeys - 3D mode
+[options="header",cols="20%,80%"]
+|=======================
+|Keypress|Result
+|`f`       |Frame current selection, or whole scene if nothing selected
+|`up-arrow`|Expand hierarchy of any selected bounding boxes
+|`down-arrow`|Collapse hierarchy of any selected items/bounding boxes
+|`+`       |Zoom in !!!!not yet implemented!!!!
+|`-`       |Zoom out !!!!not yet implemented!!!!
+|=======================
+
+.NodeEditor Hotkeys
+[options="header",cols="20%,80%"]
+|=======================
+|Keypress|Result
+|`up-arrow`|When focus is set to a numerical input field, this will increment the value of the field
+|`down-arrow`|When focus is set to a numerical input field, this will decrement the value of the field
+|`Tab`     |Move focus to the next input field
+|=======================
+
+.ScriptEditor Hotkeys
+[options="header",cols="20%,80%"]
+|=======================
+|Keypress|Result
+|`CTRL+a`  |Select all text
+|`SHIFT+CTRL+a`|Clear selection
+|`CTRL+x`  |Cut current selection
+|`CTRL+c`  |Copy current selection
+|`CTRL+v`  |Paste
+|`Enter`   |Execute selected input text
+|=======================
+
+
+=== Scripting Nuggets anchor:appendices_scriptingNuggets[]
+These one or two-liners achieve simple tasks via the python scripting interface, and serve as examples to build from.
+More complete details of the gaffer api are available !!!!HERE!!!!
+
+* Using the current frame to drive a plug (in this case the number of pixel samples). Enter in an expression for constant update.
+[source, python]
+------------------------------------
+parent['RenderManOptions']['options']['pixelSamples']['value']['y'] = int(context.getFrame())
+------------------------------------
+
+* Looping over a frame range.
+[source, python]
+------------------------------------
+for i in range(1,120):
+	script.context().setFrame(i)
+------------------------------------
+
+* Execute a named executable node - i.e. render
+[source, python]
+------------------------------------
+script['RenderManRender'].execute( [script.context()] )
+------------------------------------
+
+* Get the file name of the open script
+[source, python]
+------------------------------------
+script['fileName'].getValue()
+------------------------------------
+
+* Query value of script variables
+[source, python]
+------------------------------------
+rd = script.context()['project:rootDirectory']
+------------------------------------
+
+* Create a RenderManShader node pointing to a specific shader on disk
+[source, python]
+------------------------------------
+import GafferRenderMan
+
+shaderNode = GafferRenderMan.RenderManShader("MyShaderNode")
+shaderNode.loadShader( '/path/to/my/shader' )
+script.addChild( shaderNode )
+------------------------------------
+
+* Set the current selection to be a specific node
+[source, python]
+------------------------------------
+script.selection().clear()
+script.selection().add(script['MyNodeName'])
+------------------------------------
+
+* Set the value of a plug
+[source, python]
+------------------------------------
+# 'MySceneReaderNode' is the node name
+# 'fileName' == the plug name
+script['MySceneReaderNode']['fileName'].setValue( '/path/to/my/cache.scc' )
+------------------------------------
+
+* Set the value of a nested plug
+[source, python]
+------------------------------------
+# 'MyStandardOptionsNode' is the node name
+# the plug name would be shown as 'options.renderResolution.value.x' in the Gaffer UI tooltips
+script['MyStandardOptionsNode']['options']['renderResolution']['value']['x'].setValue( 2048 )
+------------------------------------
+
+
+=== RenderMan Shader Writing anchor:appendices_rendermanShaderWriting[]
+
+Gaffer allows RenderMan shader writers to provide information about shaders and their parameters in the form of *annotations*. This metadata is then used by Gaffer to draw suitable shader interface elements in its various Editor panels. In this manner GUIs for shaders can be provided to end users.
+
+The annotation system is derived from the metadata section of the +++<a href="https://github.com/imageworks/OpenShadingLanguage/blob/master/src/doc/osl-languagespec.pdf?raw=true">OSL Language Spec</a>+++. Gaffer supports a subset of these tags, and introduces the extensions *activator*, *divider*, *primaryInput*, *coshaderType*, and *type*.
+
+Annotations are optional and Gaffer will provide default appearances for all shader parameter types if given no other instruction.
+
+.Available Annotations
+[options="header",cols="20%,80%"]
+|=======================
+|Annotation|Use
+|primaryInput		|If declared, this annotation determines which input will be passed to downstream nodes if the current node is disabled. Value of this annotation should be a "shader" parameter.
+|coshaderType		|Specifies 'type' for the shader. Only of use for co-shaders designed to be connected to other shaders.
+|PARAMETER.coshaderType|Specifies the 'type' of co-shader this plug will accept as for connection. Aids usability as noodles will automatically latch on to valid connections, and invalid connections are made impossible.
+|PARAMETER.label	|Can be used to override the label drawn for the plug. Value of label will be displayed as-is (i.e. you must include your own <space> characters)
+|PARAMETER.help		|Allows small documentation strings to be attached to parameters. The help strings are shown in popup tooltips when users hovers over a parameter labels.
+|PARAMETER.page		|Parameters can be arranged into collapsible boxes by specifying 'page' annotations. Matching page values result in those parameters appearing grouped together.
+|page.PAGE_NAME.collapsed|Sets the default open/closed state of the page group.
+|PARAMETER.widget		|Allows parameters to drawn as one of the specific widget types. The available widgets are:
+
+mapper : A pop-up menu with associative choices (an enumerated type, if the values are integers). This widget further the annotation "options", a ‘\|’-delimited string with “key:value” pairs.
+
+popup : A pop-up menu of literal choices. This widget further the annotation "options", a ‘\|’-delimited string with “key:value” pairs. 
+
+checkBox : A boolean widget displayed as a checkbox.
+
+filename : Treats a string as a file path. Adds file browser button, and enables Gaffer's in place path editing.
+
+null : Hides the parameter.
+|PARAMETER.type		|Allows numeric shader parameters (which are always floats) to be represented within gaffer as FloatPlugs, IntPlugs or BoolPlugs by specifying a value of "float", "int" or "bool"
+|PARAMETER.min		|Minimum value a numeric parameter can have.
+|PARAMETER.max		|Maximum value a numeric parameter can have.
+|PARAMETER.divider	|A horizontal divider bar is drawn below any parameters with this annotation. 
+|activator.ACTIVATOR_NAME.expression|Declares an activator expression that can be used to drive the enabled/disabled state of parameters. Inputs to expressions can include parameter values and the connected state of a plug on the ShaderNode. Simple logic is possible - see examples.
+|PARAMETER.activator|Sets the parameter to use the specified activator expression. If the expression evaluates as False (or 0), the parameter will be disabled in the NodeEditor, otherwise the parameter will be enabled for editing. 
+|======================
+
+------------------------------------
+Example shader showing parameter annotations:
+
+include::../images/autoGenerated_source/annotationsExample.sl[]
+------------------------------------
+
+
+.The example shader loaded into Gaffer
+image::images/autoGenerated_target/appendices_rendermanShaderWriting_figAA.png[align="center"]
+
+=== Licenses anchor:appendices_licenses[]
+
+include::./appendices_licenses_dynamicContent.txt[]
+

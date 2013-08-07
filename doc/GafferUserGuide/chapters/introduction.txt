@@ -1,13 +1,73 @@
 == Introduction to Gaffer anchor:introduction_introductionToGaffer[]
-Welcome. This would be some text introducing people to Gaffer and its capabilities.
+
+Gaffer is a vfx/cg-animation application built around the core concept of defining scenes procedurally by means of networks of nodes. +
+Its primary use is as a lighting and look development tool. However, the modular nature of Gaffer's design provides the potential for expansion into other aspects of vfx production.
+
+
+It provides non-destructive methods for building and modifying scenes and sending those resulting scenes to render. Gaffer is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. +
+In addition to processing of 3D scenes, Gaffer has simple 2D compositing functionality allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
+
+
+The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
+
+
+
+////
+!!!!Welcome. This would be some text introducing people to Gaffer and its capabilities.!!!!
+
+Gaffer is a 3D content creation application !!!!that is built around procedurally defined scenes!!!!. Its primary use is as a lighting and look-development (shading) tool, but its modular nature allows for customisation and expansion for use in other aspects of CGI production.   !!!!into other    areas.!!!!
+
+
+
+
+
+
+Gaffer is a vfx/cg-animation application built around a core concept of defining scenes procedurally by means of networks of nodes.
+Its primary use is as a lighting and look development tool - however, the modular nature of Gaffer's design provides the potential for it to be expanded into other aspects of vfx production.
+
+
+but due to its modular nature its possible to expand the app to tackle a range of tasks.
+
+the app as potential to be expanded into other cgi fields  aspects  tasks
+
+
+
+
+
+It provides non-destructive methods for constructing and modifying scenes and sending the resulting scenes to render. Gaffer is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the <a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. !!!!and in fact can be extended to support any renderer implemented in the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.!!!
+In addition to processing of 3D scenes Gaffer has simple 2D compositing functionality, allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
+
+The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
+////
 
 === Design Overview anchor:introduction_designOverview[]
-What is the core design philosophy of Gaffer and how should users approach it?
+!!!!What is the core design philosophy of Gaffer and how should users approach it?
+
+.......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....!!!!
+
+!!!!script -> scene   defines    which gaffer then generates on demand!!!!
+
+
 
 === Functionality anchor:introduction_functionality[]
-What can Gaffer do?
+!!!!What can Gaffer do?!!!!
 
 === Using this guide anchor:introduction_usingThisGuide[]
-The user guide is structured thusly. Some simple tutorials are included, but extra in depth tutorials are available HERE. Nodes also have tooltips that contain useful information, and that information is collated in the GafferNodeReference document.
+
+The user guide is loosely structured in three sections, starting with an overview of Gaffer and how to get up and running in the app. Then there are chapters covering in more depth the use of the various parts of the software. Lastly, the user guide presents a collection of useful tidbits - mini tutorials and references.
+
+[Note]
+In addition to the information available in the user guide, Gaffer features exstensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
+
+As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user. The node listings contain a description of each node's purpose, alongside details of all the plugs available on that node. This NodeReference !!!!!!LINK HERE SOME HOW!!!!!!! can be used as a guide to the tools that can be employed within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
+
+
+==== Terminology 
+
+As the Gaffer workflow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology thoughout the user guide.
+
+To refer to components of the interface (as apposed to generic concepts), this document will stick to the convention of *UpperCamelCase*.  So for example, we might talk about the *NodeGraph* being used to manipulate a node graph.  In this case the *NodeGraph* is part of the GUI, where as the 'node graph' is a network of nodes created by the user.
+
+In addition, some aspects of the application will be referred to by both the name given to them 'behind the scenes' and by terms related more to everyday usage.  It can be helpful for users to have some awareness of the mechanisms behind their actions so these will be exposed where appropriate.  As an example of this, the user guide might talk generically about manipulating items in a scene then go on to discuss the fact that an item is represented internally as a *location* in a *scene graph*.  Here the emphasis indicates that 'location' and 'scene graph' are technical terms.
 
 

@@ -1,24 +1,24 @@
 === Configuration Files Example anchor:configurationFilesExample[]
 
 
-.Introduction
+==== Introduction
 Gaffer applications are intended to be easily extensible and customisable, and to this end provide many scripting hooks for registering new behaviours and customising the user interface. At application startup, a series of configuration files are executed, providing an opportunity for the intrepid TD to make his or her mark.
 
-.Startup file locations
-The location of Gaffer's configuration files are specified using the GAFFER_STARTUP_PATHS environment variable. This is a colon separated list of paths to directories where the startup files reside. Config directories at the end of the list are executed first, allowing them to be overridden by config directories earlier in the list.
+==== Startup file locations
+The location of Gaffer's configuration files are specified using the `GAFFER_STARTUP_PATHS` environment variable. This is a colon separated list of paths to directories where the startup files reside. Config directories at the end of the list are executed first, allowing them to be overridden by config directories earlier in the list.
 
-Gaffer automatically adds the ~/gaffer/startup config directory to the GAFFER_STARTUP_PATHS to allow users to create their own config files without having to faff around with the environment. This user level config is run last, allowing it to take precedence over all other configuration files.
+Gaffer automatically adds the `~/gaffer/startup` config directory to the `GAFFER_STARTUP_PATHS` to allow users to create their own config files without having to faff around with the environment. This user level config is run last, allowing it to take precedence over all other configuration files.
 
-Within a startup directory, config files are stored in subdirectories by application name - each application only executes the files in the appropriate directory. So for instance, the browser app executes files from the ~/gaffer/startup/browser directory.
+Within a startup directory, config files are stored in subdirectories by application name - each application only executes the files in the appropriate directory. So for instance, the browser app executes files from the `~/gaffer/startup/browser` directory.
 
-.Creating a simple startup file
+==== Creating a simple startup file
 We can add a startup script for the main gaffer application by creating a file in the "gui" subdirectory of the user startup location : 
 --------------------------------------------------
 ~/gaffer/startup/gui/startupTest.py
 --------------------------------------------------
 
 For now, let's just create a really simple script to provide a nice little distraction from work. 
-//[source,python] ------- source highlighting needs some extra stuff installed
+[source,python]
 ---------------------------------------------------------------------------------------------------
 import urllib2
 import datetime
@@ -36,5 +36,5 @@ July 13th is the day in 1919 that the British airship R34 lands in Norfolk, Engl
 completing the first airship return journey across the Atlantic in 182 hours of flight.
 ---------------------------------------------------------------------------------------
 
-.Next steps
+==== Next steps
 Naturally, we might want to do something slightly more useful at startup. Taking a look at Gaffer's internal https://github.com/ImageEngine/gaffer[config files] might provide some good starting points for more useful customisations. 
