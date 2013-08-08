@@ -39,8 +39,6 @@
 
 #include <vector>
 
-#include "boost/regex.hpp"
-
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugIterator.h"
 #include "Gaffer/Node.h"
@@ -96,9 +94,8 @@ class InputGenerator : public Behaviour
 
 	private :
 		
-		/// \todo Replace this with a method which validates both the name and type of a plug. Remove m_nameValidator
-		/// at the same time to reduce unecessary storage overhead.
-		inline bool validateName( const std::string &name ) { return regex_match( name.c_str(), m_nameValidator ); }
+		// Returns true if the specified plug is one that should be managed by us.
+		bool plugValid( const Plug *plug );
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void inputChanged( Gaffer::Plug *plug );
@@ -115,10 +112,6 @@ class InputGenerator : public Behaviour
 		/// This vector will always hold the minimum number of inputs defined
 		/// within the constructor. It can never exceed the maximum number of inputs.
 		std::vector<PlugClassPtr> m_inputs;
-
-		/// A regular expression which is used to test whether inputs of the parent node are instances
-		/// of the plugPrototype which is passed into the constructor.
-		boost::regex m_nameValidator;
 
 		/// A pointer to the plug that we will use as our prototype for creating more.
 		PlugClassPtr m_prototype;
