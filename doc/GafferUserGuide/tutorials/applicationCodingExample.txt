@@ -108,14 +108,14 @@ We can now run our application as follows :
 ------------------------------------------------------------------
 gaffer helloWorld
 ------------------------------------------------------------------
-image::images/tutorials/applicationCodingExample/helloWorld2.png[align="center"]
+image::images/chapters/minitutorials/applicationCodingExample/helloWorld2.png[align="center"]
 
 Or provide some command line arguments :
 
 ------------------------------------------------------------------
 gaffer helloWorld -greeting "Wotcha" -greetee "Billy"
 ------------------------------------------------------------------
-image::images/tutorials/applicationCodingExample/helloWorld4.png[align="center"]
+image::images/chapters/minitutorials/applicationCodingExample/helloWorld4.png[align="center"]
 
 Or print command line help, automatically generated from the parameters :
 

@@ -19,7 +19,7 @@ We want our new feature to be easily accessible to the user, so we'll put it in 
 GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ------------------------------------
 
-image::images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png[align="center"]
+image::images/chapters/minitutorials/creatingNodesCodingExample/iWantAPonyMenu.png[align="center"]
 
 You'll find that most user interfaces in Gaffer can be extended with similar ease. In this case we've simply specified the path to the menu item, and specified that it should run a python function called iWantAPony - we'll define that in the next section.
 
@@ -67,7 +67,7 @@ script.selection().add( objectToScene )
 
 And there we have it. Perhaps not quite suitable for show jumping but nevertheless a valuable source of milk, cheese and finally meat.
 
-image::images/tutorials/creatingNodesCodingExample/iWantAPonyResult.png[align="center"]
+image::images/chapters/minitutorials/creatingNodesCodingExample/iWantAPonyResult.png[align="center"]
 
 ==== The whole script
 Here's the whole script in all its glory.
