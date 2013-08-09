@@ -296,22 +296,26 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 
 const Shader *Shader::NetworkBuilder::effectiveNode( const Shader *shaderNode ) const
 {
-	if( shaderNode->enabledPlug()->getValue() )
+	while( shaderNode )
 	{
-		return shaderNode;
-	}
+		if( shaderNode->enabledPlug()->getValue() )
+		{
+			return shaderNode;
+		}
 
-	const Plug *correspondingInput = shaderNode->correspondingInput( shaderNode->outPlug() );
-	if( !correspondingInput )
-	{
-		return 0;
+		const Plug *correspondingInput = shaderNode->correspondingInput( shaderNode->outPlug() );
+		if( !correspondingInput )
+		{
+			return NULL;
+		}
+
+		const Plug *source = correspondingInput->source<Plug>();
+		if( source == correspondingInput )
+		{
+			return NULL;
+		}
+
+		shaderNode = source->ancestor<Shader>();
 	}
-	
-	const Plug *source = correspondingInput->source<Plug>();
-	if( source == correspondingInput )
-	{
-		return 0;
-	}
-	
-	return source->ancestor<Shader>();
+	return NULL;
 }
