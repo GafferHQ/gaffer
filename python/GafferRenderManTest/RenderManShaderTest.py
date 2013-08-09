@@ -1003,6 +1003,112 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderNode["out"] ) )
 		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
 		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
+	
+	def testSplitCoshaderPassThrough( self ) :
+	
+		#   C ----S      S is connected to C both directly
+		#   |     |      and as a pass-through of the disabled
+		#   D ----       node D.
+		#
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		S = GafferRenderMan.RenderManShader()
+		S.loadShader( shader )
+				
+		passThroughCoshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderWithPassThrough.sl" )
+		D = GafferRenderMan.RenderManShader()
+		D.loadShader( passThroughCoshader )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		C = GafferRenderMan.RenderManShader()
+		C.loadShader( coshader )
+
+		S["parameters"]["fixedShaderArray"][0].setInput( C["out"] )
+		S["parameters"]["fixedShaderArray"][1].setInput( D["out"] )
+		D["parameters"]["aColorIWillTint"].setInput( C["out"] )
+		
+		h = S.stateHash()
+		s = S.state()
+		
+		self.assertEqual( len( s ), 3 )
+		self.assertEqual( s[2].parameters["fixedShaderArray"], IECore.StringVectorData( [ s[0].parameters["__handle"].value, s[1].parameters["__handle"].value, "", "" ] ) )
+		self.assertEqual( s[0].name, coshader )
+		self.assertEqual( s[1].parameters["aColorIWillTint"], s[0].parameters["__handle"] )
+		self.assertEqual( s[1].name, passThroughCoshader )
+		
+		D["enabled"].setValue( False )
+
+		self.assertNotEqual( S.stateHash(), h )
+		
+		s = S.state()
+		
+		self.assertEqual( len( s ), 2 )
+		self.assertEqual( s[1].parameters["fixedShaderArray"], IECore.StringVectorData( [ s[0].parameters["__handle"].value, s[0].parameters["__handle"].value, "", "" ] ) )
+		self.assertEqual( s[0].name, coshader )
+	
+	def testSerialDisabledShaders( self ) :
+	
+		# C ----> D1 ----> D2 ----> S
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		S = GafferRenderMan.RenderManShader()
+		S.loadShader( shader )
+				
+		passThroughCoshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderWithPassThrough.sl" )
+		D1 = GafferRenderMan.RenderManShader()
+		D1.loadShader( passThroughCoshader )
+		D2 = GafferRenderMan.RenderManShader()
+		D2.loadShader( passThroughCoshader )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		C = GafferRenderMan.RenderManShader()
+		C.loadShader( coshader )
+		
+		S["parameters"]["coshaderParameter"].setInput( D2["out"] )
+		D2["parameters"]["aColorIWillTint"].setInput( D1["out"] )
+		D1["parameters"]["aColorIWillTint"].setInput( C["out"] )
+		
+		h1 = S.stateHash()
+		s = S.state()
+		
+		self.assertEqual( len( s ), 4 )
+		self.assertEqual( s[0].name, coshader )
+		self.assertEqual( s[1].name, passThroughCoshader )
+		self.assertEqual( s[2].name, passThroughCoshader )
+		self.assertEqual( s[3].name, shader )
+		
+		self.assertEqual( s[3].parameters["coshaderParameter"], s[2].parameters["__handle"] )
+		self.assertEqual( s[2].parameters["aColorIWillTint"], s[1].parameters["__handle"] )
+		self.assertEqual( s[1].parameters["aColorIWillTint"], s[0].parameters["__handle"] )
+		
+		D2["enabled"].setValue( False )
+				
+		h2 = S.stateHash()
+		self.assertNotEqual( h1, h2 )
+		
+		s = S.state()
+		
+		self.assertEqual( len( s ), 3 )
+		self.assertEqual( s[0].name, coshader )
+		self.assertEqual( s[1].name, passThroughCoshader )
+		self.assertEqual( s[2].name, shader )
+		
+		self.assertEqual( s[2].parameters["coshaderParameter"], s[1].parameters["__handle"] )
+		self.assertEqual( s[1].parameters["aColorIWillTint"], s[0].parameters["__handle"] )
+		
+		D1["enabled"].setValue( False )
+				
+		h3 = S.stateHash()
+		self.assertNotEqual( h3, h2 )
+		self.assertNotEqual( h3, h1 )
+		
+		s = S.state()
+		
+		self.assertEqual( len( s ), 2 )
+		self.assertEqual( s[0].name, coshader )
+		self.assertEqual( s[1].name, shader )
+		
+		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
 		
 if __name__ == "__main__":
 	unittest.main()
