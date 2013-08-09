@@ -284,9 +284,13 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 		return emptyString;
 	}
 	
-	s->setType( "shader" );
-	IECore::StringDataPtr handleData = new IECore::StringData( boost::lexical_cast<std::string>( shaderNode ) );
-	s->parameters()["__handle"] = handleData;
+	IECore::StringDataPtr handleData = s->parametersData()->member<IECore::StringData>( "__handle" );
+	if( !handleData )
+	{
+		s->setType( "shader" );
+		handleData = new IECore::StringData( boost::lexical_cast<std::string>( s ) );
+		s->parameters()["__handle"] = handleData;
+	}
 	return handleData->readable();
 }
 
