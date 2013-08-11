@@ -1644,6 +1644,7 @@ class _EventFilter( QtCore.QObject ) :
 		widget = Widget._owner( qObject )
 		if widget._buttonPressSignal is not None :
 			event = GafferUI.ButtonEvent(
+				Widget._buttons( qEvent.button() ),
 				Widget._buttons( qEvent.buttons() ),
 				self.__positionToLine( qEvent.pos() ),
 				0.0,
@@ -1672,6 +1673,7 @@ class _EventFilter( QtCore.QObject ) :
 			if widget._buttonReleaseSignal is not None :
 	
 				event = GafferUI.ButtonEvent(
+					Widget._buttons( qEvent.button() ),
 					Widget._buttons( qEvent.buttons() ),
 					self.__positionToLine( qEvent.pos() ),
 					0.0,
@@ -1690,6 +1692,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget._buttonDoubleClickSignal is not None :
 
 			event = GafferUI.ButtonEvent(
+				Widget._buttons( qEvent.button() ),
 				Widget._buttons( qEvent.buttons() ),
 				self.__positionToLine( qEvent.pos() ),
 				0.0,
@@ -1709,6 +1712,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget._mouseMoveSignal is not None :
 
 			event = GafferUI.ButtonEvent(
+				Widget._buttons( qEvent.button() ),
 				Widget._buttons( qEvent.buttons() ),
 				self.__positionToLine( qEvent.pos() ),
 				0.0,
@@ -1741,6 +1745,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget._wheelSignal is not None :
 		
 			event = GafferUI.ButtonEvent(
+				GafferUI.ButtonEvent.Buttons.None,
 				Widget._buttons( qEvent.buttons() ),
 				self.__positionToLine( qEvent.pos() ),
 				qEvent.delta() / 8.0,
@@ -1818,6 +1823,7 @@ class _EventFilter( QtCore.QObject ) :
 			return False
 		
 		dragDropEvent = GafferUI.DragDropEvent(
+			Widget._buttons( qEvent.button() ),
 			Widget._buttons( qEvent.buttons() ),
 			self.__lastButtonPressEvent.line,
 			Widget._modifiers( qEvent.modifiers() ),
