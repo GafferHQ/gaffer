@@ -181,6 +181,7 @@ from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from NodeUI import NodeUI
 from StandardNodeUI import StandardNodeUI
+from ColorSwatchPlugValueWidget import ColorSwatchPlugValueWidget
 from ColorPlugValueWidget import ColorPlugValueWidget
 from AboutWindow import AboutWindow
 import ApplicationMenu

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -50,39 +50,26 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 			
 		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plug, **kw )
 
-		self.__swatch = GafferUI.ColorSwatch()
-		## \todo How do set maximum height with a public API?
-		self.__swatch._qtWidget().setMaximumHeight( 20 )
+		self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plug )
 		
 		self._row().append( self.__swatch, expand=True )
 						
-		self.__buttonPressConnection = self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__buttonReleaseConnection = self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		
-		self.__colorChooserDialogue = None
 		self.__blinkBehaviour = None
-		
-		self._updateFromPlug()
-	
+			
 	def setPlug( self, plug ) :
 	
 		GafferUI.CompoundNumericPlugValueWidget.setPlug( self, plug )
 		
-		if self.__colorChooserDialogue is not None and self.__colorChooserDialogue() is not None :
-			self.__colorChooserDialogue().setPlug( plug )
+		self.__swatch.setPlug( plug )
 		
-	def _updateFromPlug( self ) :
-	
-		GafferUI.CompoundNumericPlugValueWidget._updateFromPlug( self )
-	
-		plug = self.getPlug()
-		if plug is not None :
-			with self.getContext() :
-				self.__swatch.setColor( plug.getValue() )
-		
-	def __buttonPress( self, widget, event ) :
+	def __buttonRelease( self, widget, event ) :
 		
 		if not self._editable() :
-		
+			
+			# the swatch will have been unable to display a colour chooser, so we
+			# draw the user's attention to the components which are preventing that.		
 			if self.__blinkBehaviour is not None :
 				self.__blinkBehaviour.stop()
 			widgets = [ w for w in self._row()[:len( self.getPlug() )] if not w._editable() ]
@@ -90,108 +77,9 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 			self.__blinkBehaviour.start()
 			
 			return False
-				
-		# we only store a weak reference to the dialogue, because we want to allow it
-		# to manage its own lifetime. this allows it to exist after we've died, which
-		# can be useful for the user - they can bring up a node editor to get access to
-		# the color chooser, and then close the node editor but keep the floating color
-		# chooser. the only reason we keep a reference to the dialogue at all is so that
-		# we can avoid opening two at the same time, and update the plug in self.setPlug().
-		if self.__colorChooserDialogue is None or self.__colorChooserDialogue() is None :
-			self.__colorChooserDialogue = weakref.ref(
-				_ColorPlugValueDialogue(
-					self.getPlug(),
-					self.ancestor( GafferUI.Window )
-				)
-			)
-
-		self.__colorChooserDialogue().setVisible( True )
-				
-		return True
 					
 GafferUI.PlugValueWidget.registerType( Gaffer.Color3fPlug.staticTypeId(), ColorPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.Color4fPlug.staticTypeId(), ColorPlugValueWidget )
-
-## \todo Perhaps we could make this a part of the public API and give it an acquire()
-# method which the ColorPlugValueWidget uses? Perhaps we could also make a PlugValueDialogue
-# base class to share some of the work with the dialogue made by the SplinePlugValueWidget.
-class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
-
-	def __init__( self, plug, parentWindow ) :
-	
-		GafferUI.ColorChooserDialogue.__init__( 
-			self,
-			color = plug.getValue()
-		)
-		
-		# we use these to decide which actions to merge into a single undo
-		self.__lastChangedReason = None
-		self.__mergeGroupId = 0
-		
-		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
-		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
-		self.__confirmClickedConnection = self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__cancelClickedConnection = self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-
-		self.setPlug( plug )
-
-		parentWindow.addChildWindow( self )
-
-	def setPlug( self, plug ) :
-	
-		self.__plug = plug
-
-		node = plug.node()
-		self.__nodeParentChangedConnection = node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
-		self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-		
-		self.setTitle( plug.relativeName( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) )
-		
-		self.__plugSet( plug )
-		
-	def getPlug( self ) :
-	
-		return self.__plug
-
-	def __plugSet( self, plug ) :
-		
-		if plug.isSame( self.__plug ) :
-			with Gaffer.BlockedConnection( self.__colorChangedConnection ) :
-				self.colorChooser().setColor( self.__plug.getValue() )
-
-	def __colorChanged( self, colorChooser, reason ) :
-	
-		if not GafferUI.Slider.changesShouldBeMerged( self.__lastChangedReason, reason ) :
-			self.__mergeGroupId += 1
-		self.__lastChangedReason = reason
-				
-		with Gaffer.UndoContext(
-			self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() ),
-			mergeGroup = "ColorPlugValueDialogue%d%d" % ( id( self, ), self.__mergeGroupId )
-		) :
-		
-			with Gaffer.BlockedConnection( self.__plugSetConnection ) :
-				self.__plug.setValue( self.colorChooser().getColor() )
-			
-	def __buttonClicked( self, button ) :
-		
-		if button is self.cancelButton :
-			with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-				self.__plug.setValue( self.colorChooser().getInitialColor() )
-		
-		# ideally we'd just remove ourselves from our parent immediately, but that would
-		# trigger this bug :
-		#
-		# 	https://bugreports.qt-project.org/browse/QTBUG-26761
-		#
-		# so instead we destroy ourselves on the next idle event.
-		
-		GafferUI.EventLoop.addIdleCallback( self.__destroy )
-	
-	def __destroy( self, *unused ) :
-	
-		self.parent().removeChild( self )
-		return False # to remove idle callback
 
 ## \todo Consider if this is something that might be useful elsewhere, if
 # there are other such things, and what a Behaviour base class for them
