@@ -337,7 +337,17 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 		return;
 	}
 
-	ArrayPlugPtr plug = new ArrayPlug( name, Plug::In, new Plug( "in1" ), minSize, maxSize, Plug::Default | Plug::Dynamic );
+	std::string elementName = name;
+	if( isdigit( *elementName.rbegin() ) )
+	{
+		elementName += "_0";
+	}
+	else
+	{
+		elementName += "0";		
+	}
+	
+	ArrayPlugPtr plug = new ArrayPlug( name, Plug::In, new Plug( elementName ), minSize, maxSize, Plug::Default | Plug::Dynamic );
 	parametersPlug->setChild( name, plug );
 	
 	if( existingPlug )
