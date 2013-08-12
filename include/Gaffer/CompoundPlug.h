@@ -48,7 +48,7 @@ class CompoundPlug : public ValuePlug
 
 	public :
 			
-		CompoundPlug( const std::string &name=defaultName<ValuePlug>(), Direction direction=In, unsigned flags=Default );
+		CompoundPlug( const std::string &name=defaultName<CompoundPlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~CompoundPlug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPlug, CompoundPlugTypeId, ValuePlug );

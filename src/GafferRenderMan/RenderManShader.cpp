@@ -49,6 +49,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 
@@ -188,7 +189,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 
 void RenderManShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
 {
-	if( parameterPlug->typeId() == CompoundPlug::staticTypeId() )
+	if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
 	{
 		// coshader array parameter
 		for( InputPlugIterator cIt( parameterPlug ); cIt != cIt.end(); ++cIt )
@@ -221,7 +222,7 @@ IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPl
 			}
 		}
 	}
-	else if( parameterPlug->typeId() == CompoundPlug::staticTypeId() )
+	else if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
 	{
 		// coshader array parameter
 		StringVectorDataPtr value = new StringVectorData();
@@ -324,19 +325,40 @@ static void loadCoshaderParameter( Gaffer::CompoundPlug *parametersPlug, const s
 	parametersPlug->setChild( name, plug );
 }
 
-static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const Data *defaultValue )
+static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const StringVectorData *defaultValue )
 {
-	CompoundPlugPtr plug = parametersPlug->getChild<CompoundPlug>( name );
-	if( !plug )
+	const size_t minSize = std::max( defaultValue->readable().size(), (size_t)1 );
+	const size_t maxSize = defaultValue->readable().size() ? defaultValue->readable().size() : Imath::limits<size_t>::max();
+	
+	PlugPtr existingPlug = parametersPlug->getChild<Plug>( name );
+	ArrayPlug *existingArrayPlug = runTimeCast<ArrayPlug>( existingPlug );
+	if( existingArrayPlug && existingArrayPlug->minSize() == minSize && existingArrayPlug->maxSize() == maxSize )
 	{
-		plug = new CompoundPlug( name, Plug::In, Plug::Default | Plug::Dynamic );
-		parametersPlug->setChild( name, plug );
+		return;
 	}
-		
-	const std::vector<std::string> &typedDefaultValue = static_cast<const StringVectorData *>( defaultValue )->readable();
-	while( plug->children().size() != typedDefaultValue.size() )
+
+	std::string elementName = name;
+	if( isdigit( *elementName.rbegin() ) )
 	{
-		plug->addChild( new Plug( "in1" , Plug::In, Plug::Default | Plug::Dynamic ) );
+		elementName += "_0";
+	}
+	else
+	{
+		elementName += "0";		
+	}
+	
+	ArrayPlugPtr plug = new ArrayPlug( name, Plug::In, new Plug( elementName ), minSize, maxSize, Plug::Default | Plug::Dynamic );
+	parametersPlug->setChild( name, plug );
+	
+	if( existingPlug )
+	{
+		for( size_t i = 0; i < plug->children().size(); ++i )
+		{
+			if( i < existingPlug->children().size() )
+			{
+				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput<Plug>() );
+			}
+		}
 	}
 }
 
@@ -780,7 +802,7 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 			case StringVectorDataTypeId :
 				if( typeHint && typeHint->readable() == "shader" )
 				{
-					loadCoshaderArrayParameter( parametersPlug, *it, defaultValue );
+					loadCoshaderArrayParameter( parametersPlug, *it, static_cast<const StringVectorData *>( defaultValue ) );
 				}
 				else
 				{

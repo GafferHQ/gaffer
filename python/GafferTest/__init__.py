@@ -127,6 +127,8 @@ from OrphanRemoverTest import OrphanRemoverTest
 from GraphComponentPathTest import GraphComponentPathTest
 from InputGeneratorNode import InputGeneratorNode
 from InputGeneratorTest import InputGeneratorTest
+from ArrayPlugNode import ArrayPlugNode
+from ArrayPlugTest import ArrayPlugTest
 
 if __name__ == "__main__":
 	import unittest

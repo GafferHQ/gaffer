@@ -112,6 +112,7 @@ enum TypeId
 	SetValueActionTypeId = 110065,
 	CompoundActionTypeId = 110066,
 	CompoundDataMemberPlugTypeId = 110067,
+	ArrayPlugTypeId = 110068,
 	LastTypeId = 110200,
 	
 };

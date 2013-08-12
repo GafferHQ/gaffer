@@ -464,10 +464,10 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"], Gaffer.CompoundPlug ) )
 		
 		self.assertEqual( len( n["parameters"]["fixedShaderArray"] ), 4 )
-		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in1"], Gaffer.Plug ) )
-		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in2"], Gaffer.Plug ) )
-		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in3"], Gaffer.Plug ) )
-		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["in4"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray0"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray1"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray2"], Gaffer.Plug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray3"], Gaffer.Plug ) )
 		
 		state = n.state()
 		
@@ -478,7 +478,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshaderNode = GafferRenderMan.RenderManShader()
 		coshaderNode.loadShader( coshader )
 		
-		n["parameters"]["fixedShaderArray"]["in1"].setInput( coshaderNode["out"] )
+		n["parameters"]["fixedShaderArray"]["fixedShaderArray0"].setInput( coshaderNode["out"] )
 	
 		state = n.state()
 			
@@ -513,8 +513,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n4 = GafferRenderMan.RenderManShader()
 		n4.loadShader( arrayShader )
 		
-		self.assertFalse( n4["parameters"]["fixedShaderArray"]["in1"].acceptsInput( n2["out"] ) )
-		self.assertTrue( n4["parameters"]["fixedShaderArray"]["in1"].acceptsInput( n3["out"] ) )
+		self.assertFalse( n4["parameters"]["fixedShaderArray"]["fixedShaderArray0"].acceptsInput( n2["out"] ) )
+		self.assertTrue( n4["parameters"]["fixedShaderArray"]["fixedShaderArray0"].acceptsInput( n3["out"] ) )
 	
 	def testConnectionsBetweenParameters( self ) :
 	
@@ -541,19 +541,19 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshaderNode = GafferRenderMan.RenderManShader()
 		coshaderNode.loadShader( coshader )
 		
-		n["parameters"]["fixedShaderArray"]["in1"].setInput( coshaderNode["out"] )
+		n["parameters"]["fixedShaderArray"]["fixedShaderArray0"].setInput( coshaderNode["out"] )
 	
 		h2 = n.stateHash()
 		self.assertNotEqual( h2, h1 )
 		
-		n["parameters"]["fixedShaderArray"]["in2"].setInput( coshaderNode["out"] )
+		n["parameters"]["fixedShaderArray"]["fixedShaderArray1"].setInput( coshaderNode["out"] )
 		
 		h3 = n.stateHash()
 		self.assertNotEqual( h3, h2 )
 		self.assertNotEqual( h3, h1 )
 
-		n["parameters"]["fixedShaderArray"]["in2"].setInput( None )
-		n["parameters"]["fixedShaderArray"]["in3"].setInput( coshaderNode["out"] )
+		n["parameters"]["fixedShaderArray"]["fixedShaderArray1"].setInput( None )
+		n["parameters"]["fixedShaderArray"]["fixedShaderArray2"].setInput( coshaderNode["out"] )
 
 		h4 = n.stateHash()
 		self.assertNotEqual( h4, h3 )
@@ -626,8 +626,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshaderNode2 = GafferRenderMan.RenderManShader()
 		coshaderNode2.loadShader( coshader )
 			
-		n["parameters"]["fixedShaderArray"]["in1"].setInput( coshaderNode1["out"] )
-		n["parameters"]["fixedShaderArray"]["in3"].setInput( coshaderNode2["out"] )
+		n["parameters"]["fixedShaderArray"][0].setInput( coshaderNode1["out"] )
+		n["parameters"]["fixedShaderArray"][2].setInput( coshaderNode2["out"] )
 	
 		state = n.state()
 		h1 = n.stateHash()
@@ -992,17 +992,17 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertFalse( shaderNode["parameters"]["coshaderParameterType2"].acceptsInput( coshaderType1Node["out"] ) )
 		self.assertTrue( shaderNode["parameters"]["coshaderParameterType2"].acceptsInput( coshaderType2Node["out"] ) )
 		
-		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["in1"].acceptsInput( coshaderNode["out"] ) )
-		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
-		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["coshaderArrayParameter0"].acceptsInput( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["coshaderArrayParameter0"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameter"]["coshaderArrayParameter0"].acceptsInput( coshaderType2Node["out"] ) )
 		
-		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType1"]["in1"].acceptsInput( coshaderNode["out"] ) )
-		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType1"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
-		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType1"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType1"]["coshaderArrayParameterType1_0"].acceptsInput( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType1"]["coshaderArrayParameterType1_0"].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType1"]["coshaderArrayParameterType1_0"].acceptsInput( coshaderType2Node["out"] ) )
 		
-		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderNode["out"] ) )
-		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderType1Node["out"] ) )
-		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType2"]["in1"].acceptsInput( coshaderType2Node["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"][0].acceptsInput( coshaderNode["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"][0].acceptsInput( coshaderType1Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType2"][0].acceptsInput( coshaderType2Node["out"] ) )
 	
 	def testSplitCoshaderPassThrough( self ) :
 	
@@ -1109,6 +1109,99 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( s[1].name, shader )
 		
 		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
+
+	def testDynamicCoshaderArrayParameters( self ) :
+	
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertEqual( len( shaderNode["parameters"]["dynamicShaderArray"] ), 1 )
+		self.assertTrue( isinstance( shaderNode["parameters"]["dynamicShaderArray"][0], Gaffer.Plug ) )
+		self.assertTrue( shaderNode["parameters"]["dynamicShaderArray"][0].getInput() is None )
+		
+		shaderNode["parameters"]["dynamicShaderArray"][0].setInput( coshaderNode["out"] )
+		
+		self.assertEqual( len( shaderNode["parameters"]["dynamicShaderArray"] ), 2 )
+		self.assertTrue( isinstance( shaderNode["parameters"]["dynamicShaderArray"][0], Gaffer.Plug ) )
+		self.assertTrue( isinstance( shaderNode["parameters"]["dynamicShaderArray"][1], Gaffer.Plug ) )
+		self.assertTrue( shaderNode["parameters"]["dynamicShaderArray"][0].getInput().isSame( coshaderNode["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["dynamicShaderArray"][1].getInput() is None )
+				
+		shaderNode["parameters"]["dynamicShaderArray"][0].setInput( None )
+		
+		self.assertEqual( len( shaderNode["parameters"]["dynamicShaderArray"] ), 1 )
+		self.assertTrue( isinstance( shaderNode["parameters"]["dynamicShaderArray"][0], Gaffer.Plug ) )
+		self.assertTrue( shaderNode["parameters"]["dynamicShaderArray"][0].getInput() is None )
+		
+	def testSerialiseDynamicCoshaderArrayParameters( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferRenderMan.RenderManShader()
+		s["n"].loadShader( shader )
+		
+		s["c"] = GafferRenderMan.RenderManShader()
+		s["c"].loadShader( coshader )
+		
+		s["n"]["parameters"]["dynamicShaderArray"][0].setInput( s["c"]["out"] )
+		s["n"]["parameters"]["dynamicShaderArray"][1].setInput( s["c"]["out"] )
+		s["n"]["parameters"]["dynamicShaderArray"][2].setInput( s["c"]["out"] )
+		s["n"]["parameters"]["dynamicShaderArray"][1].setInput( None )
+		
+		self.assertEqual( len( s["n"]["parameters"]["dynamicShaderArray"] ), 4 )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( len( s2["n"]["parameters"]["dynamicShaderArray"] ), 4 )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][0].getInput().isSame( s2["c"]["out"] ) )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][1].getInput() is None )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][2].getInput().isSame( s2["c"]["out"] ) )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][3].getInput() is None )
+		
+		s2["n"]["parameters"]["dynamicShaderArray"][3].setInput( s2["c"]["out"] )
+		
+		self.assertEqual( len( s2["n"]["parameters"]["dynamicShaderArray"] ), 5 )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][0].getInput().isSame( s2["c"]["out"] ) )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][1].getInput() is None )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][2].getInput().isSame( s2["c"]["out"] ) )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][3].getInput().isSame( s2["c"]["out"] ) )
+		self.assertTrue( s2["n"]["parameters"]["dynamicShaderArray"][4].getInput() is None )
+		
+	def testConvertFixedCoshaderArrayToDynamic( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		shaderV2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParametersV2.sl" )
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferRenderMan.RenderManShader()
+		s["n"].loadShader( shader )
+		
+		s["c"] = GafferRenderMan.RenderManShader()
+		s["c"].loadShader( coshader )
+		
+		s["n"]["parameters"]["fixedShaderArray"][0].setInput( s["c"]["out"] )
+		self.assertTrue( len( s["n"]["parameters"]["fixedShaderArray"] ), 4 )
+		
+		s["n"].loadShader( shaderV2, keepExistingValues = True )
+		
+		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][0].getInput().isSame( s["c"]["out"] ) )
+		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][1].getInput() is None )
+		
+		s["n"]["parameters"]["fixedShaderArray"][0].setInput( None )
+
+		self.assertEqual( len( s["n"]["parameters"]["fixedShaderArray"] ), 1 )
+		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][0].getInput() is None )
 		
 if __name__ == "__main__":
 	unittest.main()
