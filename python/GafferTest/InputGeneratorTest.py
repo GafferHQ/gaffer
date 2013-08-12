@@ -299,6 +299,84 @@ class InputGeneratorTest( unittest.TestCase ) :
 		self.assertTrue( s["n"]["in"].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["n"]["in1"].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["n"]["in2"].getInput().isSame( s["a"]["sum"] ) )
+	
+	def testCompoundPlugParent( self ) :
+	
+		n = Gaffer.Node()
+		n["p"] = Gaffer.CompoundPlug()
+		
+		g = Gaffer.Behaviours.InputGenerator( n["p"], Gaffer.IntPlug( "in" ) )
+		
+		self.assertEqual( len( g ), 1 )
+		self.assertTrue( isinstance( n["p"][0], Gaffer.IntPlug ) )
+		
+		a = GafferTest.AddNode()
+		n["p"]["in"].setInput( a["sum"] )
+		
+		self.assertEqual( len( g ), 2 )
+		self.assertTrue( isinstance( n["p"][0], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( n["p"][1], Gaffer.IntPlug ) )
+		self.assertTrue( n["p"][0].getInput().isSame( a["sum"] ) )
+		self.assertTrue( n["p"][1].getInput() is None )
+		
+		n["p"][0].setInput( None )
+		self.assertEqual( len( g ), 1 )
+		self.assertTrue( isinstance( n["p"][0], Gaffer.IntPlug ) )
+		self.assertTrue( n["p"][0].getInput() is None )
+	
+	def testPrototypeWithSuffix( self ) :
+	
+		n = Gaffer.Node()
+		n["in1"] = Gaffer.IntPlug()
+		
+		g = Gaffer.Behaviours.InputGenerator( n, n["in1"] )
+		
+		self.assertEqual( len( g ), 1 )
+		self.assertEqual( g[0].getName(), "in1" )
+		self.assertTrue( g[0].isSame( n["in1"] ) )
+		self.assertTrue( g[0].getInput() is None )
+		
+		a = GafferTest.AddNode()
+		
+		n["in1"].setInput( a["sum"] )
+		
+		self.assertEqual( len( g ), 2 )
+		self.assertEqual( g[0].getName(), "in1" )
+		self.assertTrue( g[0].isSame( n["in1"] ) )
+		self.assertTrue( g[0].getInput().isSame( a["sum"] ) )
+		self.assertEqual( g[1].getName(), "in2" )
+		self.assertTrue( g[1].isSame( n["in2"] ) )
+		self.assertTrue( g[1].getInput() is None )
+		
+		n["in2"].setInput( a["sum"] )
+		
+		self.assertEqual( len( g ), 3 )
+		self.assertEqual( g[0].getName(), "in1" )
+		self.assertTrue( g[0].isSame( n["in1"] ) )
+		self.assertTrue( g[0].getInput().isSame( a["sum"] ) )
+		self.assertEqual( g[1].getName(), "in2" )
+		self.assertTrue( g[1].isSame( n["in2"] ) )
+		self.assertTrue( g[1].getInput().isSame( a["sum"] ) )
+		self.assertEqual( g[2].getName(), "in3" )
+		self.assertTrue( g[2].isSame( n["in3"] ) )
+		self.assertTrue( g[2].getInput() is None )
+		
+		n["in2"].setInput( None )
+		
+		self.assertEqual( len( g ), 2 )
+		self.assertEqual( g[0].getName(), "in1" )
+		self.assertTrue( g[0].isSame( n["in1"] ) )
+		self.assertTrue( g[0].getInput().isSame( a["sum"] ) )
+		self.assertEqual( g[1].getName(), "in2" )
+		self.assertTrue( g[1].isSame( n["in2"] ) )
+		self.assertTrue( g[1].getInput() is None )
+		
+		n["in1"].setInput( None )
+		
+		self.assertEqual( len( g ), 1 )
+		self.assertEqual( g[0].getName(), "in1" )
+		self.assertTrue( g[0].isSame( n["in1"] ) )
+		self.assertTrue( g[0].getInput() is None )
 		
 	def tearDown( self ) :
 		

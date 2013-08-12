@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/regex.hpp"
 
 #include "Gaffer/ScriptNode.h"
 
@@ -44,15 +45,24 @@ namespace Behaviours
 {
 
 template< typename PlugClass >
-InputGenerator<PlugClass>::InputGenerator( Gaffer::Node *parent, PlugClassPtr plugPrototype, size_t minInputs, size_t maxInputs )
+InputGenerator<PlugClass>::InputGenerator( Gaffer::GraphComponent *parent, PlugClassPtr plugPrototype, size_t minInputs, size_t maxInputs )
 	:
 	m_parent( parent ),
 	m_minimumInputs( std::max( minInputs, size_t( 1 ) ) ),
 	m_maximumInputs( std::max( maxInputs, m_minimumInputs ) ),
-	m_nameValidator( std::string("^") + plugPrototype->getName().string() + std::string("[_0-9]*") ),
 	m_prototype( plugPrototype )
 {
-	m_parent->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
+	Node *node = IECore::runTimeCast<Node>( parent );
+	if( !node )
+	{
+		node = parent->ancestor<Node>();
+		if( !node )
+		{
+			throw IECore::Exception( "Parent must be a Node or have an ancestor Node" );
+		}
+	}
+	
+	node->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
 	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childAdded, this, ::_1, ::_2 ) );
 	m_parent->childRemovedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childRemoved, this, ::_1, ::_2 ) );
 
@@ -94,11 +104,52 @@ size_t InputGenerator<PlugClass>::nConnectedInputs() const
 	return result;
 }
 
+template<typename PlugClass>
+bool InputGenerator<PlugClass>::plugValid( const Plug *plug )
+{
+	if( plug == m_prototype )
+	{
+		return true;
+	}
+	
+	if( !plug )
+	{
+		return false;
+	}
+	if( plug->typeId() != m_prototype->typeId() )
+	{
+		return false;
+	}
+
+	std::string prefix = m_prototype->getName();
+	static boost::regex g_prefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
+	boost::cmatch match;
+	if( boost::regex_match( m_prototype->getName().string().c_str(), match, g_prefixSuffixRegex ) )
+	{
+		prefix = match[1];
+	}
+	if( !boost::regex_match( plug->getName().string().c_str(), match, g_prefixSuffixRegex ) )
+	{
+		return false;
+	}
+	return match[1] == prefix;
+}
+
 template< typename PlugClass >
 void InputGenerator<PlugClass>::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	if( child->isInstanceOf( PlugClass::staticTypeId() ) && validateName( child->getName() ) )
+	if( plugValid( IECore::runTimeCast<Gaffer::Plug>( child ) ) )
 	{
+		if( m_inputs.size() && m_inputs[m_inputs.size()-1] == child )
+		{
+			// we can arrive here in the circumstance that we were constructed from
+			// a childAdded() handler somewhere else. in that case, we've just added
+			// the first plug to m_inputs in the constructor, and added our own
+			// childAdded handler, which actually seems to get called even though it
+			// was added in the middle of the signal emission. so we must avoid adding
+			// a second reference to child.
+			return;
+		}
 		m_inputs.push_back( static_cast<PlugClass *>( child ) );
 	}
 }
@@ -112,12 +163,7 @@ void InputGenerator<PlugClass>::childRemoved( Gaffer::GraphComponent *parent, Ga
 template< typename PlugClass >
 void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 {
-	if( !plug->isInstanceOf( PlugClass::staticTypeId() ) )
-	{
-		return;
-	}
-	
-	if( !validateName( plug->getName() ) )
+	if( !plugValid( plug ) )
 	{
 		return;
 	}
@@ -164,7 +210,6 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 				break;
 			}
 		}
-		
 		
 		if( toRemove.size() )
 		{

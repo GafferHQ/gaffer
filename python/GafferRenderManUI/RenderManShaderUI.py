@@ -75,7 +75,7 @@ def __parameterNoduleCreator( plug ) :
 	# graph.
 	if plug.typeId() == Gaffer.Plug.staticTypeId() :
 		return GafferUI.StandardNodule( plug )
-	elif plug.typeId() == Gaffer.CompoundPlug.staticTypeId() :
+	elif plug.typeId() == Gaffer.ArrayPlug.staticTypeId() :
 		# coshader arrays tend to be used for layering, so we prefer to present the
 		# last entry at the top, hence the increasing direction.
 		return GafferUI.CompoundNodule(
@@ -363,7 +363,7 @@ def __plugValueWidgetCreator( plug ) :
 					( plug.node()["name"].getValue(), parameterName, str( e ) )
 			)
 	
-	if plug.typeId() == Gaffer.CompoundPlug.staticTypeId() :
+	if plug.typeId() == Gaffer.ArrayPlug.staticTypeId() :
 		# coshader array
 		return None
 	
