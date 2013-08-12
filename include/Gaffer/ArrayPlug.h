@@ -43,6 +43,9 @@
 namespace Gaffer
 {
 
+/// The ArrayPlug maintains a sequence of identically-typed child
+/// plugs, automatically adding new plugs when all existing plugs
+/// have connections.
 /// \todo Consider using this everywhere in preference to
 /// InputGenerator, and removing the InputGenerator class.
 class ArrayPlug : public CompoundPlug
@@ -50,6 +53,13 @@ class ArrayPlug : public CompoundPlug
 
 	public :
 		
+		/// The element plug is used as the first array element,
+		/// and all new array elements are created by calling
+		/// element->createCounterpart(). Currently the element
+		/// names are derived from the name of the first element,
+		/// but this may change in the future. It is strongly
+		/// recommended that ArrayPlug children are only accessed
+		/// through numeric indexing and never via names. 
 		ArrayPlug(
 			const std::string &name = defaultName<ArrayPlug>(),
 			Direction direction = In,
