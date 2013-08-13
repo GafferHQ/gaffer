@@ -117,6 +117,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	/// or use the sRGB texture extension in IECoreGL::Font::texture() to ensure that data is
 	/// automatically linearised before arriving in the shader.
 	glUniform1i( g_textureTypeParameter, 2 );
+	glUniform1i( g_colorMaskParameter, All );
 
 	glColor( m_colors[ForegroundColor] );
 
@@ -268,7 +269,7 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 
 }
 
-void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const
+void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture, int colorMask ) const
 {
 	glPushAttrib( GL_COLOR_BUFFER_BIT );
 	
@@ -284,6 +285,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
+	glUniform1i( g_colorMaskParameter, colorMask );
 	glUniform1i( g_textureTypeParameter, 1 );
 
 	glColor3f( 1.0f, 1.0f, 1.0f );
@@ -452,6 +454,7 @@ static const char *g_fragmentSource =
 	"uniform bool edgeAntiAliasing;"
 
 	"uniform int textureType;"
+	"uniform int colorMask;"
 	"uniform sampler2D texture;"
 
 	"uniform uint ieCoreGLNameIn;"
@@ -490,7 +493,17 @@ static const char *g_fragmentSource =
 	"	{"
 	"		outColor = vec4( outColor.rgb, texture2D( texture, gl_TexCoord[0].xy ).a );"
 	"	}"
-
+	"	if( textureType!=0 && colorMask!=15 )"
+	"	{"
+	"		if( colorMask==8 )"
+	"		{"
+	"			outColor = vec4( outColor[3], outColor[3], outColor[3], 1. );"
+	"		}"
+	"		else"
+	"		{"
+	"			outColor = vec4( bool(colorMask & 1) ? outColor[0] : 0., bool(colorMask & 2) ? outColor[1] : 0., bool(colorMask & 4) ? outColor[2] : 0., 1. );"
+	"		}"
+	"	}"
 	"	ieCoreGLNameOut = ieCoreGLNameIn;"
 
 	"}";
@@ -500,6 +513,7 @@ int StandardStyle::g_borderRadiusParameter;
 int StandardStyle::g_edgeAntiAliasingParameter;
 int StandardStyle::g_textureParameter;
 int StandardStyle::g_textureTypeParameter;
+int StandardStyle::g_colorMaskParameter;
 int StandardStyle::g_bezierParameter;
 int StandardStyle::g_v0Parameter;
 int StandardStyle::g_v1Parameter;
@@ -519,6 +533,7 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;
 		g_textureParameter = g_shader->uniformParameter( "texture" )->location;
 		g_textureTypeParameter = g_shader->uniformParameter( "textureType" )->location;
+		g_colorMaskParameter = g_shader->uniformParameter( "colorMask" )->location;
 		g_bezierParameter = g_shader->uniformParameter( "bezier" )->location;
 		g_v0Parameter = g_shader->uniformParameter( "v0" )->location;
 		g_v1Parameter = g_shader->uniformParameter( "v1" )->location;
