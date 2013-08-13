@@ -60,7 +60,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 		
 		self.__gadgetWidget.getViewportGadget().setChild( graphGadget )
-		self.__frame()		
+		self.__frame( scriptNode.selection() )		
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -81,6 +81,11 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	def graphGadget( self ) :
 	
 		return self.graphGadgetWidget().getViewportGadget().getChild()
+
+	## Frames the specified nodes in the viewport.
+	def frame( self, nodes ) :
+	
+		self.__frame( nodes )
 	
 	def getTitle( self ) :
 		
@@ -261,7 +266,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	def __keyPress( self, widget, event ) :
 		
 		if event.key == "F" :
-			self.__frame()
+			self.__frame( self.scriptNode().selection() )
 			return True
 		## \todo This cursor key navigation might not make sense for all applications,
 		# so we should move it into BoxUI and load it in a config file that the gui app uses.
@@ -283,20 +288,18 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				
 		return False
 		
-	def __frame( self ) :
+	def __frame( self, nodes ) :
 	
 		graphGadget = self.graphGadget()
 		
-		# get the bounds of the selected nodes
-		scriptNode = self.scriptNode()
-		selection = scriptNode.selection()
+		# get the bounds of the nodes
 		bound = IECore.Box3f()
-		for node in selection :
+		for node in nodes :
 			nodeGadget = graphGadget.nodeGadget( node )
 			if nodeGadget :
 				bound.extendBy( nodeGadget.transformedBound( graphGadget ) )
 		
-		# if there were no nodes selected then use the bound of the whole
+		# if there were no nodes then use the bound of the whole
 		# graph.		
 		if bound.isEmpty() :
 			bound = graphGadget.bound()
