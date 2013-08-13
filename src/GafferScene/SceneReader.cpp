@@ -143,7 +143,9 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 			continue;
 		}
 		
-		result->members()[ std::string( *it ) ] = s->readAttribute( *it, context->getFrame() / g_frameRate );
+		// the const cast is ok, because we're only using it to put the object into a CompoundObject that will
+		// be treated as forever const after being returned from this function.
+		result->members()[ std::string( *it ) ] = constPointerCast<Object>( s->readAttribute( *it, context->getFrame() / g_frameRate ) );
 	}
 	
 	return result;
@@ -164,9 +166,8 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 	
 	if( s->hasObject() )
 	{
-		ObjectPtr o = s->readObject( context->getFrame() / g_frameRate );
-		
-		return o? o : parent->objectPlug()->defaultValue();
+		ConstObjectPtr o = s->readObject( context->getFrame() / g_frameRate );
+		return o ? o : ConstObjectPtr( parent->objectPlug()->defaultValue() );
 	}
 	
 	return parent->objectPlug()->defaultValue();

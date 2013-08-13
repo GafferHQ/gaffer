@@ -278,7 +278,7 @@ IECore::CachedReader *RenderManShader::shaderLoader()
 	{
 		const char *sp = getenv( "DL_SHADERS_PATH" );
 		sp = sp ? sp : "";
-		g_loader = new CachedReader( SearchPath( sp, ":" ), 10 * 1024 * 1024 );
+		g_loader = new CachedReader( SearchPath( sp, ":" ) );
 	}
 	return g_loader.get();
 }

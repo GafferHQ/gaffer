@@ -69,7 +69,7 @@ void Pointer::setFromFile( const std::string &name )
 	{
 		const char *sp = getenv( "GAFFERUI_IMAGE_PATHS" );
 		sp = sp ? sp : "";
-		g_reader = new IECore::CachedReader( IECore::SearchPath( sp, ":" ), 10 * 1024 * 1024 );
+		g_reader = new IECore::CachedReader( IECore::SearchPath( sp, ":" ) );
 	}
 
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( g_reader->read( name ) ); 
