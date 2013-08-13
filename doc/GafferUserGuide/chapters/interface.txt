@@ -109,9 +109,23 @@ examples: viewers, NodeEditor, ScriptEditor
 
 ==== Manipulating noodles anchor:interface_manipulatingNoodles[]
 
-drag from out to in
+Connections between nodes are made by dragging noodles between nodules. This action breaks down into:
 
-drag from in to out
+* Hovering over the nodule you want to connect 'from'. The nodule will grow and change colour to indicate that it is available to start the action.
+* Then `left-click-dragging` to draw the noodle out of the nodule.
+* Holding down `left-click` will allow you to pull the tip of the noodle over to the target node. 
+** Once over the target node, Gaffer will attempt to snap the noodle to any nodules that are valid. This list of available plugs is filtered by the type of data passed through the noodle.
+** If the plug selected isn't the desired target, simply move the pointer closer to the correct nodule.
+** Gaffer will display the names of the available plugs to help you identify the right connection.
+* Finally, release the `left-click` to drop the noodle onto the target nodule, completing the connection.
+
+For flexibility, connections can be made from the 'source' to the 'target' plugs or in reverse - from the 'target' to the 'source'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
+
+how to see the connection in/out on a noodle
+
+how to disconnect
+
+how to connect to other node/nodule
 
 [NOTE]
 To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
