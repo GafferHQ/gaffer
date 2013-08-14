@@ -571,6 +571,34 @@ a = A()"""
 		self.assertEqual( n3["op1"].getInput(), None )
 		self.assertEqual( n3["op2"].getInput(), None )
 	
+	def testReconnectionToFloatingNodes( self ) :
+		
+		s = Gaffer.ScriptNode()
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+		n3 = GafferTest.AddNode()
+		
+		s.addChild( n1 )
+		s.addChild( n2 )
+		
+		n2["op1"].setInput( n1["sum"] )
+		n2["op2"].setInput( n1["sum"] )
+		
+		n3["op1"].setInput( n2["sum"] )
+		n3["op2"].setInput( n2["sum"] )
+		
+		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
+		
+		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		
+		s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
+		
+		# the inputs to n3 shouldn't have been reconnected, as it's not a descendant of the script:
+		self.assertEqual( n3["op1"].getInput(), None )
+		self.assertEqual( n3["op2"].getInput(), None )
+		
 	def testScriptAccessor( self ) :
 	
 		s = Gaffer.ScriptNode()
