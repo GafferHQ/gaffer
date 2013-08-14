@@ -105,34 +105,43 @@ image::images/placeHolder.png[align="center"]
 
 ===== Dragging nodes to other editors
 
+!!!!!TODO!!!!!!!!!!!!!!!!!!
 examples: viewers, NodeEditor, ScriptEditor
 
 ==== Manipulating noodles anchor:interface_manipulatingNoodles[]
 
-Connections between nodes are made by dragging noodles between nodules. This action breaks down into:
+Connections between nodes are made by dragging noodles from on nodule to another. This action breaks down into:
 
-* Hovering over the nodule you want to connect 'from'. The nodule will grow and change colour to indicate that it is available to start the action.
-* Then `left-click-dragging` to draw the noodle out of the nodule.
+* Hovering over the nodule from which you want to start the connection. The nodule will grow and change colour to indicate that it is available to begin the action.
+* Then `left-click-drag` to draw the noodle out of the nodule.
 * Holding down `left-click` will allow you to pull the tip of the noodle over to the target node. 
-** Once over the target node, Gaffer will attempt to snap the noodle to any nodules that are valid. This list of available plugs is filtered by the type of data passed through the noodle.
+** Once over the target node, Gaffer will attempt to snap the noodle to any valid nodules. The list of available plugs is filtered by the type of data passed through the noodle.
 ** If the plug selected isn't the desired target, simply move the pointer closer to the correct nodule.
 ** Gaffer will display the names of the available plugs to help you identify the right connection.
 * Finally, release the `left-click` to drop the noodle onto the target nodule, completing the connection.
 
-For flexibility, connections can be made from the 'source' to the 'target' plugs or in reverse - from the 'target' to the 'source'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
+For flexibility, connections can be created by dragging in either direction, i.e from the 'out' to the 'in', or from the 'in' to the 'out'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
 
-how to see the connection in/out on a noodle
+////
+made from the 'source' to the 'target' plugs - or in reverse, i.e. from the 'target' to the 'source'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
+////
 
-how to disconnect
+Once a connection is in place, the noodle will follow the start and end nodes as they are moved around in the NodeGraph. If at any point you need to find out what plugs are connected by a particular noodle, simply hover the pointer over the body of the noodle and a pop-up should appear. This pop-up will list the full name of the source and target plugs (including the node name and the names of any parent plugs), and indicate in which direction the data is flowing. For example: `MySphereNode.out -> MyGroupNode.in`
+
+.Tooltip displaying connection details
+image::images/chapters/interface/interface_nodeGraph_figCA.png[align="center"]
+
+To "delete" a connection, we just need to disconnect one end of the noodle. This
 
 how to connect to other node/nodule
 
+////
 [NOTE]
-To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
+To help with finding the particular plugs you wish to connect to, the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
 
 .!!!!screen grab of popup plug labels!!!!
 image::images/placeHolder.png[align="center"]
-
+////
 
 To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
 In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
@@ -142,7 +151,10 @@ To hide/unhide connections:
 * `right-click` on a node in the NodeGraph.
 * In the pop-up menu un-check "Show Input Connections"/"Show Output Connections"
 
-.!!!!screen grab showing before and after of hidden criss crossy connections!!!!!!!!
+.!!!!screen grab showing before criss crossy connections!!!!!!!!
+image::images/placeHolder.png[align="center"]
+
+.!!!!screen grab showing after of hidden criss crossy connections!!!!!!!!
 image::images/placeHolder.png[align="center"]
 
 
