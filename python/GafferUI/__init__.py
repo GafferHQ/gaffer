@@ -203,6 +203,7 @@ from UserPlugValueWidget import UserPlugValueWidget
 import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget
+from NodeFinderDialogue import NodeFinderDialogue
 
 # then stuff specific to parameterised objects
 

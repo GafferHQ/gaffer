@@ -54,6 +54,9 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
+	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
+	menuDefinition.append( prefix + "/FindDivider", { "divider" : True } )
+
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
 	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : __selectionAvailable } )
 
@@ -136,6 +139,23 @@ def delete( menu ) :
 	script, parent = __scriptAndParent( menu )
 	with Gaffer.UndoContext( script ) :
 		script.deleteNodes( parent, script.selection() )
+
+## A function suitable as the command for an Edit/Find menu item.  It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def find( menu ) :
+
+	script, parent = __scriptAndParent( menu )
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	
+	try :
+		findDialogue = scriptWindow.__findDialogue
+	except AttributeError :
+		findDialogue = GafferUI.NodeFinderDialogue( parent )
+		scriptWindow.addChildWindow( findDialogue )
+		scriptWindow.__findDialogue = findDialogue
+	
+	findDialogue.setScope( parent ) 
+	findDialogue.setVisible( True )
 	
 ## A function suitable as the command for an Edit/Select All menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.

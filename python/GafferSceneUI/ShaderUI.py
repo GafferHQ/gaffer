@@ -133,3 +133,16 @@ GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "enabled", la
 
 # we leave it to the derived class uis to register creators for the parameters.* plugs, because only the derived classes know whether
 # or not networkability makes sense in each case.
+
+##########################################################################
+# NodeFinderDialogue mode
+##########################################################################
+
+def __shaderNameExtractor( node ) :
+
+	if isinstance( node, GafferScene.Shader ) :
+		return node["name"].getValue()
+	else :
+		return ""
+	
+GafferUI.NodeFinderDialogue.registerMode( "Shader Names", __shaderNameExtractor )
