@@ -43,6 +43,8 @@
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 namespace GafferBindings
 {
 
@@ -118,6 +120,7 @@ static bool acceptsInput( const T &p, Gaffer::ConstPlugPtr input )
 template<typename T>
 static void setInput( T &p, Gaffer::PlugPtr input )
 {
+	IECorePython::ScopedGILRelease r;
 	p.T::setInput( input );
 }
 

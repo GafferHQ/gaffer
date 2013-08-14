@@ -42,6 +42,7 @@
 #include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Context.h"
@@ -231,6 +232,13 @@ static StandardSetPtr selection( ScriptNode &s )
 	return s.selection();
 }
 
+static void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect )
+{
+	IECorePython::ScopedGILRelease r;
+	s.deleteNodes( parent, filter, reconnect );
+}
+
+
 class ScriptNodeSerialiser : public NodeSerialiser
 {
 
@@ -305,7 +313,7 @@ void bindScriptNode()
 		.def( "copy", &ScriptNode::copy, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
 		.def( "cut", &ScriptNode::cut, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
 		.def( "paste", &ScriptNode::paste, ( arg_( "parent" ) = object() ) )
-		.def( "deleteNodes", &ScriptNode::deleteNodes, ( arg_( "parent" ) = object(), arg_( "filter" ) = object(), arg_( "reconnect" ) = true ) )
+		.def( "deleteNodes", &deleteNodes, ( arg_( "parent" ) = object(), arg_( "filter" ) = object(), arg_( "reconnect" ) = true ) )
 		.def( "execute", &ScriptNode::execute, ( arg_( "parent" ) = object() ) )
 		.def( "executeFile", &ScriptNode::executeFile, ( arg_( "fileName" ), arg_( "parent" ) = object() ) )
 		.def( "evaluate", &ScriptNode::evaluate, ( arg_( "parent" ) = object() ) )

@@ -491,7 +491,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 					for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); )
 					{
 						Plug *dstPlug = *oIt;
-						if ( dstPlug && dstPlug->acceptsInput( srcPlug ) )
+						if ( dstPlug && dstPlug->acceptsInput( srcPlug ) && this->isAncestorOf( dstPlug ) )
 						{
 							oIt++;
 							dstPlug->setInput( srcPlug );
