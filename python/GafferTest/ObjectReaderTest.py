@@ -142,6 +142,23 @@ class ObjectReaderTest( unittest.TestCase ) :
 	
 		r = Gaffer.ObjectReader()
 		self.assertEqual( r["out"].getValue(), r["out"].defaultValue() )
+	
+	def testExtraneousParameterPlugsAfterSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.ObjectReader()
+		s["n"]["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+
+		originalParameterPlugNames = s["n"]["parameters"].keys()
+
+		r = s["n"]["out"].getValue()
+		
+		ss = s.serialise()
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+
+		self.assertEqual( s["n"]["parameters"].keys(), originalParameterPlugNames )
 			
 if __name__ == "__main__":
 	unittest.main()
