@@ -72,7 +72,11 @@ class ImageView : public GafferUI::View
 		const GafferImage::ImageStats *imageStatsNode() const;
 		
 		static ViewDescription<ImageView> g_viewDescription;
-	
+
+	private:
+
+		int m_colorMask;
+		Imath::V2f m_mousePos;
 };
 
 IE_CORE_DECLAREPTR( ImageView );

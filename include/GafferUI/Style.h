@@ -79,13 +79,23 @@ class Style : public IECore::RunTimeTyped
 		/// any of the render* methods below. The currently bound style is passed as it may
 		/// be possible to use it to optimise the binding of a new style of the same type.
 		virtual void bind( const Style *currentStyle=0 ) const = 0;
-		
+
+		enum ColorMask
+		{
+			None = 0,
+			Red = 1,
+			Green = 2,
+			Blue = 4,
+			Alpha = 8,
+			All = 15
+		};
+
 		enum TextType
 		{
 			LabelText,
 			LastText
 		};
-		
+
 		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
 		virtual void renderText( TextType textType, const std::string &text, State state = NormalState ) const = 0;
 
@@ -95,7 +105,7 @@ class Style : public IECore::RunTimeTyped
 		/// The tangents give an indication of which direction is "out" from a node.
 		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const = 0;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const = 0;
-		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const = 0;
+		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture, int colorMask = All ) const = 0;
 		virtual void renderLine( const IECore::LineSegment3f &line ) const = 0;
 		virtual void renderSolidRectangle( const Imath::Box2f &box ) const = 0;
 		virtual void renderRectangle( const Imath::Box2f &box ) const = 0;
