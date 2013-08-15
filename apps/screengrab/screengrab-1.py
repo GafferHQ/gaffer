@@ -82,12 +82,12 @@ class screengrab( Gaffer.Application ) :
 			]
 			
 		)
-		
-		#dirty hack - pretend we are the gui app so that we can load all of its startup files.
-		self.root().setName("gui") ## these startup files are required to initialise layouts, menus etc 
-
-	
+			
 	def _run( self, args ) :
+		
+		# run the gui startup files so the images we grab are representative
+		# of the layouts and configuration of the gui app.
+		self._executeStartupFiles( "gui" )
 		
 		GafferUI.ScriptWindow.connect( self.root() )
 		
