@@ -80,17 +80,18 @@ class ImageViewGadget : public GafferUI::Gadget
 
 	public :
 
-		ImageViewGadget( IECore::ConstImagePrimitivePtr image, GafferImage::ImageStatsPtr imageStats )
+	ImageViewGadget( IECore::ConstImagePrimitivePtr image, GafferImage::ImageStatsPtr imageStats, int &colorMask, Imath::V2f &mousePos )
 			:	Gadget( defaultName<ImageViewGadget>() ),
 				m_displayBound( image->bound() ),
 				m_displayWindow( image->getDisplayWindow() ),
 				m_dataWindow( image->getDataWindow() ),
 				m_image( image->copy() ),
 				m_texture( 0 ),
-				m_mousePos( 0 ),
+				m_mousePos( mousePos ),
 				m_sampleColor( 0.f),
 				m_dragSelecting( false ),
 				m_drawSelection( false ),
+				m_channelMask( colorMask ),
 				m_imageStats( imageStats )
 		{
 			Box2i dataWindow( image->getDataWindow() );
@@ -105,6 +106,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				V3f( dataMax.x - dispCenter.x, dataMax.y - dispCenter.y + dataOffset.y * 2, 0. )
 			);
 
+			keyPressSignal().connect( boost::bind( &ImageViewGadget::keyPress, this, ::_1,  ::_2 ) );
 			buttonPressSignal().connect( boost::bind( &ImageViewGadget::buttonPress, this, ::_1,  ::_2 ) );
 			buttonReleaseSignal().connect( boost::bind( &ImageViewGadget::buttonRelease, this, ::_1,  ::_2 ) );
 			dragBeginSignal().connect( boost::bind( &ImageViewGadget::dragBegin, this, ::_1, ::_2 ) );
@@ -118,13 +120,13 @@ class ImageViewGadget : public GafferUI::Gadget
 			m_colorUiElements.resize(4);
 			m_colorUiElements[0].name = "RGBA"; // The color under the mouse pointer.
 			m_colorUiElements[0].draw = true;
-			m_colorUiElements[0].position = V2i( 110, 0 );
+			m_colorUiElements[0].position = V2i( 135, 0 );
 			m_colorUiElements[1].name = "Min"; // The minimum color within a selection.
-			m_colorUiElements[1].position = V2i( 110, 19 );
+			m_colorUiElements[1].position = V2i( 135, 19 );
 			m_colorUiElements[2].name = "Max"; // The maximum color within a selection.
-			m_colorUiElements[2].position = V2i( 360, 19 );
+			m_colorUiElements[2].position = V2i( 385, 19 );
 			m_colorUiElements[3].name = "Mean"; // The mean color within a selection.
-			m_colorUiElements[3].position = V2i( 610, 19 );
+			m_colorUiElements[3].position = V2i( 635, 19 );
 		}
 
 		virtual ~ImageViewGadget()
@@ -140,6 +142,44 @@ class ImageViewGadget : public GafferUI::Gadget
 		}
 		
 	protected :
+		
+		bool keyPress( GadgetPtr gadget, const KeyEvent &event )
+		{
+			int channel = Style::All;
+			if( event.key=="R" )
+			{
+				channel = Style::Red;
+			}
+			else if( event.key=="G" )
+			{
+				channel = Style::Green;
+			}
+			else if( event.key=="B" )
+			{
+				channel = Style::Blue;
+			}
+			else if( event.key=="A" )
+			{
+				channel = Style::Alpha;
+			}
+			else
+			{
+				return false;
+			}
+
+			if( channel == m_channelMask )
+			{
+				m_channelMask = Style::All;
+			}
+			else
+			{
+				m_channelMask = channel;
+			}
+			
+			renderRequestSignal()( this );
+			
+			return true;
+		}
 		
 		/// Returns the data window of the image in raster space.
 		inline Box2f dataRasterBox() const
@@ -453,7 +493,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				// Get the bounds of the data window in Gadget space.
 				Box2f b( V2f( m_dataBound.min.x, m_dataBound.min.y ), V2f( m_dataBound.max.x, m_dataBound.max.y ) );
-				style->renderImage( b, (const Texture *)m_texture.get() );
+				style->renderImage( b, (const Texture *)m_texture.get(), m_channelMask );
 			}
 
 			ViewportGadget::RasterScope rasterScope( viewportGadget );
@@ -540,14 +580,48 @@ class ImageViewGadget : public GafferUI::Gadget
 			}
 
 			// Draw the color information bar.	
+			Imath::Box2f infoBarBox( infoBox() );
 			color = Color4f( 0.f, 0.f, 0.f, 1.f );
 			glColor( color );
-			style->renderSolidRectangle( infoBox() );
+			style->renderSolidRectangle( infoBarBox );
 			glColor( Color4f( .29804, .29804, .29804, .90 ) );
-			style->renderRectangle( infoBox() );
+			style->renderRectangle( infoBarBox );
+			
+			// Draw the channel mask icon.
+			Imath::Box2f iconBox( V2f( 10.f, 5.f ) + infoBarBox.min, V2f( 20.f, 15.f ) + infoBarBox.min );
+			if( m_channelMask == Style::All )
+			{
+				float sliceWidth = iconBox.size().x / 3.f;
+				Imath::Box2f iconSlice( iconBox.min, Imath::V2f( sliceWidth + iconBox.min.x, iconBox.max.y ) );
+				glColor( Color4f( 1., 0., 0., 1. ) );
+				style->renderSolidRectangle( iconSlice );
+
+				iconSlice.min.x += sliceWidth;
+				iconSlice.max.x += sliceWidth;
+				glColor( Color4f( 0., 1., 0., 1. ) );
+				style->renderSolidRectangle( iconSlice );
+				
+				iconSlice.min.x += sliceWidth;
+				iconSlice.max.x += sliceWidth;
+				glColor( Color4f( 0., 0., 1., 1. ) );
+				style->renderSolidRectangle( iconSlice );
+			}
+			else if( m_channelMask == Style::Alpha )
+			{
+				glColor( Color4f( 1., 1., 1., 1. ) );
+				style->renderSolidRectangle( iconBox );
+			}
+			else
+			{
+				glColor( Color4f( (m_channelMask & Style::Red) * 1., (m_channelMask & Style::Green) * 1., (m_channelMask & Style::Blue) * 1., 1. ) );
+				style->renderSolidRectangle( iconBox );
+			}
+			glColor( Color4f( .29804, .29804, .29804, .90 ) );
+			style->renderRectangle( infoBarBox );
+			glLoadIdentity();
 
 			// Draw the mouse's XY position.
-			glTranslatef( infoBox().min.x+10, infoBox().min.y+14, 0.f );
+			glTranslatef( infoBarBox.min.x+30, infoBarBox.min.y+14, 0.f );
 			glScalef( 10.f, -10.f, 1.f );
 			std::string mousePosStr = std::string( boost::str( boost::format( "XY: %d, %d" ) % fastFloatRound( m_mousePos.x - .5 ) % fastFloatRound( m_mousePos.y - .5 ) ) );
 			style->renderText( Style::LabelText, mousePosStr );
@@ -557,7 +631,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				if( m_colorUiElements[i].draw )
 				{
-					V2f origin( m_colorUiElements[i].position + infoBox().min );
+					V2f origin( m_colorUiElements[i].position + infoBarBox.min );
 					
 					// Render a little swatch of the color.
 					Box2f swatchBox( m_colorUiElements[i].swatchBox );
@@ -614,12 +688,13 @@ class ImageViewGadget : public GafferUI::Gadget
 		ConstImagePrimitivePtr m_image;
 		mutable ConstTexturePtr m_texture;
 
-		Imath::V2f m_mousePos;
+		Imath::V2f &m_mousePos;
 		Imath::V3f m_dragStartPosition;
 		Imath::V3f m_lastDragPosition;
 		Color4f m_sampleColor;
 		bool m_dragSelecting;
 		bool m_drawSelection;
+		int &m_channelMask;
 
 		Imath::Box3f m_sampleWindow;
 		GafferImage::ImageStatsPtr m_imageStats;
@@ -641,14 +716,18 @@ IE_CORE_DEFINERUNTIMETYPED( ImageView );
 ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 
 ImageView::ImageView( const std::string &name )
-	:	View( name, new GafferImage::ImagePlug() )
+	:	View( name, new GafferImage::ImagePlug() ),
+		m_colorMask( Style::All ),
+		m_mousePos( 0. )
 {
 	// Create an internal ImageStats node 
 	addChild( new GafferImage::ImageStats( "imageStats" ) );
 }
 
 ImageView::ImageView( const std::string &name, Gaffer::PlugPtr input )
-	:	View( name, input )
+	:	View( name, input ),
+		m_colorMask( Style::All ),
+		m_mousePos( 0. )
 {
 	// Create an internal ImageStats node 
 	addChild( new GafferImage::ImageStats( "imageStats" ) );
@@ -692,7 +771,7 @@ void ImageView::update()
 		imageStatsNode()->inPlug()->setInput( imagePlug );
 		imageStatsNode()->channelsPlug()->setInput( imagePlug->channelNamesPlug() );
 
-		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode() );
+		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), m_colorMask, m_mousePos );
 		bool hadChild = viewportGadget()->getChild<Gadget>();
 		viewportGadget()->setChild( imageViewGadget );
 		if( !hadChild )
