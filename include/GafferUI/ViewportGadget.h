@@ -110,8 +110,6 @@ class ViewportGadget : public IndividualContainer
 				~SelectionScope();
 				
 				/// Returns the IECoreGL::State which should be used for rendering while selecting.
-				/// \todo Would it be better for IECoreGL::Selector to be scoped in the same way as this
-				/// class and for us to simply derive from it?
 				IECoreGL::State *baseState();
 				
 			private :
@@ -125,7 +123,8 @@ class ViewportGadget : public IndividualContainer
 				void end();
 				
 				bool m_depthSort;
-				IECoreGL::Selector m_selector;
+				typedef boost::shared_ptr<IECoreGL::Selector> SelectorPtr;
+				SelectorPtr m_selector;
 				std::vector<IECoreGL::HitRecord> &m_selection;
 								
 		};

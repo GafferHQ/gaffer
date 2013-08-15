@@ -700,7 +700,7 @@ ViewportGadget::SelectionScope::~SelectionScope()
 
 IECoreGL::State *ViewportGadget::SelectionScope::baseState()
 {
-	return m_selector.baseState();
+	return m_selector->baseState();
 }
 
 void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform, IECoreGL::Selector::Mode mode )
@@ -731,8 +731,8 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	m_selector.begin( ndcRegion, mode );
-	
+	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection ) );
+	 
 	glPushMatrix();
 	glMultMatrixf( transform.getValue() );
 }
@@ -740,8 +740,8 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 void ViewportGadget::SelectionScope::end()
 {
 	glPopMatrix();
-	m_selector.end( m_selection );
-		
+	m_selector = SelectorPtr();
+	
 	if( m_depthSort )
 	{
 		std::sort( m_selection.begin(), m_selection.end() );
