@@ -1,3 +1,13 @@
+0.75.0
+======
+
+- Added a channel mask feature to GafferImageUI::ImageView. Use the r,g,b and a keys to isolate individual channels (#403).
+- Updated for compatibility with Cortex 8.0.0a14.
+- Updated screengrab app to allow the execution of a commands file.
+- Added a node find dialogue, accessible via the Edit/Find.. menu item (#454).
+- Added NodeGraph.frame( nodes ) method. This can be used to frame specific nodes within the viewport of the NodeGraph.
+- Addressed thread related hangs when using an InteractiveRenderManRender and deleting or connecting nodes.
+
 0.74.0
 ======
 
