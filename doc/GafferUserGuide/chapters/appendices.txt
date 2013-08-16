@@ -102,6 +102,13 @@ for i in range(1,120):
 	script.context().setFrame(i)
 ------------------------------------
 
+* Get the current script's start and end frame 
+[source, python]
+------------------------------------
+start = script['frameRange']['start'].getValue()
+end = script['frameRange']['end'].getValue()
+------------------------------------
+
 * Execute a named executable node - i.e. render
 [source, python]
 ------------------------------------
