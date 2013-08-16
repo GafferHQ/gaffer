@@ -1203,5 +1203,32 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( len( s["n"]["parameters"]["fixedShaderArray"] ), 1 )
 		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][0].getInput() is None )
 		
+	def testConvertFixedCoshaderArrayToDynamicWithFirstPlugUnconnected( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+		shaderV2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParametersV2.sl" )
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferRenderMan.RenderManShader()
+		s["n"].loadShader( shader )
+		
+		s["c"] = GafferRenderMan.RenderManShader()
+		s["c"].loadShader( coshader )
+		
+		s["n"]["parameters"]["fixedShaderArray"][1].setInput( s["c"]["out"] )
+		self.assertTrue( len( s["n"]["parameters"]["fixedShaderArray"] ), 4 )
+		
+		s["n"].loadShader( shaderV2, keepExistingValues = True )
+		
+		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][1].getInput().isSame( s["c"]["out"] ) )
+		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][0].getInput() is None )
+		
+		s["n"]["parameters"]["fixedShaderArray"][1].setInput( None )
+
+		self.assertEqual( len( s["n"]["parameters"]["fixedShaderArray"] ), 1 )
+		self.assertTrue( s["n"]["parameters"]["fixedShaderArray"][0].getInput() is None )	
+		
 if __name__ == "__main__":
 	unittest.main()
