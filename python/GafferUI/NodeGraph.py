@@ -278,7 +278,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			selection = self.scriptNode().selection()
 			if selection.size() and isinstance( selection[0], Gaffer.Box ) :
 				self.graphGadget().setRoot( selection[0] )
-				self.__frame()
+				self.__frame( self.graphGadget().getRoot().children( Gaffer.Node.staticTypeId() ) )
 				return True
 		elif event.key == "Up" :
 			root = self.graphGadget().getRoot()
