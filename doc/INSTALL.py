@@ -72,28 +72,6 @@ class installationTool():
 		
 		self.runCommands()
 		
-		
-	def getPythonInstructions(self,pyfile):
-		'''
-		for use with the gaffer screengrab app.
-		returns a string which can be passed to screengrab app,
-		by reading the contents of a .py file
-		'''
-		
-		result = ''
-		handle = open(pyfile, 'r')
-		contents = handle.readlines()
-		handle.close()
-		for line in contents:
-			#get rid of newlines
-			line = line.rstrip('\n')
-			#strip any comments from end of line
-			line = line.split('#')[0]
-			line = line.strip()
-			
-			result += '%s;' % (line)
-			
-		return result
 	
 	def logit(self,message):
 		'''
@@ -140,16 +118,11 @@ class installationTool():
 			os.chdir( os.path.join( build_root, 'GafferUserGuide' ))
 			self.messageHeader = 'GafferUserGuide'
 			
-			##generate licenses content in asciidoc format
-			#self.logit('Generating license data...')
-			#os.system( gp_cmd + ' appendicies_licensesGenerator.py' )
-			
 			self.logit('Running any dynamic content generation scripts...')
 			prescripts_dir = os.path.join( build_root, 'GafferUserGuide', 'dynamicContentGenerators' )
 			for script in os.listdir( prescripts_dir  ):
 				self.logit( script )
 				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
-			
 			
 			if self.opts['images_flag']:
 				##generate images from reference scripts
@@ -166,7 +139,7 @@ class installationTool():
 						pythonfile = os.path.join( source_dir, source[:-4] + '.py' )
 						if os.path.exists( pythonfile ):
 							#there is a corresponding post launch python file
-							sg_cmd_full = '%s -cmd "%s"' % ( sg_cmd_full, self.getPythonInstructions(pythonfile))
+							sg_cmd_full = '%s -cmdfile %s' % ( sg_cmd_full, pythonfile)
 							
 						self.logit( sg_cmd_full )
 						os.system( sg_cmd_full )
