@@ -51,12 +51,11 @@ namespace GafferImageBindings
 void bindRemoveChannels()
 {
 
+	scope s = GafferBindings::DependencyNodeClass<RemoveChannels>();
 	enum_<RemoveChannels::RemoveChannelsMode>( "RemoveChannelsMode" )
 		.value( "Keep", RemoveChannels::Keep )
 		.value( "Remove", RemoveChannels::Remove )
 	;
-
-	GafferBindings::DependencyNodeClass<RemoveChannels>();
 
 }
 

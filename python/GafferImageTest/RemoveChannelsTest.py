@@ -55,8 +55,8 @@ class RemoveChannelsTest( unittest.TestCase ) :
 
 		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 
-		self.assertEqual( c["mode"].getValue(), GafferImage.RemoveChannelsMode.Remove )
-		c["mode"].setValue( GafferImage.RemoveChannelsMode.Keep )
+		self.assertEqual( c["mode"].getValue(), GafferImage.RemoveChannels.RemoveChannelsMode.Remove )
+		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Keep )
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
@@ -80,7 +80,7 @@ class RemoveChannelsTest( unittest.TestCase ) :
 
 		c = GafferImage.RemoveChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannelsMode.Remove ) # Remove selected channels
+		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Remove ) # Remove selected channels
 		c["channels"].setValue( IECore.StringVectorData( [ "G", "A" ] ) )
 		
 		self.assertEqual( c["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "B" ] ) )
@@ -92,7 +92,7 @@ class RemoveChannelsTest( unittest.TestCase ) :
 
 		c = GafferImage.RemoveChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannelsMode.Keep ) # Keep selected channels
+		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Keep ) # Keep selected channels
 		c["channels"].setValue( IECore.StringVectorData( [ "G", "A" ] ) )
 
 		self.assertEqual( c["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "G", "A" ] ) )
@@ -106,7 +106,7 @@ class RemoveChannelsTest( unittest.TestCase ) :
 
 		c = GafferImage.RemoveChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannelsMode.Remove ) # Remove selected channels
+		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Remove ) # Remove selected channels
 		c["channels"].setValue( r["out"]["channelNames"].getValue() )
 		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 
@@ -127,7 +127,7 @@ class RemoveChannelsTest( unittest.TestCase ) :
 
 		c = GafferImage.RemoveChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannelsMode.Keep ) # Keep selected channels
+		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Keep ) # Keep selected channels
 		c["channels"].setValue( r["out"]["channelNames"].getValue() )
 		h = c["out"]["channelNames"].hash()
 
