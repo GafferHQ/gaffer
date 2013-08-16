@@ -90,7 +90,7 @@ def isPlugPluggable( plug ):
 
 
 #open file ready to write asciidoc formatted data into
-with open('./dynamicContent.txt', 'w') as targetDoc:
+with open('./nodeDescription_dynamicContent.txt', 'w') as targetDoc:
 
 	#build list of modules available for gaffer. nodes are split across modules
 	modules = []
@@ -100,11 +100,25 @@ with open('./dynamicContent.txt', 'w') as targetDoc:
 				if module.startswith( 'Gaffer' ) and not module.endswith('Test'):
 					modules.append( module )
 	modules.sort()
-
+	
+	
 	#now import all the modules
-	imported = map( __import__, modules )
-
-
+	# make some effort to handle optional modules...
+	# if we don't have dependencies (arnold, 3delight etc) we should still be able to continue
+	imported = []
+	skip = []
+	for module in modules:
+		try:
+			imported.append( __import__(module) )
+		except ImportError:
+			skip.append(module) # make a note that this module should be skipped
+			print "Error importing module [ %s ]. Check availabilty of dependencies." % (module)
+	
+	# take any modules that failed to import properly out of the master list
+	for module in skip:
+		if module in modules:
+			modules.remove(module)
+	
 	#loop over each module, find it's contents, check if those are nodes, then pull all the info about plugs
 	for i in range(len(modules)):
 		
@@ -114,7 +128,7 @@ with open('./dynamicContent.txt', 'w') as targetDoc:
 		
 		#print the module name into the doc
 		addModuleDefinitionToDoc( targetDoc, modules[i] )
-
+		
 		#get all the members for this module
 		moduleContents = dir( imported[i] )
 		

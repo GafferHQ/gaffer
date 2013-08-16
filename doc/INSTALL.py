@@ -99,9 +99,12 @@ class installationTool():
 			os.chdir( os.path.join (build_root, 'GafferNodeReference' ))
 			self.messageHeader = 'GafferNodeReference'
 			
-			## extract the info from the node metadata
-			self.logit('Generating node descriptions data...')
-			os.system( gp_cmd + ' extractoMatic.py' )
+			self.logit('Running any dynamic content generation scripts...')
+			prescripts_dir = os.path.join( build_root, 'GafferNodeReference', 'dynamicContentGenerators' )
+			for script in os.listdir( prescripts_dir  ):
+				self.logit( script )
+				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
+			
 			
 			if self.opts['runasciidoc_flag']:
 				## run asciidoc then convert the result into a pdf
