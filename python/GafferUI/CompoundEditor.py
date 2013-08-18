@@ -58,7 +58,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		
 		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode, **kw )
 		
-		self.__splitContainer.append( GafferUI.TabbedContainer() )
+		self.__splitContainer.append( _TabbedContainer() )
 		self.__addCornerWidget( self.__splitContainer )
 		
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -124,6 +124,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
 				if tabbedContainer.getCurrent() is not None :
 					tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
+				tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
 				return repr( tabDict )
 		
 		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % __serialise( self.__splitContainer )
@@ -154,11 +155,17 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		if removeItemAdded :		
 			m.append( "/divider2", { "divider" : True } )
-
+		
+		tabsVisible = tabbedContainer.getTabsVisible()
+		# because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
+		# users know it exists. it is actually implemented directly in __keyPress.
+		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : IECore.curry( Gaffer.WeakMethod( tabbedContainer.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
+		m.append( "/TabsDivider", { "divider" : True } )
+		
 		m.append( "/Split Left", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
 		m.append( "/Split Right", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
 		m.append( "/Split Bottom", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
-		m.append( "/Split Top", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
+		m.append( "/Split Top", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )		
 
 		self.__layoutMenu = GafferUI.Menu( m ) # must store it somewhere else it'll die
 		self.__layoutMenu.popup()
@@ -226,7 +233,13 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				child.__enterConnection = None
 
 			return True
-			
+		
+		elif event.key == "T" and event.modifiers == event.Modifiers.Control :
+		
+			tabbedContainer = GafferUI.Widget.widgetAt( GafferUI.Widget.mousePosition(), _TabbedContainer )
+			if tabbedContainer is not None :
+				tabbedContainer.setTabsVisible( not tabbedContainer.getTabsVisible() )
+										
 		return False
 
 	def __addChildren( self, splitContainer, children ) :
@@ -247,8 +260,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				# new format - various fields provided by a dictionary
 				for c in children["tabs"] :
 					self.__addChild( splitContainer, c )
-				splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )	
-					
+				splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
+				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
 			
 	def __addChild( self, splitContainer, nameOrEditor ) :
 	
@@ -277,7 +290,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		assert( len( splitContainer ) == 0 )
 		
 		sc2 = GafferUI.SplitContainer()
-		sc2.append( GafferUI.TabbedContainer() )
+		sc2.append( _TabbedContainer() )
 		self.__addCornerWidget( sc2 )
 		
 		if subPanelIndex==1 :
@@ -299,7 +312,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 	def __addCornerWidget( self, splitContainer ) :
 	
 		assert( len( splitContainer ) == 1 )
-		assert( isinstance( splitContainer[0], GafferUI.TabbedContainer ) )
+		assert( isinstance( splitContainer[0], _TabbedContainer ) )
 		
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 ) as row :
 		
@@ -405,6 +418,18 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 					
 		return False
 
+# The class that keeps a bunch of editors in tabs - this is used
+# to differentiate between TabbedContainers created directly by
+# the CompoundEditor, and those that might exist within the child
+# editors themselves.
+## \todo It might make sense to move some of the implementation
+# of CompoundEditor into here.
+class _TabbedContainer( GafferUI.TabbedContainer ) :
+
+	def __init__( self, cornerWidget=None, **kw ) :
+	
+		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
+		
 # The class that implements the node target button used in the tabbed container corner widget
 class _TargetButton( GafferUI.Button ) :
 
@@ -451,7 +476,7 @@ class _TargetButton( GafferUI.Button ) :
 			
 		splitContainer = self.ancestor( type=GafferUI.SplitContainer )
 		assert( len( splitContainer ) == 1 )
-		assert( isinstance( splitContainer[0], GafferUI.TabbedContainer ) )
+		assert( isinstance( splitContainer[0], _TabbedContainer ) )
 		
 		editor = splitContainer[0].getCurrent()
 		assert( isinstance( editor, GafferUI.NodeSetEditor ) )
