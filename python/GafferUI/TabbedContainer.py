@@ -183,10 +183,14 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def getCornerWidget( self ) :
 	
 		return self.__cornerWidget
-		
+	
+	## If the tabs are hidden, then the corner widget will
+	# also be hidden.
 	def setTabsVisible( self, visible ) :
 	
 		self._qtWidget().tabBar().setVisible( visible )
+		if self.__cornerWidget is not None :
+			self.__cornerWidget.setVisible( visible )
 		
 	def getTabsVisible( self ) :
 	
