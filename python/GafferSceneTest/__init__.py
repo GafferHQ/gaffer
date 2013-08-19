@@ -79,6 +79,7 @@ from PruneTest import PruneTest
 from ShaderTest import ShaderTest
 from TextTest import TextTest
 from MapProjectionTest import MapProjectionTest
+from PointConstraintTest import PointConstraintTest
 
 if __name__ == "__main__":
 	import unittest

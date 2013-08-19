@@ -75,8 +75,7 @@ try :
 	nodeMenu.append(
 		"/Arnold/Render", GafferArnold.ArnoldRender,
 		plugValues = {
-			## \todo Remove the nonsensical leading slash once Gaffer.Path does relative paths properly.
-			"fileName" : "/${project:rootDirectory}/asses/${script:name}/${script:name}.####.ass",
+			"fileName" : "${project:rootDirectory}/asses/${script:name}/${script:name}.####.ass",
 		},
 		searchText = "ArnoldRender"
 	)
@@ -100,8 +99,7 @@ try :
 	nodeMenu.append(
 		"/RenderMan/Render", GafferRenderMan.RenderManRender,
 		plugValues = {
-			## \todo Remove the nonsensical leading slash once Gaffer.Path does relative paths properly.
-			"ribFileName" : "/${project:rootDirectory}/ribs/${script:name}/${script:name}.####.rib",
+			"ribFileName" : "${project:rootDirectory}/ribs/${script:name}/${script:name}.####.rib",
 		},
 		searchText = "RenderManRender"
 	)
@@ -136,6 +134,7 @@ nodeMenu.append( "/Scene/Scene/Group", GafferScene.Group )
 nodeMenu.append( "/Scene/Scene/SubTree", GafferScene.SubTree ) #\todo - rename to 'Subtree' (node needs to change too)
 nodeMenu.append( "/Scene/Scene/Prune", GafferScene.Prune )
 nodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
+nodeMenu.append( "/Scene/Transform/Point Constraint", GafferScene.PointConstraint, searchText = "PointConstraint" )
 nodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, searchText = "AimConstraint" )
 nodeMenu.append( "/Scene/Context/Time Warp", GafferScene.SceneTimeWarp, searchText = "TimeWarp" )
 nodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables )

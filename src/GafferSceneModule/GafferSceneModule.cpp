@@ -72,7 +72,6 @@
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Transform.h"
-#include "GafferScene/AimConstraint.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/Cube.h"
 #include "GafferScene/Sphere.h"
@@ -86,6 +85,7 @@
 #include "GafferSceneBindings/PathMatcherDataBinding.h"
 #include "GafferSceneBindings/RenderBinding.h"
 #include "GafferSceneBindings/ShaderBinding.h"
+#include "GafferSceneBindings/ConstraintBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -157,19 +157,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<MapProjection>();
 	
-	{
-		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
-		
-		enum_<Constraint::TargetMode>( "TargetMode" )
-			.value( "Origin", Constraint::Origin )
-			.value( "BoundMin", Constraint::BoundMin )
-			.value( "BoundMax", Constraint::BoundMax )
-			.value( "BoundCenter", Constraint::BoundCenter )
-		;
-	}
-	
-	GafferBindings::DependencyNodeClass<AimConstraint>();
-
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )
 	;
@@ -184,5 +171,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	}
 	
 	bindRender();
+	bindConstraint();
 	
 }
