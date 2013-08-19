@@ -483,7 +483,23 @@ class Widget( object ) :
 			p = relativeTo._qtWidget().mapFromGlobal( p )
 			
 		return IECore.V2i( p.x(), p.y() )
-		
+	
+	## Returns the widget at the specified screen position.
+	# If widgetType is specified, then it is used to find
+	# an ancestor of the widget at the position.
+	@staticmethod
+	def widgetAt( position, widgetType = None ) :
+	
+		if widgetType is None :
+			widgetType = GafferUI.Widget
+	
+		qWidget = QtGui.QApplication.instance().widgetAt( QtGui.QCursor.pos() )
+		widget = GafferUI.Widget._owner( qWidget )
+		if widget is not None and not isinstance( widget, widgetType ) :
+			widget = widget.ancestor( widgetType )
+			
+		return widget
+			
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.
 	def _qtWidget( self ) :
