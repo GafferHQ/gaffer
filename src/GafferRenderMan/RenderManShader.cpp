@@ -352,11 +352,15 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 	
 	if( existingPlug )
 	{
-		for( size_t i = 0; i < plug->children().size(); ++i )
+		for( size_t i = 0, e = std::min( existingArrayPlug->children().size(), maxSize ); i < e; ++i )
 		{
-			if( i < existingPlug->children().size() )
+			if( i < plug->children().size() )
 			{
 				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput<Plug>() );
+			}
+			else
+			{
+				plug->addChild( existingPlug->getChild<Plug>( i ) );
 			}
 		}
 	}

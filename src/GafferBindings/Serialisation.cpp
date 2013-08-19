@@ -103,6 +103,8 @@ std::string Serialisation::result() const
 	
 	result += m_connectionScript;
 	
+	result += m_postScript;
+	
 	result += "\n\ndel __children\n\n";
 	
 	return result;
@@ -176,6 +178,7 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 	parentSerialiser->moduleDependencies( parent, m_modules );
 	m_hierarchyScript += parentSerialiser->postConstructor( parent, parentIdentifier, *this );
 	m_connectionScript += parentSerialiser->postHierarchy( parent, parentIdentifier, *this );
+	m_postScript += parentSerialiser->postScript( parent, parentIdentifier, *this );
 
 	for( GraphComponent::ChildIterator it = parent->children().begin(), eIt = parent->children().end(); it != eIt; it++ )
 	{
@@ -279,6 +282,11 @@ std::string Serialisation::Serialiser::postConstructor( const Gaffer::GraphCompo
 }
 
 std::string Serialisation::Serialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+{
+	return "";
+}
+
+std::string Serialisation::Serialiser::postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
 	return "";
 }
