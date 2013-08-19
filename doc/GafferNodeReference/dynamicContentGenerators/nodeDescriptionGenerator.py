@@ -95,7 +95,7 @@ with open('./nodeDescription_dynamicContent.txt', 'w') as targetDoc:
 	#build list of modules available for gaffer. nodes are split across modules
 	modules = []
 	for path in sys.path:
-		if 'gaffer' in path and os.path.exists( path ):
+		if 'gaffer' in path and os.path.exists( path ) and path != os.getcwd():
 			for module in os.listdir( path ):
 				if module.startswith( 'Gaffer' ) and not module.endswith('Test'):
 					modules.append( module )
