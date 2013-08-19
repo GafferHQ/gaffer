@@ -1,3 +1,16 @@
+0.76.0
+======
+
+- Added Application._executeStartupFiles() method (#354).
+- Added RemoveChannels image node.
+- Added a PointConstraint node (#482).
+- Fixed framing error when entering a Box.
+- Image viewer now displays channels in grey scale.
+- Added Widget.widgetAt() method.
+- Added ability to hide tabs in layouts.
+- Fixed bug converting coshader array from fixed to variable length.
+- Added Serialiser::postScript() method.
+
 0.75.0
 ======
 
