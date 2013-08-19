@@ -4,6 +4,8 @@ BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFE
 INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}'
 DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/dependencies'
 DOXYGEN='/software/apps/doxygen/1.8.4/cent6.x86_64/bin/doxygen'
+RMAN_ROOT='/software/apps/3delight/10.0.163/cent6.x86_64'
+ARNOLD_ROOT='/software/apps/arnold/4.0.9.1/cent6.x86_64'
 
 # essential to bypass the ie python wrappers which will screw up the build
 export PATH=/software/apps/scons/2.0.1/bin/:/software/apps/cmake/2.8.4/cent6.x86_64/bin:/usr/local/bin:/usr/bin:/bin
@@ -30,5 +32,7 @@ scons \
 	DEPENDENCIES_SRC_DIR=$DEPENDENCIES_SRC_DIR \
 	BUILD_DIR=$BUILD_DIR \
 	INSTALL_DIR=$INSTALL_DIR \
+	RMAN_ROOT=$RMAN_ROOT \
+	ARNOLD_ROOT=$ARNOLD_ROOT \
 	DOXYGEN=$DOXYGEN \
 	package
