@@ -54,7 +54,7 @@ using namespace GafferRenderMan;
 class RenderManShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
-	virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
 		const RenderManShader *shader = static_cast<const RenderManShader *>( graphComponent );
 		std::string shaderName = shader->namePlug()->getValue();
