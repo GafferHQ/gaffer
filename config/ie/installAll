@@ -21,12 +21,10 @@ if IEEnv.platform() == "cent6.x86_64" :
 	build()
 	
 	# app specific builds
-	build( [ "APP=maya", "APP_VERSION=2013" ] )
-	build( [ "APP=houdini", "APP_VERSION=12.1.230" ] )
-	build( [ "APP=houdini", "APP_VERSION=12.5.475" ] )
-	build( [ "APP=nuke", "APP_VERSION=6.3v7" ] )
-	build( [ "APP=nuke", "APP_VERSION=7.0v8" ] )
-	
+	for app in ( "maya", "houdini", "nuke" ) :
+		for version in IEEnv.activeAppVersions( app ) :
+			build( [ "APP=" + app, "APP_VERSION=" + version ] )
+			
 else :
 
 	raise RuntimeError( "Unknown platform" )
