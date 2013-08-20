@@ -106,6 +106,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def setEditable( self, editable ) :
 	
 		self._qtWidget().setReadOnly( not editable )
+		self._repolish()
 		
 	def getEditable( self ) :
 	
@@ -290,6 +291,9 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		return text
 				
 	def __dragEnter( self, widget, event ) :
+	
+		if not self.getEditable() :
+			return False
 	
 		if self.__dropText( event.data ) is not None :
 			self.setFocussed( True )
