@@ -41,45 +41,10 @@ import IECore
 import Gaffer
 import GafferUI
 
-# NodeUI implementation
+# NodeUI registration
 ##########################################################################
-
-class ExpressionUI( GafferUI.NodeUI ) :
-
-	def __init__( self, node ) :
-	
-		self.__column = GafferUI.ListContainer( spacing = 4 )
-		
-		GafferUI.NodeUI.__init__( self, node, self.__column )
-		
-		with self.__column :
-			
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) :
-			
-				GafferUI.Label( "Engine" )
-				GafferUI.PlugValueWidget.create( node["engine"] )
-			
-			expressionWidget = GafferUI.PlugValueWidget.create( node["expression"] )
-			self.__dropTextConnection = expressionWidget.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
-	
-	def __dropText( self, widget, dragData ) :
-	
-		if isinstance( dragData, IECore.StringVectorData ) :
-			return repr( list( dragData ) )
-		elif isinstance( dragData, Gaffer.GraphComponent ) :
-			name = dragData.relativeName( self.node().parent() )	
-			if not name :
-				return None
-			return "parent" + "".join( [ "['" + n + "']" for n in name.split( "." ) ] )
-		elif isinstance( dragData, Gaffer.Set ) :
-			if len( dragData ) == 1 :
-				return self.__dropText( widget, dragData[0] )
-			else :
-				return None
-		
-		return None
-		
-GafferUI.NodeUI.registerNodeUI( Gaffer.Expression.staticTypeId(), ExpressionUI )
+				
+GafferUI.NodeUI.registerNodeUI( Gaffer.Expression.staticTypeId(), lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )
 
 # PlugValueWidget popup menu for creating expressions
 ##########################################################################
@@ -132,6 +97,41 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
+# _ExpressionPlugValueWidget
+##########################################################################
+
+class _ExpressionPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		GafferUI.MultiLineStringPlugValueWidget.__init__( self, plug, **kw )
+	
+		self.__dropTextConnection = self.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+
+	def hasLabel( self ) :
+	
+		# strictly speaking we don't have a label, but i think it's pretty obvious
+		# what we are - what else is a giant text input box in an expression ui
+		# going to be?
+		return True
+
+	def __dropText( self, widget, dragData ) :
+	
+		if isinstance( dragData, IECore.StringVectorData ) :
+			return repr( list( dragData ) )
+		elif isinstance( dragData, Gaffer.GraphComponent ) :
+			name = dragData.relativeName( self.getPlug().node().parent() )	
+			if not name :
+				return None
+			return "parent" + "".join( [ "['" + n + "']" for n in name.split( "." ) ] )
+		elif isinstance( dragData, Gaffer.Set ) :
+			if len( dragData ) == 1 :
+				return self.__dropText( widget, dragData[0] )
+			else :
+				return None
+		
+		return None
+		
 # PlugValueWidget registrations
 ##########################################################################
 
@@ -147,7 +147,7 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.Expression.staticTypeId(),
 	"expression",
-	GafferUI.MultiLineStringPlugValueWidget,
+	_ExpressionPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
