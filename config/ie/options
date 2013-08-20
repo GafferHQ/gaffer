@@ -98,6 +98,9 @@ try :
 except :
 	pass
 
+dlReg = IEEnv.registry["apps"]["3delight"][getOption( "DL_VERSION", os.environ["DL_VERSION"] )][IEEnv.platform()]
+RMAN_ROOT = dlReg["location"]
+
 ##########################################################################
 # set where we'll put things
 ##########################################################################
