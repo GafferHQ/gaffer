@@ -22,15 +22,15 @@ targetDoc.write( About.dependenciesPreamble() )
 blockDelimiter = '....'
 
 for dependency in About.dependencies():
-		targetDoc.write( '\n\n===== %s' % (dependency['name']) )
-		if 'credit' in dependency:
-			targetDoc.write( '\n%s\n' % (dependency['credit']) )
-		if 'url' in dependency:
-			targetDoc.write( '\n%s' % (dependency['url']) )
-		if 'license' in dependency:
-			licensePath = dependency['license'].replace( '$GAFFER_ROOT', os.environ['GAFFER_ROOT']  )
-			if os.path.exists( licensePath ):
-				with open( licensePath, 'r' ) as fh:
-					license = fh.read()
-					targetDoc.write( '\n\n%s\n\n%s\n%s\n' % (blockDelimiter,license,blockDelimiter) )
+	targetDoc.write( '\n\n===== %s' % (dependency['name']) )
+	if 'credit' in dependency:
+		targetDoc.write( '\n%s\n' % (dependency['credit']) )
+	if 'url' in dependency:
+		targetDoc.write( '\n%s' % (dependency['url']) )
+	if 'license' in dependency:
+		licensePath = dependency['license'].replace( '$GAFFER_ROOT', os.environ['GAFFER_ROOT']  )
+		if os.path.exists( licensePath ):
+			with open( licensePath, 'r' ) as fh:
+				license = fh.read()
+				targetDoc.write( '\n\n%s\n\n%s\n%s\n' % (blockDelimiter,license,blockDelimiter) )
 	
