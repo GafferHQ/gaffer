@@ -119,12 +119,20 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
 				return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, __serialise( w[0] ), __serialise( w[1] ) )		
 			else :
-				# not split
+				# not split - a tabbed container full of editors
 				tabbedContainer = w[0]
 				tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
 				if tabbedContainer.getCurrent() is not None :
 					tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
 				tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
+				
+				tabDict["pinned"] = []
+				for editor in tabbedContainer :
+					if isinstance( editor, GafferUI.NodeSetEditor ) :
+						tabDict["pinned"].append( not editor.getNodeSet().isSame( self.scriptNode().selection() ) )
+					else :
+						tabDict["pinned"].append( None )
+				
 				return repr( tabDict )
 		
 		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % __serialise( self.__splitContainer )
@@ -258,8 +266,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 					self.__addChild( splitContainer, c )		
 			else :
 				# new format - various fields provided by a dictionary
-				for c in children["tabs"] :
-					self.__addChild( splitContainer, c )
+				for i, c in enumerate( children["tabs"] ) :
+					editor = self.__addChild( splitContainer, c )
+					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
+						editor.setNodeSet( Gaffer.StandardSet() )
 				splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
 				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
 			
@@ -279,6 +289,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		tabbedContainer.setLabel( editor, editor.getTitle() )
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 		tabbedContainer.setCurrent( editor )
+		
+		return editor
 		
 	def __split( self, splitContainer, orientation, subPanelIndex ) :
 	
