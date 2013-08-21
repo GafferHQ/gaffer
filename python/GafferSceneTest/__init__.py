@@ -80,6 +80,7 @@ from ShaderTest import ShaderTest
 from TextTest import TextTest
 from MapProjectionTest import MapProjectionTest
 from PointConstraintTest import PointConstraintTest
+from SceneReaderTest import SceneReaderTest
 
 if __name__ == "__main__":
 	import unittest
