@@ -93,7 +93,7 @@ When nodes are selected they can be repositioned in within the node graph by `le
 
 ===== Duplicating/deleting
 
-The usual system hotkeys for cut/copy-paste and deleting nodes will work. See xref:appendices_hotkeys[the appendices] for more details.
+The usual system hotkeys for cut,copy,paste, and delete will work on nodes. See xref:appendices_hotkeys[the appendices] for more details.
 
 In addition to permanently deleting nodes, users have the option of temprorarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
 

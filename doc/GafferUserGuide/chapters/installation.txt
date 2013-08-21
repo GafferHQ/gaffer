@@ -1,5 +1,16 @@
 == Installation anchor:installation_installation[]
-!!!Something about how Gaffer should be unpacked and any required + optional env vars.!!!
+
+=== Linux anchor:installation_linux[]
+To install a prebuilt package, simply download and untar the bundle. The resulting directory will contain the application ready to run.
+
+Add the following location within the Gaffer directory to your `$PATH` environment variable:
+
+------------------------------------
+<GAFFER_ROOT>/bin
+------------------------------------
+
+=== OS X anchor:installation_osx[]
+!!!!TODO!!!!
 
 === Launching Gaffer anchor:installation_launchingGaffer[]
 Once Gaffer is properly installed, simply launch it from the commandline as follows

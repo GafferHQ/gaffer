@@ -4,7 +4,7 @@ v0.1, 2013
 :doctype: book
 
 
-include::chapters/debug.txt[]
+//include::chapters/debug.txt[]
 
 include::chapters/introduction.txt[]
 
