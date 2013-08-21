@@ -109,6 +109,22 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 				
 		return plugValueWidget
 	
+	def setReadOnly( self, readOnly ) :
+	
+		if readOnly == self.getReadOnly() :
+			return
+			
+		GafferUI.NodeUI.setReadOnly( self, readOnly )
+		
+		for plugValueWidget in self.__plugValueWidgets.values() :
+			## \todo Consider how this might interoperate better
+			# with the activator expressions in the RenderManShaderUI.
+			# I think perhaps we should promote activator expressions to
+			# be implemented here for all node types and then we'll be
+			# in a position to deal with the interaction of the two
+			# causes of read-onlyness.
+			plugValueWidget.setReadOnly( readOnly )
+	
 	## The header for the ui is a vertical ListContainer. Derived classes may
 	# access it using this method in order to add their own header items.
 	def _header( self ) :

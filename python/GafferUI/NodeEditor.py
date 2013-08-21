@@ -50,7 +50,25 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, **kw )
 		
+		self.__nodeUI = None
+		self.__nameWidget = None
+		self.__readOnly = False
+		
 		self._updateFromSet()
+	
+	def setReadOnly( self, readOnly ) :
+	
+		if readOnly == self.__readOnly :
+			return
+			
+		self.__readOnly = readOnly
+		if self.__nodeUI is not None :
+			self.__nodeUI.setReadOnly( readOnly )
+			self.__nameWidget.setEditable( not readOnly )
+	
+	def getReadOnly( self ) :
+	
+		return self.__readOnly
 	
 	## Ensures that the specified node has a visible NodeEditor editing it, creating
 	# one if necessary.
@@ -107,6 +125,8 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		GafferUI.NodeSetEditor._updateFromSet( self )
 				
 		del self.__column[:]
+		self.__nodeUI = None
+		self.__nameWidget = None
 		
 		node = self._lastAddedNode()
 		if not node :
@@ -115,7 +135,8 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		with self.__column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) :
 				GafferUI.Label( "<h4>Node Name</h4>" )
-				GafferUI.NameWidget( node )
+				self.__nameWidget = GafferUI.NameWidget( node )
+				self.__nameWidget.setEditable( not self.getReadOnly() )
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 					GafferUI.Image( "info.png" )
@@ -127,7 +148,9 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 					
 		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 		self.__column.append( frame, expand=True )
-		frame.setChild( GafferUI.NodeUI.create( node ) )
+		self.__nodeUI = GafferUI.NodeUI.create( node )
+		self.__nodeUI.setReadOnly( self.getReadOnly() )
+		frame.setChild( self.__nodeUI )
 
 	def _titleFormat( self ) :
 	

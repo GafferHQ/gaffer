@@ -62,8 +62,18 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 				infoIcon.setToolTip( self.node().getParameterised()[0].description )
 				
 			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
-				parameters = GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
-				parameters.plugValueWidget().setReadOnly( readOnly )
+				self.__parameterValueWidget = GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
+		
+		self.setReadOnly( readOnly )
+		
+	def setReadOnly( self, readOnly ) :
+	
+		if readOnly == self.getReadOnly() :
+			return
+			
+		GafferUI.NodeUI.setReadOnly( self, readOnly )
+	
+		self.__parameterValueWidget.plugValueWidget().setReadOnly( readOnly )
 				
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), ParameterisedHolderNodeUI )
