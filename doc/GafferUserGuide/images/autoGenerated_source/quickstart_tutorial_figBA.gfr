@@ -1,0 +1,47 @@
+import Gaffer
+import GafferScene
+import IECore
+
+__children = {}
+
+parent["frameRange"]["start"].setValue( 1 )
+parent["frameRange"]["end"].setValue( 100 )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectName", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["name"].setValue( 'project:name' )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["value"].setValue( 'default' )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectRootDirectory", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["name"].setValue( 'project:rootDirectory' )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["value"].setValue( '$HOME/gaffer/projects/${project:name}' )
+__children["Sphere"] = GafferScene.Sphere( "Sphere" )
+parent.addChild( __children["Sphere"] )
+__children["Sphere"]["enabled"].setValue( True )
+__children["Sphere"]["name"].setValue( 'sphere' )
+__children["Sphere"]["transform"]["translate"]["x"].setValue( 0.0 )
+__children["Sphere"]["transform"]["translate"]["y"].setValue( 0.0 )
+__children["Sphere"]["transform"]["translate"]["z"].setValue( 0.0 )
+__children["Sphere"]["transform"]["rotate"]["x"].setValue( 0.0 )
+__children["Sphere"]["transform"]["rotate"]["y"].setValue( 0.0 )
+__children["Sphere"]["transform"]["rotate"]["z"].setValue( 0.0 )
+__children["Sphere"]["transform"]["scale"]["x"].setValue( 1.0 )
+__children["Sphere"]["transform"]["scale"]["y"].setValue( 1.0 )
+__children["Sphere"]["transform"]["scale"]["z"].setValue( 1.0 )
+__children["Sphere"]["type"].setValue( 1 )
+__children["Sphere"]["radius"].setValue( 1.0 )
+__children["Sphere"]["zMin"].setValue( -1.0 )
+__children["Sphere"]["zMax"].setValue( 1.0 )
+__children["Sphere"]["thetaMax"].setValue( 360.0 )
+__children["Sphere"]["divisions"]["x"].setValue( 20 )
+__children["Sphere"]["divisions"]["y"].setValue( 40 )
+__children["Sphere"].addChild( Gaffer.V2fPlug( "__uiPosition", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+__children["Sphere"]["__uiPosition"]["x"].setValue( 0.85714715719223022 )
+__children["Sphere"]["__uiPosition"]["y"].setValue( 4.2428560256958008 )
+parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+
+del __children
+

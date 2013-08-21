@@ -55,8 +55,8 @@ Browsing the NodeMenu:
 ** The menu is organised hierarchically, with nodes grouped in to modules at the top level (Scene, RenderMan, Arnold, Image etc).
 ** Simply browse the menu and submenus, and select the desired node with a `left-click` to have it added to the node network.
 
-.Browsing the NodeMenu to create a node
-image::images/chapters/interface/interface_nodeGraph_figAA.png[align="center"]
+.!!!!screen grab of node menu with submenus!!!!
+image::images/placeHolder.png[align="center"]
 
 Searching the NodeMenu:
 
@@ -64,11 +64,11 @@ Searching the NodeMenu:
 ** The NodeMenu has a search field built in which sits on top of the menu list.
 ** The quickest way to access it is by pressing `Tab` in the NodeGraph, which will raise the menu and set focus to the search field.
 *** This allows you to start typing straight away, and Gaffer will begin returning fuzzy matches from your first key stroke.
-*** For example: typing "attr" will show results including: *'Attr'*'ibuteCache', *'Attr'*'ibutes', 'OpenGL'*'Attr'*'ibutes', 'Standard'*'Attr'*'ributes' etc..
+*** For example: typing "att" will show results including: *'Att'*'ributeCache', *'Att'*'ributes', 'OpenGL'*'Att'*'ributes', 'Standard'*'Att'*'ributes' etc..
 ** Once you have a list of matches, you can use the mouse to select or alternatively you can use the `up-arrow` and `down-arrow` keys combined with `Enter`.
 
-.Searching the NodeMenu
-image::images/chapters/interface/interface_nodeGraph_figBA.png[align="center"]
+.!!!!screen grab of node menu with active search!!!!
+image::images/placeHolder.png[align="center"]
 
 As another efficiency aid, the NodeMenu will store the type of the last node it created. Next time you open the NodeMenu (either with `Tab` or `right-click`) the search field will be populated with this info, meaning you need only press `Enter` to create another node of that type.
 
@@ -93,55 +93,32 @@ When nodes are selected they can be repositioned in within the node graph by `le
 
 ===== Duplicating/deleting
 
-The usual system hotkeys for cut,copy,paste, and delete will work on nodes. See xref:appendices_hotkeys[the appendices] for more details.
+The usual system hotkeys for cut/copy-paste and deleting nodes will work. See xref:appendices_hotkeys[the appendices] for more details.
 
 In addition to permanently deleting nodes, users have the option of temprorarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
 
 * `right-clicking` on a specific node with show a popup menu with an entry for "Enable" which can be checked on/off.
-* alternatively, the hotkey `d` will toggle the "enabled" state for all selected nodes.
+* alternatively, the hotkey `d` will toggle the 'enabled' state for all selected nodes.
 
 .!!!!screen grab a disabled node with input and output connections!!!!
 image::images/placeHolder.png[align="center"]
 
 ===== Dragging nodes to other editors
 
-!!!!!TODO!!!!!!!!!!!!!!!!!!
 examples: viewers, NodeEditor, ScriptEditor
 
 ==== Manipulating noodles anchor:interface_manipulatingNoodles[]
 
-Connections between nodes are made by dragging noodles from on nodule to another. This action breaks down into:
+drag from out to in
 
-* Hovering over the nodule from which you want to start the connection. The nodule will grow and change colour to indicate that it is available to begin the action.
-* Then `left-click-drag` to draw the noodle out of the nodule.
-* Holding down `left-click` will allow you to pull the tip of the noodle over to the target node. 
-** Once over the target node, Gaffer will attempt to snap the noodle to any valid nodules. The list of available plugs is filtered by the type of data passed through the noodle.
-** If the plug selected isn't the desired target, simply move the pointer closer to the correct nodule.
-** Gaffer will display the names of the available plugs to help you identify the right connection.
-* Finally, release the `left-click` to drop the noodle onto the target nodule, completing the connection.
+drag from in to out
 
-For flexibility, connections can be created by dragging in either direction, i.e from the 'out' to the 'in', or from the 'in' to the 'out'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
-
-////
-made from the 'source' to the 'target' plugs - or in reverse, i.e. from the 'target' to the 'source'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
-////
-
-Once a connection is in place, the noodle will follow the start and end nodes as they are moved around in the NodeGraph. If at any point you need to find out what plugs are connected by a particular noodle, simply hover the pointer over the body of the noodle and a pop-up should appear. This pop-up will list the full name of the source and target plugs (including the node name and the names of any parent plugs), and indicate in which direction the data is flowing. For example: `MySphereNode.out -> MyGroupNode.in`
-
-.Tooltip displaying connection details
-image::images/chapters/interface/interface_nodeGraph_figCA.png[align="center"]
-
-To "delete" a connection, we just need to disconnect one end of the noodle. This
-
-how to connect to other node/nodule
-
-////
 [NOTE]
-To help with finding the particular plugs you wish to connect to, the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
+To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
 
 .!!!!screen grab of popup plug labels!!!!
 image::images/placeHolder.png[align="center"]
-////
+
 
 To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
 In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
@@ -151,10 +128,7 @@ To hide/unhide connections:
 * `right-click` on a node in the NodeGraph.
 * In the pop-up menu un-check "Show Input Connections"/"Show Output Connections"
 
-.!!!!screen grab showing before criss crossy connections!!!!!!!!
-image::images/placeHolder.png[align="center"]
-
-.!!!!screen grab showing after of hidden criss crossy connections!!!!!!!!
+.!!!!screen grab showing before and after of hidden criss crossy connections!!!!!!!!
 image::images/placeHolder.png[align="center"]
 
 
@@ -215,22 +189,22 @@ image::images/autoGenerated_target/interface_sceneInspector_figAA.png[align="cen
 * When we render the scene ballA is showing up green. This is not intended and it appears that it is picking up the shader destined for a different object, ballB.
 
 .!!!!!!!!!!SCREEN GRAB OF RESULTING RENDER HERE - just viewer, display selected!!!!!!!!!!!!!!!
-image::images/autoGenerated_target/interface_sceneInspector_figBA.png[align="center"]
+image::images/autoGenerated_target/interface_sceneInspector_figAB.png[align="center"]
 
 * If we use the SceneInspector to view the state of ballA at the first shader assignment we can see that the correct shader is infact assigned.
 
 .!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: redPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
-image::images/autoGenerated_target/interface_sceneInspector_figCA.png[align="center"]
+image::images/autoGenerated_target/interface_sceneInspector_figAC.png[align="center"]
 
 * However if we look further down the node graph and inspect the state at the second shader assignment node its clear that the earlier assignment is being overridden. The original value of the shader attribute is being changed to instead point at greenPlastic
 
 .!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: greenPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
-image::images/autoGenerated_target/interface_sceneInspector_figDA.png[align="center"]
+image::images/autoGenerated_target/interface_sceneInspector_figAD.png[align="center"]
 
 * By then checking the properties at the node feeding immediately into the second shader assignment we can see that the shader value was correct just prior to ShaderAssignementB. This indicates that the mistake has been made in ShaderAssignementB and this is where we should look to fix the problem.
 
 .!!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING Shader: redPlastic !!!!!!!!!!!!!!! graph with selected node should be shown alongside
-image::images/autoGenerated_target/interface_sceneInspector_figEA.png[align="center"]
+image::images/autoGenerated_target/interface_sceneInspector_figAE.png[align="center"]
 
 * In this example, the problem was an incorrect path filter expression which is easily fixed. However, without the SceneInspector it may have been tricky to track down the root cause of the error, with the user having to fall back on trial and error testing to isolate the culpable node.
 
@@ -258,21 +232,13 @@ The SceneInspector will list the properties of the selected item indicating any 
 .!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING SINGLE ADDED ATTRIBUTE !!!!!!!!!!!!!!!!!!!!!!!!!!
 image::images/placeHolder.png[align="center"]
 
- * Similarly, if a property has been modified the old value is shown highlighted in red and the new value in green.
+* Similarly, if a property has been modified the old value is shown highlighted in red and the new value in green.
 
 .!!!!!!!!!SCREEN GRAB OF SCENEINSPECTOR INTERFACE SHOWING SINGLE MODIFIED ATTRIBUTE !!!!!!!!!!!!!!!!!!!!!!!!!!
 image::images/placeHolder.png[align="center"]
 
 === ScriptEditor anchor:interface_scriptEditor[]
-Python scripts to manipulate the current Gaffer session can be entered and executed in the *ScriptEditor*. See the xref:appendices_scriptingNuggets[scripting nuggets] section for some useful examples.
-
-The editor is broken into two sections:
-
-* The bottom field is for entering python commands. Cut, copy, paste, undo, redo, select all, etc will work as normal - either via hotkeys or the right-click context menu.
-* The top displays output from any commands executed.
-
-To execute any code entered into the lower field of the ScriptEditor, simply select the text (either single lines, or whole chunks or code) and press `CTRL+Enter`.
-You should see the commands entered echoed in the feedback field (indicating that they were successfully executed) along with any results.
+!!!!lorem ipsum foo bar doodah!!!!
 
 
 === Timeline anchor:interface_timeline[]

@@ -1,6 +1,7 @@
 import IECore
 import GafferUI
 import GafferScene
+import GafferSceneUI
 import os
 scriptNode = script
 scriptWindow = GafferUI.ScriptWindow.acquire( script )

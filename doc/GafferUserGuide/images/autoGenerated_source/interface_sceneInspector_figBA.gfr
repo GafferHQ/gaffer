@@ -432,8 +432,6 @@ __children["ShaderAssignmentA"]["shader"].setInput( __children["redPlasticSurfac
 __children["ShaderAssignmentB"]["in"].setInput( __children["ShaderAssignmentA"]["out"] )
 __children["ShaderAssignmentB"]["filter"].setInput( __children["PathFilterB"]["match"] )
 __children["ShaderAssignmentB"]["shader"].setInput( __children["greenPlasticSurface"]["out"] )
-__children["redPlasticSurface"].loadShader( "architectural", keepExistingValues=True )
-__children["greenPlasticSurface"].loadShader( "architectural", keepExistingValues=True )
 __children["StandardOptions"]["in"].setInput( __children["Displays"]["out"] )
 __children["RenderManRender"]["in"].setInput( __children["StandardOptions"]["out"] )
 __children["Group"]["in"].setInput( __children["SphereA"]["out"] )
@@ -441,6 +439,8 @@ __children["Group"]["in1"].setInput( __children["SphereB"]["out"] )
 __children["Group"]["in2"].setInput( __children["Camera"]["out"] )
 __children["Group"]["in3"].setInput( __children["pointlight"]["out"] )
 __children["Displays"]["in"].setInput( __children["ShaderAssignmentB"]["out"] )
+__children["redPlasticSurface"].loadShader( "architectural", keepExistingValues=True )
+__children["greenPlasticSurface"].loadShader( "architectural", keepExistingValues=True )
 
 
 del __children
