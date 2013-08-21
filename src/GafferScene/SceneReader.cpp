@@ -61,6 +61,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneReader );
 
 /// \todo hard coded framerate should be replaced with a getTime() method on Gaffer::Context or something
 const double SceneReader::g_frameRate( 24 );
+static IECore::BoolDataPtr g_trueBoolData = new IECore::BoolData( true );
 
 SceneReader::SceneReader( const std::string &name )
 	:	FileSource( name )
@@ -122,9 +123,10 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		return parent->attributesPlug()->defaultValue();
 	}
 	
-
 	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
 	s = s->scene( path );
+	
+	// read attributes
 	
 	SceneInterface::NameList nameList;
 	s->attributeNames( nameList );
@@ -147,7 +149,20 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		// be treated as forever const after being returned from this function.
 		result->members()[ std::string( *it ) ] = constPointerCast<Object>( s->readAttribute( *it, context->getFrame() / g_frameRate ) );
 	}
+
+	// read tags and turn them into attributes of the form "user:tag:tagName"
 	
+	nameList.clear();
+	s->readTags( nameList, false );
+	for( SceneInterface::NameList::const_iterator it = nameList.begin(); it != nameList.end(); ++it )
+	{
+		if( it->string().compare( 0, 11, "ObjectType:" ) == 0 )
+		{
+			continue;
+		}
+		result->members()["user:tag:"+it->string()] = g_trueBoolData;
+	}
+
 	return result;
 }
 
