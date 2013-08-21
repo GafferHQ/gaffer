@@ -54,6 +54,7 @@ class NodeUI( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 	
 		self.__node = node
+		self.__readOnly = False
 			
 	## Returns the node the ui represents.
 	def node( self ) :
@@ -69,6 +70,17 @@ class NodeUI( GafferUI.Widget ) :
 	def plugValueWidget( self, plug, lazy=True ) :
 	
 		return None
+
+	## Can be called to make the UI read only - must
+	# be implemented appropriately by derived classes.
+	def setReadOnly( self, readOnly ) :
+	
+		assert( isinstance( readOnly, bool ) )
+		self.__readOnly = readOnly
+		
+	def getReadOnly( self ) :
+	
+		return self.__readOnly
 
 	## Creates a NodeUI instance for the specified node.
 	@classmethod
