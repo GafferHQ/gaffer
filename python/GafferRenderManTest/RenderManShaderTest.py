@@ -1262,16 +1262,12 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 	
 	def testHashThroughBox( self ):
 		
-		s = Gaffer.ScriptNode()
-
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
 		shaderNode = GafferRenderMan.RenderManShader()
 		shaderNode.loadShader( shader )
-		s["shader"] = shaderNode
 		
 		# box up an intermediate coshader:
 		b = Gaffer.Box()
-		s["box"] = b
 		
 		b.addChild( Gaffer.Plug( "in" ) )
 		b.addChild( Gaffer.Plug( "out", direction = Gaffer.Plug.Direction.Out ) )
@@ -1283,7 +1279,6 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
 		coshaderNode = GafferRenderMan.RenderManShader()
 		coshaderNode.loadShader( coshader )
-		s["coshader"] = coshaderNode
 		
 		b["in"].setInput( coshaderNode["out"] )
 		intermediateCoshaderNode["parameters"]["aColorIWillTint"].setInput( b["in"] )
@@ -1295,7 +1290,24 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshaderNode["parameters"]["floatParameter"].setValue( 0.25 )
 		
 		self.assertNotEqual( shaderNode.stateHash(), h1 )
-		
 	
+	def testDanglingBoxConnection( self ):
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode1 = GafferRenderMan.RenderManShader()
+		shaderNode1.loadShader( shader )
+		
+		shaderNode2 = GafferRenderMan.RenderManShader()
+		shaderNode2.loadShader( shader )
+		
+		b = Gaffer.Box()
+		b.addChild( Gaffer.Plug( "in" ) )
+		b.addChild( Gaffer.Plug( "out", direction = Gaffer.Plug.Direction.Out ) )
+		
+		b["shader1"] = shaderNode1
+		shaderNode1["parameters"]["coshaderParameter"].setInput( b["in"] )
+		
+		shaderNode2["parameters"]["coshaderParameter"].setInput( b["out"] )
+		
 if __name__ == "__main__":
 	unittest.main()
