@@ -91,8 +91,37 @@ class ReformatTest( unittest.TestCase ) :
 		reformat["format"].setValue( GafferImage.Format( 150, 125, 1. ) )
 		reformat["in"].setInput( read["out"] )
 		reformatWindow = reformat["out"]["dataWindow"].getValue()
-		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 25 ), IECore.V2i( 119, 87 )  ) )
+		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 37 ), IECore.V2i( 119, 99 )  ) )
+	
+	def testNegativeDisplayWindowReformat( self ) :
 		
+		read = GafferImage.ImageReader()
+		read["fileName"].setValue( os.path.join( self.path, "checkerWithNegWindows.200x150.exr" ) )
+		
+		# Resize the image and check the size of the output data window.
+		reformat = GafferImage.Reformat()
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -22, -13 ), IECore.V2i( 33, 58 ) ), 1. )
+		reformat["format"].setValue( f )
+		reformat["in"].setInput( read["out"] )
+		reformat["filter"].setValue( "Bilinear" )
+
+		reformatDataWindow = reformat["out"]["dataWindow"].getValue()
+		reformatFormat = reformat["out"]["format"].getValue()
+		
+		# Check the data and display windows.
+		self.assertEqual( reformatDataWindow, IECore.Box2i( IECore.V2i( -66, -83 ), IECore.V2i( 365, 333 )  ) )
+		self.assertEqual( reformatFormat, f )
+
+		# Check the image data.
+		expectedFile = os.path.join( self.path, "checkerWithNegWindowsReformated.exr" )
+		expectedOutput = IECore.Reader.create( expectedFile ).read()
+		expectedOutput.blindData().clear()
+		
+		reformatOutput = reformat["out"].image()
+		reformatOutput.blindData().clear()
+		
+		self.assertEqual( reformatOutput, expectedOutput )
+			
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :
 

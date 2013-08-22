@@ -44,6 +44,7 @@ import sys
 class ImageWriterTest( unittest.TestCase ) :
 	
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100" )
+	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/defaultNegativeDisplayWindow.exr" )
 	__testFilePath = "/tmp/test"
 	__writeModes = [ ("scanline", 0), ("tile", 1) ]
 	
@@ -85,7 +86,39 @@ class ImageWriterTest( unittest.TestCase ) :
 
 	def testExrWrite( self ) :
 		self.__testExtension( "exr" )
+
+	def testDefaultFormatWrite( self ) :
+		
+		s = Gaffer.ScriptNode()
+		w = GafferImage.ImageWriter()
+		g = GafferImage.Grade()
+		
+		s.addChild( g )
+		s.addChild( w )
+		
+		testFile = self.__testFilePath + "testBlack.exr"
+		self.failIf( os.path.exists( testFile ) )
 	
+		GafferImage.Format.setDefaultFormat( s, GafferImage.Format( IECore.Box2i( IECore.V2i( -7, -2 ), IECore.V2i( 22, 24 ) ), 1. ) )
+		w["in"].setInput( g["out"] )
+		w["fileName"].setValue( testFile )
+		w["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )	
+		
+		# Try to execute. In older versions of the ImageWriter this would throw an exception.
+		w.execute( [ s.context() ] )
+		self.failUnless( os.path.exists( testFile ) )
+		
+		# Check the output.
+		expectedFile = self.__defaultFormatFile
+		expectedOutput = IECore.Reader.create( expectedFile ).read()
+		expectedOutput.blindData().clear()
+		
+		writerOutput = IECore.Reader.create( testFile ).read()
+		writerOutput.blindData().clear()
+		
+		self.assertEqual( writerOutput, expectedOutput )
+		
+		
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
 	def __testExtension( self, ext ) :
 		
@@ -129,11 +162,43 @@ class ImageWriterTest( unittest.TestCase ) :
 			)
 			self.assertFalse( res.value )   	
 
+	def testOffsetDisplayWinodowWrite( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferImage.Constant()
+		s.addChild( c )
+
+		with s.context() :
+
+			format = GafferImage.Format( IECore.Box2i( IECore.V2i( -20, -15 ), IECore.V2i( 29, 14 ) ), 1. )
+			GafferImage.Format.setDefaultFormat( s, format )
+
+			self.assertEqual( c["out"]["format"].getValue(), format )
+
+			testFile = self.__testFile( "offsetDisplayWindow", "RGBA", "exr" )
+			w = GafferImage.ImageWriter()
+			w["in"].setInput( c["out"] )
+			w["fileName"].setValue( testFile )
+
+			# Execute
+			w.execute( [ Gaffer.Context() ] )
+			self.failUnless( os.path.exists( testFile ) )
+			i = IECore.Reader.create( testFile ).read()
+			i.blindData().clear()
+
+			self.assertEqual( i.displayWindow, format.getDisplayWindow() )
+
 	def tearDown( self ) :
-		
-		testFile = self.__testFile( "scanline", "RGBA", "jpg" )
-		if os.path.exists( testFile ) :
-			os.remove( testFile )
+	
+		files = [
+			self.__testFilePath + "testBlack.exr",
+			self.__testFile( "scanline", "RGBA", "jpg" ),
+			self.__testFile( "offsetDisplayWindow", "RGBA", "exr" )
+		]
+
+		for f in files :
+			if os.path.exists( f ) :
+				os.remove( f )
 		
 		for name, mode in self.__writeModes :
 			testFileRB = self.__testFile( name, "RB", "exr" )

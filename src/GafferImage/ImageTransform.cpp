@@ -43,6 +43,7 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
 #include "IECore/AngleConversion.h"
+#include "IECore/FastFloat.h"
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
 #include "boost/format.hpp"
@@ -260,7 +261,6 @@ Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, 
 
 Imath::M33f Implementation::computeAdjustedMatrix() const
 {
-	///\todo: We don't handle the pixel aspect of the format here but we should!
 	Format inFormat = inPlug()->formatPlug()->getValue();
 	Format outFormat = outputFormatPlug()->getValue();
 
@@ -274,17 +274,10 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 	);
 
 	// To transform the image correctly we need to first move the image to the pivot point.
-	// However, this is not as trivial as it sounds as the pivot point was specified in relation to the unscaled image
-	// and the image we are manipulating here has already been scaled to the nearest integer data window by the 
-	// reformat node that is place directly upstream. Therefore we first need to scale the pivot point by the actual
-	// input's scale and then convert it from image space to gadget space by flipping it in the Y axis.
-	float inFormatHeight = inFormat.getDisplayWindow().size().y + 1;	
-	Imath::M33f p;
-	Imath::V2f pivotVec = transformPlug()->pivotPlug()->getValue();
-	pivotVec *= trueScale;
-	pivotVec.y = inFormatHeight - pivotVec.y;
-	pivotVec *= Imath::V2f( -1. );
-	p.translate( pivotVec );
+	Imath::M33f pi;
+	Imath::V2f invPivotVec = -transformPlug()->pivotPlug()->getValue();
+	invPivotVec *= trueScale;
+	pi.translate( invPivotVec );
 
 	// As the input was only scaled to the nearest integer bounding box by the reformat node we need to 
 	// do a slight scale adjustment to achieve any sub-pixel scale factor.
@@ -294,23 +287,18 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 
 	// The rotation component.	
 	Imath::M33f r;
-	r.rotate( IECore::degreesToRadians( transformPlug()->rotatePlug()->getValue() ) );
-	Imath::M33f t;
+	r.rotate( -IECore::degreesToRadians( transformPlug()->rotatePlug()->getValue() ) );
 	
 	// The translation component.
-	Imath::V2f translateVec = transformPlug()->translatePlug()->getValue();
-	translateVec.y *= -1.;
-	t.translate( translateVec );
+	Imath::M33f t;
+	t.translate( transformPlug()->translatePlug()->getValue() );
 
 	// Here we invert the pivot vector and translate the image back.
-	float outFormatHeight = outFormat.getDisplayWindow().size().y + 1;	
-	Imath::M33f pi;
-	Imath::V2f invPivotVec = transformPlug()->pivotPlug()->getValue();
-	invPivotVec.y = outFormatHeight - invPivotVec.y;
-	pi.translate( invPivotVec );
+	Imath::M33f p;
+	p.translate( transformPlug()->pivotPlug()->getValue() );
 
 	// Concatenate the transforms.
-	Imath::M33f result = p * s * r * t * pi;
+	Imath::M33f result = pi * s * r * t * p;
 
 	return result;
 }
@@ -474,9 +462,13 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 	{
 		Imath::V2f scale = transformPlug()->scalePlug()->getValue();
 		GafferImage::Format f = inPlug()->formatPlug()->getValue();
-		static_cast<FormatPlug *>( output )->setValue(
-			Format( int( ceil( (f.getDisplayWindow().size().x+1) * scale.x ) ), int( ceil( (f.getDisplayWindow().size().y+1) * scale.y ) ), 1.)
+
+		Imath::Box2i newDisplayWindow(
+			Imath::V2i( IECore::fastFloatFloor( f.getDisplayWindow().min.x * scale.x ), IECore::fastFloatFloor( f.getDisplayWindow().min.y * scale.y ) ),
+			Imath::V2i( IECore::fastFloatCeil( f.getDisplayWindow().max.x * scale.x ), IECore::fastFloatCeil( f.getDisplayWindow().max.y * scale.y ) )
 		);
+
+		static_cast<FormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );
 		return;
 	}
 

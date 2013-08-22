@@ -48,6 +48,21 @@ class ImageReaderTest( unittest.TestCase ) :
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/negativeDisplayWindow.exr" )
+
+	def testInternalImageSpaceConversion( self ) :
+		
+		r = IECore.EXRImageReader( self.negativeDataWindowFileName )
+		image = r.read()
+		exrDisplayWindow = image.displayWindow
+		exrDataWindow = image.dataWindow
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.negativeDataWindowFileName )
+		internalDisplayWindow = n["out"]["format"].getValue().getDisplayWindow()
+		internalDataWindow = n["out"]["dataWindow"].getValue()
+		expectedDataWindow = IECore.Box2i( IECore.V2i( exrDataWindow.min.x, exrDisplayWindow.max.y - exrDataWindow.max.y ), IECore.V2i( exrDataWindow.max.x, exrDisplayWindow.max.y - exrDataWindow.min.y ) )
+		self.assertEqual( internalDisplayWindow, exrDisplayWindow )
+		self.assertEqual( internalDataWindow, expectedDataWindow )
 
 	def test( self ) :
 	
@@ -72,11 +87,20 @@ class ImageReaderTest( unittest.TestCase ) :
 		
 		self.assertEqual( image, image2 )
 
+	def testNegativeDisplayWindowRead( self ) :
+
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.negativeDisplayWindowFileName )
+		f = n["out"]["format"].getValue()
+		d = n["out"]["dataWindow"].getValue()
+		self.assertEqual( f.getDisplayWindow(), IECore.Box2i( IECore.V2i( -5, -5 ), IECore.V2i( 20, 20 ) ) )
+		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -9 ), IECore.V2i( 35, 24 ) ) )
+
 	def testNegativeDataWindow( self ) :
-	
+		
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )		
-		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, 30 ), IECore.V2i( 174, 179 ) ) )
+		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 174, 119 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 	
 		channelNames = n["out"]["channelNames"].getValue()
@@ -88,10 +112,12 @@ class ImageReaderTest( unittest.TestCase ) :
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.negativeDataWindowFileName ).read()
 		
-		image.blindData().clear()
-		image2.blindData().clear()
-		
-		self.assertEqual( image, image2 )
+		op = IECore.ImageDiffOp()
+		res = op(
+			imageA = image,
+			imageB = image2
+		)
+		self.assertFalse( res.value )   	
 
 	def testTileSize( self ) :
 	
@@ -115,7 +141,7 @@ class ImageReaderTest( unittest.TestCase ) :
 			t1 = n["out"]["channelData"].getValue( _copy=False )
 			t2 = n["out"]["channelData"].getValue( _copy=False )
 		
-		# we dont want the separate computations to result in the
+		# we don't want the separate computations to result in the
 		# same value, because the ImageReader has its own cache in
 		# OIIO, so doing any caching on top of that would be wasteful.
 		self.failIf( t1.isSame( t2 ) )

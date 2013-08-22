@@ -55,7 +55,21 @@ class FormatPlugTest( unittest.TestCase ) :
 		s2.execute( se )
 
 		self.failUnless( s2["n"]["f"].isInstanceOf( GafferImage.FormatPlug.staticTypeId() ) )
+
+	def testOffsetSerialize( self ) :
 	
+		format = GafferImage.Format( IECore.Box2i( IECore.V2i( -5, -11 ), IECore.V2i( 13, 19 ) ), .5 )	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["f"] = GafferImage.FormatPlug( "testPlug", defaultValue = format, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		se = s.serialise()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( se )
+
+		self.assertEqual( s2["n"]["f"].getValue(), format )
+		
 	def testInputPlug( self ) :
 		n = Gaffer.Node()
 		f = GafferImage.FormatPlug("f", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default )

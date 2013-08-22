@@ -154,9 +154,14 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	
-	GafferImage::Format format( spec->full_width, spec->full_height );
-	
+
+	GafferImage::Format format(
+		Imath::Box2i(
+			Imath::V2i( spec->full_x, spec->full_y ),
+			Imath::V2i( spec->full_x + spec->full_width - 1, spec->full_y + spec->full_height - 1 )
+		),
+		1.
+	);
 	return GafferImage::Format::registerFormat( format );
 }
 
@@ -164,10 +169,11 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	
+
+	const int yOffset = ( spec->full_y + spec->full_height ) - spec->y;	
 	return Box2i(
-		V2i( spec->x, spec->y ),
-		V2i( spec->x + spec->width - 1, spec->y + spec->height - 1 )
+		V2i( spec->x, yOffset - spec->height ),
+		V2i( spec->x + spec->width - 1, yOffset - 1 )
 	);
 }
 
@@ -194,22 +200,31 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 		}
 	}
 	
-	// Create the output data buffer.
-	FloatVectorDataPtr resultData = new FloatVectorData;
-	vector<float> &result = resultData->writable();	
-	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-
+	const int yOffset = ( spec->full_y + spec->full_height ) - tileOrigin.y - ImagePlug::tileSize();	
+	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
 	size_t channelIndex = channelIt - spec->channelnames.begin();
 	imageCache()->get_pixels(
 		uFileName,
 		0, 0, // subimage, miplevel
 		tileOrigin.x, tileOrigin.x + ImagePlug::tileSize(),
-		tileOrigin.y, tileOrigin.y + ImagePlug::tileSize(),
+		yOffset, yOffset + ImagePlug::tileSize(), 
 		0, 1,
 		channelIndex, channelIndex + 1,
 		TypeDesc::FLOAT,
-		&(result[0])
+		&(channelData[0])
 	);
 	
+	// Create the output data buffer.
+	FloatVectorDataPtr resultData = new FloatVectorData;
+	vector<float> &result = resultData->writable();	
+	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+
+	// Flip the tile in the Y axis to convert it to our internal image data representation.
+	for( int y = 0; y < ImagePlug::tileSize(); ++y )
+	{
+		memcpy( &(result[ ( ImagePlug::tileSize() - y - 1 ) * ImagePlug::tileSize() ]), &(channelData[ y * ImagePlug::tileSize() ]), sizeof(float)*ImagePlug::tileSize()  );
+	}
+
 	return resultData;
 }
+

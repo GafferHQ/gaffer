@@ -60,7 +60,13 @@ std::string formatRepr( const GafferImage::Format *format )
 	}
 	else
 	{
-		return std::string( boost::str( boost::format( "GafferImage.Format(%d, %d, %.3f)" ) % format->width() % format->height() % format->getPixelAspect() ) );
+		Imath::Box2i box( format->getDisplayWindow() );
+		return std::string(
+			boost::str( boost::format(
+				"GafferImage.Format( IECore.Box2i( IECore.V2i( %d, %d ), IECore.V2i( %d, %d ) ), %.3f )" )
+				% box.min.x % box.min.y % box.max.x % box.max.y %format->getPixelAspect()
+			)
+		);
 	}
 }
 
@@ -110,6 +116,7 @@ void bindFormat()
 	static void (*setDefaultFormatPtr2)( ScriptNode *scriptNode, const std::string & ) (&Format::setDefaultFormat);
 	
 	class_<Format>( "Format", init<int, int, double>() )
+		.def( init< const Imath::Box2i &, double >() )
 		.def( init<>() )
 		.def( "width", &Format::width )
 		.def( "height", &Format::height )

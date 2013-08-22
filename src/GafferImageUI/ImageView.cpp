@@ -103,16 +103,26 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_channelMask( colorMask ),
 				m_imageStats( imageStats )
 		{
-			Box2i dataWindow( image->getDataWindow() );
-			V3f dataMin( dataWindow.min.x, dataWindow.min.y, 0.0 );
-			V3f dataMax( dataWindow.max.x + 1.f, dataWindow.max.y + 1.f, 0.0 );
-			V3f dataCenter = (dataMin + dataMax) / 2.0;
-			V3f dispCenter = ( m_displayBound.size() ) / V3f( 2. );
-			V3f dataOffset( dispCenter - dataCenter );
+			V3f dataMin( m_dataWindow.min.x, m_dataWindow.min.y, 0.f );
+			V3f dataMax( 1.f + m_dataWindow.max.x, 1.f + m_dataWindow.max.y, 0.f );
+			V3f dataCenter = ( dataMin + dataMax ) / 2.f;
 			
+			V3f dispMin( m_displayWindow.min.x, m_displayWindow.min.y, 0.f );
+			V3f dispMax( 1.f + m_displayWindow.max.x, 1.f + m_displayWindow.max.y, 0.f );
+			V3f dispCenter = ( dispMin + dispMax ) / 2.f;
+
+			const int yOffset = ( m_displayWindow.min.y + m_displayWindow.size().y + 1 ) - m_dataWindow.min.y;
 			m_dataBound = Box3f(
-				V3f( dataMin.x - dispCenter.x, dataMin.y - dispCenter.y + dataOffset.y * 2, 0. ),
-				V3f( dataMax.x - dispCenter.x, dataMax.y - dispCenter.y + dataOffset.y * 2, 0. )
+				V3f(
+					dataMin.x - dispCenter.x,
+					( yOffset - ( m_dataWindow.size().y + 1 ) ) - dispCenter.y,
+					0.f
+				),
+				V3f(
+					dataMax.x - dispCenter.x,
+					( yOffset ) - dispCenter.y,
+					0.f
+				)
 			);
 
 			keyPressSignal().connect( boost::bind( &ImageViewGadget::keyPress, this, ::_1,  ::_2 ) );
@@ -220,11 +230,11 @@ class ImageViewGadget : public GafferUI::Gadget
 		V2f rasterToDisplaySpace( const V2f &point ) const
 		{
 			Box2f dispRasterBox( displayRasterBox() );
-			V2f wh( dispRasterBox.max - dispRasterBox.min + V2f(1.f) );
-			V2f t = ( point - dispRasterBox.min ) / wh;
+			V2f wh( ( dispRasterBox.max.x - dispRasterBox.min.x ) + 1.f, ( dispRasterBox.min.y - dispRasterBox.max.y ) + 1.f );
+			V2f t( ( point[0] - dispRasterBox.min.x ) / wh[0], ( point[1] - dispRasterBox.max.y ) / wh[1] );
 			return V2f(
 				float( m_displayWindow.min.x ) + t.x * ( m_displayWindow.size().x + 1.f ),
-				float( m_displayWindow.min.y ) + t.y * ( m_displayWindow.size().y + 1.f )
+				float( m_displayWindow.max.y + 1.f ) - ( t.y * ( m_displayWindow.size().y + 1.f ) )
 			);
 		}
 	
@@ -246,14 +256,16 @@ class ImageViewGadget : public GafferUI::Gadget
 			return Box2f( gadgetToDisplaySpace( box.min ), gadgetToDisplaySpace( box.max ) );
 		}
 
-		/// Samples a color from the image.		
+		/// Samples a color from the image.
+		///\todo: This method currently samples a pixel from the ImagePrimitive and this means that the sampled colour is the result of the image preprocessor.
+		/// Instead we should really be sampling from the input image plug so that the user is presented with raw colour data.
 		Color4f sampleColor( const V2f &point ) const
 		{
 			V2i samplePos(
 				fastFloatRound( point.x - .5 ) - m_dataWindow.min.x,
-				m_dataWindow.size().y - ( fastFloatRound( point.y - .5 ) - m_dataWindow.min.y )
+				( ( m_displayWindow.max.y - fastFloatRound( point.y - .5 ) ) - m_dataWindow.min.y )
 			);
-				
+			
 			if ( samplePos.x < 0 || samplePos.y < 0 || samplePos.x > m_dataWindow.size().x || samplePos.y > m_dataWindow.size().y )
 			{
 				return Color4f( 0.f, 0.f, 0.f, 0.f );
@@ -361,12 +373,12 @@ class ImageViewGadget : public GafferUI::Gadget
 
 				Box2i roi(
 					V2i(
-						fastFloatRound( roif.min.x - .5 ) + 1,
-						m_displayWindow.size().y - ( fastFloatRound( roif.max.y - .5 ) ) + 1
+						fastFloatRound( roif.min.x ),
+						fastFloatRound( roif.min.y )
 					),
 					V2i(
-						fastFloatRound( roif.max.x - .5 ),
-						m_displayWindow.size().y - ( fastFloatRound( roif.min.y - .5 ) )
+						fastFloatRound( roif.max.x ) - 1,
+						fastFloatRound( roif.max.y ) - 1
 					)
 				);
 				m_imageStats->regionOfInterestPlug()->setValue( roi );
@@ -432,13 +444,20 @@ class ImageViewGadget : public GafferUI::Gadget
 			m_sampleWindow = selectionBox;
 		}
 
-		void drawWindow( Box2f &rasterWindow, const Style *style ) const
+		void drawWindow( Box2f &rasterWindow,  const Style *style ) const
+		{
+			V2f minPt( rasterToDisplaySpace( rasterWindow.min ) );
+			V2f maxPt( rasterToDisplaySpace( rasterWindow.max ) );
+			drawWindow( rasterWindow, minPt, maxPt, style );
+		}
+
+		void drawWindow( Box2f &rasterWindow, const V2f &bottomLeftPoint, const V2f &topRightPoint, const Style *style ) const
 		{
 			V2f minPt( rasterToDisplaySpace( rasterWindow.min ) );
 			V2f maxPt( rasterToDisplaySpace( rasterWindow.max ) );
 				
-			std::string rasterWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( minPt.x ) % fastFloatRound( minPt.y ) ) );
-			std::string rasterWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( maxPt.x ) % fastFloatRound( maxPt.y ) ) );
+			std::string rasterWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( bottomLeftPoint.x ) % fastFloatRound( bottomLeftPoint.y ) ) );
+			std::string rasterWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( topRightPoint.x ) % fastFloatRound( topRightPoint.y ) ) );
 				
 			// Draw the box around the data window.
 			style->renderRectangle( rasterWindow );
@@ -578,7 +597,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				color = Color4f( .2f, .2f, .2f, 1.f );
 				glColor( color );
-				drawWindow( dataRasterBox, style );
+				drawWindow( dataRasterBox, m_dataWindow.min, m_dataWindow.max, style );
 			}
 
 			/// Draw the selection window.

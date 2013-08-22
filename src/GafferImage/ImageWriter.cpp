@@ -199,18 +199,25 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		channelsPlug()->maskChannels( maskChannels );
 		const int nChannels = maskChannels.size();
 		
-		// Get the image's display window.
-		const Imath::Box2i displayWindow( inPlug()->formatPlug()->getValue().getDisplayWindow() );
-		const int displayWindowWidth = displayWindow.max.x-displayWindow.min.x+1;
-		const int displayWindowHeight = displayWindow.max.y-displayWindow.min.y+1;
-	
-		// Get the image's data window.
-		const Imath::Box2i dataWindow( inPlug()->dataWindowPlug()->getValue() );
-		const int dataWindowWidth = dataWindow.max.x-dataWindow.min.x+1;
-		const int dataWindowHeight = dataWindow.max.y-dataWindow.min.y+1;
-			
 		// Get the image channel data.
 		IECore::ImagePrimitivePtr imagePtr( inPlug()->image() );
+		
+		// Get the image's display window.
+		const Imath::Box2i displayWindow( imagePtr->getDisplayWindow() );
+		const int displayWindowWidth = displayWindow.size().x+1;
+		const int displayWindowHeight = displayWindow.size().y+1;
+
+		// Get the image's data window and if it then set a flag.
+		bool imageIsBlack = false;
+		Imath::Box2i dataWindow( imagePtr->getDataWindow() );
+		if ( inPlug()->dataWindowPlug()->getValue().isEmpty() )
+		{
+			dataWindow = displayWindow;
+			imageIsBlack = true;
+		}
+
+		int dataWindowWidth = dataWindow.size().x+1;
+		int dataWindowHeight = dataWindow.size().y+1;
 	
 		// Create the image header. 
 		ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
@@ -235,13 +242,13 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		}
 		
 		// Specify the display window.
-		spec.full_x = 0;
-		spec.full_y = 0;
+		spec.full_x = displayWindow.min.x;
+		spec.full_y = displayWindow.min.y;
 		spec.full_width = displayWindowWidth;
 		spec.full_height = displayWindowHeight;
 		spec.x = dataWindow.min.x;
 		spec.y = dataWindow.min.y;
-
+	
 		if ( !out->open( fileName, spec ) )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
@@ -254,22 +261,40 @@ void ImageWriter::execute( const Contexts &contexts ) const
 		{
 			// Create a buffer for the scanline.
 			float scanline[ nChannels*dataWindowWidth ];
-		
-			// Interleave the channel data and write it by scanline to the file.	
-			for ( int y = dataWindow.min.y; y <= dataWindow.max.y; ++y )
+			
+			if ( imageIsBlack )
 			{
-				float *outPtr = &scanline[0];	
-				for ( int x = 0; x < dataWindowWidth; ++x )
+				memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
+
+				for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
+				{
+					if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+					}
+				}
+			}
+			else
+			{
+				// Interleave the channel data and write it by scanline to the file.	
+				for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
 				{
 					for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 					{
-						*outPtr++ = *(*channelDataIt)++;
+						float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
+						// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
+						const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
+						const int inc = channelPtrs.size();
+						for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
+						{
+							*outPtr = *inRowPtr++;
+						}
 					}
-				}
 
-				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
-				{
-					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+					if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+					}
 				}
 			}
 		}
@@ -279,35 +304,52 @@ void ImageWriter::execute( const Contexts &contexts ) const
 			// Create a buffer for the tile.
 			const int tileSize = ImagePlug::tileSize();
 			float tile[ nChannels*tileSize*tileSize ];
-		
-			// Interleave the channel data and write it by scanline to the file.	
-			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
-			{
-				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
-				{
-					float *outPtr = &tile[0];	
-					
-					const int r = std::min( tileSize+tileX, dataWindowWidth );
-					const int t = std::min( tileSize+tileY, dataWindowHeight );
 
-					for ( int y = 0; y < t; ++y )
+			if ( imageIsBlack )
+			{
+				memset( tile, 0,  sizeof(float) * nChannels*tileSize*tileSize );
+				for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+				{
+					for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
 					{
-						for ( int x = 0; x < r; ++x )
+						if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+						{
+							throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+						}
+					}
+				}
+			}
+			else
+			{
+				// Interleave the channel data and write it to the file tile-by-tile.
+				for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+				{
+					for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+					{
+						float *outPtr = &tile[0];	
+
+						const int r = std::min( tileSize+tileX, dataWindowWidth );
+						const int t = std::min( tileSize+tileY, dataWindowHeight );
+
+						for ( int y = 0; y < t; ++y )
 						{
 							for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 							{
-								*outPtr++ = (**channelDataIt)+dataWindowWidth*(tileY+y)+(tileX+x);
+								const int inc = channelPtrs.size();
+								const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
+								for ( int x = 0; x < r; ++x, outPtr += inc )
+								{
+									*outPtr = *inRowPtr+(tileX+x);
+								}
 							}
 						}
-					}
 
-					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+dataWindow.min.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-					{
-						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+						if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+						{
+							throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+						}
 					}
-
 				}
-
 			}
 
 		}

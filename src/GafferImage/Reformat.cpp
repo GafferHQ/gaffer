@@ -161,12 +161,23 @@ void Reformat::hashChannelDataPlug( const GafferImage::ImagePlug *output, const 
 Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	// Work out the scale factor of the output image and scale the input data window.
-	Imath::V2f s( scale() );
+	Imath::V2d s( scale() );
 	Imath::Box2i inDataWindow( inPlug()->dataWindowPlug()->getValue() );
+
+	Imath::V2d inFormatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min );
+	Imath::V2d outFormatOffset( formatPlug()->getValue().getDisplayWindow().min );
+	
 	Imath::Box2i outDataWindow(
-		Imath::V2i( int( floor( (inDataWindow.min.x)*s.x ) ), int( floor( (inDataWindow.min.y)*s.y ) ) ),
-		Imath::V2i( int( ceil( (inDataWindow.max.x+1.)*s.x-1. ) ), int( ceil( (inDataWindow.max.y+1.)*s.y-1. ) ) )
+		Imath::V2i(
+			IECore::fastFloatFloor( double( inDataWindow.min.x - inFormatOffset.x ) * s.x + outFormatOffset.x ),
+			IECore::fastFloatFloor( double( inDataWindow.min.y - inFormatOffset.y ) * s.y + outFormatOffset.y )
+		),
+		Imath::V2i(
+			IECore::fastFloatCeil( double( inDataWindow.max.x - inFormatOffset.x + 1. ) * s.x + outFormatOffset.x - 1. ),
+			IECore::fastFloatCeil( double( inDataWindow.max.y - inFormatOffset.y + 1. ) * s.y + outFormatOffset.y - 1. )
+		)
 	);
+
 	return outDataWindow;
 }
 
@@ -180,13 +191,13 @@ IECore::ConstStringVectorDataPtr Reformat::computeChannelNames( const Gaffer::Co
 	return inPlug()->channelNamesPlug()->getValue();
 }
 
-Imath::V2f Reformat::scale() const
+Imath::V2d Reformat::scale() const
 {
 	Format inFormat( inPlug()->formatPlug()->getValue() );
 	Format outFormat( formatPlug()->getValue() );
-	Imath::V2i inWH = Imath::V2i( inFormat.getDisplayWindow().max ) + Imath::V2i(1);
-	Imath::V2i outWH = Imath::V2i( outFormat.getDisplayWindow().max ) + Imath::V2i(1);
-	Imath::V2f scale( float( outWH.x ) / ( inWH.x ), float( outWH.y ) / inWH.y );
+	Imath::V2d inWH = Imath::V2d( inFormat.getDisplayWindow().size() ) + Imath::V2d(1.);
+	Imath::V2d outWH = Imath::V2d( outFormat.getDisplayWindow().size() ) + Imath::V2d(1.);
+	Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
 	return scale;
 }
 
@@ -204,19 +215,21 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
 	// Create some useful variables...
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+	Imath::V2i formatOffset( formatPlug()->getValue().getDisplayWindow().min );	
+	Imath::Box2i tile( tileOrigin-formatOffset, Imath::V2i( tileOrigin.x - formatOffset.x + ImagePlug::tileSize() - 1, tileOrigin.y - formatOffset.y + ImagePlug::tileSize() - 1 ) );
 	Imath::V2f scaleFactor( scale() );
 
 	// Create our filter.
 	FilterPtr f = Filter::create( filterPlug()->getValue(), 1.f / scaleFactor.y );
 	
 	// If we are filtering with a box filter then just don't bother filtering
-	// at all and sample instead...
+	// at all and just integer sample instead...
 	if ( static_cast<GafferImage::TypeId>( f->typeId() ) == GafferImage::BoxFilterTypeId )
 	{
+		Imath::V2d scaleFactorD( scale() );
 		Imath::Box2i sampleBox(
-			Imath::V2i( IECore::fastFloatFloor( tile.min.x / scaleFactor.x ), IECore::fastFloatCeil( tile.min.y / scaleFactor.y ) ),
-			Imath::V2i( IECore::fastFloatFloor( tile.max.x / scaleFactor.x ), IECore::fastFloatCeil( tile.max.y / scaleFactor.y ) )
+			Imath::V2i( IECore::fastFloatFloor( tile.min.x / scaleFactorD.x ), IECore::fastFloatCeil( tile.min.y / scaleFactorD.y ) ),
+			Imath::V2i( IECore::fastFloatFloor( tile.max.x / scaleFactorD.x ), IECore::fastFloatCeil( tile.max.y / scaleFactorD.y ) )
 		);
 		Sampler sampler( inPlug(), channelName, sampleBox, f, Sampler::Clamp );
 		for ( int y = tile.min.y, ty = 0; y <= tile.max.y; ++y, ++ty )
@@ -246,15 +259,15 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 		Imath::V2i( sampleMaxX + fWidth, sampleMaxY + fHeight )
 	);
 
-	int sampleBoxWidth = sampleBox.max.x - sampleBox.min.x + 1;
-	int sampleBoxHeight = sampleBox.max.y - sampleBox.min.y + 1;
+	int sampleBoxWidth = sampleBox.size().x + 1;
+	int sampleBoxHeight = sampleBox.size().y + 1;
 	
 	// Create a temporary buffer that we can write the result of the first pass to.
 	// We extend the buffer vertically as we will need additional information in the
 	// vertical squash (the second pass) to properly convolve the filter.
 	float buffer[ ImagePlug::tileSize() * sampleBoxHeight ];
 	
-	// Create several buffers for each pixel in the output row (or coloum depending on the pass)
+	// Create several buffers for each pixel in the output row (or column depending on the pass)
 	// into which we can place the indices for the pixels that are contribute to it's result and
 	// their weight.
 	
