@@ -25,6 +25,11 @@ class installationTool():
 							dest="runguide_flag",
 							default=False,
 							help="Run user guide generation process")
+		parser.add_option("-l", "--runlicenses",
+							action="store_true",
+							dest="runlicenses_flag",
+							default=False,
+							help="Run licenses generation process")
 		parser.add_option("-d", "--runasciidoc",
 							action="store_true",
 							dest="runasciidoc_flag",
@@ -115,7 +120,31 @@ class installationTool():
 				os.system( pdf_cmd + ' GafferNodeReference.html GafferNodeReference.pdf' )
 			
 			self.logit('Done.')
+
+
+		if self.opts['runlicenses_flag']:
+			#build the node reference
+			os.chdir( os.path.join (build_root, 'GafferLicenses' ))
+			self.messageHeader = 'GafferLicenses'
 			
+			self.logit('Running any dynamic content generation scripts...')
+			prescripts_dir = os.path.join( build_root, 'GafferLicenses', 'dynamicContentGenerators' )
+			for script in os.listdir( prescripts_dir  ):
+				self.logit( script )
+				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
+			
+			
+			if self.opts['runasciidoc_flag']:
+				## run asciidoc then convert the result into a pdf
+				self.logit('Processing Asciidoc source...')
+				os.system( ad_cmd + ' GafferLicenses.txt' )
+			if self.opts['runpdf_flag']:
+				self.logit('Postconverting html to pdf...')
+				os.system( pdf_cmd + ' GafferLicenses.html GafferLicenses.pdf' )
+			
+			self.logit('Done.')
+
+
 		if self.opts['runguide_flag']:
 			#build the user guide
 			os.chdir( os.path.join( build_root, 'GafferUserGuide' ))
