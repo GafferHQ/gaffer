@@ -1259,6 +1259,55 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual( len( s2["n"]["parameters"]["fixedShaderArray"] ), 1 )
 		self.assertTrue( s2["n"]["parameters"]["fixedShaderArray"][0].getInput() is None )
-
+	
+	def testHashThroughBox( self ):
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		# box up an intermediate coshader:
+		b = Gaffer.Box()
+		
+		b.addChild( Gaffer.Plug( "in" ) )
+		b.addChild( Gaffer.Plug( "out", direction = Gaffer.Plug.Direction.Out ) )
+		
+		intermediateCoshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderWithPassThrough.sl" )
+		intermediateCoshaderNode = GafferRenderMan.RenderManShader()
+		intermediateCoshaderNode.loadShader( intermediateCoshader )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		
+		b["in"].setInput( coshaderNode["out"] )
+		intermediateCoshaderNode["parameters"]["aColorIWillTint"].setInput( b["in"] )
+		b["out"].setInput( intermediateCoshaderNode["out"] )
+		shaderNode["parameters"]["coshaderParameter"].setInput( b["out"] )
+		
+		h1 = shaderNode.stateHash()
+		
+		coshaderNode["parameters"]["floatParameter"].setValue( 0.25 )
+		
+		self.assertNotEqual( shaderNode.stateHash(), h1 )
+	
+	def testDanglingBoxConnection( self ):
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode1 = GafferRenderMan.RenderManShader()
+		shaderNode1.loadShader( shader )
+		
+		shaderNode2 = GafferRenderMan.RenderManShader()
+		shaderNode2.loadShader( shader )
+		
+		b = Gaffer.Box()
+		b.addChild( Gaffer.Plug( "in" ) )
+		b.addChild( Gaffer.Plug( "out", direction = Gaffer.Plug.Direction.Out ) )
+		
+		b["shader1"] = shaderNode1
+		shaderNode1["parameters"]["coshaderParameter"].setInput( b["in"] )
+		
+		shaderNode2["parameters"]["coshaderParameter"].setInput( b["out"] )
+		
 if __name__ == "__main__":
 	unittest.main()

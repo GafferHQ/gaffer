@@ -50,6 +50,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Box.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 
@@ -136,8 +137,21 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
+		
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
+		
+			const Node* sourceNode = inputPlug->node();
+			if( sourceNode && sourceNode->typeId() == Box::staticTypeId() )
+			{
+				// looks like we're exposing this input via a box, or
+				// connecting it to an unconnected output on a box. At
+				// the moment, we're just accepting this and trusting
+				// the user not to connect something nonsensical to inputPlug.
+				// \todo: make it so we can't make illegal connections to inputPlug
+				return true;
+			}
+			
 			// coshader parameter - input must be another
 			// renderman shader hosting a coshader.
 			const RenderManShader *inputShader = sourcePlug->parent<RenderManShader>();
