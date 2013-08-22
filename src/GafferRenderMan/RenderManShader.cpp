@@ -50,6 +50,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Box.h"
 
 #include "GafferRenderMan/RenderManShader.h"
 
@@ -136,8 +137,16 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
+		
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
+		
+			const Node* sourceNode = inputPlug->node();
+			if( sourceNode && sourceNode->typeId() == Box::staticTypeId() )
+			{
+				return true;
+			}
+			
 			// coshader parameter - input must be another
 			// renderman shader hosting a coshader.
 			const RenderManShader *inputShader = sourcePlug->parent<RenderManShader>();
