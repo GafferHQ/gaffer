@@ -165,6 +165,9 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 {
 	const Plug *inputPlug = parameterPlug->getInput<Plug>();
 	const Shader *n = 0;
+	
+	// follow input chain until we hit a shader. This is so the network can dip in and out
+	// of boxes and still propagate hashes correctly
 	while( inputPlug )
 	{
 		n = IECore::runTimeCast<const Shader>( inputPlug->node() );
@@ -180,8 +183,8 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 		h.append( network.shaderHash( n ) );
 		return;
 	}
+	
 	// fall through to hash plug value
-
 	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );
 	if( vplug )
 	{
