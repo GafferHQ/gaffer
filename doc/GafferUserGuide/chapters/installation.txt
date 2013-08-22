@@ -6,8 +6,22 @@ To install a prebuilt package, simply download and untar the bundle. The resulti
 Add the following location within the Gaffer directory to your `$PATH` environment variable:
 
 ------------------------------------
-<GAFFER_ROOT>/bin
+/path/to/gaffer/bin
 ------------------------------------
+
+
+To use 3delight with Gaffer you will need to:
+* Ensure `/path/to/3delight/bin` is in your `$PATH`.
+* Set the `$DELIGHT` environment variable to `/path/to/3delight`.
+* Add `/path/to/3delight/shaders` to the `$DL_SHADERS_PATH` environment variable.
+* Add `/path/to/3delight/displays` to the `$DL_DISPLAYS_PATH` environment variable.
+* Add `/path/to/3delight/lib` to the `$LD_LIBRARY_PATH` environment variable.
+
+To use Arnold with Gaffer you will need to:
+* Ensure `/path/to/arnold/bin` is in your `$PATH`.
+* Add `/path/to/arnold/bin` to the `$LD_LIBRARY_PATH` environment variable.
+* Add `/path/to/arnold/python` to the `$PYTHONPATH` environment variable
+
 
 === OS X anchor:installation_osx[]
 !!!!TODO!!!!
