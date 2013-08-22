@@ -272,7 +272,15 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 						editor.setNodeSet( Gaffer.StandardSet() )
 				splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
 				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
-			
+				
+				# this is a shame-faced hack to make sure the timeline in the default layout can't be compressed
+				# or stretched vertically. fixing this properly is quite involved, because we'd need to find a sensible
+				# generic way for TabbedContainer to set a min/max height based on it's children, and then a sensible
+				# generic rule for what SplitContainer should do in its __applySizePolicy() method.
+				if len( splitContainer[0] ) == 1 and isinstance( splitContainer[0][0], GafferUI.Timeline ) :
+					splitContainer[0]._qtWidget().setFixedHeight( splitContainer[0][0]._qtWidget().sizeHint().height() )
+					splitContainer._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+				
 	def __addChild( self, splitContainer, nameOrEditor ) :
 	
 		assert( len( splitContainer ) == 1 )
