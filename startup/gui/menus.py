@@ -37,6 +37,7 @@
 
 import os
 import traceback
+import webbrowser
 
 import IECore
 
@@ -55,6 +56,44 @@ GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
 GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.ExecuteUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
+
+# Add help menu
+def launchUserGuide( menu ):
+	doc = os.path.join ( os.environ["GAFFER_ROOT"], 'doc', 'GafferUserGuide.pdf' )
+	if os.path.exists( doc ):
+		url = r'file://%s' % (doc) 
+		webbrowser.open( url )
+
+def launchNodeReference( menu ):
+	doc = os.path.join ( os.environ["GAFFER_ROOT"], 'doc', 'GafferNodeReference.pdf' )
+	if os.path.exists( doc ):
+		url = r'file://%s' % (doc) 
+		webbrowser.open( url )
+
+def launchLicenses( menu ):
+	doc = os.path.join ( os.environ["GAFFER_ROOT"], 'doc', 'GafferLicenses.pdf' )
+	if os.path.exists( doc ):
+		url = r'file://%s' % (doc) 
+		webbrowser.open( url )
+		
+def launchGoogleGroup( menu ):
+		url = r'https://groups.google.com/forum/#!forum/gaffer-dev'
+		webbrowser.open( url )
+
+#TODO - scour an examples directory for .gfr files
+#TODO - ..then build a menu with items to launch each example
+def helpExamples( menu ):
+	result = IECore.MenuDefinition()
+	return result
+
+scriptWindowMenu.append( "/Help/User Guide", 		{ "command" : launchUserGuide } )
+scriptWindowMenu.append( "/Help/Node Reference", 	{ "command" : launchNodeReference  } )
+scriptWindowMenu.append( "/Help/Licenses", 			{ "command" : launchLicenses } )
+scriptWindowMenu.append( "/Help/DocsDivider", 		{ "divider" : True } )
+scriptWindowMenu.append( "/Help/Developer Discussion", { "command" : launchGoogleGroup } )
+scriptWindowMenu.append( "/Help/DevDivider", 		{ "divider" : True } )
+scriptWindowMenu.append( "/Help/Examples",			{ "subMenu" : helpExamples } )
+
 
 ## Node creation menu
 ###########################################################################
