@@ -164,16 +164,23 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
 {
 	const Plug *inputPlug = parameterPlug->getInput<Plug>();
-	if( inputPlug )
+	const Shader *n = 0;
+	while( inputPlug )
 	{
-		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
+		n = IECore::runTimeCast<const Shader>( inputPlug->node() );
 		if( n )
 		{
-			h.append( network.shaderHash( n ) );
-			return;
+			break;
 		}
-		// fall through to hash plug value
+		inputPlug = inputPlug->getInput<Plug>();
 	}
+	
+	if( n )
+	{
+		h.append( network.shaderHash( n ) );
+		return;
+	}
+	// fall through to hash plug value
 
 	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );
 	if( vplug )
