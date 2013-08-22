@@ -1259,6 +1259,43 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual( len( s2["n"]["parameters"]["fixedShaderArray"] ), 1 )
 		self.assertTrue( s2["n"]["parameters"]["fixedShaderArray"][0].getInput() is None )
+	
+	def testHashThroughBox( self ):
+		
+		s = Gaffer.ScriptNode()
 
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		s["shader"] = shaderNode
+		
+		# box up an intermediate coshader:
+		b = Gaffer.Box()
+		s["box"] = b
+		
+		b.addChild( Gaffer.Plug( "in" ) )
+		b.addChild( Gaffer.Plug( "out", direction = Gaffer.Plug.Direction.Out ) )
+		
+		intermediateCoshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderWithPassThrough.sl" )
+		intermediateCoshaderNode = GafferRenderMan.RenderManShader()
+		intermediateCoshaderNode.loadShader( intermediateCoshader )
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+		s["coshader"] = coshaderNode
+		
+		b["in"].setInput( coshaderNode["out"] )
+		intermediateCoshaderNode["parameters"]["aColorIWillTint"].setInput( b["in"] )
+		b["out"].setInput( intermediateCoshaderNode["out"] )
+		shaderNode["parameters"]["coshaderParameter"].setInput( b["out"] )
+		
+		h1 = shaderNode.stateHash()
+		
+		coshaderNode["parameters"]["floatParameter"].setValue( 0.25 )
+		
+		self.assertNotEqual( shaderNode.stateHash(), h1 )
+		
+	
 if __name__ == "__main__":
 	unittest.main()
