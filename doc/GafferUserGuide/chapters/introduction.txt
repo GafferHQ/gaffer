@@ -1,15 +1,11 @@
 == Introduction to Gaffer anchor:introduction_introductionToGaffer[]
 
-Gaffer is a vfx/cg-animation application built around the core concept of scenes defined procedurally by means of networks of nodes. +
-Its primary use is as a lighting and look development tool.  However, the modular nature of Gaffer's design presents the potential for expansion into other aspects of vfx production.
+Gaffer is a vfx/cg-animation application built around the core concept of scenes defined procedurally by means of networks of nodes. Its primary use is as a lighting and look development tool; however, the modular nature of Gaffer's design presents the potential for expansion into other aspects of vfx production.
 
-
-Gaffer provides non-destructive methods for building and modifying scenes and sending those resulting scenes to render.  It is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. +
+Gaffer provides non-destructive methods for building and modifying scenes and sending those resulting scenes to render.  It is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.
 In addition to processing of 3D scenes, Gaffer has simple 2D compositing functionality allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
 
-
 The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications.  More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
-
 
 
 === Design Overview anchor:introduction_designOverview[]
@@ -19,11 +15,9 @@ The framework with which the Gaffer tool is built is also available for rapid de
 
 !!!!script -> scene   defines    which gaffer then generates on demand!!!!
 
-There are two key aspects to the design of Gaffer that are important to grasp in order to get the output you are look for from the program.
+There are two key aspects to the design of Gaffer that are important to grasp in order to get the output you are looking for from the program.
 
-The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. +
-Looking at Gaffer from this point of view, it can be useful to consider the workflow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearring that reflects the upstream changes. +
-This node approach allows for very flexible and reusable workflows to be created. Complexity and volume can be made managable, and changes can be made quickly.
+* The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes. This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
 
 Secondly, it can be useful to understand the deferred evaluation aspect of Gaffer. +
 !!!!John?!!!!
@@ -38,7 +32,7 @@ The interface allows
 - images/renders to be viewed and inspected (including streaming of currently rendering imagery)
 - geometry and lights to be explored and selected in an opengl 3d viewport
 - sophisticated set of node graph construction and manipulation operations
-- interogation of scene hierarchys
+- interrogation of scene hierarchies
 
 RenderMan integration.
 - Provided by GafferRenderMan module
@@ -65,14 +59,14 @@ Compositing
 The user guide is loosely structured in three sections, starting with an overview of Gaffer and how to get up and running in the app. Then there are chapters covering the use of the various parts of the software in more depth. Lastly, the user guide presents a collection of useful tidbits - mini tutorials and references.
 
 [Note]
-In addition to the information available in the user guide, Gaffer features exstensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
+In addition to the information available in the user guide, Gaffer features extensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
 
 As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user.  The node listings contain a description of each node's purpose, alongside details of all the plugs available on that node.  This NodeReference !!!!!!LINK HERE SOME HOW!!!!!!! can be used as a guide to the tools that can be employed within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
 
 
 ==== Terminology 
 
-As the Gaffer workflow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology thoughout the user guide.
+As the Gaffer work-flow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology throughout the user guide.
 
 To refer to components of the interface (as apposed to generic concepts), this document will stick to the convention of *UpperCamelCase*.  So for example, we might talk about the *NodeGraph* being used to manipulate a node graph.  In this case the *NodeGraph* is part of the GUI, where as the 'node graph' is a network of nodes created by the user.
 
