@@ -80,7 +80,16 @@ class ImageViewGadget : public GafferUI::Gadget
 
 	public :
 
-	ImageViewGadget( IECore::ConstImagePrimitivePtr image, GafferImage::ImageStatsPtr imageStats, int &colorMask, Imath::V2f &mousePos )
+		ImageViewGadget(
+			IECore::ConstImagePrimitivePtr image,
+			GafferImage::ImageStatsPtr imageStats,
+			int &colorMask,
+			Imath::V2f &mousePos,
+			Color4f &sampleColor,
+			Color4f &minColor,
+			Color4f &maxColor,
+			Color4f &averageColor
+		)
 			:	Gadget( defaultName<ImageViewGadget>() ),
 				m_displayBound( image->bound() ),
 				m_displayWindow( image->getDisplayWindow() ),
@@ -115,9 +124,15 @@ class ImageViewGadget : public GafferUI::Gadget
 			dragEndSignal().connect( boost::bind( &ImageViewGadget::dragEnd, this, ::_1, ::_2 ) );
 			mouseMoveSignal().connect( boost::bind( &ImageViewGadget::mouseMove, this, ::_1, ::_2 ) );
 
+			sampleColor = ImageViewGadget::sampleColor( mousePos );
+
 			// Create some useful structs that we will use to hold information needed
 			// to draw the UI elements that display the color readouts to the screen.	
-			m_colorUiElements.resize(4);
+			m_colorUiElements.reserve(4);
+			m_colorUiElements.push_back( ColorUiElement( sampleColor ) );
+			m_colorUiElements.push_back( ColorUiElement( minColor ) );
+			m_colorUiElements.push_back( ColorUiElement( maxColor ) );
+			m_colorUiElements.push_back( ColorUiElement( averageColor ) );
 			m_colorUiElements[0].name = "RGBA"; // The color under the mouse pointer.
 			m_colorUiElements[0].draw = true;
 			m_colorUiElements[0].position = V2i( 135, 0 );
@@ -290,7 +305,7 @@ class ImageViewGadget : public GafferUI::Gadget
 					Box2f swatchBox( m_colorUiElements[i].swatchBox.min + origin, m_colorUiElements[i].swatchBox.max + origin );
 					if( boxIntersects( swatchBox, mouseRasterPos ) )
 					{
-						m_sampleColor = m_colorUiElements[i].color;
+						m_sampleColor = *m_colorUiElements[i].color;
 						renderRequestSignal()( this );
 						return true;
 					}
@@ -298,7 +313,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			}
 
 			m_drawSelection = m_colorUiElements[1].draw = m_colorUiElements[2].draw = m_colorUiElements[3].draw = false;
-			m_colorUiElements[0].color = m_sampleColor = sampleColor( m_mousePos );
+			*m_colorUiElements[0].color = m_sampleColor = sampleColor( m_mousePos );
 			renderRequestSignal()( this );
 
 			return true;
@@ -307,7 +322,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		bool mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		{
 			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
-			m_colorUiElements[0].color = sampleColor( m_mousePos );
+			*m_colorUiElements[0].color = sampleColor( m_mousePos );
 			renderRequestSignal()( this );
 			return true;
 		}
@@ -356,13 +371,13 @@ class ImageViewGadget : public GafferUI::Gadget
 				);
 				m_imageStats->regionOfInterestPlug()->setValue( roi );
 		
-				m_colorUiElements[1].color = m_imageStats->minPlug()->getValue();
-				m_colorUiElements[2].color = m_imageStats->maxPlug()->getValue();
-				m_colorUiElements[3].color = m_imageStats->averagePlug()->getValue();
+				*m_colorUiElements[1].color = m_imageStats->minPlug()->getValue();
+				*m_colorUiElements[2].color = m_imageStats->maxPlug()->getValue();
+				*m_colorUiElements[3].color = m_imageStats->averagePlug()->getValue();
 			}
 
 			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
-			m_colorUiElements[0].color = sampleColor( m_mousePos );
+			*m_colorUiElements[0].color = sampleColor( m_mousePos );
 			renderRequestSignal()( this );
 			return true;
 		}
@@ -643,7 +658,7 @@ class ImageViewGadget : public GafferUI::Gadget
 					glColor( Color4f( 1.f ) );
 					style->renderSolidRectangle( Box2f( swatchBox.min, swatchBox.min + ( swatchBox.size() / V2f( 2. ) ) ) );
 					style->renderSolidRectangle( Box2f( swatchBox.min + ( swatchBox.size() / V2f( 2. ) ), swatchBox.max ) );
-					glColor( m_colorUiElements[i].color );
+					glColor( *m_colorUiElements[i].color );
 					style->renderSolidRectangle( swatchBox );
 					glColor( Color4f( .29804, .29804, .29804, .90 ) );
 					style->renderRectangle( swatchBox );
@@ -656,10 +671,10 @@ class ImageViewGadget : public GafferUI::Gadget
 							boost::str(
 								boost::format( "%s: %.4f, %.4f, %.4f, %.4f" )
 								% m_colorUiElements[i].name.c_str()
-								% m_colorUiElements[i].color[0]
-								% m_colorUiElements[i].color[1]
-								% m_colorUiElements[i].color[2]
-								% m_colorUiElements[i].color[3]
+								% (*m_colorUiElements[i].color)[0]
+								% (*m_colorUiElements[i].color)[1]
+								% (*m_colorUiElements[i].color)[2]
+								% (*m_colorUiElements[i].color)[3]
 								)
 							);
 					style->renderText( Style::LabelText, infoStr );
@@ -673,10 +688,10 @@ class ImageViewGadget : public GafferUI::Gadget
 		/// A simple struct that we use to hold the information required to draw a UI element that displays information about a color.
 		struct ColorUiElement
 		{
-			ColorUiElement(): draw( false ), name( "RGBA" ), color( 0.f ), position( 0.f ), swatchBox( V2f( 0.f, 5.f ), V2f( 10.f, 15.f ) ) {}
+			ColorUiElement( Color4f &swatchColor ): draw( false ), name( "RGBA" ), color( &swatchColor ), position( 0.f ), swatchBox( V2f( 0.f, 5.f ), V2f( 10.f, 15.f ) ) {}
 			bool draw;
 			std::string name;
-			Color4f color;
+			Color4f *color;
 			Imath::V2f position;
 			Imath::Box2f swatchBox;
 		};
@@ -718,7 +733,11 @@ ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage:
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
 		m_colorMask( Style::All ),
-		m_mousePos( 0. )
+		m_mousePos(0.),
+		m_sampleColor(0.),
+		m_minColor(0.),
+		m_maxColor(0.),
+		m_averageColor(0.)
 {
 	// Create an internal ImageStats node 
 	addChild( new GafferImage::ImageStats( "imageStats" ) );
@@ -727,7 +746,12 @@ ImageView::ImageView( const std::string &name )
 ImageView::ImageView( const std::string &name, Gaffer::PlugPtr input )
 	:	View( name, input ),
 		m_colorMask( Style::All ),
-		m_mousePos( 0. )
+		m_mousePos( 0. ),
+		m_sampleColor(0.),
+		m_minColor(0.),
+		m_maxColor(0.),
+		m_averageColor(0.)
+
 {
 	// Create an internal ImageStats node 
 	addChild( new GafferImage::ImageStats( "imageStats" ) );
@@ -771,7 +795,7 @@ void ImageView::update()
 		imageStatsNode()->inPlug()->setInput( imagePlug );
 		imageStatsNode()->channelsPlug()->setInput( imagePlug->channelNamesPlug() );
 
-		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), m_colorMask, m_mousePos );
+		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), m_colorMask, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
 		bool hadChild = viewportGadget()->getChild<Gadget>();
 		viewportGadget()->setChild( imageViewGadget );
 		if( !hadChild )
