@@ -163,28 +163,18 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
 {
-	const Plug *inputPlug = parameterPlug->getInput<Plug>();
-	const Shader *n = 0;
-	
-	// follow input chain until we hit a shader. This is so the network can dip in and out
-	// of boxes and still propagate hashes correctly
-	while( inputPlug )
+	const Plug *inputPlug = parameterPlug->source<Plug>();
+	if( inputPlug )
 	{
-		n = IECore::runTimeCast<const Shader>( inputPlug->node() );
+		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
 		if( n )
 		{
-			break;
+			h.append( network.shaderHash( n ) );
+			return;
 		}
-		inputPlug = inputPlug->getInput<Plug>();
+		// fall through to hash plug value
 	}
-	
-	if( n )
-	{
-		h.append( network.shaderHash( n ) );
-		return;
-	}
-	
-	// fall through to hash plug value
+
 	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );
 	if( vplug )
 	{
