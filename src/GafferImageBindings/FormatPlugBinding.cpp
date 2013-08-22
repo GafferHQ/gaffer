@@ -70,6 +70,7 @@ void FormatPlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *gra
 		{
 			modules.insert( module );
 		}
+		modules.insert( "IECore" );
 	}
 }
 

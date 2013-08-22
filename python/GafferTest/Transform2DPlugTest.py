@@ -51,15 +51,10 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		p["rotate"].setValue( 45 )
 		p["scale"].setValue( IECore.V2f( 2, 3 ) )
 	
-		displayWindow = IECore.Box2i( IECore.V2i(0), IECore.V2i(9) )
-		pixelAspect = 1.
-		formatHeight = displayWindow.size().y+1 
 		pivotValue = p["pivot"].getValue()
-		pivotValue.y = formatHeight - pivotValue.y
 		pivot = IECore.M33f.createTranslated( pivotValue )
 		
 		translateValue = p["translate"].getValue()
-		translateValue.y = -translateValue.y
 		translate = IECore.M33f.createTranslated( translateValue )
 		
 		rotate = IECore.M33f.createRotated( IECore.degreesToRadians( p["rotate"].getValue() ) )
@@ -78,7 +73,7 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		for m in ( "pi", "s", "r", "t", "p" ) :
 			transform = transform * transforms[m]
 
-		self.assertEqual( p.matrix( displayWindow, pixelAspect ), transform )
+		self.assertEqual( p.matrix(), transform )
 
 	def testTransformOrderExplicit( self ) :
 	
@@ -99,11 +94,11 @@ class Transform2DPlugTest( unittest.TestCase ) :
 		# Test if this is equal to a simple hardcoded matrix, down to floating point error
 		# This verifies that translation is not being affected by rotation and scale,
 		# which is what users will expect
-		self.assertTrue( plug.matrix( displayWindow, pixelAspect ).equalWithAbsError(
+		self.assertTrue( plug.matrix().equalWithAbsError(
 			IECore.M33f(
 				0,   2, 0,
 				-2,  0, 0,
-				150, 0, 1),
+				90, -30, 1),
 			2e-6
 		) )
 	

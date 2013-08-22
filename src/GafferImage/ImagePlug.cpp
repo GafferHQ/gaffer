@@ -69,15 +69,21 @@ namespace Detail
 class CopyTiles
 {
 	public:
-		CopyTiles( const vector<float *> &imageChannelData, const vector<string> &channelNames, const Gaffer::FloatVectorDataPlug *channelDataPlug, const Box2i& dataWindow, const Context *context, const int tileSize ) :
-			m_imageChannelData( imageChannelData ),
-			m_channelNames( channelNames ),
-			m_channelDataPlug( channelDataPlug ),
-			m_dataWindow( dataWindow ),
-			m_parentContext( context ),
-			m_tileSize( tileSize )
+		CopyTiles(
+				const vector<float *> &imageChannelData,
+				const vector<string> &channelNames,
+				const Gaffer::FloatVectorDataPlug *channelDataPlug,
+				const Box2i& dataWindow,
+				const Context *context, const int tileSize
+			) :
+				m_imageChannelData( imageChannelData ),
+				m_channelNames( channelNames ),
+				m_channelDataPlug( channelDataPlug ),
+				m_dataWindow( dataWindow ),
+				m_parentContext( context ),
+				m_tileSize( tileSize )
 		{}
-		
+
 		void operator()( const blocked_range2d<size_t>& r ) const
 		{
 			ContextPtr context = new Context( *m_parentContext );
@@ -85,7 +91,7 @@ class CopyTiles
 			V2i minTileOrigin = ImagePlug::tileOrigin( operationWindow.min );
 			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max );
 			size_t imageStride = m_dataWindow.size().x + 1;
-			
+
 			for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
 			{
 				for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
@@ -97,13 +103,13 @@ class CopyTiles
 						Context::Scope scope( context );
 						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
 						Box2i b = boxIntersection( tileBound, operationWindow );
-					
+
 						ConstFloatVectorDataPtr tileData = m_channelDataPlug->getValue();
-					
+
 						for( int y = b.min.y; y<=b.max.y; y++ )
 						{
 							const float *tilePtr = &(tileData->readable()[0]) + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
-							float *channelPtr = m_imageChannelData[it-m_channelNames.begin()] + ( y - m_dataWindow.min.y ) * imageStride + (b.min.x - m_dataWindow.min.x);
+							float *channelPtr = m_imageChannelData[it-m_channelNames.begin()] + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
 							for( int x = b.min.x; x <= b.max.x; x++ )
 							{
 								*channelPtr++ = *tilePtr++;
@@ -297,14 +303,19 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 {
 	Box2i format = formatPlug()->getValue().getDisplayWindow();
 	Box2i dataWindow = dataWindowPlug()->getValue();
+	Box2i newDataWindow( Imath::V2i(0) );
 	
 	if( dataWindow.isEmpty() )
 	{
 		dataWindow = Box2i( Imath::V2i(0) );
 	}
+	else
+	{
+		newDataWindow = Box2i( V2i( dataWindow.min.x, format.max.y - dataWindow.max.y ), V2i( dataWindow.max.x, format.max.y - dataWindow.min.y ) );
+	}
 	
-	ImagePrimitivePtr result = new ImagePrimitive( dataWindow, format );
-	
+	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format );
+
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
 	

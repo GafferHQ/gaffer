@@ -84,9 +84,8 @@ float Sampler::sample( float x, float y )
 			colour += c * w;
 		}
 	}
-	
-	colour /= weightedSum;
-	return colour;
+
+	return weightedSum == 0 ? 0 : colour / weightedSum;
 }
 
 float Sampler::sample( int x, int y )

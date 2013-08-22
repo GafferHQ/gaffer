@@ -76,6 +76,20 @@ class FormatTest( unittest.TestCase ) :
 			s["defaultFormat"]
 		except:
 			self.assertTrue(False)
+	
+	def testOffsetDisplayWindow( self ) :
+		box = IECore.Box2i( IECore.V2i( 6, -4 ), IECore.V2i( 49, 149 ) )
+		f = GafferImage.Format( box, 1.1 )
+		self.assertEqual( f.getDisplayWindow(), box )
+		self.assertEqual( f.width(), 44 )
+		self.assertEqual( f.height(), 154 )
+		self.assertEqual( f.getPixelAspect(), 1.1 )
+	
+	def testBoxAspectConstructor( self ) :
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 49, 149 ) ), 1.3 )
+		self.assertEqual( f.width(), 50 )
+		self.assertEqual( f.height(), 150 )
+		self.assertEqual( f.getPixelAspect(), 1.3 )
 		
 	def testWH( self ) :
 		f = GafferImage.Format( 101, 102, 1. )

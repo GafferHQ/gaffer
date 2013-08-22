@@ -185,18 +185,21 @@ class ImageTransformTest( unittest.TestCase ) :
 		t["transform"]["scale"].setValue( IECore.V2f( .75, 1.1 ) )
 		t["transform"]["rotate"].setValue( 40 )
 		t["transform"]["pivot"].setValue( IECore.V2f( 50, 30 ) )
-		t["in"].setInput( reader["out"] ) 
-		
-		expectedOutput = GafferImage.ImageReader()
-
-		file = "transformedChecker" + filter + ".200x150.exr"
-		expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
 		t["filter"].setValue( filter )
+		t["in"].setInput( reader["out"] ) 
+		filteredImage = t["out"].image()
+		filteredImage.blindData().clear()
+
+		file = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/transformedChecker" + filter + ".200x150.exr" )
+		expectedOutput = GafferImage.ImageReader()
+		expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
+		expectedImage = expectedOutput['out'].image()
+		expectedImage.blindData().clear()
 		
 		op = IECore.ImageDiffOp()
 		res = op(
-			imageA = expectedOutput["out"].image(),
-			imageB = t["out"].image()
+			imageA = filteredImage,
+			imageB = expectedImage
 		)
 		
 		self.assertFalse( res.value )
