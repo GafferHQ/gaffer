@@ -35,7 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Node.h"
-#include "Gaffer/CompoundPlug.h"
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Executable.h"
 #include "Gaffer/Despatcher.h"
@@ -96,8 +96,8 @@ bool Executable::Task::operator < ( const Task &rhs ) const
 
 Executable::Executable( Node *node )
 {
-	node->addChild( new CompoundPlug( "requirements", Plug::In, Plug::AcceptsInputs ) );
-	node->addChild( new Plug( "requirement", Plug::Out, Plug::AcceptsInputs ) );
+	node->addChild( new ArrayPlug( "requirements", Plug::In, new Plug( "requirement0" ) ) );
+	node->addChild( new Plug( "requirement", Plug::Out ) );
 
 	CompoundPlugPtr despatcherPlug = new CompoundPlug( "despatcherParameters", Plug::In );
 	node->addChild( despatcherPlug );
@@ -115,21 +115,19 @@ Executable::~Executable()
 
 void Executable::defaultRequirements( const Node *node, const Context *context, Tasks &requirements )
 {
-	const CompoundPlug *rPlug = node->getChild< CompoundPlug >( "requirements" );
+	const ArrayPlug *rPlug = node->getChild<ArrayPlug>( "requirements" );
 	if ( !rPlug )
 	{
 		throw Exception( "No requirements plug found!" );
 	}
-	// \todo Use InputPlugIterator when it provides non-const access to the Plug
-	GraphComponent::ChildIterator cIt = rPlug->children().begin();
-	GraphComponent::ChildIterator cEnd = rPlug->children().end();
-	for ( ; cIt != cEnd; cIt++ )
+	
+	for( PlugIterator cIt( rPlug ); cIt != cIt.end(); ++cIt )
 	{
-		Plug *p = static_cast< const Plug * >(cIt->get())->source< Plug >();
-		if ( p )
+		Plug *p = (*cIt)->source<Plug>();
+		if( p != *cIt )
 		{
 			Node *n = p->node();
-			if ( n )
+			if( n )
 			{
 				Task newTask;
 				newTask.node = n;
@@ -142,7 +140,7 @@ void Executable::defaultRequirements( const Node *node, const Context *context, 
 
 bool Executable::acceptsRequirementsInput( const Plug *plug, const Plug *inputPlug )
 {
-	const CompoundPlug *ancestor = plug->ancestor<CompoundPlug>();
+	const ArrayPlug *ancestor = plug->ancestor<ArrayPlug>();
 	if ( ancestor && ancestor->getName() == "requirements" )
 	{
 		const Plug *p = inputPlug->source<Plug>();
