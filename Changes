@@ -1,3 +1,20 @@
+0.77.0
+======
+
+- Added alignment support and addSpacer method to ListContainer.
+- Fixed an update bug in the pixel value inspector (#401).
+- Added the pinned status to saved layouts (#444).
+- Added read-only mode to NodeUIs and NodeEditor (#414). Note that this currently interacts poorly with activators on RenderManShader node, and will be fixed in a future release.
+- Fixed read-only MultiLineTextWidget bugs.
+- Implemented tag reading in SceneReader node. Tags are represented as BoolData attributes called "user:tag:tagName" (#494).
+- Increased width of plug labels in NodeEditor (#98).
+- Improved the default layout to include SceneHierarchy and SceneInspector and Timeline editors.
+- Fixed TabbedContainer sizing when tabs not visible.
+- Fixed crashes when loading old scripts where coshader array parameters were stored as Compound plugs.
+- Fixed propagation of shader hashes through Boxes.
+- Allowed shaders to accept inputs from Boxes, even if the Box doesn't currently output a shader.
+- Changed internal image coordinate system to have 0,0 at bottom left (formerly at top left).
+
 0.76.0
 ======
 
