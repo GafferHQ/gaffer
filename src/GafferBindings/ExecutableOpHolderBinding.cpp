@@ -63,7 +63,8 @@ static IECore::OpPtr getOp( ExecutableOpHolder &n )
 
 void GafferBindings::bindExecutableOpHolder()
 {
-	typedef ParameterisedHolderClass<NodeClass<ExecutableOpHolder, ExecutableOpHolderWrapperPtr> > PythonType;
+	typedef NodeClass<ExecutableOpHolder, ExecutableOpHolderWrapperPtr> PythonType;
+	
 	PythonType executableOp;
 	executableOp
 		.def(
