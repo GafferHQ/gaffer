@@ -126,9 +126,13 @@ def __previousAvailable( menu ) :
 	return bool( __previous( script ) )
 
 ##########################################################################
-# Metadata and PlugValueWidgets
+# Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
 GafferUI.Metadata.registerPlugValue( Gaffer.Node, "despatcherParameters", "nodeUI:section", "Despatcher" )
+
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "requirements", None )
+
+GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "despatcherParameters", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )
