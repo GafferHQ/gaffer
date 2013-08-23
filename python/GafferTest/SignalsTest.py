@@ -340,6 +340,23 @@ class SignalsTest( unittest.TestCase ) :
 		s()
 		
 		self.assertEqual( values, [ "two", "one" ] )
+	
+	def testSlotQueries( self ) :
+	
+		def f() :
+			pass
+	
+		s = Gaffer.Signal0()
+		self.assertTrue( s.empty() )
+		self.assertEqual( s.num_slots(), 0 )
+		
+		c = s.connect( f )
+		self.assertFalse( s.empty() )
+		self.assertEqual( s.num_slots(), 1 )
+		
+		del c
+		self.assertTrue( s.empty() )
+		self.assertEqual( s.num_slots(), 0 )
 		
 if __name__ == "__main__":
 	unittest.main()
