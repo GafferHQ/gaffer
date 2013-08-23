@@ -60,6 +60,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 		
 		self.__gadgetWidget.getViewportGadget().setChild( graphGadget )
+		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
 		self.__frame( scriptNode.selection() )		
 
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
