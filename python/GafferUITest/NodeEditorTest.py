@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -94,6 +94,35 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 		del s["n"]
 		
 		self.assertEqual( ww(), None )
+	
+	def testNodeUIAccessor( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		
+		e = GafferUI.NodeEditor( s )
+		
+		self.assertEqual( e.nodeUI(), None )
+		
+		s.selection().add( s["n1"] )
+		
+		self.assertTrue( isinstance( e.nodeUI(), GafferUI.NodeUI ) )
+		self.assertTrue( e.nodeUI().node().isSame( s["n1"] ) )
+		
+		s.selection().add( s["n2"] )
+		
+		self.assertTrue( isinstance( e.nodeUI(), GafferUI.NodeUI ) )
+		self.assertTrue( e.nodeUI().node().isSame( s["n2"] ) )
+		
+		s.selection().remove( s["n2"] )
+		
+		self.assertTrue( isinstance( e.nodeUI(), GafferUI.NodeUI ) )
+		self.assertTrue( e.nodeUI().node().isSame( s["n1"] ) )
+		
+		s.selection().remove( s["n1"] )
+
+		self.assertEqual( e.nodeUI(), None )		
 		
 if __name__ == "__main__":
 	unittest.main()
