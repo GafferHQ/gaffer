@@ -104,6 +104,16 @@ class __NodeUI( GafferUI.StandardNodeUI ) :
 
 		self.__updateActivations()
 
+	def setReadOnly( self, readOnly ) :
+		
+		if readOnly == self.getReadOnly() :
+			return
+
+		GafferUI.StandardNodeUI.setReadOnly( self, readOnly )
+		
+		if not readOnly :
+			self.__updateActivations()
+
 	def __plugSet( self, plug ) :
 
 		if plug.parent().isSame( self.node()["parameters"] ) :
@@ -115,6 +125,10 @@ class __NodeUI( GafferUI.StandardNodeUI ) :
 			self.__updateActivations()
 
 	def __updateActivations( self ) :
+
+		if self.getReadOnly() :
+			# nothing should be activated, regardless
+			return
 
 		parametersPlug = self.node()["parameters"]
 
