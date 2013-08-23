@@ -56,6 +56,13 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		
 		self._updateFromSet()
 	
+	## Returns the NodeUI being used to represent the current node,
+	# or None if there is no current node.
+	def nodeUI( self ) :
+	
+		self._doPendingUpdate()
+		return self.__nodeUI
+	
 	def setReadOnly( self, readOnly ) :
 	
 		if readOnly == self.__readOnly :

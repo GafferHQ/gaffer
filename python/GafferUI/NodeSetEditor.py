@@ -117,9 +117,13 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		
 		return None
 	
-	## Called whenever the contents of getNodeSet() have changed - must be
-	# implemented by derived classes to update the UI appropriately. Implementations
-	# must first call the base class implementation.
+	## Called when the contents of getNodeSet() have changed and need to be
+	# reflected in the UI - so must be implemented by derived classes to update
+	# their UI appropriately. Updates are performed lazily to avoid unecessary
+	# work, but any pending updates can be performed immediately by calling
+	# _doPendingUpdate().
+	#
+	# All implementations must first call the base class implementation.
 	def _updateFromSet( self ) :
 	
 		# flush information needed for making the title -
@@ -128,6 +132,13 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		self.__titleFormat = None
 	
 		self.titleChangedSignal()( self )
+	
+	# May be called to ensure that _updateFromSet() is called
+	# immediately if a lazy update has been scheduled but not
+	# yet performed.
+	def _doPendingUpdate( self ) :
+	
+		self.__updateTimeout()
 		
 	## May be reimplemented by derived classes to specify a combination of
 	# strings and node names to use in building the title. The NodeSetEditor
@@ -203,5 +214,6 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 	
 	def __updateTimeout( self ) :
 		
-		self.__updateScheduled = False
-		self._updateFromSet()
+		if self.__updateScheduled :
+			self.__updateScheduled = False
+			self._updateFromSet()
