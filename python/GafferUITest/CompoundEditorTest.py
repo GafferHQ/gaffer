@@ -61,7 +61,21 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		
 		self.assertEqual( wc(), None )
 		self.assertEqual( we(), None )
-			
+	
+	def testEditorAddedSignal( self ) :
+	
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+		
+		cs = GafferTest.CapturingSlot( c.editorAddedSignal() )
+		
+		n = GafferUI.NodeEditor( s )
+		c.addEditor( n )
+		
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0] is c )
+		self.assertTrue( cs[0][1] is n )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
