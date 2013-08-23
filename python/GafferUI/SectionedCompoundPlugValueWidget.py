@@ -78,6 +78,16 @@ class SectionedCompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				return result
 				
 		return None
+	
+	def setReadOnly( self, readOnly ) :
+	
+		if readOnly == self.getReadOnly() :
+			return
+			
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
+		
+		for section in self.__column :
+			section.setReadOnly( readOnly )
 			
 	def _updateFromPlug( self ) :
 	

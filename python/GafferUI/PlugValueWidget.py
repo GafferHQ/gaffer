@@ -416,6 +416,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 	def __dragEnter( self, widget, event ) :
 
+		if self.getReadOnly() :
+			return False
+
 		if isinstance( event.data, Gaffer.Plug ) :
 			if self.getPlug().acceptsInput( event.data ) :
 				self.setHighlighted( True )
