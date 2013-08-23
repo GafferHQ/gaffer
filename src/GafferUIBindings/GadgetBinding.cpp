@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -109,6 +109,10 @@ void GafferUIBindings::bindGadget()
 		.def( "dragEndSignal", &Gadget::dragEndSignal, return_internal_reference<1>() )
 		.def( "keyPressSignal", &Gadget::keyPressSignal, return_internal_reference<1>() )
 		.def( "keyReleaseSignal", &Gadget::keyReleaseSignal, return_internal_reference<1>() )
+		.def( "idleSignal", &Gadget::idleSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "idleSignal" )
+		.def( "_idleSignalAccessedSignal", &Gadget::idleSignalAccessedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "_idleSignalAccessedSignal" )
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 	
@@ -118,5 +122,6 @@ void GafferUIBindings::bindGadget()
 	SignalBinder<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, CatchingSlotCaller<Gadget::DragBeginSignal> >::bind( "DragBeginSignal" );
 	SignalBinder<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, CatchingSlotCaller<Gadget::DragDropSignal> >::bind( "DragDropSignal" );
 	SignalBinder<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, CatchingSlotCaller<Gadget::EnterLeaveSignal> >::bind( "EnterLeaveSignal" );	
+	SignalBinder<Gadget::IdleSignal>::bind( "IdleSignal" );	
 
 }
