@@ -556,7 +556,7 @@ pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
 
 pythonLinkFlags = ""
 try :
-	pythonLinkFlags = subprocess.Popen( [ "python-config", "--ldflags" ], env=depEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().strip()
+	pythonLinkFlags = subprocess.Popen( [ "python-config", "--ldflags" ], env=depEnv["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
 except OSError :
 	# this should only occur when building gaffer without an integrated python build, and on linux
 	# at least, it's ok to ignore the warning. basically this is just here for ie's funky setup.
@@ -885,7 +885,7 @@ libraries = {
 	
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "GLEW$GLEW_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUI", "GafferImageUI" ],
