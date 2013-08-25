@@ -241,6 +241,24 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_LLVM", "Set this to build LLVM.", False )
+)
+options.Add(
+	"LLVM_SRC_DIR",
+	"The location of the OSL source to be used if BUILD_DEPENDENCY_LLVM is specified.",
+	"$DEPENDENCIES_SRC_DIR/llvm-3.2.src",
+)
+
+options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_OSL", "Set this to build OSL.", False )
+)
+options.Add(
+	"OSL_SRC_DIR",
+	"The location of the OSL source to be used if BUILD_DEPENDENCY_OSL is specified.",
+	"$DEPENDENCIES_SRC_DIR/OpenShadingLanguage-Release-1.3.3",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_HDF5", "Set this to build HDF5.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -556,7 +574,7 @@ pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
 
 pythonLinkFlags = ""
 try :
-	pythonLinkFlags = subprocess.Popen( [ "python-config", "--ldflags" ], env=depEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().strip()
+	pythonLinkFlags = subprocess.Popen( [ "python-config", "--ldflags" ], env=depEnv["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
 except OSError :
 	# this should only occur when building gaffer without an integrated python build, and on linux
 	# at least, it's ok to ignore the warning. basically this is just here for ie's funky setup.
@@ -621,7 +639,19 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 	else :
 		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/linux64/* $BUILD_DIR" )
 		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.so $BUILD_DIR/lib/libOpenImageIO-1.so" )
-	  
+
+if depEnv["BUILD_DEPENDENCY_LLVM"] :
+	# removing MACOSX_DEPLOYMENT_TARGET because it causes rpath link error
+	# need to put matching clang src code in $LLVM_SRC_DIR/tools/clang
+	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env MACOSX_DEPLOYMENT_TARGET="" REQUIRES_RTTI=1 make VERBOSE=1 && make install" )
+
+if depEnv["BUILD_DEPENDENCY_OSL"] :
+	# OPENIMAGEIO_NAMESPACE
+	# had to edit src/cmake/oiio.cmake to give libOpenImageIO-1 as the name for the OIIO library
+	runCommand( "cd $OSL_SRC_DIR && make nuke && make MY_CMAKE_FLAGS='-DENABLERTTI=1' ILMBASE_HOME=$BUILD_DIR OPENIMAGEIOHOME=$BUILD_DIR LLVM_DIRECTORY=$BUILD_DIR VERBOSE=1 USE_BOOST_WAVE=1" )
+	oslPlatform = "macosx" if depEnv["PLATFORM"]=="darwin" else "linux64"
+	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/* $BUILD_DIR" )
+
 if depEnv["BUILD_DEPENDENCY_HDF5"] :
 	runCommand( "cd $HDF5_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-threadsafe --with-pthread=/usr/include && make clean && make -j 4 && make install" )
 
@@ -885,7 +915,7 @@ libraries = {
 	
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "GLEW$GLEW_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUI", "GafferImageUI" ],
