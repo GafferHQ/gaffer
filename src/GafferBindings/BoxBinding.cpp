@@ -78,7 +78,10 @@ static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
 
 void bindBox()
 {
-	NodeClass<Box>()
+	typedef NodeWrapper<Box> BoxWrapper;
+	IE_CORE_DECLAREPTR( BoxWrapper );
+	
+	NodeClass<Box, BoxWrapperPtr>()
 		.def( "canPromotePlug", &Box::canPromotePlug )
 		.def( "promotePlug", &promotePlug )
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
