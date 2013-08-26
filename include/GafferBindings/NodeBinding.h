@@ -89,9 +89,6 @@ class NodeWrapper : public GraphComponentWrapper<T>
 	
 };
 
-#define GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME ) \
-	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )
-
 class NodeSerialiser : public Serialisation::Serialiser
 {
 

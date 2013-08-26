@@ -129,9 +129,6 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 	
 };
 
-#define GAFFERBINDINGS_DEFDEPENDENCYNODEWRAPPERFNS( CLASSNAME ) \
-	GAFFERBINDINGS_DEFNODEWRAPPERFNS( CLASSNAME )
-
 } // namespace GafferBindings
 
 #include "GafferBindings/DependencyNodeBinding.inl"
