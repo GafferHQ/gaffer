@@ -56,6 +56,38 @@ GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.ExecuteUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
+# Add help menu
+def launchGoogleGroup( menu ):
+		url = r'https://groups.google.com/forum/#!forum/gaffer-dev'
+		GafferUI.ShowURL.showURL( url )
+
+#TODO - scour an examples directory for .gfr files
+#TODO - ..then build a menu with items to launch each example
+def helpExamples( menu ):
+	result = IECore.MenuDefinition()
+	return result
+
+for menuItem, fileName in [
+		( "/Help/User Guide", "$GAFFER_ROOT/doc/GafferUserGuide.pdf" ),
+		( "/Help/Node Reference", "$GAFFER_ROOT/doc/GafferNodeReference.pdf" ),
+		( "/Help/Licenses", "$GAFFER_ROOT/doc/GafferLicenses.pdf" ),
+	] :
+	
+	fileName = os.path.expandvars( fileName )
+	scriptWindowMenu.append(
+		menuItem,
+		{
+			"command" : IECore.curry( GafferUI.showURL, fileName ),
+			"active" : os.path.exists( fileName ),
+		}
+	)
+
+scriptWindowMenu.append( "/Help/DocsDivider", 		{ "divider" : True } )
+scriptWindowMenu.append( "/Help/Developer Discussion", { "command" : launchGoogleGroup } )
+scriptWindowMenu.append( "/Help/DevDivider", 		{ "divider" : True } )
+scriptWindowMenu.append( "/Help/Examples",			{ "subMenu" : helpExamples } )
+
+
 ## Node creation menu
 ###########################################################################
 
