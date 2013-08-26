@@ -91,11 +91,15 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		with IECore.IgnoredExceptions( KeyError ) :
 			uiTypeHint = parameter.userData()["UI"]["typeHint"].value
 	
-		parameterHierarchy = IECore.RunTimeTyped.baseTypeIds( parameter.typeId() )
-		for typeId in [ parameter.typeId() ] + parameterHierarchy :	
-			creator = cls.__typesToCreators.get( ( typeId, uiTypeHint ), None )
-			if creator is not None :
-				return creator( parameterHandler )
+		parameterHierarchy = [ parameter.typeId() ] + IECore.RunTimeTyped.baseTypeIds( parameter.typeId() )
+		
+		if uiTypeHint is not None :
+			for typeId in parameterHierarchy :	
+				creator = cls.__typesToCreators.get( ( typeId, uiTypeHint ), None )
+				if creator is not None :
+					return creator( parameterHandler )
+			
+		for typeId in parameterHierarchy :	
 			creator = cls.__typesToCreators.get( ( typeId, None ), None )
 			if creator is not None :
 				return creator( parameterHandler )	
