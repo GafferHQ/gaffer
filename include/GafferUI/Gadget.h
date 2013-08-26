@@ -50,6 +50,14 @@
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/DragDropEvent.h"
 
+namespace GafferUIBindings
+{
+
+// forward declaration for friendship
+void bindGadget();
+
+}
+
 namespace GafferUI
 {
 
@@ -206,6 +214,12 @@ class Gadget : public Gaffer::GraphComponent
 		KeySignal &keyPressSignal();
 		/// The signal triggered by a key release event.
 		KeySignal &keyReleaseSignal();
+		
+		/// A signal emitted when the host event loop is idle. Connections
+		/// to this should be limited in duration because idle events consume
+		/// CPU when the program would otherwise be inactive.
+		typedef boost::signal<void ()> IdleSignal; 
+		static IdleSignal &idleSignal();
 		//@}
 		
 	protected :
@@ -248,6 +262,12 @@ class Gadget : public Gaffer::GraphComponent
 		KeySignal m_keyReleaseSignal;
 		
 		GLuint m_glName;
+
+		// used by the bindings to know when the idleSignal()
+		// has been accessed, and only use an idle timer
+		// when absolutely necessary (when slots are connected).
+		static IdleSignal &idleSignalAccessedSignal();
+		friend void GafferUIBindings::bindGadget();
 
 };
 

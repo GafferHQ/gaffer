@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_VIEWPORTGADGET_H
 #define GAFFERUI_VIEWPORTGADGET_H
 
+#include "boost/chrono.hpp"
+
 #include "IECore/Camera.h"
 #include "IECore/CameraController.h"
 
@@ -75,6 +77,11 @@ class ViewportGadget : public IndividualContainer
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );
+		
+		/// When drag tracking is enabled, the camera will automatically
+		/// move to follow drags that would otherwise be exiting the viewport.
+		void setDragTracking( bool dragTracking );
+		bool getDragTracking() const;
 		
 		/// Fills the passed vector with all the Gadgets below the specified position.
 		/// The first Gadget in the list will be the frontmost, determined either by the
@@ -169,6 +176,9 @@ class ViewportGadget : public IndividualContainer
 
 		GadgetPtr updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event );
 
+		void trackDrag( const DragDropEvent &event );
+		void trackDragIdle();
+		
 		template<typename Event, typename Signal>
 		typename Signal::result_type dispatchEvent( std::vector<GadgetPtr> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr &handler );
 		
@@ -180,6 +190,12 @@ class ViewportGadget : public IndividualContainer
 		
 		GadgetPtr m_lastButtonPressGadget;
 		GadgetPtr m_gadgetUnderMouse;
+		
+		bool m_dragTracking;
+		boost::signals::connection m_dragTrackingIdleConnection;
+		DragDropEvent m_dragTrackingEvent;
+		Imath::V2f m_dragTrackingVelocity;
+		boost::chrono::high_resolution_clock::time_point m_dragTrackingTime;
 						
 };
 

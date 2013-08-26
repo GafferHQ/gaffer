@@ -50,6 +50,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/Pointer.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -206,11 +207,25 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
 	renderRequestSignal()( this );
+	if( event.buttons == ButtonEvent::Middle )
+	{
+		GafferUI::Pointer::setFromFile( "plug.png" );
+	}
 	return plug();
 }
 
 bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
+	if( event.buttons != DragDropEvent::Left )
+	{
+		// we only accept drags with the left button, so as to
+		// allow the middle button to be used for dragging the
+		// plug out of the node graph (and into places like the
+		// script editor), rather than dragging a connection
+		// around within it.
+		return false;
+	}
+
 	if( event.sourceGadget == this )
 	{
 		m_draggingConnection = true;
@@ -306,6 +321,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 
 bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
+	GafferUI::Pointer::set( NULL );
 	m_draggingConnection = false;
 	m_hovering = false;
 	renderRequestSignal()( this );
