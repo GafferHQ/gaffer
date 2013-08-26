@@ -1,3 +1,38 @@
+0.78.0
+======
+
+API
+---
+
+- Added python bindings for signal::num_slots and signal::empty().
+- Added Gadget::idleSignal(). This allows Gadgets to do things during the idle times of the host event loop.
+- Added NodeEditor.nodeUI() method.
+- Added CompoundEditor.editorAddedSignal().
+- Enabled subclassing of Box from Python.
+- Made RenderManShaderUI public.
+
+Core
+---
+
+- Fixed serialisation of ExecutableOpHolder.
+- Added dynamic requirement plugs to Executable.
+- 
+
+UI
+--
+
+- Added middle mouse drag for dragging nodules to the script editor without dragging a connection.
+- Further increased width of plug labels in NodeEditor (#98).
+- Fixed read-only RenderManShader UIs.
+- Fixed bug whereby read-only PlugValueWidgets were accepting drags.
+- Added Help menu.
+- Added NodeGraph auto-scrolling.
+
+OS X
+----
+
+- Fixed GafferImageUI linking.
+
 0.77.0
 ======
 
