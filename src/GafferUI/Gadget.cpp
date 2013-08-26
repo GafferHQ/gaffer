@@ -281,3 +281,16 @@ Gadget::KeySignal &Gadget::keyReleaseSignal()
 {
 	return m_keyReleaseSignal;
 }
+
+Gadget::IdleSignal &Gadget::idleSignal()
+{
+	static IdleSignal g_idleSignal;
+	idleSignalAccessedSignal()();
+	return g_idleSignal;
+}
+
+Gadget::IdleSignal &Gadget::idleSignalAccessedSignal()
+{
+	static IdleSignal g_idleSignalAccessedSignal;
+	return g_idleSignalAccessedSignal;
+}

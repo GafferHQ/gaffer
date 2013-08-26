@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -185,23 +185,14 @@ class EventLoop() :
 		
 		assert( callback not in cls.__idleCallbacks )
 		cls.__idleCallbacks.append( callback )
-		
-		if cls.__idleTimer is None :
-			cls.__idleTimer = QtCore.QTimer( cls.__qtApplication )
-			cls.__idleTimer.timeout.connect( cls.__qtIdleCallback )
-		
-		if not cls.__idleTimer.isActive() :
-			cls.__idleTimer.start()
-	
+		cls.__ensureIdleTimer()
+			
 	## Removes an idle callback previously created with addIdleCallback().
 	@classmethod
 	def removeIdleCallback( cls, callback ) :
 	
 		cls.__idleCallbacks.remove( callback )
-		
-		if len( cls.__idleCallbacks )==0 :
-			cls.__idleTimer.stop()
-	
+			
 	## Widgets may only be manipulated on the thread where mainEventLoop() is running. It
 	# is common to want to perform some background processing on a secondary thread, and
 	# to update the UI during processing or upon completion. This function can be used from
@@ -226,11 +217,23 @@ class EventLoop() :
 		else :
 			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( QtCore.QEvent.Type( _UIThreadExecutor.executeEventType ) ) )
 			return None
+	
+	@classmethod
+	def __ensureIdleTimer( cls ) :
+	
+		if cls.__idleTimer is None :
+			cls.__idleTimer = QtCore.QTimer( cls.__qtApplication )
+			cls.__idleTimer.timeout.connect( cls.__qtIdleCallback )
+		
+		if not cls.__idleTimer.isActive() :
+			cls.__idleTimer.start()
 			
 	# This is a staticmethod rather than a classmethod because PySide 1.0.5
 	# doesn't support classmethods as slots.
 	@staticmethod
 	def __qtIdleCallback() :
+	
+		GafferUI.Gadget.idleSignal()()
 	
 		toRemove = []
 		for c in EventLoop.__idleCallbacks :
@@ -246,7 +249,15 @@ class EventLoop() :
 				
 		for c in toRemove :
 			EventLoop.removeIdleCallback( c )
-				
+		
+		if len( EventLoop.__idleCallbacks )==0 and GafferUI.Gadget.idleSignal().empty() :
+			EventLoop.__idleTimer.stop()
+	
+	@classmethod
+	def _gadgetIdleSignalAccessed( cls ) :
+	
+		cls.__ensureIdleTimer()
+		
 	def __pumpThreadFn( self ) :
 	
 		import maya.utils
@@ -260,6 +271,8 @@ class EventLoop() :
 		for thrust in range( 0, thrusts ) :
 			self.__qtEventLoop.processEvents()
 
+_gadgetIdleSignalAccessedConnection = GafferUI.Gadget._idleSignalAccessedSignal().connect( EventLoop._gadgetIdleSignalAccessed )
+		
 class _UIThreadExecutor( QtCore.QObject ) :
 
 	executeEventType = QtCore.QEvent.registerEventType()
