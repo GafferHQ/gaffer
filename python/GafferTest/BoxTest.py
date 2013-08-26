@@ -470,6 +470,24 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( b["n2"] in s.selection() )
 		self.assertFalse( n1 in s.selection() )
 		self.assertEqual( len( s.selection() ), 1 )
+	
+	def testDerivingInPython( self ) :
+	
+		class DerivedBox( Gaffer.Box ) :
+		
+			def __init__( self, name = "DerivedBox" ) :
+			
+				Gaffer.Box.__init__( self, name )
+		
+		IECore.registerRunTimeTyped( DerivedBox )
+		
+		# check that the typeid can be seen from the C++ side.
+		
+		b = DerivedBox()
+		b["c"] = Gaffer.Node()
+		
+		a = b["c"].ancestor( DerivedBox.staticTypeId() )
+		self.assertTrue( a.isSame( b ) )
 		
 if __name__ == "__main__":
 	unittest.main()
