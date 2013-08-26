@@ -93,7 +93,7 @@ GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), 
 # parameter uis using a plugSet callback.
 ##########################################################################
 
-class __NodeUI( GafferUI.StandardNodeUI ) :
+class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 
 	def __init__( self, node, displayMode = None, **kw ) :
 
@@ -187,8 +187,8 @@ class __NodeUI( GafferUI.StandardNodeUI ) :
 					if plugWidget is not None :
 						plugWidget.labelPlugValueWidget().setReadOnly( not active )
 				
-GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader.staticTypeId(), __NodeUI )
-GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight.staticTypeId(), __NodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader.staticTypeId(), RenderManShaderUI )
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight.staticTypeId(), RenderManShaderUI )
 
 ##########################################################################
 # PlugValueWidget for the "parameters" compound. This is defined in order
