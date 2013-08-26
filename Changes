@@ -27,6 +27,7 @@ UI
 - Fixed bug whereby read-only PlugValueWidgets were accepting drags.
 - Added Help menu.
 - Added NodeGraph auto-scrolling.
+- Added support for "presets" parameter type hint.
 
 OS X
 ----
