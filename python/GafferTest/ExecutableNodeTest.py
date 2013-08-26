@@ -129,10 +129,8 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		n = ExecutableNodeTest.MyNode(True)
 		n2 = ExecutableNodeTest.MyNode(True)
 
-		# make n3 requiring n
-		r1 = Gaffer.Plug( name = "r1" )
-		n2['requirements'].addChild( r1 )
-		r1.setInput( n['requirement'] )
+		# make n2 require n
+		n2["requirements"][0].setInput( n['requirement'] )
 
 		self.assertEqual( n.executionRequirements(c1), [] )
 		self.assertEqual( n2.executionRequirements(c1), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
