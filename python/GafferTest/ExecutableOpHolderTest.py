@@ -139,7 +139,20 @@ class ExecutableOpHolderTest( unittest.TestCase ) :
 		self.assertEqual( n2Requirements[1], t2 )
 		self.assertEqual( len(set(n2.executionRequirements(c)).difference([ t1, t2])), 0 )
 		self.assertEqual( n1.executionRequirements(c), [ Gaffer.ExecutableNode.Task(n2,c) ] )
-				
+	
+	def testSerialise( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.ExecutableOpHolder()
+	
+		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		s["n"].setOp( *opSpec )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s["n"]["parameters"].keys(), s2["n"]["parameters"].keys() )
+			
 if __name__ == "__main__":
 	unittest.main()
 	
