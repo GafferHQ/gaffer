@@ -518,7 +518,7 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 		
 		// we don't actually do the scrolling in this function - instead we
 		// just calculate the appropriate velocity and then ensure that 
-		// autoScrollIdle will be called to apply the scrolling on idle events.
+		// trackDragIdle will be called to apply the scrolling on idle events.
 		// this allows the scrolling to happen even when the mouse isn't moving.
 		
 		const V3f direction = closestPointOnBox( event.line.p0, viewportBox ) - event.line.p0;
