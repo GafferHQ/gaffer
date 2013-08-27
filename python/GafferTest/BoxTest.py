@@ -489,6 +489,17 @@ class BoxTest( unittest.TestCase ) :
 		a = b["c"].ancestor( DerivedBox.staticTypeId() )
 		self.assertTrue( a.isSame( b ) )
 		
+		# check that adding the node to a script and getting
+		# it back gives the same object, with the correct
+		# typeids etc.
+		
+		s = Gaffer.ScriptNode()
+		s["b"] = b
+		
+		self.assertTrue( s["b"] is b )
+		self.assertEqual( s["b"].typeId(), DerivedBox.staticTypeId() )
+		self.assertEqual( s["b"].typeName(), DerivedBox.staticTypeName() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
