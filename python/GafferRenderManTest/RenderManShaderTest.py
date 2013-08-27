@@ -1308,6 +1308,28 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		shaderNode1["parameters"]["coshaderParameter"].setInput( b["in"] )
 		
 		shaderNode2["parameters"]["coshaderParameter"].setInput( b["out"] )
+	
+	def testUnconnectedCustomBoxInput( self ) :
+	
+		class CustomBox( Gaffer.Box ) :
+		
+			def __init__( self, name = "CustomBox" ) :
+			
+				Gaffer.Box.__init__( self, name )
+				
+		IECore.registerRunTimeTyped( CustomBox )
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		
+		b = CustomBox()
+		b["s"] = GafferRenderMan.RenderManShader()
+		b["s"].loadShader( shader )
+		
+		b["in"] = b["s"]["parameters"]["coshaderParameter"].createCounterpart( "in", Gaffer.Plug.Direction.In )
+		
+		b["s"]["parameters"]["coshaderParameter"].setInput( b["in"] )
+		
+		self.assertTrue( b["s"]["parameters"]["coshaderParameter"].getInput().isSame( b["in"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

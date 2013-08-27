@@ -142,7 +142,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 		{
 		
 			const Node* sourceNode = inputPlug->node();
-			if( sourceNode && sourceNode->typeId() == Box::staticTypeId() )
+			if( runTimeCast<const Box>( sourceNode ) )
 			{
 				// looks like we're exposing this input via a box, or
 				// connecting it to an unconnected output on a box. At
