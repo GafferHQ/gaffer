@@ -38,8 +38,6 @@
 #ifndef GAFFERUI_VIEWPORTGADGET_H
 #define GAFFERUI_VIEWPORTGADGET_H
 
-#include "boost/chrono.hpp"
-
 #include "IECore/Camera.h"
 #include "IECore/CameraController.h"
 
@@ -195,7 +193,7 @@ class ViewportGadget : public IndividualContainer
 		boost::signals::connection m_dragTrackingIdleConnection;
 		DragDropEvent m_dragTrackingEvent;
 		Imath::V2f m_dragTrackingVelocity;
-		boost::chrono::high_resolution_clock::time_point m_dragTrackingTime;
+		double m_dragTrackingTime;
 						
 };
 

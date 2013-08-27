@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include <sys/time.h>
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
@@ -497,6 +499,13 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	return false;
 }
 
+static double currentTime()
+{
+	timeval t;
+	gettimeofday( &t, NULL ) ;
+	return (double)t.tv_sec + (double)t.tv_usec / 1000000.0;
+}
+
 void ViewportGadget::trackDrag( const DragDropEvent &event )
 {
 	
@@ -537,7 +546,7 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 		
 		if( !m_dragTrackingIdleConnection.connected() )
 		{
-			m_dragTrackingTime = boost::chrono::high_resolution_clock::now();
+			m_dragTrackingTime = currentTime();
 			m_dragTrackingIdleConnection = idleSignal().connect( boost::bind( &ViewportGadget::trackDragIdle, this ) );
 		}
 	}
@@ -547,11 +556,11 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 
 void ViewportGadget::trackDragIdle()
 {	
-	boost::chrono::high_resolution_clock::time_point now = boost::chrono::high_resolution_clock::now();
-	boost::chrono::duration<float> duration = now - m_dragTrackingTime;
+	double now = currentTime();
+	float duration = (float)(now - m_dragTrackingTime);
 
 	m_cameraController.motionStart( CameraController::Track, V2f( 0 ) );
-	m_cameraController.motionEnd( m_dragTrackingVelocity * duration.count() * 20.0f );
+	m_cameraController.motionEnd( m_dragTrackingVelocity * duration * 20.0f );
 	
 	m_dragTrackingTime = now;
 	
