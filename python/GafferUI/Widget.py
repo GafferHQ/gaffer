@@ -285,6 +285,17 @@ class Widget( object ) :
 				
 		return None
 	
+	## Returns true if this Widget is an ancestor (or direct parent) of other.
+	def isAncestorOf( self, other ) :
+	
+		while other :
+			parent = other.parent()
+			if parent is self :
+				return True
+			other = parent
+			
+		return False
+	
 	## \deprecated Use bound().size() instead.	
 	def size( self ) :
 	
