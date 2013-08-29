@@ -13,7 +13,7 @@ Add the following location within the Gaffer directory to your `$PATH` environme
 To use *3delight* with Gaffer you will need to:
 
 * Ensure `<3DELIGHT_INSTALL_PATH>/bin` is in your `$PATH`.
-* Set the `$DELIGHT` environment variable to `<3DELIGHT_INSTALL_PATH>`.
+* Set the `$DELIGHT` environment variable to point to `<3DELIGHT_INSTALL_PATH>`.
 * Add `<3DELIGHT_INSTALL_PATH>/shaders` to the `$DL_SHADERS_PATH` environment variable.
 * Add `<3DELIGHT_INSTALL_PATH>/displays` to the `$DL_DISPLAYS_PATH` environment variable.
 * Add `<3DELIGHT_INSTALL_PATH>/lib` to the `$LD_LIBRARY_PATH` environment variable.
