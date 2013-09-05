@@ -173,6 +173,13 @@ script['MySceneReaderNode']['fileName'].setValue( '/path/to/my/cache.scc' )
 script['MyStandardOptionsNode']['options']['renderResolution']['value']['x'].setValue( 2048 )
 ------------------------------------
 
+* Connect one node to another (in this case connecting the 'out' plug of myNodeA to the 'in' plug of myNodeB)
+[source, python]
+------------------------------------
+myNodeB['in'].setInput(myNodeA['out'])
+------------------------------------
+
+
 
 === RenderMan Shader Writing anchor:appendices_rendermanShaderWriting[]
 
