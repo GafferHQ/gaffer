@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,24 +34,18 @@
 #  
 ##########################################################################
 
-import GafferUI
+from __future__ import with_statement
+
+import IECore
+
+import Gaffer
 import GafferScene
 
+class CustomAttributes( GafferScene.Attributes ) :
 
-GafferUI.Metadata.registerNodeDescription(
-
-GafferScene.Options,
-
-"""The base type for nodes that apply options to the scene. 
-""",
-
-"options",
-"""The options to be applied - arbitrary numbers of user defined options may be added
-as children of this plug via the user interface, or using the CompoundDataPlug API via
-python.""",
-
-)
+	def __init__( self, name="CustomAttributes" ) :
+	
+		GafferScene.Attributes.__init__( self, name )
 
 
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Options.staticTypeId(), "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
+IECore.registerRunTimeTyped( CustomAttributes, typeName = "GafferScene::CustomAttributes" )

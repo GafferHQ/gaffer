@@ -42,3 +42,5 @@ from _GafferScene import *
 from ScenePath import ScenePath
 from ScriptProcedural import ScriptProcedural
 from AlembicPath import AlembicPath
+from CustomAttributes import CustomAttributes
+from CustomOptions import CustomOptions
