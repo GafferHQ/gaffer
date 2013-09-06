@@ -9,19 +9,19 @@ The framework with which the Gaffer tool is built is also available for rapid de
 
 
 === Design Overview anchor:introduction_designOverview[]
+////
 !!!!What is the core design philosophy of Gaffer and how should users approach it?
 
 .......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....!!!!
 
 !!!!script -> scene   defines    which gaffer then generates on demand!!!!
+////
 
-There are two key aspects to the design of Gaffer that are important to grasp in order to get the output you are looking for from the program.
+There are two key aspects to the design of Gaffer that are important to grasp in order to work with the software effectively.
 
-* The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes. This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
+* The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes.  This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
 
-Secondly, it can be useful to understand the deferred evaluation aspect of Gaffer. +
-!!!!John?!!!!
-
+* Secondly, it can be useful to understand the deferred evaluation aspect of Gaffer.
 
 
 === Functionality anchor:introduction_functionality[]
@@ -61,7 +61,7 @@ The user guide is loosely structured in three sections, starting with an overvie
 [Note]
 In addition to the information available in the user guide, Gaffer features extensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
 
-As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user.  The node listings contain a description of each node's purpose, alongside details of all the plugs available on that node.  This NodeReference (found in `$GAFFER_ROOT/doc/GafferNodeReference.pdf`) can be used as a guide to the tools that can be employed within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
+As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user.  The entry for each node contains a description of the node's purpose, alongside details of all the plugs available on that node.  This Node Reference document (found in `$GAFFER_ROOT/doc/GafferNodeReference.pdf`) can be used as a guide to the tools available for use within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
 
 
 ==== Terminology 

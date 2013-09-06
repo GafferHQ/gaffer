@@ -238,7 +238,6 @@ When adding the individual attributes/options to a node, ensure you select the c
 
 ==== Syntax
 In the general form, the syntax for specifying an attribute or option is:
-[source]
 ------------------------------------
 <RENDERER>:<PREFIX>:<NAME>
 ------------------------------------

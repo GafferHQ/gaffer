@@ -1,0 +1,49 @@
+import Gaffer
+import GafferImage
+import GafferScene
+import IECore
+
+__children = {}
+
+parent["frameRange"]["start"].setValue( 1 )
+parent["frameRange"]["end"].setValue( 100 )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectName", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["name"].setValue( 'project:name' )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["value"].setValue( 'default' )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectRootDirectory", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["name"].setValue( 'project:rootDirectory' )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["value"].setValue( '$HOME/gaffer/projects/${project:name}' )
+__children["SceneReader"] = GafferScene.SceneReader( "SceneReader" )
+parent.addChild( __children["SceneReader"] )
+__children["SceneReader"]["enabled"].setValue( True )
+__children["SceneReader"]["fileName"].setValue( '/${GAFFER_ROOT}/doc/exampleData/sierpinskiPyramid_001.scc' )
+__children["SceneReader"]["refreshCount"].setValue( 5 )
+__children["SceneReader"].addChild( Gaffer.V2fPlug( "__uiPosition", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+__children["SceneReader"]["__uiPosition"]["x"].setValue( 30.0990047454834 )
+__children["SceneReader"]["__uiPosition"]["y"].setValue( 8.950494766235352 )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format(), flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, )
+parent.addChild( __children["defaultFormat"] )
+GafferImage.Format.registerFormat( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1023, 777 ) ), 1.000 ), "1K Super 35 (full-ap) 1024x778 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 2047, 1555 ) ), 1.000 ), "2K Super 35 (full-ap) 2048x1556 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 4095, 3111 ) ), 1.000 ), "4K Super 35 (full-ap) 4096x3112 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 679, 464 ) ), 1.000 ), "680x465 1.000" )
+GafferImage.Format.registerFormat( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1919, 1079 ) ), 1.000 ), "HD 1080p 1920x1080 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 639, 479 ) ), 1.000 ), "PC Video (640x480) 640x480 1" )
+__children["defaultFormat"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1919, 1079 ) ), 1.000 ) )
+__children["ImageReader"] = GafferImage.ImageReader( "ImageReader" )
+parent.addChild( __children["ImageReader"] )
+__children["ImageReader"]["enabled"].setValue( True )
+__children["ImageReader"]["fileName"].setValue( '/${GAFFER_ROOT}/doc/exampleData/kittens.png' )
+__children["ImageReader"].addChild( Gaffer.V2fPlug( "__uiPosition", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+__children["ImageReader"]["__uiPosition"]["x"].setValue( 30.257431030273438 )
+__children["ImageReader"]["__uiPosition"]["y"].setValue( -5.148512840270996 )
+parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+
+del __children
+

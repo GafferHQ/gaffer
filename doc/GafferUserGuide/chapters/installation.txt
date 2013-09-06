@@ -1,7 +1,7 @@
 == Installation anchor:installation_installation[]
 
 === Linux anchor:installation_linux[]
-To install a prebuilt package, simply download and untar the bundle. The resulting directory will contain the application ready to run.
+To install a prebuilt package, simply download and untar the latest bundle from +++<a href="https://github.com/ImageEngine/gaffer/releases">github </a>+++. The resulting directory will contain the complete application ready to run.
 
 Add the following location within the Gaffer directory to your `$PATH` environment variable (substituting `<GAFFER_INSTALL_PATH>` with the path to the unpacked directory):
 
@@ -57,8 +57,7 @@ And this is an example of using flags (in this case opening the specified script
 
 
 === Customising anchor:installation_customising[]
-Gaffer exposes a number of user configurable preferences, allowing individuals to set various behaviours to suit their current workflow.
-!!!!Link out to preferences here!!!!
+Gaffer exposes a number of user configurable preferences, allowing individuals to set various behaviours to suit their current workflow. These are available from by navigating the main menu to launch _Gaffer -> Preferences..._
 
 Additionally, elements of the user inferface can be arranged and saved as *layouts*. Once saved these layouts can be restored at any time, or can be set to be the default gui arrangement. For more information on manipulating and managing layouts see the xref:interface_layouts[Interface chapter].
 
