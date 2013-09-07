@@ -3,7 +3,7 @@
 */
 .highlight .hll { background-color: #ffffcc }
 /*.highlight  { background: #f4f4f4; }*/ /*we don't need extra highlighting*/ 
-.highlight .c { color: #008888; font-style: italic } /* Comment */
+.highlight .c { color: #888888; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
 .highlight .k { color: #AA22FF; font-weight: normal } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
