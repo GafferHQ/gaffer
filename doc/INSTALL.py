@@ -106,9 +106,10 @@ class installationTool():
 			
 			self.logit('Running any dynamic content generation scripts...')
 			prescripts_dir = os.path.join( build_root, 'GafferNodeReference', 'dynamicContentGenerators' )
-			for script in os.listdir( prescripts_dir  ):
-				self.logit( script )
-				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
+			if os.path.exists(prescripts_dir):
+			    for script in os.listdir( prescripts_dir  ):
+				    self.logit( script )
+				    os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
 			
 			
 			if self.opts['runasciidoc_flag']:
@@ -129,9 +130,10 @@ class installationTool():
 			
 			self.logit('Running any dynamic content generation scripts...')
 			prescripts_dir = os.path.join( build_root, 'GafferLicenses', 'dynamicContentGenerators' )
-			for script in os.listdir( prescripts_dir  ):
-				self.logit( script )
-				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
+			if os.path.exists(prescripts_dir):
+			    for script in os.listdir( prescripts_dir  ):
+				    self.logit( script )
+				    os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
 			
 			
 			if self.opts['runasciidoc_flag']:
@@ -152,9 +154,10 @@ class installationTool():
 			
 			self.logit('Running any dynamic content generation scripts...')
 			prescripts_dir = os.path.join( build_root, 'GafferUserGuide', 'dynamicContentGenerators' )
-			for script in os.listdir( prescripts_dir  ):
-				self.logit( script )
-				os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
+			if os.path.exists(prescripts_dir):
+			    for script in os.listdir( prescripts_dir  ):
+				    self.logit( script )
+				    os.system( gp_cmd + ' ' + os.path.join( prescripts_dir, script ))
 			
 			if self.opts['images_flag']:
 				##generate images from reference scripts
