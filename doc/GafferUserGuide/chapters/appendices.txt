@@ -99,64 +99,65 @@ Also, as nodes are described by plain text you can cut and paste into emails/IM 
 
 === Scripting Nuggets anchor:appendices_scriptingNuggets[]
 These one or two-liners achieve simple tasks via the python scripting interface, and serve as examples to build from.
+////
 More complete details of the gaffer api are available !!!!HERE!!!!
+////
 
-* Using the current frame to drive a plug (in this case the number of pixel samples). Enter in an expression for constant update.
+Using the current frame to drive a plug (in this case the number of pixel samples). Enter in an expression for constant update:
 [source, python]
 ------------------------------------
 parent['RenderManOptions']['options']['pixelSamples']['value']['y'] = int(context.getFrame())
 ------------------------------------
 
-* Looping over a frame range.
+Looping over a frame range:
 [source, python]
 ------------------------------------
 for i in range(1,120):
 	script.context().setFrame(i)
 ------------------------------------
 
-* Get the current script's start and end frame 
+Get the current script's start and end frame:
 [source, python]
 ------------------------------------
 start = script['frameRange']['start'].getValue()
 end = script['frameRange']['end'].getValue()
 ------------------------------------
 
-* Execute a named executable node - i.e. render
+Execute a named executable node - i.e. render:
 [source, python]
 ------------------------------------
 script['RenderManRender'].execute( [script.context()] )
 ------------------------------------
 
-* Get the file name of the open script
+Get the file name of the open script:
 [source, python]
 ------------------------------------
 script['fileName'].getValue()
 ------------------------------------
 
-* Query value of script variables
+Query value of script variables:
 [source, python]
 ------------------------------------
 rd = script.context()['project:rootDirectory']
 ------------------------------------
 
-* Create a RenderManShader node pointing to a specific shader on disk
+Create a RenderManShader node pointing to a specific shader on disk:
 [source, python]
 ------------------------------------
 import GafferRenderMan
-
 shaderNode = GafferRenderMan.RenderManShader("MyShaderNode")
 shaderNode.loadShader( '/path/to/my/shader' )
 script.addChild( shaderNode )
 ------------------------------------
 
-* Set the current selection to be a specific node
+Set the current selection to be a specific node:
 [source, python]
 ------------------------------------
 script.selection().clear()
 script.selection().add(script['MyNodeName'])
 ------------------------------------
 
-* Set the value of a plug
+Set the value of a plug:
 [source, python]
 ------------------------------------
 # 'MySceneReaderNode' is the node name
@@ -164,7 +165,7 @@ script.selection().add(script['MyNodeName'])
 script['MySceneReaderNode']['fileName'].setValue( '/path/to/my/cache.scc' )
 ------------------------------------
 
-* Set the value of a nested plug
+Set the value of a nested plug:
 [source, python]
 ------------------------------------
 # 'MyStandardOptionsNode' is the node name
@@ -172,7 +173,7 @@ script['MySceneReaderNode']['fileName'].setValue( '/path/to/my/cache.scc' )
 script['MyStandardOptionsNode']['options']['renderResolution']['value']['x'].setValue( 2048 )
 ------------------------------------
 
-* Connect one node to another (in this case connecting the 'out' plug of myNodeA to the 'in' plug of myNodeB)
+Connect one node to another (in this case connecting the 'out' plug of myNodeA to the 'in' plug of myNodeB):
 [source, python]
 ------------------------------------
 myNodeB['in'].setInput(myNodeA['out'])

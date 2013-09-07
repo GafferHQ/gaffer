@@ -117,8 +117,8 @@ Gaffer makes extensive use of drag-and-drop behaviours throughout its interface.
 Gaffer will indicate when it has content attached to a drag manouver by changing the mouse pointer. Adornments are added to the pointer icon to show the type of data being dragged (i.e. plug, node(s), colour-value, float-value, etc)
 
 ==== Manipulating noodles anchor:interface_manipulatingNoodles[]
-
-* Hovering over the nodule from which you want to start the connection. The nodule will grow and change colour to indicate that it is available to begin the action.
+===== Connecting nodes
+* Hover over the nodule from which you want to start the connection. The nodule will grow and change colour to indicate that it is available to begin the action.
 * Then `left-click-drag` to draw the noodle out of the nodule.
 * Holding down `left-click` will allow you to pull the tip of the noodle over to the target node. 
 ** Once over the target node, Gaffer will attempt to snap the noodle to any valid nodules. The list of available plugs is filtered by the type of data passed through the noodle.
@@ -140,6 +140,8 @@ To help with finding the particular plugs you wish to connect to the NodeGraph e
 image::images/chapters/interface/interface_nodeGraph_figDA.png[align="center"]
 
 
+===== Wrangling noodles
+
 To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
 In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
 
@@ -152,6 +154,7 @@ To hide/unhide connections:
 image::images/chapters/interface/interface_nodeGraph_figEA.png[align="center"]
 
 
+===== Disconnecting noodles
 
 
 
