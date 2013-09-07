@@ -1,0 +1,8 @@
+=== Layouts anchor:interface_layouts[]
+
+* how to manipulate panels
+** resizing
+** splitting
+** removing 
+* how to add and remove editors from panels
+* how to save and restore layouts
