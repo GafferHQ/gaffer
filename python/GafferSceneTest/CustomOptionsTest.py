@@ -44,7 +44,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class OptionsTest( GafferSceneTest.SceneTestCase ) :
+class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
