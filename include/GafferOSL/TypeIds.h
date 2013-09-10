@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,21 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERRENDERMAN_TYPEIDS_H
-#define GAFFERRENDERMAN_TYPEIDS_H
+#ifndef GAFFEROSL_TYPEIDS_H
+#define GAFFEROSL_TYPEIDS_H
 
-namespace GafferRenderMan
+namespace GafferOSL
 {
 
 enum TypeId
 {
-	RenderManShaderTypeId = 110950,
-	RenderManOptionsTypeId = 110951,
-	RenderManAttributesTypeId = 110952,
-	RenderManLightTypeId = 110953,
-	InteractiveRenderManRenderTypeId = 110954,
+	OSLShaderTypeId = 110975,
+	OSLRendererTypeId = 110976,
+	OSLImageTypeId = 110977,
 	
-	LastTypeId = 110974
+	LastTypeId = 110999
 };
 
-} // namespace GafferRenderMan
+} // namespace GafferOSL
 
-#endif // GAFFERRENDERMAN_TYPEIDS_H
+#endif // GAFFEROSL_TYPEIDS_H
