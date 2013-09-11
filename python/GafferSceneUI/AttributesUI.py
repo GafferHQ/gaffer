@@ -39,15 +39,12 @@ import GafferUI
 
 import GafferScene
 
+
 GafferUI.Metadata.registerNodeDescription(
 
-GafferScene.Transform,
+GafferScene.Attributes,
 
-"""Applies arbitrary user-defined attributes to locations in the scene. Note
-that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes
-and ArnoldAttributes nodes should be used in preference - they provide predefined
-sets of attributes with customised user interfaces. The Attributes node is of most use when
-needing to set a custom attribute not supported by the specialised nodes.
+"""The base type for nodes that apply attributes to the scene. 
 """,
 
 "attributes",
@@ -56,5 +53,6 @@ as children of this plug via the user interface, or using the CompoundDataPlug A
 python.""",
 
 )
+
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Attributes.staticTypeId(), "attributes", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

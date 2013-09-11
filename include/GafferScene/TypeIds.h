@@ -98,6 +98,8 @@ enum TypeId
 	TextTypeId = 110553,
 	MapProjectionTypeId = 110554,
 	PointConstraintTypeId = 110555,
+	CustomAttributesTypeId = 110556,
+	CustomOptionsTypeId = 110557,
 	
 	LastTypeId = 110650
 };
