@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}'
-INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}'
+BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
+INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
 DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/dependencies'
 DOXYGEN='/software/apps/doxygen/1.8.4/cent6.x86_64/bin/doxygen'
 RMAN_ROOT='/software/apps/3delight/10.0.163/cent6.x86_64'
