@@ -36,12 +36,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "boost/tokenizer.hpp"
 #include "boost/format.hpp"
 
 #include "IECore/MessageHandler.h"
+
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/Wrapper.h"
 
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/GraphComponentBinding.h"
@@ -299,4 +302,174 @@ bool Serialisation::Serialiser::childNeedsSerialisation( const Gaffer::GraphComp
 bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 {
 	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Python binding
+//////////////////////////////////////////////////////////////////////////
+
+class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython::Wrapper<Serialisation::Serialiser>
+{
+
+	public :
+	
+		SerialiserWrapper( PyObject *self )
+			:	Serialisation::Serialiser(), IECorePython::Wrapper<Serialisation::Serialiser>( self, this )
+		{
+		}
+
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "moduleDependencies" ) )
+			{
+				boost::python::override f = this->get_override( "moduleDependencies" );
+				if( f )
+				{
+					object mo = f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
+					std::vector<std::string> mv;
+					container_utils::extend_container( mv, mo );
+					modules.insert( mv.begin(), mv.end() );
+					return;
+				}
+			}
+			Serialiser::moduleDependencies( graphComponent, modules );
+		}
+				
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "constructor" ) )
+			{
+				boost::python::override f = this->get_override( "constructor" );
+				if( f )
+				{
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
+				}
+			}
+			return Serialiser::constructor( graphComponent );
+		}
+		
+		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "postConstructor" ) )
+			{
+				boost::python::override f = this->get_override( "postConstructor" );
+				if( f )
+				{
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation );
+				}
+			}
+			return Serialiser::postConstructor( graphComponent, identifier, serialisation );
+		}
+		
+		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "postHierarchy" ) )
+			{
+				boost::python::override f = this->get_override( "postHierarchy" );
+				if( f )
+				{
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation );
+				}
+			}
+			return Serialiser::postHierarchy( graphComponent, identifier, serialisation );
+		}
+		
+		virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "postScript" ) )
+			{
+				boost::python::override f = this->get_override( "postScript" );
+				if( f )
+				{
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation );
+				}
+			}
+			return Serialiser::postScript( graphComponent, identifier, serialisation );
+		}
+		
+		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "childNeedsSerialisation" ) )
+			{
+				boost::python::override f = this->get_override( "childNeedsSerialisation" );
+				if( f )
+				{
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ) );
+				}
+			}
+			return Serialiser::childNeedsSerialisation( child );
+		}
+		
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( PyObject_HasAttrString( m_pyObject, "childNeedsConstruction" ) )
+			{
+				boost::python::override f = this->get_override( "childNeedsConstruction" );
+				if( f )
+				{
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ) );
+				}
+			}
+			return Serialiser::childNeedsConstruction( child );
+		}
+		
+};
+
+IE_CORE_DECLAREPTR( SerialiserWrapper )
+
+static object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
+{
+	std::set<std::string> modules;
+	serialiser.moduleDependencies( graphComponent, modules );
+	boost::python::list modulesList;
+	for( std::set<std::string>::const_iterator it = modules.begin(); it != modules.end(); ++it )
+	{
+		modulesList.append( *it );
+	}
+	PyObject *modulesSet = PySet_New( modulesList.ptr() );
+	return object( handle<>( modulesSet ) );	
+}
+
+void GafferBindings::bindSerialisation()
+{
+
+	scope s = boost::python::class_<Serialisation>( "Serialisation", no_init )
+		.def(
+			init<const Gaffer::GraphComponent *, const std::string &, const Gaffer::Set *>
+			(
+				(
+					arg( "parent" ),
+					arg( "parentName" ) = "parent",
+					arg( "filter" ) = object()
+				)
+			)
+		)
+		.def( "identifier", &Serialisation::identifier )
+		.def( "result", &Serialisation::result )
+		.def( "modulePath", (std::string (*)( object & ))&Serialisation::modulePath )
+		.staticmethod( "modulePath" )
+		.def( "classPath", (std::string (*)( object & ))&Serialisation::classPath )
+		.staticmethod( "classPath" )
+		.def( "registerSerialiser", &Serialisation::registerSerialiser )
+		.staticmethod( "registerSerialiser" )
+	;
+	
+	IECorePython::RefCountedClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapperPtr>( "Serialiser" )
+		.def( init<>() )
+		.def( "moduleDependencies", &moduleDependencies )
+		.def( "constructor", &Serialisation::Serialiser::constructor )
+		.def( "postConstructor", &Serialisation::Serialiser::postConstructor )
+		.def( "postHierarchy", &Serialisation::Serialiser::postHierarchy )
+		.def( "postScript", &Serialisation::Serialiser::postScript )
+		.def( "childNeedsSerialisation", &Serialisation::Serialiser::postScript )
+		.def( "childNeedsConstruction", &Serialisation::Serialiser::childNeedsConstruction )
+	;
+	
 }
