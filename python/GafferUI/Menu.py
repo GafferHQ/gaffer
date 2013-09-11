@@ -179,7 +179,7 @@ class Menu( GafferUI.Widget ) :
 			self.__searchLine.selectAll()
 			searchWidget.setDefaultWidget( self.__searchLine )
 			
-			firstAction = self._qtWidget().actions()[0]
+			firstAction = self._qtWidget().actions()[0] if len( self._qtWidget().actions() ) else None
 			self._qtWidget().insertAction( firstAction, searchWidget )
 			self._qtWidget().insertSeparator( firstAction )
 			self._qtWidget().setActiveAction( searchWidget )
