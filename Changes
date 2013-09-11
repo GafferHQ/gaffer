@@ -1,3 +1,28 @@
+0.79.0
+======
+
+UI
+--
+
+- Added additional plug types to the CompoundDataPlug new plug menu (#522).
+- Fixed bug in searchable Menus with no entries (#527).
+
+Scene
+-----
+
+- Added CustomAttributes and CustomOptions nodes. These will be used instead of the old Attributes and Options nodes, and exist to better distinguish their use from the Standard, RenderMan and Arnold options and attributes nodes.
+
+RenderMan
+---------
+
+-  Enabled hosting of RenderManShaders inside custom Box classes. Previously it only worked inside Boxes and not classes derived from Box.
+
+API
+---
+
+- Added python subclassing ability to Serialisation::Serialiser (#520).
+
+
 0.78.0
 ======
 
