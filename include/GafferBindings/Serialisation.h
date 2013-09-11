@@ -77,6 +77,8 @@ class Serialisation
 			
 			public :
 						
+				IE_CORE_DECLAREMEMBERPTR( Serialiser );
+
 				/// Should be implemented to insert the names of any modules the serialiser will need
 				/// into the modules set. The default implementation returns modulePath( graphComponent ).
 				virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
@@ -128,6 +130,8 @@ class Serialisation
 		static const Serialiser *serialiser( const Gaffer::GraphComponent *graphComponent );
 				
 };
+
+void bindSerialisation();
 
 } // namespace GafferBindings
 

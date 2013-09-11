@@ -79,6 +79,7 @@
 #include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/BehaviourBinding.h"
 #include "GafferBindings/ArrayPlugBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -127,6 +128,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindExecutableOpHolder();
 	bindReference();
 	bindArrayPlug();
+	bindSerialisation();
 			
 	DependencyNodeClass<ContextProcessorComputeNode>();
 	DependencyNodeClass<TimeWarpComputeNode>();
