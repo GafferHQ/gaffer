@@ -44,12 +44,12 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class OptionsTest( GafferSceneTest.SceneTestCase ) :
+class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
 		p = GafferScene.Plane()
-		options = GafferScene.Options()
+		options = GafferScene.CustomOptions()
 		options["in"].setInput( p["out"] )
 	
 		# check that the scene hierarchy is passed through
@@ -77,7 +77,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 	def testSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["optionsNode"] = GafferScene.Options()
+		s["optionsNode"] = GafferScene.CustomOptions()
 		s["optionsNode"]["options"].addMember( "test", IECore.IntData( 10 ) )
 		s["optionsNode"]["options"].addMember( "test2", IECore.StringData( "10" ) )
 		
@@ -98,7 +98,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 		# identical to the input, so that they share cache entries.
 	
 		p = GafferScene.Plane()
-		options = GafferScene.Options()
+		options = GafferScene.CustomOptions()
 		options["in"].setInput( p["out"] )
 		options["options"].addMember( "test", IECore.IntData( 10 ) )
 		
@@ -107,7 +107,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 	def testDisabled( self ) :
 	
 		p = GafferScene.Plane()
-		options = GafferScene.Options()
+		options = GafferScene.CustomOptions()
 		options["in"].setInput( p["out"] )
 		options["options"].addMember( "test", IECore.IntData( 10 ) )
 	
@@ -122,7 +122,7 @@ class OptionsTest( GafferSceneTest.SceneTestCase ) :
 	def testDirtyPropagation( self ) :
 	
 		p = GafferScene.Plane()
-		o = GafferScene.Options()
+		o = GafferScene.CustomOptions()
 		
 		o["in"].setInput( p["out"] )
 		

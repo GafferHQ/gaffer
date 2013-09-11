@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,10 +34,28 @@
 #  
 ##########################################################################
 
-import Gaffer
+import GafferUI
+import GafferScene
 
-from _GafferScene import *
+GafferUI.Metadata.registerNodeDescription(
 
-from ScenePath import ScenePath
-from ScriptProcedural import ScriptProcedural
-from AlembicPath import AlembicPath
+GafferScene.CustomOptions,
+
+"""Applies arbitrary user-defined options to the root of the scene. Note
+that for most common cases the StandardOptions, OpenGLOptions, RenderManOptions,
+and ArnoldOptions nodes should be used in preference - they provide predefined
+sets of options with customised user interfaces. The CustomOptions node is of most use when
+needing to set a custom option not supported by the specialised nodes.
+""",
+
+"options",
+"""The options to be applied - arbitrary numbers of user defined options may be added
+as children of this plug via the user interface, or using the CompoundDataPlug API via
+python.""",
+
+
+)
+
+
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.CustomOptions.staticTypeId(), "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

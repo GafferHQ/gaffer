@@ -44,7 +44,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class AttributesTest( GafferSceneTest.SceneTestCase ) :
+class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		
 	def test( self ) :
 	
@@ -66,7 +66,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 	
-		a = GafferScene.Attributes()
+		a = GafferScene.CustomAttributes()
 		a["in"].setInput( input["out"] )
 		
 		# should be no attributes until we've specified any
@@ -107,7 +107,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 	
-		a = GafferScene.Attributes()
+		a = GafferScene.CustomAttributes()
 		a["in"].setInput( input["out"] )
 		
 		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
@@ -120,7 +120,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		a2 = GafferScene.Attributes()
+		a2 = GafferScene.CustomAttributes()
 		a2["in"].setInput( a["out"] )
 		
 		self.assertEqual(
@@ -159,7 +159,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 	
-		a = GafferScene.Attributes()
+		a = GafferScene.CustomAttributes()
 		a["in"].setInput( input["out"] )
 		
 		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
@@ -200,7 +200,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 	
-		a = GafferScene.Attributes()
+		a = GafferScene.CustomAttributes()
 		a["in"].setInput( input["out"] )
 		
 		# when we have no attributes at all, everything should be a pass-through
@@ -230,7 +230,7 @@ class AttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testSerialisation( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["a"] = GafferScene.Attributes()
+		s["a"] = GafferScene.CustomAttributes()
 		s["a"]["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 1.0 ) )
 
 		s2 = Gaffer.ScriptNode()

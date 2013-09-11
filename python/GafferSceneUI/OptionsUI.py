@@ -37,4 +37,21 @@
 import GafferUI
 import GafferScene
 
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.Options,
+
+"""The base type for nodes that apply options to the scene. 
+""",
+
+"options",
+"""The options to be applied - arbitrary numbers of user defined options may be added
+as children of this plug via the user interface, or using the CompoundDataPlug API via
+python.""",
+
+)
+
+
+
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Options.staticTypeId(), "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

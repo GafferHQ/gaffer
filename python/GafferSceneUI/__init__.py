@@ -63,3 +63,5 @@ import LightUI
 import InteractiveRenderUI
 import SphereUI
 import MapProjectionUI
+import CustomAttributesUI
+import CustomOptionsUI
