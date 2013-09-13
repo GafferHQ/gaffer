@@ -15,7 +15,10 @@ There are two key aspects to the design of Gaffer that are important to grasp in
 The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes.
 
 //// TO BE COMPLETED
-The comparison with node based compositing is also helpful for clarifying how Gaffer's scene processing nodes act.  In the compositing case nodes generate new images, based in input or by     . With Gaffer scene nodes,       output complete scenes (with heirarchy, objects, attributes, render settings, etc); either by generating content from scratch, or by taking one or more input scenes, modifying it/them, then passing back out a fresh new scene.
+The comparison with node based compositing also helps clarify how Gaffer's scene processing nodes operate.  In the case of a compositor, nodes 
+
+ nodes generate new images, either based in input images or by genera.
+ With Gaffer scene nodes,       output complete scenes (with heirarchy, objects, attributes, render settings, etc); either by generating content from scratch, or by taking one or more input scenes, modifying it/them, then passing back out a fresh new scene.
 ////
 
 This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
