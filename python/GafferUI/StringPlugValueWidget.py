@@ -48,7 +48,7 @@ import GafferUI
 # \todo Stop editing for non editable plugs.
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, continuousUpdate=False, **kw ) :
 	
 		self.__textWidget = GafferUI.TextWidget()
 			
@@ -58,7 +58,9 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
-
+		if continuousUpdate :
+			self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
+			
 		self._updateFromPlug()
 
 	def textWidget( self ) :
