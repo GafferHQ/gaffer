@@ -1,7 +1,7 @@
 == Quick Start Guide anchor:quickstart_quickStartGuide[]
 
 
-This tutorial is designed to give new users a their first exposure to the workflow in Gaffer. Brief explanations of each step will be given, but there is no expectation at this stage that those following will fully understand the process. The intent is instead to expose various aspects of the program, providing some practical experience that should be helpful as readers work through the rest of the user guide.
+This tutorial is designed to give new users their first exposure to the workflow in Gaffer. Brief explanations of each step will be given, but there is no expectation at this stage that those following will fully understand the process. The intent is instead to expose various aspects of the program, providing some practical experience that should be helpful you work through the rest of the user guide.
 
 [NOTE]
 You will need 3delight configured for use in Gaffer to fully follow this tutorial. If you are using Arnold (or another renderer), you should be able to make substitutions for the RenderMan specific nodes.
