@@ -1,6 +1,8 @@
 === Viewer anchor:interface_viewer[]
-!!!!lorem ipsum foo bar doodah!!!!
+!!!TO BE COMPLETED!!!
 
 ==== 3D Mode anchor:interface_viewer3D[]
+!!!TO BE COMPLETED!!!
 
 ==== 2D Mode anchor:interface_viewer2D[]
+!!!TO BE COMPLETED!!!

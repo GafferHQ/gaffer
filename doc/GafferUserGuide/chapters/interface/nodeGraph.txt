@@ -1,7 +1,7 @@
 === NodeGraph anchor:interface_nodeGraph[]
 
 The *NodeGraph* is one of the key parts of the Gaffer interface and is the primary means of constructing and modifying the contents of a script.
-As we have seen previously, the script is composed of nodes connected to form graphs and the NodeGraph provides a visualisation of both these nodes and their connections.
+As we have seen previously, the script is composed of nodes connected to form graphs and the NodeGraph provides visualisation of both these nodes and their connections.
 
 [NOTE]
 Nodes, noodles, and nodules... +
@@ -118,6 +118,12 @@ To help with finding the particular plugs you wish to connect to the NodeGraph e
 image::images/chapters/interface/interface_nodeGraph_figDA.png[align="center"]
 
 
+===== Disconnecting noodles
+Disconnecting noodels is a simple action:
+
+* `left-click-drag` one of the ends of a noodle, until that end is disconnected from the plug it was attached to.
+* Then release the mouse and the noodle will be destroyed.
+
 ===== Wrangling noodles
 
 To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
@@ -132,7 +138,9 @@ To hide/unhide connections:
 image::images/chapters/interface/interface_nodeGraph_figEA.png[align="center"]
 
 
-===== Disconnecting noodles
+
+
+
 
 
 

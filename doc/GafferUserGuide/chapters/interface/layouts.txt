@@ -1,5 +1,5 @@
 === Layouts anchor:interface_layouts[]
-
+!!!TO BE COMPLETED!!!
 * how to manipulate panels
 ** resizing
 ** splitting

@@ -9,19 +9,20 @@ The framework with which the Gaffer tool is built is also available for rapid de
 
 
 === Design Overview anchor:introduction_designOverview[]
-////
-!!!!What is the core design philosophy of Gaffer and how should users approach it?
-
-.......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....!!!!
-
-!!!!script -> scene   defines    which gaffer then generates on demand!!!!
-////
 
 There are two key aspects to the design of Gaffer that are important to grasp in order to work with the software effectively.
 
-The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes.  This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
+The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes.
 
-Secondly, it can be useful to understand the deferred evaluation aspect of Gaffer.
+//// TO BE COMPLETED
+The comparison with node based compositing is also helpful for clarifying how Gaffer's scene processing nodes act.  In the compositing case nodes generate new images, based in input or by     . With Gaffer scene nodes,       output complete scenes (with heirarchy, objects, attributes, render settings, etc); either by generating content from scratch, or by taking one or more input scenes, modifying it/them, then passing back out a fresh new scene.
+////
+
+This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
+
+Secondly, it can be useful to understand the deferred evaluation aspect of Gaffer.  One of the objectives of the the application is to allow for processing of arbitrarily complex and deep scene hierarchies. In contrast to programs that retain the entire 3d scene in memory throughout the working session, Gaffer will only evaluate as much of the scene as is requested.
+
+In practical terms this means that when manipulting a scene in the Gaffer interface, you will often be viewing only top level bounding boxes; with the rest of the content collapsed away, ready to be expanded at render time. It is possible at any time to dive in to the hierarchy and modify any location, but there is no need to have the entire scene active.  This makes Gaffer particularly adapt at handling complex content like large environments, crowds, and heavily detailed assets.
 
 
 === Functionality anchor:introduction_functionality[]
@@ -29,33 +30,49 @@ Secondly, it can be useful to understand the deferred evaluation aspect of Gaffe
 !!!!What can Gaffer do?!!!!
 keeps this light and as a summary. explain that everything will be expanded upon later. just and overview for now
 ////
+The functionality of the Gaffer app is evolving, so here we give a brief overview of its current capabilities.
 
-The interface allows:
+==== Scene generation/manipulation
 
-* Images/renders to be viewed and inspected (including streaming of currently rendering imagery)
-* Geometry and lights to be explored and selected in an opengl 3d viewport
-* Sophisticated set of node graph construction and manipulation operations
-* Interrogation of scene hierarchies
+* Reading of cached scene hierarchies.
+** Support for both Alembic file sources and Cortex SCC sources.
+* Primitive generation.
+* Camera creation.
+* Grouping and isolating operations for scene hierarchies.
+* Geometry instancing.
+* Transformation constraints.
 
-RenderMan integration:
+==== RenderMan integration
 
-* Provided by GafferRenderMan module
-* Tested with 3delight
-* Interactive rendering
-* Standard rendering
-* Lights, shaders, attributes, options etc
+* Provided by GafferRenderMan module.
+* Tested with 3delight.
+* Interactive rendering.
+* Standard rendering.
+* Rendertime procedural for deferred scene evaluation.
+* Support for lights, shaders, attributes, options etc.
 
-Arnold integration:
+==== Arnold integration
 
-* Provided by GafferArnold module
-* similar
+* Provided by GafferArnold module.
+* Interactive rendering.
+* Standard rendering.
+* Rendertime procedural for deferred scene evaluation.
+* Support for lights, shaders, attributes, options etc.
 
-Compositing:
+==== Compositing
 
-* GafferImage module
-* Wide Read/Write support (utilising OpenImageIO)
-* Image transformations
-* Basic colour manipulations 
+* GafferImage module.
+* Wide Read/Write support (utilising OpenImageIO).
+* Image transformations.
+* Basic colour manipulations.
+
+==== Interface
+Gaffer has graphical user interface that allows:
+
+* Images/renders to be viewed and inspected (including streaming of currently rendering imagery).
+* Geometry and lights to be explored and selected in an opengl 3d viewport.
+* Sophisticated node graph construction and manipulation operations to be performed.
+* Interrogation of scene hierarchies and inspection of object properties.
 
 
 
