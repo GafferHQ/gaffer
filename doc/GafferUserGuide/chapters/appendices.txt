@@ -1,14 +1,13 @@
 == Appendices anchor:appendices_appendices[]
 
-This section contains additional material to be referenced whilst using Gaffer.
+This section contains additional miscellaneous  material to be referenced whilst using Gaffer.
 
 It is composed of the following appendices:
 
 * xref:appendices_hotkeys[Appendix A: Hotkeys]
 * xref:appendices_scriptingNuggets[Appendix B: Scripting Nuggets]
 * xref:appendices_rendermanShaderWriting[Appendix C: RenderMan Shader Writing]
-* xref:appendices_licenses[Appendix D: Licenses]
-
+* xref:appendices_customAttributesAndOptions[Appendix D: Custom Attributes and Options]
 
 
 
@@ -63,6 +62,19 @@ Also, as nodes are described by plain text you can cut and paste into emails/IM 
 |`-`       |Zoom out !!!!not yet implemented!!!!
 |=======================
 
+.Viewer Hotkeys - 2D mode
+[options="header",cols="20%,80%"]
+|=======================
+|Keypress|Result
+|`f`       |Fit image to Viewer
+|`r`       |Isolate RED channel of image. Press again to revert back to RGB image
+|`g`       |Isolate GREEN channel of image. Press again to revert back to RGB image
+|`b`       |Isolate BLUE channel of image. Press again to revert back to RGB image
+|`a`       |Isolate ALPHA channel of image. Press again to revert back to RGB image
+|`+`       |Zoom in !!!!not yet implemented!!!!
+|`-`       |Zoom out !!!!not yet implemented!!!!
+|=======================
+
 .NodeEditor Hotkeys
 [options="header",cols="20%,80%"]
 |=======================
@@ -87,57 +99,65 @@ Also, as nodes are described by plain text you can cut and paste into emails/IM 
 
 === Scripting Nuggets anchor:appendices_scriptingNuggets[]
 These one or two-liners achieve simple tasks via the python scripting interface, and serve as examples to build from.
+////
 More complete details of the gaffer api are available !!!!HERE!!!!
+////
 
-* Using the current frame to drive a plug (in this case the number of pixel samples). Enter in an expression for constant update.
+Using the current frame to drive a plug (in this case the number of pixel samples). Enter in an expression for constant update:
 [source, python]
 ------------------------------------
 parent['RenderManOptions']['options']['pixelSamples']['value']['y'] = int(context.getFrame())
 ------------------------------------
 
-* Looping over a frame range.
+Looping over a frame range:
 [source, python]
 ------------------------------------
 for i in range(1,120):
 	script.context().setFrame(i)
 ------------------------------------
 
-* Execute a named executable node - i.e. render
+Get the current script's start and end frame:
+[source, python]
+------------------------------------
+start = script['frameRange']['start'].getValue()
+end = script['frameRange']['end'].getValue()
+------------------------------------
+
+Execute a named executable node - i.e. render:
 [source, python]
 ------------------------------------
 script['RenderManRender'].execute( [script.context()] )
 ------------------------------------
 
-* Get the file name of the open script
+Get the file name of the open script:
 [source, python]
 ------------------------------------
 script['fileName'].getValue()
 ------------------------------------
 
-* Query value of script variables
+Query value of script variables:
 [source, python]
 ------------------------------------
 rd = script.context()['project:rootDirectory']
 ------------------------------------
 
-* Create a RenderManShader node pointing to a specific shader on disk
+Create a RenderManShader node pointing to a specific shader on disk:
 [source, python]
 ------------------------------------
 import GafferRenderMan
-
 shaderNode = GafferRenderMan.RenderManShader("MyShaderNode")
 shaderNode.loadShader( '/path/to/my/shader' )
 script.addChild( shaderNode )
 ------------------------------------
 
-* Set the current selection to be a specific node
+Set the current selection to be a specific node:
 [source, python]
 ------------------------------------
 script.selection().clear()
 script.selection().add(script['MyNodeName'])
 ------------------------------------
 
-* Set the value of a plug
+Set the value of a plug:
 [source, python]
 ------------------------------------
 # 'MySceneReaderNode' is the node name
@@ -145,13 +165,20 @@ script.selection().add(script['MyNodeName'])
 script['MySceneReaderNode']['fileName'].setValue( '/path/to/my/cache.scc' )
 ------------------------------------
 
-* Set the value of a nested plug
+Set the value of a nested plug:
 [source, python]
 ------------------------------------
 # 'MyStandardOptionsNode' is the node name
 # the plug name would be shown as 'options.renderResolution.value.x' in the Gaffer UI tooltips
 script['MyStandardOptionsNode']['options']['renderResolution']['value']['x'].setValue( 2048 )
 ------------------------------------
+
+Connect one node to another (in this case connecting the 'out' plug of myNodeA to the 'in' plug of myNodeB):
+[source, python]
+------------------------------------
+myNodeB['in'].setInput(myNodeA['out'])
+------------------------------------
+
 
 
 === RenderMan Shader Writing anchor:appendices_rendermanShaderWriting[]
@@ -202,7 +229,41 @@ include::../images/autoGenerated_source/annotationsExample.sl[]
 .The example shader loaded into Gaffer
 image::images/autoGenerated_target/appendices_rendermanShaderWriting_figAA.png[align="center"]
 
-=== Licenses anchor:appendices_licenses[]
 
-include::./appendices_licenses_dynamicContent.txt[]
+=== Custom Attributes and Options anchor:appendices_customAttributesAndOptions[]
+Alongside the default settings that can be specified via the *Attributes and *Options nodes, Gaffer supports arbitrary renderer attributes/options by means of a naming convention. Strings are used to specifiy the scope of the setting (i.e. which renderer to apply to), and the specific attribute or option to set.
+This syntax is utilised by the CustomAttributes and CustomOptions nodes to pass the relevant setting to the renderer.
 
+[note]
+When adding the individual attributes/options to a node, ensure you select the correct 'type', as the translation mechanism is type sensitive. For example, in the RenderMan case 'Matte' is a boolean attribute, so you must add a 'bool' member to the CustomAttributes node. 
+
+==== Syntax
+In the general form, the syntax for specifying an attribute or option is:
+------------------------------------
+<RENDERER>:<PREFIX>:<NAME>
+------------------------------------
+
+<PREFIX> is optional, and valid <RENDERER> values are `ri` (RenderMan), `ai` (Arnold), `gl` (openGL).
+
+
+
+==== Examples
+
+The `ri` examples use descriptions taken from the 3delight documentation to demonstrate the translation.
+
+[options="header",cols="40%,20%,20%,20%"]
+|=======================
+| Docs description | Syntax in Gaffer | Type in Gaffer | Relevant node
+| Color [1 1 1] | `ri:color` | color | CustomAttributes
+| Matte 0 | `ri:matte` | bool | CustomAttributes
+| Attribute "visibility" "integer specular" [0] | `ri:visibility:specular` | bool | CustomAttributes
+| Attribute "grouping" "string tracesubset" [""] | `ri:grouping:tracesubset` | string | CustomAttributes
+| Attribute "user" "uniform type variable" value | `ri:user:`__name__ | _varies_ | CustomAttributes
+| Option "render" "integer nthreads" n | `ri:render:nthreads` | int | CustomOptions
+| Option "limits" "integer bucketsize[2]" [16 16] | `ri:limits:bucketsize` | V2i | CustomOptions
+| Option "user" "type variable" value | `ri:user`__name__ | _varies_ | CustomOptions
+| Hider "raytrace" "int progressive" [0] | `ri:hider:progressive` | bool | CustomOptions
+|=======================
+
+.Example of custom 3delight attributes and options in Gaffer
+image::images/autoGenerated_target/appendices_customAttributesOptions_figAA.png[align="center"]

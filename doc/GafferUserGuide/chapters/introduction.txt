@@ -1,73 +1,96 @@
 == Introduction to Gaffer anchor:introduction_introductionToGaffer[]
 
-Gaffer is a vfx/cg-animation application built around the core concept of defining scenes procedurally by means of networks of nodes. +
-Its primary use is as a lighting and look development tool. However, the modular nature of Gaffer's design provides the potential for expansion into other aspects of vfx production.
+Gaffer is a vfx/cg-animation application built around the core concept of scenes defined procedurally by means of networks of nodes. Its primary use is as a lighting and look development tool; however, the modular nature of Gaffer's design presents the potential for expansion into other aspects of vfx production.
 
-
-It provides non-destructive methods for building and modifying scenes and sending those resulting scenes to render. Gaffer is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. +
+Gaffer provides non-destructive methods for building and modifying scenes and sending those resulting scenes to render.  It is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the +++<a href="https://github.com/ImageEngine/cortex">cortex</a>+++ framework.
 In addition to processing of 3D scenes, Gaffer has simple 2D compositing functionality allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
 
+The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications.  More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
 
-The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
-
-
-
-////
-!!!!Welcome. This would be some text introducing people to Gaffer and its capabilities.!!!!
-
-Gaffer is a 3D content creation application !!!!that is built around procedurally defined scenes!!!!. Its primary use is as a lighting and look-development (shading) tool, but its modular nature allows for customisation and expansion for use in other aspects of CGI production.   !!!!into other    areas.!!!!
-
-
-
-
-
-
-Gaffer is a vfx/cg-animation application built around a core concept of defining scenes procedurally by means of networks of nodes.
-Its primary use is as a lighting and look development tool - however, the modular nature of Gaffer's design provides the potential for it to be expanded into other aspects of vfx production.
-
-
-but due to its modular nature its possible to expand the app to tackle a range of tasks.
-
-the app as potential to be expanded into other cgi fields  aspects  tasks
-
-
-
-
-
-It provides non-destructive methods for constructing and modifying scenes and sending the resulting scenes to render. Gaffer is not tied to any specific renderer, instead it leverages the renderer abstraction provided by the <a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework. !!!!and in fact can be extended to support any renderer implemented in the +++<a href="http://code.google.com/p/cortex-vfx/">cortex</a>+++ framework.!!!
-In addition to processing of 3D scenes Gaffer has simple 2D compositing functionality, allowing for renders and other imagery to be combined, and for the execution of basic image manipulations.
-
-The framework with which the Gaffer tool is built is also available for rapid development of both command line and GUI applications. More details on the framework and its use are available from the +++<a href="https://github.com/ImageEngine/gaffer/wiki">project site.</a>+++
-////
 
 === Design Overview anchor:introduction_designOverview[]
-!!!!What is the core design philosophy of Gaffer and how should users approach it?
 
-.......two core parts to the design of gaffer, the way the scene recipe is defined using a graph and the deferred evaluation of the scene and render time.....!!!!
+There are two key aspects to the design of Gaffer that are important to grasp in order to work with the software effectively.
 
-!!!!script -> scene   defines    which gaffer then generates on demand!!!!
+The first is the way that scene "recipes" are defined using a graph of interconnected nodes.  These nodes specify the input(s) to be used in the recipe, how those inputs are to be manipulated and combined, and finally how the scene is to be configured for execution by the chosen render engine. Looking at Gaffer from this point of view, it can be useful to consider the work-flow similar to that of a node based compositor.  Very much like modern compositing apps, because the scene processing is stored as a network of instructions, updates or changes to the inputs can easily be made. The new data can simply flow down through the various operations applied by the graph, with a new output appearing that reflects the upstream changes.
 
+The comparison with node based compositing also helps clarify how Gaffer's scene processing nodes operate.  In the case of a compositor, nodes are responsible for generating new images, either based on input images or based on parameters set by users. When users view the output of a node, they expect to see an image.
+We can think of Gaffer scene nodes very similarly, just by substituting 'image' with 'scene'. Each scene nodes outputs complete a scene  (with heirarchy, objects, attributes, render settings, etc); either by creating content from scratch, or by taking one or more input scenes, modifying it/them, then passing back out a fresh new scene.
+
+This node approach allows for very flexible and reusable work-flows to be created. Complexity and volume can be made manageable, and changes can be made quickly.
+
+Secondly, it can be useful to understand the deferred evaluation aspect of Gaffer.  One of the objectives of the the application is to allow for processing of arbitrarily complex and deep scene hierarchies. In contrast to programs that retain the entire 3d scene in memory throughout the working session, Gaffer will only evaluate as much of the scene as is requested.
+
+In practical terms this means that when manipulting a scene in the Gaffer interface, you will often be viewing only top level bounding boxes; with the rest of the content collapsed away, ready to be expanded at render time. It is possible at any time to dive in to the hierarchy and modify any location, but there is no need to have the entire scene active.  This makes Gaffer particularly adapt at handling complex content like large environments, crowds, and heavily detailed assets.
 
 
 === Functionality anchor:introduction_functionality[]
+////
 !!!!What can Gaffer do?!!!!
+keeps this light and as a summary. explain that everything will be expanded upon later. just and overview for now
+////
+The functionality of the Gaffer app is evolving, so here we give a brief overview of its current capabilities.
+
+==== Scene generation/manipulation
+
+* Reading of cached scene hierarchies.
+** Support for both Alembic file sources and Cortex SCC sources.
+* Primitive generation.
+* Camera creation.
+* Grouping and isolating operations for scene hierarchies.
+* Geometry instancing.
+* Transformation constraints.
+
+==== RenderMan integration
+
+* Provided by GafferRenderMan module.
+* Tested with 3delight.
+* Interactive rendering.
+* Standard rendering.
+* Rendertime procedural for deferred scene evaluation.
+* Support for lights, shaders, attributes, options etc.
+
+==== Arnold integration
+
+* Provided by GafferArnold module.
+* Interactive rendering.
+* Standard rendering.
+* Rendertime procedural for deferred scene evaluation.
+* Support for lights, shaders, attributes, options etc.
+
+==== Compositing
+
+* GafferImage module.
+* Wide Read/Write support (utilising OpenImageIO).
+* Image transformations.
+* Basic colour manipulations.
+
+==== Interface
+Gaffer has graphical user interface that allows:
+
+* Images/renders to be viewed and inspected (including streaming of currently rendering imagery).
+* Geometry and lights to be explored and selected in an opengl 3d viewport.
+* Sophisticated node graph construction and manipulation operations to be performed.
+* Interrogation of scene hierarchies and inspection of object properties.
+
+
 
 === Using this guide anchor:introduction_usingThisGuide[]
 
-The user guide is loosely structured in three sections, starting with an overview of Gaffer and how to get up and running in the app. Then there are chapters covering in more depth the use of the various parts of the software. Lastly, the user guide presents a collection of useful tidbits - mini tutorials and references.
+The user guide is loosely structured in three sections, starting with an overview of Gaffer and how to get up and running in the app. Then there are chapters covering the use of the various parts of the software in more depth. Lastly, the user guide presents a collection of useful tidbits - mini tutorials and references.
 
 [Note]
-In addition to the information available in the user guide, Gaffer features exstensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
+In addition to the information available in the user guide, Gaffer features extensive tooltip information. If you're ever stuck or curious, hover your mouse pointer over elements of the gui to see the context specific help.
 
-As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user. The node listings contain a description of each node's purpose, alongside details of all the plugs available on that node. This NodeReference !!!!!!LINK HERE SOME HOW!!!!!!! can be used as a guide to the tools that can be employed within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
+As a supplement to the user guide, Gaffer also provides a reference document which lists all the nodes available to the user.  The entry for each node contains a description of the node's purpose, alongside details of all the plugs available on that node.  This Node Reference document (found in `$GAFFER_ROOT/doc/GafferNodeReference.pdf`) can be used as a guide to the tools available for use within Gaffer, and as a reference when building scripts to manipulate Gaffer sessions.
 
 
 ==== Terminology 
 
-As the Gaffer workflow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology thoughout the user guide.
+As the Gaffer work-flow employs some concepts that may be unfamiliar to users, special emphasis is placed on terminology throughout the user guide.
 
 To refer to components of the interface (as apposed to generic concepts), this document will stick to the convention of *UpperCamelCase*.  So for example, we might talk about the *NodeGraph* being used to manipulate a node graph.  In this case the *NodeGraph* is part of the GUI, where as the 'node graph' is a network of nodes created by the user.
 
-In addition, some aspects of the application will be referred to by both the name given to them 'behind the scenes' and by terms related more to everyday usage.  It can be helpful for users to have some awareness of the mechanisms behind their actions so these will be exposed where appropriate.  As an example of this, the user guide might talk generically about manipulating items in a scene then go on to discuss the fact that an item is represented internally as a *location* in a *scene graph*.  Here the emphasis indicates that 'location' and 'scene graph' are technical terms.
+In addition, some aspects of the application will be referred to by both the name given to them "behind the scenes" and by terms related more to everyday usage.  It can be helpful for users to have some awareness of the mechanisms behind their actions so these will be exposed where appropriate.  As an example of this, the user guide might talk generically about manipulating items in a scene then go on to discuss the fact that an item is represented internally as a *location* in a *scene graph*.  Here the emphasis indicates that "location" and "scene graph" are technical terms.
 
 

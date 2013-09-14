@@ -1,0 +1,22 @@
+import Gaffer
+
+__children = {}
+
+parent["frameRange"]["start"].setValue( 1 )
+parent["frameRange"]["end"].setValue( 100 )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectName", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["name"].setValue( 'project:name' )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["value"].setValue( 'default' )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectRootDirectory", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["name"].setValue( 'project:rootDirectory' )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["value"].setValue( '$HOME/gaffer/projects/${project:name}' )
+parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+
+del __children
+

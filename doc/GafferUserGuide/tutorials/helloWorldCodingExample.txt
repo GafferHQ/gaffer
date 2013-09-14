@@ -24,7 +24,7 @@ Save this in a file helloWorld.py, and we can run it from the command line as fo
 
 Behold our magnificent window!
 
-image::images/tutorials/helloWorldCodingExample/helloWorld1.png[align="center"]
+image::images/chapters/minitutorials/helloWorldCodingExample/helloWorld1.png[align="center"]
 
 Here we're using the built in "python" application to run our script in an environment where all the Gaffer modules are available. Shortly we'll turn our simple script into an application of its own, so we can handle command line arguments in a nice straightforward way. Before we do that though, we can simplify things a little...
 
@@ -62,7 +62,7 @@ with GafferUI.Window( title = "Hello World", borderWidth=10 ) as window :
         button = GafferUI.Button( "Greet" )
 ------------------------------------
 
-image::images/tutorials/helloWorldCodingExample/helloWorld2.png[align="center"]
+image::images/chapters/minitutorials/helloWorldCodingExample/helloWorld2.png[align="center"]
 
 That's all well and good, but now we have no greeting - hardly friendly. We'll need to provide some interactivity...
 
@@ -113,6 +113,6 @@ GafferUI.EventLoop.mainEventLoop().start()
 
 And here's the final ui, showing a suitable salutation :
 
-image::images/tutorials/helloWorldCodingExample/helloWorld3.png[align="center"]
+image::images/chapters/minitutorials/helloWorldCodingExample/helloWorld3.png[align="center"]
 
 Next we'll take a look at xref:applicationCodingExample[creating an application based on our script], where Gaffer will help us to define command line arguments and perform our parsing and input validation for us. 
