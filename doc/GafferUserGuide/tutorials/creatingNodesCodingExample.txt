@@ -19,7 +19,7 @@ We want our new feature to be easily accessible to the user, so we'll put it in 
 GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ------------------------------------
 
-image::images/tutorials/creatingNodesCodingExample/iWantAPonyMenu.png[align="center"]
+image::images/chapters/minitutorials/creatingNodesCodingExample/iWantAPonyMenu.png[align="center"]
 
 You'll find that most user interfaces in Gaffer can be extended with similar ease. In this case we've simply specified the path to the menu item, and specified that it should run a python function called iWantAPony - we'll define that in the next section.
 
@@ -35,18 +35,18 @@ def __iWantAPony( menu ) :
 ------------------------------------
 
 
-Now we can create a read node to load a model, set the values of its plugs, and add it to the script.
+Now we can create an ObjectReader node to load a model, set the values of its plugs, and add it to the script.
 
 [source,python]
 ------------------------------------
-read = Gaffer.ReadNode()
+read = Gaffer.ObjectReader()
 read["fileName"].setValue( "/path/to/some/cortexData/cow.cob" )
 script.addChild( read )
 ------------------------------------
 
 The astute reader may have noticed that the model looks suspiciously bovine, and may not quite fulfil the user's request, but it will on the other hand provide a valuable lesson : you can't always get what you want.
 
-The ReadNode loads in single objects, but is unaware of Gaffer's framework for on demand processing of entire scenes. We can create another node to promote our poor heifer to scene status, and connect this node up to the first.
+The ObjectReader loads in single objects, but is unaware of Gaffer's framework for on demand processing of entire scenes. We can create another node to promote our poor heifer to scene status, and connect this node up to the first.
 
 [source,python]
 ------------------------------------
@@ -67,7 +67,7 @@ script.selection().add( objectToScene )
 
 And there we have it. Perhaps not quite suitable for show jumping but nevertheless a valuable source of milk, cheese and finally meat.
 
-image::images/tutorials/creatingNodesCodingExample/iWantAPonyResult.png[align="center"]
+image::images/chapters/minitutorials/creatingNodesCodingExample/iWantAPonyResult.png[align="center"]
 
 ==== The whole script
 Here's the whole script in all its glory.
@@ -82,7 +82,7 @@ def __iWantAPony( menu ) :
         scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
         script = scriptWindow.scriptNode()
         
-        read = Gaffer.ReadNode()
+        read = Gaffer.ObjectReader()
         read["fileName"].setValue( "/path/to/some/cortexData/cow.cob" )
         script.addChild( read )
         

@@ -1,0 +1,9 @@
+=== NodeEditor anchor:interface_nodeEditor[]
+
+A node's controls can be viewed and edited in the *NodeEditor* tab.
+
+[NOTE]
+Internally all of the exposed parts of a node ( its label, its input/output slots, its tweakable controls ) are known as *plugs*.  In this user guide we will make reference to both plugs and controls. + 
+'Plugs' will be used in the general case, and 'controls' when we are indicating plugs that expose their values for user modification via the NodeEditor interface.
+
+!!!TO BE COMPLETED!!!

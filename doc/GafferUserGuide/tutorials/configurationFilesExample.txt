@@ -37,4 +37,4 @@ completing the first airship return journey across the Atlantic in 182 hours of 
 ---------------------------------------------------------------------------------------
 
 ==== Next steps
-Naturally, we might want to do something slightly more useful at startup. Taking a look at Gaffer's internal https://github.com/ImageEngine/gaffer[config files] might provide some good starting points for more useful customisations. 
+Naturally, we might want to do something slightly more useful at startup. Taking a look at Gaffer's internal https://github.com/ImageEngine/gaffer/tree/master/startup/gui[config files] might provide some good starting points for more useful customisations. 

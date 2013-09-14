@@ -236,7 +236,7 @@ div.tableblock > table, table.tableblock { border: 3px solid #E8E8E8; }
 td, th ,th.tableblock, td.tableblock { border: 1px solid #E8E8E8; }
 
 /* reduce the margin between blocks to keep the items in lists a bit tighter */
-ul > li > * { color: #3E4349; margin-bottom: 0.4em; }
+ul > li > * { color: #404030; margin-bottom: 0.4em; }
 
 /*reduce the amount of padding in bullet lists*/
 ul { padding-left: 0; margin-left: 3em; }
@@ -247,19 +247,18 @@ td.icon, td.content { border: 0px; }
 /* scaling table content down a little */
 p.table { font-size: 90%; }
 
-/*code and inset blocks text*/
-pre, code, .monospaced {
+/*inset blocks text*/
+pre, code, .monospaced, tt {
   font-family: 'Ubuntu Mono','Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
   font-size:90%;
-  /*font-family: 'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
-  font-size:80%;*/
   line-height: 150%;
   color: #195057;
+  font-size: 8pt;
 }
 
-tt {
-  font-family: 'Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
-}
+
+/*have inline tt (set by `` in newer asciidoc versions) be full size*/
+tt { font-size:100%; }
 
 /*code examples - draw a thick side and overflow:auto to add a bottom scrollbar*/
 div.exampleblock > div.content, div.sidebarblock > div.content, div.listingblock > div.content { 

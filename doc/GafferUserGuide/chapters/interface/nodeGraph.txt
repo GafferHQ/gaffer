@@ -1,0 +1,150 @@
+=== NodeGraph anchor:interface_nodeGraph[]
+
+The *NodeGraph* is one of the key parts of the Gaffer interface and is the primary means of constructing and modifying the contents of a script.
+As we have seen previously, the script is composed of nodes connected to form graphs and the NodeGraph provides visualisation of both these nodes and their connections.
+
+[NOTE]
+Nodes, noodles, and nodules... +
+When discussing Gaffer graphs, you may see references to 'nodes', 'noodes' and 'nodules'. 'Nodes' handily refers to Gaffer nodes. You may see the curvy lines that represent the connections between nodes called 'noodles'. And finally 'nodule' is the name given to the little circles drawn on each node representing the plugs available for connection. +
+It's useful to note that noodles and nodules are a components of the GUI rather than part of the Gaffer core - you can manipulate them visually in the NodeGraph, but they aren't entities with values that you can set by other means. In that way they are distinct from nodes, which are actual Gaffer entities.
+
+
+==== Manipulating the NodeGraph view anchor:interface_manipulatingTheNodeGraphView[]
+
+The mouse can be used to perform most actions in the NodeGraph.
+
+* To pan around, simply click and hold the `middle-mouse button` in empty space (i.e. not on a node)
+** Alternatively, hold down the `ALT key` and `left-mouse drag` to perform the same action.
+* To zoom in and out of the graph, you can use the `middle-mouse scrollwheel` if you have one.
+** Alternatively, hold down the `ALT key` and `right-mouse drag` to zoom.
+
+There are xref:appendices_hotkeys[some hotkeys] available for setting the view. For example, `f` will frame to the current node selection.
+
+==== Manipulating nodes anchor:interface_manipulatingNodes[]
+
+===== Creating Nodes
+
+There are two handy ways of creating nodes within the NodeGraph. Both are integrated within the same tool, with each having its own particular benefits.
+
+Browsing the NodeMenu:
+
+** You can summon the NodeMenu by `right-clicking` in empty space within the NodeGraph panel.
+*** Additionally, if you `right-click` on a nodule of an existing node, Gaffer will show a context sensitive menu filtered a relevant subset of nodes.
+** The menu is organised hierarchically, with nodes grouped in to modules at the top level (Scene, RenderMan, Arnold, Image etc).
+** Simply browse the menu and submenus, and select the desired node with a `left-click` to have it added to the node network.
+
+.Browsing the NodeMenu and its submenus.
+image::images/chapters/interface/interface_nodeGraph_figAA.png[align="center"]
+
+Searching the NodeMenu:
+
+** Alternatively, nodes can be created by performing quick searches of the available node list.
+** The NodeMenu has a search field built in which sits on top of the menu list.
+** The quickest way to access it is by pressing `Tab` in the NodeGraph, which will raise the menu and set focus to the search field.
+*** This allows you to start typing straight away, and Gaffer will begin returning fuzzy matches from your first key stroke.
+*** For example: typing "att" will show results including: *'Att'*'ributeCache', *'Att'*'ributes', 'OpenGL'*'Att'*'ributes', 'Standard'*'Att'*'ributes' etc..
+** Once you have a list of matches, you can use the mouse to select or alternatively you can use the `up-arrow` and `down-arrow` keys combined with `Enter`.
+
+.Using the search box that sits atop the NodeMenu.
+image::images/chapters/interface/interface_nodeGraph_figBA.png[align="center"]
+
+As another efficiency aid, the NodeMenu will store the type of the last node it created. Next time you open the NodeMenu (either with `Tab` or `right-click`) the search field will be populated with this info, meaning you need only press `Enter` to create another node of that type.
+
+===== Selecting and arranging Nodes
+
+Once the NodeGraph is populated, nodes can be selected by:
+
+* `left-clicking` on individual nodes.
+** `Shift+left-click` will add nodes to the selection.
+** `Ctrl+left-click` will remove nodes from the selection.
+* `left-click-dragging` to draw a selection region around a group of nodes.
+* pressing `CTRL+a` to select all nodes.
+
+The selection can be cleared by:
+
+* `left-clicking` in the empty space of the NodeGraph.
+* or pressing `CTRL+SHIFT+a` whilst focus is on the NodeGraph panel.
+
+When nodes are selected they can be repositioned in within the node graph by `left-click-dragging`. To help with maintaining tidy networks, Gaffer peforms some snapping opertations as you move nodes. If the nodes being re-arranged have connections to any nodes outside the selection, Gaffer will attempt to to snap to their input and outputs such that nodes are centered, connections are horizontal or veritcal, and nodes butt up nicely to each other.
+
+
+
+===== Duplicating/deleting
+
+The usual system hotkeys for cut,copy,paste, and deleting nodes will work. See xref:appendices_hotkeys[the appendices] for more details.
+
+In addition to permanently deleting nodes, users have the option of temprorarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
+
+* `right-clicking` on a specific node with show a popup menu with an entry for "Enable" which can be checked on/off.
+* alternatively, the hotkey `d` will toggle the 'enabled' state for all selected nodes.
+
+.The centre node is disabled, and therefore has no affect on the scene as it passes through.
+image::images/autoGenerated_target/interface_nodeGraph_figAA.png[align="center"]
+
+
+===== Dragging nodes to other editors
+
+Gaffer makes extensive use of drag-and-drop behaviours throughout its interface. This action can be used to take node selections from the NodeGraph to quickly populate other editors. For example:
+
+* `middle-click-drag` on a node (selected or un-selected) in the NodeGraph and drop it on to a Viewer editor. This will set the Viewer to look at the output of that node (even if the Viewer is already 'pinned' to follow another node) and set the 'pin' status of the Viewer to True. This has the affect of keeping the node active in the Viewer whilst different nodes are selected.
+* The same is true for the NodeEditor. `middle-click-drag` and drop to pin a particular node for editing.
+* If you `middle-click-drag` a node over to a ScriptEditor, this will drop the path to that node in as a string (e.g. `script['MyBox']['MySceneReader']`). This can be useful if you wish to start writing a small script to affect or inspect a particular node.
+** This also works for input and output plugs. You can grab a nodule with `middle-click` and drop it to get its path (e.g. `script['MyBox']['MyTransform']['filter']`).
+
+[NOTE]
+Gaffer will indicate when it has content attached to a drag manouver by changing the mouse pointer. Adornments are added to the pointer icon to show the type of data being dragged (i.e. plug, node(s), colour-value, float-value, etc)
+
+==== Manipulating noodles anchor:interface_manipulatingNoodles[]
+===== Connecting nodes
+* Hover over the nodule from which you want to start the connection. The nodule will grow and change colour to indicate that it is available to begin the action.
+* Then `left-click-drag` to draw the noodle out of the nodule.
+* Holding down `left-click` will allow you to pull the tip of the noodle over to the target node. 
+** Once over the target node, Gaffer will attempt to snap the noodle to any valid nodules. The list of available plugs is filtered by the type of data passed through the noodle.
+** If the plug selected isn't the desired target, simply move the pointer closer to the correct nodule.
+** Gaffer will display the names of the available plugs to help you identify the right connection.
+* Finally, release the `left-click` to drop the noodle onto the target nodule, completing the connection.
+
+For flexibility, connections can be created by dragging in either direction, i.e from the 'out' to the 'in', or from the 'in' to the 'out'. This has no impact on the flow of data through the nodes, and is merely an UI convience.
+
+Once a connection is in place, the noodle will follow the start and end nodes as they are moved around in the NodeGraph. If at any point you need to find out what plugs are connected by a particular noodle, simply hover the pointer over the body of the noodle and a pop-up should appear. This pop-up will list the full name of the source and target plugs (including the node name and the names of any parent plugs), and indicate in which direction the data is flowing. For example: _MySphereNode.out -> MyGroupNode.in_
+
+.The handy pop-up listing input and output plugs on a noodle.
+image::images/chapters/interface/interface_nodeGraph_figCA.png[align="center"]
+
+[NOTE]
+To help with finding the particular plugs you wish to connect to the NodeGraph editor will pop-up handy plug labels when hovering over a node's nodules, or when dragging a noodle onto a node.
+
+.He we can see the labels of the available input plugs.
+image::images/chapters/interface/interface_nodeGraph_figDA.png[align="center"]
+
+
+===== Disconnecting noodles
+Disconnecting noodels is a simple action:
+
+* `left-click-drag` one of the ends of a noodle, until that end is disconnected from the plug it was attached to.
+* Then release the mouse and the noodle will be destroyed.
+
+===== Wrangling noodles
+
+To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
+In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
+
+To hide/unhide connections:
+
+* `right-click` on a node in the NodeGraph.
+* In the pop-up menu un-check "Show Input Connections"/"Show Output Connections"
+
+.A before and after comparison of hidden noodles. Note the stub noodles left on the nodules, indicating which plugs have input connections.
+image::images/chapters/interface/interface_nodeGraph_figEA.png[align="center"]
+
+
+
+
+
+
+
+
+
+
+
+

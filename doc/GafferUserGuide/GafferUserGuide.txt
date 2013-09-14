@@ -1,10 +1,10 @@
 = Gaffer User Guide
 image engine
-v0.1, 2013
+v0.79.0, 2013
 :doctype: book
 
 
-include::chapters/debug.txt[]
+//include::chapters/debug.txt[]
 
 include::chapters/introduction.txt[]
 
