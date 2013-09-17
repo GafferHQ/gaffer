@@ -1,4 +1,5 @@
 /*inline code samples*/
 .icode {
-color:red;
+	font-family: DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	color:rgb(80,80,80);
 }
