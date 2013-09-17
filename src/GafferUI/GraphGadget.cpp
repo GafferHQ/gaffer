@@ -42,6 +42,7 @@
 #include "OpenEXR/ImathPlane.h"
 
 #include "IECore/NullObject.h"
+#include "IECore/BoxOps.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -999,7 +1000,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 			{
 				Box3f nodeBound3 = nodeGadget->transformedBound();
 				Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
-				if( selectionBound.intersects( nodeBound2 ) )
+				if( boxContains( selectionBound, nodeBound2 ) )
 				{
 					m_scriptNode->selection()->add( nodeGadget->node() );
 				}
