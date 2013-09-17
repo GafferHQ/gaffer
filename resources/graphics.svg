@@ -13,7 +13,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 r9760"
+   inkscape:version="0.47 r22583"
    sodipodi:docname="graphics.svg">
   <defs
      id="defs4">
@@ -138,17 +138,17 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="249.72318"
-     inkscape:cy="916.12175"
+     inkscape:zoom="2.8284271"
+     inkscape:cx="593.3125"
+     inkscape:cy="909.49792"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="852"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1"
+     inkscape:window-width="1219"
+     inkscape:window-height="680"
+     inkscape:window-x="1920"
+     inkscape:window-y="47"
+     inkscape:window-maximized="0"
      inkscape:snap-global="true"
      inkscape:snap-nodes="true"
      inkscape:snap-bbox="true">
@@ -213,7 +213,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -269,7 +269,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)" />
       <rect
          style="fill:none;stroke:none"
@@ -299,7 +299,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)" />
       <rect
          style="fill:none;stroke:none"
@@ -317,7 +317,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -341,7 +341,7 @@
     </g>
     <path
        transform="matrix(-0.65333366,0,0,0.646633,135.86671,-311.44114)"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
        inkscape:randomized="0"
        inkscape:rounded="0"
        inkscape:flatsided="true"
@@ -384,7 +384,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)" />
       <rect
          style="fill:none;stroke:none"
@@ -408,7 +408,7 @@
        inkscape:flatsided="true"
        inkscape:rounded="0"
        inkscape:randomized="0"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
        transform="matrix(0,-0.65333366,-0.646633,0,423.30333,137.72889)"
        inkscape:label="#path2847" />
     <rect
@@ -500,7 +500,7 @@
        inkscape:flatsided="true"
        inkscape:rounded="0"
        inkscape:randomized="0"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
        transform="matrix(-0.65333366,0,0,0.646633,155.86671,-311.44114)"
        inkscape:label="#forExport:collapsibleArrowRightHover" />
     <rect
@@ -514,7 +514,7 @@
        inkscape:label="#rect2914" />
     <path
        transform="matrix(0,-0.65333366,-0.646633,0,443.30333,137.72889)"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
        inkscape:randomized="0"
        inkscape:rounded="0"
        inkscape:flatsided="true"
@@ -545,7 +545,7 @@
        inkscape:label="#rect2859" />
     <g
        id="forExport:aboutLogo"
-       transform="matrix(0.47176156,0,0,0.47176156,442.33486,109.86094)"
+       transform="matrix(0.47176156,0,0,0.47176156,666.33486,139.86094)"
        inkscape:label="#g4957">
       <path
          sodipodi:nodetypes="scsccccccssccccccccccs"
@@ -815,14 +815,14 @@
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:AppleMyungjo;-inkscape-font-specification:AppleMyungjo"
-       x="599.30432"
-       y="126.29126"
+       x="855.30432"
+       y="160.29126"
        id="text3085"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3087"
-         x="599.30432"
-         y="126.29126">gaffer</tspan></text>
+         x="855.30432"
+         y="160.29126">gaffer</tspan></text>
     <rect
        style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-opacity:1"
        id="forExport:layoutButton"
@@ -1783,5 +1783,30 @@
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccccccc" />
     </g>
+    <path
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 514.5,93.5 0,-3.5 -5.5,5 5.5,5 0,-3.5 7,0 0,3.5 5.5,-5 -5.5,-5 0,3.5 -7,0 z"
+       id="forExport:moveHorizontally"
+       sodipodi:nodetypes="ccccccccccc"
+       transform="translate(0,52.362183)"
+       inkscape:label="#path3088" />
+    <path
+       sodipodi:nodetypes="ccccccccccc"
+       id="forExport:moveVertically"
+       d="m 534,150.86218 -3.5,0 5,5.5 5,-5.5 -3.5,0 0,-7 3.5,0 -5,-5.5 -5,5.5 3.5,0 0,7 z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:label="#path3093" />
+    <path
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 552.44974,150.81192 -2.47487,2.47488 7.42462,0.35355 -0.35355,-7.42462 -2.47488,2.47487 -4.94974,-4.94974 2.47487,-2.47488 -7.42462,-0.35355 0.35355,7.42462 2.47488,-2.47487 4.94974,4.94974 z"
+       id="forExport:moveDiagonallyDown"
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:label="#path3095" />
+    <path
+       sodipodi:nodetypes="ccccccccccc"
+       id="forExport:moveDiagonallyUp"
+       d="m 566.22183,150.76167 2.47487,2.47488 -7.42462,0.35355 0.35355,-7.42462 2.47488,2.47487 4.94974,-4.94974 -2.47487,-2.47488 7.42462,-0.35355 -0.35355,7.42462 -2.47488,-2.47487 -4.94974,4.94974 z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:label="#path3097" />
   </g>
 </svg>
