@@ -5,59 +5,58 @@ title: Gaffer Home
 {% include header.html %}
 
 <div class="jumbotron">
-	<h1>Connect nodes. Make pictures.</h1>
-	<p class="lead">
-	Gaffer is a general purpose node-based application designed for use in the visual effects industry.
-	It provides basic tools for procedural scene generation, shader authoring, rendering, and image compositing.
-	</p>
-	<p><a class="btn btn-primary btn-lg" href="getStarted.html"><span class="glyphicon glyphicon-download"></span> Give it a whirl...</a></p>
+	<div class="container">
+		<h1>Connect nodes. Make pictures.</h1>
+		<p class="lead">
+		Gaffer is a general purpose node-based application designed for use in the visual effects industry.
+		It provides basic tools for procedural scene generation, shader authoring, rendering, and image compositing.
+		</p>
+		<p><a class="btn btn-primary btn-lg" href="getStarted.html"><span class="glyphicon glyphicon-download"></span> Give it a whirl...</a></p>
+	</div>
 </div>
 
-<hr>
 
-<div class="row-fluid marketing">
 
-	<div class="span4">
-		<h2>Powerful</h2>
-		<p>Based on a multithreaded blah blah...</p>
-		<h2>Renderer Agnostic</h2>
-		<p>Gaffer utilises a renderer abstraction layer allowing it to export to your favourite renderer (assuming
-		   for now that your favourite renderer is either Arnold or 3Delight).
-		</p>
-	</div>
 
-	<div class="span4">
+<div class="container">
+	<div class="row">
+		<div class="col-lg-4">
+			<h2>Powerful</h2>
+			<p>Based on a multithreaded blah blah...</p>
+			<h2>Renderer Agnostic</h2>
+			<p>Gaffer utilises a renderer abstraction layer allowing it to export to your favourite renderer (assuming
+			   for now that your favourite renderer is either Arnold or 3Delight).
+			</p>
+		</div>
+		<div class="col-lg-4">
+			<h2>Customisable</h2>
+			<p>Gaffer is built to be customisable throughout. Be it a simple
+			scripted configuration tweak, complex expression, custom node
+			or user interface, even a full blown application, Gaffer's open APIs enable
+			you to do what you need.
+			</p>
 
-		<h2>Customisable</h2>
-		<p>Gaffer is built to be customisable throughout. Be it a simple
-		scripted configuration tweak, complex expression, custom node
-		or user interface, even a full blown application, Gaffer's open APIs enable
-		you to do what you need.
+			<h2>Extensible</h2>
+			<p>Indeed</p>
+
+		</div>
+
+		<div class="col-lg-4">
+			<h2>Open Source</h2>
+			<p>Distributed under the BSD license, Gaffer builds upon a
+			   wealth of open-source VFX libraries including OpenEXR, OpenImageIO,
+			   OpenColorIO, Cortex and of course the Gaffer frameworks themselves.
+			</p>
+			<h2>Unfinished</h2>
+			<p>Although Gaffer is becoming more capable by the day, it still lacks
+			in features and useability.
 		
-		
-		</p>
-
-		<h2>Extensible</h2>
-		<p>Indeed</p>
-
+			Itching to fix a bug or contribute a cool new enhancement? Want to
+			add support for OpenVDB, Bullet or another renderer backend? 
+			<a href="https://github.com/ImageEngine/gaffer">Fork it on GitHub...</a>
+			</p>
+		</div>
 	</div>
-
-	<div class="span4">
-		<h2>Open Source</h2>
-		<p>Distributed under the BSD license, Gaffer builds upon a
-		   wealth of open-source VFX libraries including OpenEXR, OpenImageIO,
-		   OpenColorIO, Cortex and of course the Gaffer frameworks themselves.
-		</p>
-		<h2>Unfinished</h2>
-		<p>Although Gaffer is becoming more capable by the day, it still lacks
-		in features and useability.
-		
-		Itching to fix a bug or contribute a cool new enhancement? Want to
-		add support for OpenVDB, Bullet or another renderer backend? 
-		<a href="https://github.com/ImageEngine/gaffer">Fork it on GitHub...</a>
-		</p>
-	</div>
-
 </div>
 
 {% include footer.html %}
