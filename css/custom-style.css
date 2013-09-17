@@ -1,5 +1,6 @@
 /*inline code samples*/
 .icode {
 	font-family: DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
-	color:rgb(80,80,80);
+	font-size: 80%;
+	color:rgb(120,120,120);
 }
