@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,45 +34,42 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "Gaffer/Backdrop.h"
 
-namespace GafferUI
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( Backdrop );
+
+size_t Backdrop::g_firstPlugIndex = 0;
+
+Backdrop::Backdrop( const std::string &name )
+	:	Node( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "title", Plug::In, "Title" ) );
+	addChild( new StringPlug( "description" ) );
+}
 
-enum TypeId
+Backdrop::~Backdrop()
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	
-	LastTypeId = 110500
-};
+}
 
-} // namespace GafferUI
+Gaffer::StringPlug *Backdrop::titlePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
 
-#endif // GAFFERUI_TYPEIDS_H
+const Gaffer::StringPlug *Backdrop::titlePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringPlug *Backdrop::descriptionPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Backdrop::descriptionPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}

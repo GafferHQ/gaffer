@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,45 +34,50 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
-namespace GafferUI
-{
+#include "IECorePython/RunTimeTypedBinding.h"
 
-enum TypeId
+#include "GafferUI/BackdropNodeGadget.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/Nodule.h"
+
+#include "GafferUIBindings/NodeGadgetBinding.h"
+#include "GafferUIBindings/BackdropNodeGadgetBinding.h"
+
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferUI;
+using namespace GafferUIBindings;
+
+static void frame( BackdropNodeGadget &b, object nodes )
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
+	std::vector<Node *> n;
+	boost::python::container_utils::extend_container( n, nodes );
+	b.frame( n );
+}
+
+static list framed( BackdropNodeGadget &b )
+{
+	std::vector<Node *> n;
+	b.framed( n );
 	
-	LastTypeId = 110500
-};
+	list result;
+	for( std::vector<Node *>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
+	{
+		result.append( NodePtr( *it ) );
+	}
+	
+	return result;
+}
 
-} // namespace GafferUI
-
-#endif // GAFFERUI_TYPEIDS_H
+void GafferUIBindings::bindBackdropNodeGadget()
+{
+	IECorePython::RunTimeTypedClass<BackdropNodeGadget>()
+		.def( init<Gaffer::NodePtr>() )
+		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( BackdropNodeGadget )
+		.def( "frame", &frame )
+		.def( "framed", &framed )
+	;
+}
