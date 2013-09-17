@@ -13,35 +13,26 @@
 
 <body>
 
-    <div class="container">
-    
-	    <!-- Navigation Bar -->
+<nav class="navbar navbar-default" role="navigation">
+	<!-- Collect the nav links, forms, and other content for toggling -->
+	<div class="collapse navbar-collapse navbar-ex1-collapse">
+		<ul class="nav navbar-nav">
+			<li {% if page.url == '/index.html' %} class="active" {% endif %}>
+				<a href="/gaffer/index.html"> <span class="glyphicon glyphicon-home"></span> Gaffer</a>
+			</li>
+			<li {% if page.url == '/getStarted.html' %} class="active" {% endif %}>
+				<a href="/gaffer/getStarted.html">Get Started</a>
+			</li>
+			<li {% if page.url == '/forum.html' %} class="active" {% endif %}>
+				<a href="/gaffer/forum.html">Forum</a>
+			</li>
+			<li {% if page.url contains '/blog'  %} class="active" {% endif %}>
+				<a href="/gaffer/{{ site.posts.first.url }}">Blog</a></li>
+			</li>
+		</ul>
+	</div><!-- /.navbar-collapse -->
+</nav>
 
-		<div class="masthead">
-			<h3 class="muted">Gaffer</h3>	
-			<div class="navbar navbar-static-top">
-				<div class="navbar-inner">
-					<div class="container">
-						<ul class="nav">
-							<li {% if page.url == '/index.html' %} class="active" {% endif %}>
-								<a href="/gaffer/index.html"><i class="icon-home"></i> Gaffer</a>
-							</li>
-							<li {% if page.url == '/getStarted.html' %} class="active" {% endif %}>
-								<a href="/gaffer/getStarted.html">Get Started</a>
-							</li>
-							<li {% if page.url == '/forum.html' %} class="active" {% endif %}>
-								<a href="/gaffer/forum.html">Forum</a>
-							</li>
-							<li {% if page.url contains '/blog'  %} class="active" {% endif %}>
-								<a href="/gaffer/{{ site.posts.first.url }}">Blog</a></li>
-							</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
+<div class="container">
+<div class="container" id="contentContainer">
 
-  		<hr>
-  		
-  		<div class="container" id="contentContainer">
-  		
