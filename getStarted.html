@@ -21,13 +21,29 @@ title: Getting Started With Gaffer
 			<h1>1. Download</h1>
 			</div>
 			<p class="lead">To install a pre-built release, simply download and unpack the latest bundle from <a href=https://github.com/ImageEngine/gaffer/releases>the project site</a>. The resulting directory will contain the complete application ready to run.</p>
+			<p>For linux, you will want the gaffer-VERSION-linux.tar.gz bundle. It's recommended that you choose the latest available verion. Once you have this file downloaded, unpack it with the command <tt>tar -xvf gaffer-0.79.0-linux.tar.gz</tt> (where in this case <tt>0.79.0</tt> is the version number)</p>
 		</section>
 
 		<section id="configure">
 			<div class="page-header">
 			<h1>2. Configure</h1>
 			</div>
-			<p class="lead">Blah blah...</p>
+			<p class="lead">Once you have unpacked the bundle, you will need to add the following location within the Gaffer directory to your $PATH environment variable (substituting <tt>&lt;GAFFER_INSTALL_PATH&gt;</tt> with the path to the unpacked directory):</p>
+			<ul><li><tt>&lt;GAFFER_INSTALL_PATH&gt;/bin</tt></li></ul>
+			<p> Then to use 3delight with Gaffer you will need to:</p>
+			<ul>
+			<li>Ensure <tt>&lt;3DELIGHT_INSTALL_PATH&gt;/bin</tt> is in your $PATH.</li>
+			<li>Set the $DELIGHT environment variable to point to <tt>&lt;3DELIGHT_INSTALL_PATH&gt;</tt>.</li>
+			<li>Add <tt>&lt;3DELIGHT_INSTALL_PATH&gt;/shaders</tt> to the $DL_SHADERS_PATH environment variable.</li>
+			<li>Add <tt>&lt;3DELIGHT_INSTALL_PATH&gt;/displays</tt> to the $DL_DISPLAYS_PATH environment variable.</li>
+			<li>Add <tt>&lt;3DELIGHT_INSTALL_PATH&gt;/lib</tt> to the $LD_LIBRARY_PATH environment variable.</li>
+			</ul>
+			<p>Similarly, to use Arnold with Gaffer you will need to:</p>
+			<ul>
+			<li>Ensure <tt>&lt;ARNOLD_INSTALL_PATH&gt;/bin</tt> is in your $PATH.</li>
+			<li>Add <tt>&lt;ARNOLD_INSTALL_PATH&gt;/bin</tt> to the $LD_LIBRARY_PATH environment variable.</li>
+			<li>Add <tt>&lt;ARNOLD_INSTALL_PATH&gt;/python</tt> to the $PYTHONPATH environment variable.</li>
+			</ul>
 		</section>
 
 		<section id="tinker">
