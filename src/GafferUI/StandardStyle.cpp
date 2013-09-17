@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/tokenizer.hpp"
+
 #include "OpenEXR/ImathVecAlgo.h"
 
 #include "IECore/SearchPath.h"
@@ -61,6 +63,15 @@ IE_CORE_DEFINERUNTIMETYPED( StandardStyle );
 StandardStyle::StandardStyle()
 {
 	setFont( LabelText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
+	setFontScale( LabelText, 1.0f );
+	
+	setFont( BodyText, FontLoader::defaultFontLoader()->load( "Vera.ttf" ) );
+	setFontScale( BodyText, 1.0f );
+
+	setFont( HeadingText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
+	setFontScale( HeadingText, 2.0f );
+	
+	
 	setColor( BackgroundColor, Color3f( 0.1 ) );
 	setColor( SunkenColor, Color3f( 0.1 ) );
 	setColor( RaisedColor, Color3f( 0.4 ) );
@@ -96,7 +107,10 @@ void StandardStyle::bind( const Style *currentStyle ) const
 Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
 {	
 	Imath::Box2f b = m_fonts[textType]->coreFont()->bound( text );
-	return Imath::Box3f( Imath::V3f( b.min.x, b.min.y, 0 ), Imath::V3f( b.max.x, b.max.y, 0 ) );
+	return Imath::Box3f(
+		m_fontScales[textType] * Imath::V3f( b.min.x, b.min.y, 0 ),
+		m_fontScales[textType] * Imath::V3f( b.max.x, b.max.y, 0 )
+	);
 }
 
 void StandardStyle::renderText( TextType textType, const std::string &text, State state ) const
@@ -120,7 +134,68 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 
 	glColor( m_colors[ForegroundColor] );
 
-	m_fonts[textType]->renderSprites( text );
+	glPushMatrix();
+
+		glScalef( m_fontScales[textType], m_fontScales[textType], m_fontScales[textType] );
+		m_fonts[textType]->renderSprites( text );
+	
+	glPopMatrix();
+}
+
+void StandardStyle::renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state ) const
+{	
+	IECoreGL::Font *glFont = m_fonts[textType].get();
+	const IECore::Font *coreFont = glFont->coreFont();
+	
+	const float spaceWidth = coreFont->bound().size().x * 0.25;
+	const float descent = coreFont->bound().min.y;
+	const float newlineHeight = coreFont->bound().size().y * 1.2;
+	
+	V2f cursor( bound.min.x, bound.max.y - coreFont->bound().size().y );
+	
+	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	boost::char_separator<char> separator( "", " \n\t" );
+	Tokenizer tokenizer( text, separator );
+	Tokenizer::iterator it = tokenizer.begin();
+	while( it != tokenizer.end() && ( cursor.y + descent ) > bound.min.y )
+	{
+		if( *it == "\n" )
+		{
+			cursor.x = bound.min.x;
+			cursor.y -= newlineHeight;
+		}
+		else if( *it == " " )
+		{
+			cursor.x += spaceWidth;
+		}
+		else if( *it == "\t" )
+		{
+			cursor.x += spaceWidth	* 4;			
+		}
+		else
+		{
+			const float width = coreFont->bound( *it ).size().x;
+			if( cursor.x + width > bound.max.x )
+			{
+				cursor.x = bound.min.x;
+				cursor.y -= newlineHeight;
+				// moving the cursor down might have sent us
+				// out of the bound, in which case we must stop.
+				if( ( cursor.y + descent ) < bound.min.y )
+				{
+					break;
+				}
+			}
+			
+			glPushMatrix();
+				glTranslatef( cursor.x, cursor.y, 0.0f );
+				renderText( textType, *it, state );
+				cursor.x += width;
+			glPopMatrix();
+		}
+
+		++it;
+	}
 }
 
 void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, State state ) const
@@ -233,6 +308,17 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glEnd();
 }
 
+void StandardStyle::renderBackdrop( const Imath::Box2f &box, State state ) const
+{
+	glColor( m_colors[RaisedColor] );
+	renderSolidRectangle( box );
+	if( state == HighlightedState )
+	{
+		glColor( m_colors[HighlightColor] );
+		renderRectangle( box );
+	}
+}
+
 void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 {
 	V2f boxSize = box.size();
@@ -264,6 +350,25 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 		glTexCoord2f( 1, 0 );
 		glVertex2f( box.max.x, box.min.y );
 
+	glEnd();
+
+}
+
+void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length, State state ) const
+{
+
+	glColor( state == HighlightedState ? m_colors[HighlightColor] : m_colors[ForegroundColor] );
+
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	
+	glBegin( GL_LINES );
+		
+		glVertex2f( center.x - length / 2.0f, center.y );
+		glVertex2f( center.x + length / 2.0f, center.y );
+		
 	glEnd();
 
 }
@@ -343,6 +448,16 @@ const IECoreGL::Font *StandardStyle::getFont( TextType textType ) const
 	return m_fonts[textType].get();
 }
 
+void StandardStyle::setFontScale( TextType textType, float scale )
+{
+	m_fontScales[textType] = scale;
+}
+
+const float StandardStyle::getFontScale( TextType textType ) const
+{
+	return m_fontScales[textType];
+}
+		
 unsigned int StandardStyle::connectionDisplayList()
 {
 	static unsigned int g_list;
