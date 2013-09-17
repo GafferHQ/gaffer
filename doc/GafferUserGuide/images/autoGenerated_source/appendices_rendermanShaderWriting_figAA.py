@@ -1,11 +1,18 @@
 import GafferUI
 import GafferRenderMan
+import IECore
 import os
+
 scriptFile = script['fileName'].getValue()
 scriptPath = os.path.dirname(scriptFile)
+
+os.environ['DL_SHADERS_PATH'] = os.environ['DL_SHADERS_PATH'] + ':' + scriptPath
+
 shaderNode = GafferRenderMan.RenderManShader('ShaderNode')
 script.addChild( shaderNode )
-os.environ['DL_SHADERS_PATH'] = os.environ['DL_SHADERS_PATH'] + ':' + scriptPath
+
+shaderNode.shaderLoader().searchPath = IECore.SearchPath(os.environ['DL_SHADERS_PATH'],":")
+
 shaderPath = 'annotationsExample'
 shaderNode.loadShader( shaderPath )
 scriptWindow = GafferUI.ScriptWindow.acquire( script )

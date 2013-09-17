@@ -6,6 +6,6 @@ The editor is broken into two sections:
 * The bottom field is for entering python commands. Cut, copy, paste, undo, redo, select all, etc will work as normal - either via hotkeys or the right-click context menu.
 * The top displays output from any commands executed.
 
-To execute any code entered into the lower field of the ScriptEditor, simply select the text (either single lines, or whole chunks or code) and press `CTRL+Enter`.
+To execute any code entered into the lower field of the ScriptEditor, simply select the text (either single lines, or whole chunks or code) and press `Ctrl+Enter`.
 You should see the commands entered echoed in the feedback field (indicating that they were successfully executed) along with any results.
 

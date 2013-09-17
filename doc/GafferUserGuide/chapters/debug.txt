@@ -1,6 +1,6 @@
 == DEBUG
 
-This chapter is exclusively for the purposes of testing the documenation build chain.
+This chapter is exclusively for the purposes of testing the documentation build chain.
 
 It contains examples of formatting and layout.
 
@@ -16,7 +16,7 @@ pass::[<a href="https://www.google.com">googles</a>]
 
 [source, python]
 ------------------------------------
-import this
+import thiss
 foo = (1,2,3)
 def jam:
     eggs * 5

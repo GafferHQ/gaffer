@@ -1,0 +1,98 @@
+import Gaffer
+import IECore
+import GafferUI
+import GafferScene
+
+class MyNode( Gaffer.Node ) :
+
+	def __init__( self, name="ExampleNode" ) :
+	
+		Gaffer.Node.__init__( self, name )
+
+
+		self.addChild( Gaffer.IntPlug( "integer", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+		self["integer"].setValue( 1 )
+		self.addChild( Gaffer.FloatPlug( "float", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+		self["float"].setValue( 0.2 )
+		self.addChild( Gaffer.V2iPlug( "twoIntVector", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+		self["twoIntVector"].setValue( IECore.V2i(3,4) )
+		self.addChild( Gaffer.V3fPlug( "threeFloatVector", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+		self["threeFloatVector"].setValue( IECore.V3f(0.5,0.6,0.7) )
+		self.addChild( Gaffer.Color3fPlug( "rgb", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+		self["rgb"].setValue( IECore.Color3f(0.8,0.9,1.0) )
+		self.addChild( Gaffer.Color4fPlug( "rgba", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+		self["rgba"].setValue( IECore.Color4f(1.0,0.9,0.8,0.7) )
+		self.addChild( Gaffer.IntPlug( "enum" ) )
+		self.addChild( Gaffer.StringPlug( "string" ) )
+		self["string"].setValue( "abcdefg" )
+		self.addChild( Gaffer.StringPlug( "filePath" ) )
+		self["filePath"].setValue( "/tmp/foo/bar/doodah.png" )
+		self.addChild( Gaffer.StringPlug( "scenePath") )
+		self["scenePath"].setValue( "/root_GRP/geo_GRP/mesh_GEO" )
+
+		
+IECore.registerRunTimeTyped( MyNode, typeName = "Gaffer::MyNode" )
+
+
+GafferUI.PlugValueWidget.registerCreator(
+	MyNode.staticTypeId(),
+	"enum",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "option A", 0 ),
+		( "option B", 1 ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	MyNode.staticTypeId(),
+	"filePath",
+	GafferUI.PathPlugValueWidget,
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	MyNode.staticTypeId(),
+	"scenePath",
+	GafferUI.PathPlugValueWidget,
+)
+
+
+__children = {}
+
+parent["frameRange"]["start"].setValue( 1 )
+parent["frameRange"]["end"].setValue( 100 )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectName", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["name"].setValue( 'project:name' )
+parent["variables"]["projectName"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectName"]["value"].setValue( 'default' )
+parent["variables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "projectRootDirectory", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["name"].setValue( 'project:rootDirectory' )
+parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+parent["variables"]["projectRootDirectory"]["value"].setValue( '$HOME/gaffer/projects/${project:name}' )
+
+
+
+
+__children["ExampleNode"] = MyNode( "ExampleNode" )
+parent.addChild( __children["ExampleNode"] )
+
+
+
+__children["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+parent.addChild( __children["PathFilter"] )
+__children["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ "/root/lights_GRP/orientation_GRP/key01_LGT", "/root/lights_GRP/.../*02_LGT" ] ) )
+__children["PathFilter"].addChild( Gaffer.V2fPlug( "__uiPosition", flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable | Gaffer.Plug.Flags.AcceptsInputs | Gaffer.Plug.Flags.PerformsSubstitutions | Gaffer.Plug.Flags.Cacheable, ) )
+__children["PathFilter"]["__uiPosition"]["x"].setValue( -2.8444442749023438 )
+__children["PathFilter"]["__uiPosition"]["y"].setValue( 3.5555572509765625 )
+
+
+
+
+parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+
+del __children
+

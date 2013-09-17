@@ -1,6 +1,6 @@
 = Gaffer User Guide
 image engine
-v0.79.0, 2013
+v0.83.0, 2013
 :doctype: book
 
 
