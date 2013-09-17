@@ -21,7 +21,7 @@ title: Getting Started With Gaffer
 			<h1>1. Download</h1>
 			</div>
 			<p class="lead">To install a pre-built release, simply download and unpack the latest bundle from <a href=https://github.com/ImageEngine/gaffer/releases>the project site</a>. The resulting directory will contain the complete application ready to run.</p>
-			<p class="lead">For linux, you will want the gaffer-VERSION-linux.tar.gz bundle. It's recommended that you choose the latest available verion. Once you have this file downloaded, unpack it with the command <span class="icode">tar -xvf gaffer-0.79.0-linux.tar.gz</span> (where in this case <span class="icode">0.79.0</span> is the version number)</p>
+			<p class="lead">For linux, you will want the gaffer-VERSION-linux.tar.gz bundle. It's recommended that you choose the latest available verion. Once you have this file downloaded, unpack it with the command <code>tar -xvf gaffer-0.79.0-linux.tar.gz</code> (where in this case <code>0.79.0</code> is the version number)</p>
 		</section>
 
 		<section id="configure">
@@ -29,9 +29,9 @@ title: Getting Started With Gaffer
 			<h1>2. Configure</h1>
 			</div>
 			<p class="lead">Once you have unpacked the bundle, you will need to add the following location within the Gaffer directory to your $PATH environment variable (substituting <span class="icode">&lt;GAFFER_INSTALL_PATH&gt;</span> with the path to the unpacked directory):</p>
-			<ul class="lead"><li><span class="icode">&lt;GAFFER_INSTALL_PATH&gt;/bin</span></li></ul>
+			<ul><li><span class="icode">&lt;GAFFER_INSTALL_PATH&gt;/bin</span></li></ul>
 			<p class="lead"> Then to use 3delight with Gaffer you will need to:</p>
-			<ul class="lead">
+			<ul>
 			<li>Ensure <span class="icode">&lt;3DELIGHT_INSTALL_PATH&gt;/bin</span> is in your $PATH.</li>
 			<li>Set the $DELIGHT environment variable to point to <span class="icode">&lt;3DELIGHT_INSTALL_PATH&gt;</span>.</li>
 			<li>Add <span class="icode">&lt;3DELIGHT_INSTALL_PATH&gt;/shaders</span> to the $DL_SHADERS_PATH environment variable.</li>
@@ -39,7 +39,7 @@ title: Getting Started With Gaffer
 			<li>Add <span class="icode">&lt;3DELIGHT_INSTALL_PATH&gt;/lib</span> to the $LD_LIBRARY_PATH environment variable.</li>
 			</ul>
 			<p class="lead">Similarly, to use Arnold with Gaffer you will need to:</p>
-			<ul class="lead">
+			<ul>
 			<li>Ensure <span class="icode">&lt;ARNOLD_INSTALL_PATH&gt;/bin</span> is in your $PATH.</li>
 			<li>Add <span class="icode">&lt;ARNOLD_INSTALL_PATH&gt;/bin</span> to the $LD_LIBRARY_PATH environment variable.</li>
 			<li>Add <span class="icode">&lt;ARNOLD_INSTALL_PATH&gt;/python</span> to the $PYTHONPATH environment variable.</li>
