@@ -4,11 +4,11 @@
 	<title>{{ page.title }}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<!-- Bootstrap -->
-	<link href="/gaffer/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<link href="/gaffer/css/bootstrap.css" rel="stylesheet" media="screen">
 	<link href="/gaffer/css/bootstrap-theme.css" rel="stylesheet">
 	<!-- Our styling -->
 	<link rel="stylesheet" type="text/css" href="css/custom-style.css"/>
-	<link rel="icon" type="image/png" href="http://imageengine.github.io/gaffer/images/favicon.png" />
+	<link rel="icon" type="image/png" href="http://imageengine.github.io/gaffer/resources/images/favicon.png" />
 </head>
 
 <body>
@@ -38,6 +38,9 @@
 			    <!--<li {% if page.url contains '/blog'  %} class="active" {% endif %}>
 				    <a href="/gaffer/{{ site.posts.first.url }}">Blog</a>
 			    </li>-->
+				<li {% if page.url == '/demos.html'  %} class="active" {% endif %}>
+				    <a href="/gaffer/demos.html">Demos</a>
+			    </li>
 		    </ul>
 	    </div>
 	</div><!-- /.navbar-collapse -->
