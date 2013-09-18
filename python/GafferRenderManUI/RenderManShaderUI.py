@@ -394,6 +394,14 @@ GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticT
 # Metadata registrations
 ##########################################################################
 
+
+def __nodeDescription( node ) :
+
+	__defaultNodeDescription = """Loads shaders for use in RenderMan renderers. Use the ShaderAssignment node to assign shaders to objects in the scene."""
+
+	description = _shaderAnnotations( node ).get( "help", None )
+	return description.value if description is not None else __defaultNodeDescription
+		
 def __plugDescription( plug ) :
 
 	annotations = _shaderAnnotations( plug.node() )
@@ -416,6 +424,8 @@ def __plugDivider( plug ) :
 		return False
 		
 	return d.value.lower() in ( "True", "true", "1" )	
+
+GafferUI.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
 
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
 GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
