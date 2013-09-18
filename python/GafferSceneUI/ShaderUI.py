@@ -95,7 +95,7 @@ class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			shaderName = self.getPlug().getValue()
 			self.__label.setText( "<h3>Shader : " + shaderName + "</h3>" )
 			## \todo Disable the RenderMan check once we've got all the shader types implementing reloading properly.
-			self.__button.setEnabled( shaderName and "RenderMan" in self.getPlug().node().typeName() )
+			self.__button.setEnabled( bool( shaderName ) and "RenderMan" in self.getPlug().node().typeName() )
 			
 	def __buttonClicked( self, button ) :
 	
