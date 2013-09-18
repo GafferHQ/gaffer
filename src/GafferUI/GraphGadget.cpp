@@ -42,6 +42,7 @@
 #include "OpenEXR/ImathPlane.h"
 
 #include "IECore/NullObject.h"
+#include "IECore/BoxOps.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -431,7 +432,19 @@ void GraphGadget::doRender( const Style *style ) const
 {
 	glDisable( GL_DEPTH_TEST );
 	
-	// render connection first so they go underneath
+	// render backdrops before anything else
+	/// \todo Perhaps we need a more general layering system as part
+	/// of the Gadget system, to allow Gadgets to choose their own layering,
+	/// and perhaps to also allow one gadget to draw into multiple layers.
+	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+	{
+		if( (*it)->isInstanceOf( (IECore::TypeId)BackdropNodeGadgetTypeId ) )
+		{
+			static_cast<const Gadget *>( it->get() )->render( style );		
+		}
+	}	
+	
+	// then render connections so they go underneath the nodes
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
 		ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() );
@@ -470,7 +483,7 @@ void GraphGadget::doRender( const Style *style ) const
 	// then render the rest on top
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
-		if( !((*it)->isInstanceOf( ConnectionGadget::staticTypeId() )) )
+		if( !((*it)->isInstanceOf( ConnectionGadget::staticTypeId() )) && !((*it)->isInstanceOf( (IECore::TypeId)BackdropNodeGadgetTypeId )) )
 		{
 			static_cast<const Gadget *>( it->get() )->render( style );
 		}
@@ -999,7 +1012,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 			{
 				Box3f nodeBound3 = nodeGadget->transformedBound();
 				Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
-				if( selectionBound.intersects( nodeBound2 ) )
+				if( boxContains( selectionBound, nodeBound2 ) )
 				{
 					m_scriptNode->selection()->add( nodeGadget->node() );
 				}

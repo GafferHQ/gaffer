@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,45 +34,43 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFER_BACKDROP_H
+#define GAFFER_BACKDROP_H
 
-#include "IECoreGL/Texture.h"
+#include "Gaffer/Node.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "GafferUI/Style.h"
-
-#include "GafferUIBindings/StyleBinding.h"
-
-using namespace boost::python;
-using namespace GafferUIBindings;
-using namespace GafferUI;
-
-void GafferUIBindings::bindStyle()
+namespace Gaffer
 {
-	scope s = IECorePython::RunTimeTypedClass<Style>()
-		.def( "textBound", &Style::textBound )
-		.def( "renderText", &Style::renderText )
-		.def( "renderWrappedText", &Style::renderWrappedText )
-		.def( "renderFrame", &Style::renderFrame )
-		.def( "renderNodule", &Style::renderNodule )
-		.def( "renderConnection", &Style::renderConnection )
-		.def( "renderBackdrop", &Style::renderBackdrop )
-		.def( "renderSelectionBox", &Style::renderSelectionBox )
-		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
-		.def( "renderImage", &Style::renderImage )
-		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
-		.def( "setDefaultStyle", &Style::getDefaultStyle ).staticmethod( "setDefaultStyle" )	
-	;
+
+/// The Backdrop node has no computational purpose - it is merely a placeholder
+/// for an organisation tool in the user interface, implemented in GafferUI::BackdropNodeGadget.
+class Backdrop : public Node
+{
+
+	public :
+
+		Backdrop( const std::string &name=defaultName<Backdrop>() );
+		virtual ~Backdrop();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Backdrop, BackdropTypeId, Node );
+		
+		StringPlug *titlePlug();
+		const StringPlug *titlePlug() const;
+		
+		StringPlug *descriptionPlug();
+		const StringPlug *descriptionPlug() const;
+		
+	private :
 	
-	enum_<Style::State>( "State" )
-		.value( "NormalState", Style::NormalState )
-		.value( "DisabledState", Style::DisabledState )
-		.value( "HighlightedState", Style::HighlightedState )
-	;
+		static size_t g_firstPlugIndex;		
 	
-	enum_<Style::TextType>( "TextType" )
-		.value( "LabelText", Style::LabelText )
-		.value( "BodyText", Style::BodyText )
-	;
-}
+};
+
+IE_CORE_DECLAREPTR( Backdrop )
+
+typedef FilteredChildIterator<TypePredicate<Backdrop> > BackdropIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<Backdrop> > RecursiveBackdropIterator;
+
+} // namespace Gaffer
+
+#endif // GAFFER_BACKDROP_H

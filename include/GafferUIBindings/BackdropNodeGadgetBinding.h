@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,45 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUIBINDINGS_BACKDROPNODEGADGETBINDING_H
+#define GAFFERUIBINDINGS_BACKDROPNODEGADGETBINDING_H
 
-#include "IECoreGL/Texture.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
-
-#include "GafferUI/Style.h"
-
-#include "GafferUIBindings/StyleBinding.h"
-
-using namespace boost::python;
-using namespace GafferUIBindings;
-using namespace GafferUI;
-
-void GafferUIBindings::bindStyle()
+namespace GafferUIBindings
 {
-	scope s = IECorePython::RunTimeTypedClass<Style>()
-		.def( "textBound", &Style::textBound )
-		.def( "renderText", &Style::renderText )
-		.def( "renderWrappedText", &Style::renderWrappedText )
-		.def( "renderFrame", &Style::renderFrame )
-		.def( "renderNodule", &Style::renderNodule )
-		.def( "renderConnection", &Style::renderConnection )
-		.def( "renderBackdrop", &Style::renderBackdrop )
-		.def( "renderSelectionBox", &Style::renderSelectionBox )
-		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
-		.def( "renderImage", &Style::renderImage )
-		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
-		.def( "setDefaultStyle", &Style::getDefaultStyle ).staticmethod( "setDefaultStyle" )	
-	;
-	
-	enum_<Style::State>( "State" )
-		.value( "NormalState", Style::NormalState )
-		.value( "DisabledState", Style::DisabledState )
-		.value( "HighlightedState", Style::HighlightedState )
-	;
-	
-	enum_<Style::TextType>( "TextType" )
-		.value( "LabelText", Style::LabelText )
-		.value( "BodyText", Style::BodyText )
-	;
-}
+
+void bindBackdropNodeGadget();
+
+} // namespace GafferUIBindings
+
+#endif // GAFFERUIBINDINGS_BACKDROPNODEGADGETBINDING_H

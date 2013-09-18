@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,44 +35,49 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-
-#include "IECoreGL/Texture.h"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
-#include "GafferUI/Style.h"
+#include "GafferUI/BackdropNodeGadget.h"
+#include "GafferUI/GraphGadget.h"
+#include "GafferUI/Nodule.h"
 
-#include "GafferUIBindings/StyleBinding.h"
+#include "GafferUIBindings/NodeGadgetBinding.h"
+#include "GafferUIBindings/BackdropNodeGadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferUIBindings;
+using namespace Gaffer;
 using namespace GafferUI;
+using namespace GafferUIBindings;
 
-void GafferUIBindings::bindStyle()
+static void frame( BackdropNodeGadget &b, object nodes )
 {
-	scope s = IECorePython::RunTimeTypedClass<Style>()
-		.def( "textBound", &Style::textBound )
-		.def( "renderText", &Style::renderText )
-		.def( "renderWrappedText", &Style::renderWrappedText )
-		.def( "renderFrame", &Style::renderFrame )
-		.def( "renderNodule", &Style::renderNodule )
-		.def( "renderConnection", &Style::renderConnection )
-		.def( "renderBackdrop", &Style::renderBackdrop )
-		.def( "renderSelectionBox", &Style::renderSelectionBox )
-		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
-		.def( "renderImage", &Style::renderImage )
-		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
-		.def( "setDefaultStyle", &Style::getDefaultStyle ).staticmethod( "setDefaultStyle" )	
-	;
+	std::vector<Node *> n;
+	boost::python::container_utils::extend_container( n, nodes );
+	b.frame( n );
+}
+
+static list framed( BackdropNodeGadget &b )
+{
+	std::vector<Node *> n;
+	b.framed( n );
 	
-	enum_<Style::State>( "State" )
-		.value( "NormalState", Style::NormalState )
-		.value( "DisabledState", Style::DisabledState )
-		.value( "HighlightedState", Style::HighlightedState )
-	;
+	list result;
+	for( std::vector<Node *>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
+	{
+		result.append( NodePtr( *it ) );
+	}
 	
-	enum_<Style::TextType>( "TextType" )
-		.value( "LabelText", Style::LabelText )
-		.value( "BodyText", Style::BodyText )
+	return result;
+}
+
+void GafferUIBindings::bindBackdropNodeGadget()
+{
+	IECorePython::RunTimeTypedClass<BackdropNodeGadget>()
+		.def( init<Gaffer::NodePtr>() )
+		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( BackdropNodeGadget )
+		.def( "frame", &frame )
+		.def( "framed", &framed )
 	;
 }

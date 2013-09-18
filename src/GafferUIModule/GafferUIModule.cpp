@@ -68,6 +68,7 @@
 #include "GafferUIBindings/PlugGadgetBinding.h"
 #include "GafferUIBindings/GraphLayoutBinding.h"
 #include "GafferUIBindings/PointerBinding.h"
+#include "GafferUIBindings/BackdropNodeGadgetBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -105,5 +106,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindPlugGadget();
 	bindGraphLayout();
 	bindPointer();
+	bindBackdropNodeGadget();
 	
 }

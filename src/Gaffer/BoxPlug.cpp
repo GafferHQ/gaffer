@@ -51,13 +51,14 @@ BoxPlug<T>::BoxPlug(
 )
 	:	CompoundPlug( name, direction, flags )
 {
+	const unsigned childFlags = flags & ~Dynamic;
 	addChild(
 		new ChildType(
 			"min", direction,
 			defaultValue.min,
 			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::min() ),
 			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::max() ),
-			flags
+			childFlags
 		)
 	);
 	
@@ -67,7 +68,7 @@ BoxPlug<T>::BoxPlug(
 			defaultValue.max,
 			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::min() ),
 			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::max() ),
-			flags
+			childFlags
 		)
 	);
 }

@@ -37,6 +37,7 @@
 
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/ContextVariables.h"
+#include "Gaffer/Backdrop.h"
 
 #include "GafferBindings/ConnectionBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -130,6 +131,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindArrayPlug();
 	bindSerialisation();
 			
+	NodeClass<Backdrop>();
+
 	DependencyNodeClass<ContextProcessorComputeNode>();
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();

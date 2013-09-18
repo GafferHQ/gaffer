@@ -113,6 +113,7 @@ enum TypeId
 	CompoundActionTypeId = 110066,
 	CompoundDataMemberPlugTypeId = 110067,
 	ArrayPlugTypeId = 110068,
+	BackdropTypeId = 110069,
 	LastTypeId = 110200,
 	
 };

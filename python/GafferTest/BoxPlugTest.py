@@ -59,7 +59,20 @@ class BoxPlugTest( unittest.TestCase ) :
 		self.assertEqual( p2.getName(), "c" )
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
+	
+	def testDynamicSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Box3fPlug( flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].setValue( IECore.Box3f( IECore.V3f( -100 ), IECore.V3f( 1, 2, 3 ) ) )
 		
+				
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["n"]["p"].getValue(), s["n"]["p"].getValue() )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

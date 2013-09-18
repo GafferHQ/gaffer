@@ -69,6 +69,7 @@ enum TypeId
 	PlugGadgetTypeId = 110274,
 	GraphLayoutTypeId = 110275,
 	StandardGraphLayoutTypeId = 110276,
+	BackdropNodeGadgetTypeId = 110277,
 	
 	LastTypeId = 110500
 };
