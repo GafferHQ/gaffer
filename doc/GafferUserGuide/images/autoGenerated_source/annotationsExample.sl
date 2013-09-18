@@ -1,3 +1,5 @@
+#pragma annotation "help" "Helpful description for the shader as a whole"
+
 surface annotationsExample(
 
 #pragma annotation "primaryInput" "primaryParam"
