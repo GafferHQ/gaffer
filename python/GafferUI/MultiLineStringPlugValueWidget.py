@@ -42,7 +42,7 @@ import GafferUI
 
 class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, continuousUpdate=False, **kw ) :
 	
 		self.__textWidget = GafferUI.MultiLineTextWidget()
 			
@@ -53,6 +53,8 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
+		if continuousUpdate :
+			self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
 		self._updateFromPlug()
 
@@ -87,5 +89,3 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		text = self.__textWidget.getText()
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( text )
-	
-	

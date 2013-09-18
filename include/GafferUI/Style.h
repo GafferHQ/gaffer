@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -83,18 +83,24 @@ class Style : public IECore::RunTimeTyped
 		enum TextType
 		{
 			LabelText,
+			BodyText,
+			HeadingText,
 			LastText
 		};
 
 		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
 		virtual void renderText( TextType textType, const std::string &text, State state = NormalState ) const = 0;
+		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const = 0;
 
 		/// \todo Should all these be taking 3d arguments - no but 3d counterparts might be good.
 		virtual void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const = 0;
 		virtual void renderNodule( float radius, State state = NormalState ) const = 0;
 		/// The tangents give an indication of which direction is "out" from a node.
 		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const = 0;
+		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const = 0;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const = 0;
+		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const = 0;
+		
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const = 0;
 		virtual void renderLine( const IECore::LineSegment3f &line ) const = 0;
 		virtual void renderSolidRectangle( const Imath::Box2f &box ) const = 0;
