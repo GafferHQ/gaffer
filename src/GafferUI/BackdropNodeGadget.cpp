@@ -84,8 +84,7 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 		);
 	}
 	
-	node->plugSetSignal().connect( boost::bind( &BackdropNodeGadget::plugSetOrDirtied, this, ::_1 ) );
-	node->plugDirtiedSignal().connect( boost::bind( &BackdropNodeGadget::plugSetOrDirtied, this, ::_1 ) );
+	node->plugDirtiedSignal().connect( boost::bind( &BackdropNodeGadget::plugDirtied, this, ::_1 ) );
 	
 	if( ScriptNode *script = node->scriptNode() )
 	{
@@ -271,7 +270,7 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 	}
 }
 
-void BackdropNodeGadget::plugSetOrDirtied( const Gaffer::Plug *plug )
+void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	if(
