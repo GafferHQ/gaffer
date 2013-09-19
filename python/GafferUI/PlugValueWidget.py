@@ -154,7 +154,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		
 	def _plugConnections( self ) :
 	
-		return [ self.__plugSetConnection,
+		return [ 
 			self.__plugDirtiedConnection,
 			self.__plugInputChangedConnection,
 			self.__plugFlagsChangedConnection
@@ -296,13 +296,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	__plugTypesToCreators = {}
 	__nodeTypesToCreators = {}
-		
-	def __plugSet( self, plug ) :
 	
-		if plug.isSame( self.__plug ) :
-		
-			self._updateFromPlug()	
-
 	def __plugDirtied( self, plug ) :
 	
 		if plug.isSame( self.__plug ) :
@@ -331,19 +325,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 		context = self.__fallbackContext
 		
 		if self.__plug is not None :
-			self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-			if hasattr( plug.node(), "plugDirtiedSignal" ) :
-				# only DependencyNodes have the plugDirtiedSignal
-				self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-			else :
-				self.__plugDirtiedConnection = None
+			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
 			self.__plugFlagsChangedConnection = plug.node().plugFlagsChangedSignal().connect( Gaffer.WeakMethod( self.__plugFlagsChanged ) )
 			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
 			if scriptNode is not None :
 				context = scriptNode.context()
 		else :
-			self.__plugSetConnection = None
 			self.__plugDirtiedConnection = None
 			self.__plugInputChangedConnection = None
 			self.__plugFlagsChangedConnection = None

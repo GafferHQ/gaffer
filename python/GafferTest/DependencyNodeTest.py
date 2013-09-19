@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import threading
 
 import Gaffer
 import GafferTest
@@ -129,15 +130,20 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		dstDirtied = GafferTest.CapturingSlot( dst.plugDirtiedSignal() )
 		
 		src["behaveBadly"].setValue( True )
+		self.assertEqual( len( srcDirtied ), 1 )
+		self.assertTrue( srcDirtied[0][0].isSame( src["behaveBadly"] ) ) 
 		self.assertRaises( RuntimeError, src["in"].setValue, 10 )
 		
-		src["behaveBadly"].setValue( False )		
+		src["behaveBadly"].setValue( False )
+		del srcDirtied[:]
+		
 		src["in"].setValue( 20 )
 				
 		srcDirtiedNames = set( [ x[0].fullName() for x in srcDirtied ] )
+				
+		self.assertEqual( len( srcDirtiedNames ), 4 )
 		
-		self.assertEqual( len( srcDirtiedNames ), 3 )
-		
+		self.assertTrue( "CompoundOut.in" in srcDirtiedNames )
 		self.assertTrue( "CompoundOut.out.one" in srcDirtiedNames )
 		self.assertTrue( "CompoundOut.out.two" in srcDirtiedNames )
 		self.assertTrue( "CompoundOut.out" in srcDirtiedNames )
@@ -233,5 +239,65 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( e.correspondingInput( e["bIn"] ), None )
 		self.assertEqual( e.correspondingInput( e["cOut"] ), None )
 	
+	def testNoDirtiedSignalDuplicates( self ) :
+	
+		a1 = GafferTest.AddNode()
+		a2 = GafferTest.AddNode()
+		a2["op1"].setInput( a1["sum"] )
+		a2["op2"].setInput( a1["sum"] )
+		
+		cs = GafferTest.CapturingSlot( a2.plugDirtiedSignal() )
+		
+		a1["op1"].setValue( 21 )
+				
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( a2["op1"] ) )
+		self.assertTrue( cs[1][0].isSame( a2["sum"] ) )
+		self.assertTrue( cs[2][0].isSame( a2["op2"] ) )
+	
+	def testSettingValueAlsoSignalsDirtiness( self ) :
+	
+		a = GafferTest.AddNode()
+		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
+
+		a["op1"].setValue( 21 )
+				
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[0][0].isSame( a["op1"] ) )		
+		self.assertTrue( cs[1][0].isSame( a["sum"] ) )		
+	
+	def testDirtyPropagationThreading( self ) :
+	
+		def f() :
+		
+			n1 = GafferTest.AddNode()
+			n2 = GafferTest.AddNode()
+			n3 = GafferTest.AddNode()
+			
+			n2["op1"].setInput( n1["sum"] )
+			n2["op2"].setInput( n1["sum"] )
+			
+			n3["op1"].setInput( n2["sum"] )
+			
+			for i in range( 1, 100 ) :
+			
+				cs = GafferTest.CapturingSlot( n3.plugDirtiedSignal() )
+				
+				n1["op1"].setValue( i )
+				
+				self.assertEqual( len( cs ), 2 )
+				self.assertTrue( cs[0][0].isSame( n3["op1"] ) )
+				self.assertTrue( cs[1][0].isSame( n3["sum"] ) )
+				
+		threads = []
+		for i in range( 0, 10 ) :
+		
+			t = threading.Thread( target = f )
+			t.start()
+			threads.append( t )
+		
+		for t in threads :
+			t.join()
+		
 if __name__ == "__main__":
 	unittest.main()

@@ -96,7 +96,6 @@ class StandardNodeGadget : public NodeGadget
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		
-		void plugSet( const Gaffer::Plug *plug );
 		void plugDirtied( const Gaffer::Plug *plug );
 		
 		void enter( Gadget *gadget );

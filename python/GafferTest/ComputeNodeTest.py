@@ -56,9 +56,10 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		
 		n1["op1"].setValue( 2 )
 		self.assertEqual( len( setPlugs ), 1 )
-		self.assertEqual( len( dirtiedPlugs ), 1 )
+		self.assertEqual( len( dirtiedPlugs ), 2 )
 		self.assertEqual( setPlugs[0][0].fullName(), "AddNode.op1" )
-		self.assertEqual( dirtiedPlugs[0][0].fullName(), "AddNode.sum" )
+		self.assertEqual( dirtiedPlugs[0][0].fullName(), "AddNode.op1" )
+		self.assertEqual( dirtiedPlugs[1][0].fullName(), "AddNode.sum" )
 		
 		n1["op2"].setValue( 3 )
 		self.assertEqual( len( setPlugs ), 2 )
@@ -115,10 +116,11 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		del dirtied[:]
 		n1["op1"].setValue( 10 )
-		self.assertEqual( len( dirtied ), 3 )
-		self.failUnless( dirtied[0][0].isSame( n1["sum"] ) )
-		self.failUnless( dirtied[1][0].isSame( n2["op1"] ) )
-		self.failUnless( dirtied[2][0].isSame( n2["sum"] ) )
+		self.assertEqual( len( dirtied ), 4 )
+		self.failUnless( dirtied[0][0].isSame( n1["op1"] ) )
+		self.failUnless( dirtied[1][0].isSame( n1["sum"] ) )
+		self.failUnless( dirtied[2][0].isSame( n2["op1"] ) )
+		self.failUnless( dirtied[3][0].isSame( n2["sum"] ) )
 		
 		self.assertEqual( n2.getChild( "sum" ).getValue(), 10 )
 	

@@ -85,7 +85,7 @@ class InteractiveRender : public Render
 	private :
 
 		void plugInputChanged( const Gaffer::Plug *plug );
-		void plugSetOrDirtied( const Gaffer::Plug *plug );
+		void plugDirtied( const Gaffer::Plug *plug );
 		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
 		
 		void start();

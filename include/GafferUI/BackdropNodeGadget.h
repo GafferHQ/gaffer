@@ -72,7 +72,7 @@ class BackdropNodeGadget : public NodeGadget
 		
 	private :
 
-		void plugSetOrDirtied( const Gaffer::Plug *plug );
+		void plugDirtied( const Gaffer::Plug *plug );
 		
 		bool mouseMove( Gadget *gadget, const ButtonEvent &event );
 		bool buttonPress( Gadget *gadget, const ButtonEvent &event );
