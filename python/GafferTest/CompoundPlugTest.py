@@ -148,10 +148,12 @@ class CompoundPlugTest( unittest.TestCase ) :
 		
 		n["p"]["f"].setValue( 100 )
 		
-		self.assertEqual( len( dirtyPlugs ), 2 )
+		self.assertEqual( len( dirtyPlugs ), 4 )
 		
-		self.failUnless( dirtyPlugs[0][0].isSame( n["o"]["f"] ) )
-		self.failUnless( dirtyPlugs[1][0].isSame( n["o"] ) )
+		self.failUnless( dirtyPlugs[0][0].isSame( n["p"]["f"] ) )
+		self.failUnless( dirtyPlugs[1][0].isSame( n["p"] ) )
+		self.failUnless( dirtyPlugs[2][0].isSame( n["o"]["f"] ) )
+		self.failUnless( dirtyPlugs[3][0].isSame( n["o"] ) )
 		
 	def testPlugSetPropagation( self ) :
 	

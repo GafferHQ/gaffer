@@ -60,7 +60,8 @@ class RemoveChannelsTest( unittest.TestCase ) :
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
-		self.assertEqual( len(dirtiedPlugs), 2 )
+		self.assertEqual( len(dirtiedPlugs), 3 )
+		self.assertTrue( "mode" in dirtiedPlugs )
 		self.assertTrue( "out" in dirtiedPlugs )
 		self.assertTrue( "out.channelNames" in dirtiedPlugs )
 
@@ -69,7 +70,8 @@ class RemoveChannelsTest( unittest.TestCase ) :
 		c["channels"].setValue( IECore.StringVectorData( ["R"] ) )
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len(dirtiedPlugs), 2 )
+		self.assertEqual( len(dirtiedPlugs), 3 )
+		self.assertTrue( "channels" in dirtiedPlugs )
 		self.assertTrue( "out" in dirtiedPlugs )
 		self.assertTrue( "out.channelNames" in dirtiedPlugs )
 

@@ -73,7 +73,8 @@ class ReformatTest( unittest.TestCase ) :
 		reformat["format"].setValue( GafferImage.Format( 150, 125, 1. ) )
 		
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len( dirtiedPlugs ), 4 )
+		self.assertEqual( len( dirtiedPlugs ), 5 )
+		self.assertTrue( "format" in dirtiedPlugs )
 		self.assertTrue( "out" in dirtiedPlugs )
 		self.assertTrue( "out.dataWindow" in dirtiedPlugs )
 		self.assertTrue( "out.channelData" in dirtiedPlugs )

@@ -85,6 +85,13 @@ class DependencyNode : public Node
 		virtual const Plug *correspondingInput( const Plug *output ) const;
 		//@}
 
+	private :
+	
+		friend class Plug;
+		friend class ValuePlug;
+		
+		static void propagateDirtiness( Plug *plugToDirty );
+
 };
 
 typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;

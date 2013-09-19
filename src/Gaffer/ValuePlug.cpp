@@ -469,10 +469,10 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDi
 	if( n )
 	{
 		// it is important that we emit the plug set signal before
-		// we emit dirty signals for any dependent plugs. this is
-		// because the node may wish to perform some internal setup when plugs
-		// are set, and listeners on output plugs may pull to get new
-		// output values as soon as the dirty signal is emitted. 
+		// we emit dirty signals. this is because the node may wish to
+		// perform some internal setup when plugs are set, and listeners
+		// on output plugs may pull to get new output values as soon as
+		// the dirty signal is emitted. 
 		ValuePlug *p = this;
 		while( p )
 		{
@@ -482,7 +482,7 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDi
 	}
 	if( propagateDirtiness )
 	{
-		this->propagateDirtiness();
+		DependencyNode::propagateDirtiness( this );
 	}
 }
 

@@ -90,9 +90,10 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferTest.CapturingSlot( p.plugDirtiedSignal() )
 		
 		p["name"].setValue( "ground" )
-		self.assertEqual( len( s ), 2 )
-		self.failUnless( s[0][0].isSame( p["out"]["childNames"] ) )
-		self.failUnless( s[1][0].isSame( p["out"] ) )
+		self.assertEqual( len( s ), 3 )
+		self.failUnless( s[0][0].isSame( p["name"] ) )
+		self.failUnless( s[1][0].isSame( p["out"]["childNames"] ) )
+		self.failUnless( s[2][0].isSame( p["out"] ) )
 		
 		del s[:]
 		

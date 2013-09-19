@@ -88,7 +88,11 @@ class ImageTransformTest( unittest.TestCase ) :
 		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) );	
 		
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len( dirtiedPlugs ), 4 )
+		self.assertEqual( len( dirtiedPlugs ), 8 )
+		self.assertTrue( "transform.scale.x" in dirtiedPlugs )
+		self.assertTrue( "transform.scale.y" in dirtiedPlugs )
+		self.assertTrue( "transform.scale" in dirtiedPlugs )
+		self.assertTrue( "transform" in dirtiedPlugs )
 		self.assertTrue( "out" in dirtiedPlugs )
 		self.assertTrue( "out.channelData" in dirtiedPlugs )
 		self.assertTrue( "out.dataWindow" in dirtiedPlugs )
