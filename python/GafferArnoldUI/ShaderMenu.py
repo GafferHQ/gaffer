@@ -57,13 +57,15 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
 			if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
 				menuPath = prefix + "/Shader/" + displayName
+				nodeType = GafferArnold.ArnoldShader
 			else :
 				menuPath = prefix + "/Light/" + displayName
+				nodeType = GafferArnold.ArnoldLight
 				
 			menuDefinition.append(
 				menuPath,
 				{
-					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shaderName, GafferArnold.ArnoldShader ) ),
+					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shaderName, nodeType ) ),
 				}
 			)
 
@@ -76,4 +78,3 @@ def __shaderCreator( name, nodeType ) :
 	shader = nodeType( name )
 	shader.loadShader( name )
 	return shader
-
