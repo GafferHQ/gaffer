@@ -1379,6 +1379,7 @@ manifest = [
 	"include/tbb",
 	
 	"renderMan",
+	"arnold",
 	
 ]
 
