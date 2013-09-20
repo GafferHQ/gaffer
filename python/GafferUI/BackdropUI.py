@@ -74,6 +74,9 @@ Gaffer.Backdrop,
 "title",
 "The title for the backdrop - this will be displayed at the top of the backdrop.",
 
+"scale",
+"Controls the size of the backdrop text.",
+
 "description",
 "Text describing the contents of the backdrop - this will be displayed below the title.",
 

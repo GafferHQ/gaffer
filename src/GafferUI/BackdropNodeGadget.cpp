@@ -213,7 +213,25 @@ Imath::Box3f BackdropNodeGadget::bound() const
 
 void BackdropNodeGadget::doRender( const Style *style ) const
 {
+	// this is our bound in gadget space
 	Box2f bound = boundPlug()->getValue();
+	
+	// but because we're going to draw our contents at an arbitrary scale,
+	// we need to compute a modified bound which will be in the right place
+	// following scaling. 
+	
+	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
+	const float scale = backdrop->scalePlug()->getValue();
+	
+	bound.min /= scale;
+	bound.max /= scale;
+	
+	glPushMatrix();
+	
+	glScalef( scale, scale, scale );
+
+	const Box3f titleCharacterBound = style->characterBound( Style::HeadingText );
+	const float titleBaseline = bound.max.y - g_margin - titleCharacterBound.max.y;
 
 	if( IECoreGL::Selector::currentSelector() )
 	{
@@ -230,45 +248,48 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.min.x + width, bound.max.y ) ) ); // left
 		style->renderSolidRectangle( Box2f( V2f( bound.max.x - width, bound.min.y ), bound.max ) ); // right
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.max.x, bound.min.y + width ) ) ); // bottom
-		style->renderSolidRectangle( Box2f( V2f( bound.min.x, bound.max.y - g_margin * 2.0f ), bound.max ) ); // top
-		
-		return;
-	}
-	
-	const ScriptNode *script = node()->scriptNode();
-	const bool selected = script && script->selection()->contains( node() );
-	
-	style->renderBackdrop( bound, selected ? Style::HighlightedState : Style::NormalState );
-			
-	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
+		style->renderSolidRectangle( Box2f( V2f( bound.min.x, titleBaseline - g_margin ), bound.max ) ); // top
 
-	const std::string title = backdrop->titlePlug()->getValue();
-	if( title.size() )
+	}
+	else
 	{
-		const Box3f titleBound = style->textBound( Style::HeadingText, title );
-		glPushMatrix();
-			glTranslatef( bound.center().x - titleBound.size().x / 2.0f, bound.max.y - g_margin - titleBound.size().y, 0.0f );
-			style->renderText( Style::HeadingText, title );
-		glPopMatrix();
+		// normal drawing mode
+	
+		const ScriptNode *script = node()->scriptNode();
+		const bool selected = script && script->selection()->contains( node() );
+
+		style->renderBackdrop( bound, selected ? Style::HighlightedState : Style::NormalState );
+
+		const std::string title = backdrop->titlePlug()->getValue();
+		if( title.size() )
+		{
+			Box3f titleBound = style->textBound( Style::HeadingText, title );
+			glPushMatrix();
+				glTranslatef( bound.center().x - titleBound.size().x / 2.0f, titleBaseline, 0.0f );
+				style->renderText( Style::HeadingText, title );
+			glPopMatrix();
+		}
+
+		if( m_hovered )
+		{
+			style->renderHorizontalRule(
+				V2f( bound.center().x, titleBaseline - g_margin / 2.0f ),
+				bound.size().x - g_margin * 2.0f,
+				Style::HighlightedState
+			);
+		}
+
+		Box2f textBound = bound;
+		textBound.min += V2f( g_margin );
+		textBound.max = V2f( textBound.max.x - g_margin, titleBaseline - g_margin );
+		if( textBound.hasVolume() )
+		{
+			std::string description = backdrop->descriptionPlug()->getValue();
+			style->renderWrappedText( Style::BodyText, description, textBound );
+		}
 	}
 	
-	if( m_hovered )
-	{
-		style->renderHorizontalRule(
-			V2f( bound.center().x, bound.max.y - g_margin * 2.0f ),
-			bound.size().x - g_margin * 2.0f,
-			Style::HighlightedState
-		);
-	}
-	
-	Box2f textBound = boundPlug()->getValue();
-	textBound.min += V2f( g_margin );
-	textBound.max -= V2f( g_margin, g_margin * 2.5f );
-	if( textBound.hasVolume() )
-	{
-		std::string description = backdrop->descriptionPlug()->getValue();
-		style->renderWrappedText( Style::BodyText, description, textBound );
-	}
+	glPopMatrix();
 }
 
 void BackdropNodeGadget::plugSetOrDirtied( const Gaffer::Plug *plug )
@@ -276,6 +297,7 @@ void BackdropNodeGadget::plugSetOrDirtied( const Gaffer::Plug *plug )
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	if(
 		plug == backdrop->titlePlug() ||
+		plug == backdrop->scalePlug() ||
 		plug == backdrop->descriptionPlug() ||
 		plug == boundPlug()
 	)
