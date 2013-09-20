@@ -71,7 +71,6 @@ StandardStyle::StandardStyle()
 	setFont( HeadingText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
 	setFontScale( HeadingText, 2.0f );
 	
-	
 	setColor( BackgroundColor, Color3f( 0.1 ) );
 	setColor( SunkenColor, Color3f( 0.1 ) );
 	setColor( RaisedColor, Color3f( 0.4 ) );
@@ -102,6 +101,15 @@ void StandardStyle::bind( const Style *currentStyle ) const
 	{
 		selector->loadIDShader( shader() );
 	}
+}
+
+Imath::Box3f StandardStyle::characterBound( TextType textType ) const
+{
+	Imath::Box2f b = m_fonts[textType]->coreFont()->bound();
+	return Imath::Box3f(
+		m_fontScales[textType] * Imath::V3f( b.min.x, b.min.y, 0 ),
+		m_fontScales[textType] * Imath::V3f( b.max.x, b.max.y, 0 )
+	);
 }
 
 Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
