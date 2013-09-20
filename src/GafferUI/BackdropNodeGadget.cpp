@@ -243,13 +243,13 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 		// necessary to allow the GraphGadget to continue to perform
 		// drag selection on the nodes on top of the backdrop.
 		
-		const float width = hoverWidth();
+		const float width = hoverWidth() / scale;
 			
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.min.x + width, bound.max.y ) ) ); // left
 		style->renderSolidRectangle( Box2f( V2f( bound.max.x - width, bound.min.y ), bound.max ) ); // right
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.max.x, bound.min.y + width ) ) ); // bottom
-		style->renderSolidRectangle( Box2f( V2f( bound.min.x, titleBaseline - g_margin ), bound.max ) ); // top
-
+		style->renderSolidRectangle( Box2f( V2f( bound.min.x, bound.max.y - width ), bound.max ) ); // top
+		style->renderSolidRectangle( Box2f( V2f( bound.min.x, titleBaseline - g_margin ), bound.max ) ); // heading
 	}
 	else
 	{
@@ -440,6 +440,8 @@ void BackdropNodeGadget::selectionChanged( Gaffer::Set *set, IECore::RunTimeType
 		static_cast<StandardSet *>( set )->remove( node() );
 		static_cast<StandardSet *>( set )->add( node() );
 	}
+	
+	renderRequestSignal()( this );
 }
 
 float BackdropNodeGadget::hoverWidth() const
@@ -448,16 +450,20 @@ float BackdropNodeGadget::hoverWidth() const
 	// rather than in gadget space.
 	const ViewportGadget *viewport = ancestor<ViewportGadget>();
 	const V3f p0 = viewport->rasterToGadgetSpace( V2f( 0 ), this ).p0;
-	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 3.0f ), this ).p0;
-	return std::min( g_margin / 2.0f, ( p0 - p1 ).length() );
+	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 5.0f ), this ).p0;
+	return ( p0 - p1 ).length();
 }
 
 void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal, int &vertical ) const
 {	
-	const Box2f b = boundPlug()->getValue();
-	const V3f p = event.line.p0;
-	const float width = hoverWidth() * 1.5;
+	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
+	const float scale = backdrop->scalePlug()->getValue();
 	
+	const Box2f b = boundPlug()->getValue();
+		
+	const V3f &p = event.line.p0;
+	const float width = hoverWidth() * 2.0f;
+
 	horizontal = vertical = 0;
 
 	if( fabs( p.x - b.min.x ) < width )
@@ -473,7 +479,7 @@ void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal
 	{
 		vertical = -1;
 	}
-	else if( fabs( p.y - b.max.y ) < width )
+	else if( fabs( p.y - b.max.y ) < std::min( width, 0.25f * g_margin * scale ) )
 	{
 		vertical = 1;
 	}	

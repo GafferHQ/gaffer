@@ -47,7 +47,7 @@ Backdrop::Backdrop( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "title", Plug::In, "Title" ) );
-	addChild( new FloatPlug( "scale", Plug::In, 1.0f, 0.0f ) );
+	addChild( new FloatPlug( "scale", Plug::In, 1.0f, 1.0f ) );
 	addChild( new StringPlug( "description" ) );
 }
 
