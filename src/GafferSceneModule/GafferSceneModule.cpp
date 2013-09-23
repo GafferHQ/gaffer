@@ -77,6 +77,7 @@
 #include "GafferScene/Sphere.h"
 #include "GafferScene/Text.h"
 #include "GafferScene/MapProjection.h"
+#include "GafferScene/MapOffset.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/CustomOptions.h"
 
@@ -158,6 +159,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Prune>();
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<MapProjection>();
+	GafferBindings::DependencyNodeClass<MapOffset>();
 	GafferBindings::DependencyNodeClass<CustomAttributes>();
 	GafferBindings::DependencyNodeClass<CustomOptions>();
 	

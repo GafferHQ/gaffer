@@ -158,6 +158,7 @@ nodeMenu.append( "/Scene/Object/Modifiers/Attribute Cache", GafferScene.Attribut
 nodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Modifiers/Mesh Type", GafferScene.MeshType, searchText = "MeshType"  )
 nodeMenu.append( "/Scene/Object/Modifiers/Map Projection", GafferScene.MapProjection, searchText = "MapProjection"  )
+nodeMenu.append( "/Scene/Object/Modifiers/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
 nodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
 nodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
 nodeMenu.append( "/Scene/Attributes/Custom Attributes", GafferScene.CustomAttributes, searchText = "CustomAttributes" )
