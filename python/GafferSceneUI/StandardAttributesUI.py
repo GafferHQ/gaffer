@@ -43,7 +43,9 @@ def __attributesSummary( plug ) :
 	info = []
 	if plug["visibility"]["enabled"].getValue() :
 		info.append( "Visible" if plug["visibility"]["value"].getValue() else "Invisible" )
-		
+	if plug["doubleSided"]["enabled"].getValue() :
+		info.append( "Double Sided" if plug["doubleSided"]["value"].getValue() else "Single Sided" )
+			
 	return ", ".join( info )
 
 def __motionBlurSummary( plug ) :
@@ -74,6 +76,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			"summary" : __attributesSummary,
 			"namesAndLabels" : (
 				( "gaffer:visibility", "Visibility" ),
+				( "doubleSided", "Double Sided" ),
 			),
 		},
 		

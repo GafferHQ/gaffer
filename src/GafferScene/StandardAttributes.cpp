@@ -46,6 +46,7 @@ StandardAttributes::StandardAttributes( const std::string &name )
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 	
 	attributes->addOptionalMember( "gaffer:visibility", new IECore::BoolData( true ), "visibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "doubleSided", new IECore::BoolData( true ), "doubleSided", Gaffer::Plug::Default, false );
 	
 	// motion blur
 	
