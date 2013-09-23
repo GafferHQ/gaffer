@@ -38,6 +38,12 @@ import Gaffer
 import GafferUI
 import GafferRenderMan
 
+## \todo This is getting used in a few places now - maybe put it in one
+# place? Maybe a static method on NumericWidget?
+def __floatToString( f ) :
+
+	return ( "%.4f" % f ).rstrip( '0' ).rstrip( '.' )
+
 def __visibilitySummary( plug ) :
 
 	info = []
@@ -58,6 +64,32 @@ def __visibilitySummary( plug ) :
 		if values :
 			info.append( label + " : " + "/".join( values ) )
 			
+	return ", ".join( info )
+
+def __shadingSummary( plug ) :
+
+	info = []
+	if plug["shadingRate"]["enabled"].getValue() :
+		info.append( "Shading Rate %s" % __floatToString( plug["shadingRate"]["value"].getValue() ) )
+	if plug["relativeShadingRate"]["enabled"].getValue() :
+		info.append( "Relative Shading Rate %s" % __floatToString( plug["relativeShadingRate"]["value"].getValue() ) )
+	if plug["matte"]["enabled"].getValue() :
+		info.append( "Matte %s" % ( "On" if plug["matte"]["value"].getValue() else "Off" ) )
+	if plug["displacementBound"]["enabled"].getValue() :
+		info.append( "Displacement Bound %s" % __floatToString( plug["displacementBound"]["value"].getValue() ) )
+			
+	return ", ".join( info )
+	
+def __raytracingSummary( plug ) :
+
+	info = []
+	if plug["maxDiffuseDepth"]["enabled"].getValue() :
+		info.append( "Diffuse Depth %d" % plug["maxDiffuseDepth"]["value"].getValue() )
+	if plug["maxSpecularDepth"]["enabled"].getValue() :
+		info.append( "Specular Depth %d" % plug["maxSpecularDepth"]["value"].getValue() )
+	if plug["traceDisplacements"]["enabled"].getValue() :
+		info.append( "Displacements %s" % ( "On" if plug["traceDisplacements"]["value"].getValue() else "Off" ) )
+	
 	return ", ".join( info )
 		
 GafferUI.PlugValueWidget.registerCreator(
@@ -85,6 +117,27 @@ GafferUI.PlugValueWidget.registerCreator(
 				
 				( "ri:visibility:photon", "Photon" ),
 				( "ri:shade:photonhitmode", "Photon Mode" ),
+			),
+		},
+		
+		{
+			"label" : "Shading",
+			"summary" : __shadingSummary,
+			"namesAndLabels" : (
+				( "ri:shadingRate", "Shading Rate" ),
+				( "ri:shade:relativeshadingrate", "Relative Shading Rate" ),
+				( "ri:matte", "Matte" ),
+				( "ri:displacementbound:sphere", "Displacement Bound" ),
+			),
+		},
+		
+		{
+			"label" : "Raytracing",
+			"summary" : __raytracingSummary,
+			"namesAndLabels" : (
+				( "ri:trace:maxdiffusedepth", "Max Diffuse Depth" ),
+				( "ri:trace:maxspeculardepth", "Max Specular Depth" ),
+				( "ri:trace:displacements", "Trace Displacements" ),
 			),
 		},
 		

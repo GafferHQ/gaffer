@@ -62,6 +62,19 @@ RenderManAttributes::RenderManAttributes( const std::string &name )
 	attributes->addOptionalMember( "ri:visibility:photon", new IECore::BoolData( false ), "photonVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ri:shade:photonhitmode", new IECore::StringData( "shader" ), "photonHitMode", Gaffer::Plug::Default, false );
 	
+	// shading parameters
+	
+	attributes->addOptionalMember( "ri:shadingRate", new IECore::FloatData( 1.0f ), "shadingRate", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:shade:relativeshadingrate", new IECore::FloatData( 1.0f ), "relativeShadingRate", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:matte", new IECore::BoolData( false ), "matte", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:displacementbound:sphere", new IECore::FloatData( 0.0f ), "displacementBound", Gaffer::Plug::Default, false );
+	
+	// trace parameters
+	
+	attributes->addOptionalMember( "ri:trace:maxdiffusedepth", new IECore::IntData( 1 ), "maxDiffuseDepth", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:trace:maxspeculardepth", new IECore::IntData( 2 ), "maxSpecularDepth", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:trace:displacements", new IECore::BoolData( false ), "traceDisplacements", Gaffer::Plug::Default, false );
+	
 }
 
 RenderManAttributes::~RenderManAttributes()
