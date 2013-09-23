@@ -62,6 +62,7 @@
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/Pointer.h"
+#include "GafferUI/BackdropNodeGadget.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -663,11 +664,18 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 			bool nodeSelected = m_scriptNode->selection()->contains( node );
 
+			std::vector<Gaffer::Node *> affectedNodes;
+			if( const BackdropNodeGadget *backdrop = runTimeCast<BackdropNodeGadget>( nodeGadget ) )
+			{
+				backdrop->framed( affectedNodes );
+			}
+			affectedNodes.push_back( node );
+
 			if( nodeSelected )
 			{
 				if( shiftHeld )
 				{
-					m_scriptNode->selection()->remove( node );
+					m_scriptNode->selection()->remove( affectedNodes.begin(), affectedNodes.end() );
 				}
 			}
 			else
@@ -676,7 +684,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 				{
 					m_scriptNode->selection()->clear();
 				}
-				m_scriptNode->selection()->add( node );			
+				m_scriptNode->selection()->add( affectedNodes.begin(), affectedNodes.end() );			
 			}
 
 			return true;

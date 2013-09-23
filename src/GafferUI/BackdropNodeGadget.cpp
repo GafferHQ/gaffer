@@ -89,8 +89,8 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	
 	if( ScriptNode *script = node->scriptNode() )
 	{
-		m_selectionAddedConnection = script->selection()->memberAddedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
-		m_selectionRemovedConnection = script->selection()->memberRemovedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
+		script->selection()->memberAddedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
+		script->selection()->memberRemovedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
 	}
 	
 	mouseMoveSignal().connect( boost::bind( &BackdropNodeGadget::mouseMove, this, ::_1, ::_2 ) );
@@ -406,42 +406,10 @@ void BackdropNodeGadget::leave( Gadget *gadget, const ButtonEvent &event )
 
 void BackdropNodeGadget::selectionChanged( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
-	if( member != node() )
+	if( member == node() )
 	{
-		return;
+		renderRequestSignal()( this );
 	}
-		
-	StandardSet *standardSet = static_cast<StandardSet *>( set );
-	
-	std::vector<Node *> nodes;
-	framed( nodes );
-		
-	bool selected = set->contains( node() );
-	for( std::vector<Node *>::const_iterator it = nodes.begin(), eIt = nodes.end(); it != eIt; ++it )
-	{
-		if( selected )
-		{
-			standardSet->add( *it );
-		}
-		else
-		{
-			standardSet->remove( *it );
-		}
-	}
-	
-	if( selected && nodes.size() )
-	{
-		// we've added a bunch more nodes to the selection, but we
-		// still want the backdrop node to appear to be the last
-		// one that was selected. so we have to reselect it to
-		// get it onto the end of the list.
-		BlockedConnection addBlock( m_selectionAddedConnection );
-		BlockedConnection removeBlock( m_selectionRemovedConnection );
-		static_cast<StandardSet *>( set )->remove( node() );
-		static_cast<StandardSet *>( set )->add( node() );
-	}
-	
-	renderRequestSignal()( this );
 }
 
 float BackdropNodeGadget::hoverWidth() const

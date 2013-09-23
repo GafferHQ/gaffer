@@ -96,8 +96,6 @@ class BackdropNodeGadget : public NodeGadget
 		bool m_hovered;
 		int m_horizontalDragEdge;
 		int m_verticalDragEdge;
-		boost::signals::connection m_selectionAddedConnection;
-		boost::signals::connection m_selectionRemovedConnection;
 	
 		static NodeGadgetTypeDescription<BackdropNodeGadget> g_nodeGadgetTypeDescription;
 		
