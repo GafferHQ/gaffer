@@ -74,8 +74,10 @@ class ObjectReaderTest( unittest.TestCase ) :
 		
 		node["parameters"]["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 		
-		self.assertEqual( len( dirtyCapturer ), 1 )
-		self.assertEqual( dirtyCapturer[0][0].getName(), "out" )
+		self.assertEqual( len( dirtyCapturer ), 3 )
+		self.assertEqual( dirtyCapturer[0][0].getName(), "channels" )
+		self.assertEqual( dirtyCapturer[1][0].getName(), "parameters" )
+		self.assertEqual( dirtyCapturer[2][0].getName(), "out" )
 		
 		reader["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 						

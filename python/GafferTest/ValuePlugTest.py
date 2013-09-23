@@ -140,6 +140,22 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["p"].getValue(), 100 )
 		self.assertEqual( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
 	
+	def testSetValueSignalsDirtiness( self ) :
+	
+		n = Gaffer.Node()
+		n["p"] = Gaffer.IntPlug()
+		
+		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
+		
+		n["p"].setValue( 10 )
+		
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0].isSame( n["p"] ) )
+
+		n["p"].setValue( 10 )
+
+		self.assertEqual( len( cs ), 1 )
+	
 	def setUp( self ) :
 	
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

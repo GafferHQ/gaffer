@@ -76,9 +76,10 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
 		
 		t["name"].setValue( "ground" )
-		self.assertEqual( len( s ), 2 )
-		self.failUnless( s[0][0].isSame( t["out"]["childNames"] ) )
-		self.failUnless( s[1][0].isSame( t["out"] ) )
+		self.assertEqual( len( s ), 3 )
+		self.failUnless( s[0][0].isSame( t["name"] ) )
+		self.failUnless( s[1][0].isSame( t["out"]["childNames"] ) )
+		self.failUnless( s[2][0].isSame( t["out"] ) )
 		
 		del s[:]
 		t["text"].setValue( "cat" )

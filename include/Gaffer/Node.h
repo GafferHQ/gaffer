@@ -75,21 +75,38 @@ class Node : public GraphComponent
 		/// of signals.
 		//////////////////////////////////////////////////////////////
 		//@{
-		/// Called when the value of an unconnected input plug of
-		/// this node is set.
+		/// Emitted immediately after each call to ValuePlug::setValue() for
+		/// unconnected input plugs on this node. It is acceptable for slots
+		/// connected to this signal to rewire the node graph by adding and
+		/// removing connections and nodes, and changing the values of other
+		/// plugs.
+		/// \note Passive observers of the plug value should use plugDirtiedSignal()
+		/// rather than plugSetSignal().
 		UnaryPlugSignal &plugSetSignal();
-		/// Called when the input changes on a plug of this node.
+		/// Emitted immediately when the input changes on a plug of this node.
+		/// As with plugSetSignal(), it is acceptable for slots connected to
+		/// this signal to rewire the node graph.
 		UnaryPlugSignal &plugInputChangedSignal();
-		/// Called when the flags are changed for a plug of this node.
-		UnaryPlugSignal &plugFlagsChangedSignal();
-		/// Called when a plug of this node is dirtied - this signifies that
-		/// any previously calculated values are invalid and should be recalculated.
-		/// Although only DependencyNodes can define the relationships necessary
+		/// Emitted when a plug of this node is dirtied - this signifies that any
+		/// values previously retrieved from the plug via ValuePlug::getValue() are
+		/// now invalid and should be recalculated.
+		/// 
+		/// Unlike the signals above, this signal is not emitted immediately. Instead,
+		/// a list of dirtied plugs is accumulated as dirtiness is propagated through
+		/// the graph and when this propagation is complete, the dirtiness is signalled
+		/// for each plug. This means that dirtiness is only signalled once for each plug,
+		/// and only when all plugSet and plugInputChanged slots have finished any rewiring
+		/// they may wish to perform. A consequence of this is that slots connected to
+		/// this signal must not rewire the graph - they should be passive observers only.
+		///
+		/// \note Although only DependencyNodes can define the relationships necessary
 		/// for dirtying a plug, the signal is defined on the Node base class,
 		/// because dirtiness may be propagated from an output plug of a DependencyNode
 		/// onto an input plug of a plain Node (and potentially onwards if that plug
 		/// has its own output connections).
 		UnaryPlugSignal &plugDirtiedSignal();
+		/// Emitted when the flags are changed for a plug of this node.
+		UnaryPlugSignal &plugFlagsChangedSignal();
 		//@}
 		
 		/// It's common for users to want to create their own plugs on

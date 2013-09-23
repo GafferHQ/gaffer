@@ -83,9 +83,10 @@ class CubeTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		
 		c["name"].setValue( "box" )
-		self.assertEqual( len( s ), 2 )
-		self.failUnless( s[0][0].isSame( c["out"]["childNames"] ) )
-		self.failUnless( s[1][0].isSame( c["out"] ) )
+		self.assertEqual( len( s ), 3 )
+		self.failUnless( s[0][0].isSame( c["name"] ) )
+		self.failUnless( s[1][0].isSame( c["out"]["childNames"] ) )
+		self.failUnless( s[2][0].isSame( c["out"] ) )
 		
 		del s[:]
 		

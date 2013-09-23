@@ -175,14 +175,7 @@ class Plug : public GraphComponent
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 	
 	protected :
-	
-		/// Emits the dirty signal for this plug, and all ancestor plugs up
-		/// to node(). The result of node() can be passed to avoid repeatedly
-		/// finding the node in the case of making repeated calls.
-		void emitDirtiness( Node *n = 0 );
-		/// Calls emitDirtiness() on affected plugs and output connections.
-		void propagateDirtiness();
-		
+			
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 		
 	private :

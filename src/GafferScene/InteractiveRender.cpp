@@ -59,8 +59,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
 
 	plugInputChangedSignal().connect( boost::bind( &InteractiveRender::plugInputChanged, this, ::_1 ) );
-	plugSetSignal().connect( boost::bind( &InteractiveRender::plugSetOrDirtied, this, ::_1 ) );
-	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugSetOrDirtied, this, ::_1 ) );
+	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
 	
 	setContext( new Context() );
@@ -119,7 +118,7 @@ void InteractiveRender::plugInputChanged( const Gaffer::Plug *plug )
 	}
 }
 
-void InteractiveRender::plugSetOrDirtied( const Gaffer::Plug *plug )
+void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == statePlug() )
 	{

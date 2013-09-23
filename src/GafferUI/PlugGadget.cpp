@@ -68,7 +68,6 @@ void PlugGadget::setPlug( Gaffer::PlugPtr plug )
 		
 	Node *node = m_plug->node();
 	
-	m_plugSetConnection = node->plugSetSignal().connect( boost::bind( &PlugGadget::plugSet, this, ::_1 ) );
 	m_plugDirtiedConnection = node->plugDirtiedSignal().connect( boost::bind( &PlugGadget::plugDirtied, this, ::_1 ) );
 	m_plugInputChangedConnection = node->plugInputChangedSignal().connect( boost::bind( &PlugGadget::plugInputChanged, this, ::_1 ) );
 
@@ -96,14 +95,6 @@ Gaffer::Context *PlugGadget::getContext()
 
 void PlugGadget::updateFromPlug()
 {
-}
-
-void PlugGadget::plugSet( Gaffer::Plug *plug )
-{
-	if( plug == m_plug )
-	{
-		updateFromPlug();
-	}
 }
 
 void PlugGadget::plugDirtied( Gaffer::Plug *plug )
