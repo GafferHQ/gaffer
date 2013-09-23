@@ -47,6 +47,7 @@ Backdrop::Backdrop( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "title", Plug::In, "Title" ) );
+	addChild( new FloatPlug( "scale", Plug::In, 1.0f, 1.0f ) );
 	addChild( new StringPlug( "description" ) );
 }
 
@@ -64,12 +65,24 @@ const Gaffer::StringPlug *Backdrop::titlePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+FloatPlug *Backdrop::scalePlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
+const FloatPlug *Backdrop::scalePlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::StringPlug *Backdrop::descriptionPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringPlug *Backdrop::descriptionPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
+
+

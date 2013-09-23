@@ -51,6 +51,7 @@ using namespace GafferUI;
 void GafferUIBindings::bindStyle()
 {
 	scope s = IECorePython::RunTimeTypedClass<Style>()
+		.def( "characterBound", &Style::characterBound )
 		.def( "textBound", &Style::textBound )
 		.def( "renderText", &Style::renderText )
 		.def( "renderWrappedText", &Style::renderWrappedText )

@@ -67,6 +67,7 @@ class StandardStyle : public Style
 
 		virtual void bind( const Style *currentStyle=0 ) const;
 
+		virtual Imath::Box3f characterBound( TextType textType ) const;
 		virtual Imath::Box3f textBound( TextType type, const std::string &text ) const;
 		virtual void renderText( TextType type, const std::string &text, State state = NormalState ) const;
 		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const;

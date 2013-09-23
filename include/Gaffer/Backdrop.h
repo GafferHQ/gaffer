@@ -38,6 +38,7 @@
 #define GAFFER_BACKDROP_H
 
 #include "Gaffer/Node.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
@@ -57,6 +58,9 @@ class Backdrop : public Node
 		StringPlug *titlePlug();
 		const StringPlug *titlePlug() const;
 		
+		FloatPlug *scalePlug();
+		const FloatPlug *scalePlug() const;
+
 		StringPlug *descriptionPlug();
 		const StringPlug *descriptionPlug() const;
 		
