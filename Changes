@@ -1,3 +1,44 @@
+0.81.0
+======
+
+Core
+----
+
+- Improved dirtiness propagation mechanism to remove duplicate signal emission.
+
+UI
+--
+
+- Backdrop improvements
+	- Backdrop contents can now be scaled, so large backdrops can still have readable text when zoomed out.
+	- Fixed bug which meant that empty backdrops didn't immediately redraw as highlighted when selected.
+	- Improved resizing behaviour.
+	- Fixed cut and paste bug.
+
+Scene
+-----
+
+- Added doublesided attribute to StandardAttributes node (#275).
+
+Arnold
+------
+
+- Fixed packaging of Arnold plugins.
+- Fixed problem where light shaders weren't being created as lights.
+
+RenderMan
+---------
+
+- Fixed public build to work with older 3delight versions where RiProceduralV isn't available.
+- Added support for several new attributes in RenderManAttributes node (#275).
+
+API
+---
+
+- The plugDirtiedSignal() is now emitted when a value has been edited with ValuePlug::setValue() - this means that observers need only ever use plugDirtiedSignal() instead of also having to use plugSetSignal() as well.
+- Added Style::characterBound(). This returns a bounding box guaranteed to cover the largest character in the font. It is useful for correctly positioning the text baseline among other things.
+
+
 0.80.0
 ======
 
