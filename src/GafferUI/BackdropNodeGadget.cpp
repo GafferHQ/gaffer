@@ -88,8 +88,8 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	
 	if( ScriptNode *script = node->scriptNode() )
 	{
-		m_selectionAddedConnection = script->selection()->memberAddedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
-		m_selectionRemovedConnection = script->selection()->memberRemovedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
+		script->selection()->memberAddedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
+		script->selection()->memberRemovedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
 	}
 	
 	mouseMoveSignal().connect( boost::bind( &BackdropNodeGadget::mouseMove, this, ::_1, ::_2 ) );
@@ -212,7 +212,25 @@ Imath::Box3f BackdropNodeGadget::bound() const
 
 void BackdropNodeGadget::doRender( const Style *style ) const
 {
+	// this is our bound in gadget space
 	Box2f bound = boundPlug()->getValue();
+	
+	// but because we're going to draw our contents at an arbitrary scale,
+	// we need to compute a modified bound which will be in the right place
+	// following scaling. 
+	
+	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
+	const float scale = backdrop->scalePlug()->getValue();
+	
+	bound.min /= scale;
+	bound.max /= scale;
+	
+	glPushMatrix();
+	
+	glScalef( scale, scale, scale );
+
+	const Box3f titleCharacterBound = style->characterBound( Style::HeadingText );
+	const float titleBaseline = bound.max.y - g_margin - titleCharacterBound.max.y;
 
 	if( IECoreGL::Selector::currentSelector() )
 	{
@@ -224,50 +242,53 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 		// necessary to allow the GraphGadget to continue to perform
 		// drag selection on the nodes on top of the backdrop.
 		
-		const float width = hoverWidth();
+		const float width = hoverWidth() / scale;
 			
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.min.x + width, bound.max.y ) ) ); // left
 		style->renderSolidRectangle( Box2f( V2f( bound.max.x - width, bound.min.y ), bound.max ) ); // right
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.max.x, bound.min.y + width ) ) ); // bottom
-		style->renderSolidRectangle( Box2f( V2f( bound.min.x, bound.max.y - g_margin * 2.0f ), bound.max ) ); // top
-		
-		return;
+		style->renderSolidRectangle( Box2f( V2f( bound.min.x, bound.max.y - width ), bound.max ) ); // top
+		style->renderSolidRectangle( Box2f( V2f( bound.min.x, titleBaseline - g_margin ), bound.max ) ); // heading
 	}
+	else
+	{
+		// normal drawing mode
 	
-	const ScriptNode *script = node()->scriptNode();
-	const bool selected = script && script->selection()->contains( node() );
-	
-	style->renderBackdrop( bound, selected ? Style::HighlightedState : Style::NormalState );
-			
-	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
+		const ScriptNode *script = node()->scriptNode();
+		const bool selected = script && script->selection()->contains( node() );
 
-	const std::string title = backdrop->titlePlug()->getValue();
-	if( title.size() )
-	{
-		const Box3f titleBound = style->textBound( Style::HeadingText, title );
-		glPushMatrix();
-			glTranslatef( bound.center().x - titleBound.size().x / 2.0f, bound.max.y - g_margin - titleBound.size().y, 0.0f );
-			style->renderText( Style::HeadingText, title );
-		glPopMatrix();
+		style->renderBackdrop( bound, selected ? Style::HighlightedState : Style::NormalState );
+
+		const std::string title = backdrop->titlePlug()->getValue();
+		if( title.size() )
+		{
+			Box3f titleBound = style->textBound( Style::HeadingText, title );
+			glPushMatrix();
+				glTranslatef( bound.center().x - titleBound.size().x / 2.0f, titleBaseline, 0.0f );
+				style->renderText( Style::HeadingText, title );
+			glPopMatrix();
+		}
+
+		if( m_hovered )
+		{
+			style->renderHorizontalRule(
+				V2f( bound.center().x, titleBaseline - g_margin / 2.0f ),
+				bound.size().x - g_margin * 2.0f,
+				Style::HighlightedState
+			);
+		}
+
+		Box2f textBound = bound;
+		textBound.min += V2f( g_margin );
+		textBound.max = V2f( textBound.max.x - g_margin, titleBaseline - g_margin );
+		if( textBound.hasVolume() )
+		{
+			std::string description = backdrop->descriptionPlug()->getValue();
+			style->renderWrappedText( Style::BodyText, description, textBound );
+		}
 	}
 	
-	if( m_hovered )
-	{
-		style->renderHorizontalRule(
-			V2f( bound.center().x, bound.max.y - g_margin * 2.0f ),
-			bound.size().x - g_margin * 2.0f,
-			Style::HighlightedState
-		);
-	}
-	
-	Box2f textBound = boundPlug()->getValue();
-	textBound.min += V2f( g_margin );
-	textBound.max -= V2f( g_margin, g_margin * 2.5f );
-	if( textBound.hasVolume() )
-	{
-		std::string description = backdrop->descriptionPlug()->getValue();
-		style->renderWrappedText( Style::BodyText, description, textBound );
-	}
+	glPopMatrix();
 }
 
 void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
@@ -275,6 +296,7 @@ void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	if(
 		plug == backdrop->titlePlug() ||
+		plug == backdrop->scalePlug() ||
 		plug == backdrop->descriptionPlug() ||
 		plug == boundPlug()
 	)
@@ -383,39 +405,9 @@ void BackdropNodeGadget::leave( Gadget *gadget, const ButtonEvent &event )
 
 void BackdropNodeGadget::selectionChanged( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
-	if( member != node() )
+	if( member == node() )
 	{
-		return;
-	}
-		
-	StandardSet *standardSet = static_cast<StandardSet *>( set );
-	
-	std::vector<Node *> nodes;
-	framed( nodes );
-		
-	bool selected = set->contains( node() );
-	for( std::vector<Node *>::const_iterator it = nodes.begin(), eIt = nodes.end(); it != eIt; ++it )
-	{
-		if( selected )
-		{
-			standardSet->add( *it );
-		}
-		else
-		{
-			standardSet->remove( *it );
-		}
-	}
-	
-	if( selected && nodes.size() )
-	{
-		// we've added a bunch more nodes to the selection, but we
-		// still want the backdrop node to appear to be the last
-		// one that was selected. so we have to reselect it to
-		// get it onto the end of the list.
-		BlockedConnection addBlock( m_selectionAddedConnection );
-		BlockedConnection removeBlock( m_selectionRemovedConnection );
-		static_cast<StandardSet *>( set )->remove( node() );
-		static_cast<StandardSet *>( set )->add( node() );
+		renderRequestSignal()( this );
 	}
 }
 
@@ -425,16 +417,20 @@ float BackdropNodeGadget::hoverWidth() const
 	// rather than in gadget space.
 	const ViewportGadget *viewport = ancestor<ViewportGadget>();
 	const V3f p0 = viewport->rasterToGadgetSpace( V2f( 0 ), this ).p0;
-	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 3.0f ), this ).p0;
-	return std::min( g_margin / 2.0f, ( p0 - p1 ).length() );
+	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 5.0f ), this ).p0;
+	return ( p0 - p1 ).length();
 }
 
 void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal, int &vertical ) const
 {	
-	const Box2f b = boundPlug()->getValue();
-	const V3f p = event.line.p0;
-	const float width = hoverWidth() * 1.5;
+	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
+	const float scale = backdrop->scalePlug()->getValue();
 	
+	const Box2f b = boundPlug()->getValue();
+		
+	const V3f &p = event.line.p0;
+	const float width = hoverWidth() * 2.0f;
+
 	horizontal = vertical = 0;
 
 	if( fabs( p.x - b.min.x ) < width )
@@ -450,7 +446,7 @@ void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal
 	{
 		vertical = -1;
 	}
-	else if( fabs( p.y - b.max.y ) < width )
+	else if( fabs( p.y - b.max.y ) < std::min( width, 0.25f * g_margin * scale ) )
 	{
 		vertical = 1;
 	}	

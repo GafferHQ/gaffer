@@ -88,6 +88,7 @@ class Style : public IECore::RunTimeTyped
 			LastText
 		};
 
+		virtual Imath::Box3f characterBound( TextType textType ) const = 0;
 		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
 		virtual void renderText( TextType textType, const std::string &text, State state = NormalState ) const = 0;
 		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const = 0;
