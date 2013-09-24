@@ -91,6 +91,10 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 	/// \todo Can this be simplified using the same logic used in SceneProcessor::hash()? It would
 	/// avoid calling ComputeNode::hash only to overwrite the hash if we're disabled.
 	ComputeNode::hash( output, context, h );
+	
+	/// \todo Should this not be done only if we're computing an ImagePlug output?
+	/// and doesn't the fact that we call enabled() below mean that we're already
+	/// hashing in the effect of the enabled plug anyway?
 	h.append( enabledPlug()->hash() );
 
 	const ImagePlug *imagePlug = output->parent<ImagePlug>();
