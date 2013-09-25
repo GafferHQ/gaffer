@@ -51,7 +51,10 @@ import GafferUI
 # other values place the plug in a tab with the section name.
 class StandardNodeUI( GafferUI.NodeUI ) :
 
-	DisplayMode = IECore.Enum.create( "Tabbed", "Simplified" )
+	## Tabbed provides the full node UI, including a tab for user plugs.
+	#  Simplified shows only the contents of the main tab, including a scroll bar.
+	#  Bare shows only the contents of the main tab, without a scroll bar.
+	DisplayMode = IECore.Enum.create( "Tabbed", "Simplified", "Bare" )
 
 	__defaultSectionName = "Settings"
 	__currentTabPlugName = "__uiCurrentTab"
@@ -142,18 +145,22 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		sectionColumn = self.__sectionColumns.get( sectionName, None )
 		if sectionColumn is None :
 
-			scrolledContainer = GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=8 )
 			sectionColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
-			scrolledContainer.setChild( sectionColumn )
+			
+			if self.__displayMode == self.DisplayMode.Bare :
+				sectionContainer = sectionColumn
+			else :
+				sectionContainer = GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=8 )
+				sectionContainer.setChild( sectionColumn )
 
 			if self.__displayMode == self.DisplayMode.Tabbed :
 				newTabIndex = 0
 				if len( self.__tabbedContainer ) and self.__tabbedContainer.getLabel( self.__tabbedContainer[0] )==self.__defaultSectionName :
 					# make sure the default tab always comes first
 					newTabIndex = 1
-				self.__tabbedContainer.insert( newTabIndex, scrolledContainer, label = sectionName )
+				self.__tabbedContainer.insert( newTabIndex, sectionContainer, label = sectionName )
 			else :
-				self.__mainColumn.append( scrolledContainer, expand = True )
+				self.__mainColumn.append( sectionContainer, expand = True )
 
 			self.__sectionColumns[sectionName] = sectionColumn
 
@@ -173,7 +180,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 				continue
 				
 			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
-			if self.__displayMode == self.DisplayMode.Simplified and sectionName != self.__defaultSectionName :
+			if self.__displayMode != self.DisplayMode.Tabbed and sectionName != self.__defaultSectionName :
 				continue
 				
 			widget = GafferUI.PlugValueWidget.create( plug )
