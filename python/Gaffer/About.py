@@ -99,7 +99,7 @@ class About :
 			
 			{
 				"name" : "cortex",
-				"url" : "http://code.google.com/p/cortex-vfx",
+				"url" : "https://github.com/ImageEngine/cortex/",
 				"license" : "$GAFFER_ROOT/doc/licenses/cortex",
 			},
 									
