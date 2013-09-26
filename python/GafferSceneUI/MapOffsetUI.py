@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,34 +34,26 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
+import GafferScene
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
+GafferUI.Metadata.registerNodeDescription(
+
+GafferScene.MapOffset,
+
+"""Adds an offset to object texture coordinates. Provides a convenient way of looking at specific texture UDIMs.""",
+
+"offset",
+"An offset added to the texture coordinates. Note that moving the texture coordinates in the positive direction will move the texture in the negative direction.",
+
+"udim",
+"A specific UDIM to offset the texture coordinates to. The UDIM is converted to an offset which is added to the offset above.",
+
+"sName",
+"The name of the primitive variable holding the s coordinate.",
+
+"tName",
+"The name of the primitive variable holding the t coordinate.",
+
+)
