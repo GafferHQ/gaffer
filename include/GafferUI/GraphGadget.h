@@ -169,7 +169,9 @@ class GraphGadget : public ContainerGadget
 		void offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset );
 		
 		void updateGraph();
-		void addNodeGadget( Gaffer::Node *node );
+		/// May return NULL if NodeGadget::create() returns NULL, signifying that
+		/// someone has registered a creator in order to hide all nodes of a certain type.
+		NodeGadget *addNodeGadget( Gaffer::Node *node );
 		void removeNodeGadget( const Gaffer::Node *node );
 		NodeGadget *findNodeGadget( const Gaffer::Node *node ) const;
 		void updateNodeGadgetTransform( NodeGadget *nodeGadget );
