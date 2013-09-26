@@ -79,6 +79,7 @@ from PruneTest import PruneTest
 from ShaderTest import ShaderTest
 from TextTest import TextTest
 from MapProjectionTest import MapProjectionTest
+from MapOffsetTest import MapOffsetTest
 from PointConstraintTest import PointConstraintTest
 from SceneReaderTest import SceneReaderTest
 

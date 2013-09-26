@@ -100,6 +100,7 @@ enum TypeId
 	PointConstraintTypeId = 110555,
 	CustomAttributesTypeId = 110556,
 	CustomOptionsTypeId = 110557,
+	MapOffsetTypeId = 110558,
 	
 	LastTypeId = 110650
 };

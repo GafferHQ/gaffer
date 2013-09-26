@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,34 +34,48 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import os
+import unittest
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferScene
+import GafferSceneTest
+
+class MapOffsetTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+	
+		plane = GafferScene.Plane()
+		offset = GafferScene.MapOffset()
+		offset["in"].setInput( plane["out"] )
+	
+		self.assertSceneValid( offset["out"] )
+		self.assertScenesEqual( offset["out"], plane["out"] )
+	
+		inputObject = plane["out"].object( "/plane" )
+	
+		self.assertEqual( offset["out"].object( "/plane" ), inputObject )
+
+		offset["udim"].setValue( 1022 )
+		self.assertSceneValid( offset["out"] )
+				
+		for i, s in enumerate( offset["out"].object( "/plane" )["s"].data ) :
+			self.assertEqual( s, inputObject["s"].data[i] + 1 )
+		
+		for i, t in enumerate( offset["out"].object( "/plane" )["t"].data ) :
+			self.assertEqual( t, inputObject["t"].data[i] + 2 )
+		
+		offset["offset"].setValue( IECore.V2f( 0.5, 1.5 ) )
+		self.assertSceneValid( offset["out"] )
+
+		for i, s in enumerate( offset["out"].object( "/plane" )["s"].data ) :
+			self.assertEqual( s, inputObject["s"].data[i] + 1.5 )
+		
+		for i, t in enumerate( offset["out"].object( "/plane" )["t"].data ) :
+			self.assertEqual( t, inputObject["t"].data[i] + 3.5 )
+		
+if __name__ == "__main__":
+	unittest.main()
