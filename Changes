@@ -1,3 +1,24 @@
+# 0.82.0
+
+#### Core
+
+- Made Plug::acceptsInput() consider current output connections (#532).
+
+#### UI
+
+- Added even-more-simplified mode to StandardNodeUI (#549).
+- Fixed GraphGadget for NULL return from NodeGadget::create(). This allows NodeGadget::registerNodeGadget() to be used with functions that will return NULL to signify that the node should be hidden.
+
+#### Scene
+
+- Fixed errors reading polygon normals from Alembic files (courtesy of Cortex 8.0.0-a18).
+- Added MapOffset node for offsetting texture coordinates.
+
+#### RenderMan
+
+- Fixed output of multiple displays (courtesy of Cortex 8.0.0-a18) (#357).
+- Added automatic instancing capabilities (courtesy of Cortex 8.0.0-a18).
+
 0.81.0
 ======
 
