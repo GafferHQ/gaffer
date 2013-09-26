@@ -845,6 +845,40 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		
 		self.assertFalse( c1.getMinimised() )
 		self.assertFalse( c2.getMinimised() )
+	
+	def testNodeGadgetCreatorReturningNull( self ) :
+	
+		class InvisibleNode( GafferTest.AddNode ) :
+		
+			def __init__( self, name = "InvisibleNode" ) :
+			
+				GafferTest.AddNode.__init__( self, name )
+				
+		IECore.registerRunTimeTyped( InvisibleNode )
+		
+		GafferUI.NodeGadget.registerNodeGadget( InvisibleNode.staticTypeId(), lambda node : None )
+		
+		script = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( script )
+		
+		script["n1"] = InvisibleNode()
+		script["n2"] = InvisibleNode()
+		
+		self.assertEqual( g.nodeGadget( script["n1"] ), None )
+		self.assertEqual( g.nodeGadget( script["n2"] ), None )
+		
+		script["n2"]["op1"].setInput( script["n1"]["sum"] )
+		
+		self.assertEqual( g.connectionGadget( script["n2"]["op1"] ), None )
+		
+		# in case it wasn't clear, hiding the nodes has zero
+		# effect on their computations.
+		
+		script["n1"]["op1"].setValue( 12 )
+		script["n1"]["op2"].setValue( 13 )
+		script["n2"]["op2"].setValue( 100 )
+		
+		self.assertEqual( script["n2"]["sum"].getValue(), 125 )
 		
 if __name__ == "__main__":
 	unittest.main()

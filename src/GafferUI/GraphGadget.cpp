@@ -536,8 +536,11 @@ void GraphGadget::rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphCom
 	if( node && ( !m_filter || m_filter->contains( node ) ) )
 	{
 		if( !findNodeGadget( node ) )
-		{	addNodeGadget( node );
-			addConnectionGadgets( node );   
+		{
+			if( addNodeGadget( node ) )
+			{
+				addConnectionGadgets( node );   
+			}
 		}
 	}
 }
@@ -557,8 +560,11 @@ void GraphGadget::filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *mem
 	if( node && node->parent<Gaffer::Node>() == m_root )
 	{
 		if( !findNodeGadget( node ) )
-		{	addNodeGadget( node );
-			addConnectionGadgets( node );   
+		{
+			if( addNodeGadget( node ) )
+			{
+				addConnectionGadgets( node );   
+			}
 		}
 	}
 }
@@ -1196,9 +1202,14 @@ void GraphGadget::updateGraph()
 
 }
 
-void GraphGadget::addNodeGadget( Gaffer::Node *node )
+NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 {	
 	NodeGadgetPtr nodeGadget = NodeGadget::create( node );
+	if( !nodeGadget )
+	{
+		return NULL;
+	}
+	
 	addChild( nodeGadget );
 	
 	NodeGadgetEntry nodeGadgetEntry;
@@ -1215,6 +1226,8 @@ void GraphGadget::addNodeGadget( Gaffer::Node *node )
 	}
 	
 	updateNodeGadgetTransform( nodeGadget.get() );
+	
+	return nodeGadget;
 }
 
 void GraphGadget::removeNodeGadget( const Gaffer::Node *node )
@@ -1264,6 +1277,10 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
 	Gaffer::Node *node = plugParent->isInstanceOf( Gaffer::Node::staticTypeId() ) ? static_cast<Gaffer::Node *>( plugParent ) : plugParent->ancestor<Gaffer::Node>();
 	
 	NodeGadget *nodeGadget = findNodeGadget( node );
+	if( !nodeGadget )
+	{
+		return;
+	}
 
 	for( Gaffer::PlugIterator pIt( plugParent->children().begin(), plugParent->children().end() ); pIt!=pIt.end(); pIt++ )
 	{
@@ -1311,7 +1328,13 @@ void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 	}
 	
 	Gaffer::Node *dstNode = dstPlug->node();
-	Nodule *dstNodule = findNodeGadget( dstNode )->nodule( dstPlug );
+	NodeGadget *dstNodeGadget = findNodeGadget( dstNode );
+	if( !dstNodeGadget )
+	{
+		return;
+	}
+	
+	Nodule *dstNodule = dstNodeGadget->nodule( dstPlug );
 	if( !dstNodule )
 	{
 		// the destination connection point is not represented in the graph
