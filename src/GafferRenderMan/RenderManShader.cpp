@@ -140,20 +140,24 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 		
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
-		
-			const Node* sourceNode = inputPlug->node();
+			// coshader parameter - source must be another
+			// renderman shader hosting a coshader, or a box
+			// with a currently dangling connection. in the box case,
+			// we will be called again when the box is connected to
+			// something, so we can check that the indirect connection
+			// is to our liking.
+			const Node* sourceNode = sourcePlug->node();
+			
 			if( runTimeCast<const Box>( sourceNode ) )
 			{
 				// looks like we're exposing this input via a box, or
-				// connecting it to an unconnected output on a box. At
-				// the moment, we're just accepting this and trusting
-				// the user not to connect something nonsensical to inputPlug.
-				// \todo: make it so we can't make illegal connections to inputPlug
+				// connecting it to an unconnected output on a box. we'll
+				// accept the input for now - later when the plug on the
+				// box itself is connected we'll be called again to check
+				// that we accept the new indirect connection.
 				return true;
 			}
 			
-			// coshader parameter - input must be another
-			// renderman shader hosting a coshader.
 			const RenderManShader *inputShader = sourcePlug->parent<RenderManShader>();
 			if(
 				!inputShader ||

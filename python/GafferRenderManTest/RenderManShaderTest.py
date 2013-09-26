@@ -1321,15 +1321,60 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
 		
+		# create a box and put a shader in it
+		
 		b = CustomBox()
 		b["s"] = GafferRenderMan.RenderManShader()
 		b["s"].loadShader( shader )
 		
+		# create a plug on the outside of the box, and connect it into
+		# the shader.
+		
 		b["in"] = b["s"]["parameters"]["coshaderParameter"].createCounterpart( "in", Gaffer.Plug.Direction.In )
 		
 		b["s"]["parameters"]["coshaderParameter"].setInput( b["in"] )
+		s = b["s"].state()
+		self.assertEqual( len( s ), 1 )
+		self.assertEqual( s[0].name, shader )
 		
 		self.assertTrue( b["s"]["parameters"]["coshaderParameter"].getInput().isSame( b["in"] ) )
+		
+		# check that it is now possible to connect appropriate coshaders
+		# into the box plug, and that appropriate networks are generated that way.
+		
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		c = GafferRenderMan.RenderManShader()
+		c.loadShader( coshader )
+		
+		self.assertTrue( b["in"].acceptsInput( c["out"] ) )
+		b["in"].setInput( c["out"] )
+		
+		s = b["s"].state()
+		self.assertEqual( len( s ), 2 )
+		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
+		
+		# check that it's not possible to use the plug on the box to create rogue connections
+		# that the shader itself wouldn't have accepted directly.
+		
+		n = Gaffer.Node()
+		n["out"] = b["in"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
+		
+		self.assertFalse( b["in"].acceptsInput( n["out"] ) )
+		self.assertRaises( RuntimeError, b["in"].setInput, n["out"] )
+		
+		# and check that if we remove the internal connection to the shader, the exterior plug
+		# will start accepting new connections again.
+		
+		b["s"]["parameters"]["coshaderParameter"].setInput( None )
+		
+		self.assertTrue( b["in"].acceptsInput( n["out"] ) )
+		b["in"].setInput( n["out"] )
+		self.assertTrue( b["in"].getInput().isSame( n["out"] ) )
+		
+		# and that the shader will reject connection to the plug with the dodgy input.
+		
+		self.assertFalse( b["s"]["parameters"]["coshaderParameter"].acceptsInput( b["in"] ) )
+		self.assertRaises( RuntimeError, b["s"]["parameters"]["coshaderParameter"].setInput, b["in"] )
 		
 if __name__ == "__main__":
 	unittest.main()

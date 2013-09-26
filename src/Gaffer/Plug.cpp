@@ -134,7 +134,7 @@ void Plug::setFlags( unsigned flags, bool enable )
 
 bool Plug::acceptsInput( const Plug *input ) const
 {
-	if( !getFlags( AcceptsInputs ) )
+	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
 	{
 		return false;
 	}
@@ -151,7 +151,16 @@ bool Plug::acceptsInput( const Plug *input ) const
 			return false;
 		}
 	}
-	return !getFlags( ReadOnly );
+	
+	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
+	{
+		if( !(*it)->acceptsInput( input ) )
+		{
+			return false;
+		}
+	}
+	
+	return true;
 }
 
 void Plug::setInput( PlugPtr input )
