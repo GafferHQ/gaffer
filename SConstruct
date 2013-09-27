@@ -657,8 +657,8 @@ if depEnv["BUILD_DEPENDENCY_OSL"] :
 	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/include/OSL $BUILD_DIR/include" )
 	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/lib/libosl* $BUILD_DIR/lib" )
 	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/bin/osl* $BUILD_DIR/bin" )
+	runCommand( "mkdir -p $BUILD_DIR/shaders && cp $OSL_SRC_DIR/dist/" + oslPlatform + "/shaders/stdosl.h $BUILD_DIR/shaders" )
 	runCommand( "mkdir -p $BUILD_DIR/doc/osl && cd $OSL_SRC_DIR && cp dist/" + oslPlatform + "/doc/*.pdf $BUILD_DIR/doc/osl" )
-	runCommand( "cd $OSL_SRC_DIR && cp dist/" + oslPlatform + "/LICENSE $BUILD_DIR/doc/licenses/osl" )
 
 if depEnv["BUILD_DEPENDENCY_HDF5"] :
 	runCommand( "cd $HDF5_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-threadsafe --with-pthread=/usr/include && make clean && make -j 4 && make install" )
@@ -965,6 +965,28 @@ libraries = {
 	"GafferRenderManTest" : {
 		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
 	},
+
+	"GafferOSL" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery", "oslexec" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL" ],
+		},
+		"requiredOptions" : [ "OSL_SRC_DIR" ],
+		"oslFiles" : glob.glob( "shaders/*/*.osl" ),
+	},
+
+	"GafferOSLUI" : {
+		"requiredOptions" : [ "OSL_SRC_DIR" ],
+	},
+	
+	"GafferOSLTest" : {
+		"additionalFiles" : glob.glob( "python/GafferOSLTest/*/*" ),
+		"requiredOptions" : [ "OSL_SRC_DIR" ],
+	},
 		
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
@@ -1220,6 +1242,7 @@ if buildingDependencies :
 		( "hdf5", "$HDF5_SRC_DIR/COPYING" ),
 		( "alembic", "$ALEMBIC_SRC_DIR/LICENSE.txt" ),
 		( "qt", "$QT_SRC_DIR/LICENSE.LGPL" ),
+		( "osl", "$OSL_SRC_DIR/LICENSE" ),
 	]
 	
 	if env["BUILD_DEPENDENCY_PYQT"] :
