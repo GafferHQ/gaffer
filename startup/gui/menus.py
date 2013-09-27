@@ -53,6 +53,7 @@ scriptWindowMenu = GafferUI.ScriptWindow.menuDefinition( application )
 GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
 GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
 GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
+GafferUI.PlaybackMenu.appendDefinitions( scriptWindowMenu, prefix="/Playback" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.ExecuteUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
