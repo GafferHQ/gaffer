@@ -1359,6 +1359,10 @@ class Widget( object ) :
 			padding: 2px;
 		}
 		
+		.QFrame[gafferHighlighted=\"true\"]#borderStyleFlat {
+			border: 1px solid $brightColor;		
+		}
+		
 		.QFrame#gafferDivider {
 			color: $backgroundDark;
 		}
