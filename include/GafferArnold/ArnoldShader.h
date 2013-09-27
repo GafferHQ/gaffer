@@ -57,10 +57,6 @@ class ArnoldShader : public GafferScene::Shader
 		
 		void loadShader( const std::string &shaderName );
 
-	protected :
-	
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *plug, NetworkBuilder &network ) const;
-
 };
 
 } // namespace GafferArnold

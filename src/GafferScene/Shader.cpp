@@ -167,7 +167,7 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 	if( inputPlug != parameterPlug )
 	{
 		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
-		if( n )
+		if( n && ( inputPlug == n->outPlug() || n->outPlug()->isAncestorOf( inputPlug ) ) )
 		{
 			h.append( network.shaderHash( n ) );
 			return;
@@ -188,11 +188,33 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 
 IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
 {
+	const Plug *inputPlug = parameterPlug->source<Plug>();
+	if( inputPlug != parameterPlug )
+	{
+		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
+		if( n && ( inputPlug == n->outPlug() || n->outPlug()->isAncestorOf( inputPlug ) ) )
+		{
+			const std::string &shaderHandle = network.shaderHandle( n );
+			if( !shaderHandle.size() )
+			{
+				return NULL;
+			}
+			std::string result = "link:" + shaderHandle;
+			if( n->outPlug()->isAncestorOf( inputPlug ) )
+			{
+				result += "." + inputPlug->relativeName( n->outPlug() );
+			}
+			return new IECore::StringData( result );
+		}
+		// fall through to use plug value
+	}
+
 	if( const Gaffer::ValuePlug *valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
 	{
 		return Gaffer::CompoundDataPlug::extractDataFromPlug( valuePlug );
 	}
-	return 0;
+	
+	return NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////
