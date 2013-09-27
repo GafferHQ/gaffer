@@ -52,6 +52,7 @@ class Frame( GafferUI.ContainerWidget ) :
 		
 		self._qtWidget().setLayout( QtGui.QGridLayout() )
 		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
+		self._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		
 		self.__child = None
 		self.setChild( child )
