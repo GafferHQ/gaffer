@@ -36,6 +36,7 @@
 
 from OSLTestCase import OSLTestCase
 from OSLShaderTest import OSLShaderTest
+from OSLRendererTest import OSLRendererTest
 
 if __name__ == "__main__":
 	import unittest

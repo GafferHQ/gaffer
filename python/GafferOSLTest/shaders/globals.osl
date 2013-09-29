@@ -34,52 +34,23 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLRenderer.h"
-
-using namespace boost::python;
-using namespace GafferBindings;
-using namespace GafferOSL;
-
-/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
-/// and implemented it so reloading works in ArnoldShader and OpenGLShader.
-class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
+surface globals
+(
+	string global = "P"
+)
 {
-
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	color c = 0;
+	if( global == "P" )
 	{
-		const OSLShader *shader = static_cast<const OSLShader *>( graphComponent );
-		std::string shaderName = shader->namePlug()->getValue();
-		if( shaderName.size() )
-		{
-			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
-		}
-
-		return "";
+		c = color( P );
 	}
-
-};
-
-BOOST_PYTHON_MODULE( _GafferOSL )
-{
-	
-	GafferBindings::DependencyNodeClass<OSLShader>()
-		.def( "loadShader", &OSLShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
-	;
-		
-	Serialisation::registerSerialiser( OSLShader::staticTypeId(), new OSLShaderSerialiser() );
-
-	scope s = IECorePython::RunTimeTypedClass<OSLRenderer>()
-		.def( init<>() )
-		.def( "shadingEngine", &OSLRenderer::shadingEngine )
-	;
-
-	IECorePython::RefCountedClass<OSLRenderer::ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
-		.def( "shade", &OSLRenderer::ShadingEngine::shade )
-	;
-
+	else if( global == "u" )
+	{
+		c = color( u );
+	}
+	else if( global == "v" )
+	{
+		c = color( v );
+	}
+	Ci = c * emission();
 }
