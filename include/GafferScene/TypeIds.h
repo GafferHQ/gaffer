@@ -101,6 +101,7 @@ enum TypeId
 	CustomAttributesTypeId = 110556,
 	CustomOptionsTypeId = 110557,
 	MapOffsetTypeId = 110558,
+	IsolateTypeId = 110559,
 	
 	LastTypeId = 110650
 };
