@@ -284,6 +284,7 @@ IECore::ConstObjectPtr SceneElementProcessor::computeProcessedObject( const Scen
 	return inputObject;
 }
 
+/// \todo This needs updating to return a bitmask now that filters return a bitmask.
 SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod() const
 {
 	const bool pBound = processesBound();
