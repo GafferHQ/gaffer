@@ -35,6 +35,9 @@
 #  
 ##########################################################################
 
+import os
+import sys
+
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -42,4 +45,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 def showURL( url ) :
 
-	QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+	if sys.platform == "darwin" :
+		os.system( "open \"" + url + "\"" )
+	else :
+		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
