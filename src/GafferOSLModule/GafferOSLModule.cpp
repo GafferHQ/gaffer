@@ -40,6 +40,7 @@
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLRenderer.h"
+#include "GafferOSL/OSLImage.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -72,6 +73,8 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	;
 		
 	Serialisation::registerSerialiser( OSLShader::staticTypeId(), new OSLShaderSerialiser() );
+
+	GafferBindings::DependencyNodeClass<OSLImage>();
 
 	scope s = IECorePython::RunTimeTypedClass<OSLRenderer>()
 		.def( init<>() )

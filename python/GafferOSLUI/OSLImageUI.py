@@ -34,5 +34,30 @@
 #  
 ##########################################################################
 
-import OSLShaderUI
-import OSLImageUI
+import Gaffer
+import GafferUI
+
+import GafferOSL
+
+##########################################################################
+# Metadata
+##########################################################################
+
+GafferUI.Metadata.registerNodeDescription(
+
+GafferOSL.OSLImage,
+
+"""Executes OSL shaders to perform image processing.""",
+
+"shader",
+"The shader to be executed - connect the output from an OSL network here.",
+
+)
+
+##########################################################################
+# Nodules
+##########################################################################
+
+GafferUI.Nodule.registerNodule( GafferOSL.OSLImage.staticTypeId(), "shader", GafferUI.StandardNodule )
+
+

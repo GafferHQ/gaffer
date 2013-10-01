@@ -37,6 +37,7 @@
 from OSLTestCase import OSLTestCase
 from OSLShaderTest import OSLShaderTest
 from OSLRendererTest import OSLRendererTest
+from OSLImageTest import OSLImageTest
 
 if __name__ == "__main__":
 	import unittest
