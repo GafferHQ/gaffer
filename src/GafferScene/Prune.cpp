@@ -235,10 +235,7 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 			path.push_back( *tIt );
 		}
 		tmpContext->set( ScenePlug::scenePathContextName, path );
-		/// \todo We really need to take into account ancestor matches here too, to remove
-		/// items whose ancestor has been pruned, but the Filter classes don't provide that
-		/// information yet.
-		if( !(filterPlug()->getValue() & Filter::ExactMatch) )
+		if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
 		{
 			outputForwardDeclarations->writable()[it->first] = it->second;
 		}

@@ -232,5 +232,33 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
 		self.assertEqual( fd.keys(), [] )
 	
+	def testForwardDeclarationsWhenAncestorPruned( self ) :
+	
+		light1 = GafferSceneTest.TestLight()
+		light2 = GafferSceneTest.TestLight()
+
+		group1 = GafferScene.Group()
+		group2 = GafferScene.Group()
+		
+		group1["in"].setInput( light1["out"] )
+		group2["in"].setInput( light1["out"] )
+		
+		topGroup = GafferScene.Group()
+		topGroup["in"].setInput( group1["out"] )
+		topGroup["in1"].setInput( group2["out"] )
+		
+		fd = topGroup["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( set( fd.keys() ), set( [ "/group/group/light", "/group/group1/light" ] ) )
+	
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/group" ] ) )
+		
+		prune = GafferScene.Prune()
+		prune["in"].setInput( topGroup["out"] )
+		prune["filter"].setInput( filter["match"] )
+	
+		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( set( fd.keys() ), set( [ "/group/group1/light" ] ) )
+	
 if __name__ == "__main__":
 	unittest.main()
