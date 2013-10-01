@@ -49,7 +49,7 @@ FilteredSceneProcessor::FilteredSceneProcessor( const std::string &name, Filter:
 	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::Match ) );
+	addChild( new IntPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::EveryMatch ) );
 }
 
 FilteredSceneProcessor::~FilteredSceneProcessor()

@@ -301,15 +301,15 @@ bool PathMatcher::operator != ( const PathMatcher &other ) const
 	return !(*this == other );
 }
 
-Filter::Result PathMatcher::match( const std::string &path ) const
+unsigned PathMatcher::match( const std::string &path ) const
 {
-	Filter::Result result = Filter::NoMatch;
+	unsigned result = Filter::NoMatch;
 	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );	
 	matchWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), result );
 	return result;
 }
 
-Filter::Result PathMatcher::match( const std::vector<IECore::InternedString> &path ) const
+unsigned PathMatcher::match( const std::vector<IECore::InternedString> &path ) const
 {
    Node *node = m_root.get();
    if( !node )
@@ -317,32 +317,46 @@ Filter::Result PathMatcher::match( const std::vector<IECore::InternedString> &pa
        return Filter::NoMatch;
    }
 
-	Filter::Result result = Filter::NoMatch;
+	unsigned result = Filter::NoMatch;
 	matchWalk( node, path.begin(), path.end(), result );
 	return result;
 }
 
 template<typename NameIterator>
-void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIterator &end, Filter::Result &result ) const
+void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const
 {
-	// either we've matched to the end of the path
+	// see if we've matched to the end of the path, and terminate the recursion if we have.
 	if( start == end )
 	{
 		if( node->terminator )
 		{
-			result = Filter::Match;
+			result |= Filter::ExactMatch;
 		}
-		else
+		if( node->children.size() ) 
 		{
-			if( node->children.size() || node->ellipsis )
+			result |= Filter::DescendantMatch;
+		}
+		if( node->ellipsis )
+		{
+			result |= Filter::DescendantMatch;
+			if( node->ellipsis->terminator )
 			{
-				result = Filter::DescendantMatch;
+				result |= Filter::ExactMatch;
 			}
 		}
 		return;
 	}
 		
-	// or we need to match the remainder of the path against child branches.
+	// we haven't matched to the end of the path - there are still path elements
+	// to check. if this node is a terminator then we have found an ancestor match
+	// though.
+	if( node->terminator )
+	{
+		result |= Filter::AncestorMatch;
+	}
+	
+	// now we can match the remainder of the path against child branches to see
+	// if we have any exact or descendant matches.
 	Node::ChildMapRange range = node->childRange( *start );
 	if( range.first != range.second )
 	{
@@ -352,10 +366,10 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 			if( Detail::wildcardMatch( start->c_str(), it->first.c_str() ) )
 			{
 				matchWalk( it->second, newStart, end, result );
-				// if we've found a perfect match then we can terminate early,
+				// if we've found every kind of match then we can terminate early,
 				// but otherwise we need to keep going even though we may
-				// have found a DescendantMatch already.
-				if( result == Filter::Match )
+				// have found some of the match types already.
+				if( result == Filter::EveryMatch )
 				{
 					return;
 				}
@@ -365,17 +379,22 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 	
 	if( node->ellipsis )
 	{
+		result |= Filter::DescendantMatch;
+		if( node->ellipsis->terminator )
+		{
+			result |= Filter::ExactMatch;
+		}
+		
 		NameIterator newStart = start;
 		while( newStart != end )
 		{
 			matchWalk( node->ellipsis, newStart, end, result );
-			if( result == Filter::Match )
+			if( result == Filter::EveryMatch )
 			{
 				return;
 			}
 			newStart++;
-		}
-		result = node->ellipsis->terminator ? Filter::Match : Filter::DescendantMatch;
+		}		
 	}
 }
 

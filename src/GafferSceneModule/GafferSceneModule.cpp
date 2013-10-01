@@ -142,7 +142,9 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		enum_<Filter::Result>( "Result" )
 			.value( "NoMatch", Filter::NoMatch )
 			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "Match", Filter::Match )
+			.value( "ExactMatch", Filter::ExactMatch )
+			.value( "AncestorMatch", Filter::AncestorMatch )
+			.value( "EveryMatch", Filter::EveryMatch )
 		;
 	}
 				
