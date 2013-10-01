@@ -1168,7 +1168,15 @@ for libraryName, libraryDef in libraries.items() :
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
-		
+	
+	# osl shaders
+	
+	for oslFile in libraryDef.get( "oslFiles", [] ) :
+		oslFileInstall = env.InstallAs( "$BUILD_DIR/" + oslFile, oslFile )
+		env.Alias( "build", additionalFileInstall )
+		compiledFile = depEnv.Command( os.path.splitext( str( oslFileInstall[0] ) )[0] + ".oso", oslFileInstall, "oslc -o $TARGET $SOURCE" )
+		env.Alias( "build", compiledFile )
+			
 	# class stubs
 	
 	def buildClassStub( target, source, env ) :
@@ -1411,6 +1419,7 @@ manifest = [
 	"ops",
 	"procedurals",
 	"resources",
+	"osl",
 
 	"openColorIO",
 
