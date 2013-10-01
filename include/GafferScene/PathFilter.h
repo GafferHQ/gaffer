@@ -66,7 +66,7 @@ class PathFilter : public Filter
 	protected :
 
 		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Result computeMatch( const Gaffer::Context *context ) const;
+		virtual unsigned computeMatch( const Gaffer::Context *context ) const;
 
 	private :
 	

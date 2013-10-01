@@ -93,7 +93,7 @@ void bindPathMatcher()
 		.def( "removePath", &PathMatcher::removePath )
 		.def( "clear", &PathMatcher::clear )
 		.def( "paths", &paths )
-		.def( "match", (Filter::Result (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
+		.def( "match", (unsigned (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
 		.def( self == self )
 		.def( self != self )
 	;

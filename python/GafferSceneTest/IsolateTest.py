@@ -42,7 +42,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class PruneTest( GafferSceneTest.SceneTestCase ) :
+class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		
 	def testPassThrough( self ) :
 	
@@ -82,31 +82,31 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 		
-		prune = GafferScene.Prune()
-		prune["in"].setInput( input["out"] )
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( input["out"] )
 		
 		self.assertSceneValid( input["out"] )
-		self.assertSceneValid( prune["out"] )
+		self.assertSceneValid( isolate["out"] )
 
-		# with no filter applied, nothing should be pruned so we should have a perfect pass through
+		# with no filter applied, nothing should be isolated so we should have a perfect pass through
 
-		self.assertScenesEqual( input["out"], prune["out"] )
-		self.assertSceneHashesEqual( input["out"], prune["out"] )
-		self.assertTrue( input["out"].object( "/groupA/sphereAA", _copy = False ).isSame( prune["out"].object( "/groupA/sphereAA", _copy = False ) ) )
+		self.assertScenesEqual( input["out"], isolate["out"] )
+		self.assertSceneHashesEqual( input["out"], isolate["out"] )
+		self.assertTrue( input["out"].object( "/groupA/sphereAA", _copy = False ).isSame( isolate["out"].object( "/groupA/sphereAA", _copy = False ) ) )
 		
 		# and even with a filter applied, we should have a perfect pass through if the node is disabled.
 		
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
-		prune["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["match"] )
 		
-		prune["enabled"].setValue( False )
+		isolate["enabled"].setValue( False )
 
-		self.assertScenesEqual( input["out"], prune["out"] )
-		self.assertSceneHashesEqual( input["out"], prune["out"] )
-		self.assertTrue( input["out"].object( "/groupA/sphereAA", _copy = False ).isSame( prune["out"].object( "/groupA/sphereAA", _copy = False ) ) )
+		self.assertScenesEqual( input["out"], isolate["out"] )
+		self.assertSceneHashesEqual( input["out"], isolate["out"] )
+		self.assertTrue( input["out"].object( "/groupA/sphereAA", _copy = False ).isSame( isolate["out"].object( "/groupA/sphereAA", _copy = False ) ) )
 	
-	def testPruning( self ) :
+	def testIsolation( self ) :
 	
 		sphere = IECore.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
@@ -144,18 +144,21 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 		
-		prune = GafferScene.Prune()
-		prune["in"].setInput( input["out"] )
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( input["out"] )
 		
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/groupA/sphereAB" ] ) )
-		prune["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["match"] )
 		
-		self.assertNotEqual( prune["out"].childNamesHash( "/groupA" ), input["out"].childNamesHash( "/groupA" ) )
-		self.assertEqual( prune["out"].childNames( "/groupA" ), IECore.InternedStringVectorData( [ "sphereAA" ] ) )		
+		self.assertNotEqual( isolate["out"].childNamesHash( "/groupA" ), input["out"].childNamesHash( "/groupA" ) )
+		self.assertEqual( isolate["out"].childNames( "/groupA" ), IECore.InternedStringVectorData( [ "sphereAB" ] ) )		
+		self.assertEqual( isolate["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "groupA" ] ) )		
 
 		filter["paths"].setValue( IECore.StringVectorData( [ "/groupA/sphereAA" ] ) )
-		self.assertEqual( prune["out"].childNames( "/groupA" ), IECore.InternedStringVectorData( [ "sphereAB" ] ) )		
+		self.assertEqual( isolate["out"].childNames( "/groupA" ), IECore.InternedStringVectorData( [ "sphereAA" ] ) )		
+		self.assertEqual( isolate["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "groupA" ] ) )		
+
 		
 	def testAdjustBounds( self ) :
 	
@@ -183,23 +186,23 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 	
-		prune = GafferScene.Prune()
-		prune["in"].setInput( input["out"] )
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( input["out"] )
 		
 		filter = GafferScene.PathFilter()
-		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere2" ] ) )
-		prune["filter"].setInput( filter["match"] )
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere1" ] ) )
+		isolate["filter"].setInput( filter["match"] )
 		
-		self.assertEqual( prune["out"].bound( "/" ), sphere2.bound() )
-		self.assertEqual( prune["out"].bound( "/group" ), sphere2.bound() )
-		self.assertEqual( prune["out"].bound( "/group/sphere1" ), sphere1.bound() )
+		self.assertEqual( isolate["out"].bound( "/" ), sphere2.bound() )
+		self.assertEqual( isolate["out"].bound( "/group" ), sphere2.bound() )
+		self.assertEqual( isolate["out"].bound( "/group/sphere1" ), sphere1.bound() )
 		
-		prune["adjustBounds"].setValue( True )
+		isolate["adjustBounds"].setValue( True )
 		
-		self.assertEqual( prune["out"].bound( "/" ), sphere1.bound() )
-		self.assertEqual( prune["out"].bound( "/group" ), sphere1.bound() )
-		self.assertEqual( prune["out"].bound( "/group/sphere1" ), sphere1.bound() )
-		
+		self.assertEqual( isolate["out"].bound( "/" ), sphere1.bound() )
+		self.assertEqual( isolate["out"].bound( "/group" ), sphere1.bound() )
+		self.assertEqual( isolate["out"].bound( "/group/sphere1" ), sphere1.bound() )
+
 	def testForwardDeclarations( self ) :
 	
 		light1 = GafferSceneTest.TestLight()
@@ -212,53 +215,25 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		fd = group["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
 		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
 	
-		prune = GafferScene.Prune()
-		prune["in"].setInput( group["out"] )
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( group["out"] )
 		
-		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
 		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
 		
 		filter = GafferScene.PathFilter()
-		prune["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["match"] )
 		
-		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
+		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( set( fd.keys() ), set( [] ) )
 		
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
-		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/light1" ] ) )
+		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( set( fd.keys() ), set( [ "/group/light" ] ) )
 		
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light*" ] ) )
-		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( fd.keys(), [] )
-	
-	def testForwardDeclarationsWhenAncestorPruned( self ) :
-	
-		light1 = GafferSceneTest.TestLight()
-		light2 = GafferSceneTest.TestLight()
+		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
 
-		group1 = GafferScene.Group()
-		group2 = GafferScene.Group()
-		
-		group1["in"].setInput( light1["out"] )
-		group2["in"].setInput( light1["out"] )
-		
-		topGroup = GafferScene.Group()
-		topGroup["in"].setInput( group1["out"] )
-		topGroup["in1"].setInput( group2["out"] )
-		
-		fd = topGroup["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/group/light", "/group/group1/light" ] ) )
-	
-		filter = GafferScene.PathFilter()
-		filter["paths"].setValue( IECore.StringVectorData( [ "/group/group" ] ) )
-		
-		prune = GafferScene.Prune()
-		prune["in"].setInput( topGroup["out"] )
-		prune["filter"].setInput( filter["match"] )
-	
-		fd = prune["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/group1/light" ] ) )
-	
 if __name__ == "__main__":
 	unittest.main()

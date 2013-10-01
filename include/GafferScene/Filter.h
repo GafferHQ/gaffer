@@ -54,7 +54,9 @@ class Filter : public Gaffer::ComputeNode
 		{
 			NoMatch = 0,
 			DescendantMatch = 1,
-			Match = 2
+			ExactMatch = 2,
+			AncestorMatch = 4,
+			EveryMatch = DescendantMatch | ExactMatch | AncestorMatch
 		};
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
@@ -74,7 +76,7 @@ class Filter : public Gaffer::ComputeNode
 		
 		/// Must be implemented by derived classes.
 		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual Result computeMatch( const Gaffer::Context *context ) const = 0;
+		virtual unsigned computeMatch( const Gaffer::Context *context ) const = 0;
 
 	private :
 	

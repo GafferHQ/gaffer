@@ -301,7 +301,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 			bool expand = true;
 			if( m_pathsToExpand )
 			{
-				expand = m_pathsToExpand->readable().match( m_scenePath ) == Filter::Match;
+				expand = m_pathsToExpand->readable().match( m_scenePath ) & Filter::ExactMatch;
 			}
 			
 			if( !expand )

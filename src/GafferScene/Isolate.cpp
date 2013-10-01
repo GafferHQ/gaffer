@@ -38,39 +38,39 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/Prune.h"
+#include "GafferScene/Isolate.h"
 
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( Prune );
+IE_CORE_DEFINERUNTIMETYPED( Isolate );
 
-size_t Prune::g_firstPlugIndex = 0;
+size_t Isolate::g_firstPlugIndex = 0;
 
-Prune::Prune( const std::string &name )
-	:	FilteredSceneProcessor( name, Filter::NoMatch )
+Isolate::Isolate( const std::string &name )
+	:	FilteredSceneProcessor( name, Filter::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, false ) );
 }
 
-Prune::~Prune()
+Isolate::~Isolate()
 {
 }
 
-Gaffer::BoolPlug *Prune::adjustBoundsPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::BoolPlug *Prune::adjustBoundsPlug() const
+Gaffer::BoolPlug *Isolate::adjustBoundsPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex );
 }
 
-void Prune::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+const Gaffer::BoolPlug *Isolate::adjustBoundsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex );
+}
+
+void Isolate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
@@ -90,12 +90,12 @@ void Prune::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		unsigned match = filterPlug()->getValue();
-		if( match & Filter::DescendantMatch )
+		Filter::Result match = (Filter::Result)filterPlug()->getValue();
+		if( match == Filter::DescendantMatch )
 		{
 			h = hashOfTransformedChildBounds( path, outPlug() );
 			return;
@@ -106,25 +106,25 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	h = inPlug()->boundPlug()->hash();
 }
 
-void Prune::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->transformPlug()->hash();
 }
 
-void Prune::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->attributesPlug()->hash();
 }
 
-void Prune::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->objectPlug()->hash();
 }
 
-void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	unsigned match = filterPlug()->getValue();
-	if( match & Filter::DescendantMatch )
+	Filter::Result match = (Filter::Result)filterPlug()->getValue();
+	if( match == Filter::DescendantMatch )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
@@ -138,19 +138,19 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 	}
 }
 
-void Prune::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FilteredSceneProcessor::hashGlobals( context, parent, h );
 	inPlug()->globalsPlug()->hash( h );
 	filterPlug()->hash( h );
 }
 
-Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		unsigned match = filterPlug()->getValue();
-		if( match & Filter::DescendantMatch )
+		Filter::Result match = (Filter::Result)filterPlug()->getValue();
+		if( match == Filter::DescendantMatch )
 		{
 			return unionOfTransformedChildBounds( path, outPlug() );
 		}
@@ -159,25 +159,25 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 	return inPlug()->boundPlug()->getValue();
 }
 
-Imath::M44f Prune::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+Imath::M44f Isolate::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->transformPlug()->getValue();
 }
 
-IECore::ConstCompoundObjectPtr Prune::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr Isolate::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->attributesPlug()->getValue();
 }
 
-IECore::ConstObjectPtr Prune::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstObjectPtr Isolate::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->objectPlug()->getValue();
 }
 
-IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	unsigned match = filterPlug()->getValue();
-	if( match & Filter::DescendantMatch )
+	Filter::Result match = (Filter::Result)filterPlug()->getValue();
+	if( match == Filter::DescendantMatch )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
@@ -195,7 +195,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		{
 			childPath[path.size()] = *it;
 			tmpContext->set( ScenePlug::scenePathContextName, childPath );
-			if( !(filterPlug()->getValue() & Filter::ExactMatch) )
+			if( filterPlug()->getValue() != Filter::NoMatch )
 			{
 				outputChildNames.push_back( *it );
 			}
@@ -210,7 +210,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 	}
 }
 
-IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 
@@ -235,7 +235,7 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 			path.push_back( *tIt );
 		}
 		tmpContext->set( ScenePlug::scenePathContextName, path );
-		if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
+		if( filterPlug()->getValue() != Filter::NoMatch )
 		{
 			outputForwardDeclarations->writable()[it->first] = it->second;
 		}
@@ -245,3 +245,4 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 	outputGlobals->members()["gaffer:forwardDeclarations"] = outputForwardDeclarations;
 	return outputGlobals;
 }
+
