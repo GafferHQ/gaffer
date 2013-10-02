@@ -66,6 +66,8 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		
 		self.__gadgetWidget._qtWidget().installEventFilter( _eventFilter )
 		
@@ -332,6 +334,31 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		if nodeGadget is not None :
 			return self.nodeDoubleClickSignal()( self, nodeGadget.node() )
 	
+	def __dragEnter( self, widget, event ) :
+	
+		if event.sourceWidget is self.__gadgetWidget :
+			return False
+	
+		if self.__dropNodes( event.data ) :
+			return True
+		
+		return False
+			
+	def __drop( self, widget, event ) :
+	
+		self.__frame( self.__dropNodes( event.data ) )
+	
+	def __dropNodes( self, dragData ) :
+	
+		if isinstance( dragData, Gaffer.Node ) :
+			return [ dragData ]
+		elif isinstance( dragData, Gaffer.Plug ) :
+			return [ dragData.node() ]
+		elif isinstance( dragData, Gaffer.Set ) :
+			return [ x for x in dragData if isinstance( x, Gaffer.Node ) ]
+			
+		return []
+		
 	def __rootChanged( self, graphGadget ) :
 	
 		if graphGadget.getRoot().isSame( self.scriptNode() ) :

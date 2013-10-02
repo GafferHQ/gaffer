@@ -89,6 +89,7 @@ from ViewTest import ViewTest
 from SliderTest import SliderTest
 from NumericPlugValueWidgetTest import NumericPlugValueWidgetTest
 from CompoundNumericPlugValueWidgetTest import CompoundNumericPlugValueWidgetTest
+from NameLabelTest import NameLabelTest
 
 if __name__ == "__main__":
 	unittest.main()

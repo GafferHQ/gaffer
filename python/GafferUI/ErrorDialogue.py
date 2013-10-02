@@ -48,25 +48,21 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
 		
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
-		messageWidget = GafferUI.Label( IECore.StringUtil.wrap( message, 60 ) )
-		messageFrame = GafferUI.Frame( child = messageWidget, borderWidth=8 )
-		
-		column.append( messageFrame )
-		
-		if details is not None :
-		
-			detailsWidget = GafferUI.MultiLineTextWidget(
-				text = details,
-				editable = False,
-			)
-			
-			detailsFrame = GafferUI.Frame( child = detailsWidget, borderWidth=8 )
-			
-			column.append(
-				GafferUI.Collapsible( label = "Details", collapsed = True, child = detailsFrame )						
-			)
-					
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 ) as column :
+			with GafferUI.Frame( borderWidth = 8 ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+					GafferUI.Spacer( IECore.V2i( 1 ) )
+					GafferUI.Label( IECore.StringUtil.wrap( message, 60 ) )
+					GafferUI.Spacer( IECore.V2i( 1 ) )
+				
+			if details is not None :
+				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
+					with GafferUI.Frame( borderWidth=8 ) :					
+						GafferUI.MultiLineTextWidget(
+							text = details,
+							editable = False,
+						)
+
 		self._setWidget( column )
 								
 		self.__closeButton = self._addButton( "Close" )

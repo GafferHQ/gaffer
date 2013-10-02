@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -47,10 +47,11 @@ using namespace GafferUI;
 void GafferUIBindings::bindButtonEvent()
 {
 	scope s = class_<ButtonEvent, bases<ModifiableEvent> >( "ButtonEvent" )
-		.def( init<ButtonEvent::Buttons>() )
-		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &>() )
-		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &, float>() )
-		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &, float, ModifiableEvent::Modifiers>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons, const IECore::LineSegment3f &>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons, const IECore::LineSegment3f &, float>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons, const IECore::LineSegment3f &, float, ModifiableEvent::Modifiers>() )
+		.def_readwrite( "button", &ButtonEvent::button )
 		.def_readwrite( "buttons", &ButtonEvent::buttons )
 		.def_readwrite( "line", &ButtonEvent::line )
 		.def_readwrite( "wheelRotation", &ButtonEvent::wheelRotation )
