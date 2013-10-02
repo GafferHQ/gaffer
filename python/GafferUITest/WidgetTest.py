@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -99,6 +99,31 @@ class WidgetTest( GafferUITest.TestCase ) :
 		self.assert_( p.ancestor( GafferUI.ListContainer ) is l )
 		self.assert_( p.ancestor( GafferUI.Window ) is w )
 		self.assert_( p.ancestor( GafferUI.Menu ) is None )
+	
+	def testIsAncestorOf( self ) :
+	
+		with GafferUI.Window( "test" ) as w :
+			with GafferUI.SplitContainer() as p :
+				with GafferUI.ListContainer() as l1 :
+					b1 = GafferUI.Button()
+				with GafferUI.ListContainer() as l2 :
+					b2 = GafferUI.Button()
+					
+		self.assertTrue( l2.isAncestorOf( b2 ) )
+		self.assertFalse( l1.isAncestorOf( b2 ) )
+		self.assertTrue( p.isAncestorOf( b2 ) )
+		self.assertTrue( w.isAncestorOf( b2 ) )
+		
+		self.assertFalse( b2.isAncestorOf( b1 ) )
+		self.assertFalse( b2.isAncestorOf( l1 ) )
+		self.assertFalse( b2.isAncestorOf( l2 ) )
+		self.assertFalse( b2.isAncestorOf( p ) )
+		self.assertFalse( b2.isAncestorOf( w ) )
+				
+		self.assertTrue( l1.isAncestorOf( b1 ) )
+		self.assertFalse( l2.isAncestorOf( b1 ) )
+		self.assertTrue( p.isAncestorOf( b1 ) )
+		self.assertTrue( w.isAncestorOf( b1 ) )
 	
 	def testGafferWidgetAsTopLevel( self ) :
 	

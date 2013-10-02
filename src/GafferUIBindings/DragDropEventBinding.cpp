@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,9 +77,9 @@ static void setDestinationGadget( DragDropEvent &d, GadgetPtr s )
 void GafferUIBindings::bindDragDropEvent()
 {
 	class_<DragDropEvent, bases<ButtonEvent> >( "DragDropEvent" )
-		.def( init<ButtonEvent::Buttons>() )
-		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &>() )
-		.def( init<ButtonEvent::Buttons, const IECore::LineSegment3f &, ModifiableEvent::Modifiers>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons, const IECore::LineSegment3f &>() )
+		.def( init<ButtonEvent::Buttons, ButtonEvent::Buttons, const IECore::LineSegment3f &, ModifiableEvent::Modifiers>() )
 		.add_property( "sourceGadget", &getSourceGadget, &setSourceGadget )
 		.add_property( "data", &getData, &setData )
 		.add_property( "destinationGadget", &getDestinationGadget, &setDestinationGadget )

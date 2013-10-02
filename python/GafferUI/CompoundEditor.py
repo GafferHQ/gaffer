@@ -525,6 +525,9 @@ class _TargetButton( GafferUI.Button ) :
 		if not isinstance( currentEditor, GafferUI.NodeSetEditor ) :
 			return False
 		
+		if currentEditor.isAncestorOf( event.sourceWidget ) :
+			return False
+		
 		result = False
 		if isinstance( event.data, Gaffer.Node ) :
 			result = True

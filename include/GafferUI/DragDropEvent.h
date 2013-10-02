@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,11 +50,12 @@ struct DragDropEvent : public ButtonEvent
 {
 
 	DragDropEvent(
-		Buttons b=None,
+		Buttons button = None,
+		Buttons buttons = None,
 		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),
 		Modifiers m = ModifiableEvent::None
 	)
-		:	ButtonEvent( b, Line, 0, m ), sourceGadget( 0 ), data( 0 ), destinationGadget( 0 ), dropResult( false )
+		:	ButtonEvent( button, buttons, Line, 0, m ), sourceGadget( 0 ), data( 0 ), destinationGadget( 0 ), dropResult( false )
 	{
 	};
 	

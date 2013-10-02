@@ -204,6 +204,7 @@ import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget
 from NodeFinderDialogue import NodeFinderDialogue
+from ConnectionPlugValueWidget import ConnectionPlugValueWidget
 
 # then stuff specific to parameterised objects
 
