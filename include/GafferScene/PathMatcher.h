@@ -84,8 +84,10 @@ class PathMatcher
 		/// within this matcher.
 		void paths( std::vector<std::string> &paths ) const;
 		
-		Filter::Result match( const std::string &path ) const;
-		Filter::Result match( const std::vector<IECore::InternedString> &path ) const;
+		/// Result is a bitwise or of the relevant values
+		/// from Filter::Result.
+		unsigned match( const std::string &path ) const;
+		unsigned match( const std::vector<IECore::InternedString> &path ) const;
 		
 		bool operator == ( const PathMatcher &other ) const;
 		bool operator != ( const PathMatcher &other ) const;
@@ -100,7 +102,7 @@ class PathMatcher
 		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
 
 		template<typename NameIterator>
-		void matchWalk( Node *node, const NameIterator &start, const NameIterator &end, Filter::Result &result ) const;
+		void matchWalk( Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 		
 		boost::shared_ptr<Node> m_root;
 		

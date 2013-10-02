@@ -98,13 +98,13 @@ void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Cont
 
 void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = Filter::NoMatch;
+	unsigned match = Filter::NoMatch;
 	if( processesTransform() )
 	{
-		match = (Filter::Result)filterPlug()->getValue();
+		match = filterPlug()->getValue();
 	}
 
-	if( match == Filter::Match )
+	if( match & Filter::ExactMatch )
 	{
 		FilteredSceneProcessor::hashTransform( path, context, parent, h );
 		inPlug()->transformPlug()->hash( h );
@@ -119,13 +119,13 @@ void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::
 
 void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = Filter::NoMatch;
+	unsigned match = Filter::NoMatch;
 	if( processesAttributes() )
 	{
-		match = (Filter::Result)filterPlug()->getValue();
+		match = filterPlug()->getValue();
 	}
 
-	if( match == Filter::Match )
+	if( match & Filter::ExactMatch )
 	{
 		FilteredSceneProcessor::hashAttributes( path, context, parent, h );
 		inPlug()->attributesPlug()->hash( h );
@@ -140,13 +140,13 @@ void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer:
 
 void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = Filter::NoMatch;
+	unsigned match = Filter::NoMatch;
 	if( processesObject() )
 	{
-		match = (Filter::Result)filterPlug()->getValue();
+		match = filterPlug()->getValue();
 	}
 
-	if( match == Filter::Match )
+	if( match & Filter::ExactMatch )
 	{
 		FilteredSceneProcessor::hashObject( path, context, parent, h );
 		inPlug()->objectPlug()->hash( h );
@@ -184,7 +184,7 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 
 Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterPlug()->getValue() == Filter::Match )
+	if( filterPlug()->getValue() & Filter::ExactMatch )
 	{
 		return computeProcessedTransform( path, context, inPlug()->transformPlug()->getValue() );
 	}
@@ -196,7 +196,7 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 
 IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterPlug()->getValue() == Filter::Match )
+	if( filterPlug()->getValue() & Filter::ExactMatch )
 	{
 		return computeProcessedAttributes( path, context, inPlug()->attributesPlug()->getValue() );
 	}
@@ -208,7 +208,7 @@ IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const S
 
 IECore::ConstObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterPlug()->getValue() == Filter::Match )
+	if( filterPlug()->getValue() & Filter::ExactMatch )
 	{
 		return computeProcessedObject( path, context, inPlug()->objectPlug()->getValue() );
 	}
@@ -284,6 +284,7 @@ IECore::ConstObjectPtr SceneElementProcessor::computeProcessedObject( const Scen
 	return inputObject;
 }
 
+/// \todo This needs updating to return a bitmask now that filters return a bitmask.
 SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod() const
 {
 	const bool pBound = processesBound();
@@ -291,8 +292,8 @@ SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod() const
 	
 	if( pBound || pTransform )
 	{
-		Filter::Result f = (Filter::Result)filterPlug()->getValue();
-		if( f == Filter::Match )
+		unsigned f = filterPlug()->getValue();
+		if( f & Filter::ExactMatch )
 		{
 			if( pBound )
 			{
@@ -304,7 +305,7 @@ SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod() const
 				// on the bound of that location - fall through to default case.
 			}
 		}
-		else if( f == Filter::DescendantMatch )
+		else if( f & Filter::DescendantMatch )
 		{
 			return Union;
 		}

@@ -50,7 +50,7 @@ class SceneElementProcessor : public FilteredSceneProcessor
 
 	public :
 
-		SceneElementProcessor( const std::string &name=defaultName<SceneElementProcessor>(), Filter::Result filterDefault = Filter::Match );
+		SceneElementProcessor( const std::string &name=defaultName<SceneElementProcessor>(), Filter::Result filterDefault = Filter::EveryMatch );
 		virtual ~SceneElementProcessor();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );

@@ -73,6 +73,7 @@
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Transform.h"
 #include "GafferScene/Prune.h"
+#include "GafferScene/Isolate.h"
 #include "GafferScene/Cube.h"
 #include "GafferScene/Sphere.h"
 #include "GafferScene/Text.h"
@@ -142,7 +143,9 @@ BOOST_PYTHON_MODULE( _GafferScene )
 		enum_<Filter::Result>( "Result" )
 			.value( "NoMatch", Filter::NoMatch )
 			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "Match", Filter::Match )
+			.value( "ExactMatch", Filter::ExactMatch )
+			.value( "AncestorMatch", Filter::AncestorMatch )
+			.value( "EveryMatch", Filter::EveryMatch )
 		;
 	}
 				
@@ -157,6 +160,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<StandardAttributes>();
 	GafferBindings::DependencyNodeClass<Transform>();
 	GafferBindings::DependencyNodeClass<Prune>();
+	GafferBindings::DependencyNodeClass<Isolate>();
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<MapProjection>();
 	GafferBindings::DependencyNodeClass<MapOffset>();

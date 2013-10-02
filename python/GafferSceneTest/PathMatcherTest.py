@@ -80,13 +80,13 @@ class PathMatcherTest( unittest.TestCase ) :
 		m = GafferScene.PathMatcher( [ "/a", "/red", "/b/c/d" ] )
 	
 		for path, result in [
-			( "/a", GafferScene.Filter.Result.Match ),
-			( "/red", GafferScene.Filter.Result.Match ),
+			( "/a", GafferScene.Filter.Result.ExactMatch ),
+			( "/red", GafferScene.Filter.Result.ExactMatch ),
 			( "/re", GafferScene.Filter.Result.NoMatch ),
 			( "/redThing", GafferScene.Filter.Result.NoMatch ),
-			( "/b/c/d", GafferScene.Filter.Result.Match ),
+			( "/b/c/d", GafferScene.Filter.Result.ExactMatch ),
 			( "/c", GafferScene.Filter.Result.NoMatch ),
-			( "/a/b", GafferScene.Filter.Result.NoMatch ),
+			( "/a/b", GafferScene.Filter.Result.AncestorMatch ),
 			( "/blue", GafferScene.Filter.Result.NoMatch ),
 			( "/b/c", GafferScene.Filter.Result.DescendantMatch ),
 		] :
@@ -104,7 +104,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		# the tests build a matcher, and then assert that every path in the hierarchy is
 		# matched appropriately. uncomment the timers to get useful information printed out.
 			
- 		match = GafferScene.Filter.Result.Match
+		match = GafferScene.Filter.Result.ExactMatch
 
 		# deep hierarchy
 		paths = self.generatePaths( seed = 10, depthRange = ( 3, 14 ), numChildrenRange = ( 2, 6 ) )
@@ -114,7 +114,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		 		
  		t = IECore.Timer()
 		for path in paths :
-			self.assertEqual( matcher.match( path ), match )
+			self.assertTrue( matcher.match( path ) & match )
 		#print "LOOKUP DEEP", t.stop()
 		
 		# shallow hierarchy
@@ -125,7 +125,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		 		
  		t = IECore.Timer()
 		for path in paths :
-			self.assertEqual( matcher.match( path ), match )
+			self.assertTrue( matcher.match( path ) & match )
 		#print "LOOKUP SHALLOW", t.stop()
 			
 	def testDefaultConstructor( self ) :
@@ -147,23 +147,23 @@ class PathMatcherTest( unittest.TestCase ) :
 		)
 	
 		for path, result in [
-			( "/a", f.Result.Match ),
-			( "/redBoots", f.Result.Match ),
-			( "/red", f.Result.Match ),
-			( "/redWellies", f.Result.Match ),
-			( "/redWellies/in/puddles", f.Result.NoMatch ),
-			( "/greenFatBloke", f.Result.Match ),
-			( "/greenBloke", f.Result.Match ),
-			( "/greenBlokes", f.Result.Match ),
-			( "/somewhere/over/the/rainbow", f.Result.Match ),
+			( "/a", f.Result.ExactMatch ),
+			( "/redBoots", f.Result.ExactMatch ),
+			( "/red", f.Result.ExactMatch ),
+			( "/redWellies", f.Result.ExactMatch ),
+			( "/redWellies/in/puddles", f.Result.AncestorMatch ),
+			( "/greenFatBloke", f.Result.ExactMatch ),
+			( "/greenBloke", f.Result.ExactMatch ),
+			( "/greenBlokes", f.Result.ExactMatch ),
+			( "/somewhere/over/the/rainbow", f.Result.ExactMatch | f.Result.DescendantMatch ),
 			( "/somewhere/over/the", f.Result.DescendantMatch ),
 			( "/somewhere/over", f.Result.DescendantMatch ),
 			( "/somewhere", f.Result.DescendantMatch ),
-			( "/somewhere/over/the/rainbow/skies/are/blue", f.Result.Match ),
-			( "/somewhere/over/the/rainbow/skies/are", f.Result.DescendantMatch ),
-			( "/somewhere/over/the/astonExpressway/skies/are", f.Result.DescendantMatch ),
-			( "/somewhere/over/the/astonExpressway/skies/are/blue", f.Result.Match ),		
-			( "/somewhere/over/the/astonExpressway/skies/are/grey", f.Result.NoMatch ),		
+			( "/somewhere/over/the/rainbow/skies/are/blue", f.Result.ExactMatch | f.Result.AncestorMatch ),
+			( "/somewhere/over/the/rainbow/skies/are", f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/somewhere/over/the/astonExpressway/skies/are", f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/somewhere/over/the/astonExpressway/skies/are/blue", f.Result.ExactMatch | f.Result.AncestorMatch ),		
+			( "/somewhere/over/the/astonExpressway/skies/are/grey", f.Result.AncestorMatch ),		
 		] :
 		
 			c = Gaffer.Context()
@@ -182,8 +182,8 @@ class PathMatcherTest( unittest.TestCase ) :
 		)
 	
 		for path, result in [
-			( "/a/aThing/c", f.Result.Match ),
-			( "/a/aThing/b", f.Result.Match ),
+			( "/a/aThing/c", f.Result.ExactMatch ),
+			( "/a/aThing/b", f.Result.ExactMatch ),
 		] :
 		
 			c = Gaffer.Context()
@@ -203,7 +203,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		c = Gaffer.Context()
 		c["scene:path"] = IECore.InternedStringVectorData( [ "a", "s" ] )
 		with c :
-			self.assertEqual( f["match"].getValue(), int( GafferScene.Filter.Result.Match ) )
+			self.assertEqual( f["match"].getValue(), int( GafferScene.Filter.Result.ExactMatch ) )
 
 	def testEllipsis( self ) :
 	
@@ -216,13 +216,12 @@ class PathMatcherTest( unittest.TestCase ) :
 		)
 	
 		for path, result in [
-			( "/a/ball", f.Result.Match ),
-			( "/a/red/ball", f.Result.Match ),
+			( "/a/ball", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/red/ball", f.Result.ExactMatch | f.Result.DescendantMatch ),
 			( "/a/red/car", f.Result.DescendantMatch ),
-			( "/a/big/red/ball", f.Result.Match ),
-			( "/a/lovely/shiny/bicyle", f.Result.Match ),
-			( "/a/lovely/shiny/bicyle", f.Result.Match ),
-			( "/a/c", f.Result.Match ),
+			( "/a/big/red/ball", f.Result.ExactMatch | f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/a/lovely/shiny/bicyle", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/c", f.Result.ExactMatch | f.Result.DescendantMatch ),
 			( "/a/d", f.Result.DescendantMatch ),
 			( "/a/anything", f.Result.DescendantMatch ),
 			( "/a/anything/really", f.Result.DescendantMatch ),
@@ -246,13 +245,12 @@ class PathMatcherTest( unittest.TestCase ) :
 		)
 	
 		for path, result in [
-			( "/a/ball", f.Result.Match ),
-			( "/a/red/ball", f.Result.Match ),
-			( "/a/red/car", f.Result.Match ),
-			( "/a/big/red/ball", f.Result.Match ),
-			( "/a/lovely/shiny/bicyle", f.Result.Match ),
-			( "/a/lovely/shiny/bicyle", f.Result.Match ),
-			( "/a/c", f.Result.Match ),
+			( "/a/ball", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/red/ball", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/red/car", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/big/red/ball", f.Result.ExactMatch | f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/a/lovely/shiny/bicyle", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/c", f.Result.ExactMatch | f.Result.DescendantMatch ),
 			( "/a/d", f.Result.DescendantMatch ),
 			( "/a/anything", f.Result.DescendantMatch ),
 			( "/a/anything/really", f.Result.DescendantMatch ),
@@ -275,11 +273,11 @@ class PathMatcherTest( unittest.TestCase ) :
 		)
 	
 		for path, result in [
-			( "/a", f.Result.DescendantMatch ),
-			( "/a/ball", f.Result.Match ),
-			( "/a/red/car", f.Result.Match ),
-			( "/a/red/car/rolls", f.Result.Match ),
-			( "/a/terminating/ellipsis/matches/everything/below/it", f.Result.Match ),
+			( "/a", f.Result.ExactMatch | f.Result.DescendantMatch ),
+			( "/a/ball", f.Result.ExactMatch | f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/a/red/car", f.Result.ExactMatch | f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/a/red/car/rolls", f.Result.ExactMatch | f.Result.DescendantMatch | f.Result.AncestorMatch ),
+			( "/a/terminating/ellipsis/matches/everything/below/it", f.Result.ExactMatch | f.Result.DescendantMatch | f.Result.AncestorMatch ),
 		 ] :
 		
 			c = Gaffer.Context()
@@ -290,15 +288,15 @@ class PathMatcherTest( unittest.TestCase ) :
 	def testCopyConstructorIsDeep( self ) :
 	
 		m = GafferScene.PathMatcher( [ "/a" ] )
-		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.ExactMatch )
 		
 		m2 = GafferScene.PathMatcher( m )
-		self.assertEqual( m2.match( "/a" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m2.match( "/a" ), GafferScene.Filter.Result.ExactMatch )
 		
 		m.clear()
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.NoMatch )
 
-		self.assertEqual( m2.match( "/a" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m2.match( "/a" ), GafferScene.Filter.Result.ExactMatch )
 
 	def testAddAndRemovePaths( self ) :
 	
@@ -306,12 +304,12 @@ class PathMatcherTest( unittest.TestCase ) :
 		m.addPath( "/a" )
 		m.addPath( "/a/b" )
 		
-		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.Match )
-		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.ExactMatch | GafferScene.Filter.Result.DescendantMatch )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.ExactMatch | GafferScene.Filter.Result.AncestorMatch )
 		
 		m.removePath( "/a" )
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.DescendantMatch )
-		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.ExactMatch )
 		
 		m.removePath( "/a/b" )
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.NoMatch )
@@ -324,7 +322,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.DescendantMatch )
 		self.assertEqual( m.match( "/a/b" ), GafferScene.Filter.Result.DescendantMatch )
-		self.assertEqual( m.match( "/a/b/c" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m.match( "/a/b/c" ), GafferScene.Filter.Result.ExactMatch )
 	
 		m.removePath( "/a/b/c" )
 		
@@ -339,7 +337,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.DescendantMatch )
 		self.assertEqual( m.match( "/a/c" ), GafferScene.Filter.Result.DescendantMatch )
-		self.assertEqual( m.match( "/a/c/b" ), GafferScene.Filter.Result.Match )
+		self.assertEqual( m.match( "/a/c/b" ), GafferScene.Filter.Result.ExactMatch | GafferScene.Filter.Result.DescendantMatch )
 		
 		m.removePath( "/a/.../b" )
 		
@@ -435,6 +433,89 @@ class PathMatcherTest( unittest.TestCase ) :
 		
 		m.clear()
 		self.assertEqual( m.paths(), [] )
+	
+		f = GafferScene.PathFilter()
+		f["paths"].setValue(
+			IECore.StringVectorData( [
+				"/a",
+				"/red*",
+				"/green*Bloke*",
+				"/somewhere/over/the/*",
+				"/somewhere/over/the/*/skies/are/blue",
+			] )
+		)
+	
+	def testMultipleMatchTypes( self ) :
+	
+		m = GafferScene.PathMatcher( [
+			"/a",
+			"/a/b",
+			"/a/b/c",
+		] )
+
+		r = GafferScene.Filter.Result
+
+		for path, result in [
+			( "/a", r.ExactMatch | r.DescendantMatch ),
+			( "/a/b", r.ExactMatch | r.AncestorMatch | r.DescendantMatch ),
+			( "/a/b/c", r.ExactMatch | r.AncestorMatch ),
+			( "/a/b/d", r.AncestorMatch ),
+		] :
 		
+			self.assertEqual( m.match( path ), int( result ) )
+	
+	def testAncestorMatch( self ) :
+	
+		m = GafferScene.PathMatcher( [
+			"/a",
+		] )
+	
+		r = GafferScene.Filter.Result
+
+		for path, result in [
+			( "/a/b", r.AncestorMatch ),
+			( "/a/b/c", r.AncestorMatch ),
+			( "/a/b/d", r.AncestorMatch ),
+			( "/b/d", r.NoMatch ),
+		] :
+		
+			self.assertEqual( m.match( path ), int( result ) )
+			
+	def testWildCardAncestorMatch( self ) :
+	
+		m = GafferScene.PathMatcher( [
+			"/a*",
+		] )
+	
+		r = GafferScene.Filter.Result
+
+		for path, result in [
+			( "/armadillo/brunches", r.AncestorMatch ),
+			( "/a/b/c", r.AncestorMatch ),
+			( "/a/b/d", r.AncestorMatch ),
+			( "/b/d", r.NoMatch ),
+			( "/armadillo", r.ExactMatch ),
+		] :
+		
+			self.assertEqual( m.match( path ), int( result ) )
+		
+	def testRootAncestorMatch( self ) :
+	
+		m = GafferScene.PathMatcher( [
+			"/",
+		] )
+	
+		r = GafferScene.Filter.Result
+
+		for path, result in [
+			( "/armadillo/brunches", r.AncestorMatch ),
+			( "/a/b/c", r.AncestorMatch ),
+			( "/a/b/d", r.AncestorMatch ),
+			( "/b/d", r.AncestorMatch ),
+			( "/armadillo", r.AncestorMatch ),
+		] :
+		
+			self.assertEqual( m.match( path ), int( result ) )
+	
 if __name__ == "__main__":
 	unittest.main()

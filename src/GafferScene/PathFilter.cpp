@@ -97,7 +97,7 @@ void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &
 	pathsPlug()->hash( h );
 }
 
-Filter::Result PathFilter::computeMatch( const Gaffer::Context *context ) const
+unsigned PathFilter::computeMatch( const Gaffer::Context *context ) const
 {
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	return m_matcher.match( path );

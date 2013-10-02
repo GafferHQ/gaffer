@@ -47,7 +47,7 @@ Filter::Filter( const std::string &name )
 	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, Match ) );
+	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch ) );
 }
 
 Filter::~Filter()

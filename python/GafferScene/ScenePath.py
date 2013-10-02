@@ -59,6 +59,8 @@ class ScenePath( Gaffer.Path ) :
 		with self.__context :
 			with IECore.IgnoredExceptions( Exception ) :
 				## \todo Possibly we should just have a "valid" child plug
+				# Or perhaps instead we should just walk up from the root,
+				# checking that all the correct child names exist.
 				self.__scenePlug.bound( str( self ) )
 				return True
 				

@@ -62,13 +62,13 @@ class PathFilterTest( unittest.TestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
 	
 		for path, result in [
-			( "/a",  f.Result.Match ),
-			( "/red", f.Result.Match ),
+			( "/a",  f.Result.ExactMatch ),
+			( "/red", f.Result.ExactMatch ),
 			( "/re", f.Result.NoMatch ),
 			( "/redThing", f.Result.NoMatch ),
-			( "/b/c/d", f.Result.Match ),
+			( "/b/c/d", f.Result.ExactMatch ),
 			( "/c", f.Result.NoMatch ),
-			( "/a/b", f.Result.NoMatch ),
+			( "/a/b", f.Result.AncestorMatch ),
 			( "/blue", f.Result.NoMatch ),
 			( "/b/c", f.Result.DescendantMatch ),
 		] :
@@ -97,7 +97,7 @@ class PathFilterTest( unittest.TestCase ) :
 		with Gaffer.Context() as c :
 			for path in paths :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
-				self.assertEqual( f["match"].getValue(), int( f.Result.Match ) )
+				self.assertTrue( f["match"].getValue() & f.Result.ExactMatch )
 	
 	def testInputsDenied( self ) :
 	
