@@ -110,6 +110,19 @@ static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *no
 	return l;
 }
 
+static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node )
+{
+	std::vector<NodeGadget *> nodeGadgets;
+	graphGadget.upstreamNodeGadgets( node, nodeGadgets );
+	
+	boost::python::list l;
+	for( std::vector<NodeGadget *>::const_iterator it=nodeGadgets.begin(), eIt=nodeGadgets.end(); it!=eIt; ++it )
+	{
+		l.append( NodeGadgetPtr( *it ) );
+	}
+	return l;
+}
+
 static void setLayout( GraphGadget &g, GraphLayoutPtr l )
 {
 	return g.setLayout( l );
@@ -144,6 +157,7 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "connectionGadget", &connectionGadget )
 		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
+		.def( "upstreamNodeGadgets", &upstreamNodeGadgets )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
 		.def( "setNodeInputConnectionsMinimised", &GraphGadget::setNodeInputConnectionsMinimised )

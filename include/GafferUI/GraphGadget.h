@@ -111,6 +111,14 @@ class GraphGadget : public ContainerGadget
 		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 );
 		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 ) const;
 		
+		/// Finds all the upstream NodeGadgets connected to the specified node
+		/// and appends them to the specified vector. Returns the new size of the vector.
+		/// \note Here "upstream" nodes are defined as nodes at the end of input
+		/// connections as shown in the graph - invisible connections and
+		/// invisible nodes are not considered at all.
+		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets );
+		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets ) const;
+		
 		/// Sets the position of the specified node within the graph. This
 		/// method may be used even when the node currently has no NodeGadget
 		/// associated with it, and the position will be used if and when a NodeGadget
@@ -184,6 +192,8 @@ class GraphGadget : public ContainerGadget
 		void updateConnectionGadgetMinimisation( ConnectionGadget *gadget );
 		ConnectionGadget *reconnectionGadgetAt( NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
 		void updateDragReconnectCandidate( const DragDropEvent &event );
+
+		void upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets );
 				
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
