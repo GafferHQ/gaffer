@@ -50,7 +50,7 @@ IE_CORE_DEFINERUNTIMETYPED( Seeds );
 size_t Seeds::g_firstPlugIndex = 0;
 
 Seeds::Seeds( const std::string &name )
-	:	BranchCreator( name )
+	:	BranchCreator( name, "seeds" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FloatPlug( "density", Plug::In, 1.0f, 0.0f ) );

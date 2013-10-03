@@ -48,7 +48,6 @@ class BranchCreator : public SceneProcessor
 
 	public :
 
-		BranchCreator( const std::string &name=defaultName<BranchCreator>() );
 		virtual ~BranchCreator();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::BranchCreator, BranchCreatorTypeId, SceneProcessor );
@@ -63,6 +62,8 @@ class BranchCreator : public SceneProcessor
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
+
+		BranchCreator( const std::string &name=defaultName<BranchCreator>(), const std::string &namePlugDefaultValue="" );
 		
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;

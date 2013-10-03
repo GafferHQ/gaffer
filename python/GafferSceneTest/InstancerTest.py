@@ -160,5 +160,11 @@ class InstancerTest( unittest.TestCase ) :
 		
 		GafferSceneTest.traverseScene( instancer["out"], Gaffer.Context() )
 
+	def testNamePlugDefaultValue( self ) :
+	
+		n = GafferScene.Instancer()
+		self.assertEqual( n["name"].defaultValue(), "instances" )
+		self.assertEqual( n["name"].getValue(), "instances" )
+
 if __name__ == "__main__":
 	unittest.main()
