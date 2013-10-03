@@ -51,12 +51,12 @@ IE_CORE_DEFINERUNTIMETYPED( BranchCreator );
 
 size_t BranchCreator::g_firstPlugIndex = 0;
 
-BranchCreator::BranchCreator( const std::string &name )
+BranchCreator::BranchCreator( const std::string &name, const std::string &namePlugDefaultValue )
 	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "parent" ) );
-	addChild( new StringPlug( "name" ) );
+	addChild( new StringPlug( "name", Plug::In, namePlugDefaultValue ) );
 }
 
 BranchCreator::~BranchCreator()

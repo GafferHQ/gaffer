@@ -54,7 +54,7 @@ IE_CORE_DEFINERUNTIMETYPED( Instancer );
 size_t Instancer::g_firstPlugIndex = 0;
 
 Instancer::Instancer( const std::string &name )
-	:	BranchCreator( name )
+	:	BranchCreator( name, "instances" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "instance" ) );
