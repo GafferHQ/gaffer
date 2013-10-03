@@ -111,6 +111,12 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 		self.assertScenesEqual( s["out"], p["out"] )
+	
+	def testNamePlugDefaultValue( self ) :
+	
+		s = GafferScene.Seeds()
+		self.assertEqual( s["name"].defaultValue(), "seeds" )
+		self.assertEqual( s["name"].getValue(), "seeds" )
 		 		
 if __name__ == "__main__":
 	unittest.main()
