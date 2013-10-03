@@ -879,6 +879,47 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		script["n2"]["op2"].setValue( 100 )
 		
 		self.assertEqual( script["n2"]["sum"].getValue(), 125 )
+	
+	def testUpstreamNodeGadgets( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		# a -> b -> c -> e -> f
+		#           ^
+		#           |
+		#			d
+		
+		script["a"] = GafferTest.AddNode()
+		script["b"] = GafferTest.AddNode()
+		script["c"] = GafferTest.AddNode()
+		script["d"] = GafferTest.AddNode()
+		script["e"] = GafferTest.AddNode()
+		script["f"] = GafferTest.AddNode()
+		
+		script["b"]["op1"].setInput( script["a"]["sum"] )
+		script["c"]["op1"].setInput( script["b"]["sum"] )
+		script["c"]["op2"].setInput( script["d"]["sum"] )
+
+		script["e"]["op1"].setInput( script["c"]["sum"] )
+		script["f"]["op1"].setInput( script["e"]["sum"] )
+		
+		g = GafferUI.GraphGadget( script )
+		
+		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["c"] ) ]
+		
+		self.assertEqual( len( u ), 3 )
+		self.assertEqual( set( u ), set( [ "a", "b", "d" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["f"] ) ]
+		self.assertEqual( len( u ), 5 )
+		self.assertEqual( set( u ), set( [ "a", "b", "d", "c", "e" ] ) )
+		
+		# filtered nodes should be ignored
+		
+		g.setFilter( Gaffer.StandardSet( [ script["f"], script["e"], script["a"] ] ) )
+		
+		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["f"] ) ]
+		self.assertEqual( u, [ "e" ] )
 		
 if __name__ == "__main__":
 	unittest.main()
