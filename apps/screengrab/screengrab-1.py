@@ -83,6 +83,14 @@ class screengrab( Gaffer.Application ) :
 			
 		)
 			
+	def setGrabWidget( self, widget ) :
+
+		self.__grabWidget = widget
+		
+	def getGrabWidget( self ) :
+
+		return self.__grabWidget
+
 	def _run( self, args ) :
 		
 		# run the gui startup files so the images we grab are representative
@@ -98,9 +106,9 @@ class screengrab( Gaffer.Application ) :
 		script.load()
 		self.root()["scripts"].addChild( script )
 		
-		#get a hook into the target window
-		self.__primaryWindow = GafferUI.ScriptWindow.acquire( script )
-		
+		#set the grab window to be the primary window by default
+		self.setGrabWidget( GafferUI.ScriptWindow.acquire( script ) )
+
 		#set up target to write to
 		self.__image = str(args["image"])
 		#create path if missing
@@ -137,7 +145,8 @@ class screengrab( Gaffer.Application ) :
 			
 			#do some dirty rummaging to get the id of the resulting window
 			## this should replaced by gaffer api methods in future
-			winhandle = self.__primaryWindow._qtWidget().winId()
+			grabWidget = self.getGrabWidget()
+			winhandle = grabWidget._qtWidget().winId()
 			
 			#use QPixmap to snapshot the window
 			pm = QtGui.QPixmap.grabWindow( winhandle )
