@@ -46,20 +46,82 @@ import GafferUI
 # IECore.Op instance and then execute it.
 class OpDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, opInstance, title=None, sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	## Defines what happens when the op has been successfully executed :
+	#
+	# FromUserData : Get behaviour from ["UI"]["postExecuteBehaviour"] userData, which should
+	#	contain a string value specifying one of the other Enum values. If no userData is found,
+	#	it defaults to CloseByDefault.
+	# 
+	# None : Do nothing. The dialogue stays open.
+	#
+	# Close : The dialogue is closed.
+	#
+	# NoneByDefault : The dialogue will remain open by default, but the user can override this.
+	#
+	# CloseByDefault : The dialogue will be closed by default, but the user can override this.
+	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None", "Close", "NoneByDefault", "CloseByDefault" )
+
+	def __init__(
+		self,
+		opInstance,
+		title=None,
+		sizeMode=GafferUI.Window.SizeMode.Manual,
+		postExecuteBehaviour = PostExecuteBehaviour.FromUserData,
+		**kw
+	) :
+
+		# initialise the dialogue
 
 		if title is None :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 		
+		# decide what we'll do after execution.
+		
+		if postExecuteBehaviour == self.PostExecuteBehaviour.FromUserData :
+			
+			postExecuteBehaviour = self.PostExecuteBehaviour.CloseByDefault
+			
+			d = None
+			with IECore.IgnoredExceptions( KeyError ) :
+				d = opInstance.userData()["UI"]["postExecuteBehaviour"]
+			if d is not None :
+				for v in self.PostExecuteBehaviour.values() :
+					if str( v ).lower() == d.value.lower() :
+						postExecuteBehaviour = v
+						break
+			else :
+				# backwards compatibility with batata
+				with IECore.IgnoredExceptions( KeyError ) :
+					d = opInstance.userData()["UI"]["closeAfterExecution"]
+				if d is not None :
+					postExecuteBehaviour = self.PostExecuteBehaviour.Close if d.value else self.PostExecuteBehaviour.None
+						
+		self.__postExecuteBehaviour = postExecuteBehaviour
+		
+		# make a node to hold the op and get a ui from it
+		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( opInstance )
+		nodeUI = GafferUI.NodeUI.create( self.__node )
 
-		frame = GafferUI.Frame()
-		frame.setChild( GafferUI.NodeUI.create( self.__node ) )
+		# build our main ui
 		
-		self._setWidget( frame )
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 ) as column :
+		
+			GafferUI.Frame( child = nodeUI )
+		
+			if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.NoneByDefault, self.PostExecuteBehaviour.CloseByDefault ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+					self.__keepWindowOpen = GafferUI.CheckBox(
+						"Keep window open",
+						self.__postExecuteBehaviour == self.PostExecuteBehaviour.NoneByDefault
+					)
+		
+		self._setWidget( column )
+		
+		# add buttons
 		
 		self.__cancelButton = self._addButton( "Cancel" )
 		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
@@ -105,8 +167,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 			result =  self.__node.getParameterised()[0]()
 			self.opExecutedSignal()( result )
 			
-			## \todo Support Op userData for specifying closing of Dialogue?
-			self.close()
+			behaviour = self.__postExecuteBehaviour
+			if behaviour in ( behaviour.NoneByDefault, behaviour.CloseByDefault ) :
+				behaviour = behaviour.None if self.__keepWindowOpen.getState() else behaviour.Close
+				
+			if behaviour == behaviour.Close :
+				self.close()
 			
 			return result
 			
