@@ -363,10 +363,11 @@ class PathListingWidget( GafferUI.Widget ) :
 				# it's not valid. if we can make it
 				# valid by trimming the last element
 				# then do that
-				pp = p.copy()
-				del pp[-1]
-				if pp.isValid() :
-					p = pp
+				if len( p ) :
+					pp = p.copy()
+					del pp[-1]
+					if pp.isValid() :
+						p = pp
 			else :
 				# it's valid and not a leaf, and
 				# that's what we want.
