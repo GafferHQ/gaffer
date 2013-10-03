@@ -266,6 +266,47 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<con
 	return connections.size();
 }
 
+size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets )
+{
+	NodeGadget *g = nodeGadget( node );
+	if( !g )
+	{
+		return 0;
+	}
+	
+	std::set<NodeGadget *> n;
+	upstreamNodeGadgetsWalk( g, n );
+	std::copy( n.begin(), n.end(), back_inserter( upstreamNodeGadgets ) );
+	return 0;
+}
+
+size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets ) const
+{
+	// preferring naughty casts over maintaining two identical implementations
+	return const_cast<GraphGadget *>( this )->upstreamNodeGadgets( node, reinterpret_cast<std::vector<NodeGadget *> &>( upstreamNodeGadgets ) );
+}
+
+void GraphGadget::upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets )
+{
+	for( Gaffer::RecursiveInputPlugIterator it( gadget->node() ); it != it.end(); ++it )
+	{
+		if( ConnectionGadget *connection = connectionGadget( it->get() ) )
+		{
+			if( Nodule *nodule = connection->srcNodule() )
+			{
+				if( NodeGadget *inputNodeGadget = nodeGadget( nodule->plug()->node() ) )
+				{
+					if( upstreamNodeGadgets.insert( inputNodeGadget ).second )
+					{
+						// inserted the node for the first time
+						upstreamNodeGadgetsWalk( inputNodeGadget, upstreamNodeGadgets );
+					}
+				}		
+			}
+		}
+	}
+}
+
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
 	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
@@ -675,6 +716,17 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			{
 				backdrop->framed( affectedNodes );
 			}
+			
+			if( event.modifiers & ButtonEvent::Alt )
+			{
+				std::vector<NodeGadget *> upstream;
+				upstreamNodeGadgets( node, upstream );
+				for( std::vector<NodeGadget *>::const_iterator it = upstream.begin(), eIt = upstream.end(); it != eIt; ++it )
+				{
+					affectedNodes.push_back( (*it)->node() );
+				}
+			}
+			
 			affectedNodes.push_back( node );
 
 			if( nodeSelected )
