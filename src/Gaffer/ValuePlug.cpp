@@ -392,15 +392,18 @@ IECore::MurmurHash ValuePlug::hash() const
 		else
 		{
 			const ComputeNode *n = ancestor<ComputeNode>();
-			if( !n )
+			if( n )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no ComputeNode." ) % fullName() ) );			
+				IECore::MurmurHash emptyHash;
+				n->hash( this, Context::current(), h );
+				if( h == emptyHash )
+				{
+					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
+				}
 			}
-			IECore::MurmurHash emptyHash;
-			n->hash( this, Context::current(), h );
-			if( h == emptyHash )
+			else
 			{
-				throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
+				h = m_staticValue->hash();
 			}
 		}
 	}
@@ -415,15 +418,18 @@ void ValuePlug::hash( IECore::MurmurHash &h ) const
 
 IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 {
-	bool haveInput = getInput<Plug>();
-	if( direction()==In && !haveInput )
+	if( !getInput<Plug>() )
 	{
-		// input plug with no input connection. there can only ever be a single value,
-		// which is stored directly on the plug.
-		return m_staticValue;
+		if( direction()==In || !ancestor<ComputeNode>() )
+		{
+			// no input connection, and no means of computing
+			// a value. there can only ever be a single value,
+			// which is stored directly on the plug.
+			return m_staticValue;
+		}
 	}
 	
-	// an input plug with an input connection or an output plug. there can be many values -
+	// an plug with an input connection or an output plug on a ComputeNode. there can be many values -
 	// one per context. the computation class is responsible for providing storage for the result
 	// and also actually managing the computation.
 	Computation computation( this );

@@ -107,6 +107,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		
 		typesNode["parameters"]["i"].setInput( outputTypesNode["out"]["i"] )
 		
+		self.assertEqual( typesNode["parameters"]["i"].getValue(), 10 )
+		
 		state = typesNode.state()
 		
 		self.assertEqual( len( state ), 2 )
