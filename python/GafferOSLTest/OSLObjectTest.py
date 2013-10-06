@@ -34,6 +34,63 @@
 #  
 ##########################################################################
 
-import OSLShaderUI
-import OSLImageUI
-import OSLObjectUI
+import IECore
+import Gaffer
+import GafferScene
+import GafferOSL
+import GafferOSLTest
+
+class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
+
+	def test( self ) :
+	
+		p = GafferScene.Plane()
+		p["dimensions"].setValue( IECore.V2f( 1, 2 ) )
+		p["divisions"].setValue( IECore.V2i( 10 ) )
+		
+		self.assertSceneValid( p["out"] )
+		
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( p["out"] )
+		
+		self.assertScenesEqual( p["out"], o["out"] )
+		
+		# shading network to swap x and y
+		
+		globals = GafferOSL.OSLShader()
+		globals.loadShader( "utility/globals" )
+		
+		splitPoint = GafferOSL.OSLShader()
+		splitPoint.loadShader( "utility/splitPoint" )
+		splitPoint["parameters"]["p"].setInput( globals["out"]["globalP"] )
+		
+		buildColor = GafferOSL.OSLShader()
+		buildColor.loadShader( "utility/buildColor" )
+		buildColor["parameters"]["r"].setInput( splitPoint["out"]["y"] )
+		buildColor["parameters"]["g"].setInput( splitPoint["out"]["x"] )
+		
+		constant = GafferOSL.OSLShader()
+		constant.loadShader( "surface/constant" )
+		constant["parameters"]["Cs"].setInput( buildColor["out"]["c"] )
+		
+		o["shader"].setInput( constant["out"] )
+		
+		self.assertScenesEqual( p["out"], o["out"] )
+		
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		
+		o["filter"].setInput( filter["match"] )
+		
+		self.assertSceneValid( o["out"] )
+		
+		boundIn = p["out"].bound( "/plane" )
+		boundOut = o["out"].bound( "/plane" )
+		
+		self.assertEqual( boundIn.min.x, boundOut.min.y )
+		self.assertEqual( boundIn.max.x, boundOut.max.y )
+		self.assertEqual( boundIn.min.y, boundOut.min.x )
+		self.assertEqual( boundIn.max.y, boundOut.max.x )
+		
+if __name__ == "__main__":
+	unittest.main()

@@ -137,7 +137,9 @@ static OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &k
 typedef LRUCache<ShadingEngineCacheKey, OSLRenderer::ConstShadingEnginePtr> ShadingEngineCache;
 static ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
-OSLRenderer::ConstShadingEnginePtr shadingEngine( const Plug *shaderPlug )
+} // namespace Detail
+
+OSLRenderer::ConstShadingEnginePtr OSLImage::shadingEngine( const Gaffer::Plug *shaderPlug )
 {
 	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug->source<Plug>()->node() );
 	if( !shader )
@@ -145,10 +147,8 @@ OSLRenderer::ConstShadingEnginePtr shadingEngine( const Plug *shaderPlug )
 		return NULL;
 	}
 
-	return g_shadingEngineCache.get( ShadingEngineCacheKey( shader ) );
+	return Detail::g_shadingEngineCache.get( Detail::ShadingEngineCacheKey( shader ) );
 }
-
-} // namespace Detail
 
 } // namespace GafferOSL
 
@@ -348,7 +348,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
-	OSLRenderer::ConstShadingEnginePtr shadingEngine = Detail::shadingEngine( shaderPlug() );
+	OSLRenderer::ConstShadingEnginePtr shadingEngine = OSLImage::shadingEngine( shaderPlug() );
 	if( !shadingEngine )
 	{
 		return static_cast<const CompoundData *>( shadingPlug()->defaultValue() );	

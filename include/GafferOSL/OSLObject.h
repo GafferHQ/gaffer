@@ -34,57 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFEROSL_OSLOBJECT_H
+#define GAFFEROSL_OSLOBJECT_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLRenderer.h"
-#include "GafferOSL/OSLImage.h"
-#include "GafferOSL/OSLObject.h"
+#include "GafferOSL/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferBindings;
-using namespace GafferOSL;
-
-/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
-/// and implemented it so reloading works in ArnoldShader and OpenGLShader.
-class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
+namespace GafferOSL
 {
 
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-	{
-		const OSLShader *shader = static_cast<const OSLShader *>( graphComponent );
-		std::string shaderName = shader->namePlug()->getValue();
-		if( shaderName.size() )
-		{
-			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
-		}
+class OSLObject : public GafferScene::SceneElementProcessor
+{
 
-		return "";
-	}
+	public :
 
+		OSLObject( const std::string &name=defaultName<SceneElementProcessor>() );
+		virtual ~OSLObject();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
+		
+		Gaffer::Plug *shaderPlug();
+		const Gaffer::Plug *shaderPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
+		virtual bool processesBound() const;
+		virtual void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box3f computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+				
+		virtual bool processesObject() const;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+
+	private :
+			
+		static size_t g_firstPlugIndex;
+	
 };
 
-BOOST_PYTHON_MODULE( _GafferOSL )
-{
-	
-	GafferBindings::DependencyNodeClass<OSLShader>()
-		.def( "loadShader", &OSLShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
-	;
-		
-	Serialisation::registerSerialiser( OSLShader::staticTypeId(), new OSLShaderSerialiser() );
+} // namespace GafferOSL
 
-	GafferBindings::DependencyNodeClass<OSLImage>();
-	GafferBindings::DependencyNodeClass<OSLObject>();
-
-	scope s = IECorePython::RunTimeTypedClass<OSLRenderer>()
-		.def( init<>() )
-		.def( "shadingEngine", &OSLRenderer::shadingEngine )
-	;
-
-	IECorePython::RefCountedClass<OSLRenderer::ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
-		.def( "shade", &OSLRenderer::ShadingEngine::shade )
-	;
-
-}
+#endif // GAFFEROSL_OSLOBJECT_H

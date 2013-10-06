@@ -38,6 +38,7 @@ from OSLTestCase import OSLTestCase
 from OSLShaderTest import OSLShaderTest
 from OSLRendererTest import OSLRendererTest
 from OSLImageTest import OSLImageTest
+from OSLObjectTest import OSLObjectTest
 
 if __name__ == "__main__":
 	import unittest
