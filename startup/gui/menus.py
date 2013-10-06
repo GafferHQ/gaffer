@@ -142,6 +142,13 @@ if "DELIGHT" in os.environ :
 			searchText = "RenderManRender"
 		)
 		nodeMenu.append( "/RenderMan/InteractiveRender", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRender" )
+		
+		scriptWindowMenu.append(
+			"/Help/3Delight/User Guide",
+			{
+				"command" : IECore.curry( GafferUI.showURL, os.path.expandvars( "$DELIGHT/doc/3Delight-UserManual.pdf" ) ),
+			}
+		)
 
 	except Exception, m :
 
@@ -202,6 +209,37 @@ nodeMenu.append( "/Image/Filter/Reformat", GafferImage.Reformat )
 nodeMenu.append( "/Image/Filter/Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
 nodeMenu.append( "/Image/Utility/Select", GafferImage.Select )
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
+
+# OSL nodes
+
+if moduleSearchPath.find( "GafferOSL" ) :
+
+	import GafferOSL
+	import GafferOSLUI
+
+	def __shaderNodeCreator( nodeName, shaderName ) :
+	
+		node = GafferOSL.OSLShader( nodeName )
+		node.loadShader( shaderName )
+		
+		return node
+
+	GafferSceneUI.ShaderUI.appendShaders(
+		nodeMenu.definition(), "/OSL/Shader",
+		os.environ["OSL_SHADER_PATHS"].split( ":" ),
+		[ "oso" ],
+		__shaderNodeCreator
+	)
+
+	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
+	nodeMenu.append( "/OSL/Object", GafferOSL.OSLObject, searchText = "OSLObject" )
+
+	scriptWindowMenu.append(
+		"/Help/Open Shading Language/Language Reference",
+		{
+			"command" : IECore.curry( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/osl/osl-languagespec.pdf" ) ),
+		}
+	)
 
 # Cortex nodes
 	
