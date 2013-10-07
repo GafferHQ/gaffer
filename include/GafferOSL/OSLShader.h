@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,36 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#ifndef GAFFEROSL_OSLSHADER_H
+#define GAFFEROSL_OSLSHADER_H
 
 #include "GafferScene/Shader.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "GafferOSL/TypeIds.h"
 
-namespace GafferArnold
+namespace GafferOSL
 {
 
-class ArnoldShader : public GafferScene::Shader
+class OSLShader : public GafferScene::Shader
 {
 
 	public :
 
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
-		virtual ~ArnoldShader();
+		OSLShader( const std::string &name=defaultName<OSLShader>() );
+		virtual ~OSLShader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLShader, OSLShaderTypeId, GafferScene::Shader );
 		
-		void loadShader( const std::string &shaderName );
+		/// \undoable.
+		/// \todo Make this method virtual and define it on the Shader base class.
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
+	protected :
+	
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+							
 };
 
-} // namespace GafferArnold
+} // namespace GafferOSL
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+#endif // GAFFEROSL_OSLSHADER_H

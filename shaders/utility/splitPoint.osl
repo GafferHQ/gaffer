@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
-
-#include "GafferScene/Shader.h"
-
-#include "GafferArnold/TypeIds.h"
-
-namespace GafferArnold
+shader splitPoint
+(
+	point p = 0,
+	output float x = 0,
+	output float y = 0,
+	output float z = 0
+)
 {
-
-class ArnoldShader : public GafferScene::Shader
-{
-
-	public :
-
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void loadShader( const std::string &shaderName );
-
-};
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+	x = p[0];
+	y = p[1];
+	z = p[2];
+}

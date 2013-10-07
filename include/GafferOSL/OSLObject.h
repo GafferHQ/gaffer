@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#ifndef GAFFEROSL_OSLOBJECT_H
+#define GAFFEROSL_OSLOBJECT_H
 
-#include "GafferScene/Shader.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "GafferOSL/TypeIds.h"
 
-namespace GafferArnold
+namespace GafferOSL
 {
 
-class ArnoldShader : public GafferScene::Shader
+class OSLObject : public GafferScene::SceneElementProcessor
 {
 
 	public :
 
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
-		virtual ~ArnoldShader();
+		OSLObject( const std::string &name=defaultName<SceneElementProcessor>() );
+		virtual ~OSLObject();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
 		
-		void loadShader( const std::string &shaderName );
+		Gaffer::Plug *shaderPlug();
+		const Gaffer::Plug *shaderPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
 
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
+		virtual bool processesBound() const;
+		virtual void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box3f computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
+				
+		virtual bool processesObject() const;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+
+	private :
+			
+		static size_t g_firstPlugIndex;
+	
 };
 
-} // namespace GafferArnold
+} // namespace GafferOSL
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+#endif // GAFFEROSL_OSLOBJECT_H

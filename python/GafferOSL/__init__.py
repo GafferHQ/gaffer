@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,17 +34,14 @@
 #  
 ##########################################################################
 
-import os
-import sys
+def __setupEnvironment() :
 
-import GafferUI
+	import os
+	p = os.environ.get( "OSL_SHADER_PATHS", "" )
+	if p :
+		p = ":" + p
+	os.environ["OSL_SHADER_PATHS"] = os.path.expandvars( "$HOME/gaffer/shaders:$GAFFER_ROOT/shaders" ) + p
+	
+__setupEnvironment()
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-
-def showURL( url ) :
-
-	if sys.platform == "darwin" :
-		os.system( "open \"" + url + "\"" )
-	else :
-		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+from _GafferOSL import *

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,22 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#ifndef GAFFEROSL_TYPEIDS_H
+#define GAFFEROSL_TYPEIDS_H
 
-#include "GafferScene/Shader.h"
-
-#include "GafferArnold/TypeIds.h"
-
-namespace GafferArnold
+namespace GafferOSL
 {
 
-class ArnoldShader : public GafferScene::Shader
+enum TypeId
 {
-
-	public :
-
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
+	OSLShaderTypeId = 110975,
+	OSLRendererTypeId = 110976,
+	OSLImageTypeId = 110977,
+	OSLObjectTypeId = 110978,
 		
-		void loadShader( const std::string &shaderName );
-
+	LastTypeId = 110999
 };
 
-} // namespace GafferArnold
+} // namespace GafferOSL
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+#endif // GAFFEROSL_TYPEIDS_H

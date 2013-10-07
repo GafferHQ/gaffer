@@ -101,6 +101,9 @@ except :
 dlReg = IEEnv.registry["apps"]["3delight"][getOption( "DL_VERSION", os.environ["DL_VERSION"] )][IEEnv.platform()]
 RMAN_ROOT = dlReg["location"]
 
+# we don't want to bother building with osl support
+OSL_SRC_DIR = ""
+
 ##########################################################################
 # set where we'll put things
 ##########################################################################

@@ -34,6 +34,11 @@
 #  
 ##########################################################################
 
+import os
+import re
+import string
+import fnmatch
+
 import IECore
 
 import Gaffer
@@ -94,8 +99,9 @@ class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			shaderName = self.getPlug().getValue()
 			self.__label.setText( "<h3>Shader : " + shaderName + "</h3>" )
-			## \todo Disable the RenderMan check once we've got all the shader types implementing reloading properly.
-			self.__button.setEnabled( bool( shaderName ) and "RenderMan" in self.getPlug().node().typeName() )
+			## \todo Disable the type check once we've got all the shader types implementing reloading properly.
+			nodeType = self.getPlug().node().typeName()
+			self.__button.setEnabled( bool( shaderName ) and ( "RenderMan" in nodeType or "OSL" in nodeType ) )
 			
 	def __buttonClicked( self, button ) :
 	
@@ -146,3 +152,85 @@ def __shaderNameExtractor( node ) :
 		return ""
 	
 GafferUI.NodeFinderDialogue.registerMode( "Shader Names", __shaderNameExtractor )
+
+##########################################################################
+# Shader menu
+##########################################################################
+
+## Appends menu items for the creation of all shaders found on some searchpaths.
+def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator, matchExpression = "*" ) :
+
+	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression ) } )
+
+def __nodeName( shaderName ) :
+
+	nodeName = os.path.split( shaderName )[-1]
+	nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
+	return nodeName
+	
+def __loadFromFile( menu, extensions, nodeCreator ) :
+
+	path = Gaffer.FileSystemPath( os.getcwd() )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( extensions ) )
+
+	dialogue = GafferUI.PathChooserDialogue( path, title="Load Shader", confirmLabel = "Load" )
+	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.ScriptWindow ) )
+	
+	if not path :
+		return None
+	
+	shaderName = os.path.splitext( str( path ) )[0]
+	
+	return nodeCreator( __nodeName( shaderName ), shaderName )
+
+def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression ) :
+		
+	if isinstance( matchExpression, str ) :
+		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
+	
+	shaders = set()
+	pathsVisited = set()
+	for path in searchPaths :
+		
+		if path in pathsVisited :
+			continue
+				
+		for root, dirs, files in os.walk( path ) :
+			for file in files :
+				if os.path.splitext( file )[1][1:] in extensions :
+					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
+					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
+						shaders.add( os.path.splitext( shaderPath )[0] )
+	
+		pathsVisited.add( path )
+	
+	shaders = sorted( list( shaders ) )
+	categorisedShaders = [ x for x in shaders if "/" in x ]
+	uncategorisedShaders = [ x for x in shaders if "/" not in x ]
+	
+	shadersAndMenuPaths = []
+	for shader in categorisedShaders :
+		shadersAndMenuPaths.append( ( shader, "/" + shader ) )
+			
+	for shader in uncategorisedShaders :
+		if not categorisedShaders :
+			shadersAndMenuPaths.append( ( shader, "/" + shader ) )
+		else :
+			shadersAndMenuPaths.append( ( shader, "/Other/" + shader ) )
+
+	result = IECore.MenuDefinition()
+	for shader, menuPath in shadersAndMenuPaths :
+		menuPath = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in menuPath.split( "/" ) ] )
+		result.append(
+			menuPath,
+			{
+				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( nodeCreator, __nodeName( shader ), shader ) ),
+				"searchText" : menuPath.rpartition( "/" )[-1].replace( " ", "" ),
+			},
+		)
+	
+	result.append( "/LoadDivider", { "divider" : True } )
+	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
+	
+	return result
+

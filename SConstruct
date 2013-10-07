@@ -241,6 +241,24 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_LLVM", "Set this to build LLVM.", False )
+)
+options.Add(
+	"LLVM_SRC_DIR",
+	"The location of the OSL source to be used if BUILD_DEPENDENCY_LLVM is specified.",
+	"$DEPENDENCIES_SRC_DIR/llvm-3.2.src",
+)
+
+options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_OSL", "Set this to build OSL.", False )
+)
+options.Add(
+	"OSL_SRC_DIR",
+	"The location of the OSL source to be used if BUILD_DEPENDENCY_OSL is specified.",
+	"$DEPENDENCIES_SRC_DIR/OpenShadingLanguage-Release-1.3.3",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_HDF5", "Set this to build HDF5.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -625,7 +643,23 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 	else :
 		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/linux64/* $BUILD_DIR" )
 		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.so $BUILD_DIR/lib/libOpenImageIO-1.so" )
-	  
+
+if depEnv["BUILD_DEPENDENCY_LLVM"] :
+	# removing MACOSX_DEPLOYMENT_TARGET because it causes rpath link error
+	# need to put matching clang src code in $LLVM_SRC_DIR/tools/clang
+	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env MACOSX_DEPLOYMENT_TARGET="" REQUIRES_RTTI=1 make VERBOSE=1 && make install" )
+
+if depEnv["BUILD_DEPENDENCY_OSL"] :
+	# OPENIMAGEIO_NAMESPACE
+	# had to edit src/cmake/oiio.cmake to give libOpenImageIO-1 as the name for the OIIO library
+	runCommand( "cd $OSL_SRC_DIR && make nuke && make MY_CMAKE_FLAGS='-DENABLERTTI=1' ILMBASE_HOME=$BUILD_DIR OPENIMAGEIOHOME=$BUILD_DIR LLVM_DIRECTORY=$BUILD_DIR VERBOSE=1 USE_BOOST_WAVE=1" )
+	oslPlatform = "macosx" if depEnv["PLATFORM"]=="darwin" else "linux64"
+	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/include/OSL $BUILD_DIR/include" )
+	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/lib/libosl* $BUILD_DIR/lib" )
+	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/bin/osl* $BUILD_DIR/bin" )
+	runCommand( "mkdir -p $BUILD_DIR/shaders && cp $OSL_SRC_DIR/dist/" + oslPlatform + "/shaders/stdosl.h $BUILD_DIR/shaders" )
+	runCommand( "mkdir -p $BUILD_DIR/doc/osl && cd $OSL_SRC_DIR && cp dist/" + oslPlatform + "/doc/*.pdf $BUILD_DIR/doc/osl" )
+
 if depEnv["BUILD_DEPENDENCY_HDF5"] :
 	runCommand( "cd $HDF5_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-threadsafe --with-pthread=/usr/include && make clean && make -j 4 && make install" )
 
@@ -931,6 +965,28 @@ libraries = {
 	"GafferRenderManTest" : {
 		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
 	},
+
+	"GafferOSL" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery", "oslexec" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL" ],
+		},
+		"requiredOptions" : [ "OSL_SRC_DIR" ],
+		"oslFiles" : glob.glob( "shaders/*/*.osl" ),
+	},
+
+	"GafferOSLUI" : {
+		"requiredOptions" : [ "OSL_SRC_DIR" ],
+	},
+	
+	"GafferOSLTest" : {
+		"additionalFiles" : glob.glob( "python/GafferOSLTest/*/*" ),
+		"requiredOptions" : [ "OSL_SRC_DIR" ],
+	},
 		
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
@@ -1112,7 +1168,15 @@ for libraryName, libraryDef in libraries.items() :
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
-		
+	
+	# osl shaders
+	
+	for oslFile in libraryDef.get( "oslFiles", [] ) :
+		oslFileInstall = env.InstallAs( "$BUILD_DIR/" + oslFile, oslFile )
+		env.Alias( "build", additionalFileInstall )
+		compiledFile = depEnv.Command( os.path.splitext( str( oslFileInstall[0] ) )[0] + ".oso", oslFileInstall, "oslc -o $TARGET $SOURCE" )
+		env.Alias( "build", compiledFile )
+			
 	# class stubs
 	
 	def buildClassStub( target, source, env ) :
@@ -1186,6 +1250,7 @@ if buildingDependencies :
 		( "hdf5", "$HDF5_SRC_DIR/COPYING" ),
 		( "alembic", "$ALEMBIC_SRC_DIR/LICENSE.txt" ),
 		( "qt", "$QT_SRC_DIR/LICENSE.LGPL" ),
+		( "osl", "$OSL_SRC_DIR/LICENSE" ),
 	]
 	
 	if env["BUILD_DEPENDENCY_PYQT"] :
@@ -1292,6 +1357,10 @@ manifest = [
 	"bin/python",
 	"bin/python*[0-9]", # get the versioned python binaries, but not python-config etc
 	
+	"bin/maketx",
+	"bin/oslc",
+	"bin/oslinfo",
+	
 	"LICENSE",
 
 	"apps/*/*-1.py",
@@ -1323,6 +1392,8 @@ manifest = [
 	"lib/libOpenImageIO*$SHLIBSUFFIX*",
 	"lib/libOpenColorIO*$SHLIBSUFFIX*",
 	
+	"lib/libosl*",
+	
 	"lib/libpython*$SHLIBSUFFIX*",
 	"lib/Python.framework",
 	"lib/python$PYTHON_VERSION",
@@ -1348,6 +1419,7 @@ manifest = [
 	"ops",
 	"procedurals",
 	"resources",
+	"osl",
 
 	"openColorIO",
 
@@ -1358,6 +1430,7 @@ manifest = [
 	"doc/licenses",
 	"doc/gaffer/html",
 	"doc/cortex/html",
+	"doc/osl*",
 
 	"python/IECore*",
 	"python/Gaffer*",

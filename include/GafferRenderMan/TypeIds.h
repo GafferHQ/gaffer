@@ -48,7 +48,7 @@ enum TypeId
 	RenderManLightTypeId = 110953,
 	InteractiveRenderManRenderTypeId = 110954,
 	
-	LastTypeId = 110999
+	LastTypeId = 110974
 };
 
 } // namespace GafferRenderMan

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
-
-#include "GafferScene/Shader.h"
-
-#include "GafferArnold/TypeIds.h"
-
-namespace GafferArnold
+surface constant
+(
+	color Cs = 1
+)
 {
-
-class ArnoldShader : public GafferScene::Shader
-{
-
-	public :
-
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void loadShader( const std::string &shaderName );
-
-};
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+	Ci = Cs * emission();
+}

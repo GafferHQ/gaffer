@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,16 +35,24 @@
 ##########################################################################
 
 import os
-import sys
 
-import GafferUI
+import GafferSceneTest
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+class OSLTestCase( GafferSceneTest.SceneTestCase ) :
 
-def showURL( url ) :
+	def setUp( self ) :
+	
+		self.__compiledShaders = set()
 
-	if sys.platform == "darwin" :
-		os.system( "open \"" + url + "\"" )
-	else :
-		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+	def compileShader( self, sourceFileName ) :
+	
+		outputFileName = "/tmp/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
+		os.system( "oslc -q -o %s %s" % ( outputFileName, sourceFileName ) )
+
+		return os.path.splitext( outputFileName )[0]
+
+	def tearDown( self ) :
+	
+		for f in self.__compiledShaders :
+			if os.path.exists( f ) :
+				os.remove( f )
