@@ -1,3 +1,45 @@
+# 0.83.0
+
+#### UI
+
+- Added support for framing nodes and plugs dragged to the NodeGraph.
+- Fixed overzealous pinning of nodes dragged to editors. Specifically, a node dragged from within an editor would be accepted as a pinning-drag into that very same editor. Now a drag must originate from outside the editor to be considered for pinning.
+- Stopped GafferUI.Frame from expanding beyond the min/max of its contents. It now behaves like the other containers in this respect. Frames can still expand, but now only when their contents want to. Updated ErrorDialogue for this fix by adding some appropriate Spacers, and updated it to use the newer "with" syntax for building UIs at the same time.
+- Added highlighted rendering for frames.
+- Added ConnectionPlugValueWidget. This is a fallback widget for plugs that otherwise have no value to display. It shows the input connection to the plug, and provides means of navigation to that input (#130).
+- Added post-execution behaviours to OpDialogue. These allow the UI writer, the Op writer or the user to choose whether or not the dialogue should be closed after the Op has executed (#560).
+- Fixed PathListingWidget errors when "/" path is invalid.  Invalid root paths occur quite frequently in the SceneHierarchy editor when an invalid filename has been entered in a SceneReader or AlembicReader. Those nodes will still display an error, but the SceneHierarchy now won't output a confusing stacktrace which distracts people from the root cause (#528).
+- Added Alt click modifier for selecting upstream nodes in GraphGadget. Alt+Shift click adds all upstream nodes to the selection. Alt+Ctrl click removes all upstream nodes from the selection (#437).
+- Fixed launching of external URLs on OS X.
+
+#### Scene
+
+-  Fixed Prune node's forward declarations of lights and cameras. Previously it would not correctly remove the forward declaration for an object whose ancestor had been pruned.
+- Added Isolate node type.  This removes all paths which are not directly above or below the chosen location - particularly useful for singling out certain assets from a large scene (#564).
+- Improved default values for Seeds and Instancer nodes. The new defaults mean there are less steps to perform to get something happening.
+- Stopped annoying startup errors when 3delight or arnold are missing (#486).
+
+#### OSL
+
+- Introduced a new gaffer module which integrates Open Shading Language.
+	- OSLShader node represents OSL shaders and allows them to be connected into shading networks.
+	- OSLImage node executes OSL shaders in the context of an input image to perform arbitrary image processing.
+	- OSLObject node executes OSL shaders in the context of an object's primitive variables to perform geometry deformation.
+	
+#### API
+
+- Added custom formatters and name depth control to NameLabel.
+- Added Widget.isAncestorOf() method.
+- Added ButtonEvent.button field.
+- Improved path matching to provide more complete information.
+- Added GraphGadget::upstreamNodeGadgets() method. 
+
+#### Support apps
+
+- Added ability to specify Widget to be grabbed in the screenGrab app.
+
+####################################################################################################
+
 # 0.82.0
 
 #### Core
