@@ -58,8 +58,6 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( f.defaultValue(), 1 )
 		self.assertEqual( f.minValue(), -1 )
 		self.assertEqual( f.maxValue(), 10 )
-		# cannot get the value of an output plug unless it's on a Node
-		self.assertRaises( RuntimeError, f.getValue )
 		
 		f = Gaffer.FloatPlug( defaultValue=10, name="a" )
 		self.assertEqual( f.defaultValue(), 10 )

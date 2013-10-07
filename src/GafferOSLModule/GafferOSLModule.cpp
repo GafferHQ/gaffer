@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,57 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#include "boost/python.hpp"
 
-#include "GafferScene/Shader.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "GafferOSL/OSLShader.h"
+#include "GafferOSL/OSLRenderer.h"
+#include "GafferOSL/OSLImage.h"
+#include "GafferOSL/OSLObject.h"
 
-namespace GafferArnold
+using namespace boost::python;
+using namespace GafferBindings;
+using namespace GafferOSL;
+
+/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
+/// and implemented it so reloading works in ArnoldShader and OpenGLShader.
+class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
-class ArnoldShader : public GafferScene::Shader
-{
+	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		const OSLShader *shader = static_cast<const OSLShader *>( graphComponent );
+		std::string shaderName = shader->namePlug()->getValue();
+		if( shaderName.size() )
+		{
+			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+		}
 
-	public :
-
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
-		virtual ~ArnoldShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
-		
-		void loadShader( const std::string &shaderName );
+		return "";
+	}
 
 };
 
-} // namespace GafferArnold
+BOOST_PYTHON_MODULE( _GafferOSL )
+{
+	
+	GafferBindings::DependencyNodeClass<OSLShader>()
+		.def( "loadShader", &OSLShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
+	;
+		
+	Serialisation::registerSerialiser( OSLShader::staticTypeId(), new OSLShaderSerialiser() );
 
-#endif // GAFFERARNOLD_ARNOLDSHADER_H
+	GafferBindings::DependencyNodeClass<OSLImage>();
+	GafferBindings::DependencyNodeClass<OSLObject>();
+
+	scope s = IECorePython::RunTimeTypedClass<OSLRenderer>()
+		.def( init<>() )
+		.def( "shadingEngine", &OSLRenderer::shadingEngine )
+	;
+
+	IECorePython::RefCountedClass<OSLRenderer::ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
+		.def( "shade", &OSLRenderer::ShadingEngine::shade )
+	;
+
+}

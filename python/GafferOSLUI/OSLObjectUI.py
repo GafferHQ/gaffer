@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,17 +34,30 @@
 #  
 ##########################################################################
 
-import os
-import sys
-
+import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+import GafferOSL
 
-def showURL( url ) :
+##########################################################################
+# Metadata
+##########################################################################
 
-	if sys.platform == "darwin" :
-		os.system( "open \"" + url + "\"" )
-	else :
-		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+GafferUI.Metadata.registerNodeDescription(
+
+GafferOSL.OSLObject,
+
+"""Executes OSL shaders to perform object processing.""",
+
+"shader",
+"The shader to be executed - connect the output from an OSL network here.",
+
+)
+
+##########################################################################
+# Nodules
+##########################################################################
+
+GafferUI.Nodule.registerNodule( GafferOSL.OSLObject.staticTypeId(), "shader", GafferUI.StandardNodule )
+
+

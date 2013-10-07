@@ -34,29 +34,25 @@
 #  
 ##########################################################################
 
-import os
-import re
-import fnmatch
-import string
-
-import IECore
-import IECoreRI
-
-import Gaffer
-import GafferUI
+import GafferSceneUI
 
 import GafferRenderMan
 
-## Appends menu items for the creation of all renderman shaders founds on the searchpath, optionally
+## Appends menu items for the creation of all renderman shaders found on the searchpath, optionally
 # filtered by filename based on matchExpression.
-def appendShaders( menuDefinition, prefix="/RenderMan/Shader", matchExpression = re.compile( ".*" ) ) :
+def appendShaders( menuDefinition, prefix="/RenderMan/Shader", matchExpression = "*" ) :
 
-	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, matchExpression ) } )
+	searchPaths = GafferRenderMan.RenderManShader.shaderLoader().searchPath.paths
+	# the 3delight installer adds "." to the shader path, but we skip it
+	# since it can lead to us traversing into arbitrarily deep hierarchies
+	# rooted in the current directory.
+	searchPaths = [ p for p in searchPaths if p != "." ]
+			
+	GafferSceneUI.ShaderUI.appendShaders(
+		menuDefinition, prefix, searchPaths, [ "slo", "sdl" ], __nodeCreator, matchExpression
+	)
 
-def __shaderCreator( shaderName ) :
-
-	nodeName = os.path.split( shaderName )[-1]
-	nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
+def __nodeCreator( nodeName, shaderName ) :
 
 	shader = GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
 	if shader.type == "light" :
@@ -67,74 +63,4 @@ def __shaderCreator( shaderName ) :
 	node.loadShader( shaderName )
 	
 	return node
-
-def __loadFromFile( menu ) :
-
-	path = Gaffer.FileSystemPath( os.getcwd() )
-	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "slo", "sdl" ] ) )
-
-	dialogue = GafferUI.PathChooserDialogue( path, title="Load RenderMan Shader", confirmLabel = "Load" )
-	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.ScriptWindow ) )
-	
-	if not path :
-		return None
-		
-	return __shaderCreator( os.path.splitext( str( path ) )[0] )
-	
-def __shaderSubMenu( matchExpression = re.compile( ".*" ) ) :
-	
-	if isinstance( matchExpression, str ) :
-		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
-	
-	shaders = set()
-	pathsVisited = set()
-	for path in GafferRenderMan.RenderManShader.shaderLoader().searchPath.paths :
-		
-		if path in pathsVisited :
-			# the 3delight installer adds duplicate paths for some reason, and
-			# since traversing them can be slow, we skip duplicates.
-			continue
-		
-		if path == "." :
-			# the 3delight installer adds "." to the shader path, but we skip it
-			# since it can lead to us traversing into arbitrarily deep hierarchies
-			# rooted in the current directory.
-			continue
-							
-		for root, dirs, files in os.walk( path ) :
-			for file in files :
-				if os.path.splitext( file )[1] == ".sdl" :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
-					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
-						shaders.add( os.path.splitext( shaderPath )[0] )
-	
-		pathsVisited.add( path )
-	
-	shaders = sorted( list( shaders ) )
-	categorisedShaders = [ x for x in shaders if "/" in x ]
-	uncategorisedShaders = [ x for x in shaders if "/" not in x ]
-	
-	shadersAndMenuPaths = []
-	for shader in categorisedShaders :
-		shadersAndMenuPaths.append( ( shader, "/" + shader ) )
-			
-	for shader in uncategorisedShaders :
-		if not categorisedShaders :
-			shadersAndMenuPaths.append( ( shader, "/" + shader ) )
-		else :
-			shadersAndMenuPaths.append( ( shader, "/Other/" + shader ) )
-
-	result = IECore.MenuDefinition()
-	for shader, menuPath in shadersAndMenuPaths :
-		result.append(
-			menuPath,
-			{
-				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shader ) )
-			}
-		)
-	
-	result.append( "/LoadDivider", { "divider" : True } )
-	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( __loadFromFile ) } )
-		
-	return result
 

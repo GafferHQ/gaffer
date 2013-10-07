@@ -189,6 +189,12 @@ class About :
 			},
 			
 			{
+				"name" : "OpenShadingLanguage",
+				"url" : "https://github.com/imageworks/OpenShadingLanguage/",
+				"license" : "$GAFFER_ROOT/doc/licenses/osl",
+			},
+			
+			{
 				"name" : "Qt",
 				"url" : "http://qt.nokia.com/",
 				"license" : "$GAFFER_ROOT/doc/licenses/qt",
