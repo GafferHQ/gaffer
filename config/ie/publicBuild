@@ -2,7 +2,8 @@
 
 BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
 INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
-DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/dependencies'
+DEPENDENCIES_SRC_TARBALL=$HOME'/publicGafferBuild/dependencies.tar.gz'
+DEPENDENCIES_UNPACK_DIR=$HOME'/publicGafferBuild'
 DOXYGEN='/software/apps/doxygen/1.8.4/cent6.x86_64/bin/doxygen'
 RMAN_ROOT='/software/apps/3delight/10.0.49/cent6.x86_64'
 ARNOLD_ROOT='/software/apps/arnold/4.0.9.1/cent6.x86_64'
@@ -10,26 +11,13 @@ ARNOLD_ROOT='/software/apps/arnold/4.0.9.1/cent6.x86_64'
 # essential to bypass the ie python wrappers which will screw up the build
 export PATH=/software/apps/scons/2.0.1/bin/:/software/apps/cmake/2.8.4/cent6.x86_64/bin:/usr/local/bin:/usr/bin:/bin
 
-pushd $DEPENDENCIES_SRC_DIR &> /dev/null
-
-for file in *.tgz *.tar.gz
-do
-	tar -xzvf $file
-done
-
-for file in *.tar.bz2
-do
-	tar -xjvf $file
-done
-
-popd &> /dev/null
-
-sed -i "s/Boost_USE_STATIC_LIBS TRUE/Boost_USE_STATIC_LIBS FALSE/" $DEPENDENCIES_SRC_DIR/Alembic*/build/AlembicBoost.cmake
+rm -rf $DEPENDENCIES_UNPACK_DIR/dependencies
+tar -xzvf $DEPENDENCIES_SRC_TARBALL -C $DEPENDENCIES_UNPACK_DIR
 
 scons \
 	OPTIONS="" \
 	BUILD_DEPENDENCIES=1 \
-	DEPENDENCIES_SRC_DIR=$DEPENDENCIES_SRC_DIR \
+	DEPENDENCIES_SRC_DIR=$DEPENDENCIES_UNPACK_DIR/dependencies \
 	BUILD_DIR=$BUILD_DIR \
 	INSTALL_DIR=$INSTALL_DIR \
 	RMAN_ROOT=$RMAN_ROOT \
