@@ -647,7 +647,7 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 if depEnv["BUILD_DEPENDENCY_LLVM"] :
 	# removing MACOSX_DEPLOYMENT_TARGET because it causes rpath link error
 	# need to put matching clang src code in $LLVM_SRC_DIR/tools/clang
-	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env MACOSX_DEPLOYMENT_TARGET="" REQUIRES_RTTI=1 make VERBOSE=1 && make install" )
+	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env MACOSX_DEPLOYMENT_TARGET="" REQUIRES_RTTI=1 make VERBOSE=1 -j 4 && make install" )
 
 if depEnv["BUILD_DEPENDENCY_OSL"] :
 	# OPENIMAGEIO_NAMESPACE
@@ -1392,6 +1392,7 @@ manifest = [
 	"lib/libOpenImageIO*$SHLIBSUFFIX*",
 	"lib/libOpenColorIO*$SHLIBSUFFIX*",
 	
+	"lib/libLLVM*$SHLIBSUFFIX*",
 	"lib/libosl*",
 	
 	"lib/libpython*$SHLIBSUFFIX*",
@@ -1419,7 +1420,7 @@ manifest = [
 	"ops",
 	"procedurals",
 	"resources",
-	"osl",
+	"shaders",
 
 	"openColorIO",
 
