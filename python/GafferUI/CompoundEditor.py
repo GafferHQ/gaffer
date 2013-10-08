@@ -543,7 +543,14 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		else :
 			nodeSet = Gaffer.StandardSet( [ x for x in event.data if isinstance( x, Gaffer.Node ) ] )		
 	
-		self.getCurrent().setNodeSet( nodeSet )
+		if event.modifiers & event.Modifiers.Shift :
+			currentEditor = self.getCurrent()
+			newEditor = currentEditor.__class__( currentEditor.scriptNode() )
+			newEditor.setNodeSet( nodeSet )
+			self.insert( 0, newEditor )
+			self.setCurrent( newEditor )
+		else :
+			self.getCurrent().setNodeSet( nodeSet )
 		
 		self.setHighlighted( False )
 		self.__pinningButton.setHighlighted( False )
