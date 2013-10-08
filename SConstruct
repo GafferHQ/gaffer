@@ -241,7 +241,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_LLVM", "Set this to build LLVM.", False )
+	BoolVariable( "BUILD_DEPENDENCY_LLVM", "Set this to build LLVM.", "$BUILD_DEPENDENCIES" )
 )
 options.Add(
 	"LLVM_SRC_DIR",
@@ -250,7 +250,7 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "BUILD_DEPENDENCY_OSL", "Set this to build OSL.", False )
+	BoolVariable( "BUILD_DEPENDENCY_OSL", "Set this to build OSL.", "$BUILD_DEPENDENCIES" )
 )
 options.Add(
 	"OSL_SRC_DIR",
