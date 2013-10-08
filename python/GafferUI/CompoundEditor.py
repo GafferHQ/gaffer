@@ -54,12 +54,11 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode, children=None, **kw ) :
 		
-		self.__splitContainer = GafferUI.SplitContainer()
+		self.__splitContainer = _SplitContainer()
 		
 		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode, **kw )
 		
 		self.__splitContainer.append( _TabbedContainer() )
-		self.__addCornerWidget( self.__splitContainer )
 		
 		self.__keyPressConnection = self.__splitContainer.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
@@ -144,8 +143,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				return repr( tabDict )
 		
 		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % __serialise( self.__splitContainer )
-		
-	def __popupLayoutMenu( self, splitContainer ) :
+
+	def _layoutMenuDefinition( self, tabbedContainer ) :
+	
+		splitContainer = tabbedContainer.ancestor( _SplitContainer )
 	
 		m = IECore.MenuDefinition()
 
@@ -162,12 +163,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			m.append( "Remove Panel", { "command" : IECore.curry( self.__join, splitContainerParent, 1 - splitContainerParent.index( splitContainer ) ) } )
 			removeItemAdded = True
 
-		tabbedContainer = splitContainer[0]
-		if tabbedContainer :
-			currentTab = tabbedContainer.getCurrent()
-			if currentTab :
-				m.append( "/Remove " + tabbedContainer.getLabel( currentTab ), { "command" : IECore.curry( self.__removeCurrentTab, tabbedContainer ) } )
-				removeItemAdded = True
+		currentTab = tabbedContainer.getCurrent()
+		if currentTab :
+			m.append( "/Remove " + tabbedContainer.getLabel( currentTab ), { "command" : IECore.curry( self.__removeCurrentTab, tabbedContainer ) } )
+			removeItemAdded = True
 
 		if removeItemAdded :		
 			m.append( "/divider2", { "divider" : True } )
@@ -183,9 +182,8 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		m.append( "/Split Bottom", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
 		m.append( "/Split Top", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )		
 
-		self.__layoutMenu = GafferUI.Menu( m ) # must store it somewhere else it'll die
-		self.__layoutMenu.popup()
-		
+		return m
+				
 	def __keyPress( self, unused, event ) :
 	
 		if event.key == "Space" :
@@ -301,27 +299,22 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			editor = nameOrEditor
 			assert( editor.scriptNode().isSame( self.scriptNode() ) )
 						
-		tabbedContainer.append( editor )
-		tabbedContainer.setLabel( editor, editor.getTitle() )
-		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
+		tabbedContainer.insert( len( tabbedContainer ), editor )
 		tabbedContainer.setCurrent( editor )
-		
-		self.__editorAddedSignal( self, editor )
-		
+				
 		return editor
 		
 	def __split( self, splitContainer, orientation, subPanelIndex ) :
 	
 		assert( len( splitContainer ) == 1 ) # we should not be split already
 		
-		sc1 = GafferUI.SplitContainer()
+		sc1 = _SplitContainer()
 		sc1.append( splitContainer[0] )
 
 		assert( len( splitContainer ) == 0 )
 		
-		sc2 = GafferUI.SplitContainer()
+		sc2 = _SplitContainer()
 		sc2.append( _TabbedContainer() )
-		self.__addCornerWidget( sc2 )
 		
 		if subPanelIndex==1 :
 			splitContainer.append( sc1 )
@@ -338,33 +331,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		splitContainer.__preferredHandlePosition = 0.5 # where the user put it last
 		
 		splitContainer.setOrientation( orientation )
-	
-	def __addCornerWidget( self, splitContainer ) :
-	
-		assert( len( splitContainer ) == 1 )
-		assert( isinstance( splitContainer[0], _TabbedContainer ) )
-		
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 ) as row :
-		
-			# node target button
-			_TargetButton( splitContainer[0] ) 
-		
-			# layout button
-			layoutButton = GafferUI.Button( image="layoutButton.png", hasFrame=False )
-			layoutButton.setToolTip( "Click to modify the layout" )
-			layoutButton.__layoutButtonClickedConnection = layoutButton.clickedSignal().connect( Gaffer.WeakMethod( self.__layoutButtonClicked ) )
-		
-		splitContainer[0].setCornerWidget( row )
-	
-	def __titleChanged( self, editor ) :
-	
-		editor.parent().setLabel( editor, editor.getTitle() )
-				
-	def __layoutButtonClicked( self, button ) :
-	
-		splitContainer = button.ancestor( type=GafferUI.SplitContainer )
-		self.__popupLayoutMenu( splitContainer )
-			
+					
 	def __join( self, splitContainer, subPanelIndex ) :
 			
 		subPanelToKeepFrom = splitContainer[subPanelIndex]	
@@ -448,67 +415,90 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 					
 		return False
 
-# The class that keeps a bunch of editors in tabs - this is used
-# to differentiate between TabbedContainers created directly by
-# the CompoundEditor, and those that might exist within the child
-# editors themselves.
-## \todo It might make sense to move some of the implementation
-# of CompoundEditor into here.
+# The internal class used to allow hierarchical splitting of the layout.
+class _SplitContainer( GafferUI.SplitContainer ) :
+
+	def __init__( self, **kw ) :
+	
+		GafferUI.SplitContainer.__init__( self, **kw )
+
+# The internal class used to keep a bunch of editors in tabs, updating the titles
+# when appropriate, and keeping a track of the pinning of nodes.
 class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 	def __init__( self, cornerWidget=None, **kw ) :
 	
 		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
 		
-# The class that implements the node target button used in the tabbed container corner widget
-class _TargetButton( GafferUI.Button ) :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 ) as cornerWidget :
+		
+			self.__pinningButton = GafferUI.Button( image="targetNodesUnlocked.png", hasFrame=False )
+		
+			layoutButton = GafferUI.MenuButton( image="layoutButton.png", hasFrame=False )
+			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ) ) )
+			layoutButton.setToolTip( "Click to modify the layout" )
+		
+		self.setCornerWidget( cornerWidget )
 
-	def __init__( self, tabbedContainer ) :
-	
-		GafferUI.Button.__init__( self, image="targetNodesLocked.png", hasFrame=False )
+		self.__pinningButtonClickedConnection = self.__pinningButton.clickedSignal().connect( Gaffer.WeakMethod( self.__pinningButtonClicked ) )		
+		self.__currentTabChangedConnection = self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
+		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+
+	## \todo We're overriding this so we can connect to titleChanged(). This works OK
+	# because we know that CompoundEditor only uses insert(), and not any other means of
+	# adding a child. A more general solution might be to have a Container.childAddedSignal()
+	# method so we can get called no matter how we get a new child.
+	def insert( self, index, editor ) :
+
+		GafferUI.TabbedContainer.insert( self, index, editor )
+
+		self.setLabel( editor, editor.getTitle() )
+		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
 		
-		self.__currentTabChangedConnection = tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
-		self.__dragEnterConnection = tabbedContainer.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dragLeaveConnection = tabbedContainer.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__dropConnection = tabbedContainer.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
-		
-		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		self.ancestor( CompoundEditor ).editorAddedSignal()( self.ancestor( CompoundEditor ), editor )
+
+	def __layoutMenuDefinition( self ) :
 	
-		self.__update( tabbedContainer.getCurrent() )
+		# the menu definition for the layout is dealt with by the CompoundEditor, because only it
+		# has the high-level view necessary to do splitting of layouts and so on.
+		return self.ancestor( CompoundEditor )._layoutMenuDefinition( self )
 	
+	def __titleChanged( self, editor ) :
+	
+		self.setLabel( editor, editor.getTitle() )
+
 	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
 		
 		if isinstance( currentEditor, GafferUI.NodeSetEditor ) :
-			self.__nodeSetChangedConnection = currentEditor.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__update ) )
+			self.__nodeSetChangedConnection = currentEditor.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updatePinningButton ) )
 		else :
 			self.__nodeSetChangedConnection = None
 		
-		self.__update( currentEditor )
+		self.__updatePinningButton()
+
+	def __updatePinningButton( self, *unused ) :
 		
-	def __update( self, editor ) :
-	
+		editor = self.getCurrent()
 		if isinstance( editor, GafferUI.NodeSetEditor ) and editor.scriptNode() is not None :
 									 
-			self.setVisible( True )
+			self.__pinningButton.setVisible( True )
 			
 			if editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
-				self.setToolTip( "Click to lock view to current selection" )
-				self.setImage( "targetNodesUnlocked.png" )
+				self.__pinningButton.setToolTip( "Click to lock view to current selection" )
+				self.__pinningButton.setImage( "targetNodesUnlocked.png" )
 			else :
-				self.setToolTip( "Click to unlock view and follow selection" )
-				self.setImage( "targetNodesLocked.png" )
+				self.__pinningButton.setToolTip( "Click to unlock view and follow selection" )
+				self.__pinningButton.setImage( "targetNodesLocked.png" )
 		
 		else :
 		
-			self.setVisible( False )
-	
-	def __clicked( self, button ) :
-			
-		splitContainer = self.ancestor( type=GafferUI.SplitContainer )
-		assert( len( splitContainer ) == 1 )
-		assert( isinstance( splitContainer[0], _TabbedContainer ) )
-		
-		editor = splitContainer[0].getCurrent()
+			self.__pinningButton.setVisible( False )
+
+	def __pinningButtonClicked( self, button ) :
+					
+		editor = self.getCurrent()
 		assert( isinstance( editor, GafferUI.NodeSetEditor ) )
 	
 		nodeSet = editor.getNodeSet()
@@ -521,7 +511,7 @@ class _TargetButton( GafferUI.Button ) :
 	
 	def __dragEnter( self, tabbedContainer, event ) :
 	
-		currentEditor = tabbedContainer.getCurrent()
+		currentEditor = self.getCurrent()
 		if not isinstance( currentEditor, GafferUI.NodeSetEditor ) :
 			return False
 		
@@ -537,14 +527,14 @@ class _TargetButton( GafferUI.Button ) :
 		
 		if result :
 			self.setHighlighted( True )
-			tabbedContainer.setHighlighted( True )
-		
+			self.__pinningButton.setHighlighted( True )
+				
 		return result
 		
 	def __dragLeave( self, tabbedContainer, event ) :
 	
 		self.setHighlighted( False )
-		tabbedContainer.setHighlighted( False )
+		self.__pinningButton.setHighlighted( False )
 
 	def __drop( self, tabbedContainer, event ) :
 	
@@ -553,9 +543,10 @@ class _TargetButton( GafferUI.Button ) :
 		else :
 			nodeSet = Gaffer.StandardSet( [ x for x in event.data if isinstance( x, Gaffer.Node ) ] )		
 	
-		tabbedContainer.getCurrent().setNodeSet( nodeSet )
+		self.getCurrent().setNodeSet( nodeSet )
 		
 		self.setHighlighted( False )
-		tabbedContainer.setHighlighted( False )
+		self.__pinningButton.setHighlighted( False )
 		
 		return True
+
