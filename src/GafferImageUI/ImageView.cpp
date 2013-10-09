@@ -41,6 +41,8 @@
 #include "boost/bind/placeholders.hpp"
 #include "boost/format.hpp"
 
+#include "OpenEXR/ImathColorAlgo.h"
+
 #include "IECore/FastFloat.h"
 #include "IECore/BoxOps.h"
 #include "IECore/BoxAlgo.h"
@@ -148,6 +150,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			m_colorUiElements[0].name = "RGBA"; // The color under the mouse pointer.
 			m_colorUiElements[0].draw = true;
 			m_colorUiElements[0].position = V2i( 135, 0 );
+			m_colorUiElements[0].hsv = true;
 			m_colorUiElements[1].name = "Min"; // The minimum color within a selection.
 			m_colorUiElements[1].position = V2i( 135, 19 );
 			m_colorUiElements[2].name = "Max"; // The maximum color within a selection.
@@ -802,7 +805,7 @@ class ImageViewGadget : public GafferUI::Gadget
 					glScalef( 10.f, -10.f, 1.f );
 					std::string infoStr = std::string(
 							boost::str(
-								boost::format( "%s: %.4f, %.4f, %.4f, %.4f" )
+								boost::format( "%s: %.3f, %.3f, %.3f, %.3f" )
 								% m_colorUiElements[i].name.c_str()
 								% (*m_colorUiElements[i].color)[0]
 								% (*m_colorUiElements[i].color)[1]
@@ -810,6 +813,15 @@ class ImageViewGadget : public GafferUI::Gadget
 								% (*m_colorUiElements[i].color)[3]
 								)
 							);
+					
+					if( m_colorUiElements[i].hsv )
+					{
+						const Color4f hsv = Imath::rgb2hsv( *m_colorUiElements[i].color );
+						infoStr += boost::str(
+							boost::format( "  HSV: %.3f, %.3f, %.3f" ) % hsv[0] % hsv[1] % hsv[2]
+						);
+					}
+							
 					style->renderText( Style::LabelText, infoStr );
 					glLoadIdentity();
 				}
@@ -830,12 +842,13 @@ class ImageViewGadget : public GafferUI::Gadget
 		/// A simple struct that we use to hold the information required to draw a UI element that displays information about a color.
 		struct ColorUiElement
 		{
-			ColorUiElement( Color4f &swatchColor ): draw( false ), name( "RGBA" ), color( &swatchColor ), position( 0.f ), swatchBox( V2f( 0.f, 5.f ), V2f( 10.f, 15.f ) ) {}
+			ColorUiElement( Color4f &swatchColor ): draw( false ), name( "RGBA" ), color( &swatchColor ), position( 0.f ), swatchBox( V2f( 0.f, 5.f ), V2f( 10.f, 15.f ) ), hsv( false ) {}
 			bool draw;
 			std::string name;
 			Color4f *color;
 			Imath::V2f position;
 			Imath::Box2f swatchBox;
+			bool hsv;
 		};
 
 		Imath::Box3f m_displayBound;
