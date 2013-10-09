@@ -101,7 +101,7 @@ class BasicPathFilterWidget( PathFilterWidget ) :
 
 	def __init__( self, pathFilter ) :
 	
-		self.__checkBox = GafferUI.CheckBox( str( pathFilter ) )
+		self.__checkBox = GafferUI.BoolWidget( str( pathFilter ) )
 		
 		PathFilterWidget.__init__( self, self.__checkBox, pathFilter )
 		
