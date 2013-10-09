@@ -34,15 +34,19 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-class CheckBox( GafferUI.Widget ) :
+class BoolWidget( GafferUI.Widget ) :
 
-	def __init__( self, text="", checked=False, **kw ) :
+	DisplayMode = IECore.Enum.create( "CheckBox", "Switch" )
+
+	def __init__( self, text="", checked=False, displayMode=DisplayMode.CheckBox, **kw ) :
 	
 		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ), **kw )
 		
@@ -51,6 +55,9 @@ class CheckBox( GafferUI.Widget ) :
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
 		
 		self._qtWidget().stateChanged.connect( Gaffer.WeakMethod( self.__stateChanged ) )
+	
+		if displayMode == self.DisplayMode.Switch :
+			self._qtWidget().setObjectName( "gafferBoolWidgetSwitch" )
 	
 	def setText( self, text ) :
 	
@@ -75,3 +82,6 @@ class CheckBox( GafferUI.Widget ) :
 	def __stateChanged( self, state ) :
 	
 		self.__stateChangedSignal( self )
+
+## \todo Backwards compatibility - remove for version 1.0
+CheckBox = BoolWidget

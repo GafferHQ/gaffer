@@ -115,7 +115,7 @@ from ColorSwatch import ColorSwatch
 from Slider import Slider
 from ShowURL import showURL
 from Spacer import Spacer
-from CheckBox import CheckBox
+from BoolWidget import BoolWidget, CheckBox
 from Image import Image
 from ErrorDialogue import ErrorDialogue
 from _Variant import _Variant

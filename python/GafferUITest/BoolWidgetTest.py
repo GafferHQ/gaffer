@@ -40,11 +40,11 @@ import weakref
 import GafferUI
 import GafferUITest
 
-class CheckBoxTest( GafferUITest.TestCase ) :
+class BoolWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifespan( self ) :
 	
-		w = GafferUI.CheckBox()
+		w = GafferUI.BoolWidget()
 		r = weakref.ref( w )
 		
 		self.failUnless( r() is w )
@@ -59,7 +59,7 @@ class CheckBoxTest( GafferUITest.TestCase ) :
 		def f( w ) :
 			self.emissions += 1
 			
-		w = GafferUI.CheckBox()
+		w = GafferUI.BoolWidget()
 		c = w.stateChangedSignal().connect( f )
 		
 		w.setState( True )
@@ -69,7 +69,7 @@ class CheckBoxTest( GafferUITest.TestCase ) :
 	
 	def testState( self ) :
 	
-		w = GafferUI.CheckBox()
+		w = GafferUI.BoolWidget()
 		self.assertEqual( w.getState(), False )
 		
 		w.setState( True )		
@@ -80,7 +80,7 @@ class CheckBoxTest( GafferUITest.TestCase ) :
 		
 	def testText( self ) :
 		
-		w = GafferUI.CheckBox( "a" )		
+		w = GafferUI.BoolWidget( "a" )		
 		self.assertEqual( w.getText(), "a" )
 		
 		w.setText( "b" )
