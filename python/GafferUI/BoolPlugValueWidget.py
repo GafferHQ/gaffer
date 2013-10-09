@@ -44,31 +44,31 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
 	
-		self.__checkBox = GafferUI.CheckBox()
+		self.__boolWidget = GafferUI.BoolWidget( displayMode=displayMode )
 		
-		GafferUI.PlugValueWidget.__init__( self, self.__checkBox, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plug, **kw )
 
-		self._addPopupMenu( self.__checkBox )
+		self._addPopupMenu( self.__boolWidget )
 
-		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
+		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 						
 		self._updateFromPlug()
 
 	def setHighlighted( self, highlighted ) :
 	
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
-		self.__checkBox.setHighlighted( highlighted )
+		self.__boolWidget.setHighlighted( highlighted )
 		
 	def _updateFromPlug( self ) :
 		
 		if self.getPlug() is not None :
 			with self.getContext() :
 				with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
-					self.__checkBox.setState( self.getPlug().getValue() )
+					self.__boolWidget.setState( self.getPlug().getValue() )
 		
-		self.__checkBox.setEnabled( self._editable() )
+		self.__boolWidget.setEnabled( self._editable() )
 		
 	def __stateChanged( self, widget ) :
 		
@@ -80,6 +80,6 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 						
-			self.getPlug().setValue( self.__checkBox.getState() )
+			self.getPlug().setValue( self.__boolWidget.getState() )
 	
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug.staticTypeId(), BoolPlugValueWidget )

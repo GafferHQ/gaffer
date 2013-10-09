@@ -130,7 +130,12 @@ class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row.append( nameWidget )
 		
 		if "enabled" in childPlug :
-			self.__row.append( GafferUI.PlugValueWidget.create( childPlug["enabled"] ) )
+			self.__row.append(
+				GafferUI.BoolPlugValueWidget(
+					childPlug["enabled"],
+					displayMode = GafferUI.BoolWidget.DisplayMode.Switch
+				)
+			)
 		
 		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ), expand = True )
 		
@@ -160,7 +165,9 @@ class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self.getContext() :
 				enabled = self.getPlug()["enabled"].getValue()
 				
-			self.__row[0].setEnabled( enabled )
+			if isinstance( self.__row[0], GafferUI.StringPlugValueWidget ) :
+				self.__row[0].setEnabled( enabled )
+				
 			self.__row[-1].setEnabled( enabled )
 						
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.staticTypeId(), CompoundDataPlugValueWidget )

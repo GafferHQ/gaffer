@@ -1314,6 +1314,8 @@ class Widget( object ) :
 			image : url($GAFFER_ROOT/graphics/collapsibleArrowDown.png);
 		}
 		
+		/* checkbox */
+		
 		QCheckBox::indicator {
 			width: 20px;
 			height: 20px;
@@ -1346,6 +1348,37 @@ class Widget( object ) :
 		QCheckBox::indicator:unchecked:disabled {
 			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedDisabled.png);
 		}
+		
+		/* boolwidget drawn as switch */
+		
+		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked {
+			image: url($GAFFER_ROOT/graphics/toggleOff.png);
+		}
+		
+		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:hover,
+		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:focus,
+		QCheckBox#gafferBoolWidgetSwitch[gafferHighlighted=\"true\"]::indicator:unchecked {
+			image: url($GAFFER_ROOT/graphics/toggleOffHover.png);
+		}
+		QCheckBox#gafferBoolWidgetSwitch::indicator:checked:hover,
+		QCheckBox#gafferBoolWidgetSwitch::indicator:checked:focus,
+		QCheckBox#gafferBoolWidgetSwitch[gafferHighlighted=\"true\"]::indicator:checked {
+			image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
+		}
+		
+		QCheckBox#gafferBoolWidgetSwitch::indicator:checked {
+			image: url($GAFFER_ROOT/graphics/toggleOn.png);
+		}
+		
+		QCheckBox#gafferBoolWidgetSwitch::indicator:checked:disabled {
+			image: url($GAFFER_ROOT/graphics/toggleOnDisabled.png);
+		}
+		
+		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:disabled {
+			image: url($GAFFER_ROOT/graphics/toggleOffDisabled.png);
+		}
+
+		/* frame */
 
 		.QFrame#borderStyleNone {
 			border: 1px solid transparent;

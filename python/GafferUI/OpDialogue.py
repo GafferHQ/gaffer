@@ -114,7 +114,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 			if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.NoneByDefault, self.PostExecuteBehaviour.CloseByDefault ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
-					self.__keepWindowOpen = GafferUI.CheckBox(
+					self.__keepWindowOpen = GafferUI.BoolWidget(
 						"Keep window open",
 						self.__postExecuteBehaviour == self.PostExecuteBehaviour.NoneByDefault
 					)
