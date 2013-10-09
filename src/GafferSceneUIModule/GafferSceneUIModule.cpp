@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,9 +36,15 @@
 
 #include "boost/python.hpp"
 
-// this placeholder currently only exists so that libGafferSceneUI is
-// loaded with the python module so that the SceneView can be
-// registered.
+#include "GafferBindings/NodeBinding.h"
+
+#include "GafferSceneUI/SceneView.h"
+
+using namespace GafferSceneUI;
+
 BOOST_PYTHON_MODULE( _GafferSceneUI )
-{	
+{
+
+	GafferBindings::NodeClass<SceneView>();
+
 }

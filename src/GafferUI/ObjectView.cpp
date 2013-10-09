@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "IECore/NullObject.h"
+
+#include "IECoreGL/State.h"
 
 #include "Gaffer/Context.h"
 
@@ -54,6 +58,8 @@ ObjectView::ObjectView( const std::string &name )
 		m_renderableGadget( new RenderableGadget )
 {
 	viewportGadget()->setChild( m_renderableGadget );
+
+	baseStateChangedSignal().connect( boost::bind( &ObjectView::baseStateChanged, this ) );
 }
 
 void ObjectView::update()
@@ -70,4 +76,10 @@ void ObjectView::update()
 	{
 		viewportGadget()->frame( m_renderableGadget->bound() );
 	}
+}
+
+void ObjectView::baseStateChanged()
+{
+	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
+	m_renderableGadget->renderRequestSignal()( m_renderableGadget );
 }
