@@ -154,6 +154,22 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n.loadShader( os.path.basename( s ) )
 		
 		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s" ] )
+	
+	def testNoConnectionToParametersPlug( self ) :
+	
+		splitPoint = GafferOSL.OSLShader()
+		splitPoint.loadShader( "utility/splitPoint" )
+		
+		globals = GafferOSL.OSLShader()
+		globals.loadShader( "utility/globals" )
+		
+		splitPoint["parameters"]["p"].setInput( globals["out"]["globalP"] )
+		
+		self.assertTrue( splitPoint["parameters"]["p"].getInput().isSame( globals["out"]["globalP"] ) )
+		self.assertTrue( splitPoint["parameters"]["p"][0].getInput().isSame( globals["out"]["globalP"][0] ) )
+		self.assertTrue( splitPoint["parameters"]["p"][1].getInput().isSame( globals["out"]["globalP"][1] ) )
+		self.assertTrue( splitPoint["parameters"]["p"][2].getInput().isSame( globals["out"]["globalP"][2] ) )
+		self.assertTrue( splitPoint["parameters"].getInput() is None )
 		
 if __name__ == "__main__":
 	unittest.main()

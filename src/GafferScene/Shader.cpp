@@ -57,7 +57,7 @@ Shader::Shader( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "type" ) );
-	addChild( new CompoundPlug( "parameters" ) );
+	addChild( new CompoundPlug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 }
 
