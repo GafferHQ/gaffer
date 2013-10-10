@@ -57,7 +57,7 @@ class SceneView : public GafferUI::View3D
 		SceneView( const std::string &name = defaultName<SceneView>() );
 		virtual ~SceneView();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View3D );
 		
 	protected :
 
