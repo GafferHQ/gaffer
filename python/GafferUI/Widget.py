@@ -504,7 +504,7 @@ class Widget( object ) :
 		if widgetType is None :
 			widgetType = GafferUI.Widget
 	
-		qWidget = QtGui.QApplication.instance().widgetAt( QtGui.QCursor.pos() )
+		qWidget = QtGui.QApplication.instance().widgetAt( position[0], position[1] )
 		widget = GafferUI.Widget._owner( qWidget )
 		if widget is not None and not isinstance( widget, widgetType ) :
 			widget = widget.ancestor( widgetType )

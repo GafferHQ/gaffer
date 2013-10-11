@@ -63,6 +63,22 @@ class TestCase( GafferTest.TestCase ) :
 				
 		widgetInstances = self.__widgetInstances()
 		self.assertEqual( widgetInstances, [] )
+	
+	def waitForIdle( self, count = 1 ) :
+	
+		self.__idleCount = 0
+		def f() :
+			
+			self.__idleCount += 1
+			
+			if self.__idleCount >= count :
+				GafferUI.EventLoop.mainEventLoop().stop()
+				return False
+			
+			return True
+			
+		GafferUI.EventLoop.addIdleCallback( f )
+		GafferUI.EventLoop.mainEventLoop().start()
 		
 	@staticmethod
 	def __widgetInstances() :
