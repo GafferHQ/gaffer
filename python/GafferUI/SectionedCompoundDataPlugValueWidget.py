@@ -57,20 +57,29 @@ class _Section( GafferUI.CompoundDataPlugValueWidget ) :
 class SectionedCompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, sections, **kw ) :
-	
 		column = GafferUI.ListContainer( spacing = 8 )
 	
 		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
 		
+		self.__sections = []
+		
 		with column :
 			for section in sections :
-				_Section(
-					self.getPlug(),
-					label = section["label"],
-					summary = section.get( "summary", None ),
-					names = [ e[0] for e in section["namesAndLabels"] ],
-					labels = [ e[1] for e in section["namesAndLabels"] ],
+				self.__sections.append( _Section(
+						plug,
+						label = section["label"],
+						summary = section.get( "summary", None ),
+						names = [ e[0] for e in section["namesAndLabels"] ],
+						labels = [ e[1] for e in section["namesAndLabels"] ],
+					)
 				)
+		
+	def setPlug( self, plug ) :
+		
+		super( SectionedCompoundDataPlugValueWidget, self ).setPlug( plug )
+		
+		for s in self.__sections:
+			s.setPlug( plug )
 	
 	def hasLabel( self ) :
 	
