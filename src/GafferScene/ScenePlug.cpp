@@ -370,3 +370,12 @@ void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 		path.push_back( *it );
 	}
 }
+
+std::ostream &operator << ( std::ostream &o, const ScenePlug::ScenePath &path )
+{
+	for( ScenePlug::ScenePath::const_iterator it = path.begin(); it != path.end(); ++it )
+	{
+		o << "/" << *it;
+	}
+	return o;
+}
