@@ -205,6 +205,7 @@ from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget
 from NodeFinderDialogue import NodeFinderDialogue
 from ConnectionPlugValueWidget import ConnectionPlugValueWidget
+import View3DToolbar
 
 # then stuff specific to parameterised objects
 
