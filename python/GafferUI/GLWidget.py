@@ -132,6 +132,8 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 	
 		QtGui.QGraphicsView.__init__( self )
 		
+		self.setObjectName( "gafferGLWidget" )
+		
 		glWidget = self.__createQGLWidget( format )
 				
 		self.setViewport( glWidget )

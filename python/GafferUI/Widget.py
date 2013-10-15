@@ -1538,6 +1538,8 @@ class Widget( object ) :
 			
 		}
 		
+		/* progress bars */
+
 		QProgressBar {
 		
 			border: 1px solid $backgroundDark;
@@ -1550,6 +1552,14 @@ class Widget( object ) :
 		QProgressBar::chunk:horizontal {
 		
 			background-color: $brightColor;
+		
+		}
+
+		/* gl widget */
+
+		QGraphicsView#gafferGLWidget {
+		
+			border: 0px;
 		
 		}
 
