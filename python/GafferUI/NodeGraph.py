@@ -216,8 +216,19 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	
 		if self.__nodeMenu is None :
 			self.__nodeMenu = GafferUI.Menu( GafferUI.NodeMenu.acquire( self.scriptNode().applicationRoot() ).definition(), searchable=True )
-	
+			self.__nodeMenuVisibilityChangedConnection = self.__nodeMenu.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMenuVisibilityChanged ) )
+			
 		return self.__nodeMenu
+	
+	def __nodeMenuVisibilityChanged( self, widget ) :
+	
+		assert( widget is self.__nodeMenu )
+		
+		if not self.__nodeMenu.visible() :
+			# generally we steal focus on mouse enter (implemented in GadgetWidget),
+			# but when the node menu closes we may not get an enter event, so we have to steal
+			# the focus back here.
+			self._qtWidget().setFocus()
 	
 	def __buttonPress( self, widget, event ) :
 				

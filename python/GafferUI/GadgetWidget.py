@@ -131,7 +131,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			
 	def __enter( self, widget ) :
 	
-		self._qtWidget().setFocus()
+		if not isinstance( QtGui.QApplication.focusWidget(), ( QtGui.QLineEdit, QtGui.QPlainTextEdit ) ) :
+			self._qtWidget().setFocus()
 	
 	def __leave( self, widget ) :
 	
