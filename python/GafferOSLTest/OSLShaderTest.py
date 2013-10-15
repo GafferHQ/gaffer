@@ -170,6 +170,53 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( splitPoint["parameters"]["p"][1].getInput().isSame( globals["out"]["globalP"][1] ) )
 		self.assertTrue( splitPoint["parameters"]["p"][2].getInput().isSame( globals["out"]["globalP"][2] ) )
 		self.assertTrue( splitPoint["parameters"].getInput() is None )
+	
+	def testStructs( self ) :
+	
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/structs.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+		
+		self.assertEqual( n["parameters"].keys(), [ "i", "f", "s", "ss" ] )
+		self.assertEqual( n["parameters"]["i"].defaultValue(), 2 )
+		self.assertEqual( n["parameters"]["f"].defaultValue(), 3 )
+		self.assertEqual( n["parameters"]["ss"].defaultValue(), "ss" )
+		
+		self.assertEqual( n["parameters"]["s"].keys(), [ "i", "f", "c", "s" ] )
+		self.assertEqual( n["parameters"]["s"]["i"].defaultValue(), 1 )
+		self.assertEqual( n["parameters"]["s"]["f"].defaultValue(), 2 )
+		self.assertEqual( n["parameters"]["s"]["c"].defaultValue(), IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["s"]["s"].defaultValue(), "s" )
+		
+		n["parameters"]["s"]["i"].setValue( 10 )
+		n["parameters"]["s"]["f"].setValue( 21 )
+		n["parameters"]["s"]["c"].setValue( IECore.Color3f( 3, 4, 5 ) )
+		n["parameters"]["s"]["s"].setValue( "ttt" )
+		
+		state = n.state()
+		self.assertEqual( len( state[0].parameters ), 7 )
+		self.assertTrue( state[0].parameters["i"], IECore.IntData( 2 ) )
+		self.assertTrue( state[0].parameters["f"], IECore.FloatData( 3 ) )
+		self.assertTrue( state[0].parameters["s.i"], IECore.IntData( 10 ) )
+		self.assertTrue( state[0].parameters["s.f"], IECore.FloatData( 21 ) )
+		self.assertTrue( state[0].parameters["s.c"], IECore.Color3fData( IECore.Color3f( 3, 4, 5 ) ) )
+		self.assertTrue( state[0].parameters["s.s"], IECore.StringData( "ttt" ) )
+		self.assertTrue( state[0].parameters["ss"], IECore.StringData( "ss" ) )
+		
+		h1 = n.stateHash()
+
+		n["parameters"]["s"]["i"].setValue( 100 )
+		h2 = n.stateHash()
+		self.assertNotEqual( h1, h2 )
+		
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" )
+		g = GafferOSL.OSLShader()
+		g.loadShader( s2 )
+					
+		n["parameters"]["s"]["i"].setInput( g["out"]["i"] )
+		h3 = n.stateHash()
+		self.assertNotEqual( h1, h3 )
+		self.assertNotEqual( h2, h3 )
 		
 if __name__ == "__main__":
 	unittest.main()

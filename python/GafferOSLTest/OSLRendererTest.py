@@ -146,6 +146,23 @@ class OSLRendererTest( GafferOSLTest.OSLTestCase ) :
 			
 			for i, c in enumerate( p["Ci"] ) :
 				self.assertEqual( c, rp["colorUserData"][i] )
+	
+	def testStructs( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/structs.osl" )
+		constant = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
+
+		rp = self.rectanglePoints()
+		
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "shader", shader, { "s.c" : IECore.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } )
+			r.shader( "surface", constant, { "Cs" : "link:h.c" } )
+			p = r.shadingEngine().shade( rp )
 			
+			for c in p["Ci"] :
+				self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+		
 if __name__ == "__main__":
 	unittest.main()
