@@ -364,9 +364,7 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	// pass the signal through
 	std::vector<GadgetPtr> gadgetUnderMouse(1, m_gadgetUnderMouse);
 	GadgetPtr handler(0);
-	dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
-	
-	return true;
+	return dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );	
 }
 
 IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
