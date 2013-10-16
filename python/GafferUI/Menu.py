@@ -188,6 +188,7 @@ class Menu( GafferUI.Widget ) :
 	def __hide( self ) :
 		
 		if self.__searchable and self.__searchMenu :
+			self.__searchLine.clearFocus()
 			self.__searchMenu.hide()
 	
 	# May be called to fully build the menu /now/, rather than only do it lazily
