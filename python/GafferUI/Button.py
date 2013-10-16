@@ -137,9 +137,12 @@ class Button( GafferUI.Widget ) :
 			return
 			
 		if not self.getHighlighted() :
-			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmap() ) )
+			pixmap = self.__image._qtPixmap()
 		else :
-			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmapHighlighted() ) )
+			pixmap = self.__image._qtPixmapHighlighted()
+		
+		self._qtWidget().setIcon( QtGui.QIcon( pixmap ) )
+		self._qtWidget().setIconSize( pixmap.size() )
 	
 	def __enter( self, widget ) :
 	
