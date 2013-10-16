@@ -261,6 +261,20 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		return self.__sizeEditable
 	
+	## Note that the number of columns is not necessarily the
+	# same as the length of the list returned by getData() - for
+	# instance a V3fVectorData in the list will generate 3 columns
+	# in the UI. The columnIndex is specified taking this into account,
+	# so there are actually 3 columns indexes relating to a single
+	# V3fVectorData, and each can be shown/hidden individually.
+	def setColumnVisible( self, columnIndex, visible ) :
+	
+		self.__tableView.setColumnHidden( columnIndex, not visible )
+		
+	def getColumnVisible( self, columnIndex ) :
+	
+		return not self.__tableView.isColumnHidden( columnIndex )
+	
 	def setDragPointer( self, dragPointer ) :
 	
 		self.__dragPointer = dragPointer
