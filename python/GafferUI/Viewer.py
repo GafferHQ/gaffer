@@ -46,6 +46,10 @@ import GafferUI
 # import lazily to improve startup of apps which don't use GL functionality
 IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
+##########################################################################
+# Viewer implementation
+##########################################################################
+
 ## The Viewer provides the primary means of visualising the output
 # of Nodes. It defers responsibility for the generation of content to
 # the View classes, which are registered against specific types of
@@ -66,6 +70,9 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
+		self.__toolbarFrame = GafferUI.Frame( borderWidth = 4, borderStyle=GafferUI.Frame.BorderStyle.None )
+		self.__gadgetWidget.addOverlay( self.__toolbarFrame )
+		
 		self.__views = []
 		self.__currentView = None
 
@@ -100,6 +107,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						if self.__currentView is not None:
 							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
 							self.__currentView.__pendingUpdate = True
+							self.__currentView.__toolbar = _ViewToolbar( self.__currentView )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
@@ -108,11 +116,13 @@ class Viewer( GafferUI.NodeSetEditor ) :
 										
 		if self.__currentView is not None :	
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
+			self.__toolbarFrame.setChild( self.__currentView.__toolbar )
 			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
-				
+			self.__toolbarFrame.setChild( None )
+			
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
@@ -150,3 +160,34 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				GafferUI.EventLoop.executeOnUIThread( self.__update )
 			
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
+
+##########################################################################
+# Toolbar implementation
+##########################################################################
+
+class _ViewToolbar( GafferUI.Widget ) :
+
+	def __init__( self, view, **kw ) :
+	
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		
+		GafferUI.Widget.__init__( self, self.__row, **kw )
+		
+		for plug in view.children( Gaffer.Plug.staticTypeId() ) :
+			
+			if plug.getName().startswith( "__" ) :
+				continue
+			
+			widget = GafferUI.PlugValueWidget.create( plug )
+			if widget is None :
+				continue
+							
+			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :
+				widget = GafferUI.PlugWidget( widget )
+				
+			self.__row.append( widget )
+		
+		self.__row.insert( 0, GafferUI.Spacer( IECore.V2i( 1, 1 ) ), expand = True )
+
+GafferUI.PlugValueWidget.registerCreator( GafferUI.View.staticTypeId(), "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferUI.View.staticTypeId(), "user", None )

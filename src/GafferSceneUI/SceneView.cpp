@@ -42,6 +42,8 @@
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
 
+#include "IECoreGL/State.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/BlockedConnection.h"
 
@@ -103,14 +105,16 @@ IE_CORE_DEFINERUNTIMETYPED( SceneView );
 
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
-SceneView::SceneView()
-	:	View3D( defaultName<SceneView>(), new GafferScene::ScenePlug() ),
+SceneView::SceneView( const std::string &name )
+	:	View3D( name, new GafferScene::ScenePlug() ),
 		m_renderableGadget( new RenderableGadget )
 {
 	viewportGadget()->setChild( m_renderableGadget );
 
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
+
+	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 	
 	// add a preprocessor which removes motion blur, because the opengl
 	// renderer doesn't support it.
@@ -342,4 +346,11 @@ IECore::PathMatcherData *SceneView::expandedPaths()
 		m = getContext()->get<IECore::PathMatcherData>( "ui:scene:expandedPaths", 0 );
 	}
 	return const_cast<IECore::PathMatcherData *>( m );
+}
+
+void SceneView::baseStateChanged()
+{
+	/// \todo This isn't transferring the override state properly. Probably an IECoreGL problem.
+	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
+	m_renderableGadget->renderRequestSignal()( m_renderableGadget );
 }

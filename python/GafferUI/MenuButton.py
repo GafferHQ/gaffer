@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -65,14 +65,10 @@ class MenuButton( GafferUI.Button ) :
 	
 		if self.__menu is None :
 			return
-		
-		kw = {}
-		if self.getHasFrame() :
-			## \todo Provide this functionality in the public Widget API
-			p = self._qtWidget().mapToGlobal( QtCore.QPoint( 0, self._qtWidget().height() ) )
-			p = IECore.V2i( p.x(), p.y() )
-			kw["position"] = p
-			kw["forcePosition"] = True
-			
-		self.__menu.popup( parent = self, **kw )
-		
+				
+		b = self.bound()
+		self.__menu.popup(
+			parent = self,
+			position = IECore.V2i( b.min.x, b.max.y ),
+			forcePosition = True,
+		)

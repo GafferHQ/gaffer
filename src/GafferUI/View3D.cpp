@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,24 +35,67 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "IECore/Camera.h"
 #include "IECore/Transform.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/MatrixTransform.h"
 
-#include "Gaffer/Plug.h"
+#include "IECoreGL/Primitive.h"
+
+#include "Gaffer/CompoundPlug.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 #include "GafferUI/View3D.h"
 
 using namespace Imath;
+using namespace IECoreGL;
 using namespace Gaffer;
 using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( View3D );
 
 View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
-	:	View( name, inPlug )
+	:	View( name, inPlug ), m_baseState( new IECoreGL::State( true ) )
 {
+
+	// base state setup
+	
+	m_baseState->add( new WireframeColorStateComponent( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
+	m_baseState->add( new PointColorStateComponent( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) );
+	m_baseState->add( new IECoreGL::Primitive::PointWidth( 2.0f ) );
+
+	// plugs
+	
+	CompoundPlugPtr baseState = new CompoundPlug( "baseState" );
+	addChild( baseState );
+	
+	CompoundPlugPtr solid = new CompoundPlug( "solid" );
+	baseState->addChild( solid );
+	solid->addChild( new BoolPlug( "enabled", Plug::In, true ) );
+	solid->addChild( new BoolPlug( "override" ) );
+
+	CompoundPlugPtr wireframe = new CompoundPlug( "wireframe" );
+	baseState->addChild( wireframe );
+	wireframe->addChild( new BoolPlug( "enabled" ) );
+	wireframe->addChild( new BoolPlug( "override" ) );
+	
+	CompoundPlugPtr points = new CompoundPlug( "points" );
+	baseState->addChild( points );
+	points->addChild( new BoolPlug( "enabled" ) );
+	points->addChild( new BoolPlug( "override" ) );
+	
+	CompoundPlugPtr bound = new CompoundPlug( "bound" );
+	baseState->addChild( bound );
+	bound->addChild( new BoolPlug( "enabled" ) );
+	bound->addChild( new BoolPlug( "override" ) );
+	
+	plugSetSignal().connect( boost::bind( &View3D::plugSet, this, ::_1 ) );
+
+	// camera
+
 	IECore::CameraPtr camera = new IECore::Camera();
 	
 	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
@@ -64,4 +107,57 @@ View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
 	camera->setTransform( new IECore::MatrixTransform( matrix ) );
 	
 	viewportGadget()->setCamera( camera );
+}
+
+View3D::~View3D()
+{
+}
+
+const IECoreGL::State *View3D::baseState() const
+{
+	return m_baseState.get();
+}
+
+View3D::BaseStateChangedSignal &View3D::baseStateChangedSignal()
+{
+	return m_baseStateChangedSignal;
+}
+
+void View3D::plugSet( const Gaffer::Plug *plug )
+{
+	if( plug == getChild<Plug>( "baseState" ) )
+	{
+		updateBaseState();
+	}
+}
+
+void View3D::updateBaseState()
+{
+	const CompoundPlug *baseState = getChild<CompoundPlug>( "baseState" );
+	
+	const CompoundPlug *solid = baseState->getChild<CompoundPlug>( "solid" );
+	m_baseState->add(
+		new Primitive::DrawSolid( solid->getChild<BoolPlug>( "enabled" )->getValue() ),
+		solid->getChild<BoolPlug>( "override" )->getValue()
+	);
+
+	const CompoundPlug *wireframe = baseState->getChild<CompoundPlug>( "wireframe" );
+	m_baseState->add(
+		new Primitive::DrawWireframe( wireframe->getChild<BoolPlug>( "enabled" )->getValue() ),
+		wireframe->getChild<BoolPlug>( "override" )->getValue()
+	);
+
+	const CompoundPlug *points = baseState->getChild<CompoundPlug>( "points" );
+	m_baseState->add(
+		new Primitive::DrawPoints( points->getChild<BoolPlug>( "enabled" )->getValue() ),
+		points->getChild<BoolPlug>( "override" )->getValue()
+	);
+
+	const CompoundPlug *bound = baseState->getChild<CompoundPlug>( "bound" );
+	m_baseState->add(
+		new Primitive::DrawBound( bound->getChild<BoolPlug>( "enabled" )->getValue() ),
+		bound->getChild<BoolPlug>( "override" )->getValue()
+	);
+	
+	baseStateChangedSignal()( this );
 }

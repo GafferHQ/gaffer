@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,61 +34,72 @@
 #  
 ##########################################################################
 
-import sys
-import unittest
+import IECore
 
-import GafferTest
+import Gaffer
 import GafferUI
+import GafferUITest
 
-## A useful base class for creating test cases for the ui.
-class TestCase( GafferTest.TestCase ) :
+class GLWidgetTest( GafferUITest.TestCase ) :
+
+	def testOverlayParenting( self ) :
+	
+		w = GafferUI.Window()
+		g = GafferUI.GLWidget()
+		f = GafferUI.Frame()
+		b = GafferUI.Button()
 		
-	def tearDown( self ) :
-	
-		# Here we check that there are no Widget instances knocking
-		# around after each test has run. this provides good coverage
-		# for the Widget lifetime problems that are all too easy to
-		# create. First we clear any previous exception, as it can be
-		# holding references to widgets that were active when the exception
-		# was thrown (and unittest.TestCase will be reporting an error
-		# anyway).
-	
-		if "_ExpectedFailure" in str( sys.exc_info()[0] ) :
-			# the expected failure exception in the unittest module
-			# unhelpfully also hangs on to exceptions, so we remove
-			# that before calling exc_clear().
-			sys.exc_info()[1].exc_info = ( None, None, None )
+		w.setChild( g )
+		g.addOverlay( f )
+		f.setChild( b )
 		
-		sys.exc_clear()
-				
-		widgetInstances = self.__widgetInstances()
-		self.assertEqual( widgetInstances, [] )
+		self.assertTrue( b.parent() is f )
+		self.assertTrue( f.parent() is g )
+		self.assertTrue( g.parent() is w )
+		self.assertTrue( b.ancestor( GafferUI.GLWidget ) is g )
+		self.assertTrue( b.ancestor( GafferUI.Frame ) is f )
+		self.assertTrue( b.ancestor( GafferUI.Window ) is w )
 	
-	def waitForIdle( self, count = 1 ) :
+	def testOverlayWidgetAt( self ) :
 	
-		self.__idleCount = 0
-		def f() :
-			
-			self.__idleCount += 1
-			
-			if self.__idleCount >= count :
-				GafferUI.EventLoop.mainEventLoop().stop()
-				return False
-			
-			return True
-			
-		GafferUI.EventLoop.addIdleCallback( f )
-		GafferUI.EventLoop.mainEventLoop().start()
+		w = GafferUI.Window()
+		g = GafferUI.GLWidget()
+		f = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+		b = GafferUI.Button()
 		
-	@staticmethod
-	def __widgetInstances() :
+		w.setChild( g )
+		g.addOverlay( f )
+		f.setChild( b )
+		
+		w.setVisible( True )
+		
+		self.waitForIdle( 1000 )
+		
+		self.assertTrue( GafferUI.Widget.widgetAt( w.bound().min + IECore.V2i( 4 ) ) is b )
 	
-		result = []
-		# yes, this is accessing Widget internals. we could add a public method
-		# to the widget to expose this information, but i'd rather not add yet
-		# more methods if we can avoid it.
-		for w in GafferUI.Widget._Widget__qtWidgetOwners.values() :
-			if w() is not None :
-				result.append( w() )
+	def testOverlayBound( self ) :
 	
-		return result
+		w = GafferUI.Window()
+		g = GafferUI.GLWidget()
+		f = GafferUI.Frame()
+		b = GafferUI.Button()
+		
+		w.setChild( g )
+		g.addOverlay( f )
+		f.setChild( b )
+		
+		w.setVisible( True )
+
+		w.setPosition( IECore.V2i( 100 ) )		
+		self.waitForIdle( 1000 )
+		b1 = b.bound()
+		
+		w.setPosition( IECore.V2i( 200 ) )		
+		self.waitForIdle( 1000 )
+		b2 = b.bound()
+		
+		self.assertEqual( b2.min, b1.min + IECore.V2i( 100 ) )
+		self.assertEqual( b2.max, b1.max + IECore.V2i( 100 ) )
+	
+if __name__ == "__main__":
+	unittest.main()

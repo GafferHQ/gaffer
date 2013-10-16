@@ -345,6 +345,10 @@ class WidgetTest( GafferUITest.TestCase ) :
 		b = GafferUI.Button()
 		w.setChild( b )
 		w.setVisible( True )
+				
+		w.setPosition( IECore.V2i( 100 ) )
+
+		self.waitForIdle( 1000 )
 		
 		wb = w.bound()
 		bb = b.bound()
@@ -384,6 +388,27 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		w.setHighlighted( False )
 		self.assertEqual( w.getHighlighted(), False )
+	
+	def testWidgetAt( self ) :
+	
+		with GafferUI.Window() as w1 :
+			t1 = GafferUI.TextWidget( "hello" )
+			
+		with GafferUI.Window() as w2 :
+			t2 = GafferUI.TextWidget( "hello" )
+		
+		w1.setVisible( True )
+		w2.setVisible( True )
+			
+		w1.setPosition( IECore.V2i( 100 ) )		
+		w2.setPosition( IECore.V2i( 300 ) )
+	
+		self.waitForIdle( 1000 )
+	
+		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center() ) is t1 )
+		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center() ) is t2 )
+		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center(), widgetType=GafferUI.Window ) is w1 )
+		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center(), widgetType=GafferUI.Window ) is w2 )
 		
 if __name__ == "__main__":
 	unittest.main()

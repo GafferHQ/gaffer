@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -54,10 +54,10 @@ class SceneView : public GafferUI::View3D
 
 	public :
 
-		SceneView();
+		SceneView( const std::string &name = defaultName<SceneView>() );
 		virtual ~SceneView();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View3D );
 		
 	protected :
 
@@ -75,6 +75,8 @@ class SceneView : public GafferUI::View3D
 		IECore::PathMatcherData *expandedPaths();
 		
 		boost::signals::scoped_connection m_selectionChangedConnection;
+		
+		void baseStateChanged();
 		
 		GafferUI::RenderableGadgetPtr m_renderableGadget;
 	

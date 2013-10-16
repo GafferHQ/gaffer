@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,61 +34,48 @@
 #  
 ##########################################################################
 
-import sys
-import unittest
+import IECore
 
-import GafferTest
+import Gaffer
+
 import GafferUI
 
-## A useful base class for creating test cases for the ui.
-class TestCase( GafferTest.TestCase ) :
+class _BaseStatePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
+	
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+	
+	def hasLabel( self ) :
+	
+		return True
 		
-	def tearDown( self ) :
+	def _updateFromPlug( self ) :
 	
-		# Here we check that there are no Widget instances knocking
-		# around after each test has run. this provides good coverage
-		# for the Widget lifetime problems that are all too easy to
-		# create. First we clear any previous exception, as it can be
-		# holding references to widgets that were active when the exception
-		# was thrown (and unittest.TestCase will be reporting an error
-		# anyway).
-	
-		if "_ExpectedFailure" in str( sys.exc_info()[0] ) :
-			# the expected failure exception in the unittest module
-			# unhelpfully also hangs on to exceptions, so we remove
-			# that before calling exc_clear().
-			sys.exc_info()[1].exc_info = ( None, None, None )
+		pass
 		
-		sys.exc_clear()
-				
-		widgetInstances = self.__widgetInstances()
-		self.assertEqual( widgetInstances, [] )
+	def __menuDefinition( self ) :
 	
-	def waitForIdle( self, count = 1 ) :
-	
-		self.__idleCount = 0
-		def f() :
-			
-			self.__idleCount += 1
-			
-			if self.__idleCount >= count :
-				GafferUI.EventLoop.mainEventLoop().stop()
-				return False
-			
-			return True
-			
-		GafferUI.EventLoop.addIdleCallback( f )
-		GafferUI.EventLoop.mainEventLoop().start()
+		m = IECore.MenuDefinition()
 		
+		for n in [ "solid", "wireframe", "points" ] :
+			plug = self.getPlug()[n]["enabled"]
+			m.append(
+				"/" + n.capitalize(),
+				{
+					"command" : IECore.curry( _BaseStatePlugValueWidget.__togglePlug, plug=plug ),
+					"checkBox" : plug.getValue(),
+				}
+			)
+		
+		return m
+	
 	@staticmethod
-	def __widgetInstances() :
+	def __togglePlug( menu, plug ) :
 	
-		result = []
-		# yes, this is accessing Widget internals. we could add a public method
-		# to the widget to expose this information, but i'd rather not add yet
-		# more methods if we can avoid it.
-		for w in GafferUI.Widget._Widget__qtWidgetOwners.values() :
-			if w() is not None :
-				result.append( w() )
-	
-		return result
+		plug.setValue( not plug.getValue() )
+		
+GafferUI.PlugValueWidget.registerCreator( GafferUI.View3D.staticTypeId(), "baseState", _BaseStatePlugValueWidget )

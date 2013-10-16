@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -48,11 +48,29 @@ class View3D : public View
 	public :
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::View3D, View3DTypeId, View );
+
+		virtual ~View3D();
 			
 	protected :
 
 		View3D( const std::string &name, Gaffer::PlugPtr input );
-					
+		
+		/// The GL state to be used by derived classes when drawing. This
+		/// is defined by the user via plugs on the view.
+		const IECoreGL::State *baseState() const;
+		/// A signal emitted when the base state has changed.
+		typedef boost::signal<void ( View3D * )> BaseStateChangedSignal;
+		BaseStateChangedSignal &baseStateChangedSignal();
+	
+	private :
+	
+		void plugSet( const Gaffer::Plug *plug );
+		
+		void updateBaseState();
+	
+		IECoreGL::StatePtr m_baseState;
+		BaseStateChangedSignal m_baseStateChangedSignal;
+						
 };
 
 } // namespace GafferUI
