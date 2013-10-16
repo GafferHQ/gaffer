@@ -96,18 +96,24 @@ AlembicSource::~AlembicSource()
 {
 }
 
-void AlembicSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AlembicSource::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	FileSource::hash( output, context, h );
-	if(
-		output == outPlug()->boundPlug() ||
-		output == outPlug()->transformPlug() ||
-		output == outPlug()->objectPlug()
-	 )
-	{
-		h.append( context->getFrame() );
-	}
+	FileSource::hashBound( path, context, parent, h );
+	h.append( context->getFrame() );
 }
+
+void AlembicSource::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashTransform( path, context, parent, h );
+	h.append( context->getFrame() );
+}
+
+void AlembicSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashObject( path, context, parent, h );
+	h.append( context->getFrame() );
+}
+
 
 Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
