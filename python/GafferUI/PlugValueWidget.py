@@ -407,6 +407,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if self.getReadOnly() :
 			return False
 
+		if isinstance( event.sourceWidget, GafferUI.PlugValueWidget ) :
+			sourcePlugValueWidget = event.sourceWidget
+		else :
+			sourcePlugValueWidget = event.sourceWidget.ancestor( GafferUI.PlugValueWidget )
+
+		if sourcePlugValueWidget is not None and sourcePlugValueWidget.getPlug().isSame( self.getPlug() ) :
+			return False
+		
 		if isinstance( event.data, Gaffer.Plug ) :
 			if self.getPlug().acceptsInput( event.data ) :
 				self.setHighlighted( True )
