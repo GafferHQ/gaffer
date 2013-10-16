@@ -112,17 +112,45 @@ void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::M
 		else if( output == scenePlug->transformPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			hashTransform( scenePath, context, scenePlug, h );
+			if( scenePath.empty() )
+			{
+				// the result of compute() will actually be different if we're at the root, so
+				// we hash an identity M44fData:
+				h.append( IECore::M44fData::staticTypeId() );
+				h.append( Imath::M44f() );
+			}
+			else
+			{
+				hashTransform( scenePath, context, scenePlug, h );
+			}
 		}
 		else if( output == scenePlug->attributesPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			hashAttributes( scenePath, context, scenePlug, h );
+			if( scenePath.empty() )
+			{
+				// the result of compute() will actually be different if we're at the root, so
+				// we just hash the default value:
+				scenePlug->attributesPlug()->defaultValue()->hash( h );
+			}
+			else
+			{
+				hashAttributes( scenePath, context, scenePlug, h );
+			}
 		}
 		else if( output == scenePlug->objectPlug() )
 		{
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			hashObject( scenePath, context, scenePlug, h );
+			if( scenePath.empty() )
+			{
+				// the result of compute() will actually be different if we're at the root, so
+				// we just hash the default value:
+				scenePlug->objectPlug()->defaultValue()->hash( h );
+			}
+			else
+			{
+				hashObject( scenePath, context, scenePlug, h );
+			}
 		}
 		else if( output == scenePlug->childNamesPlug() )
 		{
