@@ -146,6 +146,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__emittingButtonPress = False
 		self.__buttonPressConnection = self.__tableViewHolder.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.__buttonReleaseConnection = self.__tableViewHolder.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__mouseMoveConnection = self.__tableViewHolder.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 		self.__dragBeginConnection = self.__tableViewHolder.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndConnection = self.__tableViewHolder.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
@@ -502,6 +503,15 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__emitButtonPress( self.__borrowedButtonPress )
 			self.__borrowedButtonPress = None
 			
+		return False
+	
+	def __mouseMove( self, widget, event ) :
+	
+		if event.buttons :
+			# take the event so that the underlying QTableView doesn't
+			# try to do drag-selection, which would ruin our own upcoming drag.
+			return True
+		
 		return False
 		
 	def __dragBegin( self, widget, event ) :
