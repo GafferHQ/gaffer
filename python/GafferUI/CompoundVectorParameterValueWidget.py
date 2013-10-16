@@ -99,7 +99,13 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		
 		self.__vectorDataWidget.setData( data )
 		self.__vectorDataWidget.setEditable( self._editable() )
-					
+		
+		for columnIndex, childParameter in enumerate( self._parameter().values() ) :
+			columnVisible = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				columnVisible = childParameter.userData()["UI"]["visible"].value
+			self.__vectorDataWidget.setColumnVisible( columnIndex, columnVisible )
+				
 	def __dataChanged( self, vectorDataWidget ) :
 	
 		data = vectorDataWidget.getData()
