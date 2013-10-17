@@ -1901,6 +1901,9 @@ class _EventFilter( QtCore.QObject ) :
 			# so we fix that.
 			self.__lastButtonPressWidget = None
 			return False
+	
+		if ( self.__lastButtonPressEvent.line.p0 - self.__positionToLine( qEvent.pos() ).p0 ).length() < 3 :
+			return False
 			
 		sourceWidget = self.__lastButtonPressWidget()
 		if sourceWidget is None :

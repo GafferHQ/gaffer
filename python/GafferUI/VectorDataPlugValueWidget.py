@@ -55,6 +55,11 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def vectorDataWidget( self ) :
 	
 		return self.__dataWidget
+	
+	def setHighlighted( self, highlighted ) :
+	
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+		self.vectorDataWidget().setHighlighted( highlighted )		
 		
 	def _updateFromPlug( self ) :
 				
