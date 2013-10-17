@@ -138,6 +138,25 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		
 		self.assertTrue( s["add2"]["op1"].getInput().isSame( s["add4"]["sum"] ) )
 		self.assertTrue( s["add3"]["op1"].getInput().isSame( s["add4"]["sum"] ) )
+	
+	def testConnectNodeInStreamWithInvisibleOutputs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		s["add4"] = GafferTest.AddNode()
+		
+		s["add2"]["op1"].setInput( s["add1"]["sum"] )
+		
+		add3 = GafferTest.AddNode()
+		add3["op1"].setInput( s["add1"]["sum"] )
+		
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["add4"], Gaffer.StandardSet( [ s["add1"] ] ) )
+		
+		self.assertTrue( s["add2"]["op1"].getInput().isSame( s["add4"]["sum"] ) )
+		self.assertTrue( add3["op1"].getInput().isSame( s["add1"]["sum"] ) )
 		
 	def testConnectNodeToMultipleInputsDoesntInsertInStream( self ) :
 	

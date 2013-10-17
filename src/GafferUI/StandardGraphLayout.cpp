@@ -300,6 +300,17 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			Plug::OutputContainer outputs = firstConnectionSrc->outputs();
 			for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
 			{
+				// ignore outputs that aren't visible:
+				NodeGadget *nodeGadget = graph->nodeGadget( (*it)->node() );
+				if( !nodeGadget )
+				{
+					continue;
+				}
+				if( !nodeGadget->nodule( *it ) )
+				{
+					continue;
+				}
+				
 				if( !(*it)->acceptsInput( correspondingOutput ) )
 				{
 					allCompatible = false;
@@ -309,10 +320,20 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			
 			if( allCompatible )
 			{
-				for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); )
+				for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
 				{
+					// ignore outputs that aren't visible:
+					NodeGadget *nodeGadget = graph->nodeGadget( (*it)->node() );
+					if( !nodeGadget )
+					{
+						continue;
+					}
+					if( !nodeGadget->nodule( *it ) )
+					{
+						continue;
+					}
+					
 					Plug *p = *it;
-					++it; // increment now because it gets invalidated by the setInput().
 					if( p != firstConnectionDst )
 					{
 						p->setInput( correspondingOutput );
