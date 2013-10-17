@@ -127,6 +127,9 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			# in a position to deal with the interaction of the two
 			# causes of read-onlyness.
 			plugValueWidget.setReadOnly( readOnly )
+			plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
+			if plugWidget is not None :
+				plugWidget.labelPlugValueWidget().setReadOnly( readOnly )
 	
 	## The header for the ui is a vertical ListContainer. Derived classes may
 	# access it using this method in order to add their own header items.
