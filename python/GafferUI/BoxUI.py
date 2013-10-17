@@ -166,7 +166,10 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	if box.canPromotePlug( plug ) :
 		
 		menuDefinition.append( "/BoxDivider", { "divider" : True } )
-		menuDefinition.append( "/Promote to %s" % box.getName(), { "command" : IECore.curry( __promoteToBox, box, plug ) } )
+		menuDefinition.append( "/Promote to %s" % box.getName(), {
+			"command" : IECore.curry( __promoteToBox, box, plug ),
+			"active" : not plugValueWidget.getReadOnly(),
+		} )
 
 	elif box.plugIsPromoted( plug ) :
 	
@@ -176,6 +179,9 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			menuDefinition.remove( "/Remove input" )
 			
 		menuDefinition.append( "/BoxDivider", { "divider" : True } )
-		menuDefinition.append( "/Unpromote from %s" % box.getName(), { "command" : IECore.curry( __unpromoteFromBox, box, plug ) } )
+		menuDefinition.append( "/Unpromote from %s" % box.getName(), {
+			"command" : IECore.curry( __unpromoteFromBox, box, plug ),
+			"active" : not plugValueWidget.getReadOnly(),
+		} )
 			
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

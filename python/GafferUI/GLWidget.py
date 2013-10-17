@@ -133,6 +133,8 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		QtGui.QGraphicsView.__init__( self )
 		
 		self.setObjectName( "gafferGLWidget" )
+		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		
 		glWidget = self.__createQGLWidget( format )
 				
@@ -146,6 +148,23 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 			self.viewport().makeCurrent()
 			GafferUI.Widget._owner( self )._resize( IECore.V2i( event.size().width(), event.size().height() ) )
 
+	def keyPressEvent( self, event ) :
+				
+		# We have to reimplement this method to prevent QAbstractScrollArea
+		# from stealing the cursor keypresses, preventing them from
+		# being used by GLWidget subclasses. QAbstractScrollArea uses
+		# those keypresses to move the scrollbars, but we don't want the
+		# scrolling functionality at all. Our implementation of this method
+		# is functionally identical to the QGraphicsView one, except it
+		# passes unused events to QFrame, bypassing QAbstractScrollArea.
+			
+		if self.scene() is not None and self.isInteractive() :
+			QtGui.QApplication.sendEvent( self.scene(), event )
+			if event.isAccepted() :
+				return
+				
+		QtGui.QFrame.keyPressEvent( self, event )
+	
 	# We keep a single hidden widget which owns the texture and display lists
 	# and then share those with all the widgets we really want to make.
 	__shareWidget = None
