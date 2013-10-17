@@ -105,6 +105,12 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			return WrappedType::enabledPlug();
 		}
 		
+		virtual const Gaffer::BoolPlug *enabledPlug() const
+		{
+			// Better to make an ugly cast than repeat the implementation of the non-const version.
+			return const_cast<DependencyNodeWrapper *>( this )->enabledPlug();
+		}
+		
 		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output )
 		{
 			IECorePython::ScopedGILLock gilLock;
