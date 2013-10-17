@@ -149,10 +149,18 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		if compoundNumericPlugValueWidget.getPlug().isGanged() :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
-			menuDefinition.append( "/Ungang", { "command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ), "shortCut" : "Ctrl+G", } )		
+			menuDefinition.append( "/Ungang", {
+				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ),
+				"shortCut" : "Ctrl+G",
+				"active" : not plugValueWidget.getReadOnly(),
+			} )
 		elif compoundNumericPlugValueWidget.getPlug().canGang() :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
-			menuDefinition.append( "/Gang", { "command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ), "shortCut" : "Ctrl+G", } )	
+			menuDefinition.append( "/Gang", {
+				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ),
+				"shortCut" : "Ctrl+G",
+				"active" : not plugValueWidget.getReadOnly(),
+			} )
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu )			
 	
