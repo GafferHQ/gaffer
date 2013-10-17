@@ -42,8 +42,6 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-
 class NodeGraph( GafferUI.EditorWidget ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -63,14 +61,12 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
 		self.__frame( scriptNode.selection() )		
 
-		self.__buttonPressConnection = self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__buttonDoubleClickConnection = self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
-		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
-		
-		self.__gadgetWidget._qtWidget().installEventFilter( _eventFilter )
-		
+		self.__buttonPressConnection = self.__gadgetWidget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__keyPressConnection = self.__gadgetWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__buttonDoubleClickConnection = self.__gadgetWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.__dragEnterConnection = self.__gadgetWidget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dropConnection = self.__gadgetWidget.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+				
 		self.__nodeMenu = None
 		
 	## Returns the internal GadgetWidget holding the GraphGadget.	
@@ -228,7 +224,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			# generally we steal focus on mouse enter (implemented in GadgetWidget),
 			# but when the node menu closes we may not get an enter event, so we have to steal
 			# the focus back here.
-			self._qtWidget().setFocus()
+			self.__gadgetWidget._qtWidget().setFocus()
 	
 	def __buttonPress( self, widget, event ) :
 				
@@ -299,7 +295,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			if isinstance( root, Gaffer.Box ) :
 				self.graphGadget().setRoot( root.parent() )
 				return True
-				
+		elif event.key == "Tab" :
+			self._nodeMenu().popup( self )
+			return True
+	
 		return False
 		
 	def __frame( self, nodes ) :
@@ -420,23 +419,5 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			node.enabledPlug().setValue( value )
-
-## Used to capture TAB input since it doesn't make it through to the keyPressSignal
-## \todo: investigate this further. TextWidget does receive TAB in keyPressSignal
-class _EventFilter( QtCore.QObject ) :
-	
-	def eventFilter( self, qObject, qEvent ) :
-		
-		if qEvent.type() == QtCore.QEvent.KeyPress and qEvent.key() == QtCore.Qt.Key_Tab :
-			
-			nodeGraph = GafferUI.Widget._owner( qObject ).ancestor( NodeGraph )
-			if nodeGraph :
-				nodeGraph._nodeMenu().popup( nodeGraph )
-				return True
-		
-		return False
-
-# this single instance is used by all widgets
-_eventFilter = _EventFilter()
 
 GafferUI.EditorWidget.registerType( "NodeGraph", NodeGraph )

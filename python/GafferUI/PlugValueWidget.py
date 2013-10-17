@@ -207,7 +207,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if self.getPlug().getInput() is not None :
 			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
 			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
-			menuDefinition.append( "/Remove input", { "command" : Gaffer.WeakMethod( self.__removeInput ) } )
+			menuDefinition.append(
+				"/Remove input", {
+					"command" : Gaffer.WeakMethod( self.__removeInput ),
+					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly(),
+				}
+			)
 		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
 			menuDefinition.append(
 				"/Default", {
