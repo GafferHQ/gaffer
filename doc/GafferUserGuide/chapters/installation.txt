@@ -1,7 +1,7 @@
 == Installation anchor:installation_installation[]
 
 === Linux anchor:installation_linux[]
-To install a pre-built package, simply download and untar the latest bundle from +++<a href="https://github.com/ImageEngine/gaffer/releases">the project site</a>+++. The resulting directory will contain the complete application ready to run.
+To install a pre-built release, simply download and un-package the latest bundle from +++<a href="https://github.com/ImageEngine/gaffer/releases">the project site</a>+++. The resulting directory will contain the complete application ready to run.
 
 Add the following location within the Gaffer directory to your `$PATH` environment variable (substituting `<GAFFER_INSTALL_PATH>` with the path to the unpacked directory):
 
