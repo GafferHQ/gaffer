@@ -153,6 +153,12 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 	return str( path )
 
 ##########################################################################
+# Nodules
+##########################################################################
+
+GafferUI.Nodule.registerNodule( Gaffer.Reference.staticTypeId(), "fileName", lambda plug : None )
+
+##########################################################################
 # Metadata
 ##########################################################################
 

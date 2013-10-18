@@ -79,11 +79,6 @@ Nodule::NamedCreatorMap &Nodule::namedCreators()
 
 NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 {
-	if( !plug->getFlags( Gaffer::Plug::AcceptsInputs ) )
-	{
-		return 0;
-	}
-
 	Gaffer::ConstNodePtr node = plug->node();
 	if( node )
 	{
