@@ -238,5 +238,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	"paths",
 	__pathsPlugWidgetCreator,
 )
-
-GafferUI.Nodule.registerNodule( GafferScene.PathFilter.staticTypeId(), "paths", lambda plug : None )

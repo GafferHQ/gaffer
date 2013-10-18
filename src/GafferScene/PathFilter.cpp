@@ -55,7 +55,10 @@ PathFilter::PathFilter( const std::string &name )
 	:	Filter( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData() ) );
+	// we don't allow inputs to the paths plug, because then the paths could vary
+	// from computation to computation - resulting in nonsense as far as descendant
+	// matches go.
+	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData(), Plug::Default & ~Plug::AcceptsInputs ) );
 
 	plugSetSignal().connect( boost::bind( &PathFilter::plugSet, this, ::_1 ) );
 }

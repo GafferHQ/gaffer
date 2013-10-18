@@ -98,7 +98,15 @@ class PathFilterTest( unittest.TestCase ) :
 			for path in paths :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 				self.assertTrue( f["match"].getValue() & f.Result.ExactMatch )
+	
+	def testInputsDenied( self ) :
+	
+		f = GafferScene.PathFilter()
+		p = Gaffer.StringVectorDataPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.StringVectorData() )
+		self.failIf( f["paths"].acceptsInput( p ) )
 		
+		self.failUnless( f["paths"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
+	
 	def testBox( self ) :
 	
 		s = Gaffer.ScriptNode()
