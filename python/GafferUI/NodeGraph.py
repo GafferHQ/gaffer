@@ -356,8 +356,12 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			
 	def __drop( self, widget, event ) :
 	
+		if event.sourceWidget is self.__gadgetWidget :
+			return False
+			
 		self.__frame( self.__dropNodes( event.data ) )
-	
+		return True
+		
 	def __dropNodes( self, dragData ) :
 	
 		if isinstance( dragData, Gaffer.Node ) :
