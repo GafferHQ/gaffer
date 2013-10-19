@@ -170,6 +170,12 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 		if( n && ( inputPlug == n->outPlug() || n->outPlug()->isAncestorOf( inputPlug ) ) )
 		{
 			h.append( network.shaderHash( n ) );
+			if( inputPlug != n->outPlug() )
+			{
+				// shader has multiple outputs - we need to make sure the particular
+				// output in question is taken into account by the hash.
+				h.append( inputPlug->relativeName( n->outPlug() ) );
+			}
 			return;
 		}
 		// fall through to hash plug value

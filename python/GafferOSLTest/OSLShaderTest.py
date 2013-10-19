@@ -217,6 +217,22 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		h3 = n.stateHash()
 		self.assertNotEqual( h1, h3 )
 		self.assertNotEqual( h2, h3 )
+	
+	def testOutputPlugAffectsHash( self ) :
+	
+		globals = GafferOSL.OSLShader()
+		globals.loadShader( "utility/globals" )
+		
+		buildColor = GafferOSL.OSLShader()
+		buildColor.loadShader( "utility/buildColor" )
+		
+		buildColor["parameters"]["r"].setInput( globals["out"]["globalU"] )
+		h1 = buildColor.stateHash()
+		
+		buildColor["parameters"]["r"].setInput( globals["out"]["globalV"] )
+		h2 = buildColor.stateHash()
+		
+		self.assertNotEqual( h1, h2 )
 		
 if __name__ == "__main__":
 	unittest.main()
