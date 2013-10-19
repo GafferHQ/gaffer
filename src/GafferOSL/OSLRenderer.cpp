@@ -728,6 +728,7 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	
 	const float *u = varyingValue<float>( points, "u" );
 	const float *v = varyingValue<float>( points, "v" );
+	const V3f *n = varyingValue<V3f>( points, "N" );
 		
 	/// \todo Get the other globals - match the uniform list
 	
@@ -754,6 +755,10 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 		if( v )
 		{
 			shaderGlobals.v = *v++;
+		}
+		if( n )
+		{
+			shaderGlobals.N = *n++;
 		}
 		
 		shaderGlobals.Ci = NULL;
