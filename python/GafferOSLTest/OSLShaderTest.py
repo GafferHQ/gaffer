@@ -233,6 +233,16 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		h2 = buildColor.stateHash()
 		
 		self.assertNotEqual( h1, h2 )
+	
+	def testCantConnectVectorToColor( self ) :
+	
+		globals = GafferOSL.OSLShader()
+		globals.loadShader( "utility/globals" )
+		
+		constant = GafferOSL.OSLShader()
+		constant.loadShader( "surface/constant" )
+		
+		self.assertFalse( constant["parameters"]["Cs"].acceptsInput( globals["out"]["globalP"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
