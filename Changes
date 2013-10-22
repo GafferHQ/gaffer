@@ -1,3 +1,60 @@
+# 0.84.0
+
+#### UI
+
+- Added shift+drag of node to panel to create duplicate editor (#575).
+- Added HSV readout for pixel below mouse in image viewer (#576).
+- Improved the UI for Attributes and Options, to distinguish between the boolean used to enable a setting and the boolean used to define the value (#65).
+- Fixed unwanted scaling of Button images.
+- Added a toolbar to the viewer, initially with only a single button for specifying the 3D display style (#114).
+- Improved MenuButton menu positioning.
+- Fixed bug where searchable menus kept keyboard focus after closing.
+- Fixed focus stealing problems apparent in Viewer and NodeGraph. They still take focus on mouse enter, but will not steal focus from text entry widgets (#555, #439).
+- Added per-column visibility for CompoundVectorParameterValueWidget. Visibility is specified using the standard ["UI"]["visible"] userData entries on the child parameters which provide the columns (#526).
+- Stopped plug controls accepting drags from themselves. This was causing trouble for users who were accidentally dragging and dropping a single line from a PathVectorDataPlugValueWidget onto itself, thus removing all the other lines.
+- Added drag start threshold, to make it harder to accidentally start a drag (#593).
+- Disabled "Remove input" menu item for read only plugs and uis.
+- Disabled Box promotion menus on read only UIs (#604).
+- Disabled ganging menu items for read only UIs.
+- Stopped standard graph layout reconnecting invisible nodes.
+
+#### Scene
+
+- Prevented rogue connections being made to Shader "parameters" Plug.
+- Fixed bugs in computing hashes for transform, object and attributes at the scene root.
+
+#### OSL
+
+- Added support for struct parameters.
+- Added shaders for doing basic vector arithmetic.
+- Added support for N global variable in OSLRenderer.
+- Fixed OSLShader hash bug. Because OSL shaders are the first shader type we've supported where a single shader can have multiple outputs, we weren't taking into account _which_ particular output was connected when computing the hash.
+- Prevented vector->color connections for OSLShader nodes. OSL itself doesn't allow such connections so we mustn't either. Also added a vectorToColor shader to help work around the restriction.
+
+#### Documentation
+
+- Started versioning documentation releases - they follow the app release version.
+- Changed modifier key styling in documentation content to match that used in interface.
+- NodeEditor content expanded.
+- NodeGraph content expanded.
+- New images.
+- New screen grab setups.
+- Simplified example light shader.
+
+#### API
+
+- Renamed CheckBox to BoolWidget and added different display modes. CheckBox remains as an alias to BoolWidget for backwards compatibility.
+- Added stream insertion operator for GafferScene::ScenePlug::ScenePath.
+- Fixed RunTimeTyped declaration for SceneView. It was declared as deriving from View rather than View3D.
+- Fixed bug in Widget.widgetAt().
+- Added widget overlays to GLWidget. This allows any Widget subclass to be displayed as an overlay on top of the OpenGL contents.
+- Added setColumnVisible/getColumnVisible methods to VectorDataWidget.
+- Implemented VectorDataPlugValueWidget.setHighlighted().
+- Fixed StandardNodeUI.setReadOnly() to properly affect plug labels.
+- Implemented setPlug on a SectionedCompoundDataPlugValueWidget.
+- Fixed DependencyNode::enabledPlug() python bindings.
+- Added python binding for ValuePlug::setFrom().
+
 # 0.83.0
 
 #### UI
