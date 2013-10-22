@@ -185,6 +185,9 @@ class SceneTestCase( GafferTest.TestCase ) :
 			with c :
 				if ( not pathsToIgnore ) or ( self.__pathToString( scenePath ) not in pathsToIgnore ) :
 					for childPlugName in childPlugNames :
+						if len( scenePath ) == 0 and childPlugName in [ "attributes", "object", "transform" ]:
+							# hashes will automatically be equal for these plugs at the root
+							continue
 						self.assertNotEqual( scenePlug1[childPlugName].hash(), scenePlug2[childPlugName].hash() )
 				childNames = scenePlug1["childNames"].getValue() or []
 				for childName in childNames :

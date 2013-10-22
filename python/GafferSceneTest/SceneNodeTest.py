@@ -92,5 +92,66 @@ class SceneNodeTest( GafferTest.TestCase ) :
 	
 		self.assertDefaultNamesAreCorrect( GafferScene )
 
+	def testRootAttributes( self ) :
+		
+		# create node inheriting from SceneNode:
+		node = GafferScene.CustomAttributes()
+		node["attributes"].addOptionalMember( "user:foobar", True, enabled = True )
+		
+		# scene nodes always have passthrough behaviour for attributes at the root, so this particular one should return an empty compound object:
+		context = Gaffer.Context()
+		context.set( "scene:path", IECore.InternedStringVectorData([]) )
+		with context:
+			self.assertEqual( node["out"]["attributes"].getValue(), IECore.CompoundObject() )
+		
+		# unless the caching system is misbehaving, it should return the attribute values we asked for at other locations:
+		context.set( "scene:path", IECore.InternedStringVectorData(["yup"]) )
+		with context:
+			self.assertEqual( node["out"]["attributes"].getValue(), IECore.CompoundObject({'user:foobar':IECore.BoolData( 1 )}) )
+	
+	def testRootObject( self ):
+		
+		# okie dokie - create a sphere node and check it's generating a sphere in the correct place:
+		sphere = GafferScene.Sphere()
+		
+		context = Gaffer.Context()
+		context.set("scene:path", IECore.InternedStringVectorData(["sphere"]) )
+		with context:
+			self.assertEqual( sphere["out"]["object"].getValue().typeId(), IECore.MeshPrimitive.staticTypeId() )
+		
+		# right, now subtree it. If the cache is behaving itself, then there shouldn't be an object at the root of the
+		# resulting scene, cuz that aint allowed.
+		subTree = GafferScene.SubTree()
+		subTree["in"].setInput( sphere["out"] )
+		subTree["root"].setValue("sphere")
+		context.set("scene:path", IECore.InternedStringVectorData([]) )
+		with context:
+			self.assertEqual( subTree["out"]["object"].getValue().typeId(), IECore.NullObject.staticTypeId() )
+	
+	def testRootTransform( self ):
+		
+		# okie dokie - create a sphere node and check it's generating a sphere in the correct place:
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"]["x"].setValue( 1.0 )
+		sphere["transform"]["translate"]["y"].setValue( 2.0 )
+		sphere["transform"]["translate"]["z"].setValue( 3.0 )
+		
+		context = Gaffer.Context()
+		context.set("scene:path", IECore.InternedStringVectorData(["sphere"]) )
+		with context:
+			self.assertEqual( sphere["out"]["transform"].getValue(), IECore.M44f.createTranslated( IECore.V3f( 1,2,3 ) ) )
+		
+		# right, now subtree it. If the cache is behaving itself, then the transform at the root of the
+		# resulting scene should be set to identity.
+		subTree = GafferScene.SubTree()
+		subTree["in"].setInput( sphere["out"] )
+		subTree["root"].setValue("sphere")
+		context.set("scene:path", IECore.InternedStringVectorData([]) )
+		with context:
+			self.assertEqual( subTree["out"]["transform"].getValue(), IECore.M44f() )
+	
+	
+	
 if __name__ == "__main__":
 	unittest.main()
+
