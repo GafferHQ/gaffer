@@ -175,6 +175,10 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		result = cls.__createMayaQGLWidget( format )
 		if result is not None :
 			return result
+			
+		result = cls.__createHoudiniQGLWidget( format )
+		if result is not None :
+			return result
 		
 		# and if it wasn't necessary, just breathe a sigh of relief
 		# and make a nice normal one.
@@ -182,26 +186,20 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 			cls.__shareWidget = QtOpenGL.QGLWidget()
 			
 		return QtOpenGL.QGLWidget( format, shareWidget = cls.__shareWidget )
-			
-	@classmethod
-	def __createMayaQGLWidget( cls, format ) :
 	
-		# We want to be able to share OpenGL resources between gaffer uis
-		# and maya viewport uis, because IECoreGL will be used in both.
-		# So we implement our own QGLContext class which creates a context
-		# which shares with maya.
-				
-		try :
-			import maya.OpenMayaRender
-		except ImportError :
-			# we're not in maya - createQGLWidget() will just make a
-			# normal widget.
-			return None
+	@classmethod
+	def __createHostedQGLWidget( cls, format, hostContextActivator ) :
+	
+		# When running Gaffer embedded in a host application such as Maya
+		# or Houdini, we want to be able to share OpenGL resources between
+		# gaffer uis and host viewport uis, because IECoreGL will be used
+		# in both. So we implement our own QGLContext class which creates a
+		# context which shares with the host.
 
 		import OpenGL.GLX
 		
 		# This is our custom context class which allows us to share gl
-		# resources with maya's contexts. We define it in here rather than
+		# resources with the hosts's contexts. We define it in here rather than
 		# at the top level because we want to import QtOpenGL lazily and
 		# don't want to trigger a full import until the last minute.
 		## \todo Call glXDestroyContext appropriately, although as far as I
@@ -209,14 +207,15 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		# in reset(), but that's not virtual, and we can't store it in d->cx
 		# (which is what the base class destroys) because that's entirely
 		# on the C++ side of things.
-		class MayaGLContext( QtOpenGL.QGLContext ) :
+		class HostedGLContext( QtOpenGL.QGLContext ) :
 		
-			def __init__( self, format, paintDevice ) :
+			def __init__( self, format, paintDevice, hostContextActivator ) :
 			
 				QtOpenGL.QGLContext.__init__( self, format, paintDevice )
 				
 				self.__paintDevice = paintDevice
 				self.__context = None
+				self.__hostContextActivator = hostContextActivator
 		
 			def chooseContext( self, shareContext ) :
 				
@@ -226,12 +225,11 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 				# QGLWidget::setContext() accesses it directly, and will crash if we don't.
 				QtOpenGL.QGLContext.chooseContext( self, shareContext )
 
-				# Get maya's global resource context - we'll create our context
-				# to be sharing with this one.
-				import maya.OpenMayaRender
-				mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
-				mayaRenderer.makeResourceContextCurrent( mayaRenderer.backEndString() )
-				mayaResourceContext = OpenGL.GLX.glXGetCurrentContext()
+				# Get the host's main OpenGL context. It is the responsibility
+				# of the hostContextActivator passed to __init__ to make the host
+				# context current so we can access it.
+				self.__hostContextActivator()
+				hostContext = OpenGL.GLX.glXGetCurrentContext()
 				self.__display = OpenGL.GLX.glXGetCurrentDisplay()
 				
 				# Get a visual - we let the base class figure this out, but then we need
@@ -242,9 +240,9 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 				
 				# Make our context.
 				self.__context = OpenGL.GLX.glXCreateContext(
-					OpenGL.GLX.glXGetCurrentDisplay()[0],
+					self.__display[0],
 					visual,
-					OpenGL.GLX.glXGetCurrentContext(),
+					hostContext,
 					True
 				)
 
@@ -256,8 +254,34 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 				assert( success )
 				
 		result = QtOpenGL.QGLWidget()
-		result.setContext( MayaGLContext( format, result ) )
+		result.setContext( HostedGLContext( format, result, hostContextActivator ) )
 		return result
+				
+	@classmethod
+	def __createMayaQGLWidget( cls, format ) :
+	
+		try :
+			import maya.OpenMayaRender
+		except ImportError :
+			# we're not in maya - createQGLWidget() will just make a
+			# normal widget.
+			return None
+
+		mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
+		return cls.__createHostedQGLWidget( format, IECore.curry( mayaRenderer.makeResourceContextCurrent, mayaRenderer.backEndString() ) )
+		
+	@classmethod
+	def __createHoudiniQGLWidget( cls, format ) :
+					
+		try :
+			import hou
+		except ImportError :
+			# we're not in houdini - createQGLWidget() will just make a
+			# normal widget.
+			return None
+				
+		import IECoreHoudini
+		return cls.__createHostedQGLWidget( format, IECoreHoudini.makeMainGLContextCurrent )
 		
 class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 
