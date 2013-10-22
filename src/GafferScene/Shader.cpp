@@ -170,6 +170,12 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 		if( n && ( inputPlug == n->outPlug() || n->outPlug()->isAncestorOf( inputPlug ) ) )
 		{
 			h.append( network.shaderHash( n ) );
+			if( inputPlug != n->outPlug() )
+			{
+				// shader has multiple outputs - we need to make sure the particular
+				// output in question is taken into account by the hash.
+				h.append( inputPlug->relativeName( n->outPlug() ) );
+			}
 			return;
 		}
 		// fall through to hash plug value
@@ -261,9 +267,13 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 	shaderNode->namePlug()->hash( shaderAndHash.hash );
 	shaderNode->typePlug()->hash( shaderAndHash.hash );
 	
-	for( InputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); ++it )
+	for( RecursiveInputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); ++it )
 	{
-		shaderNode->parameterHash( *it, *this, shaderAndHash.hash );
+		if( (*it)->typeId() != CompoundPlug::staticTypeId() )
+		{
+			shaderNode->parameterHash( *it, *this, shaderAndHash.hash );
+			it.prune();
+		}
 	}
 	
 	return shaderAndHash.hash;
@@ -284,12 +294,16 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	}
 	
 	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
-	for( InputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); it++ )
+	for( RecursiveInputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); it++ )
 	{
-		IECore::DataPtr value = shaderNode->parameterValue( *it, *this );
-		if( value )
+		if( (*it)->typeId() != CompoundPlug::staticTypeId() )
 		{
-			shaderAndHash.shader->parameters()[(*it)->getName()] = value;
+			IECore::DataPtr value = shaderNode->parameterValue( *it, *this );
+			if( value )
+			{
+				shaderAndHash.shader->parameters()[(*it)->relativeName( shaderNode->parametersPlug() )] = value;
+			}
+			it.prune();
 		}
 	}
 
