@@ -1034,6 +1034,47 @@ class ParameterisedHolderTest( unittest.TestCase ) :
 
 		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 10 )
 
+	def testParameterInvalidWhenParameterChangedRaises( self ) :
+	
+		class InvalidValueRaiser( IECore.Parameterised ) :
+
+			def __init__( self ) :
+
+				IECore.Parameterised.__init__( self, "" )
+
+				self.parameters().addParameters(
+
+					[
+
+						IECore.IntParameter(
+							name = "driver",
+							description = "",
+							defaultValue = 0,
+						),
+
+					],
+
+				)
+
+				self.changes = []
+
+			def parameterChanged( self, parameter ) :
+
+				# this puts the parameter in a state where its value
+				# is not valid.
+				parameter.setValue( IECore.StringData( "oh dear" ) )
+				# then when we raise here, a further exception will
+				# occur when the invalid parameter value is discovered
+				# during the application of parameter changes to the plugs.
+				raise RuntimeError( "Ooops!" )
+				
+		c = InvalidValueRaiser()
+
+		ph = Gaffer.ParameterisedHolderNode()
+		ph.setParameterised( c )
+		
+		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 1 )
+
 	def setUp( self ) :
 	
 		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"

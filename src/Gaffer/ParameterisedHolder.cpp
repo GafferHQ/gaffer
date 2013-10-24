@@ -39,6 +39,7 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "IECore/ParameterisedInterface.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/ParameterisedHolder.h"
 #include "Gaffer/CompoundParameterHandler.h"
@@ -219,9 +220,46 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificat
 {
 	if( m_parameterisedHolder->m_parameterHandler )
 	{
-		BlockedConnection connectionBlocker( m_parameterisedHolder->m_plugSetConnection );
-		m_parameterisedHolder->m_parameterHandler->setupPlug( m_parameterisedHolder );
-		m_parameterisedHolder->m_parameterHandler->setPlugValue();
+		// If an exception occurs in the code scoped by a ParameterModificationContext,
+		// this destructor will be called as the exception unwinds the stack. If we
+		// were to throw a new exception in this scenario, the program would terminate.
+		// Since the operations below can throw exceptions if the parameter values have been
+		// left in an invalid state, we have to catch any exceptions they throw and report
+		// them as errors rather than let the program die entirely.
+		std::string error;
+		try
+		{
+			BlockedConnection connectionBlocker( m_parameterisedHolder->m_plugSetConnection );
+			m_parameterisedHolder->m_parameterHandler->setupPlug( m_parameterisedHolder );
+			m_parameterisedHolder->m_parameterHandler->setPlugValue();
+		}
+		catch( const std::exception &e )
+		{
+			error = e.what();
+			if( error.empty() )
+			{
+				error = "Undescriptive exception";
+			}
+		}
+		catch( ... )
+		{
+			error = "Unknown exception";
+		}
+		
+		if( !error.empty() )
+		{
+			// Unfortunately, we also have to guard against the possibility of the message
+			// handler throwing an exception too - particularly if the handler is implemented
+			// in python and the original exception came from python.
+			try
+			{
+				IECore::msg( IECore::Msg::Error, "ParameterModificationContext", error );		
+			}
+			catch( ... )
+			{
+				std::cerr << "ERROR : ParameterModificationContext : " << error << std::endl;
+			}
+		}
 	}
 }
 
