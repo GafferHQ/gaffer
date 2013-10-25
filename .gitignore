@@ -1,1 +1,6 @@
 _site
+.sconsign.dblite
+doc
+lib
+python
+src
