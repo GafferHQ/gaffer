@@ -318,26 +318,26 @@ class Widget( object ) :
 	def bound( self, relativeTo=None ) :
 		
 		# traverse up the hierarchy, accumulating the transform
+		# till we reach the top. in an ideal world we'd just call
+		# self.__qtWidget.mapToGlobal() but that doesn't take into
+		# account the fact that a widget may be embedded in a QGraphicsScene.
 		q = self.__qtWidget
 		pos = QtCore.QPoint( 0, 0 )
 		while q is not None :
-			# using geometry().topLeft() rather than pos() because it
-			# correctly takes into account space taken by window frames
-			pos += q.geometry().topLeft()
-			parentWidget = q.parentWidget()
-			if parentWidget is not None :
-				q = parentWidget
+			graphicsProxyWidget = q.graphicsProxyWidget()
+			if graphicsProxyWidget is not None :
+				pos = graphicsProxyWidget.mapToScene( pos.x(), pos.y() )
+				pos = QtCore.QPoint( pos.x(), pos.y() )
+				q = graphicsProxyWidget.scene().parent()
+			elif q.isWindow() :
+				pos = q.mapToGlobal( pos )
+				q = None
 			else :
-				# no parent widget, but we might be embedded in a QGraphicsScene
-				# which in turn is held inside a parent widget.
-				graphicsProxyWidget = q.graphicsProxyWidget()
-				if graphicsProxyWidget is not None :
-					pos = graphicsProxyWidget.mapToScene( pos.x(), pos.y() )
-					pos = QtCore.QPoint( pos.x(), pos.y() )
-					q = graphicsProxyWidget.scene().parent()
-				else :
-					q = None
-						
+				parentWidget = q.parentWidget()
+				if parentWidget is not None :
+					pos = q.mapToParent( pos )
+				q = parentWidget
+							
 		pos = IECore.V2i( pos.x(), pos.y() )
 		if relativeTo is not None :
 			pos -= relativeTo.bound().min
