@@ -49,6 +49,7 @@
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/Selector.h"
+#include "IECoreGL/IECoreGL.h"
 
 #include "GafferUI/StandardStyle.h"
 
@@ -99,7 +100,10 @@ void StandardStyle::bind( const Style *currentStyle ) const
 	
 	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
 	{
-		selector->loadIDShader( shader() );
+		if( selector->mode() == Selector::IDRender )
+		{
+			selector->loadIDShader( shader() );
+		}
 	}
 }
 
@@ -512,110 +516,141 @@ Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
 // glsl source
 //////////////////////////////////////////////////////////////////////////
 
-static const char *g_vertexSource =
+static const std::string &vertexSource()
+{
+	static const std::string g_vertexSource =
 	
-	"uniform bool bezier;"
-	"uniform vec3 v0;"
-	"uniform vec3 v1;"
-	"uniform vec3 v2;"
-	"uniform vec3 v3;"
+		"uniform bool bezier;"
+		"uniform vec3 v0;"
+		"uniform vec3 v1;"
+		"uniform vec3 v2;"
+		"uniform vec3 v3;"
 
-	"void main()"
-	"{"
-	"	if( bezier )"
-	"	{"
-	"		mat4 basis = mat4("
-	"			-1,  3, -3,  1,"
-	"			 3, -6,  3,  0,"
-	"			-3,  3,  0,  0,"
-	"			 1,  0,  0,  0"
-	"		);"
+		"void main()"
+		"{"
+		"	if( bezier )"
+		"	{"
+		"		mat4 basis = mat4("
+		"			-1,  3, -3,  1,"
+		"			 3, -6,  3,  0,"
+		"			-3,  3,  0,  0,"
+		"			 1,  0,  0,  0"
+		"		);"
 
-	"		vec4 t = vec4("
-	"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
-	"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
-	"			gl_MultiTexCoord0.y,"
-	"			1.0"
-	"		);"
+		"		vec4 t = vec4("
+		"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
+		"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
+		"			gl_MultiTexCoord0.y,"
+		"			1.0"
+		"		);"
 
-	"		vec4 tDeriv = vec4( t[1] * 3.0, t[2] * 2.0, 1.0, 0.0 );"
-	"		vec4 w = basis * t;"
-	"		vec4 wDeriv = basis * tDeriv;"
+		"		vec4 tDeriv = vec4( t[1] * 3.0, t[2] * 2.0, 1.0, 0.0 );"
+		"		vec4 w = basis * t;"
+		"		vec4 wDeriv = basis * tDeriv;"
 
-	"		vec3 p = w.x * v0 + w.y * v1 + w.z * v2 + w.w * v3;"
-	"		vec3 vTangent = wDeriv.x * v0 + wDeriv.y * v1 + wDeriv.z * v2 + wDeriv.w * v3;"
+		"		vec3 p = w.x * v0 + w.y * v1 + w.z * v2 + w.w * v3;"
+		"		vec3 vTangent = wDeriv.x * v0 + wDeriv.y * v1 + wDeriv.z * v2 + wDeriv.w * v3;"
 
-	"		vec4 camZ = gl_ModelViewMatrixInverse * vec4( 0.0, 0.0, -1.0, 0.0 );"
+		"		vec4 camZ = gl_ModelViewMatrixInverse * vec4( 0.0, 0.0, -1.0, 0.0 );"
 
-	"		vec3 uTangent = normalize( cross( camZ.xyz, vTangent ) );"
+		"		vec3 uTangent = normalize( cross( camZ.xyz, vTangent ) );"
 
-	"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
+		"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
 
-	"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4( p, 1 );"
-	"	}"
-	"	else"
-	"	{"
-	"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;"
-	"	}"
-	"	gl_FrontColor = gl_Color;"
-	"	gl_BackColor = gl_Color;"
-	"	gl_TexCoord[0] = gl_MultiTexCoord0;"
-	"}";
+		"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4( p, 1 );"
+		"	}"
+		"	else"
+		"	{"
+		"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;"
+		"	}"
+		"	gl_FrontColor = gl_Color;"
+		"	gl_BackColor = gl_Color;"
+		"	gl_TexCoord[0] = gl_MultiTexCoord0;"
+		"}";
 
-static const char *g_fragmentSource = 
+	return g_vertexSource;
+}
 
-	"#version 330 compatibility\n"
+static const std::string &fragmentSource()
+{
+
+	static std::string g_fragmentSource;
+	if( g_fragmentSource.empty() )
+	{
+
+		g_fragmentSource = 
+		
+		"#include \"IECoreGL/FilterAlgo.h\"\n"
+		"#include \"IECoreGL/ColorAlgo.h\"\n"
+
+		"uniform bool border;"
+		"uniform vec2 borderRadius;"
+
+		"uniform bool edgeAntiAliasing;"
+
+		"uniform int textureType;"
+		"uniform sampler2D texture;\n"
+
+		"#if __VERSION__ >= 330\n"
+
+		"uniform uint ieCoreGLNameIn;\n"
+		"layout( location=0 ) out vec4 outColor;\n"
+		"layout( location=1 ) out uint ieCoreGLNameOut;\n"
+		"#define OUTCOLOR outColor\n"
+
+		"#else\n"
+
+		"#define OUTCOLOR gl_FragColor\n"
+
+		"#endif\n"
+
+		"void main()"
+		"{"
+		"	OUTCOLOR = gl_Color;"
+
+		"	if( border )"
+		"	{"
+		"		vec2 v = max( borderRadius - gl_TexCoord[0].xy, vec2( 0.0 ) ) + max( gl_TexCoord[0].xy - vec2( 1.0 ) + borderRadius, vec2( 0.0 ) );"
+		"		v /= borderRadius;"
+		"		float r = length( v );"
+
+		"		OUTCOLOR = mix( OUTCOLOR, vec4( 0.05, 0.05, 0.05, OUTCOLOR.a ), ieFilteredStep( 0.8, r ) );"
+		"		OUTCOLOR.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
+		"	}"
+
+		"	if( edgeAntiAliasing )"
+		"	{"
+		"		OUTCOLOR.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
+		"	}"
+
+		/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
+		/// textures and output only linear data."
+
+		"	if( textureType==1 )"
+		"	{"
+		"		OUTCOLOR = texture2D( texture, gl_TexCoord[0].xy );"
+		"		OUTCOLOR = vec4( ieLinToSRGB( OUTCOLOR.r ), ieLinToSRGB( OUTCOLOR.g ), ieLinToSRGB( OUTCOLOR.b ), ieLinToSRGB( OUTCOLOR.a ) );"
+		"	}"
+		"	else if( textureType==2 )"
+		"	{"
+		"		OUTCOLOR = vec4( OUTCOLOR.rgb, texture2D( texture, gl_TexCoord[0].xy ).a );"
+		"	}\n"
+
+		"#if __VERSION__ >= 330\n"
+		"	ieCoreGLNameOut = ieCoreGLNameIn;\n"
+		"#endif\n"
+		"}";
 	
-	"#include \"IECoreGL/FilterAlgo.h\"\n"
-	"#include \"IECoreGL/ColorAlgo.h\"\n"
-
-	"uniform bool border;"
-	"uniform vec2 borderRadius;"
-
-	"uniform bool edgeAntiAliasing;"
-
-	"uniform int textureType;"
-	"uniform sampler2D texture;"
-
-	"uniform uint ieCoreGLNameIn;"
-
-	"layout( location=0 ) out vec4 outColor;"
-	"layout( location=1 ) out uint ieCoreGLNameOut;"
-
-	"void main()"
-	"{"
-	"	outColor = gl_Color;"
-
-	"	if( border )"
-	"	{"
-	"		vec2 v = max( borderRadius - gl_TexCoord[0].xy, vec2( 0.0 ) ) + max( gl_TexCoord[0].xy - vec2( 1.0 ) + borderRadius, vec2( 0.0 ) );"
-	"		v /= borderRadius;"
-	"		float r = length( v );"
-
-	"		outColor = mix( outColor, vec4( 0.05, 0.05, 0.05, outColor.a ), ieFilteredStep( 0.8, r ) );"
-	"		outColor.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
-	"	}"
-
-	"	if( edgeAntiAliasing )"
-	"	{"
-	"		outColor.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
-	"	}"
-
-	/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
-	/// textures and output only linear data."
-
-	"	if( textureType==1 )"
-	"	{"
-	"		outColor = texture2D( texture, gl_TexCoord[0].xy );"
-	"		outColor = vec4( ieLinToSRGB( outColor.r ), ieLinToSRGB( outColor.g ), ieLinToSRGB( outColor.b ), ieLinToSRGB( outColor.a ) );"
-	"	}"
-	"	else if( textureType==2 )"
-	"	{"
-	"		outColor = vec4( outColor.rgb, texture2D( texture, gl_TexCoord[0].xy ).a );"
-	"	}"
-	"	ieCoreGLNameOut = ieCoreGLNameIn;"
-
-	"}";
+		if( glslVersion() >= 330 )
+		{
+			// the __VERSION__ define is a workaround for the fact that cortex's source preprocessing doesn't
+			// define it correctly in the same way as the OpenGL shader preprocessing would.
+			g_fragmentSource = "#version 330 compatibility\n #define __VERSION__ 330\n\n" + g_fragmentSource;
+		}
+	}
+	
+	return g_fragmentSource;
+}
 
 int StandardStyle::g_borderParameter;
 int StandardStyle::g_borderRadiusParameter;
@@ -635,7 +670,7 @@ IECoreGL::Shader *StandardStyle::shader()
 	
 	if( !g_shader )
 	{
-		g_shader = ShaderLoader::defaultShaderLoader()->create( g_vertexSource, "", g_fragmentSource );
+		g_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", fragmentSource() );
 		g_borderParameter = g_shader->uniformParameter( "border" )->location;
 		g_borderRadiusParameter = g_shader->uniformParameter( "borderRadius" )->location;
 		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;

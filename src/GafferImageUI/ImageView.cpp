@@ -52,6 +52,7 @@
 #include "IECoreGL/Texture.h"
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/Shader.h"
+#include "IECoreGL/IECoreGL.h"
 
 #include "Gaffer/Context.h"
 
@@ -187,44 +188,65 @@ class ImageViewGadget : public GafferUI::Gadget
 			return g_vertexSource;
 		}
 
-		static const char *fragmentSource()
+		static const std::string &fragmentSource()
 		{
-			static const char *g_fragmentSource = 
+			static std::string g_fragmentSource;
+			if( g_fragmentSource.empty() )
+			{
+				g_fragmentSource =
+				
+				"#include \"IECoreGL/FilterAlgo.h\"\n"
+				"#include \"IECoreGL/ColorAlgo.h\"\n"
 
-			"#version 330 compatibility\n"
-			"#include \"IECoreGL/FilterAlgo.h\"\n"
-			"#include \"IECoreGL/ColorAlgo.h\"\n"
+				"uniform sampler2D texture;"
+				"uniform int channelToView;\n"
 
-			"uniform sampler2D texture;"
-			"uniform int channelToView;"
-			"uniform uint ieCoreGLNameIn;"
+				"#if __VERSION__ >= 330\n"
 
-			"layout( location=0 ) out vec4 outColor;"
-			"layout( location=1 ) out uint ieCoreGLNameOut;"
-			"void main()"
-			"{"
-			"	outColor = gl_Color;"
-			"	outColor = texture2D( texture, gl_TexCoord[0].xy );"
-			"	outColor = vec4( ieLinToSRGB( outColor.r ), ieLinToSRGB( outColor.g ), ieLinToSRGB( outColor.b ), ieLinToSRGB( outColor.a ) );"
-			"	if( channelToView==1 )"
-			"	{"
-			"		outColor = vec4( outColor[0], outColor[0], outColor[0], 1. );"
-			"	}"
-			"	else if( channelToView==2 )"
-			"	{"
-			"		outColor = vec4( outColor[1], outColor[1], outColor[1], 1. );"
-			"	}"
-			"	else if( channelToView==3 )"
-			"	{"
-			"		outColor = vec4( outColor[2], outColor[2], outColor[2], 1. );"
-			"	}"
-			"	else if( channelToView==4 )"
-			"	{"
-			"		outColor = vec4( outColor[3], outColor[3], outColor[3], 1. );"
-			"	}"
-			"	ieCoreGLNameOut = ieCoreGLNameIn;"
-			"}";
+				"uniform uint ieCoreGLNameIn;\n"
+				"layout( location=0 ) out vec4 outColor;\n"
+				"layout( location=1 ) out uint ieCoreGLNameOut;\n"
+				"#define OUTCOLOR outColor\n"
 
+				"#else\n"
+
+				"#define OUTCOLOR gl_FragColor\n"
+
+				"#endif\n"
+
+				"void main()"
+				"{"
+				"	OUTCOLOR = texture2D( texture, gl_TexCoord[0].xy );"
+				"	OUTCOLOR = vec4( ieLinToSRGB( OUTCOLOR.r ), ieLinToSRGB( OUTCOLOR.g ), ieLinToSRGB( OUTCOLOR.b ), ieLinToSRGB( OUTCOLOR.a ) );"
+				"	if( channelToView==1 )"
+				"	{"
+				"		OUTCOLOR = vec4( OUTCOLOR[0], OUTCOLOR[0], OUTCOLOR[0], 1. );"
+				"	}"
+				"	else if( channelToView==2 )"
+				"	{"
+				"		OUTCOLOR = vec4( OUTCOLOR[1], OUTCOLOR[1], OUTCOLOR[1], 1. );"
+				"	}"
+				"	else if( channelToView==3 )"
+				"	{"
+				"		OUTCOLOR = vec4( OUTCOLOR[2], OUTCOLOR[2], OUTCOLOR[2], 1. );"
+				"	}"
+				"	else if( channelToView==4 )"
+				"	{"
+				"		OUTCOLOR = vec4( OUTCOLOR[3], OUTCOLOR[3], OUTCOLOR[3], 1. );"
+				"	}\n"
+
+				"#if __VERSION__ >= 330\n"
+				"	ieCoreGLNameOut = ieCoreGLNameIn;\n"
+				"#endif\n"
+				"}";
+			
+				if( glslVersion() >= 330 )
+				{
+					// the __VERSION__ define is a workaround for the fact that cortex's source preprocessing doesn't
+					// define it correctly in the same way as the OpenGL shader preprocessing would.
+					g_fragmentSource = "#version 330 compatibility\n #define __VERSION__ 330\n\n" + g_fragmentSource;	
+				}
+			}
 			return g_fragmentSource;
 		}
 
