@@ -85,7 +85,7 @@ def open( menu ) :
 	
 	path.setFilter( __scriptPathFilter() )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open" )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", bookmarks = __bookmarks( currentScript ) )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -200,7 +200,7 @@ def saveAs( menu ) :
 
 	path.setFilter( __scriptPathFilter() )
 	
-	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save" )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", bookmarks = __bookmarks( script ) )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -253,7 +253,7 @@ def exportSelection( menu ) :
 	path = Gaffer.FileSystemPath( os.getcwd() )
 	path.setFilter( __scriptPathFilter() )
 	
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export" )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", bookmarks = __bookmarks( script )  )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -318,3 +318,11 @@ def __selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	return True if scriptWindow.scriptNode().selection().size() else False
+
+def __bookmarks( script ) :
+
+	return GafferUI.Bookmarks.acquire(
+		script.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+		pathType = Gaffer.FileSystemPath,
+		category = "script",
+	)
