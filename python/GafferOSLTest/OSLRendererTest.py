@@ -163,6 +163,21 @@ class OSLRendererTest( GafferOSLTest.OSLTestCase ) :
 			
 			for c in p["Ci"] :
 				self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+	
+	def testClosureParameters( self ) :
+
+		outputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
+		inputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
+			
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "shader", outputClosure, { "e" : IECore.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } )
+			r.shader( "surface", inputClosure, { "i" : "link:h.c" } )
+			p = r.shadingEngine().shade( self.rectanglePoints() )
+			
+			for c in p["Ci"] :
+				self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
 		
 if __name__ == "__main__":
 	unittest.main()

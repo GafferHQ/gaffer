@@ -243,6 +243,41 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		constant.loadShader( "surface/constant" )
 		
 		self.assertFalse( constant["parameters"]["Cs"].acceptsInput( globals["out"]["globalP"] ) )
+	
+	def testClosureParameters( self ) :
+	
+		outputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
+		outputClosure = GafferOSL.OSLShader()
+		outputClosure.loadShader( outputClosureShader )
+		
+		inputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
+		inputClosure = GafferOSL.OSLShader()
+		inputClosure.loadShader( inputClosureShader )
+		
+		self.assertEqual( outputClosure["out"]["c"].typeId(), Gaffer.Plug.staticTypeId() )
+		self.assertEqual( inputClosure["parameters"]["i"].typeId(), Gaffer.Plug.staticTypeId() )
+		
+		inputClosure["parameters"]["i"].setInput( outputClosure["out"]["c"] )
+		
+		s = inputClosure.state()
+		self.assertEqual( len( s ), 2 )
+		self.assertEqual( s[1].parameters["i"].value, "link:" + s[0].parameters["__handle"].value + ".c" )
+		
+	def testClosureParametersInputAcceptance( self ) :
+	
+		outputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
+		outputClosure = GafferOSL.OSLShader()
+		outputClosure.loadShader( outputClosureShader )
+		
+		inputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
+		inputClosure = GafferOSL.OSLShader()
+		inputClosure.loadShader( inputClosureShader )
+		
+		outputColor = GafferOSL.OSLShader()
+		outputColor.loadShader( "utility/vectorToColor" )
+		
+		self.assertTrue( inputClosure["parameters"]["i"].acceptsInput( outputClosure["out"]["c"] ) )
+		self.assertFalse( inputClosure["parameters"]["i"].acceptsInput( outputColor["out"]["c"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

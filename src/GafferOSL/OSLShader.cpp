@@ -75,21 +75,25 @@ static std::string plugName( const OSLQuery::Parameter *parameter )
 	return parameter->name;
 }
 
-template<typename PlugType>
-static void transferConnectionOrValue( PlugType *sourcePlug, PlugType *destinationPlug )
+static void transferConnectionOrValue( Plug *sourcePlug, Plug *destinationPlug )
 {
 	if( !sourcePlug )
 	{
 		return;
 	}
 	
-	if( sourcePlug->template getInput<Plug>() )
+	if( Plug *input = sourcePlug->getInput<Plug>() )
 	{
-		destinationPlug->setInput( sourcePlug->template getInput<Plug>() );
+		destinationPlug->setInput( input );
 	}
 	else
 	{
-		destinationPlug->setValue( sourcePlug->getValue() );
+		ValuePlug *sourceValuePlug = runTimeCast<ValuePlug>( sourcePlug );
+		ValuePlug *destinationValuePlug = runTimeCast<ValuePlug>( destinationPlug );
+		if( destinationValuePlug && sourceValuePlug )
+		{
+			destinationValuePlug->setFrom( sourceValuePlug );
+		}
 	}
 }
 
@@ -208,6 +212,24 @@ static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter,
 	return plug;
 }
 
+static Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
+{	
+	const string name = plugName( parameter );
+	Plug *existingPlug = parent->getChild<Plug>( name );
+	if(	existingPlug && existingPlug->typeId() == Plug::staticTypeId() )
+	{
+		return existingPlug;
+	}
+	
+	PlugPtr plug = new Plug( name, parent->direction(), Plug::Default | Plug::Dynamic );
+	
+	transferConnectionOrValue( existingPlug, plug.get() );
+	
+	parent->setChild( name, plug );
+	
+	return plug;
+}
+
 // forward declaration so loadStructParameter() can call it.
 static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent, bool keepExistingValues );
 
@@ -262,6 +284,10 @@ static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Paramet
 	if( parameter->isstruct )
 	{
 		result = loadStructParameter( query, parameter, parent, keepExistingValues );
+	}
+	else if( parameter->isclosure )
+	{
+		result = loadClosureParameter( parameter, parent );
 	}
 	else if( parameter->type.arraylen == 0 )
 	{
@@ -433,6 +459,11 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			}
 			// osl disallows the connection of vectors to colours
 			if( plug->isInstanceOf( Color3fPlug::staticTypeId() ) && inputPlug->isInstanceOf( V3fPlug::staticTypeId() ) )
+			{
+				return false;
+			}
+			// and we can only connect closures into closures
+			if( plug->typeId() == Plug::staticTypeId() && inputPlug->typeId() != Plug::staticTypeId() )
 			{
 				return false;
 			}
