@@ -37,6 +37,8 @@
 
 import fnmatch
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -44,8 +46,29 @@ def __createParameterWidget( plug ) :
 
 	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter.staticTypeId(), "fileName", GafferUI.PathPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator(
+	Gaffer.ObjectWriter.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = IECore.Reader.supportedExtensions(),
+				extensionsLabel = "Show only supported files",
+			),
+		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire(
+				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				category = "cortex",
+			),
+		},
+	),
+)
+
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter.staticTypeId(), "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter.staticTypeId(), "in", None )
 
 GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
 GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter.staticTypeId(), "in", GafferUI.StandardNodule )

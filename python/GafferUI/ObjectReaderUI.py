@@ -56,6 +56,12 @@ GafferUI.PlugValueWidget.registerCreator(
 				extensionsLabel = "Show only supported files",
 			),
 		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire(
+				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				category = "cortex",
+			),
+		},
 	),
 )
 
@@ -64,3 +70,4 @@ def __createParameterWidget( plug ) :
 	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectReader.staticTypeId(), "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectReader.staticTypeId(), "out", None )
