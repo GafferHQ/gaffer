@@ -40,7 +40,7 @@ import GafferUI
 
 class PathChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, **kw ) :
+	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, bookmarks=None, **kw ) :
 	
 		if title is None :
 			title = "Select paths" if allowMultipleSelection else "Select path"
@@ -50,7 +50,7 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		self.__path = path
 		self.__allowMultipleSelection = allowMultipleSelection
 		
-		self.__pathChooserWidget = GafferUI.PathChooserWidget( path, allowMultipleSelection=allowMultipleSelection )
+		self.__pathChooserWidget = GafferUI.PathChooserWidget( path, allowMultipleSelection=allowMultipleSelection, bookmarks=bookmarks )
 		self._setWidget( self.__pathChooserWidget )
 		self.__pathChooserSelectedConnection = self.__pathChooserWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathChooserSelected ) )
 
