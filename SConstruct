@@ -1223,9 +1223,15 @@ def buildGraphics( target, source, env ) :
 				)
 			)
 
-graphicsBuild = env.Command( "$BUILD_DIR/graphics/arrowDown10.png", "resources/graphics.svg", buildGraphics )
-env.NoCache( graphicsBuild )
-env.Alias( "build", graphicsBuild )
+for source, target in (
+	( "resources/graphics.svg", "arrowDown10.png" ),
+	( "resources/GafferLogo.svg", "GafferLogo.png" ),
+	( "resources/GafferLogoMini.svg", "GafferLogoMini.png" ),
+) :
+	
+	graphicsBuild = env.Command( os.path.join( "$BUILD_DIR/graphics/", target ), source, buildGraphics )
+	env.NoCache( graphicsBuild )
+	env.Alias( "build", graphicsBuild )
 
 #########################################################################################################
 # Licenses

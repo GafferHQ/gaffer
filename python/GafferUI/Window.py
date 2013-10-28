@@ -50,7 +50,7 @@ class Window( GafferUI.ContainerWidget ) :
 	SizeMode = IECore.Enum.create( "Fixed", "Manual", "Automatic" )
 
 	## \todo Remove the deprecated resizable argument
-	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, **kw ) :
+	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, icon="GafferLogoMini.png", **kw ) :
 	
 		GafferUI.ContainerWidget.__init__(
 			self, QtGui.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ), **kw )
@@ -81,6 +81,7 @@ class Window( GafferUI.ContainerWidget ) :
 		self._setStyleSheet()
 		
 		self.setTitle( title )
+		self.setIcon( icon )
 		
 		if resizeable is not None :
 			self.setResizeable( resizeable )
@@ -221,7 +222,20 @@ class Window( GafferUI.ContainerWidget ) :
 	def getFullScreen( self ) :
 	
 		return self._qtWidget().isFullScreen()
-
+	
+	def setIcon( self, imageOrImageFileName ) :
+		
+		if isinstance( imageOrImageFileName, basestring ) :
+			self.__image = GafferUI.Image( imageOrImageFileName )
+		else :
+			self.__image = imageOrImageFileName
+		
+		self._qtWidget().setWindowIcon( QtGui.QIcon( self.__image._qtPixmap() ) )
+	
+	def getIcon( self ) :
+		
+		return self.__image
+	
 	## Requests that this window be closed - this function may either be called
 	# directly or in response to the user attempting to close the window.
 	# If successful, setVisible( False ) will be called on the window and True will
