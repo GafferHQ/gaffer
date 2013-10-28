@@ -91,6 +91,7 @@ from NumericPlugValueWidgetTest import NumericPlugValueWidgetTest
 from CompoundNumericPlugValueWidgetTest import CompoundNumericPlugValueWidgetTest
 from NameLabelTest import NameLabelTest
 from GLWidgetTest import GLWidgetTest
+from BookmarksTest import BookmarksTest
 
 if __name__ == "__main__":
 	unittest.main()

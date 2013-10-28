@@ -115,6 +115,9 @@ class Layouts :
 	## Saves all layouts whose name matches the optional regular expression into the file object
 	# specified. If the file is later evaluated during application startup, it will reregister
 	# the layouts with the application.
+	## \todo Remove this method and follow the model in Bookmarks.py, where user bookmarks
+	# are saved automatically. This wasn't possible when Layouts.py was first introduced,
+	# because at that point in time, the Layouts class didn't have access to an application.
 	def save( self, fileObject, nameRegex = None ) :
 
 		# decide what to write
