@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,13 +41,25 @@
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "GafferUI/Style.h"
 
 #include "GafferUIBindings/StyleBinding.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 using namespace GafferUIBindings;
 using namespace GafferUI;
+
+struct UnarySlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, StylePtr s )
+	{
+		slot( s );
+		return boost::signals::detail::unusable();
+	}
+};
 
 void GafferUIBindings::bindStyle()
 {
@@ -62,6 +75,7 @@ void GafferUIBindings::bindStyle()
 		.def( "renderSelectionBox", &Style::renderSelectionBox )
 		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
 		.def( "renderImage", &Style::renderImage )
+		.def( "changedSignal", &Style::changedSignal, return_internal_reference<1>() )
 		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
 		.def( "setDefaultStyle", &Style::getDefaultStyle ).staticmethod( "setDefaultStyle" )	
 	;
@@ -76,4 +90,7 @@ void GafferUIBindings::bindStyle()
 		.value( "LabelText", Style::LabelText )
 		.value( "BodyText", Style::BodyText )
 	;
+	
+	SignalBinder<Style::UnarySignal, DefaultSignalCaller<Style::UnarySignal>, UnarySlotCaller>::bind( "UnarySignal" );	
+	
 }

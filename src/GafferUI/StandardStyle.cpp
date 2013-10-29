@@ -442,7 +442,13 @@ void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 
 void StandardStyle::setColor( Color c, Imath::Color3f v )
 {
+	if( m_colors[c] == v )
+	{
+		return;
+	}
+	
 	m_colors[c] = v;
+	changedSignal()( this );
 }
 
 const Imath::Color3f &StandardStyle::getColor( Color c ) const
@@ -452,7 +458,12 @@ const Imath::Color3f &StandardStyle::getColor( Color c ) const
 
 void StandardStyle::setFont( TextType textType, IECoreGL::FontPtr font )
 {
+	if( m_fonts[textType] == font )
+	{
+		return;
+	}
 	m_fonts[textType] = font;
+	changedSignal()( this );
 }
 
 const IECoreGL::Font *StandardStyle::getFont( TextType textType ) const
@@ -462,7 +473,12 @@ const IECoreGL::Font *StandardStyle::getFont( TextType textType ) const
 
 void StandardStyle::setFontScale( TextType textType, float scale )
 {
+	if( m_fontScales[textType] == scale )
+	{
+		return;
+	}
 	m_fontScales[textType] = scale;
+	changedSignal()( this );
 }
 
 const float StandardStyle::getFontScale( TextType textType ) const
