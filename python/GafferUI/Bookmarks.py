@@ -90,6 +90,24 @@ class Bookmarks :
 	
 		if persistent :
 			self.__save()
+	
+	## Adds a recently visited location to the bookmarks.
+	# Recent locations are prefixed with "Recent/", are always
+	# persistent, and are recycled so only the latest few are available.
+	def addRecent( self, path ) :
+	
+		name = "Recent/" + path.rpartition( "/" )[-1]
+	
+		names = [ n for n in self.names() if n.startswith( "Recent/" ) ]
+		if name in names :
+			self.remove( name )
+			names.remove( name )
+		
+		while len( names ) > 5 :
+			self.remove( names[0] )
+			del names[0]
+		
+		self.add( name, path, persistent=True )
 		
 	## Removes a bookmark previously stored with add().
 	def remove( self, name ) :

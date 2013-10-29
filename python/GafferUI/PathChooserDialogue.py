@@ -102,6 +102,11 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 	def __buttonClicked( self, button ) :
 	
 		if button is self.__confirmButton :
+			if self.__pathChooserWidget.getBookmarks() is not None :
+				self.__pathChooserWidget.getBookmarks().addRecent(
+					str( self.__pathChooserWidget.directoryPathWidget().getPath() )
+				)
+			
 			self.pathSelectedSignal()( self )
 	
 	def __pathChooserSelected( self, pathChooser ) :

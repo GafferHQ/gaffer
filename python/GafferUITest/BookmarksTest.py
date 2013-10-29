@@ -107,6 +107,37 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		
 		self.assertEqual( bd.get( "a" ), "/a" )
 		self.assertEqual( bc.get( "a" ), "/aa" )
+	
+	def testAddRecent( self ) :
+	
+		a = Gaffer.ApplicationRoot( "testApp" )
+
+		b = GafferUI.Bookmarks.acquire( a, Gaffer.FileSystemPath, category=None )
+
+		self.assertEqual( b.names(), [] )
+		
+		b.addRecent( "/a" )
+		
+		self.assertEqual( b.names(), [ "Recent/a" ] )
+		
+		b.addRecent( "/b" )
+		b.addRecent( "/c" )
+
+		self.assertEqual( b.names(), [ "Recent/a", "Recent/b", "Recent/c" ] )
+		
+		b.addRecent( "/a" )
 				
+		self.assertEqual( b.names(), [ "Recent/b", "Recent/c", "Recent/a" ] )
+		
+		b.addRecent( "/d" )
+		b.addRecent( "/e" )
+		b.addRecent( "/f" )
+		
+		self.assertEqual( b.names(), [ "Recent/b", "Recent/c", "Recent/a", "Recent/d", "Recent/e", "Recent/f" ] )
+
+		b.addRecent( "/g" )
+
+		self.assertEqual( b.names(), [ "Recent/c", "Recent/a", "Recent/d", "Recent/e", "Recent/f", "Recent/g" ] )
+		
 if __name__ == "__main__":
 	unittest.main()

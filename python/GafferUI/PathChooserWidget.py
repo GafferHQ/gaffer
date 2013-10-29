@@ -310,13 +310,15 @@ class PathChooserWidget( GafferUI.Widget ) :
 	def __bookmarksMenuDefinition( self ) :
 	
 		m = IECore.MenuDefinition()
-					
-		allBookmarks = set()
+
+		items = []
+		recentItems = []
+		unbookmarkableLocations = set()
 		testPath = self.__dirPath.copy()
 		for name in self.__bookmarks.names() :
 			bookmark = self.__bookmarks.get( name )
 			testPath.setFromString( bookmark )
-			m.append(
+			item = (
 				"/" + name,
 				{
 					"command" : IECore.curry( self.__dirPath.setFromString, bookmark ),
@@ -324,16 +326,29 @@ class PathChooserWidget( GafferUI.Widget ) :
 					"description" : bookmark,
 				}
 			)
-			allBookmarks.add( bookmark )
+			if not name.startswith( "Recent/" ) :
+				items.append( item )
+				unbookmarkableLocations.add( bookmark )
+			else :
+				recentItems.append( item )
 		
+		for item in items :
+			m.append( *item )
+
+		if len( recentItems ) :
+			m.append( "/RecentDivider", { "divider" : True } )
+			for item in recentItems :
+				m.append( *item )
+
 		m.append( "/SaveDeleteDivider", { "divider" : True } )
 		
 		for name in self.__bookmarks.names( persistent=True ) :
-			m.append( "/Delete/" + name, { "command" : IECore.curry( self.__bookmarks.remove, name ) } )
+			if not name.startswith( "Recent/" ) :
+				m.append( "/Delete/" + name, { "command" : IECore.curry( self.__bookmarks.remove, name ) } )
 		
 		m.append( "/Add Bookmark...", {
 			"command" : Gaffer.WeakMethod( self.__saveBookmark ),
-			"active" : self.__dirPath.isValid() and str( self.__dirPath ) not in allBookmarks,
+			"active" : self.__dirPath.isValid() and str( self.__dirPath ) not in unbookmarkableLocations,
 		} )
 		
 		return m
