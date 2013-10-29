@@ -138,6 +138,23 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		b.addRecent( "/g" )
 
 		self.assertEqual( b.names(), [ "Recent/c", "Recent/a", "Recent/d", "Recent/e", "Recent/f", "Recent/g" ] )
+	
+	def testDynamic( self ) :
+	
+		w = GafferUI.TextWidget( "/some/value" )
+		
+		a = Gaffer.ApplicationRoot( "testApp" )
+		b = GafferUI.Bookmarks.acquire( a, Gaffer.FileSystemPath, category=None )
+
+		def f( forWidget ) :
+			if isinstance( forWidget, GafferUI.TextWidget ) :
+				return forWidget.getText()
+			else :
+				return "/"
+			
+		b.add( "t", f )
+		
+		self.assertEqual( b.get( "t", w ), "/some/value" )	
 		
 if __name__ == "__main__":
 	unittest.main()

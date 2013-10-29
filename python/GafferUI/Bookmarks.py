@@ -71,8 +71,13 @@ class Bookmarks :
 		
 	## Adds a bookmark. If persistent is True, then the bookmark
 	# will be saved in the application preferences and restored
-	# when the application next runs.
+	# when the application next runs. The path passed may either
+	# be a string or a callable which takes the optional forWidget
+	# argument passed to get() and returns a string - this latter
+	# option makes it possible to define context sensitive bookmarks.
 	def add( self, name, path, persistent=False ) :
+
+		assert( isinstance( path, basestring ) or ( callable( path ) and not persistent ) )
 
 		s = self.__storage( self.__category )
 		try :
@@ -95,6 +100,8 @@ class Bookmarks :
 	# Recent locations are prefixed with "Recent/", are always
 	# persistent, and are recycled so only the latest few are available.
 	def addRecent( self, path ) :
+	
+		assert( isinstance( path, basestring ) )
 	
 		name = "Recent/" + path.rpartition( "/" )[-1]
 	
@@ -144,17 +151,22 @@ class Bookmarks :
 	
 		return result
 
-	## Returns the named bookmark as a string.
-	def get( self, name ) :
+	## Returns the named bookmark as a string. The optional
+	# forWidget argument may be specified to provide a context
+	# in which dynamic (callable) bookmarks may compute their
+	# result.
+	def get( self, name, forWidget=None ) :
 
-		for b in self.__storage( self.__category ) :
-			if b.name == name :
-				return b.path
-	
-		if self.__category is not None :
-			for b in self.__storage( None ) :
+		for s in [
+			self.__storage( self.__category ),
+			self.__storage( None ),
+		] :
+			for b in s :
 				if b.name == name :
-					return b.path
+					if callable( b.path ) :
+						return b.path( forWidget )
+					else :
+						return b.path
 				
 		raise KeyError( name )
 

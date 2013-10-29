@@ -316,7 +316,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		unbookmarkableLocations = set()
 		testPath = self.__dirPath.copy()
 		for name in self.__bookmarks.names() :
-			bookmark = self.__bookmarks.get( name )
+			bookmark = self.__bookmarks.get( name, forWidget=self )
 			testPath.setFromString( bookmark )
 			item = (
 				"/" + name,

@@ -34,7 +34,10 @@
 #  
 ##########################################################################
 
+import os
+
 import Gaffer
+import GafferUI
 
 def __scriptAdded( container, script ) :
 
@@ -47,3 +50,24 @@ def __scriptAdded( container, script ) :
 		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
 __scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+
+def __projectBookmark( forWidget ) :
+	
+	script = None
+	if forWidget is not None :
+		scriptWindow = forWidget.ancestor( GafferUI.ScriptWindow )
+		if scriptWindow is not None :
+			script = scriptWindow.scriptNode()
+	
+	if script is not None :
+		p = script.context().substitute( "${project:rootDirectory}" )
+		if not os.path.exists( p ) :
+			try :
+				os.makedirs( p )
+			except OSError :
+				pass
+		return p
+	else :
+		return os.getcwd()
+
+GafferUI.Bookmarks.acquire( application ).add( "Project", __projectBookmark )
