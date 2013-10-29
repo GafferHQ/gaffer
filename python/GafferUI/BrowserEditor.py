@@ -128,6 +128,17 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			self.browser().pathChooser().pathListingWidget().setDisplayMode( self.__displayMode )
 			self.browser().pathChooser().pathListingWidget().setColumns( self.__columns )
 			
+			# we've potentially changed to an entirely different type of path, so we must make
+			# sure that the bookmarks we use are suitable for that. we do this here in the base
+			# class to make sure that the path and bookmarks never get out of sync, but derived
+			# classes can still modify the bookmarks if they know better.
+			self.browser().pathChooser().setBookmarks(
+				GafferUI.Bookmarks.acquire(
+					self.browser().scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+					pathType = self.__directoryPath.__class__
+				)
+			)
+			
 			self.__contextMenuConnection = self.browser().pathChooser().pathListingWidget().contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 						
 		def disconnect( self ) :
@@ -245,6 +256,18 @@ class FileSequenceMode( BrowserEditor.Mode ) :
 		
 		BrowserEditor.Mode.__init__( self, browser )
 	
+	def connect( self ) :
+		
+		BrowserEditor.Mode.connect( self )
+		
+		# we want to share our bookmarks with the non-sequence filesystem paths
+		self.browser().pathChooser().setBookmarks(
+			GafferUI.Bookmarks.acquire(
+				self.browser().scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				pathType = Gaffer.FileSystemPath
+			)
+		)
+			
 	def _initialPath( self ) :
 	
 		return Gaffer.SequencePath(
