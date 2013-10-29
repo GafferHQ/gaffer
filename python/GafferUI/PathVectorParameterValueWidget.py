@@ -46,9 +46,24 @@ class PathVectorParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 		
+		pathChooserDialogueKeywords = {}
+		applicationRoot = parameterHandler.plug().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+		if applicationRoot is not None :
+			bookmarksCategory = None
+			with IECore.IgnoredExceptions( KeyError ) :
+				bookmarksCategory = parameterHandler.parameter().userData()["UI"]["bookmarksCategory"].value
+			pathChooserDialogueKeywords["bookmarks"] = GafferUI.Bookmarks.acquire(
+				applicationRoot,
+				# deliberately using FileSystemPath directly rather than using _path().__class__
+				# so that file sequences share the same set of bookmarks as files.
+				pathType = Gaffer.FileSystemPath,
+				category = bookmarksCategory,
+			)		
+		
 		self.__pathVectorWidget = GafferUI.PathVectorDataPlugValueWidget(
 			parameterHandler.plug(),
 			self._path(),
+			pathChooserDialogueKeywords,
 		)
 					
 		GafferUI.ParameterValueWidget.__init__(
