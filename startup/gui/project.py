@@ -36,6 +36,8 @@
 
 import os
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -51,16 +53,19 @@ def __scriptAdded( container, script ) :
 
 __scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
-def __projectBookmark( forWidget ) :
-	
+def __projectBookmark( forWidget, location ) :
+		
 	script = None
 	if forWidget is not None :
-		scriptWindow = forWidget.ancestor( GafferUI.ScriptWindow )
+		if isinstance( forWidget, GafferUI.ScriptWindow ) :
+			scriptWindow = forWidget
+		else :
+			scriptWindow = forWidget.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow is not None :
 			script = scriptWindow.scriptNode()
 	
 	if script is not None :
-		p = script.context().substitute( "${project:rootDirectory}" )
+		p = script.context().substitute( location )
 		if not os.path.exists( p ) :
 			try :
 				os.makedirs( p )
@@ -70,4 +75,5 @@ def __projectBookmark( forWidget ) :
 	else :
 		return os.getcwd()
 
-GafferUI.Bookmarks.acquire( application ).add( "Project", __projectBookmark )
+GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
+GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )

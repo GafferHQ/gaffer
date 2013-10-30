@@ -155,6 +155,24 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		b.add( "t", f )
 		
 		self.assertEqual( b.get( "t", w ), "/some/value" )	
+	
+	def testDefault( self ) :
+	
+		a = Gaffer.ApplicationRoot( "testApp" )
+		b = GafferUI.Bookmarks.acquire( a )
+		
+		self.assertEqual( b.getDefault(), "/" )
+		self.assertEqual( b.names(), [] )
+		
+		b.setDefault( "/somewhere" )
+		
+		self.assertEqual( b.getDefault(), "/somewhere" )
+		self.assertEqual( b.names(), [] )
+		
+		b.setDefault( "/somewhere/else" )
+		
+		self.assertEqual( b.getDefault(), "/somewhere/else" )
+		self.assertEqual( b.names(), [] )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -145,6 +145,8 @@ class Bookmarks :
 			for b in s :
 				if persistent is not None and b.persistent != persistent :
 					continue
+				if b.name.startswith( "__" ) :
+					continue
 				if b.name not in u :
 					result.append( b.name )
 					u.add( b.name ) 
@@ -169,6 +171,20 @@ class Bookmarks :
 						return b.path
 				
 		raise KeyError( name )
+
+	## Sets a default location which can be used when no
+	# information has been provided as to where to start
+	# browsing. Default locations are not persistent.
+	def setDefault( self, path ) :
+	
+		self.add( "__default", path )
+	
+	def getDefault( self, forWidget=None ) :
+	
+		try :
+			return self.get( "__default", forWidget )
+		except KeyError :
+			return "/"
 
 	def __storage( self, category ) :
 
