@@ -77,3 +77,4 @@ def __projectBookmark( forWidget, location ) :
 
 GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
 GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
+GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/references" ) )

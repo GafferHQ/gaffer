@@ -97,11 +97,12 @@ class BoxNodeUI( GafferUI.StandardNodeUI ) :
 		
 	def __exportForReferencing( self ) :
 	
-		path = Gaffer.FileSystemPath( os.getcwd() )
-		
+		bookmarks = GafferUI.Bookmarks.acquire( self.node().ancestor( Gaffer.ApplicationRoot.staticTypeId() ), category="reference" )
+
+		path = Gaffer.FileSystemPath( bookmarks.getDefault( self ) )
 		path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-		dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export" )
+		dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", bookmarks=bookmarks )
 		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if not path :
