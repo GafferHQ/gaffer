@@ -259,6 +259,9 @@ def importFile( menu ) :
 	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
+	if path is None :
+		return
+
 	newNodes = []
 	c = script.childAddedSignal().connect( lambda parent, child : newNodes.append( child ) )
 	with Gaffer.UndoContext( script ) :
