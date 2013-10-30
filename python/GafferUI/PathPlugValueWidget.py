@@ -115,8 +115,9 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		if pathCopy.isEmpty() :
 			# choose a sensible starting location if the path is empty.
-			if isinstance( pathCopy, ( Gaffer.SequencePath, Gaffer.FileSystemPath ) ) :
-				pathCopy.setFromString( os.getcwd() )
+			bookmarks = self.__pathChooserDialogueKeywords.get( "bookmarks", None )
+			if bookmarks is not None :
+				pathCopy.setFromString( bookmarks.getDefault() )
 			else :
 				pathCopy.setFromString( "/" )
 		
