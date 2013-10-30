@@ -269,8 +269,8 @@ class PathChooserWidget( GafferUI.Widget ) :
 		dirPathCopy = dirPath.copy()
 		dirPathCopy.truncateUntilValid()
 		with Gaffer.BlockedConnection( ( self.__pathChangedConnection, self.__listingPathChangedConnection ) ) :
-			self.__path[:] = dirPathCopy[:]
-			self.__listingPath[:] = dirPathCopy[:]
+			self.__path.setFromPath( dirPathCopy )
+			self.__listingPath.setFromPath( dirPathCopy )
 		
 	def __listingPathChanged( self, listingPath ) :
 	
