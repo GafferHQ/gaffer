@@ -75,23 +75,15 @@ def new( menu ) :
 def open( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	currentScript = scriptWindow.scriptNode()
-	currentFileName = currentScript["fileName"].getValue()
-	
-	if currentFileName :
-		path = Gaffer.FileSystemPath( os.path.dirname( os.path.abspath( currentFileName ) ) )		
-	else :
-		path = Gaffer.FileSystemPath( os.getcwd() )
-	
-	path.setFilter( __scriptPathFilter() )
+	path, bookmarks = __pathAndBookmarks( scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", bookmarks = __bookmarks( currentScript ) )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
 		return
 
-	__open( currentScript, str( path ) )
+	__open( scriptWindow.scriptNode(), str( path ) )
 	
 def __open( currentScript, fileName ) :
 
@@ -191,16 +183,9 @@ def saveAs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	currentFileName = script["fileName"].getValue()
+	path, bookmarks = __pathAndBookmarks( scriptWindow )
 	
-	if currentFileName :
-		path = Gaffer.FileSystemPath( currentFileName )		
-	else :
-		path = Gaffer.FileSystemPath( os.getcwd() )
-
-	path.setFilter( __scriptPathFilter() )
-	
-	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", bookmarks = __bookmarks( script ) )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -242,6 +227,7 @@ def exportSelection( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
+	path, bookmarks = __pathAndBookmarks( scriptWindow )
 	
 	selection = script.selection()
 	parent = selection[0].parent()
@@ -250,10 +236,7 @@ def exportSelection( menu ) :
 			assert( node.parent().isAncestorOf( parent ) )
 			parent = node.parent()
 	
-	path = Gaffer.FileSystemPath( os.getcwd() )
-	path.setFilter( __scriptPathFilter() )
-	
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", bookmarks = __bookmarks( script )  )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -271,11 +254,9 @@ def importFile( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
-	path = Gaffer.FileSystemPath( os.getcwd() )
-	path.setFilter( __scriptPathFilter() )
+	path, bookmarks = __pathAndBookmarks( scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import" )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	newNodes = []
@@ -309,20 +290,26 @@ def showSettings( menu ) :
 		scriptWindow.addChildWindow( settingsWindow )
 		
 	settingsWindow.setVisible( True )
-	
-def __scriptPathFilter() :
-
-	return Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] )
-	
+		
 def __selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	return True if scriptWindow.scriptNode().selection().size() else False
 
-def __bookmarks( script ) :
+def __pathAndBookmarks( scriptWindow ) :
 
-	return GafferUI.Bookmarks.acquire(
-		script.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+	bookmarks = GafferUI.Bookmarks.acquire(
+		scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
 		pathType = Gaffer.FileSystemPath,
 		category = "script",
 	)
+		
+	currentFileName = scriptWindow.scriptNode()["fileName"].getValue()
+	if currentFileName :
+		path = Gaffer.FileSystemPath( os.path.dirname( os.path.abspath( currentFileName ) ) )		
+	else :
+		path = Gaffer.FileSystemPath( bookmarks.getDefault( scriptWindow ) )
+		
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] ) )
+
+	return path, bookmarks
