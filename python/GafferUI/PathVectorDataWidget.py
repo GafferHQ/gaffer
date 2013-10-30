@@ -76,6 +76,10 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 	def _createRows( self ) :
 	
 		path = self.__path.copy()
+		bookmarks = self.__pathChooserDialogueKeywords.get( "bookmarks", None )
+		if bookmarks is not None :
+			path.setFromString( bookmarks.getDefault() )
+		
 		dialogue = GafferUI.PathChooserDialogue( path, allowMultipleSelection=True, **self.__pathChooserDialogueKeywords )
 		paths = dialogue.waitForPaths( parentWindow = self.ancestor( GafferUI.Window ) )
 		if not paths :
@@ -88,8 +92,12 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 		data = self.getData()[0]
 		
 		path = self.__path.copy()
-		if index < len( data ) :
+		if index < len( data ) and len( data[index] ) :
 			path.setFromString( data[index] )
+		else :
+			bookmarks = self.__pathChooserDialogueKeywords.get( "bookmarks", None )
+			if bookmarks is not None :
+				path.setFromString( bookmarks.getDefault() )
 		
 		dialogue = GafferUI.PathChooserDialogue( path, **self.__pathChooserDialogueKeywords )
 		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
