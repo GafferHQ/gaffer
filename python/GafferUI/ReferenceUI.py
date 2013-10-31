@@ -153,7 +153,7 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title = "Load reference", confirmLabel = "Load" )
+	dialogue = GafferUI.PathChooserDialogue( path, title = "Load reference", confirmLabel = "Load", valid = True, leaf = True, bookmarks = bookmarks )
 	path = dialogue.waitForPath( parentWindow = parentWindow )
 	
 	if not path :

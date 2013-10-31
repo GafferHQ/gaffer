@@ -77,7 +77,7 @@ def open( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	path, bookmarks = __pathAndBookmarks( scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", valid=True, leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -185,7 +185,7 @@ def saveAs( menu ) :
 	script = scriptWindow.scriptNode()
 	path, bookmarks = __pathAndBookmarks( scriptWindow )
 	
-	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -236,7 +236,7 @@ def exportSelection( menu ) :
 			assert( node.parent().isAncestorOf( parent ) )
 			parent = node.parent()
 	
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -256,7 +256,7 @@ def importFile( menu ) :
 	script = scriptWindow.scriptNode()
 	path, bookmarks = __pathAndBookmarks( scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", valid=True, leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if path is None :
