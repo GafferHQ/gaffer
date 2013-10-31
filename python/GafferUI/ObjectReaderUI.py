@@ -61,6 +61,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
 				category = "cortex",
 			),
+			"leaf" : True,
 		},
 	),
 )
