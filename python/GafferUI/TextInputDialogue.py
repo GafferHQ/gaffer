@@ -54,6 +54,8 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 				
 	def waitForText( self, **kw ) :
 	
+		self.__textWidget.grabFocus()
+		
 		button = self.waitForButton( **kw )
 		if button is self.__confirmButton :
 			return self.__textWidget.getText()

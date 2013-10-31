@@ -320,6 +320,15 @@ def __fileNameCreator( plug, annotations ) :
 		extensions = extensions.value.split( "|" )
 	else :
 		extensions = []
+
+	bookmarksCategory = annotations.get( plug.getName() + ".bookmarksCategory", None )
+	if bookmarksCategory is not None :
+		bookmarksCategory = bookmarksCategory.value
+	else :
+		# seems like a reasonable guess, and it's preferable to have a category
+		# rather than to have any bookmarks made here pollute the bookmarks for
+		# other browsers.
+		bookmarksCategory = "texture"
 			
 	return GafferUI.PathPlugValueWidget(
 		plug,
@@ -329,7 +338,14 @@ def __fileNameCreator( plug, annotations ) :
 				extensions = extensions,
 				extensionsLabel = "Show only supported files",
 			),
-		)
+		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire(
+				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				pathType = Gaffer.FileSystemPath,
+				category = bookmarksCategory,
+			),
+		},
 	)
 
 def __nullCreator( plug, annotations ) :

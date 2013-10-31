@@ -133,6 +133,7 @@ GafferUI.Metadata.registerPlugValue( Gaffer.Node, "despatcherParameters", "nodeU
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "requirements", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "requirement", None )
 
 GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "despatcherParameters", lambda plug : None )
 GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )

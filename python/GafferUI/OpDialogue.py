@@ -63,12 +63,22 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 	def __init__(
 		self,
-		opInstance,
+		opInstanceOrOpHolderInstance,
 		title=None,
 		sizeMode=GafferUI.Window.SizeMode.Manual,
 		postExecuteBehaviour = PostExecuteBehaviour.FromUserData,
 		**kw
 	) :
+
+		# sort out our op and op holder
+		
+		if isinstance( opInstanceOrOpHolderInstance, IECore.Op ) :
+			opInstance = opInstanceOrOpHolderInstance
+			self.__node = Gaffer.ParameterisedHolderNode()
+			self.__node.setParameterised( opInstance )
+		else :
+			self.__node = opInstanceOrOpHolderInstance
+			opInstance = self.__node.getParameterised()[0]
 
 		# initialise the dialogue
 
@@ -100,13 +110,11 @@ class OpDialogue( GafferUI.Dialogue ) :
 						
 		self.__postExecuteBehaviour = postExecuteBehaviour
 		
-		# make a node to hold the op and get a ui from it
+		# get the ui for the op
 		
-		self.__node = Gaffer.ParameterisedHolderNode()
-		self.__node.setParameterised( opInstance )
 		nodeUI = GafferUI.NodeUI.create( self.__node )
 
-		# build our main ui
+		# build our main ui around it
 		
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 ) as column :
 		

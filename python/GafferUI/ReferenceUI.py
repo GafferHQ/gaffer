@@ -137,10 +137,19 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), "user
 
 def _waitForFileName( initialFileName="", parentWindow=None ) :
 
+	bookmarks = None
+	if parentWindow is not None :
+		if isinstance( parentWindow, GafferUI.ScriptWindow ) :
+			scriptWindow = parentWindow
+		else :
+			scriptWindow = parentWindow.ancestor( GafferUI.ScriptWindow )
+		if scriptWindow is not None :
+			bookmarks = GafferUI.Bookmarks.acquire( scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ), category="reference" )
+
 	if initialFileName :
 		path = Gaffer.FileSystemPath( os.path.dirname( os.path.abspath( initialFileName ) ) )
 	else :
-		path = Gaffer.FileSystemPath( os.getcwd() )
+		path = Gaffer.FileSystemPath( bookmarks.getDefault( parentWindow ) if bookmarks is not None else os.getcwd() )
 
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 

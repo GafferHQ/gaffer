@@ -149,6 +149,7 @@ from DisplayTransform import DisplayTransform
 from Divider import Divider
 import _Pointer
 from SplineWidget import SplineWidget
+from Bookmarks import Bookmarks
 
 # then stuff specific to graph uis
 
