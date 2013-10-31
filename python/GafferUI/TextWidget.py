@@ -36,6 +36,7 @@
 ##########################################################################
 
 import weakref
+import warnings
 
 import IECore
 
@@ -56,7 +57,7 @@ class TextWidget( GafferUI.Widget ) :
 		self.setText( text )
 		self.setEditable( editable )
 		self.setDisplayMode( displayMode )
-		self.setCharacterWidth( characterWidth )
+		self.setFixedCharacterWidth( characterWidth )
 		
 	def setText( self, text ) :
 	
@@ -128,13 +129,44 @@ class TextWidget( GafferUI.Widget ) :
 		selectionStart = self._qtWidget().selectionStart()
 		return ( selectionStart, selectionStart + len( self._qtWidget().selectedText() ) )
 	
+	## Sets the preferred width for the widget in terms of the
+	# number of characters which can be displayed. The widget can still
+	# contract and expand, but will request to be this width if possible.
+	# Use setFixedCharacterWidget() to request an unchanging width.
+	def setPreferredCharacterWidth( self, numCharacters ) :
+	
+		self._qtWidget().setPreferredCharacterWidth( numCharacters )
+	
+	## Returns the preferred width in characters.
+	def getPreferredCharacterWidth( self ) :
+	
+		return self._qtWidget().getPreferredCharacterWidth()
+	
+	## Sets the width for the widget to a constant size measured
+	# in characters, overriding the preferred width. Pass
+	# numCharacters=None to remove the fixed width and make the
+	# widget resizeable again.
+	def setFixedCharacterWidth( self, numCharacters ) :
+	
+		self._qtWidget().setFixedCharacterWidth( numCharacters )
+	
+	## Returns the current fixed width, or None if the preferred
+	# width is in effect.
+	def getFixedCharacterWidth ( self ) :
+	
+		return self._qtWidget().getFixedCharacterWidth()
+	
+	## \deprecated Use setFixedCharacterWidth() instead.
 	def setCharacterWidth( self, numCharacters ) :
 	
-		self._qtWidget().setCharacterWidth( numCharacters )
+		warnings.warn( "TextWidget.setCharacterWidth() is deprecated, use PathListingWidget.setFixedCharacterWidth() instead.", DeprecationWarning, 2 )
+		self.setFixedCharacterWidth( numCharacters )
 					
-	def getCharacterWidth ( self ) :
+	## \deprecated Use getFixedCharacterWidth() instead.
+	def getCharacterWidth( self ) :
 	
-		return self._qtWidget().getCharacterWidth()
+		warnings.warn( "TextWidget.getCharacterWidth() is deprecated, use PathListingWidget.getFixedCharacterWidth() instead.", DeprecationWarning, 2 )
+		return self.getFixedCharacterWidth()
 	
 	## Clears the undo stack local to this widget - when
 	# the stack is empty the widget will ignore any
@@ -299,57 +331,69 @@ class TextWidget( GafferUI.Widget ) :
 			self.__lastSelection = selection
 
 # Private implementation - QLineEdit with a sizeHint that implements the
-# fixed character width. Initially tried to simply call setFixedWidth() on
-# a standard QLineEdit, but when the style changes the calculated width is
-# no longer correct - doing it in the sizeHint allows it to respond to
-# style changes.			
+# fixed/preferred widths measured in characters. It is necessary to implement
+# these using sizeHint() so that they can adjust automatically to changes in
+# the style.
 class _LineEdit( QtGui.QLineEdit ) :
 
 	def __init__( self, parent = None ) :
 	
 		QtGui.QLineEdit.__init__( self )
 	
-		self.__characterWidth = None
+		self.__preferredCharacterWidth = 20
+		self.__fixedCharacterWidth = None
 	
-	def setCharacterWidth( self, numCharacters ) :
+	def setPreferredCharacterWidth( self, numCharacters ) :
 	
-		if self.__characterWidth == numCharacters :
+		if self.__preferredCharacterWidth == numCharacters :
+			return
+	
+		self.__preferredCharacterWidth = numCharacters
+		if self.__fixedCharacterWidth is None :
+			self.updateGeometry()
+
+	def getPreferredCharacterWidth( self ) :
+	
+		return self.__preferredCharacterWidth
+	
+	def setFixedCharacterWidth( self, numCharacters ) :
+	
+		if self.__fixedCharacterWidth == numCharacters :
 			return
 			
-		self.__characterWidth = numCharacters
+		self.__fixedCharacterWidth = numCharacters
 		self.setSizePolicy(
-			QtGui.QSizePolicy.Expanding if self.__characterWidth is None else QtGui.QSizePolicy.Fixed,
+			QtGui.QSizePolicy.Expanding if self.__fixedCharacterWidth is None else QtGui.QSizePolicy.Fixed,
 			QtGui.QSizePolicy.Fixed
 		)
 	
-	def getCharacterWidth( self ) :
+	def getFixedCharacterWidth( self ) :
 	
-		return self.__characterWidth
+		return self.__fixedCharacterWidth
 	
 	def sizeHint( self ) :
 	
+		# call the base class to get the height
 		result = QtGui.QLineEdit.sizeHint( self )
-			
-		if self.__characterWidth is not None :
-			
-			width = self.fontMetrics().boundingRect( "M" * self.__characterWidth ).width()
-			margins = self.getTextMargins()
-			width += margins[0] + margins[2]
-	
-			options = QtGui.QStyleOptionFrameV2()
-			self.initStyleOption( options )
-			size = self.style().sizeFromContents(
-				QtGui.QStyle.CT_LineEdit,
-				options,
-				QtCore.QSize( width, 20, ),
-				self
-			)
 
-			## \todo The + 6 shouldn't be necessary at all, but otherwise the code
-			# above seems to be consistently a bit too small. Not sure if the problem
-			# is here or in qt.
-			result.setWidth( width + 6 )
+		# but then calculate our own width
+		numChars = self.__fixedCharacterWidth if self.__fixedCharacterWidth is not None else self.__preferredCharacterWidth
+		textMargins = self.getTextMargins()
+		contentsMargins = self.getContentsMargins()
+				
+		width = self.fontMetrics().boundingRect( "M" * numChars ).width()
+		width += contentsMargins[0] + contentsMargins[2] + textMargins[0] + textMargins[2]
 			
+		options = QtGui.QStyleOptionFrameV2()
+		self.initStyleOption( options )
+		size = self.style().sizeFromContents(
+			QtGui.QStyle.CT_LineEdit,
+			options,
+			QtCore.QSize( width, 20 ),
+			self
+		)
+
+		result.setWidth( width )
 		return result
 		
 	def event(self, event):

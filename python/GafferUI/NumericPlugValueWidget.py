@@ -62,6 +62,13 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 						
 		self._updateFromPlug()
+		self.__updateWidth()
+	
+	def setPlug( self, plug ) :
+	
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+		
+		self.__updateWidth()
 		
 	def numericWidget( self ) :
 	
@@ -91,12 +98,6 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self.getContext() :
 				with Gaffer.BlockedConnection( self.__valueChangedConnection ) :
 					self.__numericWidget.setValue( plug.getValue() )
-
-			charWidth = None
-			if isinstance( plug, Gaffer.IntPlug ) :
-				if plug.hasMaxValue() :
-					charWidth = len( str( plug.maxValue() ) )
-			self.__numericWidget.setCharacterWidth( charWidth )
 					
 		self.__numericWidget.setEditable( self._editable() )
 	
@@ -148,6 +149,13 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# value as it had before. we block calls to _updateFromPlug() while setting
 			# the value to avoid having to do the work twice if plugSetSignal is emitted.
 			self._updateFromPlug()
+	
+	def __updateWidth( self ) :
+	
+		charWidth = None
+		if isinstance( self.getPlug(), Gaffer.IntPlug ) and self.getPlug().hasMaxValue() :
+			charWidth = len( str( self.getPlug().maxValue() ) )
+		self.__numericWidget.setFixedCharacterWidth( charWidth )
 	
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug.staticTypeId(), NumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug.staticTypeId(), NumericPlugValueWidget )

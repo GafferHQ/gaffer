@@ -53,6 +53,10 @@ class PathWidget( GafferUI.TextWidget ) :
 	
 		GafferUI.TextWidget.__init__( self, str( path ), **kw )
 		
+		# we can be fairly sure that the average path requires a bit more space
+		# than the other things that go in TextWidgets.
+		self.setPreferredCharacterWidth( 60 )
+		
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__selectingFinishedConnection = self.selectingFinishedSignal().connect( Gaffer.WeakMethod( self.__selectingFinished ) )		
 						

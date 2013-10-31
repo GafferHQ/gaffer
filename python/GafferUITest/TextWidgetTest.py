@@ -111,10 +111,20 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 	def testCharacterWidth( self ) :
 	
 		w = GafferUI.TextWidget()
-		self.assertEqual( w.getCharacterWidth(), None )
+		self.assertEqual( w.getPreferredCharacterWidth(), 20 )
+		self.assertEqual( w.getFixedCharacterWidth(), None )
 		
-		w.setCharacterWidth( 4 )
-		self.assertEqual( w.getCharacterWidth(), 4 )
+		w.setFixedCharacterWidth( 4 )
+		self.assertEqual( w.getPreferredCharacterWidth(), 20 )
+		self.assertEqual( w.getFixedCharacterWidth(), 4 )
+
+		w.setPreferredCharacterWidth( 10 )
+		self.assertEqual( w.getPreferredCharacterWidth(), 10 )
+		self.assertEqual( w.getFixedCharacterWidth(), 4 )
+
+		w.setFixedCharacterWidth( None )
+		self.assertEqual( w.getPreferredCharacterWidth(), 10 )
+		self.assertEqual( w.getFixedCharacterWidth(), None )
 		
 if __name__ == "__main__":
 	unittest.main()
