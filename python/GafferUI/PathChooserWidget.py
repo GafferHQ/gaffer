@@ -124,10 +124,9 @@ class PathChooserWidget( GafferUI.Widget ) :
 		
 		# the path bar at the top of the window uses a modified path to make sure it can
 		# only display directories and never be used to choose leaf files. we apply the necessary filter
-		# to achieve that in __updateFilter.
+		# to achieve that in __updateFilter. we don't worry about getting the contents of this path correct
+		# immediately - we'll do that in __pathChanged() at the end of this method.
 		self.__dirPath = self.__path.copy()
-		if self.__dirPath.isLeaf() and len( self.__dirPath ) :
-			del self.__dirPath[-1]
 		self.__dirPathWidget.setPath( self.__dirPath )
 		
 		# the listing also uses a modified path of it's own.
@@ -147,6 +146,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		self.__listingPathChangedConnection = self.__listingPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__listingPathChanged ) )
 
 		self.__updateFilter()
+		self.__pathChanged( self.__path )
 	
 	def getBookmarks( self ) :
 	
@@ -251,8 +251,8 @@ class PathChooserWidget( GafferUI.Widget ) :
 				del pathCopy[-1]
 			pathCopy.truncateUntilValid()
 			with Gaffer.BlockedConnection( ( self.__dirPathChangedConnection, self.__listingPathChangedConnection ) ) :
-				self.__dirPath[:] = pathCopy[:]
-				self.__listingPath[:] = pathCopy[:]
+				self.__dirPath.setFromPath( pathCopy )
+				self.__listingPath.setFromPath( pathCopy )
 		else :
 			# if we're in tree mode then we instead scroll to display the new path
 			self.__directoryListing.scrollToPath( path )
