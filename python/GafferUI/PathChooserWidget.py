@@ -359,4 +359,5 @@ class PathChooserWidget( GafferUI.Widget ) :
 		d = GafferUI.TextInputDialogue( initialText=name, title="Save Bookmark", confirmLabel="Save" )
 		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 		
-		self.__bookmarks.add( name, str( self.__dirPath ), persistent=True )
+		if name is not None :
+			self.__bookmarks.add( name, str( self.__dirPath ), persistent=True )
