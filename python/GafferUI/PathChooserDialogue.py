@@ -40,7 +40,19 @@ import GafferUI
 
 class PathChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, bookmarks=None, **kw ) :
+	## valid has the following possible values :
+	#    None : Accept both valid (existing) and invalid (nonexisting) paths
+	#    True : Accept only valid (existing) paths
+	#    False : Accept only invalid (nonexisting) paths
+	#
+	# leaf has the following possible values :
+	#    None : Accept both leaf and non-leaf paths
+	#    True : Accept only leaf paths
+	#    False : Accept only non-leaf paths
+	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, valid=None, leaf=None, bookmarks=None, **kw ) :
+	
+		if allowMultipleSelection :
+			assert( valid != False )
 	
 		if title is None :
 			title = "Select paths" if allowMultipleSelection else "Select path"
@@ -49,10 +61,13 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		
 		self.__path = path
 		self.__allowMultipleSelection = allowMultipleSelection
+		self.__valid = valid
+		self.__leaf = leaf
 		
 		self.__pathChooserWidget = GafferUI.PathChooserWidget( path, allowMultipleSelection=allowMultipleSelection, bookmarks=bookmarks )
 		self._setWidget( self.__pathChooserWidget )
 		self.__pathChooserSelectedConnection = self.__pathChooserWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathChooserSelected ) )
+		self.__selectionChangedConnection = self.__pathChooserWidget.pathListingWidget().selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ) )
 
 		self.__cancelButton = self._addButton( cancelLabel )
 		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
@@ -60,6 +75,8 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		self.__confirmButtonConnection = self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		
 		self.__pathSelectedSignal = Gaffer.Signal1()
+		
+		self.__updateButtonState()
 	
 	## A signal called when a path has been selected. Slots for this signal
 	# should accept a single argument which will be the PathChooserDialogue instance.	
@@ -92,13 +109,17 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		button = self.waitForButton( **kw )
 		
 		if button is self.__confirmButton :
-			result = self.__pathChooserWidget.pathListingWidget().getSelectedPaths()
-			if not result and not self.__allowMultipleSelection :
-				result = [ self.__path.copy() ]
-			return result
+			return self.__result()
 			
 		return None
-		
+	
+	def __result( self ) :
+	
+		result = self.__pathChooserWidget.pathListingWidget().getSelectedPaths()
+		if not result and not self.__allowMultipleSelection :
+			result = [ self.__path.copy() ]
+		return result
+	
 	def __buttonClicked( self, button ) :
 	
 		if button is self.__confirmButton :
@@ -112,6 +133,28 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 	def __pathChooserSelected( self, pathChooser ) :
 		
 		assert( pathChooser is self.__pathChooserWidget )
-		self.__confirmButton.clickedSignal()( self.__confirmButton )	
+		if self.__confirmButton.getEnabled() :
+			self.__confirmButton.clickedSignal()( self.__confirmButton )	
 		
+	def __updateButtonState( self, *unused ) :
+	
+		confirmEnabled = True
+	
+		potentialResult = self.__result()
+		if not potentialResult :	
+			confirmEnabled = False
+		
+		if confirmEnabled and self.__valid is not None :
+			for path in potentialResult :
+				if path.isValid() != self.__valid :
+					confirmEnabled = False
+					break
+		
+		if confirmEnabled and self.__leaf is not None :
+			for path in potentialResult :
+				if path.isValid() and path.isLeaf() != self.__leaf :
+					confirmEnabled = False
+					break
+
+		self.__confirmButton.setEnabled( confirmEnabled )
 	

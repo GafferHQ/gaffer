@@ -58,6 +58,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
 				category = "rib",
 			),
+			"leaf" : True,
 		},
 	),
 )

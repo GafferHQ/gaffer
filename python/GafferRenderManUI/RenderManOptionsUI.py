@@ -187,6 +187,13 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManOptions.staticTypeId(),
 	"options.statisticsFileName.value",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = ( "htm", "html", "txt", "stats" ) ) )
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = ( "htm", "html", "txt", "stats" ) ) ),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire(
+				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				category = "statistics",
+			),
+			"leaf" : True,
+		},
 	)
 )

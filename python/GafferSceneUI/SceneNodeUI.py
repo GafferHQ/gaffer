@@ -105,6 +105,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
 				category = "sceneCache",
 			),
+			"leaf" : True,
 		},
 	)
 )
@@ -121,6 +122,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
 				category = "sceneCache",
 			),
+			"leaf" : True,
 		},
 	)
 )

@@ -102,7 +102,7 @@ class BoxNodeUI( GafferUI.StandardNodeUI ) :
 		path = Gaffer.FileSystemPath( bookmarks.getDefault( self ) )
 		path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-		dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", bookmarks=bookmarks )
+		dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
 		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if not path :

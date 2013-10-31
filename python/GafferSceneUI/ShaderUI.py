@@ -173,7 +173,7 @@ def __loadFromFile( menu, extensions, nodeCreator ) :
 	path = Gaffer.FileSystemPath( os.getcwd() )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( extensions ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Load Shader", confirmLabel = "Load" )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Load Shader", confirmLabel = "Load", valid=True, leaf=True )
 	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.ScriptWindow ) )
 	
 	if not path :
