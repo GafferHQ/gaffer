@@ -100,6 +100,10 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 
 bool Box::plugIsPromoted( const Plug *descendantPlug ) const
 {
+	if( !descendantPlug )
+	{
+		return false;
+	}
 	const Plug *input = descendantPlug->getInput<Plug>();
 	return input && input->node() == this;
 }
@@ -108,11 +112,23 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 {
 	if( !plugIsPromoted( promotedDescendantPlug ) )
 	{
-		throw IECore::Exception(
-			boost::str(
-				boost::format( "Cannot unpromote plug \"%s\" as it has not been promoted." ) % promotedDescendantPlug->fullName()
-			)
-		);
+		if( promotedDescendantPlug )
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot unpromote plug \"%s\" as it has not been promoted." ) % promotedDescendantPlug->fullName()
+				)
+			);
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot unpromote null plug" )
+				)
+			);
+
+		}
 	}
 	
 	Plug *inputPlug = promotedDescendantPlug->getInput<Plug>();
@@ -142,6 +158,21 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 
 bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const
 {
+	if( !descendantPlug )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote null plug" )
+				)
+			);
+		}
+	}
 	if( descendantPlug->direction() != Plug::In )
 	{
 		if( !throwExceptions )
