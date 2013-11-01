@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import sys
 import warnings
 
 import IECore
@@ -165,7 +166,28 @@ class Window( GafferUI.ContainerWidget ) :
 			oldParent.removeChild( childWindow ) 
 		
 		self.__childWindows.add( childWindow )
-		childWindow._qtWidget().setParent( self._qtWidget(), childWindow._qtWidget().windowFlags() | QtCore.Qt.Tool )
+		
+		# We have the following criteria for child windows :
+		#
+		#	- they must always stay on top of their parent
+		#		- even when the parent is fullscreen
+		#	- they must open somewhere sensible by default
+		#		- ideally centered on the parent
+		#	- they must take focus nicely when asked (by PathChooserDialogue for instance)
+		#
+		# On OS X, the Tool window type does an excellent job
+		# of all of that, as well as looking pretty. But if we use
+		# the Dialog window type, they disappear behind full screen
+		# windows.
+		#
+		# On Linux, the Tool window type does a poor job, opening
+		# in arbitrary places, and displaying various focus problems.
+		# The Dialog type on the other hand does a much better job. Of
+		# course, this being X11, different window managers will do different
+		# things, but on the whole the Dialog type seems best for X11.
+		childWindowType = QtCore.Qt.Tool if sys.platform == "darwin" else QtCore.Qt.Dialog
+		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType_Mask ) | childWindowType		
+		childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
 		childWindow._applyVisibility()
 	
 	## Returns a list of all the windows parented to this one.
