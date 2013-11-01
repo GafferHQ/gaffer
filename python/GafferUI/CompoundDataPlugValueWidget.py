@@ -158,7 +158,25 @@ class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 	
 		return True
+
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	
+		for w in self.__row :
+			if w.getPlug().isSame( childPlug ) :
+				return w
+				
+		return None
+	
+	def setReadOnly( self, readOnly ) :
+	
+		if readOnly == self.getReadOnly() :
+			return
+			
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
 		
+		for w in self.__row :
+			w.setReadOnly( readOnly )
+	
 	def _updateFromPlug( self ) :
 	
 		if "enabled" in self.getPlug() :
