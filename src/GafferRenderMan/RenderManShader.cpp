@@ -134,6 +134,11 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 		return false;
 	}
 	
+	if( !inputPlug )
+	{
+		return true;
+	}
+	
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
