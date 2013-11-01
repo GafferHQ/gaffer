@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -37,17 +36,17 @@
 
 #include "boost/tokenizer.hpp"
 
-#include "GafferScene/PrimitiveVariableProcessor.h"
+#include "GafferScene/AttributeProcessor.h"
 
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( PrimitiveVariableProcessor );
+IE_CORE_DEFINERUNTIMETYPED( AttributeProcessor );
 
-size_t PrimitiveVariableProcessor::g_firstPlugIndex = 0;
+size_t AttributeProcessor::g_firstPlugIndex = 0;
 
-PrimitiveVariableProcessor::PrimitiveVariableProcessor( const std::string &name )
+AttributeProcessor::AttributeProcessor( const std::string &name )
 	:	SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -55,96 +54,98 @@ PrimitiveVariableProcessor::PrimitiveVariableProcessor( const std::string &name 
 	addChild( new BoolPlug( "invertNames" ) );
 }
 
-PrimitiveVariableProcessor::~PrimitiveVariableProcessor()
+AttributeProcessor::~AttributeProcessor()
 {
 }
 
-Gaffer::StringPlug *PrimitiveVariableProcessor::namesPlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *PrimitiveVariableProcessor::namesPlug() const
+Gaffer::StringPlug *AttributeProcessor::namesPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::BoolPlug *PrimitiveVariableProcessor::invertNamesPlug()
+const Gaffer::StringPlug *AttributeProcessor::namesPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::BoolPlug *AttributeProcessor::invertNamesPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::BoolPlug *PrimitiveVariableProcessor::invertNamesPlug() const
+const Gaffer::BoolPlug *AttributeProcessor::invertNamesPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-void PrimitiveVariableProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void AttributeProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
-
+	
 	if( input == namesPlug() || input == invertNamesPlug() )
 	{
-		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->attributesPlug() );
 	}
 }
 
-bool PrimitiveVariableProcessor::processesObject() const
+bool AttributeProcessor::processesAttributes() const
 {
 	bool invert = invertNamesPlug()->getValue();
 	if( invert )
 	{
-		// we don't know if we're modifying the object till we find out what
-		// variables it has.
+		// we don't know if we're modifying the attributes till we find out what
+		// names they have.
 		return true;
 	}
 	else
 	{
-		// if there are no names, then we know we're not modifying the object.
+		// if there are no names, then we know we're not modifying the attributes.
 		std::string names = namesPlug()->getValue();
 		return names.size();
 	}
 }
 
-void PrimitiveVariableProcessor::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AttributeProcessor::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	namesPlug()->hash( h );
 	invertNamesPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr PrimitiveVariableProcessor::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	ConstPrimitivePtr inputGeometry = runTimeCast<const Primitive>( inputObject );
-	if( !inputGeometry )
+	if( inputAttributes->members().empty() )
 	{
-		return inputObject;
+		return inputAttributes;
 	}
-	/// \todo Support glob expressions. We could accelerate the regex conversion and compilation process
-	/// by storing them as member variables which we update on a plugSetSignal(). We'd have to either prevent
-	/// connections being made to namesPlug() or not use the acceleration when connections had been made.
-	/// Mind you, that's the sort of thing we're not allowed to do if we're ever going to run nodes in isolation
-	/// on some funky remote computation server. Maybe what we really need is a little LRUCache mapping from
-	/// the names string to the regexes. Yep. That's what we need. LRUCaches are going to be the way for nearly
-	/// everything like this I reckon.
+		
+	/// \todo See todos about name matching in PrimitiveVariableProcessor.
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	std::string namesValue = namesPlug()->getValue();
 	Tokenizer names( namesValue, boost::char_separator<char>( " " ) );
 		
 	bool invert = invertNamesPlug()->getValue();
-	IECore::PrimitivePtr result = inputGeometry->copy();
+
+	CompoundObjectPtr result = new CompoundObject;
 	IECore::PrimitiveVariableMap::iterator next;
-	for( IECore::PrimitiveVariableMap::iterator it = result->variables.begin(); it != result->variables.end(); it = next )
+	for( CompoundObject::ObjectMap::const_iterator it = inputAttributes->members().begin(), eIt = inputAttributes->members().end(); it != eIt; ++it )
 	{
-		next = it;
-		next++;
-		bool found = std::find( names.begin(), names.end(), it->first ) != names.end();
+		ConstObjectPtr attribute = it->second;
+		bool found = std::find( names.begin(), names.end(), it->first.string() ) != names.end();
 		if( found != invert )
 		{
-			processPrimitiveVariable( path, context, inputGeometry, it->second );
-			if( it->second.interpolation == IECore::PrimitiveVariable::Invalid || !it->second.data )
-			{
-				result->variables.erase( it );
-			}
+			attribute = processAttribute( path, context, it->first, attribute.get() );
+		}
+		if( attribute )
+		{
+			result->members().insert(
+				CompoundObject::ObjectMap::value_type(
+					it->first,
+					// cast is ok - result is const immediately on
+					// returning from this function, and attribute will
+					// therefore not be modified.
+					constPointerCast<Object>( attribute )
+				)
+			);
 		}
 	}
 	

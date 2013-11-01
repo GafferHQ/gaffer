@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,50 +39,35 @@ import unittest
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
+class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
 		p = GafferScene.Plane()
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( p["out"] )
 		
-		self.assertEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"] )
-		self.failUnless( "s" in d["out"].object( "/plane" ) )
-		self.failUnless( "t" in d["out"].object( "/plane" ) )
+		a = GafferScene.StandardAttributes()
+		a["attributes"]["doubleSided"]["enabled"].setValue( True )
+		a["attributes"]["visibility"]["enabled"].setValue( True )
+		a["in"].setInput( p["out"] )
+		
+		d = GafferScene.DeleteAttributes()
+		d["in"].setInput( a["out"] )
+		
+		self.assertScenesEqual( a["out"], d["out"] )
+		self.assertSceneHashesEqual( a["out"], d["out"] )
+		self.failUnless( "gaffer:visibility" in d["out"].attributes( "/plane" ) )
+		self.failUnless( "doubleSided" in d["out"].attributes( "/plane" ) )
 	
-		d["names"].setValue( "s t e" )
+		d["names"].setValue( "doubleSided" )
 		
-		self.assertNotEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"], childPlugNames = ( "attributes", "bound", "transform", "globals", "childNames" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"], pathsToIgnore = ( "/plane" ) )		
-		self.failUnless( "s" not in d["out"].object( "/plane" ) )
-		self.failUnless( "t" not in d["out"].object( "/plane" ) )
-		
-	def testNonPrimitiveObject( self ) :
+		self.assertSceneHashesNotEqual( a["out"], d["out"], childPlugNames = ( "attributes", ) )		
+		self.assertSceneHashesEqual( a["out"], d["out"], childPlugNames = ( "object", "bound", "transform", "globals", "childNames" ) )		
 	
-		c = GafferScene.Camera()
-		
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( c["out"] )
-	
-		self.assertSceneValid( d["out"] )
-		self.failUnless( isinstance( d["out"].object( "/camera" ), IECore.Camera ) )
-
-	def testAffects( self ) :
-	
-		d = GafferScene.DeletePrimitiveVariables()
-		
-		cs = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
-		self.assertEqual( len( cs ), 0 )
-		
-		d["enabled"].setValue( False )
-		self.assertTrue( "out" in [ x[0].getName() for x in cs ] )
-		
+		self.failUnless( "gaffer:visibility" in d["out"].attributes( "/plane" ) )
+		self.failIf( "doubleSided" in d["out"].attributes( "/plane" ) )
+						
 if __name__ == "__main__":
 	unittest.main()

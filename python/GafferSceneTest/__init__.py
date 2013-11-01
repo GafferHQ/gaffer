@@ -83,6 +83,7 @@ from MapOffsetTest import MapOffsetTest
 from PointConstraintTest import PointConstraintTest
 from SceneReaderTest import SceneReaderTest
 from IsolateTest import IsolateTest
+from DeleteAttributesTest import DeleteAttributesTest
 
 if __name__ == "__main__":
 	import unittest

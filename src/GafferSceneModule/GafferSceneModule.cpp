@@ -57,19 +57,15 @@
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
-#include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/PathFilter.h"
-#include "GafferScene/Attributes.h"
 #include "GafferScene/AlembicSource.h"
 #include "GafferScene/SceneContextVariables.h"
 #include "GafferScene/StandardOptions.h"
 #include "GafferScene/SubTree.h"
-#include "GafferScene/OpenGLAttributes.h"
 #include "GafferScene/SceneWriter.h"
 #include "GafferScene/SceneReader.h"
 #include "GafferScene/Light.h"
-#include "GafferScene/StandardAttributes.h"
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Transform.h"
 #include "GafferScene/Prune.h"
@@ -79,7 +75,6 @@
 #include "GafferScene/Text.h"
 #include "GafferScene/MapProjection.h"
 #include "GafferScene/MapOffset.h"
-#include "GafferScene/CustomAttributes.h"
 #include "GafferScene/CustomOptions.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
@@ -90,6 +85,7 @@
 #include "GafferSceneBindings/RenderBinding.h"
 #include "GafferSceneBindings/ShaderBinding.h"
 #include "GafferSceneBindings/ConstraintBinding.h"
+#include "GafferSceneBindings/AttributesBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -135,7 +131,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindShader();
 	
 	GafferBindings::DependencyNodeClass<Options>();	
-	GafferBindings::DependencyNodeClass<ShaderAssignment>();
 	
 	{
 		scope s = GafferBindings::DependencyNodeClass<Filter>();
@@ -150,21 +145,17 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	}
 				
 	GafferBindings::DependencyNodeClass<PathFilter>();
-	GafferBindings::DependencyNodeClass<Attributes>();
 	GafferBindings::DependencyNodeClass<AlembicSource>();
 	GafferBindings::DependencyNodeClass<SceneContextVariables>();
 	GafferBindings::DependencyNodeClass<StandardOptions>();
 	GafferBindings::DependencyNodeClass<SubTree>();
-	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
 	GafferBindings::DependencyNodeClass<Light>();
-	GafferBindings::DependencyNodeClass<StandardAttributes>();
 	GafferBindings::DependencyNodeClass<Transform>();
 	GafferBindings::DependencyNodeClass<Prune>();
 	GafferBindings::DependencyNodeClass<Isolate>();
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<MapProjection>();
 	GafferBindings::DependencyNodeClass<MapOffset>();
-	GafferBindings::DependencyNodeClass<CustomAttributes>();
 	GafferBindings::DependencyNodeClass<CustomOptions>();
 	
 	GafferBindings::NodeClass<OpenGLShader>()
@@ -182,5 +173,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	
 	bindRender();
 	bindConstraint();
+	bindAttributes();
 	
 }
