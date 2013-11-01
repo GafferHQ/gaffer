@@ -39,6 +39,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -72,6 +73,16 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 	
 		self.assertSceneValid( d["out"] )
 		self.failUnless( isinstance( d["out"].object( "/camera" ), IECore.Camera ) )
+
+	def testAffects( self ) :
+	
+		d = GafferScene.DeletePrimitiveVariables()
+		
+		cs = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		d["enabled"].setValue( False )
+		self.assertTrue( "out" in [ x[0].getName() for x in cs ] )
 		
 if __name__ == "__main__":
 	unittest.main()

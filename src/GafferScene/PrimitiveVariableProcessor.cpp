@@ -81,6 +81,8 @@ const Gaffer::BoolPlug *PrimitiveVariableProcessor::invertNamesPlug() const
 
 void PrimitiveVariableProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
+	SceneElementProcessor::affects( input, outputs );
+
 	if( input == namesPlug() || input == invertNamesPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
