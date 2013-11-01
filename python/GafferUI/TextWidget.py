@@ -132,7 +132,7 @@ class TextWidget( GafferUI.Widget ) :
 	## Sets the preferred width for the widget in terms of the
 	# number of characters which can be displayed. The widget can still
 	# contract and expand, but will request to be this width if possible.
-	# Use setFixedCharacterWidget() to request an unchanging width.
+	# Use setFixedCharacterWidth() to request an unchanging width.
 	def setPreferredCharacterWidth( self, numCharacters ) :
 	
 		self._qtWidget().setPreferredCharacterWidth( numCharacters )
