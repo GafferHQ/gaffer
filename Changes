@@ -1,3 +1,47 @@
+# 0.85.0
+
+#### API
+
+- Added Bookmarks API for storing Path bookmarks by application, path type, and category (#55)
+ - Configs can define custom bookmarks on startup (https://github.com/ImageEngine/gaffer/wiki/Custom-Bookmarks)
+ - Parameters can specify the bookmarks category with a ["UI"]["bookmarksCategory"] user data entry
+ - Support in the gui, browser, and op apps
+ - Support in File menu, PathChooserDialogue, PathChooserWidget, PathParameter, PathVectorParameter, RenderMan shader parameter, Box, and Reference node UIs
+- Added Style::changedSignal()
+- Added Window set/getIcon and setting GafferLogoMini as the default window icon
+- Added TextWidget set/getPreferredCharacterWidth methods
+- Fixed ParameterisedHolder parameterChanged() crashes
+- Fixed Widget.bound() on OS X
+- Fixed some bugs with null plugs in Box's plug promotion methods
+
+#### GL
+
+- Fixed GLSL shaders used by the UI for OpenGL 2.1 (requires Cortex 8.0.0-a23)
+- Fixed OpenGL drawing when embedded in Houdini (requires Cortex 8.0.0-a22)
+
+#### UI
+
+- Added ColorSwatchPlugValueWidget (#625)
+- Added new Gaffer logos (though only using them for window icons currently)
+- Increased preferred width of PathWidgets (#515)
+- Improved PathChooserDialogue handling of invalid selections (#628)
+- Fixed Dialogue positioning and focussing on Linux (#220, #642, #62)
+- Fixed SectionedCompoundDataPlugValueWidget child widget bugs (#588)
+- Fixed Timeline start/end field sizing bug (#111)
+
+#### Scene
+
+- Added DeleteAttributes node and AttributeProcessor base class (#587)
+- Fixed PrimitiveVariableProcessor::affects()
+
+#### RenderMan
+
+- Fixed RenderManShader.acceptsInput() crash
+
+#### OSL
+
+- Added closure parameter support to OSLShader
+
 # 0.84.0
 
 #### UI
