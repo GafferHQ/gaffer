@@ -122,12 +122,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 		}
 		else
 		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot unpromote null plug" )
-				)
-			);
-
+			throw IECore::Exception( "Cannot unpromote null plug" );
 		}
 	}
 	
@@ -166,13 +161,10 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 		}
 		else
 		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot promote null plug" )
-				)
-			);
+			throw IECore::Exception(  "Cannot promote null plug" );
 		}
 	}
+	
 	if( descendantPlug->direction() != Plug::In )
 	{
 		if( !throwExceptions )
