@@ -39,6 +39,7 @@
 #include "GafferScene/Shader.h"
 
 #include "Gaffer/Box.h"
+#include "Gaffer/Context.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -133,12 +134,44 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
 	if( shader )
 	{
-		// Shader::state() returns a const object, so that in the future it may
-		// come from a cached value. we're putting it into our result which, once
-		// returned, will also be treated as const and cached. for that reason the
-		// temporary const_cast needed to put it into the result is justified -
-		// we never change the object and nor can anyone after it is returned.
-		ObjectVectorPtr state = constPointerCast<ObjectVector>( shader->state() );
+		ObjectVectorPtr state;
+		
+		// This node allows the gaffer:contextVariables attribute entry to modify the context
+		// in which the shader network gets evaluated. Lets try and find it in the incoming attributes:
+		CompoundObjectPtr contextVariables;
+		CompoundObject::ObjectMap::iterator contextVariablesIt = result->members().find( ScenePlug::contextVariablesAttributeName );
+		if( contextVariablesIt != result->members().end() )
+		{
+			contextVariables = runTimeCast< CompoundObject >( contextVariablesIt->second );
+		}
+		
+		if( !contextVariables )
+		{
+			// Shader::state() returns a const object, so that in the future it may
+			// come from a cached value. we're putting it into our result which, once
+			// returned, will also be treated as const and cached. for that reason the
+			// temporary const_cast needed to put it into the result is justified -
+			// we never change the object and nor can anyone after it is returned.
+			state = constPointerCast<ObjectVector>( shader->state() );
+		}
+		else
+		{
+			// we've found gaffer:contextVariables. Lets make a temporary context so it can add
+			// the appropriate entries:
+			ContextPtr tmpContext = new Context( *context );
+			
+			for( CompoundObject::ObjectMap::iterator it = contextVariables->members().begin(); it != contextVariables->members().end(); ++it )
+			{
+				if( DataPtr data = runTimeCast<Data>( it->second ) )
+				{
+					tmpContext->set( it->first, data.get() );
+				}
+			}
+			
+			Context::Scope scopedContext( tmpContext );
+			state = constPointerCast<ObjectVector>( shader->state() );
+		}
+		
 		if( state->members().size() )
 		{
 			result->members()["shader"] = state;
