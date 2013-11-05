@@ -58,7 +58,22 @@ class _BusyWidget( QtGui.QWidget ) :
 
 		self.__size = size
 		self.setMinimumSize( size, size )
-		self.startTimer( 1000 / 25 )
+		self.__timer = None
+		
+	def showEvent( self, event ) :
+	
+		QtGui.QWidget.showEvent( self, event )
+
+		if self.__timer is None :
+			self.__timer = self.startTimer( 1000 / 25 )
+		
+	def hideEvent( self, event ) :
+	
+		QtGui.QWidget.hideEvent( self, event )
+		
+		if self.__timer is not None :
+			self.killTimer( self.__timer )
+			self.__timer = None
 	
 	def timerEvent( self, event ) :
 	
