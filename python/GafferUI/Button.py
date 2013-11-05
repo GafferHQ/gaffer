@@ -50,6 +50,8 @@ class Button( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtGui.QPushButton(), **kw )
 		
 		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
+		# allow return and enter keys to click button
+		self._qtWidget().setAutoDefault( True )
 		
 		self.setText( text )
 		self.setImage( image )
