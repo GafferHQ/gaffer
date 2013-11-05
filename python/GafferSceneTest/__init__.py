@@ -84,6 +84,7 @@ from PointConstraintTest import PointConstraintTest
 from SceneReaderTest import SceneReaderTest
 from IsolateTest import IsolateTest
 from DeleteAttributesTest import DeleteAttributesTest
+from UnionFilterTest import UnionFilterTest
 
 if __name__ == "__main__":
 	import unittest
