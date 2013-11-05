@@ -54,6 +54,7 @@ class ConfirmationDialogue( GafferUI.Dialogue ) :
 	# button was pressed, and False otherwise.
 	def waitForConfirmation( self, **kw ) :
 	
+		self.__confirmButton._qtWidget().setFocus()
 		button = self.waitForButton( **kw )
 		if button is self.__confirmButton :
 			return True
