@@ -140,6 +140,7 @@ from OpPathPreview import OpPathPreview
 from NumericSlider import NumericSlider
 from ColorChooser import ColorChooser
 from ColorChooserDialogue import ColorChooserDialogue
+from MessageWidget import MessageWidget
 from NotificationMessageHandler import NotificationMessageHandler
 from AttributeCachePathPreview import AttributeCachePathPreview
 from MenuButton import MenuButton
