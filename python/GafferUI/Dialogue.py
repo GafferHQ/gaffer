@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -58,6 +58,52 @@ class Dialogue( GafferUI.Window ) :
 		
 		self.setChild( self.__column )
 	
+		self.__modalEventLoop = None
+	
+	## When True is passed, enters a modal state and doesn't
+	# return until either setModal( False ) has been called or
+	# the dialogue is closed. When in a modal state, all other
+	# windows are prevented from receiving input events.
+	def setModal( self, modal, parentWindow=None ) :
+	
+		assert( modal != self.getModal() )
+	
+		if modal :
+		
+			if parentWindow is not None :
+				focusWidget = self._qtWidget().focusWidget()
+				parentWindow.addChildWindow( self )
+				if focusWidget is not None :
+					# the reparenting above removes the focus, so we reclaim it.
+					# this is important for PathChooserWidget, which puts the focus
+					# in the right place in waitForPath(), then calls waitForButton().
+					focusWidget.setFocus( QtCore.Qt.ActiveWindowFocusReason )
+			
+			self.setVisible( False )
+			self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
+			self.setVisible( True )
+
+			self.__closeConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		
+			self.__modalEventLoop = GafferUI.EventLoop()		
+			self.__modalEventLoop.start()
+
+			self.__closeConnection = None
+			self.__modalEventLoop = None
+			
+			self._qtWidget().setWindowModality( QtCore.Qt.NonModal )
+
+			if parentWindow is not None :
+				parentWindow.removeChild( self )
+			
+		else :
+		
+			self.__modalEventLoop.stop()
+			
+	def getModal( self ) :
+	
+		return True if self.__modalEventLoop is not None else False
+	
 	## Enters a modal state	and returns the button the user pressed to exit
 	# that state, or None if the dialogue was closed instead. If parentWindow
 	# is specified then the dialogue will be temporarily parented on top of the
@@ -68,36 +114,15 @@ class Dialogue( GafferUI.Window ) :
 	
 		assert( len( self.__buttonRow ) )
 	
-		if parentWindow is not None :
-			focusWidget = self._qtWidget().focusWidget()
-			parentWindow.addChildWindow( self )
-			if focusWidget is not None :
-				# the reparenting above removes the focus, so we reclaim it.
-				# this is important for PathChooserWidget, which puts the focus
-				# in the right place in waitForPath(), then calls waitForButton().
-				focusWidget.setFocus( QtCore.Qt.ActiveWindowFocusReason )
-			
-		self.setVisible( False )
-		self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
-		self.setVisible( True )
-		
-		self.__eventLoop = GafferUI.EventLoop()		
+		self.__resultOfWait = None
 		self.__buttonConnections = []
-		self.__closeConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 		for button in self.__buttonRow :
 			self.__buttonConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
 		
-		self.__resultOfWait = None
-		self.__eventLoop.start() # returns when a button has been pressed
+		self.setModal( True, parentWindow )
+		
 		self.__buttonConnections = []
-		self.__closeConnection = None
-		self.__eventLoop = None
-		
-		self._qtWidget().setWindowModality( QtCore.Qt.NonModal )
-		
-		if parentWindow is not None :
-			parentWindow.removeChild( self )
-							
+									
 		return self.__resultOfWait
 		
 	def _setWidget( self, widget ) :
@@ -123,18 +148,14 @@ class Dialogue( GafferUI.Window ) :
 		
 	def __buttonClicked( self, button ) :
 	
-		# check we're in a call to _waitForButton
-		assert( len( self.__buttonConnections ) and self.__eventLoop is not None )
+		# check we're in a call to waitForButton
+		assert( len( self.__buttonConnections ) )
 		
 		self.__resultOfWait = button
-		if self.__eventLoop.running() : # may already have stopped in __close (if a subclass called close())
-			self.__eventLoop.stop()
+		if self.getModal() : # may already have stopped in __close (if a subclass called close())
+			self.setModal( False )
 		
 	def __close( self, widget ) :
 	
-		# check we're in a call to _waitForButton
-		assert( len( self.__buttonConnections ) and self.__eventLoop is not None  )
-
-		self.__resultOfWait = None
-		if self.__eventLoop.running() : # may already have stopped in __buttonClicked (if same button later triggered close())
-			self.__eventLoop.stop()
+		if self.getModal() : # may already have stopped in __buttonClicked (if same button later triggered close())
+			self.setModal( False )
