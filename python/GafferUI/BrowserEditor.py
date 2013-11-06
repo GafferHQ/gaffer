@@ -214,7 +214,11 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 		
 			def showDialogue( menu ) :
 			
-				dialogue = GafferUI.OpDialogue( op )
+				dialogue = GafferUI.OpDialogue(
+					op,
+					postExecuteBehaviour = GafferUI.OpDialogue.PostExecuteBehaviour.Close,
+					executeInBackground=True
+				)
 				dialogue.waitForResult( parentWindow = menu.ancestor( GafferUI.Window ) )
 				
 			return showDialogue
