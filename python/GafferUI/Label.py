@@ -84,6 +84,19 @@ class Label( GafferUI.Widget ) :
 			GafferUI.VerticalAlignment._fromQt( a ),
 		)
 	
+	def setTextSelectable( self, selectable ) :
+	
+		flags = self._qtWidget().textInteractionFlags()
+		flags &= ~QtCore.Qt.TextSelectableByMouse
+		if selectable :
+			flags |= QtCore.Qt.TextSelectableByMouse
+			
+		self._qtWidget().setTextInteractionFlags( flags )
+		
+	def getTextSelectable( self ) :
+	
+		return bool( self._qtWidget().textInteractionFlags() & QtCore.Qt.TextSelectableByMouse )
+	
 	def linkActivatedSignal( self ) :
 	
 		try :

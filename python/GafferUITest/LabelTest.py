@@ -72,6 +72,17 @@ class LabelTest( GafferUITest.TestCase ) :
 		
 		w.setText( "<h2>goodbye</h2>" )
 		self.assertEqual( w.getText(), "<h2>goodbye</h2>" )
+	
+	def testTextSelectable( self ) :
+	
+		w = GafferUI.Label( "" )
+		self.assertEqual( w.getTextSelectable(), False )
+		
+		w.setTextSelectable( True )
+		self.assertEqual( w.getTextSelectable(), True )
+		
+		w.setTextSelectable( False )
+		self.assertEqual( w.getTextSelectable(), False )
 					
 if __name__ == "__main__":
 	unittest.main()
