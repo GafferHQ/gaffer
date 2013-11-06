@@ -180,6 +180,8 @@ class EventLoop() :
 	# remaining to be processed). If callback returns False then it will be removed
 	# automatically after running, if it returns True it will be called again until
 	# it returns False, or until removeIdleCallback() is called.
+	## \todo This should probably be replaced with an idleSignal() like the one we
+	# have in GafferUI.Gadget.
 	@classmethod
 	def addIdleCallback( cls, callback ) :
 		
