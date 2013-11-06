@@ -37,6 +37,7 @@
 
 from __future__ import with_statement
 
+import sys
 import threading
 
 import IECore
@@ -156,6 +157,10 @@ class OpDialogue( GafferUI.Dialogue ) :
 			)
 			
 			GafferUI.Spacer( IECore.V2i( 1 ), expand=True )
+			
+			with GafferUI.Collapsible( "Details", collapsed = True ) :
+			
+				self.__messageWidget = GafferUI.MessageWidget()
 				
 		# add buttons. our buttons mean different things depending on our current state,
 		# but they equate roughly to going forwards or going backwards.
@@ -226,6 +231,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__progressLabel.setTextSelectable( False )
 		self.__backButton.setEnabled( False )
 		self.__forwardButton.setEnabled( False )
+		self.__messageWidget.textWidget().setText( "" )
 		
 		self.__state = self.__State.Execution
 		
@@ -242,17 +248,19 @@ class OpDialogue( GafferUI.Dialogue ) :
 		try :
 			
 			self.__node.setParameterisedValues()
-			result = self.__node.getParameterised()[0]()
+			
+			with self.__messageWidget.messageHandler() :
+				result = self.__node.getParameterised()[0]()
 									
 		except Exception, e :
 
-			result = e
+			result = sys.exc_info()
 			
 		GafferUI.EventLoop.executeOnUIThread( IECore.curry( self.__finishExecution, result ) )
 		
 	def __finishExecution( self, result ) :
 	
-		if not isinstance( result, BaseException ) :
+		if isinstance( result, IECore.Object ) :
 		
 			if self.getModal() :
 				self.__resultOfWait = result
@@ -270,10 +278,10 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 			self.__initiateErrorDisplay( result )
 			
-	def __initiateErrorDisplay( self, exception ) :
+	def __initiateErrorDisplay( self, exceptionInfo ) :
 		
 		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueFailure.png" ) )
-		self.__progressLabel.setText( "<h3>" + str( exception ) + "</h3>" )
+		self.__progressLabel.setText( "<h3>" + str( exceptionInfo[1] ) + "</h3>" )
 	
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
@@ -282,6 +290,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton.setText( "Retry" )
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
+		
+		self.__messageWidget.appendException( exceptionInfo )
 		
 		self.__frame.setChild( self.__progressUI )
 
