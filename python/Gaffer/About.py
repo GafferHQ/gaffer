@@ -66,7 +66,7 @@ class About :
 	@staticmethod
 	def copyright() :
 		
-		return "Copyright (c) 2011-2012 John Haddon"
+		return "Copyright (c) 2011-2013 John Haddon, Copyright (c) 2011-2013 Image Engine Design Inc."
 
 	@staticmethod 
 	def license() :	
