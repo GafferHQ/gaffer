@@ -142,11 +142,11 @@ class Widget( object ) :
 		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
 				addChildKW = kw
-				if "parentArgs" in addChildKW :
+				if "parenting" in addChildKW :
 					assert( len( addChildKW ) == 1 )
 					addChildKW = addChildKW.copy()
-					addChildKW.update( addChildKW["parentArgs"] )
-					del addChildKW["parentArgs"]
+					addChildKW.update( addChildKW["parenting"] )
+					del addChildKW["parenting"]
 				self.__parentStack[-1][0].addChild( self, **addChildKW )
 				
 		self.__eventFilterInstalled = False		

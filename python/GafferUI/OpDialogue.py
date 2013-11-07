@@ -140,17 +140,17 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 			center = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center }
 			
-			GafferUI.Spacer( IECore.V2i( 1 ), parentArgs = { "expand" : True } )
+			GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
 			
 			self.__progressIconFrame = GafferUI.Frame(
 				borderStyle = GafferUI.Frame.BorderStyle.None,
-				parentArgs = {
+				parenting = {
 					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center
 				}
 			)
 
 			self.__progressLabel = GafferUI.Label(
-				parentArgs = {
+				parenting = {
 					"expand" : True,
 					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
 				}
