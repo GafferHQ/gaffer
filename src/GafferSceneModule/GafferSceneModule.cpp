@@ -57,8 +57,6 @@
 #include "GafferScene/GlobalsProcessor.h"
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathFilter.h"
 #include "GafferScene/AlembicSource.h"
 #include "GafferScene/SceneContextVariables.h"
 #include "GafferScene/StandardOptions.h"
@@ -86,6 +84,7 @@
 #include "GafferSceneBindings/ShaderBinding.h"
 #include "GafferSceneBindings/ConstraintBinding.h"
 #include "GafferSceneBindings/AttributesBinding.h"
+#include "GafferSceneBindings/FilterBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -132,19 +131,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	
 	GafferBindings::DependencyNodeClass<Options>();	
 	
-	{
-		scope s = GafferBindings::DependencyNodeClass<Filter>();
-	
-		enum_<Filter::Result>( "Result" )
-			.value( "NoMatch", Filter::NoMatch )
-			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "ExactMatch", Filter::ExactMatch )
-			.value( "AncestorMatch", Filter::AncestorMatch )
-			.value( "EveryMatch", Filter::EveryMatch )
-		;
-	}
-				
-	GafferBindings::DependencyNodeClass<PathFilter>();
 	GafferBindings::DependencyNodeClass<AlembicSource>();
 	GafferBindings::DependencyNodeClass<SceneContextVariables>();
 	GafferBindings::DependencyNodeClass<StandardOptions>();
@@ -174,5 +160,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindRender();
 	bindConstraint();
 	bindAttributes();
+	bindFilter();
 	
 }

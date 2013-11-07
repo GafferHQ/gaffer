@@ -104,6 +104,7 @@ enum TypeId
 	IsolateTypeId = 110559,
 	AttributeProcessorTypeId = 110560,
 	DeleteAttributesTypeId = 110561,
+	UnionFilterTypeId = 110562,
 	
 	LastTypeId = 110650
 };
