@@ -100,6 +100,8 @@ class Grade : public ChannelDataProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( Grade );
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_GRADE_H
