@@ -166,5 +166,23 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		self.assertTrue( "shader" in s["a"]["out"].attributes( "/plane" ) )
 		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["shader"][-1].name, "test" )
 		
+	def testContextVariables( self ) :
+		
+		# create a shader with its name defined in a substitution:
+		shader = GafferSceneTest.TestShader()
+		shader["name"].setValue( "${substitution}" )
+		
+		assignment = GafferScene.ShaderAssignment()
+		
+		# define that substitution in the attributes:
+		testAttributes = IECore.CompoundObject()
+		testAttributes["gaffer:contextVariables"] = IECore.CompoundObject( { "substitution" : IECore.StringData("substitutedValue") } )
+		assignment["in"]["attributes"].setValue( testAttributes )
+		assignment["shader"].setInput( shader["out"] )
+		
+		# the resulting shader's name should now be "substitutedValue":
+		outputAttributes = assignment["out"].attributes( "/testLocation" )
+		self.assertEqual( outputAttributes["shader"][-1].name, "substitutedValue" )
+		
 if __name__ == "__main__":
 	unittest.main()

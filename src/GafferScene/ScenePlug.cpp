@@ -51,6 +51,8 @@ IE_CORE_DEFINERUNTIMETYPED( ScenePlug );
 
 const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
 
+const IECore::InternedString ScenePlug::contextVariablesAttributeName( "gaffer:contextVariables" );
+
 ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {

@@ -111,6 +111,11 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// each time.
 		static const IECore::InternedString scenePathContextName;
 		
+		
+		/// The name used to specify attributes that add themselves
+		/// to the context
+		static const IECore::InternedString contextVariablesAttributeName;
+		
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying the scenePath
 		/// and then return the result of calling getValue() or hash() on the
