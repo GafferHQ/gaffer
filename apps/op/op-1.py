@@ -165,7 +165,7 @@ class op( Gaffer.Application ) :
 			self.root()["scripts"]["script1"] = Gaffer.ScriptNode()
 			self.root()["scripts"]["script1"]["op"] = Gaffer.ParameterisedHolderNode()
 			self.root()["scripts"]["script1"]["op"].setParameterised( op )
-			self.__dialogue = GafferUI.OpDialogue( self.root()["scripts"]["script1"]["op"] )
+			self.__dialogue = GafferUI.OpDialogue( self.root()["scripts"]["script1"]["op"], executeInBackground=True )
 			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( self.__dialogueClosed )
 			self.__dialogue.setVisible( True )
 			GafferUI.EventLoop.mainEventLoop().start()

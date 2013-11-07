@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,9 @@
 
 from __future__ import with_statement
 
+import sys
+import threading
+
 import IECore
 
 import Gaffer
@@ -50,23 +53,31 @@ class OpDialogue( GafferUI.Dialogue ) :
 	#
 	# FromUserData : Get behaviour from ["UI"]["postExecuteBehaviour"] userData, which should
 	#	contain a string value specifying one of the other Enum values. If no userData is found,
-	#	it defaults to CloseByDefault.
+	#	it defaults to DisplayResult.
 	# 
-	# None : Do nothing. The dialogue stays open.
+	# None : Do nothing. The dialogue returns to the parameter editing state.
 	#
-	# Close : The dialogue is closed.
+	# Close : The dialogue is closed immediately.
 	#
-	# NoneByDefault : The dialogue will remain open by default, but the user can override this.
+	# DisplayResult : The result is displayed, with a button for returning to the parameter editing state.
 	#
-	# CloseByDefault : The dialogue will be closed by default, but the user can override this.
-	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None", "Close", "NoneByDefault", "CloseByDefault" )
+	# DisplayResultAndClose : The result is displayed, with a button for closing the dialogue.
+	#
+	# NoneByDefault : deprecated - the same as DisplayResult
+	# CloseByDefault : deprecated - the same as DisplayResult
+	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None", "Close", "DisplayResult", "DisplayResultAndClose", "NoneByDefault", "CloseByDefault" )
 
+	# If executeInBackground is True, then the Op will be executed on another
+	# thread, allowing the UI to remain responsive during execution. This is
+	# the preferred method of operation, but it is currently not the default
+	# in case certain clients are relying on running the Op on the main thread.
 	def __init__(
 		self,
 		opInstanceOrOpHolderInstance,
 		title=None,
 		sizeMode=GafferUI.Window.SizeMode.Manual,
 		postExecuteBehaviour = PostExecuteBehaviour.FromUserData,
+		executeInBackground = False,
 		**kw
 	) :
 
@@ -91,7 +102,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		if postExecuteBehaviour == self.PostExecuteBehaviour.FromUserData :
 			
-			postExecuteBehaviour = self.PostExecuteBehaviour.CloseByDefault
+			postExecuteBehaviour = self.PostExecuteBehaviour.DisplayResult
 			
 			d = None
 			with IECore.IgnoredExceptions( KeyError ) :
@@ -106,41 +117,60 @@ class OpDialogue( GafferUI.Dialogue ) :
 				with IECore.IgnoredExceptions( KeyError ) :
 					d = opInstance.userData()["UI"]["closeAfterExecution"]
 				if d is not None :
-					postExecuteBehaviour = self.PostExecuteBehaviour.Close if d.value else self.PostExecuteBehaviour.None
+					postExecuteBehaviour = self.PostExecuteBehaviour.Close if d.value else self.PostExecuteBehaviour.DisplayResult
 						
 		self.__postExecuteBehaviour = postExecuteBehaviour
+		self.__executeInBackground = executeInBackground
 		
-		# get the ui for the op
-		
-		nodeUI = GafferUI.NodeUI.create( self.__node )
+		# make a frame to contain our main ui element. this will
+		# contain different elements depending on our state.
 
-		# build our main ui around it
+		self.__frame = GafferUI.Frame()
+		self._setWidget( self.__frame )
+
+		# get the ui for the op - we'll use this when we want
+		# the user to edit parameters.
+				
+		self.__parameterEditingUI = GafferUI.NodeUI.create( self.__node )
+				
+		# build a ui element for progress feedback and suchlike.
+		# we'll use this when executing and displaying the result.
 		
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 ) as column :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as self.__progressUI :
+			
+			center = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center }
+			
+			GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+			
+			self.__progressIconFrame = GafferUI.Frame(
+				borderStyle = GafferUI.Frame.BorderStyle.None,
+				parenting = {
+					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center
+				}
+			)
+
+			self.__progressLabel = GafferUI.Label(
+				parenting = {
+					"expand" : True,
+					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
+				}
+			)
+			
+			GafferUI.Spacer( IECore.V2i( 1 ), expand=True )
+			
+			with GafferUI.Collapsible( "Details", collapsed = True ) :
+			
+				self.__messageWidget = GafferUI.MessageWidget()
+				
+		# add buttons. our buttons mean different things depending on our current state,
+		# but they equate roughly to going forwards or going backwards.
 		
-			GafferUI.Frame( child = nodeUI )
-		
-			if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.NoneByDefault, self.PostExecuteBehaviour.CloseByDefault ) :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
-					self.__keepWindowOpen = GafferUI.BoolWidget(
-						"Keep window open",
-						self.__postExecuteBehaviour == self.PostExecuteBehaviour.NoneByDefault
-					)
-		
-		self._setWidget( column )
-		
-		# add buttons
-		
-		self.__cancelButton = self._addButton( "Cancel" )
-		self.__cancelButtonConnection = self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		
-		executeLabel = "OK"
-		with IECore.IgnoredExceptions( KeyError ) :
-			executeLabel = opInstance.userData()["UI"]["buttonLabel"].value
-		self.__executeButton = self._addButton( executeLabel )
-		self.__executeButtonConnection = self.__executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.__backButton = self._addButton( "Back" )
+		self.__forwardButton = self._addButton( "Forward" )
 		
 		self.__opExecutedSignal = Gaffer.Signal1()
+		
+		self.__initiateParameterEditing()
 					
 	## A signal called when the user has pressed the execute button
 	# and the Op has been successfully executed. This is passed the
@@ -155,44 +185,139 @@ class OpDialogue( GafferUI.Dialogue ) :
 	# to the dialogue for them to cancel or try again.
 	def waitForResult( self, **kw ) :
 	
-		# block our button connection so we don't end up executing twice
-		with Gaffer.BlockedConnection( self.__executeButtonConnection ) :
+		self.__resultOfWait = None
+		self.setModal( True, **kw ) # will return when the dialogue is closed
+		return self.__resultOfWait
+
+	def _acceptsClose( self ) :
+	
+		# we mustn't allow the window to be closed while
+		# the op is running in the background.
+		return self.__state != self.__State.Execution
+
+	__State = IECore.Enum.create( "ParameterEditing", "Execution", "ErrorDisplay", "ResultDisplay" )
+
+	def __initiateParameterEditing( self, *unused ) :
+			
+		self.__backButton.setText( "Cancel" )
+		self.__backButton.setEnabled( True )
+		self.__backButton.setVisible( True )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__close ) )
 		
-			while 1 :
-				button = self.waitForButton( **kw )					
-				if button is self.__executeButton :
-					result = self.__execute()
-					if result is not None :
-						return result
-				else :
-					return None
+		executeLabel = "OK"
+		with IECore.IgnoredExceptions( KeyError ) :
+			executeLabel = self.__node.getParameterised()[0].userData()["UI"]["buttonLabel"].value
+		
+		self.__forwardButton.setText( executeLabel )
+		self.__forwardButton.setEnabled( True )
+		self.__forwardButton.setVisible( True )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateExecution ) )
+		
+		self.__frame.setChild( self.__parameterEditingUI )
+
+		self.__forwardButton._qtWidget().setFocus()
+		
+		self.__state = self.__State.ParameterEditing
+	
+	def __close( self, *unused ) :
+	
+		self.__state = self.__State.ParameterEditing
+		self.close()
+				
+	def __initiateExecution( self, *unused ) :
+		
+		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
+		self.__progressLabel.setText( "<h3>Processing...</h3>" )
+		self.__backButton.setEnabled( False )
+		self.__forwardButton.setEnabled( False )
+		self.__messageWidget.textWidget().setText( "" )
+		
+		self.__state = self.__State.Execution
+		
+		if self.__executeInBackground :	
+			self.__frame.setChild( self.__progressUI )
+			threading.Thread( target = self.__execute ).start()
+		else :
+			# we don't display progress when we're not threaded,
+			# because we have no way of updating it.
+			self.__execute()
 
 	def __execute( self ) :
-				
+	
 		try :
 			
 			self.__node.setParameterisedValues()
-			result =  self.__node.getParameterised()[0]()
-			self.opExecutedSignal()( result )
 			
-			behaviour = self.__postExecuteBehaviour
-			if behaviour in ( behaviour.NoneByDefault, behaviour.CloseByDefault ) :
-				behaviour = behaviour.None if self.__keepWindowOpen.getState() else behaviour.Close
-				
-			if behaviour == behaviour.Close :
-				self.close()
+			with self.__messageWidget.messageHandler() :
+				result = self.__node.getParameterised()[0]()
+									
+		except Exception, e :
+
+			result = sys.exc_info()
 			
-			return result
-			
-		except :
-			
-			GafferUI.ErrorDialogue.displayException( parentWindow=self )
-			
-			return None
+		GafferUI.EventLoop.executeOnUIThread( IECore.curry( self.__finishExecution, result ) )
+		
+	def __finishExecution( self, result ) :
 	
-	def __buttonClicked( self, button ) :
-	
-		if button is self.__executeButton :
-			self.__execute()
+		if isinstance( result, IECore.Object ) :
+		
+			if self.getModal() :
+				self.__resultOfWait = result
+		
+			if self.__postExecuteBehaviour == self.PostExecuteBehaviour.Close :
+				self.__close()
+			elif self.__postExecuteBehaviour == self.PostExecuteBehaviour.None :
+				self.__initiateParameterEditing()
+			else :
+				self.__initiateResultDisplay( result )
+
+ 			self.opExecutedSignal()( result )
+ 			
 		else :
-			self.close()
+		
+			self.__initiateErrorDisplay( result )
+			
+	def __initiateErrorDisplay( self, exceptionInfo ) :
+		
+		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueFailure.png" ) )
+		self.__progressLabel.setText( "<h3>" + str( exceptionInfo[1] ) + "</h3>" )
+	
+		self.__backButton.setText( "Cancel" )
+		self.__backButton.setEnabled( True )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+	
+		self.__forwardButton.setText( "Retry" )
+		self.__forwardButton.setEnabled( True )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
+		
+		self.__messageWidget.appendException( exceptionInfo )
+		
+		self.__frame.setChild( self.__progressUI )
+
+		self.__forwardButton._qtWidget().setFocus()
+
+		self.__state = self.__State.ErrorDisplay
+	
+	def __initiateResultDisplay( self, result ) :
+	
+		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueSuccess.png" ) )
+		self.__progressLabel.setText( "<h3>Completed</h3>" )
+
+		self.__messageWidget.appendMessage( IECore.Msg.Level.Info, "Result", str( result ) )
+
+		self.__backButton.setText( "Close" )
+		self.__backButton.setEnabled( True )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		
+		self.__forwardButton.setText( "Again!" )
+		self.__forwardButton.setEnabled( True )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
+		
+		if self.__postExecuteBehaviour == self.PostExecuteBehaviour.DisplayResultAndClose :
+			self.__forwardButton.setVisible( False )
+
+		self.__frame.setChild( self.__progressUI )
+			
+		self.__backButton._qtWidget().setFocus()
+
+		self.__state = self.__State.ResultDisplay

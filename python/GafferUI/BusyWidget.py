@@ -58,7 +58,22 @@ class _BusyWidget( QtGui.QWidget ) :
 
 		self.__size = size
 		self.setMinimumSize( size, size )
-		self.startTimer( 1000 / 25 )
+		self.__timer = None
+		
+	def showEvent( self, event ) :
+	
+		QtGui.QWidget.showEvent( self, event )
+
+		if self.__timer is None :
+			self.__timer = self.startTimer( 1000 / 25 )
+		
+	def hideEvent( self, event ) :
+	
+		QtGui.QWidget.hideEvent( self, event )
+		
+		if self.__timer is not None :
+			self.killTimer( self.__timer )
+			self.__timer = None
 	
 	def timerEvent( self, event ) :
 	
@@ -71,15 +86,16 @@ class _BusyWidget( QtGui.QWidget ) :
 				
 		width, height = float( self.width() ), float( self.height() )
 		centreX, centreY = width / 2, height / 2
-		radius = self.__size * 0.95
+		radius = self.__size / 2.0
 		numCircles = 10
 		circleRadius = radius / 5
-			
+		penWidth = circleRadius / 10
+		
 		for i in range( 0, numCircles ) :
 			
 			theta = i * 360.0 / numCircles + time.time() * 10
-			circleCentreX = centreX - (radius - circleRadius) * math.cos( math.radians( theta ) )
-			circleCentreY = centreY + (radius - circleRadius) * math.sin( math.radians( theta ) )
+			circleCentreX = centreX - (radius - circleRadius - penWidth) * math.cos( math.radians( theta ) )
+			circleCentreY = centreY + (radius - circleRadius - penWidth) * math.sin( math.radians( theta ) )
 			
 			alpha =  1 - ( ( math.fmod( theta + time.time() * 270, 360 ) ) / 360 )
 		
@@ -88,7 +104,7 @@ class _BusyWidget( QtGui.QWidget ) :
 			painter.setBrush( brush )
 
 			pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, alpha * 255 ) )
-			pen.setWidth( circleRadius / 10 )
+			pen.setWidth( penWidth )
 			painter.setPen( pen )
 	
 			painter.drawEllipse( QtCore.QPointF( circleCentreX, circleCentreY ), circleRadius, circleRadius )

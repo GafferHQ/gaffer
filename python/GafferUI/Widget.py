@@ -141,7 +141,13 @@ class Widget( object ) :
 		# hardcoding stuff here.
 		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
-				self.__parentStack[-1][0].addChild( self, **kw )
+				addChildKW = kw
+				if "parenting" in addChildKW :
+					assert( len( addChildKW ) == 1 )
+					addChildKW = addChildKW.copy()
+					addChildKW.update( addChildKW["parenting"] )
+					del addChildKW["parenting"]
+				self.__parentStack[-1][0].addChild( self, **addChildKW )
 				
 		self.__eventFilterInstalled = False		
 		# if a class has overridden getToolTip, then the tooltips

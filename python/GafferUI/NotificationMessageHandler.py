@@ -79,65 +79,14 @@ class NotificationMessageHandler( IECore.MessageHandler ) :
 	
 class _Window( GafferUI.Window ) :
 
-	__levelsToColors = {
-		IECore.Msg.Level.Error : "#ff5555",
-		IECore.Msg.Level.Warning : "#ffb655",
-		IECore.Msg.Level.Info : "#80b3ff",
-		IECore.Msg.Level.Debug : "#aaffcc",
-	}
-
 	def __init__( self, title ) :
 	
 		GafferUI.Window.__init__( self, title, borderWidth = 8 )
 		
-		with self :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=6 ) :
-					
-					buttonSpecs = [
-						( IECore.Msg.Level.Error, "Errors. These may chill you to your very core. Click to scroll to the next one (if you can stomach it)." ),
-						( IECore.Msg.Level.Warning, "Warnings. These may give you pause for thought. Click to scroll to the next thinking point." ),
-						( IECore.Msg.Level.Info, "Information. You may find this edifying. Click to scroll to the next enlightening nugget." ),
-						( IECore.Msg.Level.Debug, "Debug information. You may find this very dull. Click to scroll to the next item." ),
-					]
-					self.__levelButtons = {}
-					self.__buttonClickedConnections = []
-					for buttonSpec in buttonSpecs :
-						button = GafferUI.Button(
-							image = IECore.Msg.levelAsString( buttonSpec[0] ).lower() + "Notification.png",
-							hasFrame = False,
-						)
-						button.__level = buttonSpec[0]
-						self.__levelButtons[buttonSpec[0]] = button
-						self.__buttonClickedConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
-						button.setVisible( False )
-						button.setToolTip( buttonSpec[1] )
-					
-					GafferUI.Spacer( IECore.V2i( 10 ) )
-				
-				self.__text = GafferUI.MultiLineTextWidget( editable=False )
+		self.setChild( GafferUI.MessageWidget() )
 		
 		self.setResizeable( True )
 		
 	def appendMessage( self, level, context, message ) :
 	
-		# make sure relevant button is shown
-		self.__levelButtons[level].setVisible( True )
-		
-		# append message text
-		formatted = "<h1 class='%s'>%s : %s </h1><span class='message'>%s</span><br>" % ( 
-			IECore.Msg.levelAsString( level ),
-			IECore.Msg.levelAsString( level ),
-			context,
-			message.replace( "\n", "<br>" )
-		)
-		self.__text._qtWidget().appendHtml( formatted )
-		
-	def __buttonClicked( self, button ) :
-		
-		## \todo Decide how we allow this to be achieved directly using the public
-		# interface of MultiLineTextWidget.
-		toFind = IECore.Msg.levelAsString( button.__level ) + " : "
-		if not self.__text._qtWidget().find( toFind ) :
-			self.__text._qtWidget().moveCursor( QtGui.QTextCursor.Start )
-			self.__text._qtWidget().find( toFind )
+		self.getChild().appendMessage( level, context, message )
