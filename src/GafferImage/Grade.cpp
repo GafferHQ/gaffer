@@ -59,7 +59,7 @@ Grade::Grade( const std::string &name )
 	addChild( new Color3fPlug( "gain", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
 	addChild( new Color3fPlug( "multiply", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
 	addChild( new Color3fPlug( "offset" ) );
-	addChild( new Color3fPlug( "gamma", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
+	addChild( new Color3fPlug( "gamma", Gaffer::Plug::In, Imath::Color3f( 1.0f ), Imath::Color3f( 0.0f ) ) );
 	addChild( new BoolPlug( "blackClamp", Gaffer::Plug::In, true ) );
 	addChild( new BoolPlug( "whiteClamp" ) );
 }
