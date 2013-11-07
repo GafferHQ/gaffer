@@ -56,11 +56,37 @@ class AboutWindow( GafferUI.Window ) :
 				
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="Gaffer" ) :
 					
-					text = "<h2>%s %s</h2>" % ( about.name(), about.versionString() )
-					text += about.copyright() + "<hr>"
-					text += "<a href='%s'>%s</a>" % ( about.url(), about.url() )
+					GafferUI.Spacer(
+						IECore.V2i( 1 ),
+						parenting = { "expand" : True }
+					)
 					
-					self.__label( text )
+					GafferUI.Image(
+						"GafferLogo.png",
+						parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center }
+					)
+
+					text = "<h3><a href='%s'>%s</a></h3> <small>Version %s</small>" % (
+						about.url(),
+						about.url(),
+						about.versionString(),
+					)
+
+					self.__label(
+						text,
+						horizontalAlignment = GafferUI.HorizontalAlignment.Center,
+						parenting = { "horizontalAlignment" : GafferUI.Label.HorizontalAlignment.Center },
+					)
+
+					GafferUI.Spacer(
+						IECore.V2i( 1 ),
+						parenting = { "expand" : True }
+					)
+
+					self.__label(
+						"<small>%s</small>" % about.copyright().replace( "(c)", "&copy;" ),
+						parenting = { "horizontalAlignment" : GafferUI.Label.HorizontalAlignment.Center },
+					)
 					
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="License" ) :
 					
@@ -108,7 +134,7 @@ class AboutWindow( GafferUI.Window ) :
 	
 		return IECore.StringUtil.wrap( text, 80 ).replace( '\n', "<br>" )
 
-	def __label( self, text ) :
+	def __label( self, text, **kw ) :
 	
 		## \todo Perhaps this stylesheet stuff should be done as standard for all labels?
 		header = "<html><head><style type=text/css>"
@@ -119,7 +145,7 @@ class AboutWindow( GafferUI.Window ) :
 		
 		text = header + text + footer
 			
-		label = GafferUI.Label( text )
+		label = GafferUI.Label( text, **kw )
 		self.__linkActivatedConnections.append( label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ) ) )
 		return label
 		
