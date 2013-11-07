@@ -228,7 +228,6 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
 		self.__progressLabel.setText( "<h3>Processing...</h3>" )
-		self.__progressLabel.setTextSelectable( False )
 		self.__backButton.setEnabled( False )
 		self.__forwardButton.setEnabled( False )
 		self.__messageWidget.textWidget().setText( "" )
@@ -302,8 +301,9 @@ class OpDialogue( GafferUI.Dialogue ) :
 	def __initiateResultDisplay( self, result ) :
 	
 		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueSuccess.png" ) )
-		self.__progressLabel.setText( "<h3>" + str( result ) + "</h3>" )
-		self.__progressLabel.setTextSelectable( True )
+		self.__progressLabel.setText( "<h3>Completed</h3>" )
+
+		self.__messageWidget.appendMessage( IECore.Msg.Level.Info, "Result", str( result ) )
 
 		self.__backButton.setText( "Close" )
 		self.__backButton.setEnabled( True )
