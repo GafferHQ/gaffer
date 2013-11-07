@@ -62,6 +62,12 @@ T *View::getPreprocessor()
 }
 
 template<typename T>
+const T *View::getPreprocessor() const
+{
+	return getChild<T>( "__preprocessor" );
+}
+
+template<typename T>
 T *View::preprocessedInPlug()
 {
 	Node *p = getPreprocessor<Node>();

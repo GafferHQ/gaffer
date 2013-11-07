@@ -118,6 +118,8 @@ class View : public Gaffer::Node
 		/// node has been specified (or if it is not of type T).
 		template<typename T>
 		T *getPreprocessor();
+		template<typename T>
+		const T *getPreprocessor() const;
 		/// Returns the "out" plug of the preprocessor, or inPlug() if
 		/// no preprocessor has been specified. This is the plug which
 		/// should be used when computing the contents to display.
