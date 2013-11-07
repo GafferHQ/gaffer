@@ -153,7 +153,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 	// read tags and turn them into attributes of the form "user:tag:tagName"
 	
 	nameList.clear();
-	s->readTags( nameList, false );
+	s->readTags( nameList, IECore::SceneInterface::LocalTag );
 	for( SceneInterface::NameList::const_iterator it = nameList.begin(); it != nameList.end(); ++it )
 	{
 		if( it->string().compare( 0, 11, "ObjectType:" ) == 0 )
