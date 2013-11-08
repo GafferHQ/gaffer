@@ -48,6 +48,7 @@
 namespace GafferImage
 {
 
+IE_CORE_FORWARDDECLARE( ImageProcessor )
 IE_CORE_FORWARDDECLARE( Grade )
 IE_CORE_FORWARDDECLARE( ImageStats )
 IE_CORE_FORWARDDECLARE( ImagePlug )
@@ -73,6 +74,15 @@ class ImageView : public GafferUI::View
 		Gaffer::FloatPlug *gammaPlug();
 		const Gaffer::FloatPlug *gammaPlug() const;
 	
+		/// Values should be names that exist in registeredDisplayTransforms().
+		Gaffer::StringPlug *displayTransformPlug();
+		const Gaffer::StringPlug *displayTransformPlug() const;
+	
+		typedef boost::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
+
+		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
+		static void registeredDisplayTransforms( std::vector<std::string> &names );
+	
 	protected :
 		
 		/// May be called from a subclass constructor to add a converter
@@ -95,7 +105,14 @@ class ImageView : public GafferUI::View
 		GafferImage::Grade *gradeNode();
 		const GafferImage::Grade *gradeNode() const;
 		
+		GafferImage::ImageProcessor *displayTransformNode();
+		const GafferImage::ImageProcessor *displayTransformNode() const;
+		
 		void plugSet( Gaffer::Plug *plug );
+		void insertDisplayTransform();
+
+		typedef std::map<std::string, GafferImage::ImageProcessorPtr> DisplayTransformMap;
+		DisplayTransformMap m_displayTransforms;
 
 		int m_channelToView;
 		Imath::V2f m_mousePos;
@@ -103,6 +120,9 @@ class ImageView : public GafferUI::View
 		Imath::Color4f m_minColor;
 		Imath::Color4f m_maxColor;
 		Imath::Color4f m_averageColor;
+
+		typedef std::map<std::string, DisplayTransformCreator> DisplayTransformCreatorMap;
+		static DisplayTransformCreatorMap &displayTransformCreators();
 
 		static ViewDescription<ImageView> g_viewDescription;
 
