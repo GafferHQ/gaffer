@@ -46,13 +46,13 @@ namespace GafferUI
 template<typename T>
 T *View::inPlug()
 {
-	return getChild<T>( g_firstPlugIndex );
+	return getChild<T>( "in" );
 }
 
 template<typename T>
 const T *View::inPlug() const
 {
-	return getChild<T>( g_firstPlugIndex );
+	return getChild<T>( "in" );
 }
 
 template<typename T>
