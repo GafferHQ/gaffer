@@ -38,12 +38,7 @@ import Gaffer
 import GafferUI
 import IECore
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-
 class MultiSelectionMenu( GafferUI.Button ) :
-
-	__palette = None
 
 	def __init__(
 		self,
@@ -51,14 +46,16 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		allowEmptySelection = True,
 		**kw
 	) :
-		self.__allowMultipleSelection = allowMultipleSelection
-		self.__allowEmptySelection = allowEmptySelection
-		self.__selectionChangedSignal = None
 			
 		GafferUI.Button.__init__( self, **kw )
+
 		self._menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ), self._qtWidget() )
 		self._qtWidget().setMenu( self._menu._qtWidget() ) # Ownership of the menu is NOT transferred to the button
 		
+		self.__allowMultipleSelection = allowMultipleSelection
+		self.__allowEmptySelection = allowEmptySelection
+		self.__selectionChangedSignal = None
+
 		self.__menuLabels = []
 		self.__selectedLabels = [] 
 		self.__enabledLabels = []
@@ -151,13 +148,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		if not label in self.__menuLabels :
 			self.__menuLabels.insert( index, label )
 			self.__enabledLabels.insert( index, label )
-	
-	def setText( self, text ) :
-		self._qtWidget().setText( text )
-	
-	def getText( self ) :
-		self._qtWidget().getText()	
-		
+			
 	##############################################
 	# Private Methods
 	#############################################
