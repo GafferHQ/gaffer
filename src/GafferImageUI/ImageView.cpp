@@ -228,7 +228,6 @@ class ImageViewGadget : public GafferUI::Gadget
 				"void main()"
 				"{"
 				"	OUTCOLOR = texture2D( texture, gl_TexCoord[0].xy );"
-				"	OUTCOLOR = vec4( ieLinToSRGB( OUTCOLOR.r ), ieLinToSRGB( OUTCOLOR.g ), ieLinToSRGB( OUTCOLOR.b ), ieLinToSRGB( OUTCOLOR.a ) );"
 				"	if( channelToView==1 )"
 				"	{"
 				"		OUTCOLOR = vec4( OUTCOLOR[0], OUTCOLOR[0], OUTCOLOR[0], 1. );"
@@ -955,6 +954,8 @@ ImageView::ImageView( const std::string &name )
 	gradeNode->gammaPlug()->getChild( 1 )->setInput( gammaPlug );
 	gradeNode->gammaPlug()->getChild( 2 )->setInput( gammaPlug );
 
+	addChild( new StringPlug( "displayTransform", Plug::In, "Default", Plug::Default & ~Plug::AcceptsInputs ) );
+
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
 	preprocessorOutput->setInput( gradeNode->outPlug() );
@@ -967,6 +968,9 @@ ImageView::ImageView( const std::string &name )
 	
 	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
 
+	// get our display transform right
+	
+	insertDisplayTransform();
 }
 
 void ImageView::insertConverter( Gaffer::NodePtr converter )
@@ -1024,7 +1028,17 @@ const Gaffer::FloatPlug *ImageView::gammaPlug() const
 {
 	return getChild<FloatPlug>( "gamma" );
 }
-		
+
+Gaffer::StringPlug *ImageView::displayTransformPlug()
+{
+	return getChild<StringPlug>( "displayTransform" );
+}
+
+const Gaffer::StringPlug *ImageView::displayTransformPlug() const
+{
+	return getChild<StringPlug>( "displayTransform" );
+}
+				
 GafferImage::ImageStats *ImageView::imageStatsNode()
 {
 	return getChild<ImageStats>( "__imageStats" );
@@ -1100,5 +1114,74 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 			g->multiplyPlug()->setValue( Color3f( m ) );
 		}
 	}
+	else if( plug == displayTransformPlug() )
+	{
+		insertDisplayTransform();
+	}
 }
 
+void ImageView::insertDisplayTransform()
+{
+	Grade *grade = gradeNode();
+	if( !grade )
+	{
+		/// \todo Remove this guard when we know no
+		/// subclasses are calling setPreprocessor.
+		return;
+	}
+	
+	const std::string name = displayTransformPlug()->getValue();
+	
+	ImageProcessorPtr displayTransform;
+	DisplayTransformMap::const_iterator it = m_displayTransforms.find( name );
+	if( it != m_displayTransforms.end() )
+	{
+		displayTransform = it->second;
+	}
+	else
+	{
+		DisplayTransformCreatorMap &m = displayTransformCreators();
+		DisplayTransformCreatorMap::const_iterator it = m.find( displayTransformPlug()->getValue() );
+		if( it != m.end() )
+		{
+			displayTransform = it->second();
+		}
+		if( displayTransform )
+		{
+			m_displayTransforms[name] = displayTransform;
+			displayTransform->setName( name );
+			getPreprocessor<Node>()->addChild( displayTransform );
+		}
+	}
+	
+	if( displayTransform )
+	{
+		displayTransform->inPlug()->setInput( grade->outPlug() );
+		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( displayTransform->outPlug() );
+	}
+	else
+	{
+		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( grade->outPlug() );
+	}
+}		
+
+void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
+{
+	displayTransformCreators()[name] = creator;
+}
+
+void ImageView::registeredDisplayTransforms( std::vector<std::string> &names )
+{
+	const DisplayTransformCreatorMap &m = displayTransformCreators();
+	names.clear();
+	for( DisplayTransformCreatorMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; ++it )
+	{
+		names.push_back( it->first );
+	}
+}
+
+ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()
+{
+	static DisplayTransformCreatorMap g_creators;
+	return g_creators;
+}
