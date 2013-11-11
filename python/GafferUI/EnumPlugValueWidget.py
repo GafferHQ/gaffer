@@ -56,6 +56,10 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self._updateFromPlug()
 	
+	def selectionMenu( self ) :
+	
+		return self.__selectionMenu
+	
 	def _updateFromPlug( self ) :
 	
 		self.__selectionMenu.setEnabled( self._editable() )
