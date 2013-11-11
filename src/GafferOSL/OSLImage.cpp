@@ -190,17 +190,11 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	
 	if( input == shaderPlug() )
 	{
-		/// \todo We should really be pushing shadingPlug()
-		/// here, and then pushing channelDataPlug() in the
-		/// affects for shadingPlug(). However, currently
-		/// affects() isn't called for shadingPlug() because
-		/// it's an output. We could do the output->input trick
-		/// that we're using in GafferScene::Group, but it
-		/// seems worth considering allowing affects() to be
-		/// called for outputs, to avoid forcing lots of 
-		/// implementations to use extra plugs when they're not
-		/// really needed.
-		outputs.push_back( outPlug()->channelDataPlug() );
+		outputs.push_back( shadingPlug() );
+	}
+	else if( input == shadingPlug() )
+	{
+		outputs.push_back( outPlug()->channelDataPlug()	);
 	}
 }
 
