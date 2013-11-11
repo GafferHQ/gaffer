@@ -49,8 +49,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 			
 		GafferUI.Button.__init__( self, **kw )
 
-		self._menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ), self._qtWidget() )
-		self._qtWidget().setMenu( self._menu._qtWidget() ) # Ownership of the menu is NOT transferred to the button
+		self.__menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		
 		self.__allowMultipleSelection = allowMultipleSelection
 		self.__allowEmptySelection = allowEmptySelection
@@ -60,6 +59,8 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self.__selectedLabels = [] 
 		self.__enabledLabels = []
 		self.__setDisplayName()
+
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	## A signal emitted whenever the selection changes.
 	def selectionChangedSignal( self ) :
@@ -191,7 +192,8 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self.__setDisplayName()
 		self.selectionChangedSignal()( self )
 
-	def __addMenuDefinition( self ) :
+	def __menuDefinition( self ) :
+
 		m = IECore.MenuDefinition()
 		for label in self.__menuLabels :
 			menuPath = label
@@ -287,4 +289,12 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		elif nSelected == nEntries :
 			name = "all"
 		self._qtWidget().setText(name)
+
+	def __clicked( self, button ) :
+		
+		b = self.bound()
+		self.__menu.popup(
+			parent = self,
+			position = IECore.V2i( b.min.x, b.max.y )
+		)
 
