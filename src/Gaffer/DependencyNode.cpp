@@ -145,26 +145,23 @@ void DependencyNode::propagateDirtiness( Plug *plugToDirty )
 	// and compute() methods.
 	if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
 	{
-		if( plugToDirty->direction()==Plug::In )
+		DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
+		if( dependencyNode )
 		{
-			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
-			if( dependencyNode )
-			{				
-				AffectedPlugsContainer affected;
-				dependencyNode->affects( plugToDirty, affected );
-				for( AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
+			AffectedPlugsContainer affected;
+			dependencyNode->affects( plugToDirty, affected );
+			for( AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
+			{
+				if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
 				{
-					if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
-					{
-						// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
-						// so we helpfully report any mistakes.						
-						dirtyPlugs.clear();
-						throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
-					}
-					// cast is ok - AffectedPlugsContainer only holds const pointers so that
-					// affects() can be const to discourage implementations from having side effects.
-					propagateDirtiness( const_cast<Plug *>( *it ) );
+					// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
+					// so we helpfully report any mistakes.
+					dirtyPlugs.clear();
+					throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
 				}
+				// cast is ok - AffectedPlugsContainer only holds const pointers so that
+				// affects() can be const to discourage implementations from having side effects.
+				propagateDirtiness( const_cast<Plug *>( *it ) );
 			}
 		}
 	
