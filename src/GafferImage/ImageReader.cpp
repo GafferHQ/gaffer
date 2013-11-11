@@ -126,22 +126,22 @@ void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	}
 }
 
-void ImageReader::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 }
 
-void ImageReader::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 }
 
-void ImageReader::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 }
 
-void ImageReader::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	// Hash the XY coordinates of the tile that we are drawing...
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );

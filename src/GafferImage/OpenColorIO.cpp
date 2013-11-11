@@ -109,7 +109,7 @@ void OpenColorIO::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	}
 }
 
-void OpenColorIO::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenColorIO::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	if( channelName == "R" || channelName == "G" || channelName == "B" )
