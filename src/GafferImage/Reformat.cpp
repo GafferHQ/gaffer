@@ -142,9 +142,7 @@ void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffe
 
 void Reformat::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
-
-	inPlug()->channelNamesPlug()->hash( h );
+	h = inPlug()->channelNamesPlug()->hash();
 }
 
 void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
