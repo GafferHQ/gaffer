@@ -218,8 +218,7 @@ void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const
 
 void Implementation::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
-	inPlug()->channelNamesPlug()->hash( h );
+	h = inPlug()->channelNamesPlug()->hash();
 }
 
 void Implementation::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
