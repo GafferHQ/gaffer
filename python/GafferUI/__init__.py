@@ -178,6 +178,7 @@ from NodeMenu import NodeMenu
 import FileMenu
 import LayoutMenu
 import EditMenu
+import PlaybackMenu
 from Viewer import Viewer
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
