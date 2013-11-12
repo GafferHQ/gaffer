@@ -35,9 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+
 #include "GafferImage/Grade.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
