@@ -99,6 +99,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		h1 = s.stateHash()
 		
 		i = GafferImage.Constant()
+		i["format"].setValue( GafferImage.Format( 100, 100, 1 ) )
 		s["parameters"]["texture"].setInput( i["out"] )
 		
 		h2 = s.stateHash()

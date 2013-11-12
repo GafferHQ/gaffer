@@ -123,7 +123,6 @@ void Constant::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::C
 void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
-	colorPlug()->hash( h );
 }
 
 void Constant::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

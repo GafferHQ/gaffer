@@ -100,6 +100,14 @@ class ConstantTest( unittest.TestCase ) :
 		self.assertEqual( c.correspondingInput( c["out"] ), None )
 		self.assertEqual( c.correspondingInput( c["color"] ), None )
 		self.assertEqual( c.correspondingInput( c["format"] ), None )
-		
+	
+	def testChannelNamesHash( self ) :
+	
+		c = GafferImage.Constant()
+		h1 = c["out"]["channelNames"].hash()
+		c["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		h2 = c["out"]["channelNames"].hash()
+	
+		self.assertEqual( h1, h2 )
 if __name__ == "__main__":
 	unittest.main()
