@@ -35,6 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/mutex.h"
+#include "tbb/null_mutex.h"
+
 #include "OpenColorIO/OpenColorIO.h"
 
 #include "Gaffer/Context.h"
@@ -49,6 +52,26 @@ using namespace Gaffer;
 // and OpenColorIO the library namespace.
 namespace GafferImage
 {
+
+namespace Detail
+{
+
+// Although the OpenColorIO library is advertised as threadsafe,
+// it seems to crash regularly on OS X in getProcessor(), while
+// mucking around with the locale(). we mutex the call to getProcessor()
+// but still do the actual processing in parallel - this seems to
+// have negligible performance impact but a nice not-crashing impact.
+// On other platforms we use a null_mutex so there should be no
+// performance impact at all.
+#ifdef __APPLE__
+typedef tbb::mutex OCIOMutex;
+#else
+typedef tbb::null_mutex OCIOMutex;
+#endif
+
+static OCIOMutex g_ocioMutex;
+
+} // namespace Detail
 
 IE_CORE_DEFINERUNTIMETYPED( OpenColorIO );
 
@@ -123,8 +146,12 @@ void OpenColorIO::processColorData( const Gaffer::Context *context, IECore::Floa
 	string inputSpace( inputSpacePlug()->getValue() );
 	string outputSpace( outputSpacePlug()->getValue() );
 	
-	::OpenColorIO::ConstConfigRcPtr config = ::OpenColorIO::GetCurrentConfig();
-	::OpenColorIO::ConstProcessorRcPtr processor = config->getProcessor( inputSpace.c_str(), outputSpace.c_str() );
+	::OpenColorIO::ConstProcessorRcPtr processor;
+	{
+		Detail::OCIOMutex::scoped_lock lock( Detail::g_ocioMutex );
+		::OpenColorIO::ConstConfigRcPtr config = ::OpenColorIO::GetCurrentConfig();
+		processor = config->getProcessor( inputSpace.c_str(), outputSpace.c_str() );
+	}
 			
 	::OpenColorIO::PlanarImageDesc image(
 		r->baseWritable(),
