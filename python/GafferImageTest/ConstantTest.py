@@ -87,9 +87,11 @@ class ConstantTest( unittest.TestCase ) :
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
 		c["color"][0].setValue( .5 )
-		h1 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		h2 = c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
-		self.assertEqual( h1, h2 )
+		
+		self.assertEqual(
+			c["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+			c["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ),
+		)
 	
 	def testEnableBehaviour( self ) :
 		
