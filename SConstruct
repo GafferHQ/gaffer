@@ -1011,10 +1011,8 @@ libraries = {
 
 			# images
 			( "ImageThinner", "ops/image/thinner" ),
-			( "Grade", "ops/image/composite" ),
 			( "ImagePremultiplyOp", "ops/image/premultiply" ),
 			( "ImageUnpremultiplyOp", "ops/image/unpremultiply" ),
-			( "Grade", "ops/image/grade" ),
 			( "CurveTracer", "ops/image/traceCurves" ),
 
 			# curves
