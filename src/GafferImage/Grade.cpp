@@ -211,12 +211,6 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-
-	ContextPtr tmpContext = new Context( *Context::current() );
-	Context::Scope scopedContext( tmpContext );	
-
-	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	inPlug()->channelDataPlug()->hash( h );
 
 	// Hash all of the inputs.
