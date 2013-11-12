@@ -35,10 +35,13 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
 
 ## The Timeline presents a time slider which edits the frame
 # entry of a context.
@@ -51,7 +54,7 @@ class Timeline( GafferUI.EditorWidget ) :
 		GafferUI.EditorWidget.__init__( self, self.__row, scriptNode, **kw )
 		
 		self.__playTimer = QtCore.QTimer()
-		self.__playTimer.timeout.connect( Gaffer.WeakMethod( self.__playTimeout ) )
+		self.__playTimer.timeout.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
 							
 		with self.__row :
 			
@@ -100,6 +103,12 @@ class Timeline( GafferUI.EditorWidget ) :
 	
 		self.__scriptNodePlugSetConnection = scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
 	
+		frameIncrementShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
+		frameIncrementShortcut.activated.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
+
+		frameDecrementShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
+		frameDecrementShortcut.activated.connect( IECore.curry( Gaffer.WeakMethod( self.__incrementFrame ), -1 ) )
+		
 	def _updateFromContext( self, modifiedItems ) :
 		
 		if "frame" not in modifiedItems :
@@ -208,14 +217,16 @@ class Timeline( GafferUI.EditorWidget ) :
 			self.getContext().setFrame( self.__sliderRangeStart.getValue() )
 		else :
 			self.getContext().setFrame( self.__sliderRangeEnd.getValue() )			
-			
-	def __playTimeout( self ) :
+				
+	def __incrementFrame( self, increment = 1 ) :
 	
 		frame = self.getContext().getFrame()
-		frame += 1
+		frame += increment
 		if frame > self.__sliderRangeEnd.getValue() :	
 			frame = self.__sliderRangeStart.getValue()
-			
+		elif frame < self.__sliderRangeStart.getValue() :
+			frame = self.__sliderRangeEnd.getValue()
+		
 		self.getContext().setFrame( frame )
 	
 	def __repr__( self ) :
