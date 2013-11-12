@@ -88,13 +88,14 @@ class Grade : public ChannelDataProcessor
 	
 	protected :
 
-		/// Disables the output of any channel that has a gamma value of 0.	
 		virtual bool channelEnabled( const std::string &channel ) const;
 		
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;
+		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;
 
 	private :
+		
+		void parameters( size_t channelIndex, float &a, float &b, float &gamma ) const;
 		
 		static size_t g_firstPlugIndex;
 		

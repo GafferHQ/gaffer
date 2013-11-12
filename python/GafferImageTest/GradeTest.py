@@ -119,4 +119,29 @@ class GradeTest( unittest.TestCase ) :
 						self.assertNotEqual( oldChannelHashes[hashChannelIndex], newChannelHashes[hashChannelIndex] )
 					else :
 						self.assertEqual( oldChannelHashes[hashChannelIndex], newChannelHashes[hashChannelIndex] )
-						
+	
+	def testChannelPassThrough( self ) :
+	
+		# we should get a perfect pass-through without cache duplication when
+		# all the colour plugs are at their defaults.
+		
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+		s["g"] = GafferImage.Grade()
+		s["g"]["in"].setInput( s["c"]["out"] )
+		
+		for channelName in ( "R", "G", "B" ) :
+			self.assertEqual(
+				s["g"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+				s["c"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+			)
+			
+			c = Gaffer.Context( s.context() )
+			c["image:channelName"] = channelName
+			c["image:tileOrigin"] = IECore.V2i( 0 )
+			with c :
+				self.assertTrue(
+					s["g"]["out"]["channelData"].getValue( _copy=False ).isSame(
+						s["c"]["out"]["channelData"].getValue( _copy=False )
+					)
+				)
