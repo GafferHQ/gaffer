@@ -213,16 +213,23 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 {
 	inPlug()->channelDataPlug()->hash( h );
 
-	// Hash all of the inputs.
-	blackPointPlug()->hash( h );
-	whitePointPlug()->hash( h );
-	liftPlug()->hash( h );
-	gainPlug()->hash( h );
-	multiplyPlug()->hash( h );
-	offsetPlug()->hash( h );
-	gammaPlug()->hash( h );
-	blackClampPlug()->hash( h );
-	whiteClampPlug()->hash( h );
+	std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
+	if( channelIndex >= 0 and channelIndex < 3 )
+	{
+		/// \todo The channelIndex tests above might be guaranteed true by
+		/// the effects of channelEnabled() anyway, but it's not clear from
+		/// the base class documentation.
+		blackPointPlug()->getChild( channelIndex )->hash( h );
+		whitePointPlug()->getChild( channelIndex )->hash( h );
+		liftPlug()->getChild( channelIndex )->hash( h );
+		gainPlug()->getChild( channelIndex )->hash( h );
+		multiplyPlug()->getChild( channelIndex )->hash( h );
+		offsetPlug()->getChild( channelIndex )->hash( h );
+		gammaPlug()->getChild( channelIndex )->hash( h );
+		blackClampPlug()->hash( h );
+		whiteClampPlug()->hash( h );
+	}
 }
 
 void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
