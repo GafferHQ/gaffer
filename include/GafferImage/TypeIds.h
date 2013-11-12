@@ -79,7 +79,8 @@ enum TypeId
 	ImageStatsTypeId = 110783,
 	ImageTransformImplementationTypeId = 110784,
 	RemoveChannelsTypeId = 110785,
-	
+	ColorProcessorTypeId = 110786,
+
 	LastTypeId = 110849
 };
 

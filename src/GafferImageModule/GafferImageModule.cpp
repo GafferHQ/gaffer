@@ -114,6 +114,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ImageProcessor>();
 	GafferBindings::DependencyNodeClass<FilterProcessor>();
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
+	GafferBindings::DependencyNodeClass<ColorProcessor>();
 	GafferBindings::DependencyNodeClass<OpenColorIO>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Merge>();
