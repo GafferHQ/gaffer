@@ -137,6 +137,8 @@ void RemoveChannels::hashDataWindow( const GafferImage::ImagePlug *output, const
 
 void RemoveChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hash( output, context, h );
+
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelSelectionPlug()->maskChannels( maskChannels );

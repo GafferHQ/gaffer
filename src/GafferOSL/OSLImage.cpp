@@ -252,6 +252,8 @@ void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaf
 
 void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelData( output, context, h );
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	shadingPlug()->hash( h );
 }
 

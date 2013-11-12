@@ -38,6 +38,8 @@
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
 
+#include "Gaffer/Context.h"
+
 #include "GafferImage/Constant.h"
 
 using namespace std;
@@ -114,22 +116,28 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 
 void Constant::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageNode::hashFormat( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
 void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageNode::hashChannelNames( output, context, h );
 	colorPlug()->hash( h );
 }
 
 void Constant::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageNode::hashDataWindow( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
 void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	// Don't bother hashing the format here as we couldn't care less about the size of the canvas, only the colour!
+	ImageNode::hashChannelData( output, context, h );
+	// Don't bother hashing the format or tile origin here as we couldn't care less about the
+	// position on the canvas, only the colour!
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	colorPlug()->hash( h );
 }
 

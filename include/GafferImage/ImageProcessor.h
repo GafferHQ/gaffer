@@ -64,11 +64,9 @@ class ImageProcessor : public ImageNode
 
 	protected :
 	
-		/// Reimplemented to pass through the hashes of the first input when the node is disabled. When it is not
-		/// it will call hash*Plug() so that derived classes can implement their own hashing functions.
+		/// Reimplemented to pass through the hashes of the inPlug() when the node is disabled.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;	
-		/// Reimplements the functionality of ImageNode::compute to pass through
-		/// the first input if the node is disabled.
+		/// Reimplemented from ImageNode to pass through the inPlug() computations when the node is disabled.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 	private :

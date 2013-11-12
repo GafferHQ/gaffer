@@ -121,11 +121,14 @@ bool Reformat::enabled() const
 
 void Reformat::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashFormat( output, context, h );
 	formatPlug()->hash( h );
 }
 
 void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashDataWindow( output, context, h );
+
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
@@ -139,11 +142,15 @@ void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffe
 
 void Reformat::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelNames( output, context, h );
+
 	inPlug()->channelNamesPlug()->hash( h );
 }
 
 void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelData( output, context, h );
+
 	inPlug()->channelDataPlug()->hash( h );
 	filterPlug()->hash( h );
 	

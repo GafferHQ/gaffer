@@ -96,24 +96,28 @@ void ImagePrimitiveSource<BaseType>::hash( const Gaffer::ValuePlug *output, cons
 template<typename BaseType>
 void ImagePrimitiveSource<BaseType>::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashFormat( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 
 template<typename BaseType>
 void ImagePrimitiveSource<BaseType>::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashChannelNames( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 
 template<typename BaseType>
 void ImagePrimitiveSource<BaseType>::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashDataWindow( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 
 template<typename BaseType>
 void ImagePrimitiveSource<BaseType>::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashChannelData( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 		

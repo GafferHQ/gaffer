@@ -211,17 +211,21 @@ void Implementation::hashFormat( const GafferImage::ImagePlug *output, const Gaf
 
 void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashDataWindow( output, context, h );
 	inPlug()->dataWindowPlug()->hash( h );
 	transformPlug()->hash( h );
 }
 
 void Implementation::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelNames( output, context, h );
 	inPlug()->channelNamesPlug()->hash( h );
 }
 
 void Implementation::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelData( output, context, h );
+
 	// Hash all of the tiles that the sample requires for this tile.	
 	Imath::V2i tileOrigin( Context::current()->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
 	std::string channelName( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
