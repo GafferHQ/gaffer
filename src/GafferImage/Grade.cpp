@@ -169,11 +169,18 @@ bool Grade::channelEnabled( const std::string &channel ) const
 	// Never bother to process the alpha channel.
 	if ( channelIndex == 3 ) return false;
 
-	return (
-		gammaPlug()->getValue()[ channelIndex ] != 0.
-		//|| blackPointPlug()->getValue()[ channelIndex ] != 0.
-		//|| whitePointPlug()->getValue()[ channelIndex ] != 1.
-	);
+	// And don't bother to process identity transforms or invalid gammas
+	float a, b, gamma;
+	parameters( channelIndex, a, b, gamma );
+	
+	if( gamma == 0.0f )
+	{
+		// this would result in division by zero,
+		// so it must disable processing.
+		return false;
+	}
+	
+	return gamma != 1.0f || a != 1.0f || b != 0.0f;
 }
 
 void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -238,20 +245,11 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 	const int dataWidth = ImagePlug::tileSize()*ImagePlug::tileSize();
 
 	// Do some pre-processing.
-	int channelIndex = ChannelMaskPlug::channelIndex( channel );
-	const float gamma = gammaPlug()->getValue()[channelIndex];
-	const float invGamma = 1. / gamma;	
-	const float multiply = multiplyPlug()->getValue()[channelIndex];
-	const float gain = gainPlug()->getValue()[channelIndex];
-	const float lift = liftPlug()->getValue()[channelIndex];
-	const float whitePoint = whitePointPlug()->getValue()[channelIndex];
-	const float blackPoint = blackPointPlug()->getValue()[channelIndex];
-	const float offset = offsetPlug()->getValue()[channelIndex];
+	float A, B, gamma;
+	parameters( ChannelMaskPlug::channelIndex( channel ), A, B, gamma );
+	const float invGamma = 1. / gamma;
 	const bool whiteClamp = whiteClampPlug()->getValue();	
 	const bool blackClamp = blackClampPlug()->getValue();	
-
-	const float A = multiply * ( gain - lift ) / ( whitePoint - blackPoint );
-	const float B = offset + lift - A * blackPoint;
 
 	// Get some useful pointers.	
 	float *outPtr = &(outData->writable()[0]);
@@ -271,6 +269,20 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 		// Write back the result.
 		*outPtr++ = colour;	
 	}
+}
+
+void Grade::parameters( size_t channelIndex, float &a, float &b, float &gamma ) const
+{
+	gamma = gammaPlug()->getChild( channelIndex )->getValue();
+	const float multiply = multiplyPlug()->getChild( channelIndex )->getValue();
+	const float gain = gainPlug()->getChild( channelIndex )->getValue();
+	const float lift = liftPlug()->getChild( channelIndex )->getValue();
+	const float whitePoint = whitePointPlug()->getChild( channelIndex )->getValue();
+	const float blackPoint = blackPointPlug()->getChild( channelIndex )->getValue();
+	const float offset = offsetPlug()->getChild( channelIndex )->getValue();
+
+	a = multiply * ( gain - lift ) / ( whitePoint - blackPoint );
+	b = offset + lift - a * blackPoint;
 }
 
 } // namespace GafferImage
