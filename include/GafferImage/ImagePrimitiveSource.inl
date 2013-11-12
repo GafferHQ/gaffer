@@ -39,6 +39,8 @@
 #include "IECore/BoxAlgo.h"
 #include "IECore/NullObject.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferImage/ImagePrimitiveSource.h"
 
 namespace GafferImage
@@ -118,6 +120,8 @@ template<typename BaseType>
 void ImagePrimitiveSource<BaseType>::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	BaseType::hashChannelData( output, context, h );
+	h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	inputImagePrimitivePlug()->hash( h );
 }
 		
