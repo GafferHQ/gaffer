@@ -281,7 +281,7 @@ class Path( object ) :
 		if not isinstance( other, Path ) :
 			return True
 			
-		return self.__items != other.__items	
+		return self.__items != other.__items or self.__root != other.__root
 			
 	def __checkElement( self, element ) :
 	
