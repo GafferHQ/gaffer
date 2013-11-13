@@ -34,10 +34,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "GafferImage/FilterProcessor.h"
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
+
+#include "GafferImage/FilterProcessor.h"
 
 using namespace Gaffer;
 using namespace GafferImage;

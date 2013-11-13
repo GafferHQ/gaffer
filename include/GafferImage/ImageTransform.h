@@ -37,17 +37,15 @@
 #ifndef GAFFERSCENE_IMAGETRANSFORM_H
 #define GAFFERSCENE_IMAGETRANSFORM_H
 
-#include "Gaffer/Node.h"
-#include "Gaffer/Context.h"
-#include "GafferImage/FilterPlug.h"
 #include "Gaffer/Transform2DPlug.h"
+
 #include "GafferImage/ImageProcessor.h"
-#include "Gaffer/DependencyNode.h"
 
 namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( Reformat );
+IE_CORE_FORWARDDECLARE( FilterPlug );
 
 class ImageTransform : public GafferImage::ImageProcessor
 {

@@ -37,16 +37,12 @@
 #ifndef GAFFERIMAGE_IMAGESTATS_H
 #define GAFFERIMAGE_IMAGESTATS_H
 
-#include "IECore/MurmurHash.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/BoxPlug.h"
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
-
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/DependencyNode.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/BoxPlug.h"
 
 namespace GafferImage
 {

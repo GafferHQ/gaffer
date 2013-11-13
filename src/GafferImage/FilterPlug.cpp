@@ -34,8 +34,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/FilterPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
+
+#include "GafferImage/FilterPlug.h"
 
 using namespace GafferImage;
 using namespace IECore;

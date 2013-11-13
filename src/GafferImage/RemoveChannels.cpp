@@ -34,10 +34,6 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "GafferImage/RemoveChannels.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
 #include "GafferImage/RemoveChannels.h"
 
 using namespace IECore;

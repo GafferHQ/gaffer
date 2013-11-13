@@ -38,8 +38,9 @@
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
 
-#include "GafferImage/ImageReader.h"
 #include "Gaffer/Context.h"
+
+#include "GafferImage/ImageReader.h"
 
 using namespace std;
 using namespace tbb;

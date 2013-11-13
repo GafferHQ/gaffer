@@ -38,8 +38,6 @@
 #define GAFFERIMAGE_SELECT_H
 
 #include "GafferImage/FilterProcessor.h"
-#include "GafferImage/ImagePlug.h"
-#include "Gaffer/PlugType.h"
 
 namespace GafferImage
 {

@@ -38,12 +38,15 @@
 #define GAFFERIMAGE_IMAGEWRITER_H
 
 #include "Gaffer/ExecutableNode.h"
-#include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
+
 #include "GafferImage/TypeIds.h"
-#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
+
+IE_CORE_FORWARDDECLARE( ChannelMaskPlug )
+IE_CORE_FORWARDDECLARE( ImagePlug )
 
 class ImageWriter : public Gaffer::ExecutableNode
 {
@@ -63,10 +66,13 @@ class ImageWriter : public Gaffer::ExecutableNode
 		
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
+		
 		GafferImage::ImagePlug *inPlug();
+		const GafferImage::ImagePlug *inPlug() const;
+		
 		const GafferImage::ChannelMaskPlug *channelsPlug() const;
 		GafferImage::ChannelMaskPlug *channelsPlug();
-		const GafferImage::ImagePlug *inPlug() const;
+		
 		Gaffer::IntPlug *writeModePlug();
 		const Gaffer::IntPlug *writeModePlug() const;
 

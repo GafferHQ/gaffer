@@ -35,14 +35,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/Context.h"
+
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/Sampler.h"
 #include "GafferImage/ChannelMaskPlug.h"
 #include "GafferImage/Format.h"
-#include "Gaffer/ValuePlug.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/BoxPlug.h"
-#include "Gaffer/CompoundPlug.h"
 
 using namespace GafferImage;
 using namespace Gaffer;

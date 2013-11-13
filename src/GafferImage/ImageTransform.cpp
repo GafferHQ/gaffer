@@ -34,20 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/AngleConversion.h"
+
 #include "Gaffer/Context.h"
-#include "GafferImage/ImageProcessor.h"
+
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/Reformat.h"
 #include "GafferImage/Filter.h"
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
-#include "IECore/AngleConversion.h"
-#include "IECore/FastFloat.h"
-#include "IECore/BoxAlgo.h"
-#include "IECore/BoxOps.h"
-#include "boost/format.hpp"
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 using namespace IECore;

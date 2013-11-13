@@ -38,20 +38,20 @@
 #ifndef GAFFERIMAGE_FILTER_H
 #define GAFFERIMAGE_FILTER_H
 
+#define _USE_MATH_DEFINES
+#include "math.h"
+
 #include <vector>
 #include <string>
 
 #include "tbb/mutex.h"
 #include "boost/weak_ptr.hpp"
 
-#include "GafferImage/TypeIds.h"
-
 #include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
 #include "IECore/Lookup.h"
 
-#define _USE_MATH_DEFINES
-#include "math.h"
+#include "GafferImage/TypeIds.h"
 	
 #define GAFFERIMAGE_FILTER_DECLAREFILTER( CLASS_NAME )\
 static FilterRegistration<CLASS_NAME> m_registration;\

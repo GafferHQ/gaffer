@@ -34,17 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenImageIO/imagecache.h"
-#include "OpenImageIO/paramlist.h"
+#include "boost/bind.hpp"
+
+#include "OpenImageIO/imageio.h"
 OIIO_NAMESPACE_USING
 
-#include "boost/format.hpp"
-#include "boost/shared_ptr.hpp"
-#include "boost/bind.hpp"
+#include "Gaffer/Context.h"
+
+#include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
-#include "GafferImage/ImageWriter.h"
-#include "Gaffer/Context.h"
 
 using namespace std;
 using namespace Imath;

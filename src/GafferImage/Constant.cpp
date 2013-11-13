@@ -35,20 +35,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenImageIO/imagecache.h"
-OIIO_NAMESPACE_USING
-
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Constant.h"
 
 using namespace std;
-using namespace tbb;
 using namespace Imath;
 using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
-
 
 //////////////////////////////////////////////////////////////////////////
 // Constant implementation

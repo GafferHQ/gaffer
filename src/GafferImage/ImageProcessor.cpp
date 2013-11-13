@@ -35,8 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/ImageProcessor.h"
 #include "Gaffer/Context.h"
+
+#include "GafferImage/ImageProcessor.h"
 
 using namespace Gaffer;
 using namespace GafferImage;

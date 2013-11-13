@@ -35,16 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
 #include "GafferImage/Reformat.h"
-#include "GafferImage/Filter.h"
-#include "GafferImage/FormatPlug.h"
-#include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
-#include "GafferImage/TypeIds.h"
-#include "IECore/BoxAlgo.h"
-#include "IECore/BoxOps.h"
-#include "IECore/FastFloat.h"
 
 using namespace Gaffer;
 using namespace IECore;

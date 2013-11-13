@@ -37,7 +37,8 @@
 #ifndef GAFFERIMAGE_CONSTANT_H
 #define GAFFERIMAGE_CONSTANT_H
 
-#include "Gaffer/PlugType.h"
+#include "Gaffer/CompoundNumericPlug.h"
+
 #include "GafferImage/ImageNode.h"
 
 namespace GafferImage

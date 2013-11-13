@@ -38,10 +38,10 @@
 #define GAFFER_FORMAT_H
 
 #include "OpenEXR/ImathBox.h"
-#include "GafferImage/TypeIds.h"
-#include "IECore/TypedData.h"
-#include "Gaffer/GraphComponent.h"
+
 #include "Gaffer/ScriptNode.h"
+
+#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {

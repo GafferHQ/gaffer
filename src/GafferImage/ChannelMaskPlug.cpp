@@ -34,8 +34,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/ChannelMaskPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
+
+#include "GafferImage/ChannelMaskPlug.h"
 
 using namespace GafferImage;
 using namespace IECore;
