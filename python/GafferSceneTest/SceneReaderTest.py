@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -76,6 +77,34 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( a ), 2 )
 		self.assertEqual( a["user:tag:wood"], IECore.BoolData( True ) )
 		self.assertEqual( a["user:tag:something"], IECore.BoolData( True ) )
+	
+	def testChildNamesHash( self ) :
+	
+		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		sphereGroup = s.createChild( "sphereGroup" )
+		sphereGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		sphereGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 2, 0, 0 ) ) ), 1.0 )
+		sphere = sphereGroup.createChild( "sphere" )
+		sphere.writeObject( IECore.SpherePrimitive(), 0 )
+
+		del s, sphereGroup, sphere
+		
+		s = GafferScene.SceneReader()
+		s["fileName"].setValue( "/tmp/test.scc" )
+
+		t = GafferScene.SceneTimeWarp()
+		t["in"].setInput( s["out"] )
+		t["offset"].setValue( 1 )
+		
+		self.assertSceneHashesEqual(
+			s["out"], t["out"],
+			childPlugNames = [ "childNames" ]
+		)
+		
+	def tearDown( self ) :
+	
+		if os.path.exists( "/tmp/test.scc" ) :
+			os.remove( "/tmp/test.scc" )
 		
 if __name__ == "__main__":
 	unittest.main()

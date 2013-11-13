@@ -73,6 +73,30 @@ SceneReader::~SceneReader()
 {
 }
 
+void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashBound( path, context, parent, h );
+	h.append( context->getFrame() );
+}
+
+void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashTransform( path, context, parent, h );
+	h.append( context->getFrame() );
+}
+
+void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashAttributes( path, context, parent, h );
+	h.append( context->getFrame() );
+}
+
+void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashObject( path, context, parent, h );
+	h.append( context->getFrame() );
+}
+
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
@@ -220,11 +244,4 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 	{
 		SharedSceneInterfaces::clear();
 	}
-}
-
-/// \todo this hash needs to be smarter - it should detect if the scene cache is animated or not
-void SceneReader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	FileSource::hash( output, context, h );
-	h.append( context->getFrame() / g_frameRate );
 }
