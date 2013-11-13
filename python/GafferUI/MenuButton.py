@@ -70,5 +70,4 @@ class MenuButton( GafferUI.Button ) :
 		self.__menu.popup(
 			parent = self,
 			position = IECore.V2i( b.min.x, b.max.y ),
-			forcePosition = True,
 		)
