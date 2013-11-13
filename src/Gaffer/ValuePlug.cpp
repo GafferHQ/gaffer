@@ -173,6 +173,11 @@ class ValuePlug::Computation
 			return g_valueCache.setMaxCost( bytes );
 		}
 	
+		static size_t cacheMemoryUsage()
+		{
+			return g_valueCache.currentCost();
+		}
+		
 	private :
 	
 		void computeOrSetFromInput()
@@ -500,4 +505,9 @@ size_t ValuePlug::getCacheMemoryLimit()
 void ValuePlug::setCacheMemoryLimit( size_t bytes )
 {
 	Computation::setCacheMemoryLimit( bytes );
+}
+
+size_t ValuePlug::cacheMemoryUsage()
+{
+	return Computation::cacheMemoryUsage();
 }
