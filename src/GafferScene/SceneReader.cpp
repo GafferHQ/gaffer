@@ -76,37 +76,103 @@ SceneReader::~SceneReader()
 void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashBound( path, context, parent, h );
-	h.append( context->getFrame() );
+
+	ConstSceneInterfacePtr s = scene( path );
+	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
+	if( !ss || ss->numBoundSamples() > 1 )
+	{
+		h.append( context->getFrame() );
+	}
 }
 
 void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashTransform( path, context, parent, h );
-	h.append( context->getFrame() );
+	
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
+	{
+		return;
+	}
+	
+	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
+	if( !ss || ss->numTransformSamples() > 1 )
+	{
+		h.append( context->getFrame() );
+	}
 }
 
 void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
+	{
+		h = parent->attributesPlug()->defaultValue()->Object::hash();
+		return;
+	}
+	
+	SceneInterface::NameList attributeNames;
+	s->attributeNames( attributeNames );
+	SceneInterface::NameList tagNames;
+	s->readTags( tagNames, IECore::SceneInterface::LocalTag );
+	
+	if( !attributeNames.size() && !tagNames.size() )
+	{
+		h = parent->attributesPlug()->defaultValue()->Object::hash();
+		return;
+	}
+
 	FileSource::hashAttributes( path, context, parent, h );
-	h.append( context->getFrame() );
+
+	bool animated = false;
+	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
+	if( !ss )
+	{
+		animated = true;
+	}
+	else
+	{
+		for( SceneInterface::NameList::iterator it = attributeNames.begin(); it != attributeNames.end(); ++it )
+		{
+			if( ss->numAttributeSamples( *it ) > 1 )
+			{
+				animated = true;
+				break;
+			}
+		}
+	}
+				
+	if( animated )
+	{
+		h.append( context->getFrame() );
+	}
 }
 
 void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s || !s->hasObject() )
+	{
+		// no object
+		h = parent->objectPlug()->defaultValue()->hash();
+		return;
+	}
+
 	FileSource::hashObject( path, context, parent, h );
-	h.append( context->getFrame() );
+	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
+	if( !ss || ss->numObjectSamples() > 1 )
+	{
+		h.append( context->getFrame() );
+	}
 }
 
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	if( !fileName.size() )
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
 	{
 		return Box3f();
 	}
-	
-	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
-	s = s->scene( path );
 	
 	Box3d b = s->readBound( context->getFrame() / g_frameRate );
 	
@@ -120,15 +186,12 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 
 Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	if( !fileName.size() )
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
 	{
 		return M44f();
 	}
-	
-	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
-	s = s->scene( path );
-	
+		
 	M44d t = s->readTransformAsMatrix( context->getFrame() / g_frameRate );
 	
 	return M44f(
@@ -141,14 +204,11 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 
 IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	if( !fileName.size() )
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
 	{
 		return parent->attributesPlug()->defaultValue();
 	}
-	
-	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
-	s = s->scene( path );
 	
 	// read attributes
 	
@@ -192,40 +252,25 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	if( !fileName.size() )
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s || !s->hasObject() )
 	{
 		return parent->objectPlug()->defaultValue();
 	}
 	
-	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
-	s = s->scene( path );
-	
-	ObjectPtr o;
-	
-	if( s->hasObject() )
-	{
-		ConstObjectPtr o = s->readObject( context->getFrame() / g_frameRate );
-		return o ? o : ConstObjectPtr( parent->objectPlug()->defaultValue() );
-	}
-	
-	return parent->objectPlug()->defaultValue();
+	return s->readObject( context->getFrame() / g_frameRate );
 }
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	if( !fileName.size() )
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
 	{
 		return parent->childNamesPlug()->defaultValue();
 	}
-	
-	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
-	s = s->scene( path );
 
 	InternedStringVectorDataPtr result = new InternedStringVectorData;
 	s->childNames( result->writable() );
-	
 	return result;
 }
 
@@ -244,4 +289,16 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 	{
 		SharedSceneInterfaces::clear();
 	}
+}
+
+ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
+{
+	std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return NULL;
+	}
+	
+	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
+	return s->scene( path );
 }

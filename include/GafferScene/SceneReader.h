@@ -69,6 +69,7 @@ class SceneReader : public FileSource
 	private :
 	
 		void plugSet( Gaffer::Plug *plug );
+		IECore::ConstSceneInterfacePtr scene( const ScenePath &path ) const;
 		
 		class Cache;
 		static Cache &cache();
