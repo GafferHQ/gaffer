@@ -53,7 +53,7 @@ enum TypeId
 	ChannelDataProcessorTypeId = 110757,
 	OpenColorIOTypeId = 110758,
 	ObjectToImageTypeId = 110759,
-	FormatTypeId = 110760,
+	FormatDataTypeId = 110760,
 	FormatPlugTypeId = 110761,
 	MergeTypeId = 110762,
 	GradeTypeId = 110763,

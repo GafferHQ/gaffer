@@ -61,7 +61,7 @@ const IECore::InternedString Format::defaultFormatContextName = "image:defaultFo
 
 namespace IECore
 {
-	IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatData, FormatTypeId )
+	IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatData, FormatDataTypeId )
 	
 	template<>
 	void FormatData::save( SaveContext *context ) const
