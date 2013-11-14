@@ -39,11 +39,11 @@ import Gaffer
 
 class StringInOutNode( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="StringInOutNode" ) :
+	def __init__( self, name="StringInOutNode", defaultValue="" ) :
 	
 		Gaffer.ComputeNode.__init__( self, name )
 		
-		self.addChild( Gaffer.StringPlug( "in" ) )
+		self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In, defaultValue ) )
 		self.addChild( Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out ) )
 		
 	def affects( self, input ) :
