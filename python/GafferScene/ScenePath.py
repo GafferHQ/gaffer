@@ -49,7 +49,7 @@ class ScenePath( Gaffer.Path ) :
 		assert( isinstance( scenePlug, GafferScene.ScenePlug ) )
 	
 		self.__scenePlug = scenePlug
-		self.__plugDirtiedConnection = self.__scenePlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+		self.__plugDirtiedConnection = None
 
 		self.__context = None
 		self.setContext( context )
@@ -102,16 +102,23 @@ class ScenePath( Gaffer.Path ) :
 		
 		self.__context = context
 		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
-		self.pathChangedSignal()( self )
+		self._emitPathChanged()
 		
 	def getContext( self ) :
 	
 		return self.__context
-				
+
+	def pathChangedSignal( self ) :
+
+		if self.__plugDirtiedConnection is None :
+			self.__plugDirtiedConnection = self.__scenePlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+
+		return Gaffer.Path.pathChangedSignal( self )
+
 	def __contextChanged( self, context, key ) :
 	
 		if not key.startswith( "ui:" ) :
-			self.pathChangedSignal()( self )
+			self._emitPathChanged()
 		
 	def __plugDirtied( self, plug ) :
 	
@@ -119,5 +126,5 @@ class ScenePath( Gaffer.Path ) :
 		# but if in the future we start using the other plugs in
 		# info() we'll need to take that into account here.
 		if plug.isSame( self.__scenePlug["childNames"] ) :
-			self.pathChangedSignal()( self )
+			self._emitPathChanged()
 			
