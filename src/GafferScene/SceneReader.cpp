@@ -34,18 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
-
 #include "boost/bind.hpp"
 
-#include "IECore/FileIndexedIO.h"
-#include "IECore/LRUCache.h"
-#include "IECore/SceneInterface.h"
 #include "IECore/SharedSceneInterfaces.h"
 #include "IECore/InternedString.h"
 #include "IECore/SceneCache.h"
 
 #include "Gaffer/Context.h"
+
 #include "GafferScene/SceneReader.h"
 
 using namespace Imath;
@@ -288,6 +284,7 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 	if( plug == refreshCountPlug() )
 	{
 		SharedSceneInterfaces::clear();
+		m_lastScene.clear();
 	}
 }
 
@@ -299,6 +296,24 @@ ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
 		return NULL;
 	}
 	
-	ConstSceneInterfacePtr s = SharedSceneInterfaces::get( fileName );
-	return s->scene( path );
+	LastScene &lastScene = m_lastScene.local();
+	if( lastScene.fileName == fileName )
+	{
+		if( lastScene.path == path )
+		{
+			return lastScene.pathScene;
+		}
+		else
+		{
+			lastScene.path = path;
+			lastScene.pathScene = lastScene.fileNameScene->scene( path );
+			return lastScene.pathScene;
+		}
+	}
+
+	lastScene.fileName = fileName;
+	lastScene.fileNameScene = SharedSceneInterfaces::get( fileName );
+	lastScene.path = path;
+	lastScene.pathScene = lastScene.fileNameScene->scene( path );
+	return lastScene.pathScene;
 }
