@@ -244,6 +244,15 @@ class ContextTest( unittest.TestCase ) :
 		self.assertEqual( c.substitute( "$a/$dontExist/something.###.tif" ), "apple//something.020.tif" )
 		self.assertEqual( c.substitute( "${badlyFormed" ), "" )
 	
+	def testHasSubstitutions( self ) :
+	
+		c = Gaffer.Context()
+		self.assertFalse( c.hasSubstitutions( "a" ) )
+		self.assertTrue( c.hasSubstitutions( "~something" ) )
+		self.assertTrue( c.hasSubstitutions( "$a" ) )
+		self.assertTrue( c.hasSubstitutions( "${a}" ) )
+		self.assertTrue( c.hasSubstitutions( "###" ) )
+	
 	def testNames( self ) :
 	
 		c = Gaffer.Context()

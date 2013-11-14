@@ -151,6 +151,14 @@ class StringPlugTest( GafferTest.TestCase ) :
 			self.assertEqual( n["out"].getValue(), "b" )
 			self.assertNotEqual( n["out"].hash(), h1 )
 			self.assertNotEqual( n["out"].hash(), h2 )
+	
+	def testDefaultValueExpansion( self ) :
+	
+		n = GafferTest.StringInOutNode( defaultValue = "${A}" )
+		context = Gaffer.Context()
+		context["A"] = "b"
+		with context :
+			self.assertEqual( n["out"].getValue(), "b" )
 		
 if __name__ == "__main__":
 	unittest.main()

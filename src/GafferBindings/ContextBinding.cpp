@@ -155,6 +155,7 @@ void bindContext()
 		.def( self == self )
 		.def( self != self )
 		.def( "substitute", &Context::substitute )
+		.def( "hasSubstitutions", &Context::hasSubstitutions ).staticmethod( "hasSubstitutions" )
 		.def( "current", &current ).staticmethod( "current" )
 		;
 
