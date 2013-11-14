@@ -127,6 +127,23 @@ std::string Context::substitute( const std::string &s ) const
 	return result;
 }
 
+bool Context::hasSubstitutions( const std::string &input )
+{
+	for( const char *c = input.c_str(); *c; c++ )
+	{
+		switch( *c )
+		{
+			case '$' :
+			case '#' :
+			case '~' :
+				return true;
+			default :
+				; // do nothing
+		}
+	}
+	return false;
+}
+
 void Context::substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const
 {
 	if( recursionDepth > 8 )

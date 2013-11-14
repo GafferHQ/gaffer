@@ -106,6 +106,10 @@ class Context : public IECore::RefCounted
 		/// then we could have a separate substitute() function capable
 		/// of accepting Contexts, CompoundData, CompoundObjects etc.
 		std::string substitute( const std::string &input ) const;
+		/// Returns true if the specified string contains substitutions
+		/// which can be performed by the substitute() method. If it returns
+		/// false, it is guaranteed that substitute( input ) == input.
+		static bool hasSubstitutions( const std::string &input );
 		
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
