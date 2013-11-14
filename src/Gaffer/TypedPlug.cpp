@@ -54,14 +54,19 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::AtomicBox2iPlug, Atomi
 template<>
 std::string StringPlug::getValue() const
 {	
-	bool performSubstitution = direction()==Plug::In && inCompute() && Plug::getFlags( Plug::PerformsSubstitutions );
-		
 	IECore::ConstObjectPtr o = getObjectValue();
 	const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
 	if( !s )
 	{
 		throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
 	}
+
+	bool performSubstitution =
+		direction()==Plug::In &&
+		inCompute() &&
+		Plug::getFlags( Plug::PerformsSubstitutions ) &&
+		Context::hasSubstitutions( s->readable() );
+
 	return performSubstitution ? Context::current()->substitute( s->readable() ) : s->readable();
 }
 
@@ -69,14 +74,25 @@ template<>
 IECore::MurmurHash StringPlug::hash() const
 {
 	bool performSubstitution = direction()==Plug::In && !getInput<ValuePlug>() && Plug::getFlags( Plug::PerformsSubstitutions );
-	if( !performSubstitution )
+	if( performSubstitution )
 	{
-		return ValuePlug::hash();
+		IECore::ConstObjectPtr o = getObjectValue();
+		const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
+		if( !s )
+		{
+			throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
+		}
+		
+		if( Context::hasSubstitutions( s->readable() ) )
+		{
+			IECore::MurmurHash result;
+			result.append( Context::current()->substitute( s->readable() ) );
+			return result;
+		}
 	}
-	
-	IECore::MurmurHash result;
-	result.append( Context::current()->substitute( getValue() ) );
-	return result;
+
+	// no substitutions
+	return ValuePlug::hash();
 }
 
 // explicit instantiation
