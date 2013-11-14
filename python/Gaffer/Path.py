@@ -151,7 +151,7 @@ class Path( object ) :
 		else :
 			self.__filterChangedConnection = None
 			
-		self.__emitChangedSignal()
+		self._emitPathChanged()
 		
 	def getFilter( self ) :
 	
@@ -194,7 +194,7 @@ class Path( object ) :
 			
 		self.__items = path.__items[:]
 		self.__root = path.__root
-		self.__emitChangedSignal()
+		self._emitPathChanged()
 		
 	## Sets the path root and items from a "/"
 	# separated string.
@@ -206,7 +206,7 @@ class Path( object ) :
 		if newItems != self.__items or newRoot != self.__root :
 			self.__items = newItems
 			self.__root = newRoot
-			self.__emitChangedSignal()
+			self._emitPathChanged()
 			
 		return self
 	
@@ -221,7 +221,7 @@ class Path( object ) :
 	
 		self.__checkElement( element )
 		self.__items.append( element )
-		self.__emitChangedSignal()
+		self._emitPathChanged()
 		
 		return self
 	
@@ -233,9 +233,18 @@ class Path( object ) :
 			changed = True
 			
 		if changed :
-			self.__emitChangedSignal()
+			self._emitPathChanged()
 		
 		return self
+
+	## May be called by subclasses to signify that the path has changed
+	# and to emit pathChangedSignal() if necessary. Note that it can be
+	# much more efficient to call this than to call pathChangedSignal()( self ),
+	# because it optimises away cases where nothing is connected.
+	def _emitPathChanged( self ) :
+		
+		if hasattr( self, "_Path__pathChangedSignal" ) :
+			self.__pathChangedSignal( self )
 		
 	def __len__( self ) :
 	
@@ -258,7 +267,7 @@ class Path( object ) :
 		self.__items.__setitem__( index, name )
 		
 		if prev!=name :
-			self.__emitChangedSignal()
+			self._emitPathChanged()
 		
 	def __getitem__( self, index ) :
 	
@@ -267,7 +276,7 @@ class Path( object ) :
 	def __delitem__( self, index ) :
 	
 		self.__items.__delitem__( index )
-		self.__emitChangedSignal()
+		self._emitPathChanged()
 		
 	def __eq__( self, other ) :
 	
@@ -293,17 +302,12 @@ class Path( object ) :
 		
 		if element=="" :
 			raise ValueError( "Path element is empty." )	
-
-	def __emitChangedSignal( self ) :
-		
-		if hasattr( self, "_Path__pathChangedSignal" ) :
-			self.__pathChangedSignal( self )
 			
 	def __filterChanged( self, filter ) :
 	
 		assert( filter is self.__filter )
 		
-		self.__emitChangedSignal()
+		self._emitPathChanged()
 		
 	def __repr__( self ) :
 	
