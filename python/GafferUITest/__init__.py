@@ -93,6 +93,7 @@ from NameLabelTest import NameLabelTest
 from GLWidgetTest import GLWidgetTest
 from BookmarksTest import BookmarksTest
 from SectionedCompoundDataPlugValueWidgetTest import SectionedCompoundDataPlugValueWidgetTest
+from PlaybackTest import PlaybackTest
 
 if __name__ == "__main__":
 	unittest.main()
