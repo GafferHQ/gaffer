@@ -1149,7 +1149,6 @@ void ImageView::insertDisplayTransform()
 		if( displayTransform )
 		{
 			m_displayTransforms[name] = displayTransform;
-			displayTransform->setName( name );
 			getPreprocessor<Node>()->addChild( displayTransform );
 		}
 	}
