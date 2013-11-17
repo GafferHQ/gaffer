@@ -62,7 +62,8 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 		
-		self.__plug = None		
+		self.__plug = None
+		self.__playback = None
 		self._updateFromSet()
 				
 	def __repr__( self ) :
@@ -81,20 +82,33 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		# hence the need for already figuring out the plug.
 		GafferUI.NodeSetEditor._updateFromSet( self )
 		
-		# finish our update
-		if self.__plug is not None :		
-			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, self.getContext(), "/" ) )
-			self.__transferExpansionFromContext()
-			self.__transferSelectionFromContext()
-		else :
-			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
-		
+		# update our view of the hierarchy
+		self.__setPathListingPath()
+				
 	def _updateFromContext( self, modifiedItems ) :
+		
+		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
+			self.__playback = GafferUI.Playback.acquire( self.getContext() )
+			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
 	
 		if "ui:scene:selectedPaths" in modifiedItems :
 			self.__transferSelectionFromContext()
 		elif "ui:scene:expandedPaths" in modifiedItems :
 			self.__transferExpansionFromContext()
+			
+		if self.__playback.getState() == GafferUI.Playback.State.Stopped :
+			# When the context has changed, the hierarchy of the scene may
+			# have too so we should update our PathListingWidget. One of the
+			# most common causes of Context changes is animation playback though,
+			# and in this scenario our update would greatly slow down playback,
+			# and be exceedingly unlikely to display anything of interest. For
+			# this reason, we don't update during playback. We can also avoid
+			# updating if the only entries which have changed are "ui:" prefixed
+			# as those shouldn't affect the result.
+			for item in modifiedItems :
+				if not item.startswith( "ui:" ) :
+					self.__setPathListingPath()
+					break
 			
 	def _titleFormat( self ) :
 	
@@ -104,7 +118,19 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 			_reverseNodes = True,
 			_ellipsis = False
 		)
-		
+	
+	def __setPathListingPath( self ) :
+	
+		if self.__plug is not None :
+			# Note that we take a static copy of our current context for use in the ScenePath - this prevents the
+			# PathListing from updating automatically when the original context changes, and allows us to have finer
+			# grained control of the update in our _updateFromContext() method.
+			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, Gaffer.Context( self.getContext() ), "/" ) )
+			self.__transferExpansionFromContext()
+			self.__transferSelectionFromContext()
+		else :
+			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+
 	def __expansionChanged( self, pathListing ) :
 	
 		assert( pathListing is self.__pathListing )
@@ -151,5 +177,14 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 				self.__pathListing.setSelectedPaths( selection, scrollToFirst=True, expandNonLeaf=False )
 			else :
 				self.__pathListing.setSelectedPaths( [] )
+	
+	def __playbackStateChanged( self, playback ) :
+	
+		assert( playback is self.__playback )
+		
+		if playback.getState() == playback.State.Stopped :
+			# because we disable update during playback, we need to
+			# perform a final update when playback stops.
+			self.__setPathListingPath()
 		
 GafferUI.EditorWidget.registerType( "SceneHierarchy", SceneHierarchy )
