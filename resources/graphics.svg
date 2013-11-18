@@ -16,176 +16,7 @@
    inkscape:version="0.48.1 r9760"
    sodipodi:docname="graphics.svg">
   <defs
-     id="defs4">
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4170"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4134"
-       is_visible="true" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect4131"
-       effect="spiro" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect4128"
-       effect="spiro" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3300"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4177"
-       is_visible="true" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect4173"
-       effect="spiro" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4169"
-       is_visible="true" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect4165"
-       effect="spiro" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4096"
-       is_visible="true" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect4092"
-       effect="spiro" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4088"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3247"
-       is_visible="true" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect3243"
-       effect="spiro" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3239"
-       is_visible="true" />
-    <linearGradient
-       id="linearGradient4038">
-      <stop
-         id="stop4040"
-         offset="0"
-         style="stop-color:#bebebe;stop-opacity:1;" />
-      <stop
-         id="stop4042"
-         offset="1"
-         style="stop-color:#cfcfcf;stop-opacity:1;" />
-    </linearGradient>
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect5004"
-       is_visible="true" />
-    <linearGradient
-       id="linearGradient3899">
-      <stop
-         style="stop-color:#b3b3b3;stop-opacity:1;"
-         offset="0"
-         id="stop3901" />
-      <stop
-         id="stop3978"
-         offset="0.26041666"
-         style="stop-color:#b3b3b3;stop-opacity:1;" />
-      <stop
-         id="stop4060"
-         offset="0.52083331"
-         style="stop-color:#787878;stop-opacity:1;" />
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="1"
-         id="stop3903" />
-    </linearGradient>
-    <inkscape:perspective
-       sodipodi:type="inkscape:persp3d"
-       inkscape:vp_x="0 : 526.18109 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_z="744.09448 : 526.18109 : 1"
-       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
-       id="perspective10" />
-    <inkscape:perspective
-       id="perspective2929"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3087"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3109"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3153"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect4088-4"
-       is_visible="true" />
-    <inkscape:perspective
-       id="perspective3111"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3890"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3166"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3251"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <inkscape:perspective
-       id="perspective3061"
-       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
-       inkscape:vp_z="1 : 0.5 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 0.5 : 1"
-       sodipodi:type="inkscape:persp3d" />
-  </defs>
+     id="defs4" />
   <sodipodi:namedview
      id="base"
      pagecolor="#666666"
@@ -194,14 +25,14 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="16"
-     inkscape:cx="93.1761"
-     inkscape:cy="878.29217"
+     inkscape:cx="116.29304"
+     inkscape:cy="874.15004"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1440"
      inkscape:window-height="856"
-     inkscape:window-x="137"
+     inkscape:window-x="-3"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:snap-global="true"
@@ -1271,10 +1102,8 @@
       <path
          sodipodi:nodetypes="ccccccccc"
          inkscape:connector-curvature="0"
-         inkscape:original-d="m 287.5,153.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
-         inkscape:path-effect="#path-effect4088"
          id="path4086"
-         d="m 287.5,153.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 -3,2.5"
+         d="m 287.5,153.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
     </g>
     <g
@@ -1316,10 +1145,8 @@
       </g>
       <path
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
-         d="m 336.5,148.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 -3,2.5"
+         d="m 336.5,148.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          id="path4163"
-         inkscape:path-effect="#path-effect4165"
-         inkscape:original-d="m 336.5,148.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccccccc" />
     </g>
@@ -1372,10 +1199,8 @@
       <path
          sodipodi:nodetypes="ccccccccc"
          inkscape:connector-curvature="0"
-         inkscape:original-d="m 374.5,154.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
-         inkscape:path-effect="#path-effect4169"
          id="path4167"
-         d="m 374.5,154.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 -3,2.5"
+         d="m 374.5,154.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
     </g>
     <g
@@ -1409,10 +1234,8 @@
       </g>
       <path
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
-         d="m 400.5,152.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 -3,2.5"
+         d="m 400.5,152.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          id="path4171"
-         inkscape:path-effect="#path-effect4173"
-         inkscape:original-d="m 400.5,152.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccccccc" />
     </g>
@@ -1456,10 +1279,8 @@
       <path
          sodipodi:nodetypes="ccccccccc"
          inkscape:connector-curvature="0"
-         inkscape:original-d="m 435.5,153.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
-         inkscape:path-effect="#path-effect4177"
          id="path4175"
-         d="m 435.5,153.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 -3,2.5"
+         d="m 435.5,153.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
     </g>
     <path
@@ -1480,10 +1301,8 @@
          sodipodi:nodetypes="sssss" />
       <path
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
-         d="m 248.5,149.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 -3,2.5"
+         d="m 248.5,149.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          id="path4086-7"
-         inkscape:path-effect="#path-effect4088-4"
-         inkscape:original-d="m 248.5,149.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccccccc" />
     </g>
@@ -1854,10 +1673,8 @@
        transform="matrix(1.1456995,0,0,1.1456995,-4.597265,-25.108524)">
       <path
          style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.567339;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-         d="m 100.24995,172.89343 7.75005,3.71875 0.71875,-10.53125 -8.5,-2.5625 0.0312,9.375"
+         d="m 100.24995,172.89343 7.75005,3.71875 0.71875,-10.53125 -8.5,-2.5625 z"
          id="path3304"
-         inkscape:path-effect="#path-effect4128"
-         inkscape:original-d="m 100.24995,172.89343 7.75005,3.71875 0.71875,-10.53125 -8.5,-2.5625 z"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccc" />
       <path
@@ -1869,10 +1686,8 @@
       <path
          transform="translate(0,52.362183)"
          inkscape:connector-curvature="0"
-         inkscape:original-d="m 92.375,124.125 7.625,4.65625 8,-4.53125 -7.75005,-3.71875 z"
-         inkscape:path-effect="#path-effect4170"
          id="path4168"
-         d="M 92.375,124.125 100,128.78125 108,124.25 100.24995,120.53125 92.375,124.125"
+         d="m 92.375,124.125 7.625,4.65625 8,-4.53125 -7.75005,-3.71875 z"
          style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.567339;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
       <path
          inkscape:connector-curvature="0"
