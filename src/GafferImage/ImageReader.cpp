@@ -162,6 +162,8 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 		),
 		1.
 	);
+	/// \todo This shouldn't really be here. Compute methods shouldn't really have side effects and the
+	/// registerFormat() method is not only slow but it's also not threadsafe.
 	return GafferImage::Format::registerFormat( format );
 }
 
