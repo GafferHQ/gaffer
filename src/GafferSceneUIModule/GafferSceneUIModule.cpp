@@ -45,6 +45,9 @@ using namespace GafferSceneUI;
 BOOST_PYTHON_MODULE( _GafferSceneUI )
 {
 
-	GafferBindings::NodeClass<SceneView>();
+	GafferBindings::NodeClass<SceneView>()
+		.def( "expandSelection", &SceneView::expandSelection )
+		.def( "collapseSelection", &SceneView::collapseSelection )
+	;
 
 }

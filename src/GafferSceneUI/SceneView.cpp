@@ -103,12 +103,24 @@ IE_CORE_DECLAREPTR( WrappingProcedural );
 
 IE_CORE_DEFINERUNTIMETYPED( SceneView );
 
+size_t SceneView::g_firstPlugIndex = 0;
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
 SceneView::SceneView( const std::string &name )
 	:	View3D( name, new GafferScene::ScenePlug() ),
 		m_renderableGadget( new RenderableGadget )
 {
+
+	// add plugs and signal handling for them
+	
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0 ) );
+
+	plugSetSignal().connect( boost::bind( &SceneView::plugSet, this, ::_1 ) );
+
+	// set up our gadgets
+
 	viewportGadget()->setChild( m_renderableGadget );
 
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
@@ -130,6 +142,16 @@ SceneView::SceneView( const std::string &name )
 
 SceneView::~SceneView()
 {
+}
+
+Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 void SceneView::contextChanged( const IECore::InternedString &name )
@@ -164,7 +186,10 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 
 void SceneView::update()
 {
-	SceneProceduralPtr p = new SceneProcedural( preprocessedInPlug<ScenePlug>(), getContext(), ScenePlug::ScenePath(), expandedPaths() );
+	SceneProceduralPtr p = new SceneProcedural(
+		preprocessedInPlug<ScenePlug>(), getContext(), ScenePlug::ScenePath(),
+		expandedPaths(), minimumExpansionDepthPlug()->getValue()
+	);
 	WrappingProceduralPtr wp = new WrappingProcedural( p );
 	
 	bool hadRenderable = m_renderableGadget->getRenderable();
@@ -353,4 +378,12 @@ void SceneView::baseStateChanged()
 	/// \todo This isn't transferring the override state properly. Probably an IECoreGL problem.
 	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
 	m_renderableGadget->renderRequestSignal()( m_renderableGadget );
+}
+
+void SceneView::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == minimumExpansionDepthPlug() )
+	{
+		updateRequestSignal()( this );
+	}
 }

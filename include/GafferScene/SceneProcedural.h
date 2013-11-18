@@ -60,6 +60,15 @@ namespace GafferScene
 /// in a tree of nested deferred procedurals. See the python ScriptProcedural for 
 /// a procedural which will load a gaffer script and generate geometry from a named
 /// node.
+/// \todo This class is currently being abused by the SceneView for drawing the scene in
+/// the viewer, and has some functionality that would otherwise be meaningless. We should
+/// instead implement custom scene traversal in the SceneView and simplify the SceneProcedural
+/// so it has just enough functionality for final rendering and nothing more. Things we should
+/// remove include :
+///
+///   - the PathMatcher
+///   - the minimumExpansionDepth
+///   - the drawing of cameras and lights
 class SceneProcedural : public IECore::Renderer::Procedural
 {
 
@@ -68,7 +77,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0 );
+		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0, size_t minimumExpansionDepth=0 );
 		virtual ~SceneProcedural();
 		
 		virtual IECore::MurmurHash hash() const;
@@ -87,6 +96,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		ScenePlug::ScenePath m_scenePath;
 		
 		IECore::PathMatcherDataPtr m_pathsToExpand;
+		size_t m_minimumExpansionDepth;
 		
 		struct Options
 		{
