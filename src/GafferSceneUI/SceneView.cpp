@@ -37,7 +37,6 @@
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-#include "boost/tokenizer.hpp"
 
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
@@ -252,14 +251,9 @@ void SceneView::expandSelection()
 			
 			/// \todo Maybe if RenderableGadget used PathMatcher for specifying selection, and
 			/// we had a nice means of getting ScenePaths out of PathMatcher, we wouldn't need
-			/// to do all this string manipulation.
-			typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-			Tokenizer pathTokenizer( *it, boost::char_separator<char>( "/" ) );	
+			/// to do this conversion.
 			ScenePlug::ScenePath path;
-			for( Tokenizer::const_iterator pIt = pathTokenizer.begin(), pEIt = pathTokenizer.end(); pIt != pEIt; pIt++ )
-			{
-				path.push_back( *pIt );
-			}
+			ScenePlug::stringToPath( *it, path );
 			
 			ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( path );
 			const vector<InternedString> &childNames = childNamesData->readable();
