@@ -61,12 +61,15 @@ void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::Aff
 {
 	BaseType::affects( input, outputs );
 	
-	if( const ValuePlug *inputValuePlug = IECore::runTimeCast<const ValuePlug>( input ) )
+	if( input->direction() == Plug::In )
 	{
-		const ValuePlug *output = oppositePlug( inputValuePlug );
-		if( output ) 
+		if( const ValuePlug *inputValuePlug = IECore::runTimeCast<const ValuePlug>( input ) )
 		{
-			outputs.push_back( output );
+			const ValuePlug *output = oppositePlug( inputValuePlug );
+			if( output )
+			{
+				outputs.push_back( output );
+			}
 		}
 	}
 }

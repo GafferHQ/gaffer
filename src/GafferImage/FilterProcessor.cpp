@@ -98,7 +98,7 @@ bool FilterProcessor::enabled() const
 	return true;
 }
 
-void FilterProcessor::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void FilterProcessor::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
@@ -108,7 +108,7 @@ void FilterProcessor::hashFormatPlug( const GafferImage::ImagePlug *output, cons
 	}
 }
 
-void FilterProcessor::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void FilterProcessor::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
@@ -118,7 +118,7 @@ void FilterProcessor::hashDataWindowPlug( const GafferImage::ImagePlug *output, 
 	}
 }
 
-void FilterProcessor::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void FilterProcessor::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
@@ -128,7 +128,7 @@ void FilterProcessor::hashChannelNamesPlug( const GafferImage::ImagePlug *output
 	}
 }
 
-void FilterProcessor::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void FilterProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );

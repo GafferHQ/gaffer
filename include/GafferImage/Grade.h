@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_GRADE_H
 #define GAFFERIMAGE_GRADE_H
 
+#include "Gaffer/CompoundNumericPlug.h"
+
 #include "GafferImage/ChannelDataProcessor.h"
-#include "GafferImage/ImagePlug.h"
-#include "Gaffer/PlugType.h"
 
 namespace GafferImage
 {
@@ -88,17 +88,20 @@ class Grade : public ChannelDataProcessor
 	
 	protected :
 
-		/// Disables the output of any channel that has a gamma value of 0.	
 		virtual bool channelEnabled( const std::string &channel ) const;
 		
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;
 
 	private :
+		
+		void parameters( size_t channelIndex, float &a, float &b, float &gamma ) const;
 		
 		static size_t g_firstPlugIndex;
 		
 };
+
+IE_CORE_DECLAREPTR( Grade );
 
 } // namespace GafferImage
 

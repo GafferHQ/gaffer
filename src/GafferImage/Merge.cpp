@@ -102,10 +102,10 @@ bool Merge::enabled() const
 	return ( m_inputs.nConnectedInputs() >= 2 );
 }
 
-void Merge::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	FilterProcessor::hashChannelData( output, context, h );
 	operationPlug()->hash( h );
-	FilterProcessor::hashChannelDataPlug( output, context, h );
 }
 
 IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const

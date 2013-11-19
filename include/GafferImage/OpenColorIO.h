@@ -38,13 +38,12 @@
 #ifndef GAFFERIMAGE_OPENCOLORIO_H
 #define GAFFERIMAGE_OPENCOLORIO_H
 
-#include "GafferImage/FilterProcessor.h"
+#include "GafferImage/ColorProcessor.h"
 
 namespace GafferImage
 {
 
-/// \todo Optimise for the case where the processor doesn't have channel crosstalk.
-class OpenColorIO : public FilterProcessor
+class OpenColorIO : public ColorProcessor
 {
 
 	public :
@@ -52,7 +51,7 @@ class OpenColorIO : public FilterProcessor
 		OpenColorIO( const std::string &name=defaultName<OpenColorIO>() );
 		virtual ~OpenColorIO();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIO, OpenColorIOTypeId, FilterProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIO, OpenColorIOTypeId, ColorProcessor );
 
 		Gaffer::StringPlug *inputSpacePlug();
 		const Gaffer::StringPlug *inputSpacePlug() const;
@@ -60,17 +59,15 @@ class OpenColorIO : public FilterProcessor
 		Gaffer::StringPlug *outputSpacePlug();
 		const Gaffer::StringPlug *outputSpacePlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected:
+	protected :
 
 		/// Overrides the default implementation to disable the node when the input color space is
 		/// the same as the output color space.
 		virtual bool enabled() const;
 		
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual bool affectsColorData( const Gaffer::Plug *input ) const;
+		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const;
 
 	private :
 	

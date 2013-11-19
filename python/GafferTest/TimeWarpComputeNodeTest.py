@@ -100,6 +100,20 @@ class TimeWarpComputeNodeTest( unittest.TestCase ) :
 			with c :
 				mh = s["m"]["product"].hash()
 			self.assertEqual( wh, mh )
+	
+	def testAffects( self ) :
+	
+		w = Gaffer.TimeWarpComputeNode()
+		w["in"] = Gaffer.IntPlug()
+		w["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		cs = GafferTest.CapturingSlot( w.plugDirtiedSignal() )
+		
+		w["in"].setValue( 10 )
+		
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[0][0].isSame( w["in"] ) )
+		self.assertTrue( cs[1][0].isSame( w["out"] ) )
 				
 if __name__ == "__main__":
 	unittest.main()

@@ -165,6 +165,11 @@ GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 # Toolbar implementation
 ##########################################################################
 
+## \todo We could turn this into a general class useable for all nodes and
+# not just views. Then we could use it to create useful toolbars for the node
+# being viewed too. If we do that we should have a pure abstract class called
+# NodeToolbar and then a derived class called StandardToolbar which does the
+# job 90% of the time, as we do with NodeUI and StandardNodeUI.
 class _ViewToolbar( GafferUI.Widget ) :
 
 	def __init__( self, view, **kw ) :
@@ -182,7 +187,10 @@ class _ViewToolbar( GafferUI.Widget ) :
 			if widget is None :
 				continue
 							
-			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :
+			if ( isinstance( widget, GafferUI.PlugValueWidget )
+			     and not widget.hasLabel()
+			     and GafferUI.Metadata.plugValue( plug, "label" ) != ""
+			) :
 				widget = GafferUI.PlugWidget( widget )
 				
 			self.__row.append( widget )

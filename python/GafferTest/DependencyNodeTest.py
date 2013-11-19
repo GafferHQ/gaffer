@@ -178,8 +178,10 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 			def affects( self, input ) :
 
-				assert( input.isSame( self["in"] ) )	
-				return [ self["out"] ]
+				if input.isSame( self["in"] ) :
+					return [ self["out"] ]
+				
+				return []
 				
 		s1 = SimpleDependencyNode()
 		s2 = SimpleDependencyNode()

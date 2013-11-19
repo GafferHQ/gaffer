@@ -318,10 +318,11 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 			self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )	
 		
 		def affects( self, input ) :
-				
-			assert( input.isSame( self["in"] ) )	
-				
-			return [ self["out"] ]
+			
+			if input.isSame( self["in"] ) :
+				return [ self["out"] ]
+	
+			return []
 	
 		def hash( self, output, context, h ) :
 

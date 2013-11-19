@@ -90,10 +90,10 @@ class ImageNode : public Gaffer::ComputeNode
 		/// and then call the hash*() methods below whenever output is part of an ImagePlug. Derived classes should reimplement
 		/// the specific hash*() methods rather than hash() itself.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 
 		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug and the node is enabled.
 		/// Derived classes should reimplement the specific compute*() methods rather than compute() itself.

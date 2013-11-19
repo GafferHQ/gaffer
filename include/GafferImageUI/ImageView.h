@@ -38,12 +38,22 @@
 #ifndef GAFFERIMAGEUI_IMAGEVIEW_H
 #define GAFFERIMAGEUI_IMAGEVIEW_H
 
+#include "Gaffer/NumericPlug.h"
+
 #include "GafferUI/View.h"
 
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageStats.h"
-
 #include "GafferImageUI/TypeIds.h"
+#include "GafferImageUIBindings/ImageViewBinding.h" // to enable friend declaration for bindImageView().
+
+namespace GafferImage
+{
+
+IE_CORE_FORWARDDECLARE( ImageProcessor )
+IE_CORE_FORWARDDECLARE( Grade )
+IE_CORE_FORWARDDECLARE( ImageStats )
+IE_CORE_FORWARDDECLARE( ImagePlug )
+
+} // namespace GafferImage
 
 namespace GafferImageUI
 {
@@ -58,22 +68,51 @@ class ImageView : public GafferUI::View
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
 	
+		Gaffer::FloatPlug *exposurePlug();
+		const Gaffer::FloatPlug *exposurePlug() const;
+
+		Gaffer::FloatPlug *gammaPlug();
+		const Gaffer::FloatPlug *gammaPlug() const;
+	
+		/// Values should be names that exist in registeredDisplayTransforms().
+		Gaffer::StringPlug *displayTransformPlug();
+		const Gaffer::StringPlug *displayTransformPlug() const;
+	
+		typedef boost::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
+
+		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
+		static void registeredDisplayTransforms( std::vector<std::string> &names );
+	
 	protected :
-
-		/// This constructor is for classes which derive from ImageView, but
-		/// don't necessarily accept an ImagePlug. Instead they should create
-		/// a preprocessor node that accepts the input plug and outputs an
-		/// image plug, and enable it using setPreprocessor().
-		ImageView( const std::string &name, Gaffer::PlugPtr input );
-
+		
+		/// May be called from a subclass constructor to add a converter
+		/// from non-image input types, allowing them to be viewed as images.
+		/// The converter must have an "in" Plug (of any desired type), and
+		/// convert the incoming data to an image to view on an "out" ImagePlug.
+		/// \note If the necessary conversion requires several nodes, a Box
+		/// provides a means of packaging them to meet these requirements.
+		/// \note Subclasses are not allowed to call setProcessor() as the
+		/// preprocessor is managed by the ImageView base class.
+		void insertConverter( Gaffer::NodePtr converter );
+		
 		virtual void update();
 		
+	private:
+
 		GafferImage::ImageStats *imageStatsNode();
 		const GafferImage::ImageStats *imageStatsNode() const;
 		
-		static ViewDescription<ImageView> g_viewDescription;
+		GafferImage::Grade *gradeNode();
+		const GafferImage::Grade *gradeNode() const;
+		
+		GafferImage::ImageProcessor *displayTransformNode();
+		const GafferImage::ImageProcessor *displayTransformNode() const;
+		
+		void plugSet( Gaffer::Plug *plug );
+		void insertDisplayTransform();
 
-	private:
+		typedef std::map<std::string, GafferImage::ImageProcessorPtr> DisplayTransformMap;
+		DisplayTransformMap m_displayTransforms;
 
 		int m_channelToView;
 		Imath::V2f m_mousePos;
@@ -81,6 +120,14 @@ class ImageView : public GafferUI::View
 		Imath::Color4f m_minColor;
 		Imath::Color4f m_maxColor;
 		Imath::Color4f m_averageColor;
+
+		typedef std::map<std::string, DisplayTransformCreator> DisplayTransformCreatorMap;
+		static DisplayTransformCreatorMap &displayTransformCreators();
+
+		static ViewDescription<ImageView> g_viewDescription;
+
+		friend void GafferImageUIBindings::bindImageView();
+		
 };
 
 IE_CORE_DECLAREPTR( ImageView );
