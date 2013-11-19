@@ -34,45 +34,7 @@
 #  
 ##########################################################################
 
-import IECore
+from SceneViewTest import SceneViewTest
 
-import Gaffer
-
-import GafferUI
-import GafferSceneUI
-
-class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-	
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
-	
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
-	
-	def hasLabel( self ) :
-	
-		return True
-		
-	def _updateFromPlug( self ) :
-	
-		pass
-		
-	def __menuDefinition( self ) :
-	
-		expandAll = bool( self.getPlug().getValue() )
-	
-		m = IECore.MenuDefinition()
-		m.append( "/Expand Selection", { "command" : self.getPlug().node().expandSelection, "active" : not expandAll, "shortCut" : "Down" } )
-		m.append( "/Expand Selection Fully", { "command" : IECore.curry( self.getPlug().node().expandSelection, depth = 999 ), "active" : not expandAll, "shortCut" : "Shift+Down" } )
-		m.append( "/Collapse Selection", { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
-		m.append( "/Expand All Divider", { "divider" : True } )
-		m.append( "/Expand All", { "checkBox" : expandAll, "command" : Gaffer.WeakMethod( self.__toggleMinimumExpansionDepth ) } )
-		
-		return m
-	
-	def __toggleMinimumExpansionDepth( self, *unused ) :
-	
-		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
-		
-GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "minimumExpansionDepth", _ExpansionPlugValueWidget )
+if __name__ == "__main__":
+	unittest.main()

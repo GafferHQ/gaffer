@@ -46,7 +46,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 {
 
 	GafferBindings::NodeClass<SceneView>()
-		.def( "expandSelection", &SceneView::expandSelection )
+		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
 		.def( "collapseSelection", &SceneView::collapseSelection )
 	;
 

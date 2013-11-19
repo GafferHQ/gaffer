@@ -62,7 +62,7 @@ class SceneView : public GafferUI::View3D
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;
 		
-		void expandSelection();
+		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 		
 	protected :
@@ -76,8 +76,11 @@ class SceneView : public GafferUI::View3D
 		void selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget );
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
 		void transferSelectionToContext();
-		IECore::PathMatcherData *expandedPaths();
 		void plugSet( Gaffer::Plug *plug );
+		
+		IECore::PathMatcherData *expandedPaths();
+		// Returns true if the expansion or selection were modified, false otherwise.
+		bool expandWalk( const std::string &path, size_t depth, GafferScene::PathMatcher &expanded, GafferUI::RenderableGadget::Selection &selected );
 		
 		boost::signals::scoped_connection m_selectionChangedConnection;
 		

@@ -219,7 +219,7 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 {
 	if( event.key == "Down" )
 	{
-		expandSelection();
+		expandSelection( event.modifiers & KeyEvent::Shift ? 999 : 1 );
 		return true;
 	}
 	else if( event.key == "Up" )
@@ -231,57 +231,21 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	return false;
 }
 
-void SceneView::expandSelection()
+void SceneView::expandSelection( size_t depth )
 {
 	Context::Scope scopedContext( getContext() );
 
 	RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
-	
-	vector<string> pathsToSelect;
-	vector<const string *> pathsToDeselect;
-	IECore::PathMatcherData *expandedData = expandedPaths();
-	PathMatcher &expanded = expandedData->writable();
+	PathMatcher &expanded = expandedPaths()->writable();
+
+	// must take a copy of the selection to iterate over, because we'll modify the
+	// selection inside expandWalk().
+	const std::vector<string> toExpand( selection.begin(), selection.end() );
 	
 	bool needUpdate = false;
-	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
+	for( std::vector<string>::const_iterator it = toExpand.begin(), eIt = toExpand.end(); it != eIt; ++it )
 	{
-		if( expanded.addPath( *it ) )
-		{
-			needUpdate = true;
-			
-			/// \todo Maybe if RenderableGadget used PathMatcher for specifying selection, and
-			/// we had a nice means of getting ScenePaths out of PathMatcher, we wouldn't need
-			/// to do this conversion.
-			ScenePlug::ScenePath path;
-			ScenePlug::stringToPath( *it, path );
-			
-			ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( path );
-			const vector<InternedString> &childNames = childNamesData->readable();
-			if( childNames.size() )
-			{
-				pathsToDeselect.push_back( &(*it) );
-				for( vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
-				{
-					if( *(*it).rbegin() != '/' )
-					{
-						pathsToSelect.push_back( *it + "/" + cIt->string() );
-					}
-					else
-					{
-						pathsToSelect.push_back( *it + cIt->string() );
-					}
-				}
-			}
-		}
-	}
-	
-	for( vector<string>::const_iterator it = pathsToSelect.begin(), eIt = pathsToSelect.end(); it != eIt; it++ )
-	{
-		selection.insert( *it );
-	}
-	for( vector<const string *>::const_iterator it = pathsToDeselect.begin(), eIt = pathsToDeselect.end(); it != eIt; it++ )
-	{
-		selection.erase( **it );
+		needUpdate |= expandWalk( *it, depth, expanded, selection );
 	}
 	
 	if( needUpdate )
@@ -294,6 +258,52 @@ void SceneView::expandSelection()
 		// and this will trigger a selection update also via contextChanged().
 		transferSelectionToContext();
 	}
+}
+
+bool SceneView::expandWalk( const std::string &path, size_t depth, PathMatcher &expanded, RenderableGadget::Selection &selected )
+{
+	bool result = false;
+	
+	ScenePlug::ScenePath scenePath;
+	ScenePlug::stringToPath( path, scenePath );
+	ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( scenePath );
+	const vector<InternedString> &childNames = childNamesData->readable();
+
+	if( childNames.size() )
+	{
+		// expand ourselves to show our children, and make sure we're
+		// not selected - we only want selection at the leaf levels of
+		// our expansion.
+		result |= expanded.addPath( path );
+		result |= selected.erase( path );
+		for( vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
+		{
+			std::string childPath( path );
+			if( *childPath.rbegin() != '/' )
+			{
+				childPath += '/';
+			}
+			childPath += cIt->string();
+			if( depth == 1 )
+			{
+				// at the bottom of the expansion - just select the child
+				result |= selected.insert( childPath ).second;
+			}
+			else
+			{
+				// continue the expansion
+				result |= expandWalk( childPath, depth - 1, expanded, selected );
+			}
+		}
+	}
+	else
+	{
+		// we have no children, just make sure we're selected to mark the
+		// leaf of the expansion.
+		result |= selected.insert( path ).second;
+	}
+
+	return result;
 }
 
 void SceneView::collapseSelection()
