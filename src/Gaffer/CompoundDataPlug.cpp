@@ -376,7 +376,7 @@ ValuePlugPtr CompoundDataPlug::typedObjectValuePlug( const std::string &name, Pl
 
 IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 {
-	switch( plug->typeId() )
+    switch( (unsigned int) plug->typeId() )
 	{
 		case FloatPlugTypeId :
 			return new FloatData( static_cast<const FloatPlug *>( plug )->getValue() );

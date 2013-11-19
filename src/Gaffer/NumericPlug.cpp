@@ -153,7 +153,7 @@ void NumericPlug<T>::setToDefault()
 template<class T>
 void NumericPlug<T>::setFrom( const ValuePlug *other )
 {
-	switch( other->typeId() )
+    switch( (unsigned int) other->typeId() )
 	{
 		case FloatPlugTypeId :
 			setValue( (T)static_cast<const FloatPlug *>( other )->getValue() );

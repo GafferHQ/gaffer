@@ -232,7 +232,7 @@ void LinearContainer::calculateChildTransforms() const
 		offset += m_spacing * ( m_direction==Increasing ? 1.0f : -1.0f );
 		
 		M44f m; m.translate( childOffset );
-		static_cast<const Gadget *>(it->get())->setTransform( m );
+		static_cast<Gadget *>(it->get())->setTransform( m );
 				
 	}
 	
