@@ -69,6 +69,7 @@ class Slider( GafferUI.Widget ) :
 		self.__selectedIndex = None
 		self.__sizeEditable = False
 		self.__minimumSize = 1
+		self.__positionIncrement = None
 		self._entered = False
 		
 		self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
@@ -189,6 +190,20 @@ class Slider( GafferUI.Widget ) :
 	def getMinimumSize( self ) :
 	
 		return self.__minimumSize
+	
+	## Sets the size of the position increment added/subtracted
+	# when using the cursor keys. The default value of None
+	# uses an increment equivalent to the size of one pixel at
+	# the current slider size. An increment of 0 can be specified
+	# to disable the behaviour entirely.
+	## \todo Add setValueIncrement() method on NumericSlider.
+	def setPositionIncrement( self, increment ) :
+		
+		self.__positionIncrement = increment
+	
+	def getPositionIncrement( self ) :
+	
+		return self.__positionIncrement
 	
 	## May be overridden by derived classes if necessary, but
 	# implementations must call the base class implementation
@@ -343,8 +358,16 @@ class Slider( GafferUI.Widget ) :
 		
 		if event.key in ( "Left", "Right", "Up", "Down" ) :
 			
+			if self.__positionIncrement == 0 :
+				return False
+			
+			if self.__positionIncrement is None :
+				pixelIncrement = 1
+			else :
+				pixelIncrement = self.__positionIncrement * self.size().x
+			
 			x = self.getPositions()[self.getSelectedIndex()] * self.size().x
-			x += 1 if event.key in ( "Right", "Up" ) else - 1
+			x += pixelIncrement if event.key in ( "Right", "Up" ) else -pixelIncrement
 			self.__setPositionInternal( self.getSelectedIndex(), x, self.PositionChangedReason.Increment )
 			return True
 		
@@ -421,5 +444,9 @@ class _Widget( QtGui.QWidget ) :
 			if event.key() in ( QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace ) :
 				event.accept()
 				return True
-		
+			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
+				if GafferUI.Widget._owner( self ).getPositionIncrement() != 0 :
+					event.accept()
+					return True
+				
 		return QtGui.QWidget.event( self, event )
