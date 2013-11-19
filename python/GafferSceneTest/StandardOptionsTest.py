@@ -61,6 +61,7 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		o = GafferScene.StandardOptions()
 		
 		o["options"]["renderResolution"]["value"].setValue( IECore.V2i( 10 ) )
+		o["options"]["renderResolution"]["enabled"].setValue( True )
 		self.assertEqual( o["out"]["globals"].getValue()["render:resolution"].value, IECore.V2i( 10 ) )
 
 		o["options"]["renderResolution"]["value"].setValue( IECore.V2i( 20 ) )
@@ -102,6 +103,12 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 			s2["Box"]["n"]["options"].memberDataAndName( s2["Box"]["n"]["options"]["renderCamera"] ),
 			memberDataAndName
 		)
+	
+	def testNoValuesEnabledByDefault( self ) :
+	
+		n = GafferScene.StandardOptions()
+		for p in n["options"].children() :
+			self.assertEqual( p["enabled"].getValue(), False )
 	
 if __name__ == "__main__":
 	unittest.main()
