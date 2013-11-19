@@ -110,7 +110,7 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
 			if ( channelEnabled( channel ) )
 			{
-				hashChannelDataPlug( imagePlug, context, h );
+				hashChannelData( imagePlug, context, h );
 				h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 				h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
 			}
@@ -121,15 +121,15 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 		}
 		else if ( output == imagePlug->formatPlug() )
 		{
-			hashFormatPlug( imagePlug, context, h );
+			hashFormat( imagePlug, context, h );
 		}
 		else if ( output == imagePlug->dataWindowPlug() )
 		{
-			hashDataWindowPlug( imagePlug, context, h );
+			hashDataWindow( imagePlug, context, h );
 		}
 		else if ( output == imagePlug->channelNamesPlug() )
 		{
-			hashChannelNamesPlug( imagePlug, context, h );
+			hashChannelNames( imagePlug, context, h );
 		}
 	}
 	else

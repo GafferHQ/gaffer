@@ -55,7 +55,7 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( view, GafferImageUI.ImageView ) )
 		self.assertTrue( view["in"].getInput().isSame( image["out"] ) )
 		
-	def testDeriving( self ) :
+	def testDeprecatedDeriving( self ) :
 	
 		class MyView( GafferImageUI.ImageView ) :
 		
@@ -82,8 +82,42 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( view, MyView ) )
 		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
 		self.assertTrue( isinstance( view["in"], Gaffer.ObjectPlug ) )
+		view["exposure"].setValue( 1 )
+		view["gamma"].setValue( 0.5 )
 		
 		view._update()
+		
+	def testDeriving( self ) :
+	
+		class MyView( GafferImageUI.ImageView ) :
+		
+			def __init__( self, viewedPlug = None ) :
+			
+				GafferImageUI.ImageView.__init__( self, "MyView" )
+			
+				converter = Gaffer.Node()
+				converter["in"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject.defaultNullObject() )
+				converter["out"] = GafferImage.ImagePlug( direction = Gaffer.Plug.Direction.Out )
+				converter["constant"] = GafferImage.Constant()
+				converter["constant"]["format"].setValue( GafferImage.Format( 20, 20, 1 ) )
+				converter["out"].setInput( converter["constant"]["out"] )
+				
+				self._insertConverter( converter )
+				
+				self["in"].setInput( viewedPlug )
+					
+		GafferUI.View.registerView( GafferTest.SphereNode.staticTypeId(), "out", MyView )
+
+		sphere = GafferTest.SphereNode()
+				
+		view = GafferUI.View.create( sphere["out"] )
+		self.assertTrue( isinstance( view, MyView ) )
+		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
+		self.assertTrue( isinstance( view["in"], Gaffer.ObjectPlug ) )
+		view["exposure"].setValue( 1 )
+		view["gamma"].setValue( 0.5 )
+		
+		view._update()	
 		
 if __name__ == "__main__":
 	unittest.main()

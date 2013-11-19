@@ -46,17 +46,23 @@ namespace GafferUI
 template<typename T>
 T *View::inPlug()
 {
-	return getChild<T>( g_firstPlugIndex );
+	return getChild<T>( "in" );
 }
 
 template<typename T>
 const T *View::inPlug() const
 {
-	return getChild<T>( g_firstPlugIndex );
+	return getChild<T>( "in" );
 }
 
 template<typename T>
 T *View::getPreprocessor()
+{
+	return getChild<T>( "__preprocessor" );
+}
+
+template<typename T>
+const T *View::getPreprocessor() const
 {
 	return getChild<T>( "__preprocessor" );
 }

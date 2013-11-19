@@ -89,22 +89,22 @@ int Select::selectIndex() const
 	return std::min( (int)m_inputs.inputs().size()-1, std::max( 0, index ) );
 }
 
-void Select::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Select::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug( selectIndex() )->channelDataPlug()->hash(h);
 }
 
-void Select::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Select::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug( selectIndex() )->formatPlug()->hash(h);
 }
 
-void Select::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Select::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug( selectIndex() )->dataWindowPlug()->hash(h);
 }
 
-void Select::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Select::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug( selectIndex() )->channelNamesPlug()->hash(h);
 }

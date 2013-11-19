@@ -119,12 +119,12 @@ bool Reformat::enabled() const
 	return inFormat != outFormat;
 }
 
-void Reformat::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	formatPlug()->hash( h );
 }
 
-void Reformat::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
@@ -137,12 +137,12 @@ void Reformat::hashDataWindowPlug( const GafferImage::ImagePlug *output, const G
 	inPlug()->dataWindowPlug()->hash( h );
 }
 
-void Reformat::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->channelNamesPlug()->hash( h );
 }
 
-void Reformat::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	inPlug()->channelDataPlug()->hash( h );
 	filterPlug()->hash( h );

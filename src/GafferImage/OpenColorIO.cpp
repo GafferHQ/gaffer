@@ -35,12 +35,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/mutex.h"
+#include "tbb/null_mutex.h"
+
 #include "OpenColorIO/OpenColorIO.h"
 
 #include "Gaffer/Context.h"
 
 #include "GafferImage/OpenColorIO.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 
@@ -49,16 +53,36 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
+namespace Detail
+{
+
+// Although the OpenColorIO library is advertised as threadsafe,
+// it seems to crash regularly on OS X in getProcessor(), while
+// mucking around with the locale(). we mutex the call to getProcessor()
+// but still do the actual processing in parallel - this seems to
+// have negligible performance impact but a nice not-crashing impact.
+// On other platforms we use a null_mutex so there should be no
+// performance impact at all.
+#ifdef __APPLE__
+typedef tbb::mutex OCIOMutex;
+#else
+typedef tbb::null_mutex OCIOMutex;
+#endif
+
+static OCIOMutex g_ocioMutex;
+
+} // namespace Detail
+
 IE_CORE_DEFINERUNTIMETYPED( OpenColorIO );
 
 size_t OpenColorIO::g_firstPlugIndex = 0;
 
 OpenColorIO::OpenColorIO( const std::string &name )
-	:	FilterProcessor( name )
+	:	ColorProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "inputSpace" ) );
-	addChild( new StringPlug( "outputSpace" ) );	
+	addChild( new StringPlug( "outputSpace" ) );
 }
 
 OpenColorIO::~OpenColorIO()
@@ -87,102 +111,58 @@ const Gaffer::StringPlug *OpenColorIO::outputSpacePlug() const
 
 bool OpenColorIO::enabled() const
 {
+	if( !ColorProcessor::enabled() )
+	{
+		return false;
+	}
+
 	std::string outSpaceString( outputSpacePlug()->getValue() );
 	std::string inSpaceString( inputSpacePlug()->getValue() );
 	
 	return outSpaceString != inSpaceString &&
 		outSpaceString.size() &&
-		inSpaceString.size()
-		? FilterProcessor::enabled() : false;
+		inSpaceString.size();
 }
 
-void OpenColorIO::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool OpenColorIO::affectsColorData( const Gaffer::Plug *input ) const
 {
-	FilterProcessor::affects( input, outputs );
+	if( ColorProcessor::affectsColorData( input ) )
+	{
+		return true;
+	}
+	return input == inputSpacePlug() || input == outputSpacePlug();
+}
+
+void OpenColorIO::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ColorProcessor::hashColorData( context, h );
 	
-	if( input == inPlug()->channelDataPlug() ||
-		input == inputSpacePlug() ||
-		input == outputSpacePlug()
-	)
-	{
-		outputs.push_back( outPlug()->channelDataPlug() );	
-	}
+	inputSpacePlug()->hash( h );
+	outputSpacePlug()->hash( h );
 }
 
-void OpenColorIO::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenColorIO::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
 {
-	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-	if( channelName == "R" || channelName == "G" || channelName == "B" )
-	{
-		inPlug()->channelDataPlug()->hash( h );
-		
-		ContextPtr tmpContext = new Context( *Context::current() );
-		Context::Scope scopedContext( tmpContext );	
-		
-		tmpContext->set( ImagePlug::channelNameContextName, std::string( "R" ) );
-		inPlug()->channelDataPlug()->hash( h );
-		tmpContext->set( ImagePlug::channelNameContextName, std::string( "G" ) );
-		inPlug()->channelDataPlug()->hash( h );
-		tmpContext->set( ImagePlug::channelNameContextName, std::string( "B" ) );
-		inPlug()->channelDataPlug()->hash( h );
-		
-		inputSpacePlug()->hash( h );
-		outputSpacePlug()->hash( h );
-	}
-}
-
-IECore::ConstFloatVectorDataPtr OpenColorIO::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	if( channelName == "R" || channelName == "G" || channelName == "B" )
-	{
-		std::string inputSpace = inputSpacePlug()->getValue();
-		std::string outputSpace = outputSpacePlug()->getValue();
-		if( inputSpace.size() && outputSpace.size() )
-		{
-			
-			FloatVectorDataPtr r = inPlug()->channelData( "R", tileOrigin )->copy();
-			FloatVectorDataPtr g = inPlug()->channelData( "G", tileOrigin )->copy();
-			FloatVectorDataPtr b = inPlug()->channelData( "B", tileOrigin )->copy();
-	   
-			::OpenColorIO::ConstConfigRcPtr config = ::OpenColorIO::GetCurrentConfig();
-			::OpenColorIO::ConstProcessorRcPtr processor = config->getProcessor( inputSpace.c_str(), outputSpace.c_str() );
-			
-			::OpenColorIO::PlanarImageDesc image(
-				r->baseWritable(),
-				g->baseWritable(),
-				b->baseWritable(),
-				0, // alpha
-				ImagePlug::tileSize(), // width
-				ImagePlug::tileSize() // height
-			);
-			
-			processor->apply( image );
-			
-			if( channelName=="R" )
-			{
-				return r;
-			}
-			else if( channelName=="G" )
-			{
-				return g;
-			}
-			else if( channelName=="B" )
-			{
-				return b;
-			}
-			else
-			{
-				// shouldn't get here.
-				assert( 0 );
-			}
-		}
-		else
-		{
-			// colorspaces not specified - fall through
-		}
-	}
+	string inputSpace( inputSpacePlug()->getValue() );
+	string outputSpace( outputSpacePlug()->getValue() );
 	
-	return inPlug()->channelDataPlug()->getValue();
+	::OpenColorIO::ConstProcessorRcPtr processor;
+	{
+		Detail::OCIOMutex::scoped_lock lock( Detail::g_ocioMutex );
+		::OpenColorIO::ConstConfigRcPtr config = ::OpenColorIO::GetCurrentConfig();
+		processor = config->getProcessor( inputSpace.c_str(), outputSpace.c_str() );
+	}
+			
+	::OpenColorIO::PlanarImageDesc image(
+		r->baseWritable(),
+		g->baseWritable(),
+		b->baseWritable(),
+		0, // alpha
+		ImagePlug::tileSize(), // width
+		ImagePlug::tileSize() // height
+	);
+	
+	processor->apply( image );
 }
 
 } // namespace GafferImage

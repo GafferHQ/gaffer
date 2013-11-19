@@ -90,9 +90,6 @@ class Group : public SceneProcessor
 		Gaffer::ObjectPlug *mappingPlug();
 		const Gaffer::ObjectPlug *mappingPlug() const;
 		
-		Gaffer::ObjectPlug *inputMappingPlug();
-		const Gaffer::ObjectPlug *inputMappingPlug() const;
-		
 		Gaffer::Behaviours::InputGenerator<ScenePlug> m_inPlugs;
 
 		static size_t g_firstPlugIndex;
