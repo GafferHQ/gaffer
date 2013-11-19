@@ -40,6 +40,7 @@ import PyOpenColorIO as OCIO
 
 import Gaffer
 import GafferUI
+import GafferImageUI
 
 # get default display setup
 
@@ -86,5 +87,43 @@ def __plugSet( plug ) :
 		return
 	
 	__setDisplayTransform()
+	__updateDefaultDisplayTransforms()
 	
 application.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plugSet )
+
+# register display transforms with the image viewer
+
+def __displayTransformCreator( name ) :
+
+	result = GafferImage.OpenColorIO()
+	result["inputSpace"].setValue( "linear" )
+	result["outputSpace"].setValue( config.getDisplayColorSpaceName( defaultDisplay, name ) )
+	
+	return result
+
+for name in config.getViews( defaultDisplay ) :
+	GafferImageUI.ImageView.registerDisplayTransform( name, IECore.curry( __displayTransformCreator, name ) )
+
+# and register a special "Default" display transform which tracks the
+# global settings from the preferences
+
+__defaultDisplayTransforms = []
+
+def __updateDefaultDisplayTransforms() :
+
+	view = preferences["displayColorSpace"]["view"].getValue()
+	colorSpace = config.getDisplayColorSpaceName( defaultDisplay, view )
+	for node in __defaultDisplayTransforms :
+		node["outputSpace"].setValue( colorSpace )
+
+def __defaultDisplayTransformCreator() :
+
+	result = GafferImage.OpenColorIO()
+	result["inputSpace"].setValue( "linear" )
+	
+	__defaultDisplayTransforms.append( result )
+	__updateDefaultDisplayTransforms()
+		
+	return result
+
+GafferImageUI.ImageView.registerDisplayTransform( "Default", __defaultDisplayTransformCreator )

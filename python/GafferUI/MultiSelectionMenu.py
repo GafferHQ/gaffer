@@ -38,12 +38,7 @@ import Gaffer
 import GafferUI
 import IECore
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-
 class MultiSelectionMenu( GafferUI.Button ) :
-
-	__palette = None
 
 	def __init__(
 		self,
@@ -51,18 +46,21 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		allowEmptySelection = True,
 		**kw
 	) :
+			
+		GafferUI.Button.__init__( self, **kw )
+
+		self.__menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		
 		self.__allowMultipleSelection = allowMultipleSelection
 		self.__allowEmptySelection = allowEmptySelection
 		self.__selectionChangedSignal = None
-			
-		GafferUI.Button.__init__( self, **kw )
-		self._menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ), self._qtWidget() )
-		self._qtWidget().setMenu( self._menu._qtWidget() ) # Ownership of the menu is NOT transferred to the button
-		
+
 		self.__menuLabels = []
 		self.__selectedLabels = [] 
 		self.__enabledLabels = []
 		self.__setDisplayName()
+
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	## A signal emitted whenever the selection changes.
 	def selectionChangedSignal( self ) :
@@ -151,13 +149,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		if not label in self.__menuLabels :
 			self.__menuLabels.insert( index, label )
 			self.__enabledLabels.insert( index, label )
-	
-	def setText( self, text ) :
-		self._qtWidget().setText( text )
-	
-	def getText( self ) :
-		self._qtWidget().getText()	
-		
+			
 	##############################################
 	# Private Methods
 	#############################################
@@ -200,7 +192,8 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self.__setDisplayName()
 		self.selectionChangedSignal()( self )
 
-	def __addMenuDefinition( self ) :
+	def __menuDefinition( self ) :
+
 		m = IECore.MenuDefinition()
 		for label in self.__menuLabels :
 			menuPath = label
@@ -296,4 +289,12 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		elif nSelected == nEntries :
 			name = "all"
 		self._qtWidget().setText(name)
+
+	def __clicked( self, button ) :
+		
+		b = self.bound()
+		self.__menu.popup(
+			parent = self,
+			position = IECore.V2i( b.min.x, b.max.y )
+		)
 
