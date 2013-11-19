@@ -53,7 +53,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__clickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 			
 			plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
-			plugValueWidget.numericWidget().setCharacterWidth( 5 )
+			plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 		
 		self.__toggleValue = defaultToggleValue
 		self._updateFromPlug()
