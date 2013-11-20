@@ -98,6 +98,8 @@ class ValuePlug : public Plug
 		static size_t getCacheMemoryLimit();
 		/// Sets the maximum amount of memory the cache may use in bytes.
 		static void setCacheMemoryLimit( size_t bytes );
+		/// Returns the current memory usage of the cache in bytes.
+		static size_t cacheMemoryUsage();
 		//@}
 
 	protected :

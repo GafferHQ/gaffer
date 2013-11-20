@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -76,6 +77,97 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( a ), 2 )
 		self.assertEqual( a["user:tag:wood"], IECore.BoolData( True ) )
 		self.assertEqual( a["user:tag:something"], IECore.BoolData( True ) )
+	
+	def testChildNamesHash( self ) :
+	
+		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		sphereGroup = s.createChild( "sphereGroup" )
+		sphereGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		sphereGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 2, 0, 0 ) ) ), 1.0 )
+		sphere = sphereGroup.createChild( "sphere" )
+		sphere.writeObject( IECore.SpherePrimitive(), 0 )
+
+		del s, sphereGroup, sphere
+		
+		s = GafferScene.SceneReader()
+		s["fileName"].setValue( "/tmp/test.scc" )
+
+		t = GafferScene.SceneTimeWarp()
+		t["in"].setInput( s["out"] )
+		t["offset"].setValue( 1 )
+		
+		self.assertSceneHashesEqual(
+			s["out"], t["out"],
+			childPlugNames = [ "childNames" ]
+		)
+	
+	def testStaticHashes( self ) :
+	
+		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		
+		movingGroup = s.createChild( "movingGroup" )
+		movingGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		movingGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 2, 0, 0 ) ) ), 1.0 )
+		
+		deformingSphere = movingGroup.createChild( "deformingSphere" )
+		deformingSphere.writeObject( IECore.SpherePrimitive(), 0 )
+		deformingSphere.writeObject( IECore.SpherePrimitive( 2 ), 1 )
+	
+		staticGroup = s.createChild( "staticGroup" )
+		staticGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		
+		staticSphere = staticGroup.createChild( "staticSphere" )
+		staticSphere.writeObject( IECore.SpherePrimitive(), 0 )
+
+		del s, movingGroup, deformingSphere, staticGroup, staticSphere
+		
+		s = GafferScene.SceneReader()
+		s["fileName"].setValue( "/tmp/test.scc" )
+
+		t = GafferScene.SceneTimeWarp()
+		t["in"].setInput( s["out"] )
+		t["offset"].setValue( 1 )
+		
+		self.assertPathHashesNotEqual(
+			s["out"], "/movingGroup",
+			t["out"], "/movingGroup",
+			childPlugNames = [ "transform", "bound" ]
+		)
+		
+		self.assertPathHashesNotEqual(
+			s["out"], "/movingGroup/deformingSphere",
+			t["out"], "/movingGroup/deformingSphere",
+			childPlugNames = [ "bound", "object" ]
+		)
+		
+		self.assertPathHashesEqual(
+			s["out"], "/movingGroup",
+			t["out"], "/movingGroup",
+			childPlugNames = [ "attributes", "object" ]
+		)
+		
+		self.assertPathHashesEqual(
+			s["out"], "/movingGroup/deformingSphere",
+			t["out"], "/movingGroup/deformingSphere",
+			childPlugNames = [ "attributes" ]
+		)
+		
+		self.assertPathHashesEqual(
+			s["out"], "/staticGroup",
+			t["out"], "/staticGroup",
+			childPlugNames = [ "object", "transform", "attributes", "bound" ]
+		)
+		
+		self.assertPathHashesEqual(
+			s["out"], "/staticGroup/staticSphere",
+			t["out"], "/staticGroup/staticSphere",
+			childPlugNames = [ "object", "transform", "attributes", "bound" ]
+		)
+		
+	def tearDown( self ) :
+	
+		if os.path.exists( "/tmp/test.scc" ) :
+			os.remove( "/tmp/test.scc" )
 		
 if __name__ == "__main__":
 	unittest.main()

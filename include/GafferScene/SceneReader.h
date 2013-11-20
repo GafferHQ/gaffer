@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_SCENEREADER_H
 #define GAFFERSCENE_SCENEREADER_H
 
+#include "tbb/enumerable_thread_specific.h"
+
 #include "GafferScene/FileSource.h"
 
 namespace GafferScene
@@ -51,14 +53,14 @@ class SceneReader : public FileSource
 		virtual ~SceneReader();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneReader, SceneReaderTypeId, FileSource )
-		
 				
 	protected :
 	
-		/// \todo Move this implementation into the FileSource::hash*() methods, when we come with a decent mechanism
-		/// for specifying whether or not the file contains animation.
-		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-	
+		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -70,8 +72,24 @@ class SceneReader : public FileSource
 	
 		void plugSet( Gaffer::Plug *plug );
 		
-		class Cache;
-		static Cache &cache();
+		// The typical access patterns for the SceneReader include accessing
+		// the same file repeatedly, and also the same path within the file
+		// repeatedly (to hash a value then compute it for instance, or to get
+		// the bound and then the object). We take advantage of that by storing
+		// the last accessed scene in thread local storage - we can then avoid
+		// the relatively expensive lookups necessary to find the appropriate
+		// SceneInterfacePtr for a query.
+		struct LastScene
+		{
+			std::string fileName;
+			IECore::ConstSceneInterfacePtr fileNameScene;
+			ScenePlug::ScenePath path;
+			IECore::ConstSceneInterfacePtr pathScene;
+		};
+		mutable tbb::enumerable_thread_specific<LastScene> m_lastScene;
+		// Returns the SceneInterface for the current filename (in the current Context)
+		// and specified path, using m_lastScene to accelerate the lookups.
+		IECore::ConstSceneInterfacePtr scene( const ScenePath &path ) const;
 		
 		static const double g_frameRate;
 };
