@@ -907,6 +907,8 @@ libraries = {
 			"LIBS" : [ "GafferUI", "GafferSceneUI" ],
 		},
 	},
+
+	"GafferSceneUITest" : {},
 	
 	"GafferImage" : {
 		"envAppends" : {

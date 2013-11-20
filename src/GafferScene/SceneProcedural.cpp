@@ -56,8 +56,8 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::PathMatcherData *pathsToExpand )
-	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 )
+SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const IECore::PathMatcherData *pathsToExpand, size_t minimumExpansionDepth )
+	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 ), m_minimumExpansionDepth( minimumExpansionDepth )
 {
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
@@ -92,7 +92,8 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context) ) ), m_scenePath( scenePath ),
-		m_pathsToExpand( other.m_pathsToExpand ), m_options( other.m_options ), m_attributes( other.m_attributes )
+		m_pathsToExpand( other.m_pathsToExpand ), m_minimumExpansionDepth( other.m_minimumExpansionDepth ? other.m_minimumExpansionDepth - 1 : 0 ),
+		m_options( other.m_options ), m_attributes( other.m_attributes )
 {
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
@@ -301,7 +302,10 @@ void SceneProcedural::render( RendererPtr renderer ) const
 			bool expand = true;
 			if( m_pathsToExpand )
 			{
-				expand = m_pathsToExpand->readable().match( m_scenePath ) & Filter::ExactMatch;
+				if( !m_minimumExpansionDepth )
+				{
+					expand = m_pathsToExpand->readable().match( m_scenePath ) & Filter::ExactMatch;
+				}
 			}
 			
 			if( !expand )

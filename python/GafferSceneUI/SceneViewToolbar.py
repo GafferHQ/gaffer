@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,35 +34,45 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import IECore
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
+import Gaffer
+
+import GafferUI
+import GafferSceneUI
+
+class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
+	
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+	
+	def hasLabel( self ) :
+	
+		return True
+		
+	def _updateFromPlug( self ) :
+	
+		pass
+		
+	def __menuDefinition( self ) :
+	
+		expandAll = bool( self.getPlug().getValue() )
+	
+		m = IECore.MenuDefinition()
+		m.append( "/Expand Selection", { "command" : self.getPlug().node().expandSelection, "active" : not expandAll, "shortCut" : "Down" } )
+		m.append( "/Expand Selection Fully", { "command" : IECore.curry( self.getPlug().node().expandSelection, depth = 999 ), "active" : not expandAll, "shortCut" : "Shift+Down" } )
+		m.append( "/Collapse Selection", { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
+		m.append( "/Expand All Divider", { "divider" : True } )
+		m.append( "/Expand All", { "checkBox" : expandAll, "command" : Gaffer.WeakMethod( self.__toggleMinimumExpansionDepth ) } )
+		
+		return m
+	
+	def __toggleMinimumExpansionDepth( self, *unused ) :
+	
+		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
+		
+GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "minimumExpansionDepth", _ExpansionPlugValueWidget )
