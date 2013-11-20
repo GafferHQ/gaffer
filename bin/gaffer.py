@@ -48,9 +48,9 @@ sys.setdlopenflags( sys.getdlopenflags() | ctypes.RTLD_GLOBAL )
 # Get rid of the annoying signal handler which turns Ctrl-C into a KeyboardInterrupt exception
 signal.signal( signal.SIGINT, signal.SIG_DFL )
 
-# Reenable warnings - Python2.7 turns them off by default so otherwise we'd never get
+# Reenable deprecation warnings - Python2.7 turns them off by default so otherwise we'd never get
 # to catch all the naughty deprecated things we do.
-warnings.simplefilter( "default" )
+warnings.simplefilter( "default", DeprecationWarning )
 
 import IECore
 
