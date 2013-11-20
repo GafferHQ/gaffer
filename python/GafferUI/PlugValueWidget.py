@@ -455,15 +455,28 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# drag data to the type needed for setValue().
 	def _dropValue( self, dragDropEvent ) :
 	
-		if hasattr( self.getPlug(), "defaultValue" ) :
-			plugValueType = type( self.getPlug().defaultValue() )
-			if isinstance( dragDropEvent.data, plugValueType ) :
-				return dragDropEvent.data
-			elif isinstance( dragDropEvent.data, IECore.Data ) and hasattr( dragDropEvent.data, "value" ) :
-				if isinstance( dragDropEvent.data.value, plugValueType ) :
-					return dragDropEvent.data.value
-				else :
-					with IECore.IgnoredExceptions( Exception ) :
-						return plugValueType( dragDropEvent.data.value )
+		if not hasattr( self.getPlug(), "defaultValue" ) :
+			return None
+			
+		plugValueType = type( self.getPlug().defaultValue() )
+		if isinstance( dragDropEvent.data, plugValueType ) :
+			return dragDropEvent.data
+		elif isinstance( dragDropEvent.data, IECore.Data ) :
+		
+			dataValue = None
+			if hasattr( dragDropEvent.data, "value" ) :
+				dataValue = dragDropEvent.data.value
+			else :
+				with IECore.IgnoredExceptions( Exception ) :
+					if len( dragDropEvent.data ) == 1 :
+						dataValue = dragDropEvent.data[0]
+			
+			if dataValue is None :
+				return None
+			elif isinstance( dataValue, plugValueType ) :
+				return dataValue
+			else :
+				with IECore.IgnoredExceptions( Exception ) :
+					return plugValueType( dataValue )
 		
 		return None
