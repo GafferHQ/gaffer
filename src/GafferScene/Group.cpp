@@ -69,8 +69,6 @@ Group::Group( const std::string &name )
 	addChild( new TransformPlug( "transform" ) );
 	
 	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundObject() ) );
-	addChild( new Gaffer::ObjectPlug( "__inputMapping", Gaffer::Plug::In, new CompoundObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
-	inputMappingPlug()->setInput( mappingPlug() );
 }
 
 Group::~Group()
@@ -97,6 +95,16 @@ const Gaffer::TransformPlug *Group::transformPlug() const
 	return getChild<TransformPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::ObjectPlug *Group::mappingPlug()
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::ObjectPlug *Group::mappingPlug() const
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+}
+
 void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
@@ -113,21 +121,25 @@ void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 		outputs.push_back( outPlug()->transformPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
 	}
-	else if( input == inputMappingPlug() )
+	else if( const ScenePlug *s = input->parent<ScenePlug>() )
 	{
+		if( s->direction() == Plug::In )
+		{
+			// all input scene plugs children affect the corresponding output child
+			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );		
+			// and the names also affect the mapping
+			if( input == s->childNamesPlug() )
+			{
+				outputs.push_back( mappingPlug() );
+			}
+		}
+	}
+	else if( input == mappingPlug() )
+	{
+		// the mapping affects everything about the output
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
 			outputs.push_back( it->get() );
-		}
-	}
-	else if( const ScenePlug *s = input->parent<ScenePlug>() )
-	{
-		// all input scene plugs affect the output
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) )
-		;		
-		if( input == s->childNamesPlug() )
-		{
-			outputs.push_back( mappingPlug() );
 		}
 	}
 	
@@ -240,7 +252,7 @@ void Group::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 	else if( path.size() == 1 ) // "/group"
 	{
 		SceneProcessor::hashChildNames( path, context, parent, h );
-		inputMappingPlug()->hash( h );
+		mappingPlug()->hash( h );
 	}
 	else // "/group/..."
 	{
@@ -260,7 +272,7 @@ void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent
 	{
 		(*it)->globalsPlug()->hash( h );
 	}
-	inputMappingPlug()->hash( h );
+	mappingPlug()->hash( h );
 	namePlug()->hash( h );
 }
 
@@ -432,7 +444,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	}
 	else if( path.size() == 1 )
 	{
-		ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
+		ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
 		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
 	}
 	else
@@ -449,7 +461,7 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 	
 	std::string groupName = namePlug()->getValue();
 
-	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
+	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
 
 	IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
@@ -487,7 +499,7 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::
 {		
 	const InternedString mappedChildName = outputPath[1];
 	
-	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( inputMappingPlug()->getValue() );
+	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{
@@ -501,24 +513,4 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::
 	result.push_back( entry->member<InternedStringData>( "n" )->readable() );
 	result.insert( result.end(), outputPath.begin() + 2, outputPath.end() );
 	return result;
-}
-
-Gaffer::ObjectPlug *Group::mappingPlug()
-{
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
-}
-
-const Gaffer::ObjectPlug *Group::mappingPlug() const
-{
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
-}
-
-Gaffer::ObjectPlug *Group::inputMappingPlug()
-{
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
-}
-
-const Gaffer::ObjectPlug *Group::inputMappingPlug() const
-{
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }

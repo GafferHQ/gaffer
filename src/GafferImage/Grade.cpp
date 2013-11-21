@@ -35,9 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+
 #include "GafferImage/Grade.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -59,7 +58,7 @@ Grade::Grade( const std::string &name )
 	addChild( new Color3fPlug( "gain", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
 	addChild( new Color3fPlug( "multiply", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
 	addChild( new Color3fPlug( "offset" ) );
-	addChild( new Color3fPlug( "gamma", Gaffer::Plug::In, Imath::V3f(1.f, 1.f, 1.f) ) );
+	addChild( new Color3fPlug( "gamma", Gaffer::Plug::In, Imath::Color3f( 1.0f ), Imath::Color3f( 0.0f ) ) );
 	addChild( new BoolPlug( "blackClamp", Gaffer::Plug::In, true ) );
 	addChild( new BoolPlug( "whiteClamp" ) );
 }
@@ -170,11 +169,18 @@ bool Grade::channelEnabled( const std::string &channel ) const
 	// Never bother to process the alpha channel.
 	if ( channelIndex == 3 ) return false;
 
-	return (
-		gammaPlug()->getValue()[ channelIndex ] != 0.
-		//|| blackPointPlug()->getValue()[ channelIndex ] != 0.
-		//|| whitePointPlug()->getValue()[ channelIndex ] != 1.
-	);
+	// And don't bother to process identity transforms or invalid gammas
+	float a, b, gamma;
+	parameters( channelIndex, a, b, gamma );
+	
+	if( gamma == 0.0f )
+	{
+		// this would result in division by zero,
+		// so it must disable processing.
+		return false;
+	}
+	
+	return gamma != 1.0f || a != 1.0f || b != 0.0f;
 }
 
 void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -210,26 +216,29 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 }
 
-void Grade::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	ChannelDataProcessor::hashChannelData( output, context, h );
 
-	ContextPtr tmpContext = new Context( *Context::current() );
-	Context::Scope scopedContext( tmpContext );	
-
-	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	inPlug()->channelDataPlug()->hash( h );
 
-	// Hash all of the inputs.
-	blackPointPlug()->hash( h );
-	whitePointPlug()->hash( h );
-	liftPlug()->hash( h );
-	gainPlug()->hash( h );
-	multiplyPlug()->hash( h );
-	offsetPlug()->hash( h );
-	gammaPlug()->hash( h );
-	blackClampPlug()->hash( h );
-	whiteClampPlug()->hash( h );
+	std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
+	if( channelIndex >= 0 and channelIndex < 3 )
+	{
+		/// \todo The channelIndex tests above might be guaranteed true by
+		/// the effects of channelEnabled() anyway, but it's not clear from
+		/// the base class documentation.
+		blackPointPlug()->getChild( channelIndex )->hash( h );
+		whitePointPlug()->getChild( channelIndex )->hash( h );
+		liftPlug()->getChild( channelIndex )->hash( h );
+		gainPlug()->getChild( channelIndex )->hash( h );
+		multiplyPlug()->getChild( channelIndex )->hash( h );
+		offsetPlug()->getChild( channelIndex )->hash( h );
+		gammaPlug()->getChild( channelIndex )->hash( h );
+		blackClampPlug()->hash( h );
+		whiteClampPlug()->hash( h );
+	}
 }
 
 void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
@@ -238,20 +247,11 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 	const int dataWidth = ImagePlug::tileSize()*ImagePlug::tileSize();
 
 	// Do some pre-processing.
-	int channelIndex = ChannelMaskPlug::channelIndex( channel );
-	const float gamma = gammaPlug()->getValue()[channelIndex];
-	const float invGamma = 1. / gamma;	
-	const float multiply = multiplyPlug()->getValue()[channelIndex];
-	const float gain = gainPlug()->getValue()[channelIndex];
-	const float lift = liftPlug()->getValue()[channelIndex];
-	const float whitePoint = whitePointPlug()->getValue()[channelIndex];
-	const float blackPoint = blackPointPlug()->getValue()[channelIndex];
-	const float offset = offsetPlug()->getValue()[channelIndex];
+	float A, B, gamma;
+	parameters( ChannelMaskPlug::channelIndex( channel ), A, B, gamma );
+	const float invGamma = 1. / gamma;
 	const bool whiteClamp = whiteClampPlug()->getValue();	
 	const bool blackClamp = blackClampPlug()->getValue();	
-
-	const float A = multiply * ( gain - lift ) / ( whitePoint - blackPoint );
-	const float B = offset + lift - A * blackPoint;
 
 	// Get some useful pointers.	
 	float *outPtr = &(outData->writable()[0]);
@@ -271,6 +271,20 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 		// Write back the result.
 		*outPtr++ = colour;	
 	}
+}
+
+void Grade::parameters( size_t channelIndex, float &a, float &b, float &gamma ) const
+{
+	gamma = gammaPlug()->getChild( channelIndex )->getValue();
+	const float multiply = multiplyPlug()->getChild( channelIndex )->getValue();
+	const float gain = gainPlug()->getChild( channelIndex )->getValue();
+	const float lift = liftPlug()->getChild( channelIndex )->getValue();
+	const float whitePoint = whitePointPlug()->getChild( channelIndex )->getValue();
+	const float blackPoint = blackPointPlug()->getChild( channelIndex )->getValue();
+	const float offset = offsetPlug()->getChild( channelIndex )->getValue();
+
+	a = multiply * ( gain - lift ) / ( whitePoint - blackPoint );
+	b = offset + lift - a * blackPoint;
 }
 
 } // namespace GafferImage

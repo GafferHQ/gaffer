@@ -36,18 +36,22 @@
 
 #include <map>
 
-#include "GafferImage/Format.h"
-#include "GafferImage/FormatData.h"
-#include "GafferImage/FormatPlug.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/ScriptNode.h"
-#include "GafferImage/TypeIds.h"
-#include "IECore/TypedData.inl"
-#include "IECore/MurmurHash.h"
-#include "Gaffer/ApplicationRoot.h"
 #include "boost/format.hpp"
 #include "boost/foreach.hpp"
 #include "boost/bind.hpp"
+
+#include "IECore/TypedData.h"
+#include "IECore/TypedData.inl"
+#include "IECore/MurmurHash.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/ApplicationRoot.h"
+
+#include "GafferImage/Format.h"
+#include "GafferImage/FormatData.h"
+#include "GafferImage/FormatPlug.h"
+#include "GafferImage/TypeIds.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -57,7 +61,7 @@ const IECore::InternedString Format::defaultFormatContextName = "image:defaultFo
 
 namespace IECore
 {
-	IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatData, FormatTypeId )
+	IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatData, FormatDataTypeId )
 	
 	template<>
 	void FormatData::save( SaveContext *context ) const

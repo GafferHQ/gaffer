@@ -62,6 +62,9 @@
 #include "GafferUI/Pointer.h"
 
 #include "GafferImage/Format.h"
+#include "GafferImage/Grade.h"
+#include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageStats.h"
 
 #include "GafferImageUI/ImageView.h"
 
@@ -80,6 +83,14 @@ namespace GafferImageUI
 namespace Detail
 {
 
+/// \todo Refactor all the colour sampling and swatch drawing out of here.
+/// Sampled colours should be available on the ImageView as output plugs,
+/// and a new FooterToolbar type thing in the Viewer should be used for drawing
+/// them using the standard Widget classes. The ImageViewGadget itself should be
+/// responsible only for the setting of the input plugs on the samplers during
+/// mouse move and drag and drop operations. This way the Widgets will give us all
+/// the colour correction (using GafferUI.DisplayTransform), text selection and drag
+/// and drop we could desire for free.
 class ImageViewGadget : public GafferUI::Gadget
 {
 
@@ -217,7 +228,6 @@ class ImageViewGadget : public GafferUI::Gadget
 				"void main()"
 				"{"
 				"	OUTCOLOR = texture2D( texture, gl_TexCoord[0].xy );"
-				"	OUTCOLOR = vec4( ieLinToSRGB( OUTCOLOR.r ), ieLinToSRGB( OUTCOLOR.g ), ieLinToSRGB( OUTCOLOR.b ), ieLinToSRGB( OUTCOLOR.a ) );"
 				"	if( channelToView==1 )"
 				"	{"
 				"		OUTCOLOR = vec4( OUTCOLOR[0], OUTCOLOR[0], OUTCOLOR[0], 1. );"
@@ -909,42 +919,144 @@ ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage:
 
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
-		m_channelToView(0),
-		m_mousePos(0.),
-		m_sampleColor(0.),
-		m_minColor(0.),
-		m_maxColor(0.),
-		m_averageColor(0.)
+		m_channelToView( 0 ),
+		m_mousePos( Imath::V2f( 0.0f ) ),
+		m_sampleColor( Imath::Color4f( 0.0f ) ),
+		m_minColor( Imath::Color4f( 0.0f ) ),
+		m_maxColor( Imath::Color4f( 0.0f ) ),
+		m_averageColor( Imath::Color4f( 0.0f ) )
 {
-	// Create an internal ImageStats node 
-	addChild( new GafferImage::ImageStats( "imageStats" ) );
+	
+	// build the preprocessor we use for applying colour
+	// transforms, and the stats node we use for displaying stats.
+
+	NodePtr preprocessor = new Node;
+	ImagePlugPtr preprocessorInput = new ImagePlug( "in" );
+	preprocessor->addChild( preprocessorInput );
+	
+	ImageStatsPtr statsNode = new ImageStats( "__imageStats" );
+	addChild( statsNode ); /// \todo Store this in the preprocessor when we've disallowed the changing of it by subclasses
+	statsNode->inPlug()->setInput( preprocessorInput );
+	statsNode->channelsPlug()->setInput( preprocessorInput->channelNamesPlug() );
+	
+	GradePtr gradeNode = new Grade;
+	preprocessor->setChild( "__grade", gradeNode );
+	gradeNode->inPlug()->setInput( preprocessorInput );
+
+	FloatPlugPtr exposurePlug = new FloatPlug( "exposure" );
+	exposurePlug->setFlags( Plug::AcceptsInputs, false );
+	addChild( exposurePlug ); // dealt with in plugSet()
+
+	PlugPtr gammaPlug = gradeNode->gammaPlug()->getChild( 0 )->createCounterpart( "gamma", Plug::In );
+	gammaPlug->setFlags( Plug::AcceptsInputs, false );
+	addChild( gammaPlug );
+	gradeNode->gammaPlug()->getChild( 0 )->setInput( gammaPlug );
+	gradeNode->gammaPlug()->getChild( 1 )->setInput( gammaPlug );
+	gradeNode->gammaPlug()->getChild( 2 )->setInput( gammaPlug );
+
+	addChild( new StringPlug( "displayTransform", Plug::In, "Default", Plug::Default & ~Plug::AcceptsInputs ) );
+
+	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
+	preprocessor->addChild( preprocessorOutput );
+	preprocessorOutput->setInput( gradeNode->outPlug() );
+	
+	// tell the base class about all the preprocessing we want to do
+	
+	setPreprocessor( preprocessor );
+	
+	// connect up to some signals
+	
+	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
+
+	// get our display transform right
+	
+	insertDisplayTransform();
 }
 
-ImageView::ImageView( const std::string &name, Gaffer::PlugPtr input )
-	:	View( name, input ),
-		m_channelToView(0),
-		m_mousePos( 0. ),
-		m_sampleColor(0.),
-		m_minColor(0.),
-		m_maxColor(0.),
-		m_averageColor(0.)
+void ImageView::insertConverter( Gaffer::NodePtr converter )
 {
-	// Create an internal ImageStats node 
-	addChild( new GafferImage::ImageStats( "imageStats" ) );
+	PlugPtr converterInput = converter->getChild<Plug>( "in" );
+	if( !converterInput )
+	{
+		throw IECore::Exception( "Converter has no Plug named \"in\"" );
+	}
+	ImagePlugPtr converterOutput = converter->getChild<ImagePlug>( "out" );
+	if( !converterOutput )
+	{
+		throw IECore::Exception( "Converter has no ImagePlug named \"out\"" );
+	}
+	
+	PlugPtr newInput = converterInput->createCounterpart( "in", Plug::In );
+	setChild( "in", newInput );
+	
+	NodePtr preprocessor = getPreprocessor<Node>();
+	Plug::OutputContainer outputsToRestore = preprocessor->getChild<ImagePlug>( "in" )->outputs();
+	
+	PlugPtr newPreprocessorInput = converterInput->createCounterpart( "in", Plug::In );
+	preprocessor->setChild( "in", newPreprocessorInput );
+	newPreprocessorInput->setInput( newInput );
+	
+	preprocessor->setChild( "__converter", converter );
+	converterInput->setInput( newPreprocessorInput );
+		
+	for( Plug::OutputContainer::const_iterator it = outputsToRestore.begin(), eIt = outputsToRestore.end(); it != eIt; ++it )
+	{
+		(*it)->setInput( converterOutput );
+	}
 }
 
 ImageView::~ImageView()
 {
 }
 
+Gaffer::FloatPlug *ImageView::exposurePlug()
+{
+	return getChild<FloatPlug>( "exposure" );
+}
+
+const Gaffer::FloatPlug *ImageView::exposurePlug() const
+{
+	return getChild<FloatPlug>( "exposure" );
+}
+
+Gaffer::FloatPlug *ImageView::gammaPlug()
+{
+	return getChild<FloatPlug>( "gamma" );
+}
+
+const Gaffer::FloatPlug *ImageView::gammaPlug() const
+{
+	return getChild<FloatPlug>( "gamma" );
+}
+
+Gaffer::StringPlug *ImageView::displayTransformPlug()
+{
+	return getChild<StringPlug>( "displayTransform" );
+}
+
+const Gaffer::StringPlug *ImageView::displayTransformPlug() const
+{
+	return getChild<StringPlug>( "displayTransform" );
+}
+				
 GafferImage::ImageStats *ImageView::imageStatsNode()
 {
-	return getChild<ImageStats>( "imageStats" );
+	return getChild<ImageStats>( "__imageStats" );
 }
 
 const GafferImage::ImageStats *ImageView::imageStatsNode() const
 {
-	return getChild<ImageStats>( "imageStats" );
+	return getChild<ImageStats>( "__imageStats" );
+}
+
+GafferImage::Grade *ImageView::gradeNode()
+{
+	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
+}
+
+const GafferImage::Grade *ImageView::gradeNode() const
+{
+	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
 }
 
 void ImageView::update()
@@ -968,6 +1080,8 @@ void ImageView::update()
 			throw IECore::Exception("ImageView: Failed to find an input ImagePlug");
 		}
 
+		/// \todo We should be able to remove this when we remove the python binding
+		/// which takes an input plug and allows a derived class to call setPreprocessor itself.
 		imageStatsNode()->inPlug()->setInput( imagePlug );
 		imageStatsNode()->channelsPlug()->setInput( imagePlug->channelNamesPlug() );
 
@@ -985,3 +1099,88 @@ void ImageView::update()
 	}
 }
 
+void ImageView::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == exposurePlug() )
+	{
+		Grade *g = gradeNode();
+		// we have to guard against g not existing until we've removed
+		// the deprecated constructor, after which no subclasses should
+		// be calling setPreprocessor().
+		/// \todo Remove guard when removing constructor
+		if( g )
+		{
+			const float m = pow( 2.0f, exposurePlug()->getValue() );
+			g->multiplyPlug()->setValue( Color3f( m ) );
+		}
+	}
+	else if( plug == displayTransformPlug() )
+	{
+		insertDisplayTransform();
+	}
+}
+
+void ImageView::insertDisplayTransform()
+{
+	Grade *grade = gradeNode();
+	if( !grade )
+	{
+		/// \todo Remove this guard when we know no
+		/// subclasses are calling setPreprocessor.
+		return;
+	}
+	
+	const std::string name = displayTransformPlug()->getValue();
+	
+	ImageProcessorPtr displayTransform;
+	DisplayTransformMap::const_iterator it = m_displayTransforms.find( name );
+	if( it != m_displayTransforms.end() )
+	{
+		displayTransform = it->second;
+	}
+	else
+	{
+		DisplayTransformCreatorMap &m = displayTransformCreators();
+		DisplayTransformCreatorMap::const_iterator it = m.find( displayTransformPlug()->getValue() );
+		if( it != m.end() )
+		{
+			displayTransform = it->second();
+		}
+		if( displayTransform )
+		{
+			m_displayTransforms[name] = displayTransform;
+			getPreprocessor<Node>()->addChild( displayTransform );
+		}
+	}
+	
+	if( displayTransform )
+	{
+		displayTransform->inPlug()->setInput( grade->outPlug() );
+		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( displayTransform->outPlug() );
+	}
+	else
+	{
+		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( grade->outPlug() );
+	}
+}		
+
+void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
+{
+	displayTransformCreators()[name] = creator;
+}
+
+void ImageView::registeredDisplayTransforms( std::vector<std::string> &names )
+{
+	const DisplayTransformCreatorMap &m = displayTransformCreators();
+	names.clear();
+	for( DisplayTransformCreatorMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; ++it )
+	{
+		names.push_back( it->first );
+	}
+}
+
+ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()
+{
+	static DisplayTransformCreatorMap g_creators;
+	return g_creators;
+}

@@ -35,16 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
 #include "GafferImage/Reformat.h"
-#include "GafferImage/Filter.h"
-#include "GafferImage/FormatPlug.h"
-#include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
-#include "GafferImage/TypeIds.h"
-#include "IECore/BoxAlgo.h"
-#include "IECore/BoxOps.h"
-#include "IECore/FastFloat.h"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -119,13 +111,16 @@ bool Reformat::enabled() const
 	return inFormat != outFormat;
 }
 
-void Reformat::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashFormat( output, context, h );
 	formatPlug()->hash( h );
 }
 
-void Reformat::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashDataWindow( output, context, h );
+
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
@@ -137,13 +132,15 @@ void Reformat::hashDataWindowPlug( const GafferImage::ImagePlug *output, const G
 	inPlug()->dataWindowPlug()->hash( h );
 }
 
-void Reformat::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	inPlug()->channelNamesPlug()->hash( h );
+	h = inPlug()->channelNamesPlug()->hash();
 }
 
-void Reformat::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelData( output, context, h );
+
 	inPlug()->channelDataPlug()->hash( h );
 	filterPlug()->hash( h );
 	

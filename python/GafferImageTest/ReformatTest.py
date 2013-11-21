@@ -173,4 +173,12 @@ class ReformatTest( unittest.TestCase ) :
 			
 			self.assertFalse( res.value )	
 		
-
+	def testChannelNamesPassThrough( self ) :
+	
+		c = GafferImage.Constant()
+		r = GafferImage.Reformat()
+		r["in"].setInput( c["out"] )
+		r["format"].setValue( GafferImage.Format( 200, 150, 1.0 ) )
+		
+		self.assertEqual( r["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
+		self.assertEqual( r["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )

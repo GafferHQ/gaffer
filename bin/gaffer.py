@@ -40,12 +40,17 @@ import os
 import sys
 import ctypes
 import signal
+import warnings
 
 # Work around cross module rtti errors on linux.
 sys.setdlopenflags( sys.getdlopenflags() | ctypes.RTLD_GLOBAL )
 
 # Get rid of the annoying signal handler which turns Ctrl-C into a KeyboardInterrupt exception
 signal.signal( signal.SIGINT, signal.SIG_DFL )
+
+# Reenable deprecation warnings - Python2.7 turns them off by default so otherwise we'd never get
+# to catch all the naughty deprecated things we do.
+warnings.simplefilter( "default", DeprecationWarning )
 
 import IECore
 

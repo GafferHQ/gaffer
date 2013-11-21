@@ -34,10 +34,6 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "GafferImage/RemoveChannels.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
 #include "GafferImage/RemoveChannels.h"
 
 using namespace IECore;
@@ -120,23 +116,25 @@ IECore::ConstFloatVectorDataPtr RemoveChannels::computeChannelData( const std::s
 	return inPlug()->channelData( channelName, tileOrigin );
 }
 
-void RemoveChannels::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void RemoveChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->formatPlug()->hash();
 }
 
-void RemoveChannels::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void RemoveChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->channelDataPlug()->hash();
 }
 
-void RemoveChannels::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void RemoveChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->dataWindowPlug()->hash();
 }
 
-void RemoveChannels::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void RemoveChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hash( output, context, h );
+
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelSelectionPlug()->maskChannels( maskChannels );

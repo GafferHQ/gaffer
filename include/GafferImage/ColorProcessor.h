@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //  
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,57 +34,70 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_IMAGETRANSFORM_H
-#define GAFFERSCENE_IMAGETRANSFORM_H
-
-#include "Gaffer/Transform2DPlug.h"
+#ifndef GAFFERIMAGE_COLORPROCESSOR_H
+#define GAFFERIMAGE_COLORPROCESSOR_H
 
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-IE_CORE_FORWARDDECLARE( Reformat );
-IE_CORE_FORWARDDECLARE( FilterPlug );
-
-class ImageTransform : public GafferImage::ImageProcessor
+/// Forms a useful base class for nodes which must process R,G and B channels at the same time
+/// to perform some sort of channel mixing.
+/// \todo This is currently hardcoded to operate on the "R", "G" and "B" channels - make it able
+/// to work on alternative sets of channels. To do this well I think we need to introduce the
+/// concept of layers which group channels together (e.g. beauty.R, beauty.G, beauty.B etc).
+class ColorProcessor : public ImageProcessor
 {
+
 	public :
 
-		ImageTransform( const std::string &name=defaultName<ImageTransform>() );
-		virtual ~ImageTransform();
+		ColorProcessor( const std::string &name=defaultName<ColorProcessor>() );
+		virtual ~ColorProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageTransform, ImageTransformTypeId, ImageProcessor );
-	
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+	
+		virtual bool channelEnabled( const std::string &channel ) const;
+	
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		
-		Gaffer::Transform2DPlug *transformPlug();
-		const Gaffer::Transform2DPlug *transformPlug() const;
 
-		bool enabled() const;
+		/// Implemented to pass through the hashes from the input plug.
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
-	protected:
-	
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {} ;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
-
+		/// Implemented to pass through the input values. Derived classes need only implement computeChannelData().
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		/// Implemented to in terms of processColorData().
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 		
+		/// Must be implemented by derived classes to return true if the specified input is used in processColorData().
+		/// Must first call the base class implementation and return true if it does.
+		virtual bool affectsColorData( const Gaffer::Plug *input ) const = 0;
+		/// Must be implemented by derived classes to compute the hash for the color processing - all implementations
+		/// must call their base class implementation first.
+		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		/// Must be implemented by derived classes to modify R, G and B in place.
+		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const = 0;
+
 	private :
 		
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;	
-
+		// Used to store the result of processColorData(), so that it can be reused in computeChannelData().
+		Gaffer::ObjectPlug *colorDataPlug();
+		const Gaffer::ObjectPlug *colorDataPlug() const;
+		
 		static size_t g_firstPlugIndex;
+
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERSCENE_IMAGETRANSFORM_H
+#endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H

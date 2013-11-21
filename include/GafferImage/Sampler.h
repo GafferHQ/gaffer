@@ -39,18 +39,11 @@
 
 #include <vector>
 
-#include "IECore/FastFloat.h"
-#include "IECore/BoxAlgo.h"
-#include "IECore/BoxOps.h"
-
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Filter.h"
-#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {
-
-IE_CORE_FORWARDDECLARE( Filter );
 
 /// A utility class for pixel access of an image plug.
 class Sampler

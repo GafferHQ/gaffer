@@ -159,13 +159,13 @@ class TextWidget( GafferUI.Widget ) :
 	## \deprecated Use setFixedCharacterWidth() instead.
 	def setCharacterWidth( self, numCharacters ) :
 	
-		warnings.warn( "TextWidget.setCharacterWidth() is deprecated, use PathListingWidget.setFixedCharacterWidth() instead.", DeprecationWarning, 2 )
+		warnings.warn( "TextWidget.setCharacterWidth() is deprecated, use TextWidget.setFixedCharacterWidth() instead.", DeprecationWarning, 2 )
 		self.setFixedCharacterWidth( numCharacters )
 					
 	## \deprecated Use getFixedCharacterWidth() instead.
 	def getCharacterWidth( self ) :
 	
-		warnings.warn( "TextWidget.getCharacterWidth() is deprecated, use PathListingWidget.getFixedCharacterWidth() instead.", DeprecationWarning, 2 )
+		warnings.warn( "TextWidget.getCharacterWidth() is deprecated, use TextWidget.getFixedCharacterWidth() instead.", DeprecationWarning, 2 )
 		return self.getFixedCharacterWidth()
 	
 	## Clears the undo stack local to this widget - when

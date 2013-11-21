@@ -67,5 +67,20 @@ class ObjectToImageTest( unittest.TestCase ) :
 		
 		self.assertEqual( n["out"].image(), i )
 
+	def testHashVariesPerTileAndChannel( self ) :
+	
+		n = GafferImage.ObjectToImage()
+		n["object"].setValue( IECore.Reader.create( self.fileName ).read() )
+
+		self.assertNotEqual(
+			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+			n["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+		)
+		
+		self.assertNotEqual(
+			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+			n["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

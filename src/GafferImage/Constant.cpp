@@ -35,18 +35,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "OpenImageIO/imagecache.h"
-OIIO_NAMESPACE_USING
+#include "Gaffer/Context.h"
 
 #include "GafferImage/Constant.h"
 
 using namespace std;
-using namespace tbb;
 using namespace Imath;
 using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
-
 
 //////////////////////////////////////////////////////////////////////////
 // Constant implementation
@@ -112,24 +109,29 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	}
 }
 
-void Constant::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Constant::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageNode::hashFormat( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
-void Constant::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	colorPlug()->hash( h );
+	ImageNode::hashChannelNames( output, context, h );
 }
 
-void Constant::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Constant::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageNode::hashDataWindow( output, context, h );
 	h.append( formatPlug()->hash() );
 }
 
-void Constant::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	// Don't bother hashing the format here as we couldn't care less about the size of the canvas, only the colour!
+	ImageNode::hashChannelData( output, context, h );
+	// Don't bother hashing the format or tile origin here as we couldn't care less about the
+	// position on the canvas, only the colour!
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	colorPlug()->hash( h );
 }
 

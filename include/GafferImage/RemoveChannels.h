@@ -38,9 +38,7 @@
 #define GAFFERIMAGE_REMOVECHANNELS_H
 
 #include "GafferImage/ImageProcessor.h"
-#include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
-#include "Gaffer/PlugType.h"
 
 namespace GafferImage
 {
@@ -68,10 +66,10 @@ class RemoveChannels : public ImageProcessor
 		/// Returns a pointer to the node's plugs.
 		//////////////////////////////////////////////////////////////
 		//@{
-			Gaffer::IntPlug *modePlug();
-			const Gaffer::IntPlug *modePlug() const;
-			GafferImage::ChannelMaskPlug *channelSelectionPlug();
-			const GafferImage::ChannelMaskPlug *channelSelectionPlug() const;
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+		GafferImage::ChannelMaskPlug *channelSelectionPlug();
+		const GafferImage::ChannelMaskPlug *channelSelectionPlug() const;
 		//@}
 
 	protected :
@@ -80,10 +78,10 @@ class RemoveChannels : public ImageProcessor
 		virtual bool channelEnabled( const std::string &channel ) const;
 
 		/// Reimplemented to pass through the hashes from the input plug as they don't change.
-		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		/// Implemented to pass through the input values.
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;

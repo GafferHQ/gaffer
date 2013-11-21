@@ -39,6 +39,8 @@
 #include "IECore/BoxAlgo.h"
 #include "IECore/NullObject.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferImage/ImagePrimitiveSource.h"
 
 namespace GafferImage
@@ -94,26 +96,32 @@ void ImagePrimitiveSource<BaseType>::hash( const Gaffer::ValuePlug *output, cons
 }
 
 template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImagePrimitiveSource<BaseType>::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashFormat( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 
 template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImagePrimitiveSource<BaseType>::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashChannelNames( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 
 template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImagePrimitiveSource<BaseType>::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashDataWindow( output, context, h );
 	inputImagePrimitivePlug()->hash( h );
 }
 
 template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImagePrimitiveSource<BaseType>::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BaseType::hashChannelData( output, context, h );
+	h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	inputImagePrimitivePlug()->hash( h );
 }
 		

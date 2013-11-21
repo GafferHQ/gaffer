@@ -148,7 +148,6 @@ void bindFormat()
 	SignalBinder<Format::UnaryFormatSignal, DefaultSignalCaller<Format::UnaryFormatSignal>, UnaryFormatSlotCaller >
 	::bind( "UnaryFormatSignal" );
 	
-	Serialisation::registerSerialiser( static_cast<IECore::TypeId>(FormatTypeId), new Serialisation::Serialiser() );
 }
 
 

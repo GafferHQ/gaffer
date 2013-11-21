@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/tbb.h"
+
 #include "IECore/Exception.h"
 #include "IECore/BoxOps.h"
 #include "IECore/BoxAlgo.h"

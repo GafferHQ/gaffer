@@ -35,8 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/ImageProcessor.h"
 #include "Gaffer/Context.h"
+
+#include "GafferImage/ImageProcessor.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -88,125 +89,66 @@ const Plug *ImageProcessor::correspondingInput( const Plug *output ) const
 
 void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	/// \todo Can this be simplified using the same logic used in SceneProcessor::hash()? It would
-	/// avoid calling ComputeNode::hash only to overwrite the hash if we're disabled.
-	ComputeNode::hash( output, context, h );
-	
-	/// \todo Should this not be done only if we're computing an ImagePlug output?
-	/// and doesn't the fact that we call enabled() below mean that we're already
-	/// hashing in the effect of the enabled plug anyway?
-	h.append( enabledPlug()->hash() );
-
 	const ImagePlug *imagePlug = output->parent<ImagePlug>();
-	if ( imagePlug == 0 )
+	if( !imagePlug )
 	{
-		return;
-	} 
+		ImageNode::hash( output, context, h );
+		return;	
+	}
 	
-	if ( enabled() )
+	// we're computing a component of the output image. if we're disabled,
+	// then we wish to pass through the hash from the input.
+	bool passThrough = !enabled();
+	if( !passThrough )
 	{
+		// even if we're enabled at the image level, the channel might be disabled
+		// at the channelData level.
 		if( output == imagePlug->channelDataPlug() )
 		{
 			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
-			if ( channelEnabled( channel ) )
-			{
-				hashChannelDataPlug( imagePlug, context, h );
-				h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-				h.append( context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
-			}
-			else
-			{
-				h = inPlug()->channelDataPlug()->hash();
-			}
+			passThrough = !channelEnabled( channel );
 		}
-		else if ( output == imagePlug->formatPlug() )
-		{
-			hashFormatPlug( imagePlug, context, h );
-		}
-		else if ( output == imagePlug->dataWindowPlug() )
-		{
-			hashDataWindowPlug( imagePlug, context, h );
-		}
-		else if ( output == imagePlug->channelNamesPlug() )
-		{
-			hashChannelNamesPlug( imagePlug, context, h );
-		}
+	}
+	
+	if( passThrough )
+	{
+		h = inPlug()->getChild<ValuePlug>( output->getName() )->hash();	
 	}
 	else
 	{
-		if( output == imagePlug->channelDataPlug() )
-		{
-			h = inPlug()->channelDataPlug()->hash();
-		}
-		else if ( output == imagePlug->formatPlug() )
-		{
-			h = inPlug()->formatPlug()->hash();
-		}
-		else if ( output == imagePlug->dataWindowPlug() )
-		{
-			h = inPlug()->dataWindowPlug()->hash();
-		}
-		else if ( output == imagePlug->channelNamesPlug() )
-		{
-			h = inPlug()->channelNamesPlug()->hash();
-		}
+		// normal operation - just let the base class take care of it.
+		ImageNode::hash( output, context, h );
 	}
 }
 
 void ImageProcessor::compute( ValuePlug *output, const Context *context ) const
 {
-	/// \todo Can this be simplified using the same logic used in SceneProcessor::compute()?
-	/// It would remove the need for the computeImagePlugs() method.
-	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
-	if ( imagePlug )
+	const ImagePlug *imagePlug = output->parent<ImagePlug>();
+	if( !imagePlug )
 	{
-		if( enabled() )
+		ImageNode::compute( output, context );
+		return;	
+	}
+
+	bool passThrough = !enabled();
+	if( !passThrough )
+	{
+		// even if we're enabled at the image level, the channel might be disabled
+		// at the channelData level.
+		if( output == imagePlug->channelDataPlug() )
 		{
-			if( output == imagePlug->channelDataPlug() )
-			{
-				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
-				if ( channelEnabled( channel ) )
-				{
-					computeImagePlugs( output, context );
-				}
-				else
-				{
-					static_cast<FloatVectorDataPlug *>( output )->setValue(
-						inPlug()->channelDataPlug()->getValue()
-					);
-				}
-			}
-			else
-			{
-				computeImagePlugs( output, context );
-			}
+			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+			passThrough = !channelEnabled( channel );
 		}
-		else
-		{
-			if( output == imagePlug->formatPlug() )
-			{
-				static_cast<FormatPlug *>( output )->setValue(
-					inPlug()->formatPlug()->getValue()
-				);
-			}
-			else if( output == imagePlug->dataWindowPlug() )
-			{
-				static_cast<AtomicBox2iPlug *>( output )->setValue(
-					inPlug()->dataWindowPlug()->getValue()
-				);
-			}
-			else if( output == imagePlug->channelNamesPlug() )
-			{
-				static_cast<StringVectorDataPlug *>( output )->setValue(
-					inPlug()->channelNamesPlug()->getValue()
-				);
-			}
-			else if( output == imagePlug->channelDataPlug() )
-			{
-				static_cast<FloatVectorDataPlug *>( output )->setValue(
-					inPlug()->channelDataPlug()->getValue()
-				);
-			}
-		}
+	}
+	
+	if( passThrough )
+	{
+		output->setFrom( inPlug()->getChild<ValuePlug>( output->getName() ) );
+	}
+	else
+	{
+		// normal operation - just let the base class take care of it.
+		ImageNode::compute( output, context );
 	}
 }

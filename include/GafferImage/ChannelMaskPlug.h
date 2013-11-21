@@ -37,8 +37,9 @@
 #ifndef GAFFERIMAGE_CHANNELMASKPLUG_H
 #define GAFFERIMAGE_CHANNELMASKPLUG_H
 
-#include "GafferImage/TypeIds.h"
 #include "Gaffer/TypedObjectPlug.h"
+
+#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {

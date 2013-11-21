@@ -208,6 +208,16 @@ class ImageTransformTest( unittest.TestCase ) :
 		
 		self.assertFalse( res.value )
 
+	def testChannelNamesPassThrough( self ) :
+	
+		c = GafferImage.Constant()
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( c["out"] )
+		t["transform"]["translate"].setValue( IECore.V2f( 1, 0 ) )
+		
+		self.assertEqual( t["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
+		self.assertEqual( t["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()
 

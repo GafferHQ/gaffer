@@ -34,12 +34,13 @@
 #  
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
+
 import Gaffer
 import GafferImage
-import os
 
 class GradeTest( unittest.TestCase ) :
 
@@ -96,3 +97,51 @@ class GradeTest( unittest.TestCase ) :
 		self.assertEqual( g.correspondingInput( g["in"] ), None )
 		self.assertEqual( g.correspondingInput( g["enabled"] ), None )
 		self.assertEqual( g.correspondingInput( g["gain"] ), None )
+
+	def testChannelDataHashesAreIndependent( self ) :
+	
+		# changing only one channel of any of the grading plugs should not
+		# affect the hash of any of the other channels.
+		
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+		s["g"] = GafferImage.Grade()
+		s["g"]["in"].setInput( s["c"]["out"] )
+		
+		channelNames = ( "R", "G", "B" )
+		for channelIndex, channelName in enumerate( channelNames ) :
+			for plugName in ( "blackPoint", "whitePoint", "lift", "gain", "multiply", "offset", "gamma" ) :
+				oldChannelHashes = [ s["g"]["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channelNames ]
+				s["g"][plugName][channelIndex].setValue( s["g"][plugName][channelIndex].getValue() + 0.01 )
+				newChannelHashes = [ s["g"]["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channelNames ]
+				for hashChannelIndex in range( 0, 3 ) :
+					if channelIndex == hashChannelIndex :
+						self.assertNotEqual( oldChannelHashes[hashChannelIndex], newChannelHashes[hashChannelIndex] )
+					else :
+						self.assertEqual( oldChannelHashes[hashChannelIndex], newChannelHashes[hashChannelIndex] )
+	
+	def testChannelPassThrough( self ) :
+	
+		# we should get a perfect pass-through without cache duplication when
+		# all the colour plugs are at their defaults.
+		
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+		s["g"] = GafferImage.Grade()
+		s["g"]["in"].setInput( s["c"]["out"] )
+		
+		for channelName in ( "R", "G", "B" ) :
+			self.assertEqual(
+				s["g"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+				s["c"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+			)
+			
+			c = Gaffer.Context( s.context() )
+			c["image:channelName"] = channelName
+			c["image:tileOrigin"] = IECore.V2i( 0 )
+			with c :
+				self.assertTrue(
+					s["g"]["out"]["channelData"].getValue( _copy=False ).isSame(
+						s["c"]["out"]["channelData"].getValue( _copy=False )
+					)
+				)

@@ -149,6 +149,14 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
 			return False
 		
+		# but if we're outside the overlay item then we should take the
+		# keyboard focus back from the overlay.
+		focusItem = self._qtWidget().scene().focusItem()
+		if focusItem is not None :
+			self._qtWidget().scene().clearFocus()
+			if focusItem.widget().focusWidget() is not None :
+				focusItem.widget().focusWidget().clearFocus()
+		
 		self._glWidget().makeCurrent()
 		return self.__viewportGadget.buttonPressSignal()( self.__viewportGadget, event )
 
@@ -165,7 +173,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __mouseMove( self, widget, event ) :
 
 		self._glWidget().makeCurrent()
-		return self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
+		self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
+
+		# we always return false so that any overlay items will get appropriate
+		# move/enter/leave events, otherwise highlighting for buttons etc can go
+		# awry.
+		return False
 
 	def __dragBegin( self, widget, event ) :
 
@@ -198,12 +211,22 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		return self.__viewportGadget.dragEndSignal()( self.__viewportGadget, event )
 		
 	def __keyPress( self, widget, event ) :
-						
+		
+		# we get given keypresses before the graphicsview does, so we
+		# need to make sure we don't stop them going to a focussed overlay widget.
+		if self._qtWidget().scene().focusItem() is not None :
+			if self._qtWidget().scene().focusItem().widget().focusWidget() is not None :
+				return False
+		
 		self._glWidget().makeCurrent()
 		return self.__viewportGadget.keyPressSignal()( self.__viewportGadget, event )
 
 	def __keyRelease( self, widget, event ) :
 		
+		if self._qtWidget().scene().focusItem() is not None :
+			if self._qtWidget().scene().focusItem().widget().focusWidget() is not None :
+				return False
+
 		self._glWidget().makeCurrent()
 		return self.__viewportGadget.keyReleaseSignal()( self.__viewportGadget, event )
 	

@@ -34,20 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/AngleConversion.h"
+
 #include "Gaffer/Context.h"
-#include "GafferImage/ImageProcessor.h"
+
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/Reformat.h"
 #include "GafferImage/Filter.h"
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
-#include "IECore/AngleConversion.h"
-#include "IECore/FastFloat.h"
-#include "IECore/BoxAlgo.h"
-#include "IECore/BoxOps.h"
-#include "boost/format.hpp"
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -75,10 +71,10 @@ class Implementation : public ImageProcessor
 		
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Implementation, ImageTransformImplementationTypeId, ImageProcessor );
 	
-		virtual void hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
@@ -204,24 +200,27 @@ bool Implementation::enabled() const
 	return true;
 }
 
-void Implementation::hashFormatPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = outputFormatPlug()->hash();
 }
 
-void Implementation::hashDataWindowPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashDataWindow( output, context, h );
 	inPlug()->dataWindowPlug()->hash( h );
 	transformPlug()->hash( h );
 }
 
-void Implementation::hashChannelNamesPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	inPlug()->channelNamesPlug()->hash( h );
+	h = inPlug()->channelNamesPlug()->hash();
 }
 
-void Implementation::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Implementation::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hashChannelData( output, context, h );
+
 	// Hash all of the tiles that the sample requires for this tile.	
 	Imath::V2i tileOrigin( Context::current()->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
 	std::string channelName( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );

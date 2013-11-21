@@ -87,41 +87,64 @@ bool ImageNode::enabled() const
 };
 
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ComputeNode::hash( output, context, h );
-	
+{	
 	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
-	if( imagePlug )
+	if( imagePlug && enabled() )
 	{
-		/// \todo Perhaps we don't need to hash enabledPlug() because enabled() will
-		/// compute its value anyway?
-		h.append( enabledPlug()->hash() );
-		
-		if( enabled() )
+		// We don't call ComputeNode::hash() immediately here, because for subclasses which
+		// want to pass through a specific hash in the hash*() methods it's a waste of time (the
+		// hash will get overwritten anyway). Instead we call ComputeNode::hash() in our
+		// hash*() implementations, and allow subclass implementations to not call the base class
+		// if they intend to overwrite the hash.
+		if( output == imagePlug->channelDataPlug() )
 		{
-			if( output == imagePlug->channelDataPlug() )
+			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+			if( channelEnabled( channel ) )
 			{
-				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
-				if ( channelEnabled( channel ) )
-				{
-					h.append( context->get<string>( ImagePlug::channelNameContextName ) );
-					hashChannelDataPlug( imagePlug, context, h );
-				}
+				hashChannelData( imagePlug, context, h );
 			}
-			else if( output == imagePlug->formatPlug() )
+			else
 			{
-				hashFormatPlug( imagePlug, context, h );
-			}
-			else if( output == imagePlug->dataWindowPlug() )
-			{
-				hashDataWindowPlug( imagePlug, context, h );
-			}
-			else if( output == imagePlug->channelNamesPlug() )
-			{
-				hashChannelNamesPlug( imagePlug, context, h );
+				ComputeNode::hash( output, context, h );		
 			}
 		}
+		else if( output == imagePlug->formatPlug() )
+		{
+			hashFormat( imagePlug, context, h );
+		}
+		else if( output == imagePlug->dataWindowPlug() )
+		{
+			hashDataWindow( imagePlug, context, h );
+		}
+		else if( output == imagePlug->channelNamesPlug() )
+		{
+			hashChannelNames( imagePlug, context, h );
+		}
 	}
+	else
+	{
+		ComputeNode::hash( output, context, h );	
+	}
+}
+
+void ImageNode::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->formatPlug(), context, h );
+}
+
+void ImageNode::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->dataWindowPlug(), context, h );
+}
+
+void ImageNode::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->channelNamesPlug(), context, h );
+}
+
+void ImageNode::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->channelDataPlug(), context, h );
 }
 
 void ImageNode::parentChanging( Gaffer::GraphComponent *newParent )
@@ -139,9 +162,26 @@ void ImageNode::parentChanging( Gaffer::GraphComponent *newParent )
 	ComputeNode::parentChanging( newParent );
 }
 
-void ImageNode::computeImagePlugs( ValuePlug *output, const Context *context ) const
+void ImageNode::compute( ValuePlug *output, const Context *context ) const
 {
-	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	ImagePlug *imagePlug = output->parent<ImagePlug>();
+	if( !imagePlug )
+	{
+		ComputeNode::compute( output, context );
+		return;
+	}
+	
+	// we're computing part of an ImagePlug
+	
+	if( !enabled() )
+	{
+		// disabled nodes just output a default black image.
+		output->setToDefault();
+		return;
+	}
+	
+	// node is enabled - defer to our derived classes to perform the appropriate computation
+	
 	if( output == imagePlug->formatPlug() )
 	{
 		static_cast<FormatPlug *>( output )->setValue(
@@ -163,69 +203,20 @@ void ImageNode::computeImagePlugs( ValuePlug *output, const Context *context ) c
 	else if( output == imagePlug->channelDataPlug() )
 	{
 		std::string channelName = context->get<string>( ImagePlug::channelNameContextName );
-		V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
-		if( tileOrigin.x % ImagePlug::tileSize() || tileOrigin.y % ImagePlug::tileSize() )
+		if( channelEnabled( channelName ) )
 		{
-			throw Exception( "The image:tileOrigin must be a multiple of ImagePlug::tileSize()" );
-		}
-		static_cast<FloatVectorDataPlug *>( output )->setValue(
-			computeChannelData( channelName, tileOrigin, context, imagePlug )
-		);
-	}
-}
-
-void ImageNode::compute( ValuePlug *output, const Context *context ) const
-{
-	ImagePlug *imagePlug = output->ancestor<ImagePlug>();
-	if( imagePlug )
-	{
-		if( enabled() )
-		{
-			if( output == imagePlug->channelDataPlug() )
+			V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
+			if( tileOrigin.x % ImagePlug::tileSize() || tileOrigin.y % ImagePlug::tileSize() )
 			{
-				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
-				if ( channelEnabled( channel ) )
-				{
-					computeImagePlugs( output, context );
-				}
-				else
-				{
-					static_cast<FloatVectorDataPlug *>( output )->setValue(
-						imagePlug->channelDataPlug()->defaultValue()
-					);
-				}
+				throw Exception( "The image:tileOrigin must be a multiple of ImagePlug::tileSize()" );
 			}
-			else
-			{
-				computeImagePlugs( output, context );
-			}
+			static_cast<FloatVectorDataPlug *>( output )->setValue(
+				computeChannelData( channelName, tileOrigin, context, imagePlug )
+			);
 		}
 		else
 		{
-			if( output == imagePlug->formatPlug() )
-			{
-				static_cast<FormatPlug *>( output )->setValue(
-					imagePlug->formatPlug()->defaultValue()
-				);
-			}
-			else if( output == imagePlug->dataWindowPlug() )
-			{
-				static_cast<AtomicBox2iPlug *>( output )->setValue(
-					imagePlug->dataWindowPlug()->defaultValue()
-				);
-			}
-			else if( output == imagePlug->channelNamesPlug() )
-			{
-				static_cast<StringVectorDataPlug *>( output )->setValue(
-					imagePlug->channelNamesPlug()->defaultValue()
-				);
-			}
-			else if( output == imagePlug->channelDataPlug() )
-			{
-				static_cast<FloatVectorDataPlug *>( output )->setValue(
-					imagePlug->channelDataPlug()->defaultValue()
-				);
-			}
+			output->setToDefault();
 		}
 	}
 }
