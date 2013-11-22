@@ -223,8 +223,8 @@ class PathWidget( GafferUI.TextWidget ) :
 			if self._qtWidget().cursorPositionAt( QtCore.QPoint( x, 5 ) ) >= textIndex :
 				break
 	
-		p = self._qtWidget().mapToGlobal( QtCore.QPoint( x, self._qtWidget().height() ) )
-		return IECore.V2i( p.x(), p.y() )
+		bound = self.bound()
+		return IECore.V2i( bound.min.x + x, bound.max.y )
 	
 	def __pathChanged( self, path ) :
 	
