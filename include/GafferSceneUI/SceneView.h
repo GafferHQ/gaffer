@@ -61,6 +61,15 @@ class SceneView : public GafferUI::View3D
 		
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;
+
+		Gaffer::CompoundPlug *lookThroughPlug();
+		const Gaffer::CompoundPlug *lookThroughPlug() const;
+		
+		Gaffer::BoolPlug *lookThroughEnabledPlug();
+		const Gaffer::BoolPlug *lookThroughEnabledPlug() const;
+		
+		Gaffer::StringPlug *lookThroughCameraPlug();
+		const Gaffer::StringPlug *lookThroughCameraPlug() const;
 		
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
@@ -81,6 +90,8 @@ class SceneView : public GafferUI::View3D
 		IECore::PathMatcherData *expandedPaths();
 		// Returns true if the expansion or selection were modified, false otherwise.
 		bool expandWalk( const std::string &path, size_t depth, GafferScene::PathMatcher &expanded, GafferUI::RenderableGadget::Selection &selected );
+		
+		void updateLookThrough();
 		
 		boost::signals::scoped_connection m_selectionChangedConnection;
 		

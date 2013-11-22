@@ -37,9 +37,13 @@
 import IECore
 
 import Gaffer
-
 import GafferUI
+import GafferScene
 import GafferSceneUI
+
+##########################################################################
+# Expansion
+##########################################################################
 
 class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -76,3 +80,59 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
 		
 GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "minimumExpansionDepth", _ExpansionPlugValueWidget )
+
+GafferUI.Metadata.registerPlugValue( GafferSceneUI.SceneView, "minimumExpansionDepth", "divider", True )
+
+##########################################################################
+# Lookthrough
+##########################################################################
+
+class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		
+		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		
+		with row :
+			self.__enabledWidget = GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode=GafferUI.BoolWidget.DisplayMode.Switch )
+			self.__cameraWidget = GafferUI.PathPlugValueWidget(
+				plug["camera"],
+				path = GafferScene.ScenePath( plug.node()["in"], plug.node().getContext(), "/" ),
+			)
+			self.__cameraWidget.pathWidget().setFixedCharacterWidth( 13 )
+			if hasattr( self.__cameraWidget.pathWidget()._qtWidget(), "setPlaceholderText" ) :
+				self.__cameraWidget.pathWidget()._qtWidget().setPlaceholderText( "Render Camera" )
+			
+		self._updateFromPlug()
+	
+	## \todo Remove when we've merged the image view branch and can just register an empty
+	# label via Metadata.
+	def hasLabel( self ) :
+	
+		return True
+	
+	def _updateFromPlug( self ) :
+	
+		with self.getContext() :
+			self.__cameraWidget.setEnabled( self.getPlug()["enabled"].getValue() )
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferSceneUI.SceneView.staticTypeId(),
+	"lookThrough",
+	_LookThroughPlugValueWidget,
+)
+
+GafferUI.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.enabled",
+	"When enabled, locks the view to look through a specific camera in the scene. "
+	"By default, the current render camera is used, but this can be changed using the lookThrough.camera "
+	"setting."
+)
+
+GafferUI.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.camera",
+	"Specifies the camera to look through when lookThrough.enabled is on. The default value "
+	"means that the current render camera will be used - the paths to other cameras may be specified "
+	"to choose another camera."
+)
+

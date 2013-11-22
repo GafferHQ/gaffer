@@ -40,6 +40,7 @@
 
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
+#include "IECore/MatrixTransform.h"
 
 #include "IECoreGL/State.h"
 
@@ -114,8 +115,13 @@ SceneView::SceneView( const std::string &name )
 	
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0 ) );
+	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0, Imath::limits<int>::max(), Plug::Default & ~Plug::AcceptsInputs ) );
 
+	CompoundPlugPtr lookThrough = new CompoundPlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+	lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
+	lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( lookThrough );
+	
 	plugSetSignal().connect( boost::bind( &SceneView::plugSet, this, ::_1 ) );
 
 	// set up our gadgets
@@ -151,6 +157,36 @@ Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug()
 const Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+Gaffer::CompoundPlug *SceneView::lookThroughPlug()
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::CompoundPlug *SceneView::lookThroughPlug() const
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *SceneView::lookThroughEnabledPlug()
+{
+	return lookThroughPlug()->getChild<BoolPlug>( 0 );
+}
+
+const Gaffer::BoolPlug *SceneView::lookThroughEnabledPlug() const
+{
+	return lookThroughPlug()->getChild<BoolPlug>( 0 );
+}
+
+Gaffer::StringPlug *SceneView::lookThroughCameraPlug()
+{
+	return lookThroughPlug()->getChild<StringPlug>( 1 );
+}
+
+const Gaffer::StringPlug *SceneView::lookThroughCameraPlug() const
+{
+	return lookThroughPlug()->getChild<StringPlug>( 1 );
 }
 
 void SceneView::contextChanged( const IECore::InternedString &name )
@@ -197,6 +233,8 @@ void SceneView::update()
 	{
 		viewportGadget()->frame( m_renderableGadget->bound() );
 	}
+
+	updateLookThrough();
 }
 
 Imath::Box3f SceneView::framingBound() const
@@ -389,5 +427,49 @@ void SceneView::plugSet( Gaffer::Plug *plug )
 	if( plug == minimumExpansionDepthPlug() )
 	{
 		updateRequestSignal()( this );
+	}
+	else if( plug == lookThroughPlug() )
+	{
+		updateLookThrough();
+	}
+}
+
+void SceneView::updateLookThrough()
+{
+	Context::Scope scopedContext( getContext() );
+
+	const ScenePlug *scene = preprocessedInPlug<ScenePlug>();
+	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+	
+	IECore::ConstCameraPtr constCamera;
+	ScenePlug::ScenePath cameraPath;
+	if( lookThroughEnabledPlug()->getValue() )
+	{
+		string cameraPathString = lookThroughCameraPlug()->getValue();
+		if( cameraPathString.empty() )
+		{
+			if( const StringData *cameraPathData = globals->member<StringData>( "render:camera" ) )
+			{
+				cameraPathString = cameraPathData->readable();
+			}
+		}
+		if( !cameraPathString.empty() )
+		{
+			ScenePlug::stringToPath( cameraPathString, cameraPath );
+			constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
+		}
+	}
+	
+	if( constCamera )
+	{
+		IECore::CameraPtr camera = constCamera->copy();
+		camera->setTransform( new MatrixTransform( scene->fullTransform( cameraPath ) ) );
+		camera->parameters()["resolution"] = new V2iData( viewportGadget()->getViewport() );
+		viewportGadget()->setCamera( camera );
+		viewportGadget()->setCameraEditable( false );
+	}
+	else
+	{
+		viewportGadget()->setCameraEditable( true );
 	}
 }
