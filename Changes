@@ -2,13 +2,12 @@
 
 - Added exposure and gamma controls to the image viewer (#571).
 - Added colourspace management to the image viewer (#573). By default display colourspaces are taken from the OCIO config, but any image processing node (or Box containing them) can be registered via config files to provide alternative methods of colour management.
-- Added auto expand option to the 3d viewer (#163).
+- Added auto expand option to the scene viewer (#163).
 - Added Shift+Down shortcut for full expansion in the scene viewer (#556).
 - Added global Left/Right keyboard shortcuts for frame increment/decrement (#52).
-- Added background operation to op dialogues in the op and browser apps. The UI now remains responsive during execution (#591).
+- Added background operation to op dialogues in the op and browser apps. The UI now remains responsive during execution and displays IECore messages and results (#591).
 - Buttons now accept Return and Enter keypresses in addition to the space bar and clicking.
 - Confirmation dialogues now focus the default button so they can be dismissed using the keyboard.
-and displays IECore messages and results.
 - Tarted up the About dialogue with a nice new logo courtesy of Tiziana Beretta.
 - Fixed MenuButton bug whereby menus could be shown partially offscreen.
 - Fixed Timeline bugs
