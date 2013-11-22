@@ -1,3 +1,63 @@
+#### UI
+
+- Added exposure and gamma controls to the image viewer (#571).
+- Added colourspace management to the image viewer (#573). By default display colourspaces are taken from the OCIO config, but any image processing node (or Box containing them) can be registered via config files to provide alternative methods of colour management.
+- Added auto expand option to the 3d viewer (#163).
+- Added Shift+Down shortcut for full expansion in the scene viewer (#556).
+- Added global Left/Right keyboard shortcuts for frame increment/decrement (#52).
+- Added background operation to op dialogues in the op and browser apps. The UI now remains responsive during execution (#591).
+- Buttons now accept Return and Enter keypresses in addition to the space bar and clicking.
+- Confirmation dialogues now focus the default button so they can be dismissed using the keyboard.
+and displays IECore messages and results.
+- Tarted up the About dialogue with a nice new logo courtesy of Tiziana Beretta.
+- Fixed MenuButton bug whereby menus could be shown partially offscreen.
+- Fixed Timeline bugs
+	- Wraparound during playback would remove the fractional part of the frame number
+	- Entering a value in the frame field which was outside the frame range would make it impossible to subsequently enter a fractional frame number.
+    - Changing the frame number via the numeric field didn't update until focus left the field.
+- Fixed clipping problem in BusyWidget drawing, and removed overhead of invisible BusyWidgets.
+- Fixed GadgetWidget overlay event handling problems.
+- Fixed crashes when MultiSelectionMenu was used in GLWidget overlay.
+- Viewer toolbar now omits labels when Metadata value is "".
+
+#### Scene
+
+- Added a UnionFilter node (#594).
+- Optimised SceneReader. It now computes constant hashes where data is not animated, resulting in significant speedups and reduced memory consumption. Approximately 2x speedup and 50% memory usage reduction has been seen in animated production assets (#545).
+- Optimised SceneHierarchy update for improved playback performance (#545). 4x speedups have been seen with animated production assets.
+- Fixed the laggy node dragging seen after expanding the SceneHierarchy contents and moving the current frame a few times (#209).
+
+#### Image
+
+- Optimised OpenColorIO node performance.
+- Optimised grade node performance and memory usage (through improved hash implementation).
+- Set Grade node's gamma plug minimum value to 0.
+- Fixed threading related OpenColorIO crashes on OS X.
+- Fixed ImagePrimitiveSource hashing bug. This would manifest itself as a corrupted image when connecting a disabled node downstream from a Display node (#420).
+- Fixed miscellaneous hashing bugs.
+
+#### Core
+
+- Optimised StringPlug::getValue() and StringPlug::hash() for cases where the string doesn't contain substitutions.
+- Fixed bug in Path inequality operator.
+- Renamed python deprecation warning output - Python2.7 disabled this by default.
+
+#### API
+
+- Added a new Playback class. This provides a central controller for all clients who wish to initiate playback or react when playback occurs.
+- Added ColorProcessor base class. This makes it easier to implement image processing nodes which mix across channels.
+- DependencyNode::affects() is now called for output plugs too. This can trip up poorly implemented DependencyNode::affects() overrides - see f1e9cb3bf20430b7889795dcb5eccec863f1e2e7 for details.
+- Resolved ambiguities in Widget auto-parenting keyword arguments. Parenting arguments should now be passed as "parenting = { ... }" rather than just "...".  The old style of argument passing will be deprecated (#655).
+- Added set/getTextSelectable() method to GafferUI.Label.
+- Added Dialogue set/getModal() methods.
+- Added Path._emitPathChanged() protected method.  This can be used by derived classes to emit the pathChangedSignal(), avoiding emitting it if nothing is listening. All subclasses should use this in preference to self.pathChangedSignal()( self ).
+- Added Context::hasSubstitutions() method. This can be used to query if a string contains any substitutions supported by Context::substitute().
+- Added Slider set/getPositionIncrement() methods. These allows the cursor key position nudging behaviour to be controlled.
+- Added const version of GafferUI::View::getPreprocessor.
+- Added EnumPlugValueWidget.selectionMenu() method.
+- Renamed ImageNode::hash*Plug() methods to hash*(), for consistency with the rest of the framework.
+- Refactored ImageNode hashing for improved performance and clarity - see 78b8739f1867ecd3b660838d384cdd6083734d92 for details.
+
 # 0.85.1
 
 #### Scene
