@@ -194,6 +194,8 @@ class _ViewToolbar( GafferUI.Widget ) :
 				widget = GafferUI.PlugWidget( widget )
 				
 			self.__row.append( widget )
+			if GafferUI.Metadata.plugValue( plug, "divider" ) :
+				self.__row.append( GafferUI.Divider( GafferUI.Divider.Orientation.Vertical ) )
 		
 		self.__row.insert( 0, GafferUI.Spacer( IECore.V2i( 1, 1 ) ), expand = True )
 
