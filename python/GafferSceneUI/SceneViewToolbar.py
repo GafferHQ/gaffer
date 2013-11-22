@@ -107,12 +107,6 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		self._updateFromPlug()
 	
-	## \todo Remove when we've merged the image view branch and can just register an empty
-	# label via Metadata.
-	def hasLabel( self ) :
-	
-		return True
-	
 	def _updateFromPlug( self ) :
 	
 		with self.getContext() :
@@ -123,6 +117,8 @@ GafferUI.PlugValueWidget.registerCreator(
 	"lookThrough",
 	_LookThroughPlugValueWidget,
 )
+
+GafferUI.Metadata.registerPlugValue( GafferSceneUI.SceneView, "lookThrough", "label", "" )
 
 GafferUI.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.enabled",
 	"When enabled, locks the view to look through a specific camera in the scene. "
