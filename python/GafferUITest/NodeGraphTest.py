@@ -587,28 +587,37 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		
 		roots = []
-		def f( gg ) :
+		previousRoots = []
+		def f( gg, previousRoot ) :
 		
 			self.failUnless( gg.isSame( g ) )
 			roots.append( gg.getRoot() )
+			previousRoots.append( previousRoot )
 		
 		g = GafferUI.GraphGadget( s )
 		c = g.rootChangedSignal().connect( f )
 		
 		self.assertEqual( len( roots ), 0 )
+		self.assertEqual( len( previousRoots ), 0 )
 		
 		g.setRoot( s["b"] )
 		self.assertEqual( len( roots ), 1 )
 		self.assertTrue( roots[0].isSame( s["b"] ) )
+		self.assertEqual( len( previousRoots ), 1 )
+		self.assertTrue( previousRoots[0].isSame( s ) )
 		
 		g.setRoot( s["b"] )
 		self.assertEqual( len( roots ), 1 )
 		self.assertTrue( roots[0].isSame( s["b"] ) )
+		self.assertEqual( len( previousRoots ), 1 )
+		self.assertTrue( previousRoots[0].isSame( s ) )
 		
 		g.setRoot( s )
 		self.assertEqual( len( roots ), 2 )
 		self.assertTrue( roots[1].isSame( s ) )
-	
+		self.assertEqual( len( previousRoots ), 2 )
+		self.assertTrue( previousRoots[1].isSame( s["b"] ) )
+		
 	def testLifetime( self ) :
 	
 		s = Gaffer.ScriptNode()

@@ -117,6 +117,7 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	}
 
 	bool rootChanged = false;
+	Gaffer::NodePtr previousRoot = m_root;
 	if( root != m_root )
 	{
 		rootChanged = true;
@@ -143,11 +144,11 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 
 	if( rootChanged )
 	{
-		m_rootChangedSignal( this );
+		m_rootChangedSignal( this, previousRoot.get() );
 	}
 }
 
-GraphGadget::GraphGadgetSignal &GraphGadget::rootChangedSignal()
+GraphGadget::RootChangedSignal &GraphGadget::rootChangedSignal()
 {
 	return m_rootChangedSignal;
 }

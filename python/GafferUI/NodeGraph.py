@@ -288,7 +288,6 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			selection = self.scriptNode().selection()
 			if selection.size() and isinstance( selection[0], Gaffer.Box ) :
 				self.graphGadget().setRoot( selection[0] )
-				self.__frame( self.graphGadget().getRoot().children( Gaffer.Node.staticTypeId() ) )
 				return True
 		elif event.key == "Up" :
 			root = self.graphGadget().getRoot()
@@ -373,8 +372,40 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			
 		return []
 		
-	def __rootChanged( self, graphGadget ) :
+	def __rootChanged( self, graphGadget, previousRoot ) :
 	
+		# save/restore the current framing so jumping in
+		# and out of Boxes isn't a confusing experience.
+		
+		def __framePlug( node, createIfMissing = False ) :
+			
+			plugName = "__nodeGraphFraming%d" % id( self )
+			result = node.getChild( plugName )
+			if result is None and createIfMissing :
+				result = Gaffer.Box2fPlug( plugName, flags = Gaffer.Plug.Flags.Default & ( ~Gaffer.Plug.Flags.Serialisable ) )
+				node.addChild( result )
+			
+			return result
+		
+		camera = self.graphGadgetWidget().getViewportGadget().getCamera()
+		frame = camera.parameters()["screenWindow"].value
+		translation = camera.getTransform().matrix.translation()
+		frame.min += IECore.V2f( translation.x, translation.y )
+		frame.max += IECore.V2f( translation.x, translation.y )
+		
+		__framePlug( previousRoot, True ).setValue( frame )
+		
+		newFramePlug = __framePlug( self.graphGadget().getRoot() )
+		if newFramePlug is not None :
+			frame = newFramePlug.getValue()
+			self.graphGadgetWidget().getViewportGadget().frame(
+				IECore.Box3f( IECore.V3f( frame.min.x, frame.min.y, 0 ), IECore.V3f( frame.max.x, frame.max.y, 0 ) )
+			)
+		else :
+			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node.staticTypeId() ) )
+		
+		# do what we need to do to keep our title up to date.
+		
 		if graphGadget.getRoot().isSame( self.scriptNode() ) :
 			self.__rootNameChangedConnection = None
 			self.__rootParentChangedConnection = None
