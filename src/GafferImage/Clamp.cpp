@@ -190,7 +190,7 @@ void Clamp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 }
 
-void Clamp::hashChannelDataPlug( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 
