@@ -35,13 +35,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+
 #include "GafferImage/Clamp.h"
 
 using namespace IECore;
 using namespace Gaffer;
-
-namespace GafferImage
-{
+using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( Clamp );
 
@@ -192,12 +191,8 @@ void Clamp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	ChannelDataProcessor::hashChannelData( output, context, h );
 
-	ContextPtr tmpContext = new Context( *Context::current() );
-	Context::Scope scopedContext( tmpContext );	
-
-	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	inPlug()->channelDataPlug()->hash( h );
 
 	minimumPlug()->hash( h );
@@ -263,6 +258,3 @@ void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug 
 
 	}
 }
-
-} // namespace GafferImage
-
