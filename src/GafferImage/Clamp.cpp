@@ -195,10 +195,13 @@ void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	inPlug()->channelDataPlug()->hash( h );
 
-	minimumPlug()->hash( h );
-	maximumPlug()->hash( h );
-	minClampToPlug()->hash( h );
-	maxClampToPlug()->hash( h );
+	std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
+	
+	minimumPlug()->getChild( channelIndex )->hash( h );
+	maximumPlug()->getChild( channelIndex )->hash( h );
+	minClampToPlug()->getChild( channelIndex )->hash( h );
+	maxClampToPlug()->getChild( channelIndex )->hash( h );
 
 	minimumEnabledPlug()->hash( h );
 	maximumEnabledPlug()->hash( h );

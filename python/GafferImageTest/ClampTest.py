@@ -65,15 +65,15 @@ class ClampTest( unittest.TestCase ) :
 
 		clamp["maximum"].setValue( IECore.Color4f( 1., 1., 1., 1. ) )
 
-		redHash = clamp["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		greenHash = clamp["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
-		blueHash = clamp["out"].channelData( "B", IECore.V2i( 0 ) ).hash()		
+		redHash = clamp["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+		greenHash = clamp["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+		blueHash = clamp["out"].channelDataHash( "B", IECore.V2i( 0 ) )
 
 		clamp["maximum"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
 
-		redHash2 = clamp["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		greenHash2 = clamp["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
-		blueHash2 = clamp["out"].channelData( "B", IECore.V2i( 0 ) ).hash()	
+		redHash2 = clamp["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+		greenHash2 = clamp["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+		blueHash2 = clamp["out"].channelDataHash( "B", IECore.V2i( 0 ) )
 
 		self.assertNotEqual(redHash, redHash2)
 		self.assertEqual(greenHash, greenHash2)
