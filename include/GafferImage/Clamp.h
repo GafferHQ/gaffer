@@ -37,9 +37,9 @@
 #ifndef GAFFERIMAGE_CLAMP_H
 #define GAFFERIMAGE_CLAMP_H
 
+#include "Gaffer/CompoundNumericPlug.h"
+
 #include "GafferImage/ChannelDataProcessor.h"
-#include "GafferImage/ImagePlug.h"
-#include "Gaffer/PlugType.h"
 
 namespace GafferImage
 {
