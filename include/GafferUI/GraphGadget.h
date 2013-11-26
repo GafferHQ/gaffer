@@ -79,8 +79,10 @@ class GraphGadget : public ContainerGadget
 		Gaffer::Node *getRoot();
 		const Gaffer::Node *getRoot() const;
 		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = 0 );
-		typedef boost::signal<void ( GraphGadget * )> GraphGadgetSignal;
-		GraphGadgetSignal &rootChangedSignal();
+		typedef boost::signal<void ( GraphGadget *, Gaffer::Node * )> RootChangedSignal;
+		/// A signal emitted when the root has been changed - the signature
+		/// of the signal is ( graphGadget, previousRoot ).
+		RootChangedSignal &rootChangedSignal();
 
 		/// May return 0 if no filter has been specified.
 		Gaffer::Set *getFilter();
@@ -197,7 +199,7 @@ class GraphGadget : public ContainerGadget
 				
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
-		GraphGadgetSignal m_rootChangedSignal;
+		RootChangedSignal m_rootChangedSignal;
 		boost::signals::scoped_connection m_rootChildAddedConnection;
 		boost::signals::scoped_connection m_rootChildRemovedConnection;
 

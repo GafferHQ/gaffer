@@ -55,11 +55,11 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
-struct GraphGadgetSlotCaller
+struct RootChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, GraphGadgetPtr g )
+	boost::signals::detail::unusable operator()( boost::python::object slot, GraphGadgetPtr g, Gaffer::NodePtr n )
 	{
-		slot( g );
+		slot( g , n );
 		return boost::signals::detail::unusable();
 	}
 };
@@ -170,6 +170,6 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "connectionGadgetAt", &connectionGadgetAt )
 	;
 
-	GafferBindings::SignalBinder<GraphGadget::GraphGadgetSignal, GafferBindings::DefaultSignalCaller<GraphGadget::GraphGadgetSignal>, GraphGadgetSlotCaller>::bind( "GraphGadgetSignal" );	
+	GafferBindings::SignalBinder<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>::bind( "RootChangedSignal" );
 
 }
