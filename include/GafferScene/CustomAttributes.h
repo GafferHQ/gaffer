@@ -54,6 +54,8 @@ class CustomAttributes : public GafferScene::Attributes
 				
 };
 
+IE_CORE_DECLAREPTR( CustomAttributes )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_CUSTOMATTRIBUTES_H

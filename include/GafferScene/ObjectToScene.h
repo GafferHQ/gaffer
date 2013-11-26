@@ -68,6 +68,8 @@ class ObjectToScene : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( ObjectToScene )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_OBJECTTOSCENE_H

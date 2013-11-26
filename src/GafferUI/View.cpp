@@ -128,7 +128,7 @@ bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 	if( keyEvent.key == "F" )
 	{
 		Imath::Box3f b = framingBound();
-		if( !b.isEmpty() )
+		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
 		{
 			viewportGadget()->frame( b );
 			return true;

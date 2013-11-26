@@ -74,6 +74,8 @@ class SceneWriter : public Gaffer::Node
 		static const double g_frameRate;
 };
 
+IE_CORE_DECLAREPTR( SceneWriter )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SCENEWRITER_H

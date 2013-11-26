@@ -91,6 +91,8 @@ class Constraint : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( Constraint )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_CONSTRAINT_H

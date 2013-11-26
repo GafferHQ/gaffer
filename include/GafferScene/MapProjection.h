@@ -76,6 +76,8 @@ class MapProjection : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( MapProjection )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_MAPPROJECTION_H

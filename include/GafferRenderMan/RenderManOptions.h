@@ -56,6 +56,8 @@ class RenderManOptions : public GafferScene::Options
 				
 };
 
+IE_CORE_DECLAREPTR( RenderManOptions );
+
 } // namespace GafferRenderMan
 
 #endif // GAFFERRENDERMAN_RENDERMANOPTIONS_H

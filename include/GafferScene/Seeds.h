@@ -84,6 +84,8 @@ class Seeds : public BranchCreator
 		
 };
 
+IE_CORE_DECLAREPTR( Seeds )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SEEDS_H

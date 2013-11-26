@@ -71,6 +71,8 @@ class Transform : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( Transform )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_TRANSFORM_H

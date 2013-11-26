@@ -91,6 +91,8 @@ class Sphere : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( Sphere )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SPHERE_H

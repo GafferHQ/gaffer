@@ -85,6 +85,8 @@ class Instancer : public BranchCreator
 		
 };
 
+IE_CORE_DECLAREPTR( Instancer )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_INSTANCER_H

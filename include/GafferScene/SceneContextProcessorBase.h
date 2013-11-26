@@ -89,6 +89,8 @@ class SceneContextProcessorBase : public SceneProcessor
 
 };
 
+IE_CORE_DECLAREPTR( SceneContextProcessorBase )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SCENECONTEXTPROCESSORBASE_H

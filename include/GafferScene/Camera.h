@@ -75,6 +75,8 @@ class Camera : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( Camera )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_CAMERA_H

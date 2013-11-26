@@ -76,6 +76,8 @@ class UnionFilter : public Filter
 
 };
 
+IE_CORE_DECLAREPTR( UnionFilter )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_UNIONFILTER_H

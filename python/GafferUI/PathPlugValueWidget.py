@@ -75,6 +75,11 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		return self.__row[0]
 	
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+		self.pathWidget().setHighlighted( highlighted )
+
 	def getToolTip( self ) :
 	
 		result = GafferUI.PlugValueWidget.getToolTip( self )

@@ -56,6 +56,8 @@ class ArnoldOptions : public GafferScene::Options
 				
 };
 
+IE_CORE_DECLAREPTR( ArnoldOptions );
+
 } // namespace GafferArnold
 
 #endif // GAFFERARNOLD_ARNOLDOPTIONS_H

@@ -71,6 +71,8 @@ class Text : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( Text )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_TEXT_H

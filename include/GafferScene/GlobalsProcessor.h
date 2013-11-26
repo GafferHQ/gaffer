@@ -86,6 +86,8 @@ class GlobalsProcessor : public SceneProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( GlobalsProcessor )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_GLOBALSPROCESSOR_H

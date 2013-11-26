@@ -71,6 +71,11 @@ class ViewportGadget : public IndividualContainer
 		const IECore::Camera *getCamera() const;
 		/// A copy is taken.
 		void setCamera( const IECore::Camera *camera );
+
+		/// If the camera is editable, the user can move it around
+		/// using Alt+drag. The camera is editable by default.
+		bool getCameraEditable() const;
+		void setCameraEditable( bool editable );
 		
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
@@ -185,6 +190,7 @@ class ViewportGadget : public IndividualContainer
 		
 		IECore::CameraController m_cameraController;
 		bool m_cameraInMotion;
+		bool m_cameraEditable;
 		
 		GadgetPtr m_lastButtonPressGadget;
 		GadgetPtr m_gadgetUnderMouse;

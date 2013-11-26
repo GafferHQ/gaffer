@@ -76,6 +76,8 @@ class PointConstraint : public Constraint
 	
 };
 
+IE_CORE_DECLAREPTR( PointConstraint )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_POINTCONSTRAINT_H

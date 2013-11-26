@@ -78,6 +78,8 @@ class Light : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( Light )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_LIGHT_H

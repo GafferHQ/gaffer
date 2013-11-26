@@ -78,6 +78,8 @@ class PathFilter : public Filter
 
 };
 
+IE_CORE_DECLAREPTR( PathFilter )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_PATHFILTER_H

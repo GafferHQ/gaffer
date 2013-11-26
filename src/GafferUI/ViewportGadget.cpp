@@ -64,6 +64,7 @@ ViewportGadget::ViewportGadget( GadgetPtr child )
 	: IndividualContainer( child ),
 	  m_cameraController( new IECore::Camera ),
 	  m_cameraInMotion( false ),
+	  m_cameraEditable( true ),
 	  m_dragTracking( false )
 {
 
@@ -140,6 +141,16 @@ const IECore::Camera *ViewportGadget::getCamera() const
 void ViewportGadget::setCamera( const IECore::Camera *camera )
 {
 	m_cameraController.setCamera( camera->copy() );
+}
+
+bool ViewportGadget::getCameraEditable() const
+{
+	return m_cameraEditable;
+}
+
+void ViewportGadget::setCameraEditable( bool editable )
+{
+	m_cameraEditable = editable;
 }
 		
 void ViewportGadget::frame( const Imath::Box3f &box )
@@ -410,14 +421,24 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 		
 		if( motionType )
 		{
-			m_cameraController.motionStart( motionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraInMotion = true;
+			
 			// the const_cast is necessary because we don't want to give all the other
 			// Gadget types non-const access to the event, but we do need the ViewportGadget
 			// to assign destination and source gadgets. the alternative would be a different
 			// set of non-const signals on the ViewportGadget, or maybe even having ViewportGadget
 			// not derived from Gadget at all. this seems the lesser of two evils.
 			const_cast<DragDropEvent &>( event ).sourceGadget = this;
+			
+			// we only actually update the camera if it's editable, but we still go through
+			// the usual dragEnter/dragMove/dragEnd process so that we can swallow the events.
+			// it would be confusing for users if they tried to edit a non-editable camera and
+			// their gestures fell through and affected the viewport contents.
+			if( getCameraEditable() )
+			{
+				m_cameraController.motionStart( motionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			}
+			
 			// we have to return something to start the drag, but we return something that
 			// noone else will accept to make sure we keep the drag to ourself.
 			return IECore::NullObject::defaultNullObject();
@@ -457,8 +478,11 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( m_cameraInMotion )
 	{
-		m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
- 		renderRequestSignal()( this );
+		if( getCameraEditable() )
+		{
+			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			renderRequestSignal()( this );
+		}
 		return true;
 	}
 	else
@@ -515,7 +539,7 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 		V3f( viewport.x - borderWidth, viewport.y - borderWidth, 1000.0f )
 	);
 	
-	if( viewportBox.intersects( event.line.p0 ) || !getDragTracking() )
+	if( viewportBox.intersects( event.line.p0 ) || !getDragTracking() || !getCameraEditable() )
 	{
 		m_dragTrackingIdleConnection.disconnect();
 	}
@@ -655,9 +679,12 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( m_cameraInMotion )
 	{
-		m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 		m_cameraInMotion = false;
-	 	renderRequestSignal()( this );
+		if( getCameraEditable() )
+		{
+			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			renderRequestSignal()( this );
+		}
 		return true;
 	}
 	else
@@ -679,6 +706,11 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 		// started - we get here when the user accidentally rotates
 		// the wheel while middle dragging, so it's fine to do nothing.
 		return false;
+	}
+	
+	if( !getCameraEditable() )
+	{
+		return true;
 	}
 	
 	V2i position( (int)event.line.p0.x, (int)event.line.p0.y );

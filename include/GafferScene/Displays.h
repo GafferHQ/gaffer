@@ -78,6 +78,8 @@ class Displays : public GlobalsProcessor
 
 };
 
+IE_CORE_DECLAREPTR( Displays )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_DISPLAYS_H

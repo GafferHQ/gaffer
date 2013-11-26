@@ -70,6 +70,8 @@ class AimConstraint : public Constraint
 	
 };
 
+IE_CORE_DECLAREPTR( AimConstraint )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_AIMCONSTRAINT_H

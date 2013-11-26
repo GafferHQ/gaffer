@@ -40,6 +40,7 @@
 
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
+#include "IECore/MatrixTransform.h"
 
 #include "IECoreGL/State.h"
 
@@ -49,6 +50,8 @@
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardOptions.h"
+#include "GafferScene/StandardAttributes.h"
+#include "GafferScene/PathFilter.h"
 
 #include "GafferSceneUI/SceneView.h"
 
@@ -114,8 +117,13 @@ SceneView::SceneView( const std::string &name )
 	
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0 ) );
+	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0, Imath::limits<int>::max(), Plug::Default & ~Plug::AcceptsInputs ) );
 
+	CompoundPlugPtr lookThrough = new CompoundPlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+	lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
+	lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( lookThrough );
+	
 	plugSetSignal().connect( boost::bind( &SceneView::plugSet, this, ::_1 ) );
 
 	// set up our gadgets
@@ -127,16 +135,45 @@ SceneView::SceneView( const std::string &name )
 
 	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 	
-	// add a preprocessor which removes motion blur, because the opengl
-	// renderer doesn't support it.
+	//////////////////////////////////////////////////////////////////////////
+	// add a preprocessor which monkeys with the scene before it is displayed.
+	//////////////////////////////////////////////////////////////////////////
+
+	NodePtr preprocessor = new Node();
+	ScenePlugPtr preprocessorInput = new ScenePlug( "in" );
+	preprocessor->addChild( preprocessorInput );
 	
-	StandardOptionsPtr standardOptions = new StandardOptions();
+	// remove motion blur, because the opengl renderer doesn't support it.
+	
+	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
 	
-	setPreprocessor( standardOptions );
+	preprocessor->addChild( standardOptions );
+	standardOptions->inPlug()->setInput( preprocessorInput );
+	
+	// add a node for hiding things
+	
+	StandardAttributesPtr hide = new StandardAttributes( "hide" );
+	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "enabled" )->setValue( true );
+	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
+	
+	preprocessor->addChild( hide );
+	hide->inPlug()->setInput( standardOptions->outPlug() );
+
+	PathFilterPtr hideFilter = new PathFilter( "hideFilter" );
+	preprocessor->addChild( hideFilter );
+	hide->filterPlug()->setInput( hideFilter->matchPlug() );
+
+	// make the output for the preprocessor
+
+	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
+	preprocessor->addChild( preprocessorOutput );
+	preprocessorOutput->setInput( hide->outPlug() );
+	
+	setPreprocessor( preprocessor );
 }
 
 SceneView::~SceneView()
@@ -151,6 +188,46 @@ Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug()
 const Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+Gaffer::CompoundPlug *SceneView::lookThroughPlug()
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::CompoundPlug *SceneView::lookThroughPlug() const
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *SceneView::lookThroughEnabledPlug()
+{
+	return lookThroughPlug()->getChild<BoolPlug>( 0 );
+}
+
+const Gaffer::BoolPlug *SceneView::lookThroughEnabledPlug() const
+{
+	return lookThroughPlug()->getChild<BoolPlug>( 0 );
+}
+
+Gaffer::StringPlug *SceneView::lookThroughCameraPlug()
+{
+	return lookThroughPlug()->getChild<StringPlug>( 1 );
+}
+
+const Gaffer::StringPlug *SceneView::lookThroughCameraPlug() const
+{
+	return lookThroughPlug()->getChild<StringPlug>( 1 );
+}
+
+GafferScene::PathFilter *SceneView::hideFilter()
+{
+	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
+}
+
+const GafferScene::PathFilter *SceneView::hideFilter() const
+{
+	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
 }
 
 void SceneView::contextChanged( const IECore::InternedString &name )
@@ -197,6 +274,8 @@ void SceneView::update()
 	{
 		viewportGadget()->frame( m_renderableGadget->bound() );
 	}
+
+	updateLookThrough();
 }
 
 Imath::Box3f SceneView::framingBound() const
@@ -389,5 +468,76 @@ void SceneView::plugSet( Gaffer::Plug *plug )
 	if( plug == minimumExpansionDepthPlug() )
 	{
 		updateRequestSignal()( this );
+	}
+	else if( plug == lookThroughPlug() )
+	{
+		updateLookThrough();
+	}
+}
+
+void SceneView::updateLookThrough()
+{
+	Context::Scope scopedContext( getContext() );
+
+	const ScenePlug *scene = preprocessedInPlug<ScenePlug>();
+	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+	
+	string cameraPathString;
+	IECore::CameraPtr camera;
+	if( lookThroughEnabledPlug()->getValue() )
+	{
+		cameraPathString = lookThroughCameraPlug()->getValue();
+		if( cameraPathString.empty() )
+		{
+			if( const StringData *cameraPathData = globals->member<StringData>( "render:camera" ) )
+			{
+				cameraPathString = cameraPathData->readable();
+			}
+		}
+		
+		if( !cameraPathString.empty() )
+		{
+			ScenePlug::ScenePath cameraPath;
+			ScenePlug::stringToPath( cameraPathString, cameraPath );
+			
+			try
+			{
+				ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
+				if( constCamera )
+				{
+					camera = constCamera->copy();
+					camera->setTransform( new MatrixTransform( scene->fullTransform( cameraPath ) ) );
+				}
+			}
+			catch( ... )
+			{
+				// if an invalid path has been entered for the camera, computation will fail.
+				// we can just ignore that and fall through to lock to the current camera instead.
+				cameraPathString = "";
+			}
+		}
+		
+		if( !camera )
+		{
+			// we couldn't find a render camera to lock to, but we can lock to the current
+			// camera instead.
+			camera = viewportGadget()->getCamera()->copy();
+		}
+	}
+	
+	if( camera )
+	{
+		camera->parameters()["resolution"] = new V2iData( viewportGadget()->getViewport() );
+		viewportGadget()->setCamera( camera );
+		viewportGadget()->setCameraEditable( false );
+		
+		StringVectorDataPtr invisiblePaths = new StringVectorData();
+		invisiblePaths->writable().push_back( cameraPathString );
+		hideFilter()->pathsPlug()->setValue( invisiblePaths );
+	}
+	else
+	{
+		viewportGadget()->setCameraEditable( true );
+		hideFilter()->pathsPlug()->setToDefault();
 	}
 }

@@ -117,6 +117,8 @@ class SceneNode : public Gaffer::ComputeNode
 		
 };
 
+IE_CORE_DECLAREPTR( SceneNode )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SCENENODE_H

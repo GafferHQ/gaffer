@@ -96,6 +96,8 @@ class Group : public SceneProcessor
 			
 };
 
+IE_CORE_DECLAREPTR( Group )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_GROUP_H

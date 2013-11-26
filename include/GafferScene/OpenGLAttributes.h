@@ -54,6 +54,8 @@ class OpenGLAttributes : public GafferScene::Attributes
 				
 };
 
+IE_CORE_DECLAREPTR( OpenGLAttributes )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_OPENGLATTRIBUTES_H

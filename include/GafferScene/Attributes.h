@@ -72,6 +72,8 @@ class Attributes : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( Attributes )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_ATTRIBUTES_H

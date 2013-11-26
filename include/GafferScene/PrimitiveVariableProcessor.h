@@ -80,6 +80,8 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( PrimitiveVariableProcessor )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H

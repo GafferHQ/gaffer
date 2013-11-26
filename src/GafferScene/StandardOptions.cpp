@@ -49,8 +49,8 @@ StandardOptions::StandardOptions( const std::string &name )
 	
 	// camera
 	
-	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, true );	
-	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, true );
+	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, false );
+	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, false );
 	
 	// motion blur
 	

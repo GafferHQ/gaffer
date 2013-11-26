@@ -79,6 +79,8 @@ class Prune : public FilteredSceneProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( Prune )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_PRUNE_H

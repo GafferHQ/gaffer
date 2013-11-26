@@ -58,6 +58,8 @@ class DeleteAttributes : public AttributeProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( DeleteAttributes )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_DELETEATTRIBUTES_H

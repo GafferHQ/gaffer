@@ -67,6 +67,8 @@ class RenderManLight : public GafferScene::Light
 
 };
 
+IE_CORE_DECLAREPTR( RenderManLight )
+
 } // namespace GafferRenderMan
 
 #endif // GAFFERRENDERMAN_RENDERMANLIGHT_H

@@ -153,6 +153,8 @@ class Shader : public Gaffer::DependencyNode
 		
 };
 
+IE_CORE_DECLAREPTR( Shader )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SHADER_H
