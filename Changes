@@ -4,8 +4,10 @@
 - Added colourspace management to the image viewer (#573). By default display colourspaces are taken from the OCIO config, but any image processing node (or Box containing them) can be registered via config files to provide alternative methods of colour management.
 - Added auto expand option to the scene viewer (#163).
 - Added Shift+Down shortcut for full expansion in the scene viewer (#556).
+- Added "look through camera" in the scene viewer (#49).
 - Added global Left/Right keyboard shortcuts for frame increment/decrement (#52).
 - Added background operation to op dialogues in the op and browser apps. The UI now remains responsive during execution and displays IECore messages and results (#591).
+- Objects can now be dragged from the Viewer and SceneHierarchy into path fields such as the AimConstraint target or the StandardOptions camera.
 - Buttons now accept Return and Enter keypresses in addition to the space bar and clicking.
 - Confirmation dialogues now focus the default button so they can be dismissed using the keyboard.
 - Tarted up the About dialogue with a nice new logo courtesy of Tiziana Beretta.
@@ -18,6 +20,8 @@
 - Fixed GadgetWidget overlay event handling problems.
 - Fixed crashes when MultiSelectionMenu was used in GLWidget overlay.
 - Viewer toolbar now omits labels when Metadata value is "".
+- Made the NodeGraph save and restore its framing when entering and leaving Boxes (#626).
+- Fixed PathWidget menu positioning when used as a GLWidget overlay.
 
 #### Scene
 
@@ -25,6 +29,7 @@
 - Optimised SceneReader. It now computes constant hashes where data is not animated, resulting in significant speedups and reduced memory consumption. Approximately 2x speedup and 50% memory usage reduction has been seen in animated production assets (#545).
 - Optimised SceneHierarchy update for improved playback performance (#545). 4x speedups have been seen with animated production assets.
 - Fixed the laggy node dragging seen after expanding the SceneHierarchy contents and moving the current frame a few times (#209).
+- Disabled StandardOptions camera and resolution by default.
 
 #### Image
 
@@ -47,6 +52,8 @@
 - Added ColorProcessor base class. This makes it easier to implement image processing nodes which mix across channels.
 - DependencyNode::affects() is now called for output plugs too. This can trip up poorly implemented DependencyNode::affects() overrides - see f1e9cb3bf20430b7889795dcb5eccec863f1e2e7 for details.
 - Resolved ambiguities in Widget auto-parenting keyword arguments. Parenting arguments should now be passed as "parenting = { ... }" rather than just "...".  The old style of argument passing will be deprecated (#655).
+- Added ViewportGadget::set/getCameraEditable() methods.
+- Added previous root node to GraphGadget::rootChangedSignal().
 - Added set/getTextSelectable() method to GafferUI.Label.
 - Added Dialogue set/getModal() methods.
 - Added Path._emitPathChanged() protected method.  This can be used by derived classes to emit the pathChangedSignal(), avoiding emitting it if nothing is listening. All subclasses should use this in preference to self.pathChangedSignal()( self ).
@@ -56,6 +63,8 @@
 - Added EnumPlugValueWidget.selectionMenu() method.
 - Renamed ImageNode::hash*Plug() methods to hash*(), for consistency with the rest of the framework.
 - Refactored ImageNode hashing for improved performance and clarity - see 78b8739f1867ecd3b660838d384cdd6083734d92 for details.
+- Added many missing IntrusivePtr typedefs.
+- Added support for "divider" Metadata in viewer toolbars.
 
 # 0.85.1
 
