@@ -108,6 +108,8 @@ class BranchCreator : public SceneProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( BranchCreator )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_BRANCHCREATOR_H

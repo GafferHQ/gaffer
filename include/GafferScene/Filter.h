@@ -84,6 +84,8 @@ class Filter : public Gaffer::ComputeNode
 
 };
 
+IE_CORE_DECLAREPTR( Filter )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_FILTER_H

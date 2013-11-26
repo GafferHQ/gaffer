@@ -62,6 +62,8 @@ class OpenGLShader : public GafferScene::Shader
 					
 };
 
+IE_CORE_DECLAREPTR( OpenGLShader )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_OPENGLSHADER_H

@@ -90,6 +90,8 @@ class RenderManShader : public GafferScene::Shader
 					
 };
 
+IE_CORE_DECLAREPTR( RenderManShader )
+
 } // namespace GafferRenderMan
 
 #endif // GAFFERRENDERMAN_RENDERMANSHADER_H

@@ -54,6 +54,8 @@ class StandardAttributes : public Attributes
 				
 };
 
+IE_CORE_DECLAREPTR( StandardAttributes )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_STANDARDATTRIBUTES_H

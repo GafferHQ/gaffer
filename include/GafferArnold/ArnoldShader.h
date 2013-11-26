@@ -59,6 +59,8 @@ class ArnoldShader : public GafferScene::Shader
 
 };
 
+IE_CORE_DECLAREPTR( ArnoldShader )
+
 } // namespace GafferArnold
 
 #endif // GAFFERARNOLD_ARNOLDSHADER_H

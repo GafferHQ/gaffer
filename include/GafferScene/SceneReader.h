@@ -94,6 +94,8 @@ class SceneReader : public FileSource
 		static const double g_frameRate;
 };
 
+IE_CORE_DECLAREPTR( SceneReader )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SCENEREADER_H

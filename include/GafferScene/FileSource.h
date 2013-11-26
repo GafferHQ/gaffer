@@ -82,6 +82,8 @@ class FileSource : public Source
 			
 };
 
+IE_CORE_DECLAREPTR( FileSource )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_FILESOURCE_H

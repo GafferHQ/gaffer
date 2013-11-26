@@ -81,6 +81,8 @@ class AttributeCache : public SceneElementProcessor
 		static size_t g_firstPlugIndex;		
 };
 
+IE_CORE_DECLAREPTR( AttributeCache )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_ATTRIBUTECACHE_H

@@ -54,6 +54,8 @@ class CustomOptions : public GafferScene::Options
 				
 };
 
+IE_CORE_DECLAREPTR( CustomOptions )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_CUSTOMOPTIONS_H

@@ -68,6 +68,8 @@ class FilteredSceneProcessor : public SceneProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( FilteredSceneProcessor )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_FILTEREDSCENEPROCESSOR_H

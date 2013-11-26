@@ -79,6 +79,8 @@ class MapOffset : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( MapOffset )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_MAPOFFSET_H

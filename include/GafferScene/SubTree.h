@@ -86,6 +86,8 @@ class SubTree : public SceneProcessor
 			
 };
 
+IE_CORE_DECLAREPTR( SubTree )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SUBTREE_H

@@ -76,6 +76,8 @@ class MeshType : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( MeshType )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_MESHTYPE_H

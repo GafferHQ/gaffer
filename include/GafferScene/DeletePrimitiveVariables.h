@@ -58,6 +58,8 @@ class DeletePrimitiveVariables : public PrimitiveVariableProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( DeletePrimitiveVariables )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H

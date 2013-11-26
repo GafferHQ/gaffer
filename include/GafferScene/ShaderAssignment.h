@@ -72,6 +72,8 @@ class ShaderAssignment : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( ShaderAssignment )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SHADERASSIGNMENT_H

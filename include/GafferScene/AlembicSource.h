@@ -75,6 +75,8 @@ class AlembicSource : public FileSource
 				
 };
 
+IE_CORE_DECLAREPTR( AlembicSource )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_ALEMBICSOURCE_H

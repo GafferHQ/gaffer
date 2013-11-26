@@ -70,6 +70,8 @@ class Cube : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( Cube )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_CUBE_H

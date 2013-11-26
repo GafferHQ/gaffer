@@ -79,6 +79,8 @@ class Isolate : public FilteredSceneProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( Isolate )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_ISOLATE_H

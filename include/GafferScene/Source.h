@@ -69,6 +69,8 @@ class Source : public SceneNode
 		
 };
 
+IE_CORE_DECLAREPTR( Source )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SOURCE_H

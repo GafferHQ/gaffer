@@ -78,6 +78,8 @@ class AttributeProcessor : public SceneElementProcessor
 	
 };
 
+IE_CORE_DECLAREPTR( AttributeProcessor )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_ATTRIBUTEPROCESSOR_H

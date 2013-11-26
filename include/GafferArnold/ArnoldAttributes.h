@@ -56,6 +56,8 @@ class ArnoldAttributes : public GafferScene::Attributes
 				
 };
 
+IE_CORE_DECLAREPTR( ArnoldAttributes )
+
 } // namespace GafferArnold
 
 #endif // GAFFERARNOLD_ARNOLDATTRIBUTES_H

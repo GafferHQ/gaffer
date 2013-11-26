@@ -67,6 +67,8 @@ class ArnoldLight : public GafferScene::Light
 
 };
 
+IE_CORE_DECLAREPTR( ArnoldLight )
+
 } // namespace GafferArnold
 
 #endif // GAFFERARNOLD_ARNOLDLIGHT_H

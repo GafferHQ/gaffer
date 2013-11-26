@@ -74,6 +74,8 @@ class Plane : public ObjectSource
 
 };
 
+IE_CORE_DECLAREPTR( Plane )
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_PLANE_H

@@ -71,6 +71,8 @@ class Options : public GlobalsProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( Options );
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_OPTIONS_H
