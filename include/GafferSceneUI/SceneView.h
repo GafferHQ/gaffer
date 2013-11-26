@@ -43,6 +43,7 @@
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/PathFilter.h"
 
 #include "GafferSceneUI/TypeIds.h"
 
@@ -81,6 +82,10 @@ class SceneView : public GafferUI::View3D
 		virtual Imath::Box3f framingBound() const;
 
 	private :
+	
+		// The filter for a preprocessing node used to hide things.
+		GafferScene::PathFilter *hideFilter();
+		const GafferScene::PathFilter *hideFilter() const;
 	
 		void selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget );
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );

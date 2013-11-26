@@ -50,6 +50,8 @@
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardOptions.h"
+#include "GafferScene/StandardAttributes.h"
+#include "GafferScene/PathFilter.h"
 
 #include "GafferSceneUI/SceneView.h"
 
@@ -133,16 +135,45 @@ SceneView::SceneView( const std::string &name )
 
 	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 	
-	// add a preprocessor which removes motion blur, because the opengl
-	// renderer doesn't support it.
+	//////////////////////////////////////////////////////////////////////////
+	// add a preprocessor which monkeys with the scene before it is displayed.
+	//////////////////////////////////////////////////////////////////////////
+
+	NodePtr preprocessor = new Node();
+	ScenePlugPtr preprocessorInput = new ScenePlug( "in" );
+	preprocessor->addChild( preprocessorInput );
 	
-	StandardOptionsPtr standardOptions = new StandardOptions();
+	// remove motion blur, because the opengl renderer doesn't support it.
+	
+	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
 	
-	setPreprocessor( standardOptions );
+	preprocessor->addChild( standardOptions );
+	standardOptions->inPlug()->setInput( preprocessorInput );
+	
+	// add a node for hiding things
+	
+	StandardAttributesPtr hide = new StandardAttributes( "hide" );
+	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "enabled" )->setValue( true );
+	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
+	
+	preprocessor->addChild( hide );
+	hide->inPlug()->setInput( standardOptions->outPlug() );
+
+	PathFilterPtr hideFilter = new PathFilter( "hideFilter" );
+	preprocessor->addChild( hideFilter );
+	hide->filterPlug()->setInput( hideFilter->matchPlug() );
+
+	// make the output for the preprocessor
+
+	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
+	preprocessor->addChild( preprocessorOutput );
+	preprocessorOutput->setInput( hide->outPlug() );
+	
+	setPreprocessor( preprocessor );
 }
 
 SceneView::~SceneView()
@@ -187,6 +218,16 @@ Gaffer::StringPlug *SceneView::lookThroughCameraPlug()
 const Gaffer::StringPlug *SceneView::lookThroughCameraPlug() const
 {
 	return lookThroughPlug()->getChild<StringPlug>( 1 );
+}
+
+GafferScene::PathFilter *SceneView::hideFilter()
+{
+	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
+}
+
+const GafferScene::PathFilter *SceneView::hideFilter() const
+{
+	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
 }
 
 void SceneView::contextChanged( const IECore::InternedString &name )
@@ -441,11 +482,11 @@ void SceneView::updateLookThrough()
 	const ScenePlug *scene = preprocessedInPlug<ScenePlug>();
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
 	
-	IECore::ConstCameraPtr constCamera;
-	ScenePlug::ScenePath cameraPath;
+	string cameraPathString;
+	IECore::CameraPtr camera;
 	if( lookThroughEnabledPlug()->getValue() )
 	{
-		string cameraPathString = lookThroughCameraPlug()->getValue();
+		cameraPathString = lookThroughCameraPlug()->getValue();
 		if( cameraPathString.empty() )
 		{
 			if( const StringData *cameraPathData = globals->member<StringData>( "render:camera" ) )
@@ -453,23 +494,50 @@ void SceneView::updateLookThrough()
 				cameraPathString = cameraPathData->readable();
 			}
 		}
+		
 		if( !cameraPathString.empty() )
 		{
+			ScenePlug::ScenePath cameraPath;
 			ScenePlug::stringToPath( cameraPathString, cameraPath );
-			constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
+			
+			try
+			{
+				ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
+				if( constCamera )
+				{
+					camera = constCamera->copy();
+					camera->setTransform( new MatrixTransform( scene->fullTransform( cameraPath ) ) );
+				}
+			}
+			catch( ... )
+			{
+				// if an invalid path has been entered for the camera, computation will fail.
+				// we can just ignore that and fall through to lock to the current camera instead.
+				cameraPathString = "";
+			}
+		}
+		
+		if( !camera )
+		{
+			// we couldn't find a render camera to lock to, but we can lock to the current
+			// camera instead.
+			camera = viewportGadget()->getCamera()->copy();
 		}
 	}
 	
-	if( constCamera )
+	if( camera )
 	{
-		IECore::CameraPtr camera = constCamera->copy();
-		camera->setTransform( new MatrixTransform( scene->fullTransform( cameraPath ) ) );
 		camera->parameters()["resolution"] = new V2iData( viewportGadget()->getViewport() );
 		viewportGadget()->setCamera( camera );
 		viewportGadget()->setCameraEditable( false );
+		
+		StringVectorDataPtr invisiblePaths = new StringVectorData();
+		invisiblePaths->writable().push_back( cameraPathString );
+		hideFilter()->pathsPlug()->setValue( invisiblePaths );
 	}
 	else
 	{
 		viewportGadget()->setCameraEditable( true );
+		hideFilter()->pathsPlug()->setToDefault();
 	}
 }
