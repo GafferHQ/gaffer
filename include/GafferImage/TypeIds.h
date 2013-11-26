@@ -80,6 +80,7 @@ enum TypeId
 	ImageTransformImplementationTypeId = 110784,
 	RemoveChannelsTypeId = 110785,
 	ColorProcessorTypeId = 110786,
+	ClampTypeId = 110787,
 
 	LastTypeId = 110849
 };
