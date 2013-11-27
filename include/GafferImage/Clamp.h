@@ -99,6 +99,8 @@ class Clamp : public ChannelDataProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( Clamp )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_CLAMP_H

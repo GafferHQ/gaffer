@@ -82,6 +82,8 @@ class ImageReader : public ImageNode
 		
 };
 
+IE_CORE_DECLAREPTR( ImageReader )
+
 } // namespace GafferImage
 
 #endif // GAFFERSCENE_IMAGEREADER_H

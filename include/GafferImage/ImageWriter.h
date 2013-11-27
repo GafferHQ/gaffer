@@ -96,6 +96,8 @@ class ImageWriter : public Gaffer::ExecutableNode
 		
 };
 
+IE_CORE_DECLAREPTR( ImageWriter )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_IMAGEWRITER_H

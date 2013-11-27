@@ -75,6 +75,8 @@ class ImageProcessor : public ImageNode
 					
 };
 
+IE_CORE_DECLAREPTR( ImageProcessor )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_IMAGEPROCESSOR_H

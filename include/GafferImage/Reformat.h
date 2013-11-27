@@ -93,6 +93,8 @@ class Reformat : public ImageProcessor
 		
 };
 
+IE_CORE_DECLAREPTR( Reformat )
+
 } // namespace GafferImage
 
 #endif // GAFFERSCENE_REFORMAT_H

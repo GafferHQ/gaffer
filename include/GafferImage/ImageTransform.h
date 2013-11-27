@@ -85,6 +85,8 @@ class ImageTransform : public GafferImage::ImageProcessor
 		static size_t g_firstPlugIndex;
 };
 
+IE_CORE_DECLAREPTR( ImageTransform )
+
 } // namespace GafferImage
 
 #endif // GAFFERSCENE_IMAGETRANSFORM_H
