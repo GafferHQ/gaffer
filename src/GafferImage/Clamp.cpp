@@ -213,10 +213,10 @@ void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug 
 {
 	int channelIndex = ChannelMaskPlug::channelIndex( channel );
 
-	const float minimum = minimumPlug()->getValue()[channelIndex];
-	const float maximum = maximumPlug()->getValue()[channelIndex];
-	const float minClampTo = minClampToPlug()->getValue()[channelIndex];
-	const float maxClampTo = maxClampToPlug()->getValue()[channelIndex];
+	const float minimum = minimumPlug()->getChild( channelIndex )->getValue();
+	const float maximum = maximumPlug()->getChild( channelIndex )->getValue();
+	const float minClampTo = minClampToPlug()->getChild( channelIndex )->getValue();
+	const float maxClampTo = maxClampToPlug()->getChild( channelIndex )->getValue();
 	const bool minimumEnabled = minimumEnabledPlug()->getValue();
 	const bool maximumEnabled = maximumEnabledPlug()->getValue();
 	const bool minClampToEnabled = minClampToEnabledPlug()->getValue();
