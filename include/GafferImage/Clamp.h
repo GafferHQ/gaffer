@@ -88,7 +88,7 @@ class Clamp : public ChannelDataProcessor
 	
 	protected :
 
-		virtual bool channelEnabled( const std::string &channel ) const;
+		virtual bool enabled() const;
 		
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;

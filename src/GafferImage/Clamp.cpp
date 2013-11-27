@@ -146,9 +146,9 @@ const Gaffer::BoolPlug *Clamp::maxClampToEnabledPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex+7 );
 }
 
-bool Clamp::channelEnabled( const std::string &channel ) const 
+bool Clamp::enabled() const
 {
-	if ( !ChannelDataProcessor::channelEnabled( channel ) )
+	if( !ChannelDataProcessor::enabled() )
 	{
 		return false;
 	}

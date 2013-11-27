@@ -136,8 +136,11 @@ class ClampTest( unittest.TestCase ) :
 		clamp["minimumEnabled"].setValue( False )
 		clamp["maximumEnabled"].setValue( False )
 
-		self.assertEqual(i['out'].image().hash(), clamp['out'].image().hash())
-
+		self.assertEqual( i["out"].imageHash(), clamp["out"].imageHash() )
+		self.assertEqual( i["out"]["format"].hash(), clamp["out"]["format"].hash() )
+		self.assertEqual( i["out"]["dataWindow"].hash(), clamp["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["channelNames"].hash(), clamp["out"]["channelNames"].hash() )
+		
 	def testEnableBehaviour( self ) :
 		
 		clamp = GafferImage.Clamp()
