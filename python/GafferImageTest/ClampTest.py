@@ -51,7 +51,7 @@ class ClampTest( unittest.TestCase ) :
 		
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
-		clamp["maximum"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )	
+		clamp["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
 
 		self.assertEqual(i['out'].image().hash(), clamp['out'].image().hash())
 
@@ -63,13 +63,13 @@ class ClampTest( unittest.TestCase ) :
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
 
-		clamp["maximum"].setValue( IECore.Color4f( 1., 1., 1., 1. ) )
+		clamp["max"].setValue( IECore.Color4f( 1., 1., 1., 1. ) )
 
 		redHash = clamp["out"].channelDataHash( "R", IECore.V2i( 0 ) )
 		greenHash = clamp["out"].channelDataHash( "G", IECore.V2i( 0 ) )
 		blueHash = clamp["out"].channelDataHash( "B", IECore.V2i( 0 ) )
 
-		clamp["maximum"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
+		clamp["max"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
 
 		redHash2 = clamp["out"].channelDataHash( "R", IECore.V2i( 0 ) )
 		greenHash2 = clamp["out"].channelDataHash( "G", IECore.V2i( 0 ) )
@@ -87,7 +87,7 @@ class ClampTest( unittest.TestCase ) :
 		clamp["in"].setInput( r["out"] )
 
 		cs = GafferTest.CapturingSlot( clamp.plugDirtiedSignal() )
-		clamp["maximum"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
+		clamp["max"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
 		
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
@@ -106,12 +106,12 @@ class ClampTest( unittest.TestCase ) :
 		
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
-		clamp["minimum"].setValue( IECore.Color4f( .0, .0, .0, .0 ) )
-		clamp["maximum"].setValue( IECore.Color4f( .0, .25, .25, .25 ) )	
+		clamp["min"].setValue( IECore.Color4f( .0, .0, .0, .0 ) )
+		clamp["max"].setValue( IECore.Color4f( .0, .25, .25, .25 ) )
 		clamp["minClampTo"].setValue( IECore.Color4f( .0, .0, .0, .0 ) )
 		clamp["maxClampTo"].setValue( IECore.Color4f( 1., .5, .25, 1. ) )
-		clamp["minimumEnabled"].setValue( True )
-		clamp["maximumEnabled"].setValue( True )
+		clamp["minEnabled"].setValue( True )
+		clamp["maxEnabled"].setValue( True )
 		clamp["minClampToEnabled"].setValue( False )
 		clamp["maxClampToEnabled"].setValue( True )
 
@@ -121,8 +121,8 @@ class ClampTest( unittest.TestCase ) :
 
 		clamp = GafferImage.Clamp()
 	
-		self.assertTrue( clamp['minimumEnabled'].getValue() )
-		self.assertTrue( clamp['maximumEnabled'].getValue() )
+		self.assertTrue( clamp['minEnabled'].getValue() )
+		self.assertTrue( clamp['maxEnabled'].getValue() )
 		self.assertFalse( clamp['minClampToEnabled'].getValue() )
 		self.assertFalse( clamp['maxClampToEnabled'].getValue() )
 
@@ -133,8 +133,8 @@ class ClampTest( unittest.TestCase ) :
 		
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
-		clamp["minimumEnabled"].setValue( False )
-		clamp["maximumEnabled"].setValue( False )
+		clamp["minEnabled"].setValue( False )
+		clamp["maxEnabled"].setValue( False )
 
 		self.assertEqual( i["out"].imageHash(), clamp["out"].imageHash() )
 		self.assertEqual( i["out"]["format"].hash(), clamp["out"]["format"].hash() )
@@ -149,7 +149,7 @@ class ClampTest( unittest.TestCase ) :
 		self.assertTrue( clamp.correspondingInput( clamp["out"] ).isSame( clamp["in"] ) )
 		self.assertEqual( clamp.correspondingInput( clamp["in"] ), None )
 		self.assertEqual( clamp.correspondingInput( clamp["enabled"] ), None )
-		self.assertEqual( clamp.correspondingInput( clamp["minimum"] ), None )
+		self.assertEqual( clamp.correspondingInput( clamp["min"] ), None )
 
 if __name__ == "__main__":
 	unittest.main()

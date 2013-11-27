@@ -65,19 +65,19 @@ class Clamp : public ChannelDataProcessor
 		/// Returns a pointer to the node's plugs.
 		//////////////////////////////////////////////////////////////
 		//@{	
-		Gaffer::Color4fPlug *minimumPlug();
-		const Gaffer::Color4fPlug *minimumPlug() const;
-		Gaffer::Color4fPlug *maximumPlug();
-		const Gaffer::Color4fPlug *maximumPlug() const;
+		Gaffer::Color4fPlug *minPlug();
+		const Gaffer::Color4fPlug *minPlug() const;
+		Gaffer::Color4fPlug *maxPlug();
+		const Gaffer::Color4fPlug *maxPlug() const;
 		Gaffer::Color4fPlug *minClampToPlug();
 		const Gaffer::Color4fPlug *minClampToPlug() const;
 		Gaffer::Color4fPlug *maxClampToPlug();
 		const Gaffer::Color4fPlug *maxClampToPlug() const;
 
-		Gaffer::BoolPlug *minimumEnabledPlug();
-		const Gaffer::BoolPlug *minimumEnabledPlug() const;
-		Gaffer::BoolPlug *maximumEnabledPlug();
-		const Gaffer::BoolPlug *maximumEnabledPlug() const;
+		Gaffer::BoolPlug *minEnabledPlug();
+		const Gaffer::BoolPlug *minEnabledPlug() const;
+		Gaffer::BoolPlug *maxEnabledPlug();
+		const Gaffer::BoolPlug *maxEnabledPlug() const;
 		Gaffer::BoolPlug *minClampToEnabledPlug();
 		const Gaffer::BoolPlug *minClampToEnabledPlug() const;
 		Gaffer::BoolPlug *maxClampToEnabledPlug();

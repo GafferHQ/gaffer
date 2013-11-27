@@ -51,13 +51,13 @@ Clamp::Clamp( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new Color4fPlug( "minimum", Plug::In, Imath::Color4f(0.f, 0.f, 0.f, 0.f) ) );
-	addChild( new Color4fPlug( "maximum", Plug::In, Imath::Color4f(1.f, 1.f, 1.f, 1.f) ) );
+	addChild( new Color4fPlug( "min", Plug::In, Imath::Color4f(0.f, 0.f, 0.f, 0.f) ) );
+	addChild( new Color4fPlug( "max", Plug::In, Imath::Color4f(1.f, 1.f, 1.f, 1.f) ) );
 	addChild( new Color4fPlug( "minClampTo", Plug::In, Imath::Color4f(0.f, 0.f, 0.f, 0.f) ) );
 	addChild( new Color4fPlug( "maxClampTo", Plug::In, Imath::Color4f(1.f, 1.f, 1.f, 1.f) ) );
 
-	addChild( new BoolPlug( "minimumEnabled", Plug::In, true ) );
-	addChild( new BoolPlug( "maximumEnabled", Plug::In, true ) );
+	addChild( new BoolPlug( "minEnabled", Plug::In, true ) );
+	addChild( new BoolPlug( "maxEnabled", Plug::In, true ) );
 	addChild( new BoolPlug( "minClampToEnabled", Plug::In, false ) );
 	addChild( new BoolPlug( "maxClampToEnabled", Plug::In, false ) );
 }
@@ -66,22 +66,22 @@ Clamp::~Clamp()
 {
 }
 
-Gaffer::Color4fPlug *Clamp::minimumPlug()
+Gaffer::Color4fPlug *Clamp::minPlug()
 {
 	return getChild<Color4fPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Color4fPlug *Clamp::minimumPlug() const
+const Gaffer::Color4fPlug *Clamp::minPlug() const
 {
 	return getChild<Color4fPlug>( g_firstPlugIndex );
 }
 
-Gaffer::Color4fPlug *Clamp::maximumPlug()
+Gaffer::Color4fPlug *Clamp::maxPlug()
 {
 	return getChild<Color4fPlug>( g_firstPlugIndex+1 );
 }
 
-const Gaffer::Color4fPlug *Clamp::maximumPlug() const
+const Gaffer::Color4fPlug *Clamp::maxPlug() const
 {
 	return getChild<Color4fPlug>( g_firstPlugIndex+1 );
 }
@@ -106,22 +106,22 @@ const Gaffer::Color4fPlug *Clamp::maxClampToPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex+3 );
 }
 
-Gaffer::BoolPlug *Clamp::minimumEnabledPlug()
+Gaffer::BoolPlug *Clamp::minEnabledPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex+4 );
 }
 
-const Gaffer::BoolPlug *Clamp::minimumEnabledPlug() const
+const Gaffer::BoolPlug *Clamp::minEnabledPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex+4 );
 }
 
-Gaffer::BoolPlug *Clamp::maximumEnabledPlug()
+Gaffer::BoolPlug *Clamp::maxEnabledPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex+5 );
 }
 
-const Gaffer::BoolPlug *Clamp::maximumEnabledPlug() const
+const Gaffer::BoolPlug *Clamp::maxEnabledPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex+5 );
 }
@@ -153,8 +153,8 @@ bool Clamp::enabled() const
 		return false;
 	}
 	
-	if (minimumEnabledPlug()->getValue() == false && 
-		maximumEnabledPlug()->getValue() == false )
+	if( minEnabledPlug()->getValue() == false &&
+	    maxEnabledPlug()->getValue() == false )
 	{
 		return false;
 	}
@@ -168,13 +168,13 @@ void Clamp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 	const Plug *inputParent = input->parent<Plug>();
 	if(
-		inputParent == minimumPlug() ||
-		inputParent == maximumPlug() ||
+		inputParent == minPlug() ||
+		inputParent == maxPlug() ||
 		inputParent == minClampToPlug() ||
 		inputParent == maxClampToPlug() ||
 		input == inPlug()->channelDataPlug() ||
-		input == minimumEnabledPlug() ||
-		input == maximumEnabledPlug() ||
+		input == minEnabledPlug() ||
+		input == maxEnabledPlug() ||
 		input == minClampToEnabledPlug() ||
 		input == maxClampToEnabledPlug()
 	)
@@ -192,13 +192,13 @@ void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
 	
-	minimumPlug()->getChild( channelIndex )->hash( h );
-	maximumPlug()->getChild( channelIndex )->hash( h );
+	minPlug()->getChild( channelIndex )->hash( h );
+	maxPlug()->getChild( channelIndex )->hash( h );
 	minClampToPlug()->getChild( channelIndex )->hash( h );
 	maxClampToPlug()->getChild( channelIndex )->hash( h );
 
-	minimumEnabledPlug()->hash( h );
-	maximumEnabledPlug()->hash( h );
+	minEnabledPlug()->hash( h );
+	maxEnabledPlug()->hash( h );
 	minClampToEnabledPlug()->hash( h );
 	maxClampToEnabledPlug()->hash( h );
 }
@@ -207,12 +207,12 @@ void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug 
 {
 	int channelIndex = ChannelMaskPlug::channelIndex( channel );
 
-	const float minimum = minimumPlug()->getChild( channelIndex )->getValue();
-	const float maximum = maximumPlug()->getChild( channelIndex )->getValue();
+	const float minimum = minPlug()->getChild( channelIndex )->getValue();
+	const float maximum = maxPlug()->getChild( channelIndex )->getValue();
 	const float minClampTo = minClampToPlug()->getChild( channelIndex )->getValue();
 	const float maxClampTo = maxClampToPlug()->getChild( channelIndex )->getValue();
-	const bool minimumEnabled = minimumEnabledPlug()->getValue();
-	const bool maximumEnabled = maximumEnabledPlug()->getValue();
+	const bool minimumEnabled = minEnabledPlug()->getValue();
+	const bool maximumEnabled = maxEnabledPlug()->getValue();
 	const bool minClampToEnabled = minClampToEnabledPlug()->getValue();
 	const bool maxClampToEnabled = maxClampToEnabledPlug()->getValue();
 
