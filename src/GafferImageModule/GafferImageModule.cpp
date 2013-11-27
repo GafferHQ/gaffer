@@ -55,6 +55,7 @@
 #include "GafferImageBindings/SamplerBinding.h"
 #include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
+#include "GafferImage/Clamp.h"
 #include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
 #include "GafferImage/Reformat.h"
@@ -119,6 +120,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Merge>();
 	GafferBindings::DependencyNodeClass<Grade>();
+	GafferBindings::DependencyNodeClass<Clamp>();
 	GafferBindings::DependencyNodeClass<Constant>();
 	GafferBindings::DependencyNodeClass<Select>();
 	GafferBindings::DependencyNodeClass<Reformat>();
