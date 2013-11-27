@@ -166,27 +166,21 @@ void Clamp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 {
 	ChannelDataProcessor::affects( input, outputs );
 
-	if ( minimumPlug()->isAncestorOf( input ) ||  
-		 maximumPlug()->isAncestorOf( input ) ||
-		 minClampToPlug()->isAncestorOf( input ) ||
-		 maxClampToPlug()->isAncestorOf( input )
-	  )
-	{
-		outputs.push_back( outPlug()->channelDataPlug() );	
-		return;
-	}
-
-	if( input == inPlug()->channelDataPlug() ||
+	const Plug *inputParent = input->parent<Plug>();
+	if(
+		inputParent == minimumPlug() ||
+		inputParent == maximumPlug() ||
+		inputParent == minClampToPlug() ||
+		inputParent == maxClampToPlug() ||
+		input == inPlug()->channelDataPlug() ||
 		input == minimumEnabledPlug() ||
 		input == maximumEnabledPlug() ||
 		input == minClampToEnabledPlug() ||
 		input == maxClampToEnabledPlug()
-	  )
+	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );	
-		return;
 	}
-
 }
 
 void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
