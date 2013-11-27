@@ -82,7 +82,7 @@ class Clamp : public ChannelDataProcessor
 		const Gaffer::BoolPlug *minClampToEnabledPlug() const;
 		Gaffer::BoolPlug *maxClampToEnabledPlug();
 		const Gaffer::BoolPlug *maxClampToEnabledPlug() const;
-        //@}
+		//@}
 		
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 	
