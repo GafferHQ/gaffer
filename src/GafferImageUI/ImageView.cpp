@@ -65,6 +65,7 @@
 #include "GafferImage/Grade.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageStats.h"
+#include "GafferImage/Clamp.h"
 
 #include "GafferImageUI/ImageView.h"
 
@@ -933,15 +934,28 @@ ImageView::ImageView( const std::string &name )
 	NodePtr preprocessor = new Node;
 	ImagePlugPtr preprocessorInput = new ImagePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
-	
+
 	ImageStatsPtr statsNode = new ImageStats( "__imageStats" );
 	addChild( statsNode ); /// \todo Store this in the preprocessor when we've disallowed the changing of it by subclasses
 	statsNode->inPlug()->setInput( preprocessorInput );
 	statsNode->channelsPlug()->setInput( preprocessorInput->channelNamesPlug() );
 	
+	ClampPtr clampNode = new Clamp();
+	preprocessor->setChild(  "__clipping", clampNode );
+	clampNode->inPlug()->setInput( preprocessorInput );
+	clampNode->minClampToEnabledPlug()->setValue( true );
+	clampNode->maxClampToEnabledPlug()->setValue( true );
+	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
+	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	
+	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
+	clippingPlug->setFlags( Plug::AcceptsInputs, false );
+	addChild( clippingPlug );
+	clampNode->enabledPlug()->setInput( clippingPlug );
+
 	GradePtr gradeNode = new Grade;
 	preprocessor->setChild( "__grade", gradeNode );
-	gradeNode->inPlug()->setInput( preprocessorInput );
+	gradeNode->inPlug()->setInput( clampNode->outPlug() );
 
 	FloatPlugPtr exposurePlug = new FloatPlug( "exposure" );
 	exposurePlug->setFlags( Plug::AcceptsInputs, false );
@@ -1007,6 +1021,16 @@ void ImageView::insertConverter( Gaffer::NodePtr converter )
 
 ImageView::~ImageView()
 {
+}
+
+Gaffer::BoolPlug *ImageView::clippingPlug()
+{
+	return getChild<BoolPlug>( "clipping" );
+}
+
+const Gaffer::BoolPlug *ImageView::clippingPlug() const
+{
+	return getChild<BoolPlug>( "clipping" );
 }
 
 Gaffer::FloatPlug *ImageView::exposurePlug()

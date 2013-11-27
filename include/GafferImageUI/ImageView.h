@@ -68,6 +68,9 @@ class ImageView : public GafferUI::View
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
 	
+		Gaffer::BoolPlug *clippingPlug();
+		const Gaffer::BoolPlug *clippingPlug() const;
+		
 		Gaffer::FloatPlug *exposurePlug();
 		const Gaffer::FloatPlug *exposurePlug() const;
 
