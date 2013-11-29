@@ -74,6 +74,7 @@
 #include "GafferScene/MapProjection.h"
 #include "GafferScene/MapOffset.h"
 #include "GafferScene/CustomOptions.h"
+#include "GafferScene/SceneSwitch.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -143,6 +144,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<MapProjection>();
 	GafferBindings::DependencyNodeClass<MapOffset>();
 	GafferBindings::DependencyNodeClass<CustomOptions>();
+	GafferBindings::DependencyNodeClass<SceneSwitch>();
 	
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )

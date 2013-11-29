@@ -85,6 +85,7 @@ from SceneReaderTest import SceneReaderTest
 from IsolateTest import IsolateTest
 from DeleteAttributesTest import DeleteAttributesTest
 from UnionFilterTest import UnionFilterTest
+from SceneSwitchTest import SceneSwitchTest
 
 if __name__ == "__main__":
 	import unittest

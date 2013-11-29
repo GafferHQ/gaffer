@@ -92,6 +92,14 @@ class SceneTimeWarpTest( unittest.TestCase ) :
 			if cc[0].isSame( n["out"] ) :
 				found = True		
 		self.failUnless( found )
+	
+	def testNoExtraInputs( self ) :
+	
+		p = GafferScene.Plane()
+		n = GafferScene.SceneTimeWarp()
+		n["in"].setInput( p["out"] )
+		
+		self.assertTrue( "in1" not in n )
 		
 if __name__ == "__main__":
 	unittest.main()

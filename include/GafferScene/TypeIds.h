@@ -105,6 +105,7 @@ enum TypeId
 	AttributeProcessorTypeId = 110560,
 	DeleteAttributesTypeId = 110561,
 	UnionFilterTypeId = 110562,
+	SceneSwitchTypeId = 110563,
 	
 	LastTypeId = 110650
 };

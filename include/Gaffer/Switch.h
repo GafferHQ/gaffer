@@ -37,6 +37,8 @@
 #ifndef GAFFER_SWITCH_H
 #define GAFFER_SWITCH_H
 
+#include "Gaffer/Behaviours/InputGenerator.h"
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -45,7 +47,7 @@ namespace Gaffer
 
 /// The Switch provides a generic base class to implement nodes which choose
 /// between many input branches, feeding only one of them to the output.
-/// The series of inputs branch are represented by plugs of the same type
+/// The series of input branches are represented by plugs of identical type
 /// and called "in", "in1", "in2" etc, and the output is a plug of the same
 /// type named "out".
 ///
@@ -99,8 +101,9 @@ class Switch : public BaseType
 		/// if plug is not meaningful to the switching process.
 		const Plug *oppositePlug( const Plug *plug, size_t inputIndex = 0 ) const;
 
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
+		boost::shared_ptr<Gaffer::Behaviours::InputGenerator<Plug> > m_inputGenerator;
 
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
 		static size_t g_firstPlugIndex;
 	
 };
