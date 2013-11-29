@@ -34,17 +34,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextVariables.inl"
-#include "GafferScene/SceneContextVariables.h"
+#include "Gaffer/ContextProcessor.inl"
+#include "GafferScene/SceneContextProcessor.h"
 
 using namespace GafferScene;
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextVariables, SceneContextVariablesTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextProcessor, SceneContextProcessorTypeId )
 
 }
 
 // explicit instantiation
-template class Gaffer::ContextVariables<SceneMixinBase>;
+template class Gaffer::ContextProcessor<SceneMixinBase>;

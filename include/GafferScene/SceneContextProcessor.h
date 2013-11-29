@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,17 +34,18 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ContextVariables.inl"
-#include "GafferScene/SceneContextVariables.h"
+#ifndef GAFFERSCENE_SCENECONTEXTPROCESSOR_H
+#define GAFFERSCENE_SCENECONTEXTPROCESSOR_H
 
-using namespace GafferScene;
+#include "Gaffer/ContextProcessor.h"
+#include "GafferScene/SceneMixinBase.h"
 
-namespace Gaffer
+namespace GafferScene
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextVariables, SceneContextVariablesTypeId )
+typedef Gaffer::ContextProcessor<SceneMixinBase> SceneContextProcessor;
+IE_CORE_DECLAREPTR( SceneContextProcessor )
 
-}
+} // namespace GafferScene
 
-// explicit instantiation
-template class Gaffer::ContextVariables<SceneMixinBase>;
+#endif // GAFFERSCENE_SCENECONTEXTPROCESSOR_H

@@ -106,7 +106,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<Group>();
-	GafferBindings::DependencyNodeClass<SceneContextProcessorBase>();
+	GafferBindings::DependencyNodeClass<SceneMixinBase>();
 	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
 	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();

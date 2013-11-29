@@ -38,13 +38,12 @@
 #define GAFFER_SCENETIMEWARP_H
 
 #include "Gaffer/TimeWarp.h"
-#include "GafferScene/SceneContextProcessorBase.h"
+#include "GafferScene/SceneMixinBase.h"
 
 namespace GafferScene
 {
 
-typedef Gaffer::ContextProcessor<SceneContextProcessorBase> SceneContextProcessor;
-typedef Gaffer::TimeWarp<SceneContextProcessorBase> SceneTimeWarp;
+typedef Gaffer::TimeWarp<SceneMixinBase> SceneTimeWarp;
 IE_CORE_DECLAREPTR( SceneTimeWarp )
 
 } // namespace GafferScene

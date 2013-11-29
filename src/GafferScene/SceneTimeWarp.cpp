@@ -42,11 +42,9 @@ using namespace GafferScene;
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextProcessor, SceneContextProcessorTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneTimeWarp, SceneTimeWarpTypeId )
 
 }
 
 // explicit instantiation
-template class Gaffer::ContextProcessor<SceneContextProcessorBase>;
-template class Gaffer::TimeWarp<SceneContextProcessorBase>;
+template class Gaffer::TimeWarp<SceneMixinBase>;
