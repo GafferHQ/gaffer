@@ -443,7 +443,7 @@ options.Add(
 options.Add(
 	"OIIO_LIB_SUFFIX",
 	"The suffix used when locating the OpenImageIO libraries.",
-	"-1",
+	"",
 )
 
 options.Add(
@@ -636,13 +636,8 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 	runCommand( "cd $OIIO_SRC_DIR && make clean && make THIRD_PARTY_TOOLS_HOME=$BUILD_DIR OCIO_PATH=$BUILD_DIR USE_OPENJPEG=0" )
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/macosx/* $BUILD_DIR" )
-		## \todo Come up with something better.
-		# move the library to a new name so it doesn't conflict with the libOpenImageIO that arnold uses.
-		# Ideally they'd both use the same one but currently Arnold is using a pre-version-1 version.
-		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.dylib $BUILD_DIR/lib/libOpenImageIO-1.dylib" )
 	else :
 		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/linux64/* $BUILD_DIR" )
-		runCommand( "mv $BUILD_DIR/lib/libOpenImageIO.so $BUILD_DIR/lib/libOpenImageIO-1.so" )
 
 if depEnv["BUILD_DEPENDENCY_LLVM"] :
 	# removing MACOSX_DEPLOYMENT_TARGET because it causes rpath link error
@@ -656,7 +651,7 @@ if depEnv["BUILD_DEPENDENCY_OSL"] :
 	oslPlatform = "macosx" if depEnv["PLATFORM"]=="darwin" else "linux64"
 	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/include/OSL $BUILD_DIR/include" )
 	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/lib/libosl* $BUILD_DIR/lib" )
-	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/bin/osl* $BUILD_DIR/bin" )
+	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/bin/* $BUILD_DIR/bin" )
 	runCommand( "mkdir -p $BUILD_DIR/shaders && cp $OSL_SRC_DIR/dist/" + oslPlatform + "/shaders/stdosl.h $BUILD_DIR/shaders" )
 	runCommand( "mkdir -p $BUILD_DIR/doc/osl && cd $OSL_SRC_DIR && cp dist/" + oslPlatform + "/doc/*.pdf $BUILD_DIR/doc/osl" )
 
