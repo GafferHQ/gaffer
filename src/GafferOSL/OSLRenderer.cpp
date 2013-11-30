@@ -630,7 +630,11 @@ static Color3f integrateClosure( const ClosureColor *closure )
 		switch( closure->type )
 		{
 			case ClosureColor::COMPONENT :
-				return Color3f( 1 ); // not the best integrator ever!
+#ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
+				return Color3f( static_cast<const ClosureComponent*>( closure )->w );
+#else
+				return Color3f( 1 );
+#endif
 			case ClosureColor::MUL :
 				return static_cast<const ClosureMul *>( closure )->weight * integrateClosure( static_cast<const ClosureMul *>( closure )->closure ) ;
 			case ClosureColor::ADD :
