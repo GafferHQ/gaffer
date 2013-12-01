@@ -245,6 +245,7 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 
 void Display::hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	portPlug()->hash( h );
 	updateCountPlug()->hash( h );
 }
 
