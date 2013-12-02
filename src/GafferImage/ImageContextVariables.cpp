@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,61 +34,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#include "Gaffer/ContextVariables.inl"
+#include "GafferImage/ImageContextVariables.h"
 
-namespace GafferImage
+using namespace GafferImage;
+
+namespace Gaffer
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatDataTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772,
-	BoxFilterTypeId = 110773,
-	BilinearFilterTypeId = 110774,
-	SplineFilterTypeId = 110775,
-	BSplineFilterTypeId = 110776,
-	HermiteFilterTypeId = 110777,
-	CubicFilterTypeId = 110778,
-	MitchellFilterTypeId = 110779,
-	CatmullRomFilterTypeId = 110780,
-	SincFilterTypeId = 110781,
-	LanczosFilterTypeId = 110782,
-	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
-	RemoveChannelsTypeId = 110785,
-	ColorProcessorTypeId = 110786,
-	ClampTypeId = 110787,
-	ImageMixinBaseTypeId = 110788,
-	ImageContextProcessorTypeId = 110789,
-	ImageTimeWarpTypeId = 110790,
-	ImageContextVariablesTypeId = 110791,
-	ImageSwitchTypeId = 110792,
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageContextVariables, ImageContextVariablesTypeId )
 
-	LastTypeId = 110849
-};
+}
 
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H
+// explicit instantiation
+template class Gaffer::ContextVariables<ImageMixinBase>;
