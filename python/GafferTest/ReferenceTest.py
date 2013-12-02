@@ -241,13 +241,14 @@ class ReferenceTest( unittest.TestCase ) :
 		self.assertEqual( s3["r"]["user"]["n2_op2"].getValue(), 123 )
 		self.assertTrue( s3["r"]["in"].getInput().isSame( s3["a"]["sum"] ) )
 	
-	def testReferencesDontGetCustomPlugsFromBoxes( self ) :
+	def testReferenceExportCustomPlugsFromBoxes( self ) :
 	
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferTest.AddNode()
 		
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 		b["myCustomPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		b["__invisiblePlugThatShouldntGetExported"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		b.exportForReference( "/tmp/test.grf" )
 		
@@ -255,7 +256,8 @@ class ReferenceTest( unittest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( "/tmp/test.grf" )
 		
-		self.assertTrue( "myCustomPlug" not in s2["r"] )
+		self.assertTrue( "myCustomPlug" in s2["r"] )
+		self.assertTrue( "__invisiblePlugThatShouldntGetExported" not in s2["r"] )
 		
 	def tearDown( self ) :
 	
