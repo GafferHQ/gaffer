@@ -97,9 +97,22 @@ options.Add(
 )
 
 options.Add(
+	"DEPENDENCIES_INSTALL_DIR",
+	"The destination directory for a separate installation of only the dependencies.",
+	"./install/gafferDependencies-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
+)
+
+options.Add(
 	"PACKAGE_FILE",
 	"The file in which the final gaffer file will be created by the package target.",
 	"${INSTALL_DIR}.tar.gz",
+)
+
+options.Add(
+	"DEPENDENCIES_PACKAGE_FILE",
+	"The file created by the dependenciesPackage target. This can be used to package prebuilt dependencies "
+	"to create a good starting point for another build.",
+	"${DEPENDENCIES_INSTALL_DIR}.tar.gz",
 )
 
 options.Add( 
@@ -1350,20 +1363,14 @@ docEnv.Alias( "build", docInstall )
 # Installation
 #########################################################################################################
 
-manifest = [
+dependenciesManifest = [
 
-	"bin/gaffer",
-	"bin/gaffer.py",
 	"bin/python",
 	"bin/python*[0-9]", # get the versioned python binaries, but not python-config etc
-	
+
 	"bin/maketx",
 	"bin/oslc",
 	"bin/oslinfo",
-	
-	"LICENSE",
-
-	"apps/*/*-1.py",
 
 	"lib/libboost_signals" + boostLibSuffix + "$SHLIBSUFFIX*",
 	"lib/libboost_thread" + boostLibSuffix + "$SHLIBSUFFIX*",
@@ -1377,7 +1384,6 @@ manifest = [
 	"lib/libboost_chrono" + boostLibSuffix + "$SHLIBSUFFIX*",
 
 	"lib/libIECore*$SHLIBSUFFIX",
-	"lib/libGaffer*$SHLIBSUFFIX",
 	
 	"lib/libIex*$SHLIBSUFFIX*",
 	"lib/libHalf*$SHLIBSUFFIX*",
@@ -1414,8 +1420,6 @@ manifest = [
 	"lib/QtCore.framework",
 	"lib/QtGui.framework",
 	"lib/QtOpenGL.framework",
-	
-	"startup/*/*.py",
 
 	"fonts",
 	"ops",
@@ -1425,17 +1429,15 @@ manifest = [
 
 	"openColorIO",
 
-	"graphics/*.png",
 	"glsl/IECoreGL",
 	"glsl/*.frag",
 	"glsl/*.vert",
+
 	"doc/licenses",
-	"doc/gaffer/html",
 	"doc/cortex/html",
 	"doc/osl*",
 
 	"python/IECore*",
-	"python/Gaffer*",
 	"python/PySide/*.py",
 	"python/PySide/QtCore.so",
 	"python/PySide/QtGui.so",
@@ -1446,7 +1448,6 @@ manifest = [
 	"python/PyOpenColorIO*",
 
 	"include/IECore*",
-	"include/Gaffer*",
 	"include/boost",
 	"include/GL",
 	"include/OpenEXR",
@@ -1455,7 +1456,30 @@ manifest = [
 	
 	"renderMan",
 	"arnold",
+
+]
+
+gafferManifest = dependenciesManifest + [
+
+	"bin/gaffer",
+	"bin/gaffer.py",
 	
+	"LICENSE",
+
+	"apps/*/*-1.py",
+
+	"lib/libGaffer*$SHLIBSUFFIX",
+		
+	"startup/*/*.py",
+
+	"graphics/*.png",
+
+	"doc/gaffer/html",
+
+	"python/Gaffer*",
+
+	"include/Gaffer*",
+		
 ]
 
 def installer( target, source, env ) :
@@ -1484,14 +1508,14 @@ def installer( target, source, env ) :
 					else:
 						shutil.copy2( srcName, dstName )
 	
-	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in manifest ] ) )	
+	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in env["MANIFEST"] ] ) )
 	copyTree( str( source[0] ), str( target[0] ), regex )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 	
 	# if the packaging will make a disk image, then build an os x app bundle
 
-	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer )
+	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer, MANIFEST=gafferManifest )
 	env.AlwaysBuild( install )
 	env.NoCache( install )
 	env.Alias( "install", install )
@@ -1504,11 +1528,16 @@ if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 	
 else :
 
-	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
+	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer, MANIFEST=gafferManifest )
 	env.AlwaysBuild( install )
 	env.NoCache( install )
 
 	env.Alias( "install", install )
+
+dependenciesInstall = env.Command( "$DEPENDENCIES_INSTALL_DIR", "$BUILD_DIR", installer, MANIFEST=dependenciesManifest )
+env.AlwaysBuild( dependenciesInstall )
+env.NoCache( dependenciesInstall )
+env.Alias( "dependenciesInstall", dependenciesInstall )
 
 #########################################################################################################
 # Packaging
@@ -1529,3 +1558,7 @@ def packager( target, source, env ) :
 package = env.Command( "$PACKAGE_FILE", "$INSTALL_DIR", packager )
 env.NoCache( package )
 env.Alias( "package", package )
+
+dependenciesPackage = env.Command( "$DEPENDENCIES_PACKAGE_FILE", "$DEPENDENCIES_INSTALL_DIR", packager )
+env.NoCache( dependenciesPackage )
+env.Alias( "dependenciesPackage", dependenciesPackage )
