@@ -135,7 +135,7 @@ options.Add(
 options.Add(
 	"BOOST_SRC_DIR",
 	"The location of the boost source to be used if BUILD_DEPENDENCY_BOOST is specified.",
-	"$DEPENDENCIES_SRC_DIR/boost_1_43_0",
+	"$DEPENDENCIES_SRC_DIR/boost_1_51_0",
 )
 
 options.Add(
@@ -590,6 +590,9 @@ env["PYTHON_LINK_FLAGS"] = pythonLinkFlags
 depEnv["PYTHON_VERSION"] = pythonVersion
 env["PYTHON_VERSION"] = pythonVersion
 
+if depEnv["BUILD_DEPENDENCY_BOOST"] :
+	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam -d+2 variant=release link=shared threading=multi install" )
+
 if depEnv["BUILD_DEPENDENCY_JPEG"] :
 	runCommand( "cd $JPEG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 
@@ -602,9 +605,6 @@ if depEnv["BUILD_DEPENDENCY_PNG"] :
 if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 			
-if depEnv["BUILD_DEPENDENCY_BOOST"] :
-	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam linkflags=-L$BUILD_DIR/lib -d+2 variant=release link=shared threading=multi install" )
-
 if depEnv["BUILD_DEPENDENCY_TBB"] :
 	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
 	if depEnv["PLATFORM"]=="darwin" :
@@ -645,8 +645,6 @@ if depEnv["BUILD_DEPENDENCY_LLVM"] :
 	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env MACOSX_DEPLOYMENT_TARGET="" REQUIRES_RTTI=1 make VERBOSE=1 -j 4 && make install" )
 
 if depEnv["BUILD_DEPENDENCY_OSL"] :
-	# OPENIMAGEIO_NAMESPACE
-	# had to edit src/cmake/oiio.cmake to give libOpenImageIO-1 as the name for the OIIO library
 	runCommand( "cd $OSL_SRC_DIR && make nuke && make MY_CMAKE_FLAGS='-DENABLERTTI=1' ILMBASE_HOME=$BUILD_DIR OPENIMAGEIOHOME=$BUILD_DIR LLVM_DIRECTORY=$BUILD_DIR VERBOSE=1 USE_BOOST_WAVE=1" )
 	oslPlatform = "macosx" if depEnv["PLATFORM"]=="darwin" else "linux64"
 	runCommand( "cd $OSL_SRC_DIR && cp -r dist/" +  oslPlatform + "/include/OSL $BUILD_DIR/include" )
@@ -1376,6 +1374,7 @@ manifest = [
 	"lib/libboost_filesystem" + boostLibSuffix + "$SHLIBSUFFIX*",
 	"lib/libboost_iostreams" + boostLibSuffix + "$SHLIBSUFFIX*",
 	"lib/libboost_system" + boostLibSuffix + "$SHLIBSUFFIX*",
+	"lib/libboost_chrono" + boostLibSuffix + "$SHLIBSUFFIX*",
 
 	"lib/libIECore*$SHLIBSUFFIX",
 	"lib/libGaffer*$SHLIBSUFFIX",
