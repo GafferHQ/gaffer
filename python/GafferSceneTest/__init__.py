@@ -86,6 +86,7 @@ from IsolateTest import IsolateTest
 from DeleteAttributesTest import DeleteAttributesTest
 from UnionFilterTest import UnionFilterTest
 from SceneSwitchTest import SceneSwitchTest
+from ShaderSwitchTest import ShaderSwitchTest
 
 if __name__ == "__main__":
 	import unittest

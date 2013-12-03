@@ -34,35 +34,30 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_SHADERSWITCH_H
+#define GAFFERSCENE_SHADERSWITCH_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/Switch.h"
 
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
+#include "GafferScene/TypeIds.h"
 
-#include "GafferSceneBindings/ShaderBinding.h"
-
-using namespace boost::python;
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-static IECore::ObjectVectorPtr state( const Shader &s )
-{
-	return s.state()->copy();
-}
-
-void GafferSceneBindings::bindShader()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
-	;
+class ShaderSwitch : public Gaffer::SwitchDependencyNode
+{
 
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
+	public :
 
-}
+		ShaderSwitch( const std::string &name=defaultName<ShaderSwitch>() );
+		virtual ~ShaderSwitch();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderSwitch, ShaderSwitchTypeId, Gaffer::SwitchDependencyNode );
+		
+};
+
+IE_CORE_DECLAREPTR( ShaderSwitch )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SHADERSWITCH_H

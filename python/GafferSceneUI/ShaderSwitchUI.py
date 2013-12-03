@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,37 +34,19 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import GafferUI
+import GafferScene
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
+GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch.staticTypeId(), "enabled", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch.staticTypeId(), "index", lambda plug : None )
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "enabled", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "in[0-9]*", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "out", None )
+
+def __nodeGadgetCreator( node ) :
+
+	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
+
+GafferUI.NodeGadget.registerNodeGadget( GafferScene.ShaderSwitch.staticTypeId(), __nodeGadgetCreator )
