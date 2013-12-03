@@ -71,10 +71,12 @@ Switch<BaseType>::Switch( const std::string &name )
 	}
 	else
 	{
-		// our BaseType doesn't provide an "in" plug - we'll make our InputGenerator
-		// when one gets added following construction.
-		BaseType::childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
+		// our BaseType doesn't provide an "in" plug - not to worry though, we'll make
+		// our InputGenerator when an "in" plug gets added following construction.
 	}
+	
+	BaseType::childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
+	BaseType::plugSetSignal().connect( boost::bind( &Switch::plugSet, this, ::_1 ) );
 }
 
 template<typename BaseType>
@@ -155,14 +157,14 @@ void Switch<BaseType>::childAdded( GraphComponent *child )
 	if( child->getName() == "in" )
 	{
 		PlugPtr in = IECore::runTimeCast<Plug>( child );
-		if( in )
+		if( in && !m_inputGenerator )
 		{
 			m_inputGenerator = boost::shared_ptr<Gaffer::Behaviours::InputGenerator<Plug> >(
 				new Gaffer::Behaviours::InputGenerator<Plug>( this, in )
 			);
-			BaseType::childAddedSignal().disconnect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 		}
 	}
+	updateInternalConnection();
 }
 
 template<typename BaseType>
@@ -176,9 +178,39 @@ const Plug *Switch<BaseType>::correspondingInput( const Plug *output ) const
 {
 	return oppositePlug( output, 0 );
 }
-		
+
+template<typename BaseType>
+bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !BaseType::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( !isInstanceOf( ComputeNode::staticTypeId() ) && ( plug == enabledPlug() || plug == indexPlug() ) )
+	{
+		// we're not a compute node, so we have to implement the switching by making an internal connection
+		// from an input to the output. this means the index must be a constant value, which means that it
+		// cannot be the output of a ComputeNode, which could vary according to the Context.
+		inputPlug = inputPlug->source<Plug>();
+		if( inputPlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( inputPlug->node() ) )
+		{
+			return false;
+		}
+	}
+	
+	return true;
+}
+
 template<typename BaseType>
 void Switch<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{	
+	hashInternal<BaseType>( output, context, h );
+}
+
+template<typename BaseType>
+template<typename T>
+void Switch<BaseType>::hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
 {
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex() ) ) )
 	{
@@ -190,7 +222,23 @@ void Switch<BaseType>::hash( const ValuePlug *output, const Context *context, IE
 }
 
 template<typename BaseType>
+template<typename T>
+void Switch<BaseType>::hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
+{
+	// not a ComputeNode - no need for hashing
+}
+
+template<typename BaseType>
 void Switch<BaseType>::compute( ValuePlug *output, const Context *context ) const
+{
+	// defer to computeInternal(), which is implemented appropriately for
+	// ComputeNode and DependencyNode types.
+	computeInternal<BaseType>( output, context );
+}
+
+template<typename BaseType>
+template<typename T>
+void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
 {
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex() ) ) )
 	{
@@ -202,11 +250,24 @@ void Switch<BaseType>::compute( ValuePlug *output, const Context *context ) cons
 }
 
 template<typename BaseType>
+template<typename T>
+void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
+{
+	// not a ComputeNode - no need for computation
+}
+
+template<typename BaseType>
+void Switch<BaseType>::plugSet( Plug *plug )
+{
+	updateInternalConnection();
+}
+
+template<typename BaseType>
 size_t Switch<BaseType>::inputIndex() const
 {
-	if( enabledPlug()->getValue() )
+	if( enabledPlug()->getValue() && m_inputGenerator->inputs().size() > 1 )
 	{
-		return indexPlug()->getValue();	
+		return indexPlug()->getValue() % (m_inputGenerator->inputs().size() - 1);
 	}
 	else
 	{
@@ -246,16 +307,7 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 	const Plug *oppositeAncestorPlug = NULL;
 	if( plug->direction() == Plug::Out )
 	{
-		size_t remappedIndex = inputIndex;
-		if( m_inputGenerator->inputs().size() > 1 )
-		{
-			remappedIndex = remappedIndex % (m_inputGenerator->inputs().size() - 1);
-		}
-		else
-		{
-			remappedIndex = 0;
-		}
-		oppositeAncestorPlug = m_inputGenerator->inputs()[remappedIndex];
+		oppositeAncestorPlug = m_inputGenerator->inputs()[inputIndex];
 	}
 	else
 	{
@@ -279,6 +331,27 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 	}
 	
 	return result;
+}
+
+template<typename BaseType>
+void Switch<BaseType>::updateInternalConnection()
+{
+	if( isInstanceOf( ComputeNode::staticTypeId() ) )
+	{
+		// we don't need to make internal connections, because we'll deal with
+		// the switching in hash() and compute().
+		/// \todo Investigate whether or not it might be an optimisation to
+		/// make an internal connection here if we know that our input index
+		/// is constant.
+		return;
+	}
+	
+	Plug *out = BaseType::template getChild<Plug>( "out" );
+	if( out )
+	{
+		Plug *in = const_cast<Plug *>( oppositePlug( out, inputIndex() ) );
+		out->setInput( in );
+	}
 }
 
 } // namespace Gaffer

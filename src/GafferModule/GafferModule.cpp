@@ -137,6 +137,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<ContextProcessorComputeNode>();
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();
+	DependencyNodeClass<SwitchDependencyNode>();
 	DependencyNodeClass<SwitchComputeNode>();
 
 	object behavioursModule( borrowed( PyImport_AddModule( "Gaffer.Behaviours" ) ) );

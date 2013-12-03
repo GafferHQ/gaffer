@@ -215,6 +215,81 @@ class SwitchTest( GafferTest.TestCase ) :
 		script2["s"]["index"].setValue( 1 )
 		self.assertEqual( script2["s"]["out"].getValue(), 2 )
 	
+	def testIndexExpression( self ) :
+	
+		script = Gaffer.ScriptNode()
+		script["s"] = self.intSwitch()
+		script["a1"] = GafferTest.AddNode()
+		script["a2"] = GafferTest.AddNode()
+		script["a1"]["op1"].setValue( 1 )
+		script["a2"]["op2"].setValue( 2 )
+		script["s"]["in"].setInput( script["a1"]["sum"] )
+		script["s"]["in1"].setInput( script["a2"]["sum"] )
+		
+		script["expression"] = Gaffer.Expression()
+		script["expression"]["engine"].setValue( "python" )
+		script["expression"]["expression"].setValue( 'parent["s"]["index"] = int( context.getFrame() )' )
+		
+		with script.context() :
+			script.context().setFrame( 0 )
+			self.assertEqual( script["s"]["out"].getValue(), 1 )
+			script.context().setFrame( 1 )
+			self.assertEqual( script["s"]["out"].getValue(), 2 )
+	
+	def testDependencyNodeSwitch( self ) :
+	
+		n = Gaffer.SwitchDependencyNode()
+		n["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
+	
+		self.assertTrue( n["out"].source().isSame( n["in"] ) )
+		
+		input0 = Gaffer.Plug()
+		input1 = Gaffer.Plug()
+		input2 = Gaffer.Plug()
+		
+		n["in"].setInput( input0 )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+	
+		n["in1"].setInput( input1 )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+	
+		n["index"].setValue( 1 )
+		self.assertTrue( n["out"].source().isSame( input1 ) )
+	
+		n["enabled"].setValue( False )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+	
+		n["in2"].setInput( input2 )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+	
+		n["enabled"].setValue( True )
+		self.assertTrue( n["out"].source().isSame( input1 ) )
+	
+		n["index"].setValue( 2 )
+		self.assertTrue( n["out"].source().isSame( input2 ) )
+	
+	def testIndexInputAcceptance( self ) :
+	
+		cs = Gaffer.SwitchComputeNode()
+		ds = Gaffer.SwitchDependencyNode()
+		
+		a = GafferTest.AddNode()
+		a["boolInput"] = Gaffer.BoolPlug()
+		a["boolOutput"] = Gaffer.BoolPlug( direction=Gaffer.Plug.Direction.Out )
+		
+		self.assertTrue( cs["index"].acceptsInput( a["op1"] ) )
+		self.assertTrue( cs["index"].acceptsInput( a["sum"] ) )
+
+		self.assertTrue( ds["index"].acceptsInput( a["op1"] ) )
+		self.assertFalse( ds["index"].acceptsInput( a["sum"] ) )
+		
+		self.assertTrue( cs["enabled"].acceptsInput( a["boolInput"] ) )
+		self.assertTrue( cs["enabled"].acceptsInput( a["boolOutput"] ) )
+
+		self.assertTrue( ds["enabled"].acceptsInput( a["boolInput"] ) )
+		self.assertFalse( ds["enabled"].acceptsInput( a["boolOutput"] ) )
+	
 	def setUp( self ) :
 	
 		GafferTest.TestCase.setUp( self )

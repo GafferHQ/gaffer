@@ -115,6 +115,7 @@ enum TypeId
 	ArrayPlugTypeId = 110068,
 	BackdropTypeId = 110069,
 	SwitchComputeNodeTypeId = 110070,
+	SwitchDependencyNodeTypeId = 110071,
 	LastTypeId = 110200,
 	
 };

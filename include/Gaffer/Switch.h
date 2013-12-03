@@ -37,6 +37,8 @@
 #ifndef GAFFER_SWITCH_H
 #define GAFFER_SWITCH_H
 
+#include "boost/utility/enable_if.hpp"
+
 #include "Gaffer/Behaviours/InputGenerator.h"
 
 #include "Gaffer/ComputeNode.h"
@@ -88,19 +90,42 @@ class Switch : public BaseType
 		
 	protected :
 		
-		/// The hash() and compute() methods are implemented to pass through the results from
-		/// the input branch specified by indexPlug().
+		// Implemented to reject ComputeNode inputs to "index" and "enabled" if we ourselves
+		// are not a ComputeNode.
+		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
+
+		// The hash() and compute() methods are implemented to pass through the results from
+		// the input branch specified by indexPlug(). They operate via the hashInternal() and
+		// computeInternal() methods, which are specialised for the cases where we do and do
+		// not inherit from ComputeNode.
 		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( ValuePlug *output, const Context *context ) const;
 				
 	private :
 	
+		// The internal implementation for hash(). Does nothing when BaseType is not a ComputeNode,
+		// and passes through the hash from the appropriate input when it is.
+		template<typename T>
+		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		template<typename T>
+		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		
+		// The internal implementation for compute(). Does nothing when BaseType is not a ComputeNode,
+		// and passes through the value from the appropriate input when it is.
+		template<typename T>
+		void computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		template<typename T>
+		void computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		
 		void childAdded( GraphComponent *child );
+		void plugSet( Plug *plug );
 		size_t inputIndex() const;
-		/// Returns the input corresponding to the output and vice versa. Returns NULL
-		/// if plug is not meaningful to the switching process.
+		// Returns the input corresponding to the output and vice versa. Returns NULL
+		// if plug is not meaningful to the switching process.
 		const Plug *oppositePlug( const Plug *plug, size_t inputIndex = 0 ) const;
-
+		
+		void updateInternalConnection();
+		
 		boost::shared_ptr<Gaffer::Behaviours::InputGenerator<Plug> > m_inputGenerator;
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
@@ -108,7 +133,10 @@ class Switch : public BaseType
 	
 };
 
+typedef Switch<DependencyNode> SwitchDependencyNode;
 typedef Switch<ComputeNode> SwitchComputeNode;
+
+IE_CORE_DECLAREPTR( SwitchDependencyNode );
 IE_CORE_DECLAREPTR( SwitchComputeNode );
 
 } // namespace Gaffer

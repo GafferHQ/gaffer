@@ -39,9 +39,11 @@
 namespace Gaffer
 {
 
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SwitchDependencyNode, SwitchDependencyNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SwitchComputeNode, SwitchComputeNodeTypeId )
 
 }
 
 // explicit instantiation
+template class Gaffer::Switch<Gaffer::DependencyNode>;
 template class Gaffer::Switch<Gaffer::ComputeNode>;
