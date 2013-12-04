@@ -115,13 +115,13 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntPlug> > IntPlugIte
 typedef FilteredChildIterator<PlugPredicate<Plug::In, IntPlug> > InputIntPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, IntPlug> > OutputIntPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug> > RecursiveFloatPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, FloatPlug> > RecursiveInputFloatPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug> > RecursiveOutputFloatPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, PlugPredicate<> > RecursiveFloatPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, FloatPlug>, PlugPredicate<> > RecursiveInputFloatPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, PlugPredicate<> > RecursiveOutputFloatPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, IntPlug> > RecursiveIntPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, IntPlug> > RecursiveInputIntPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, IntPlug> > RecursiveOutputIntPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, IntPlug>, PlugPredicate<> > RecursiveIntPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, IntPlug>, PlugPredicate<> > RecursiveInputIntPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, IntPlug>, PlugPredicate<> > RecursiveOutputIntPlugIterator;
 
 } // namespace Gaffer
 

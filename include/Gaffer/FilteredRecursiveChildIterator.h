@@ -38,44 +38,50 @@
 #ifndef GAFFER_FILTEREDRECURSIVECHILDITERATOR_H
 #define GAFFER_FILTEREDRECURSIVECHILDITERATOR_H
 
-#include "boost/iterator/filter_iterator.hpp"
+#include "boost/iterator/iterator_adaptor.hpp"
 
 #include "Gaffer/RecursiveChildIterator.h"
 
 namespace Gaffer
 {
 
-template<typename Predicate>
-class FilteredRecursiveChildIterator : public boost::filter_iterator<Predicate, RecursiveChildIterator>
+template<typename Predicate, typename RecursionPredicate=TypePredicate<GraphComponent> >
+class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRecursiveChildIterator<Predicate, RecursionPredicate>, RecursiveChildIterator, const typename Predicate::ChildType::Ptr>
 {
 
 	public :
 
 		typedef typename Predicate::ChildType ChildType;
-		typedef boost::filter_iterator<Predicate, RecursiveChildIterator> BaseIterator;
-
-		typedef const typename ChildType::Ptr &reference;
-		typedef const typename ChildType::Ptr *pointer;
+		typedef boost::iterator_adaptor<FilteredRecursiveChildIterator<Predicate, RecursionPredicate>, RecursiveChildIterator, const typename Predicate::ChildType::Ptr> BaseIterator;
 
 		FilteredRecursiveChildIterator()
-			:	BaseIterator()
+			:	BaseIterator(),
+				m_predicate( Predicate() ),
+				m_recursionPredicate( RecursionPredicate() ),
+				m_end( RecursiveChildIterator() )
 		{
 		}
 
 		FilteredRecursiveChildIterator( const GraphComponent *parent )
 			:	BaseIterator(
-					RecursiveChildIterator( parent ),
-					RecursiveChildIterator( parent, parent->children().end() )
-				)
+					RecursiveChildIterator( parent )
+				),
+				m_predicate( Predicate() ),
+				m_recursionPredicate( RecursionPredicate() ),
+				m_end( RecursiveChildIterator( parent, parent->children().end() ) )
 		{
+			satisfyPredicate();
 		}
 
 		FilteredRecursiveChildIterator( const GraphComponent *parent, const GraphComponent::ChildIterator &it )
 			:	BaseIterator(
-					RecursiveChildIterator( parent, it ),
-					RecursiveChildIterator( parent, parent->children().end() )
-				)
+					RecursiveChildIterator( parent, it )
+				),
+				m_predicate( Predicate() ),
+				m_recursionPredicate( RecursionPredicate() ),
+				m_end( RecursiveChildIterator( parent, parent->children().end() ) )
 		{
+			satisfyPredicate();
 		}
 
 		bool operator==( const RecursiveChildIterator &rhs ) const
@@ -87,31 +93,6 @@ class FilteredRecursiveChildIterator : public boost::filter_iterator<Predicate, 
 		{
 			return BaseIterator::base()!=( rhs );
 		}
-
-		reference operator*() const
-		{
-			// cast should be safe as predicate has checked type, and the layout of
-			// a GraphComponentPtr and any other intrusive pointer should be the same.
-			return reinterpret_cast<reference>( BaseIterator::operator*() );
-		}
-
-		pointer operator->() const
-		{
-			return reinterpret_cast<pointer>( BaseIterator::operator->() );
-		}
-
-		FilteredRecursiveChildIterator &operator++()
-		{
-			BaseIterator::operator++();
-			return *this;
-		}
-
-		FilteredRecursiveChildIterator operator++( int )
-		{
-			FilteredRecursiveChildIterator r( *this );
-			BaseIterator::operator++();
-			return r;
-		}
 		
 		/// Calling prune() causes the next increment to skip any recursion
 		/// that it would normally perform.
@@ -119,6 +100,48 @@ class FilteredRecursiveChildIterator : public boost::filter_iterator<Predicate, 
 		{
 			const_cast<RecursiveChildIterator &>( BaseIterator::base() ).prune();
 		}
+	
+		RecursiveChildIterator end()
+		{
+			return m_end;
+		}
+	
+	private :
+	
+		friend class boost::iterator_core_access;
+
+		typename BaseIterator::reference dereference() const
+		{
+			// cast should be safe as predicate has checked type, and the layout of
+			// a GraphComponentPtr and any other intrusive pointer should be the same.
+			return reinterpret_cast<typename BaseIterator::reference>( *BaseIterator::base() );
+		}
+    
+		void increment()
+		{
+			if( !m_recursionPredicate( *BaseIterator::base() ) )
+			{
+				prune();
+			}
+			++( BaseIterator::base_reference() );
+			satisfyPredicate();
+		}
+
+		void satisfyPredicate()
+		{
+			while( BaseIterator::base() != m_end && !m_predicate( *BaseIterator::base() ) )
+			{
+				if( !m_recursionPredicate( *BaseIterator::base() ) )
+				{
+					prune();
+				}
+				++( BaseIterator::base_reference() );
+			}
+		}
+
+		Predicate m_predicate;
+		RecursionPredicate m_recursionPredicate;
+		RecursiveChildIterator m_end;
 		
 };
 

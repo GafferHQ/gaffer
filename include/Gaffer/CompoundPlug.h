@@ -97,9 +97,9 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, CompoundPlug> > Compo
 typedef FilteredChildIterator<PlugPredicate<Plug::In, CompoundPlug> > InputCompoundPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, CompoundPlug> > OutputCompoundPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, CompoundPlug> > RecursiveCompoundPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, CompoundPlug> > RecursiveInputCompoundPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, CompoundPlug> > RecursiveOutputCompoundPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, CompoundPlug>, PlugPredicate<> > RecursiveCompoundPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, CompoundPlug>, PlugPredicate<> > RecursiveInputCompoundPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, CompoundPlug>, PlugPredicate<> > RecursiveOutputCompoundPlugIterator;
 
 } // namespace Gaffer
 

@@ -154,29 +154,29 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug> > Color4
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Color4fPlug> > InputColor4fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color4fPlug> > OutputColor4fPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2fPlug> > RecursiveV2fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2fPlug> > RecursiveInputV2fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2fPlug> > RecursiveOutputV2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2fPlug>, PlugPredicate<> > RecursiveV2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2fPlug>, PlugPredicate<> > RecursiveInputV2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2fPlug>, PlugPredicate<> > RecursiveOutputV2fPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3fPlug> > RecursiveV3fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3fPlug> > RecursiveInputV3fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3fPlug> > RecursiveOutputV3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3fPlug>, PlugPredicate<> > RecursiveV3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3fPlug>, PlugPredicate<> > RecursiveInputV3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3fPlug>, PlugPredicate<> > RecursiveOutputV3fPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2iPlug> > RecursiveV2iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2iPlug> > RecursiveInputV2iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2iPlug> > RecursiveOutputV2iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2iPlug>, PlugPredicate<> > RecursiveV2iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2iPlug>, PlugPredicate<> > RecursiveInputV2iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2iPlug>, PlugPredicate<> > RecursiveOutputV2iPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3iPlug> > RecursiveV3iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3iPlug> > RecursiveInputV3iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3iPlug> > RecursiveOutputV3iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3iPlug>, PlugPredicate<> > RecursiveV3iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3iPlug>, PlugPredicate<> > RecursiveInputV3iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3iPlug>, PlugPredicate<> > RecursiveOutputV3iPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug> > RecursiveColor3fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color3fPlug> > RecursiveInputColor3fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color3fPlug> > RecursiveOutputColor3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug>, PlugPredicate<> > RecursiveColor3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color3fPlug>, PlugPredicate<> > RecursiveInputColor3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color3fPlug>, PlugPredicate<> > RecursiveOutputColor3fPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug> > RecursiveColor4fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color4fPlug> > RecursiveInputColor4fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color4fPlug> > RecursiveOutputColor4fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug>, PlugPredicate<> > RecursiveColor4fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color4fPlug>, PlugPredicate<> > RecursiveInputColor4fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color4fPlug>, PlugPredicate<> > RecursiveOutputColor4fPlugIterator;
 
 } // namespace Gaffer
 

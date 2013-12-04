@@ -120,22 +120,21 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Box3fPlug> > Box3fPlu
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Box3fPlug> > InputBox3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Box3fPlug> > OutputBox3fPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box2iPlug> > RecursiveBox2iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box2iPlug> > RecursiveInputBox2iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box2iPlug> > RecursiveOutputBox2iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box2iPlug>, PlugPredicate<> > RecursiveBox2iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box2iPlug>, PlugPredicate<> > RecursiveInputBox2iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box2iPlug>, PlugPredicate<> > RecursiveOutputBox2iPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box3iPlug> > RecursiveBox3iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box3iPlug> > RecursiveInputBox3iPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box3iPlug> > RecursiveOutputBox3iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box3iPlug>, PlugPredicate<> > RecursiveBox3iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box3iPlug>, PlugPredicate<> > RecursiveInputBox3iPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box3iPlug>, PlugPredicate<> > RecursiveOutputBox3iPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box2fPlug> > RecursiveBox2fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box2fPlug> > RecursiveInputBox2fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box2fPlug> > RecursiveOutputBox2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box2fPlug>, PlugPredicate<> > RecursiveBox2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box2fPlug>, PlugPredicate<> > RecursiveInputBox2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box2fPlug>, PlugPredicate<> > RecursiveOutputBox2fPlugIterator;
 
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box3fPlug> > RecursiveBox3fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box3fPlug> > RecursiveInputBox3fPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box3fPlug> > RecursiveOutputBox3fPlugIterator;
-
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box3fPlug>, PlugPredicate<> > RecursiveBox3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box3fPlug>, PlugPredicate<> > RecursiveInputBox3fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box3fPlug>, PlugPredicate<> > RecursiveOutputBox3fPlugIterator;
 
 } // namespace Gaffer
 
