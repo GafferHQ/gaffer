@@ -98,6 +98,8 @@ class ColorProcessor : public ImageProcessor
 
 };
 
+IE_CORE_DECLAREPTR( ColorProcessor )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H

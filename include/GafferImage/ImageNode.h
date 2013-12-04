@@ -119,6 +119,8 @@ class ImageNode : public Gaffer::ComputeNode
 		static size_t g_firstPlugIndex;
 };
 
+IE_CORE_DECLAREPTR( ImageNode )
+
 } // namespace GafferImage
 
 #endif // GAFFERSCENE_IMAGENODE_H

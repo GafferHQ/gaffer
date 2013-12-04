@@ -79,6 +79,8 @@ class Constant : public ImageNode
 		
 };
 
+IE_CORE_DECLAREPTR( Constant )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_CONSTANT_H

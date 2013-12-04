@@ -91,6 +91,8 @@ class Select : public FilterProcessor
 
 };
 
+IE_CORE_DECLAREPTR( Select )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_SELECT_H

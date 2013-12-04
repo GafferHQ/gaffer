@@ -75,6 +75,8 @@ class OpenColorIO : public ColorProcessor
 				
 };
 
+IE_CORE_DECLAREPTR( OpenColorIO )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_OPENCOLORIO_H

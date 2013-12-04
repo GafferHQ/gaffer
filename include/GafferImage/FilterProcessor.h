@@ -105,6 +105,8 @@ class FilterProcessor : public ImageProcessor
 
 };
 
+IE_CORE_DECLAREPTR( FilterProcessor )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_FILTERPROCESSOR_H

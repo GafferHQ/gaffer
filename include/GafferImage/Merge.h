@@ -115,6 +115,8 @@ class Merge : public FilterProcessor
 
 };
 
+IE_CORE_DECLAREPTR( Merge )
+
 #include "Merge.inl"
 
 } // namespace GafferImage

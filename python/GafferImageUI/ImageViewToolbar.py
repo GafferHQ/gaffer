@@ -41,19 +41,21 @@ import GafferImageUI
 # Toggles between default value and the last non-default value
 class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, image, defaultToggleValue = None, **kw ) :
+	def __init__( self, plug, imagePrefix, defaultToggleValue = None, **kw ) :
 		
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		
 		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
 
+		self.__imagePrefix = imagePrefix
 		with row :
 			
-			button = GafferUI.Button( "", image, hasFrame=False )
-			self.__clickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
+			self.__clickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 			
-			plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
-			plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
+			if not isinstance( plug, Gaffer.BoolPlug ) :
+				plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 		
 		self.__toggleValue = defaultToggleValue
 		self._updateFromPlug()
@@ -79,6 +81,9 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			
 		if value != self.getPlug().defaultValue() :
 			self.__toggleValue = value
+			self.__button.setImage( self.__imagePrefix + "On.png" )
+		else :
+			self.__button.setImage( self.__imagePrefix + "Off.png" )
 		
 		self.setEnabled( self.getPlug().settable() )
 		
@@ -92,22 +97,44 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.getPlug().setToDefault()
 
-## Exposure and gamma
-	
+## Clipping, exposure and gamma
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImageUI.ImageView.staticTypeId(),
+	"clipping",
+	_TogglePlugValueWidget,
+	imagePrefix ="clipping",
+	defaultToggleValue = True,
+)
+
+GafferUI.Metadata.registerPlugValue( GafferImageUI.ImageView, "clipping", "divider", True )
+
+GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "clipping",
+	"Highlights the regions in which the colour values go above 1 or below 0."
+)
+
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImageUI.ImageView.staticTypeId(),
 	"exposure",
 	_TogglePlugValueWidget,
-	image ="exposure.png",
+	imagePrefix ="exposure",
 	defaultToggleValue = 1,
+)
+
+GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "exposure",
+	"Applies an exposure adjustment to the image."
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferImageUI.ImageView.staticTypeId(),
 	"gamma",
 	_TogglePlugValueWidget,
-	image ="gamma.png",
+	imagePrefix ="gamma",
 	defaultToggleValue = 2,
+)
+
+GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "gamma",
+	"Applies a gamma correction to the image."
 )
 
 ## Display Transform
@@ -132,4 +159,8 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferImageUI.ImageView.staticTypeId(),
 	"displayTransform",
 	__displayTransformPlugValueWidgetCreator
+)
+
+GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "displayTransform",
+	"Applies colour space transformations for viewing the image correctly."
 )

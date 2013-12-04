@@ -98,6 +98,8 @@ class ChannelDataProcessor : public ImageProcessor
 
 };
 
+IE_CORE_DECLAREPTR( ChannelDataProcessor )
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H
