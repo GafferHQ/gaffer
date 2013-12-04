@@ -40,6 +40,8 @@
 
 #include "boost/regex.hpp"
 
+#include "Gaffer/FilteredRecursiveChildIterator.h"
+
 #include "GafferUI/Gadget.h"
 
 namespace Gaffer

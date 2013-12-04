@@ -88,8 +88,15 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	assert( nodes[1] == d );
 	assert( nodes[2] == e );
 	
+	// This demonstrates the use of both the main predicate and also the
+	// recursion predicate in the FilteredRecursiveChildIterator. The main
+	// predicate specifies that we will only visit plugs, but the recursion
+	// predicate specifies that we'll recurse over everything to find them.
+	//////////////////////////////////////////////////////////////////////////
+
+	typedef FilteredRecursiveChildIterator<PlugPredicate<>, TypePredicate<GraphComponent> > DeepRecursivePlugIterator;
 	std::vector<PlugPtr> plugs;
-	for( RecursivePlugIterator it( a ); it != it.end(); it++ )
+	for( DeepRecursivePlugIterator it( a ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
@@ -103,25 +110,60 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	assert( plugs[5] == f );
 	assert( plugs[6] == g );
 	assert( plugs[7] == h );
-	
+		
+	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveFloatPlugIterator;
 	plugs.clear();
-	for( RecursiveFloatPlugIterator it( a ); it != it.end(); it++ )
+	for( DeepRecursiveFloatPlugIterator it( a ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
 	
-	assert( plugs.size() == 3 ); // there's also the user plug per node
+	assert( plugs.size() == 3 );
 	assert( plugs[0] == c );
 	assert( plugs[1] == g );
 	assert( plugs[2] == h );
 	
+	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveOutputFloatPlugIterator;
 	plugs.clear();
-	for( RecursiveOutputFloatPlugIterator it( a ); it != it.end(); it++ )
+	for( DeepRecursiveOutputFloatPlugIterator it( a ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
 	
-	assert( plugs.size() == 1 ); // there's also the user plug per node
+	assert( plugs.size() == 1 );
 	assert( plugs[0] == h );
 
+	// This demonstrates the use of a more restrictive recursion predicate
+	// which only allows recursion into plugs - this allows us to avoid
+	// recursing to plugs owned by child nodes of the node we're interested in.
+	//////////////////////////////////////////////////////////////////////////
+
+	typedef FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<> > ShallowRecursivePlugIterator;
+	plugs.clear();
+	for( ShallowRecursivePlugIterator it( a ); it != it.end(); it++ )
+	{
+		plugs.push_back( *it );
+	}
+	assert( plugs.size() == 1 ); // there's also the user plug per node
+	assert( plugs[0] == a->userPlug() );
+	
+	plugs.clear();
+	for( ShallowRecursivePlugIterator it( b ); it != it.end(); it++ )
+	{
+		plugs.push_back( *it );
+	}
+	assert( plugs.size() == 2 ); // there's also the user plug per node
+	assert( plugs[0] == b->userPlug() );
+	assert( plugs[1] == c );
+	
+	plugs.clear();
+	for( ShallowRecursivePlugIterator it( e ); it != it.end(); it++ )
+	{
+		plugs.push_back( *it );
+	}
+	assert( plugs.size() == 4 );
+	assert( plugs[0] == e->userPlug() );
+	assert( plugs[1] == f );
+	assert( plugs[2] == g );
+	assert( plugs[3] == h );
 }
