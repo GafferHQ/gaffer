@@ -499,6 +499,25 @@ class BoxTest( unittest.TestCase ) :
 		self.assertTrue( s["b"] is b )
 		self.assertEqual( s["b"].typeId(), DerivedBox.staticTypeId() )
 		self.assertEqual( s["b"].typeName(), DerivedBox.staticTypeName() )
+	
+	def testNesting( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["a1"] = GafferTest.AddNode()
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["a1"]["sum"] )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a1"], s["a2"] ] ) )
+		# we're not expecting any extra plugs on the box, because the enclosed network
+		# had no external connections.
+		self.assertEqual( b.keys(), Gaffer.Box().keys() + [ "a1", "a2" ] )
+		
+		b2 = Gaffer.Box.create( s, Gaffer.StandardSet( [ b ] ) )
+		self.assertTrue( b.parent().isSame( b2 ) )
+		# likewise here, the enclosed network had no external connections so the
+		# box should have no additional children other than the nested box.
+		self.assertEqual( b2.keys(), Gaffer.Box().keys() + [ b.getName() ] )
 		
 if __name__ == "__main__":
 	unittest.main()
