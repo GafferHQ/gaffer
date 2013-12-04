@@ -257,10 +257,10 @@ void Box::exportForReference( const std::string &fileName ) const
 		throw IECore::Exception( "Box::exportForReference called without ScriptNode" );
 	}
 	
-	// we only want to save out our child nodes, user plugs and in*/out* plugs so we build a filter.
+	// we only want to save out our child nodes and plugs that are visible in the UI, so we build a filter
 	// to specify just the things to export.
 	
-	boost::regex inOrOut( "^in|out[0-9]*$" );
+	boost::regex invisiblePlug( "^__.*$" );
 	StandardSetPtr toExport = new StandardSet;
 	for( ChildIterator it = children().begin(), eIt = children().end(); it != eIt; ++it )
 	{
@@ -270,7 +270,7 @@ void Box::exportForReference( const std::string &fileName ) const
 		}
 		else if( const Plug *plug = IECore::runTimeCast<Plug>( it->get() ) )
 		{
-			if( plug == userPlug() || boost::regex_match( plug->getName().c_str(), inOrOut ) )
+			if( !boost::regex_match( plug->getName().c_str(), invisiblePlug ) )
 			{
 				toExport->add( *it );	
 			}
