@@ -53,9 +53,9 @@ typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invali
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug> > InputFormatPlugIterator;
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug> > OutputFormatPlugIterator;
 
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug> > RecursiveFormatPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug> > RecursiveInputFormatPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug> > RecursiveOutputFormatPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveFormatPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveInputFormatPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveOutputFormatPlugIterator;
 
 } // namespace GafferImage
 
