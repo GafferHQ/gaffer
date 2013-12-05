@@ -122,7 +122,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		{
 			V3f dataMin( m_dataWindow.min.x, m_dataWindow.min.y, 0.f );
 			V3f dataMax( 1.f + m_dataWindow.max.x, 1.f + m_dataWindow.max.y, 0.f );
-			V3f dataCenter = ( dataMin + dataMax ) / 2.f;
+
 			
 			V3f dispMin( m_displayWindow.min.x, m_displayWindow.min.y, 0.f );
 			V3f dispMax( 1.f + m_displayWindow.max.x, 1.f + m_displayWindow.max.y, 0.f );

@@ -331,7 +331,7 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 {
 	if( !m_scene )
 	{
-		return false;
+		return 0;
 	}
 	
 	std::string objectUnderMouse = objectAt( event.line );

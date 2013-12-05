@@ -235,7 +235,6 @@ void Implementation::hashChannelData( const GafferImage::ImagePlug *output, cons
 	filterPlug()->hash( h );
 	
 	// Finally we hash the transformation.
-	Imath::V2f t = transformPlug()->translatePlug()->getValue();
 
 	///\ todo: Ideally we should only hash the offset of the transform from the data window so that when translated by ImagePlug::tileSize()
 	/// we can reuse the cache. However this involves changing the ImageProcessor so that it hashes each tile relative to it's data window
@@ -348,7 +347,7 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
 
 	// Work out the sample area that we require to compute this tile.
-	Format inputFormat = inPlug()->formatPlug()->getValue();
+
 	Imath::M33f t = computeAdjustedMatrix().inverse();
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
