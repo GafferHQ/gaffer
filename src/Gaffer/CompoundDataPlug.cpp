@@ -376,7 +376,7 @@ ValuePlugPtr CompoundDataPlug::typedObjectValuePlug( const std::string &name, Pl
 
 IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 {
-    switch( static_cast<Gaffer::TypeId>(plug->typeId()) )
+	switch( static_cast<Gaffer::TypeId>(plug->typeId()) )
 	{
 		case FloatPlugTypeId :
 			return new FloatData( static_cast<const FloatPlug *>( plug )->getValue() );
