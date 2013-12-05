@@ -91,7 +91,8 @@ class Switch : public BaseType
 	protected :
 		
 		// Implemented to reject ComputeNode inputs to "index" and "enabled" if we ourselves
-		// are not a ComputeNode.
+		// are not a ComputeNode, and to reject input branches inputs if they wouldn't
+		// be accepted by the output.
 		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
 
 		// The hash() and compute() methods are implemented to pass through the results from

@@ -199,6 +199,17 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 		}
 	}
 	
+	if( plug->direction() == Plug::In )
+	{
+		if( const Plug *opposite = oppositePlug( plug ) )
+		{
+			if( !opposite->acceptsInput( inputPlug ) )
+			{
+				return false;
+			}
+		}
+	}
+	
 	return true;
 }
 
