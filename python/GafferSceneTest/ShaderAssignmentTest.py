@@ -165,6 +165,75 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		
 		self.assertTrue( "shader" in s["a"]["out"].attributes( "/plane" ) )
 		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["shader"][-1].name, "test" )
+	
+	def testInputAcceptanceInsideBoxes( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["s"] = GafferSceneTest.TestShader()
+		s["n"] = Gaffer.Node()
+		s["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["a"] = GafferScene.ShaderAssignment()
+		
+		# the shader assignment shouldn't accept inputs from any old
+		# node - it should be a shader node.
+		
+		self.assertTrue( s["a"]["shader"].acceptsInput( s["s"]["out"] ) )
+		self.assertFalse( s["a"]["shader"].acceptsInput( s["n"]["out"] ) )
+		
+		# and that shouldn't change just because we happen to be inside a box
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["s"], s["n"], s["a"] ] ) )
+		
+		self.assertTrue( b["a"]["shader"].acceptsInput( b["s"]["out"] ) )
+		self.assertFalse( b["a"]["shader"].acceptsInput( b["n"]["out"] ) )
+	
+	def testInputAcceptanceFromBoxes( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["a"] = GafferScene.ShaderAssignment()
+		
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["a"] = GafferScene.ShaderAssignment()
+		s["b"]["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["b"]["in"] = s["b"]["a"]["shader"].createCounterpart( "in", Gaffer.Plug.Direction.In )
+		s["b"]["out"] = s["b"]["a"]["shader"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
+
+		# shader assignments should accept connections speculatively
+		# from unconnected box inputs and outputs.
+		
+		self.assertTrue( s["b"]["a"]["shader"].acceptsInput( s["b"]["in"] ) )
+		self.assertTrue( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
+		
+		# but should reject connections to connected box inputs and outputs
+		# if they're unsuitable.
+		
+		s["b"]["in"].setInput( s["n"]["out"] )
+		self.assertFalse( s["b"]["a"]["shader"].acceptsInput( s["b"]["in"] ) )
+
+		s["b"]["out"].setInput( s["b"]["n"]["out"] )
+		self.assertFalse( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
+
+		# and accept them again if they provide indirect access to a shader
+		
+		s["s"] = GafferSceneTest.TestShader()
+		s["b"]["in"].setInput( s["s"]["out"] )
+		self.assertTrue( s["b"]["a"]["shader"].acceptsInput( s["b"]["in"] ) )
+
+		s["b"]["s"] = GafferSceneTest.TestShader()
+		s["b"]["out"].setInput( s["b"]["s"]["out"] )
+		self.assertTrue( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
+	
+	def testInputAcceptanceFromSwitches( self ) :
+	
+		a = GafferScene.ShaderAssignment()
+		s = GafferScene.ShaderSwitch()
+		
+		self.assertTrue( a["shader"].acceptsInput( s["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
