@@ -34,35 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "Gaffer/Switch.inl"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
-
-#include "GafferSceneBindings/ShaderBinding.h"
-
-using namespace boost::python;
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-static IECore::ObjectVectorPtr state( const Shader &s )
-{
-	return s.state()->copy();
-}
-
-void GafferSceneBindings::bindShader()
+namespace Gaffer
 {
 
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
-	;
-
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SwitchDependencyNode, SwitchDependencyNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SwitchComputeNode, SwitchComputeNodeTypeId )
 
 }
+
+// explicit instantiation
+template class Gaffer::Switch<Gaffer::DependencyNode>;
+template class Gaffer::Switch<Gaffer::ComputeNode>;

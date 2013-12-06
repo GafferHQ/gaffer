@@ -38,13 +38,12 @@
 #define GAFFER_SCENECONTEXTVARIABLES_H
 
 #include "Gaffer/ContextVariables.h"
-#include "GafferScene/SceneContextProcessorBase.h"
+#include "GafferScene/SceneMixinBase.h"
 
 namespace GafferScene
 {
 
-typedef Gaffer::ContextProcessor<SceneContextProcessorBase> SceneContextProcessor;
-typedef Gaffer::ContextVariables<SceneContextProcessorBase> SceneContextVariables;
+typedef Gaffer::ContextVariables<SceneMixinBase> SceneContextVariables;
 IE_CORE_DECLAREPTR( SceneContextVariables )
 
 } // namespace GafferScene

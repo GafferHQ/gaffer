@@ -34,35 +34,18 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_IMAGECONTEXTPROCESSOR_H
+#define GAFFERIMAGE_IMAGECONTEXTPROCESSOR_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/ContextProcessor.h"
+#include "GafferImage/ImageMixinBase.h"
 
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
-
-#include "GafferSceneBindings/ShaderBinding.h"
-
-using namespace boost::python;
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-static IECore::ObjectVectorPtr state( const Shader &s )
-{
-	return s.state()->copy();
-}
-
-void GafferSceneBindings::bindShader()
+namespace GafferImage
 {
 
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
-	;
+typedef Gaffer::ContextProcessor<ImageMixinBase> ImageContextProcessor;
+IE_CORE_DECLAREPTR( ImageContextProcessor )
 
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
+} // namespace GafferImage
 
-}
+#endif // GAFFERIMAGE_IMAGECONTEXTPROCESSOR_H

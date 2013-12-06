@@ -53,7 +53,7 @@ enum TypeId
 	PrimitiveVariableProcessorTypeId = 110508,
 	DeletePrimitiveVariablesTypeId = 110509,
 	GroupTypeId = 110510,
-	SceneContextProcessorBaseTypeId = 110511,
+	SceneMixinBaseTypeId = 110511,
 	SceneContextProcessorTypeId = 110512,
 	SceneTimeWarpTypeId = 110513,
 	ObjectSourceTypeId = 110514,
@@ -105,6 +105,8 @@ enum TypeId
 	AttributeProcessorTypeId = 110560,
 	DeleteAttributesTypeId = 110561,
 	UnionFilterTypeId = 110562,
+	SceneSwitchTypeId = 110563,
+	ShaderSwitchTypeId = 110564,
 	
 	LastTypeId = 110650
 };

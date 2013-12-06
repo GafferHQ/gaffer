@@ -76,13 +76,18 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 {
 	SceneProcessor::affects( input, outputs );
 	
-	if( input == rootPlug() )
+	if( input->parent<ScenePlug>() == inPlug() )
+	{
+		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+	}
+	else if( input == rootPlug() )
 	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
 			outputs.push_back( it->get() );
 		}
 	}
+	
 }
 
 void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

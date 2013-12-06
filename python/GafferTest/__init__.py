@@ -130,6 +130,7 @@ from InputGeneratorTest import InputGeneratorTest
 from ArrayPlugNode import ArrayPlugNode
 from ArrayPlugTest import ArrayPlugTest
 from SerialisationTest import SerialisationTest
+from SwitchTest import SwitchTest
 
 if __name__ == "__main__":
 	import unittest

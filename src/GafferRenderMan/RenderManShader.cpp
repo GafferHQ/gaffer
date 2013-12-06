@@ -52,6 +52,8 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Box.h"
 
+#include "GafferScene/ShaderSwitch.h"
+
 #include "GafferRenderMan/RenderManShader.h"
 
 using namespace std;
@@ -147,19 +149,17 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 		{
 			// coshader parameter - source must be another
 			// renderman shader hosting a coshader, or a box
-			// with a currently dangling connection. in the box case,
-			// we will be called again when the box is connected to
-			// something, so we can check that the indirect connection
-			// is to our liking.
+			// or shader switch with a currently dangling connection.
+			// in the latter cases, we will be called again when the
+			// box or switch is connected to something, so we can check
+			// that the indirect connection is to our liking.
 			const Node* sourceNode = sourcePlug->node();
 			
-			if( runTimeCast<const Box>( sourceNode ) )
+			if(
+				runTimeCast<const Box>( sourceNode ) ||
+				runTimeCast<const ShaderSwitch>( sourceNode )
+			)
 			{
-				// looks like we're exposing this input via a box, or
-				// connecting it to an unconnected output on a box. we'll
-				// accept the input for now - later when the plug on the
-				// box itself is connected we'll be called again to check
-				// that we accept the new indirect connection.
 				return true;
 			}
 			

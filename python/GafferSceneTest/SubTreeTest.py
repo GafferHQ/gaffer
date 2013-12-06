@@ -181,5 +181,14 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
 		self.assertForwardDeclarationsValid( s["out"] )
 
+	def testAffects( self ) :
+	
+		s = GafferScene.SubTree()
+		
+		for n in s["in"].keys() :
+			a = s.affects( s["in"][n] )
+			self.assertEqual( len( a ), 1 )
+			self.assertTrue( a[0].isSame( s["out"][n] ) )
+			
 if __name__ == "__main__":
 	unittest.main()

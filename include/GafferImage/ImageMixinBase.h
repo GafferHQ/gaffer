@@ -34,64 +34,46 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SELECT_H
-#define GAFFERIMAGE_SELECT_H
+#ifndef GAFFERIMAGE_IMAGEMIXINBASE_H
+#define GAFFERIMAGE_IMAGEMIXINBASE_H
 
-#include "GafferImage/FilterProcessor.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-/// \deprecated Use ImageSwitch instead.
-class Select : public FilterProcessor
+/// Base class to allow Gaffer mixin classes such as TimeWarp and Switch to be used
+// in GafferImage. See SceneMixinBase for some more details of the rationale behind this.
+class ImageMixinBase : public ImageProcessor
 {
 
 	public :
-		
-		Select( const std::string &name=defaultName<Select>() );
-		virtual ~Select();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Select, SelectTypeId, FilterProcessor );
-		
-		Gaffer::IntPlug *selectPlug();
-		const Gaffer::IntPlug *selectPlug() const;
-		
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		ImageMixinBase( const std::string &name=defaultName<ImageMixinBase>() );
+		virtual ~ImageMixinBase();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageMixinBase, ImageMixinBaseTypeId, ImageProcessor );
 		
 	protected :
+	
+		/// These stubs should never be called, because the mixed-in class should implement hash() and compute()
+		/// totally. If they are called, they throw to highlight the fact that something is amiss.
+		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
-		/// Does nothing other than overide the FilterProcessor's implementation.
-		virtual bool enabled() const;
-		
-		/// Reimplemented to hash only the selected input plugs.
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		/// Sets the output format to the selected input.
+		/// These stubs should never be called, because the mixed-in class should implement hash() and compute()
+		/// totally. If they are called, they throw to highlight the fact that something is amiss.
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the data window to the selected input.
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the channel names to those of the selected input.
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the image data to that of the selected input.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-	private :
-
-		/// Returns a valid input index.	
-		int selectIndex() const;
-
-		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( Select )
+IE_CORE_DECLAREPTR( ImageMixinBase )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_SELECT_H
+#endif // GAFFERIMAGE_IMAGEMIXINBASE_H

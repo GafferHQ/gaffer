@@ -47,4 +47,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneContextVaria
 }
 
 // explicit instantiation
-template class Gaffer::ContextVariables<SceneContextProcessorBase>;
+template class Gaffer::ContextVariables<SceneMixinBase>;

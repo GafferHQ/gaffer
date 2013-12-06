@@ -35,10 +35,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Box.h"
+
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/Shader.h"
-
-#include "Gaffer/Box.h"
+#include "GafferScene/ShaderSwitch.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -95,16 +96,22 @@ bool ShaderAssignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plu
 	
 	if( plug == shaderPlug() )
 	{
-		ConstPlugPtr sourcePlug = inputPlug->source<Plug>();
-		if( sourcePlug->ancestor<Shader>() )
+		const Node *sourceNode = inputPlug->source<Plug>()->node();
+		// we only really want to accept connections from
+		// shaders, because we can't assign anything else.
+		// but we also accept the unconnected inputs and outputs
+		// of boxes, so you can wrap shader assignments in boxes
+		// prior to connecting the other side. the same goes for
+		// shader switches - if a connection source is a switch,
+		// then that means the switch hasn't had a shader connected
+		// into it yet, but we'd still like to accept the connection
+		// in anticipation of a shader being connected later.
+		if(
+			runTimeCast<const Shader>( sourceNode ) ||
+			runTimeCast<const Box>( sourceNode ) ||
+			runTimeCast<const ShaderSwitch>( sourceNode )
+		)
 		{
-			return true;
-		}
-		else if( sourcePlug->ancestor<Box>() )
-		{
-			// should also be able to accept the unconnected inputs and outputs
-			// of boxes, so you can wrap shader assignments in boxes without
-			// connecting the other side
 			return true;
 		}
 		return false;

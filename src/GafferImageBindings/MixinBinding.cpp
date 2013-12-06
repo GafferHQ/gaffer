@@ -38,31 +38,22 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
+#include "GafferImage/ImageContextProcessor.h"
+#include "GafferImage/ImageContextVariables.h"
+#include "GafferImage/ImageSwitch.h"
+#include "GafferImage/ImageTimeWarp.h"
 
-#include "GafferSceneBindings/ShaderBinding.h"
+#include "GafferImageBindings/MixinBinding.h"
 
-using namespace boost::python;
+using namespace GafferImage;
 
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-static IECore::ObjectVectorPtr state( const Shader &s )
+void GafferImageBindings::bindMixin()
 {
-	return s.state()->copy();
-}
-
-void GafferSceneBindings::bindShader()
-{
-
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
-	;
-
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
-
+	
+	GafferBindings::DependencyNodeClass<ImageMixinBase>();
+	GafferBindings::DependencyNodeClass<ImageContextProcessor>();
+	GafferBindings::DependencyNodeClass<ImageTimeWarp>();
+	GafferBindings::DependencyNodeClass<ImageContextVariables>();
+	GafferBindings::DependencyNodeClass<ImageSwitch>();
+		
 }

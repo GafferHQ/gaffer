@@ -38,31 +38,21 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
+#include "GafferScene/SceneContextVariables.h"
+#include "GafferScene/SceneSwitch.h"
+#include "GafferScene/SceneTimeWarp.h"
 
-#include "GafferSceneBindings/ShaderBinding.h"
+#include "GafferSceneBindings/MixinBinding.h"
 
-using namespace boost::python;
-
-using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferScene;
 
-static IECore::ObjectVectorPtr state( const Shader &s )
+void GafferSceneBindings::bindMixin()
 {
-	return s.state()->copy();
-}
-
-void GafferSceneBindings::bindShader()
-{
-
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
-	;
-
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
-
+	
+	GafferBindings::DependencyNodeClass<SceneMixinBase>();
+	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
+	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
+	GafferBindings::DependencyNodeClass<SceneContextVariables>();
+	GafferBindings::DependencyNodeClass<SceneSwitch>();
+		
 }

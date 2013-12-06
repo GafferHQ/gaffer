@@ -34,35 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEBINDINGS_MIXINBINDING_H
+#define GAFFERIMAGEBINDINGS_MIXINBINDING_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
-
-#include "GafferSceneBindings/ShaderBinding.h"
-
-using namespace boost::python;
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-static IECore::ObjectVectorPtr state( const Shader &s )
-{
-	return s.state()->copy();
-}
-
-void GafferSceneBindings::bindShader()
+namespace GafferImageBindings
 {
 
-	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
-	;
+void bindMixin();
 
-	GafferBindings::DependencyNodeClass<ShaderSwitch>();
+} // namespace GafferImageBindings
 
-}
+#endif // GAFFERIMAGEBINDINGS_MIXINBINDING_H

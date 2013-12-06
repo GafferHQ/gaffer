@@ -48,7 +48,6 @@
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/MeshType.h"
 #include "GafferScene/Group.h"
-#include "GafferScene/SceneTimeWarp.h"
 #include "GafferScene/Plane.h"
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
@@ -58,7 +57,6 @@
 #include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/AlembicSource.h"
-#include "GafferScene/SceneContextVariables.h"
 #include "GafferScene/StandardOptions.h"
 #include "GafferScene/SubTree.h"
 #include "GafferScene/SceneWriter.h"
@@ -85,6 +83,7 @@
 #include "GafferSceneBindings/ConstraintBinding.h"
 #include "GafferSceneBindings/AttributesBinding.h"
 #include "GafferSceneBindings/FilterBinding.h"
+#include "GafferSceneBindings/MixinBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -106,9 +105,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<Group>();
-	GafferBindings::DependencyNodeClass<SceneContextProcessorBase>();
-	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
-	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
 	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Plane>();
@@ -132,7 +128,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Options>();	
 	
 	GafferBindings::DependencyNodeClass<AlembicSource>();
-	GafferBindings::DependencyNodeClass<SceneContextVariables>();
 	GafferBindings::DependencyNodeClass<StandardOptions>();
 	GafferBindings::DependencyNodeClass<SubTree>();
 	GafferBindings::DependencyNodeClass<Light>();
@@ -161,5 +156,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindConstraint();
 	bindAttributes();
 	bindFilter();
+	bindMixin();
 	
 }

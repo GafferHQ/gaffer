@@ -81,6 +81,11 @@ enum TypeId
 	RemoveChannelsTypeId = 110785,
 	ColorProcessorTypeId = 110786,
 	ClampTypeId = 110787,
+	ImageMixinBaseTypeId = 110788,
+	ImageContextProcessorTypeId = 110789,
+	ImageTimeWarpTypeId = 110790,
+	ImageContextVariablesTypeId = 110791,
+	ImageSwitchTypeId = 110792,
 
 	LastTypeId = 110849
 };

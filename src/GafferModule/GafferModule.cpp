@@ -38,6 +38,7 @@
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/ContextVariables.h"
 #include "Gaffer/Backdrop.h"
+#include "Gaffer/Switch.h"
 
 #include "GafferBindings/ConnectionBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -136,6 +137,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<ContextProcessorComputeNode>();
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();
+	DependencyNodeClass<SwitchDependencyNode>();
+	DependencyNodeClass<SwitchComputeNode>();
 
 	object behavioursModule( borrowed( PyImport_AddModule( "Gaffer.Behaviours" ) ) );
 	scope().attr( "Behaviours" ) = behavioursModule;	
