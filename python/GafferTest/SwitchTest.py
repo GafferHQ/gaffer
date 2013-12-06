@@ -172,6 +172,7 @@ class SwitchTest( GafferTest.TestCase ) :
 		n["in2dubitablyNotAnInputBranch"] = Gaffer.IntPlug()
 		self.assertEqual( n.affects( n["myPlug"] ), [] )
 		self.assertEqual( n.affects( n["indubitablyNotAnInputBranch"] ), [] )
+		self.assertEqual( n.affects( n["in2dubitablyNotAnInputBranch"] ), [] )
 
 	def testCompoundPlugs( self ) :
 	
