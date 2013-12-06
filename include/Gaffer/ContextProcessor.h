@@ -58,6 +58,12 @@ class ContextProcessor : public BaseType
 		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
 		virtual ~ContextProcessor();
 
+		virtual BoolPlug *enabledPlug();
+		virtual const BoolPlug *enabledPlug() const;
+		
+		virtual Plug *correspondingInput( const Plug *output );
+		virtual const Plug *correspondingInput( const Plug *output ) const;
+
 		virtual void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		
 	protected :
@@ -80,6 +86,8 @@ class ContextProcessor : public BaseType
 		/// Returns the input corresponding to the output and vice versa.
 		const ValuePlug *oppositePlug( const ValuePlug *plug ) const;
 	
+		static size_t g_firstPlugIndex;
+
 };
 
 typedef ContextProcessor<ComputeNode> ContextProcessorComputeNode;

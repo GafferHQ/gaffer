@@ -94,13 +94,54 @@ class ImageTimeWarpTest( GafferTest.TestCase ) :
 				
 				script.context().setFrame( f )
 				c0 = script["constant"]["out"].image()
+				c0Hash = script["constant"]["out"].imageHash()
 				t = script["timeWarp"]["out"].image()
+				tHash = script["timeWarp"]["out"].imageHash()
 				
 				script.context().setFrame( f + 1 )
 				c1 = script["constant"]["out"].image()
+				c1Hash = script["constant"]["out"].imageHash()
 
 			self.assertEqual( c1, t )
+			self.assertEqual( c1Hash, tHash )
 			self.assertNotEqual( c0, c1 )
+			self.assertNotEqual( c0Hash, c1Hash )
+	
+	def testDisabling( self ) :
+	
+		script = Gaffer.ScriptNode()
+	
+		script["constant"] = GafferImage.Constant()
+		
+		script["expression"] = Gaffer.Expression()
+		script["expression"]["engine"].setValue( "python" )
+		script["expression"]["expression"].setValue( 'parent["constant"]["color"]["r"] = context["frame"]' )
+		
+		script["timeWarp"] = GafferImage.ImageTimeWarp()
+		script["timeWarp"]["offset"].setValue( 1 )
+		script["timeWarp"]["in"].setInput( script["constant"]["out"] )
+
+		with script.context() :
+
+			c = script["constant"]["out"].image()
+			cHash = script["constant"]["out"].imageHash()
+			t = script["timeWarp"]["out"].image()
+			tHash = script["timeWarp"]["out"].imageHash()
+		
+		self.assertNotEqual( c, t )
+		self.assertNotEqual( cHash, tHash )
+		
+		script["timeWarp"]["enabled"].setValue( False )
 							
+		with script.context() :
+
+			c = script["constant"]["out"].image()
+			cHash = script["constant"]["out"].imageHash()
+			t = script["timeWarp"]["out"].image()
+			tHash = script["timeWarp"]["out"].imageHash()
+		
+		self.assertEqual( c, t )
+		self.assertEqual( cHash, tHash )
+		
 if __name__ == "__main__":
 	unittest.main()

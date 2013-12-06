@@ -114,6 +114,40 @@ class TimeWarpComputeNodeTest( unittest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.assertTrue( cs[0][0].isSame( w["in"] ) )
 		self.assertTrue( cs[1][0].isSame( w["out"] ) )
+	
+	def testEnabled( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["m"] = GafferTest.MultiplyNode()
+		s["m"]["op2"].setValue( 1 )
+		
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
+					
+		s["w"] = Gaffer.TimeWarpComputeNode()
+		s["w"]["in"] = Gaffer.IntPlug()
+		s["w"]["in"].setInput( s["m"]["product"] )
+		s["w"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		s["w"]["offset"].setValue( 2 )
+		
+		# test that enabledPlug() and correspondingInput() are implemented
+		
+		self.assertTrue( s["w"].enabledPlug().isSame( s["w"]["enabled"] ) )
+		self.assertTrue( s["w"].correspondingInput( s["w"]["out"] ).isSame( s["w"]["in"] ) )
+		
+		# test that disabling causes no time warping
+		
+		s["w"]["enabled"].setValue( False )
+		
+		for i in range( 0, 10 ) :
+			with Gaffer.Context() as c :
+				
+				c.setFrame( i )
+				
+				self.assertEqual( s["m"]["product"].getValue(), s["w"]["out"].getValue() )
+				self.assertEqual( s["m"]["product"].hash(), s["w"]["out"].hash() )
 				
 if __name__ == "__main__":
 	unittest.main()
