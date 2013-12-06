@@ -1,3 +1,5 @@
+# 0.87.0
+
 #### UI
 
 - Added visualisation of clipping colours in the image viewer (#572).
@@ -7,16 +9,26 @@
 - Boxes now export all non-hidden plugs for referencing. Prior to this they only exported "in", "out" and user plugs.
 - Fixed unwanted plug promotion when nesting Boxes inside Boxes.
 
+#### Scene
+
+- Fixed Subtree update problem.
+- Added enabling/disabling support to SceneTimeWarp and SceneContextVariables.
+- Added a SceneSwitch node. This can be used to choose between different scene hierarchies.
+- Added a ShaderSwitch node. This can be used to switch between different shaders being fed into a ShaderAssignment. It is also compatible with RenderMan coshaders, so can be used to switch between different coshaders in a network.
+
 #### Image
 
 - Added a Clamp node
 - Fixed bug in Display node which caused problems when using multiple Displays at once.
+- Added ImageTimeWarp, ImageContextVariables and ImageSwitch nodes - these are equivalent to their Scene module counterparts.
 
 #### API
 
 - Added missing IntrusivePtr typedefs to GafferImage
 - Added RecursionPredicate to FilteredRecursiveChildIterator. This allows the definition of iterators which automatically prune the recursion based on some condition.
 - Redefined RecursivePlugIterators so that they do not recurse into nested nodes - instead they just visit all the plugs of the parent node.
+- Improved Node::plugSetSignal() behaviour. The signal is now emitted for all the outputs of the plug being set in addition to the source plug - otherwise plugSetSignal() could not be used effectively for plugs which had been promoted to Box level.
+- Renamed SceneContextProcessorBase to SceneMixinBase.
 
 #### Build
 
