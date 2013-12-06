@@ -1,3 +1,31 @@
+#### UI
+
+- Added visualisation of clipping colours in the image viewer (#572).
+
+#### Core
+
+- Boxes now export all non-hidden plugs for referencing. Prior to this they only exported "in", "out" and user plugs.
+- Fixed unwanted plug promotion when nesting Boxes inside Boxes.
+
+#### Image
+
+- Added a Clamp node
+- Fixed bug in Display node which caused problems when using multiple Displays at once.
+
+#### API
+
+- Added missing IntrusivePtr typedefs to GafferImage
+- Added RecursionPredicate to FilteredRecursiveChildIterator. This allows the definition of iterators which automatically prune the recursion based on some condition.
+- Redefined RecursivePlugIterators so that they do not recurse into nested nodes - instead they just visit all the plugs of the parent node.
+
+#### Build
+
+- Fixed build for Ubuntu 12.04.
+- Updated public build to use Arnold 4.1.
+- Removed OIIO versioning workaround - previously we had to rename the OIIO library to avoid conflicts with Arnold, but since Arnold 4.1 such conflicts no longer exist.
+- Updated default boost version to 1.51.0.
+- Added dependenciesPackage build target. This can be used to make a package of prebuilt dependencies to seed a build. from.
+
 # 0.86.0
 
 #### UI
