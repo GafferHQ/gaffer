@@ -1427,6 +1427,16 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		self.assertFalse( switch["in1"].acceptsInput( coshaderType2Node["out"] ) )
 		self.assertTrue( switch["in1"].acceptsInput( coshaderType1Node["out"] ) )
+
+	def testAcceptInputFromEmptySwitch( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+
+		switch = GafferScene.ShaderSwitch()
 		
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( switch["out"] ) )
+				
 if __name__ == "__main__":
 	unittest.main()
