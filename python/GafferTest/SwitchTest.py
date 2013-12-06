@@ -291,6 +291,35 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertTrue( ds["enabled"].acceptsInput( a["boolInput"] ) )
 		self.assertFalse( ds["enabled"].acceptsInput( a["boolOutput"] ) )
 	
+	def testDependencyNodeConnectedIndex( self ) :
+	
+		n = Gaffer.SwitchDependencyNode()
+		n["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
+		
+		input0 = Gaffer.Plug()
+		input1 = Gaffer.Plug()
+		input2 = Gaffer.Plug()
+
+		n["in"].setInput( input0 )
+		n["in1"].setInput( input1 )
+		n["in2"].setInput( input2 )
+		
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+
+		indexInput = Gaffer.IntPlug()
+		n["index"].setInput( indexInput )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+
+		indexInput.setValue( 1 )
+		self.assertTrue( n["out"].source().isSame( input1 ) )
+
+		indexInput.setValue( 2 )
+		self.assertTrue( n["out"].source().isSame( input2 ) )
+
+		indexInput.setValue( 3 )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+
 	def setUp( self ) :
 	
 		GafferTest.TestCase.setUp( self )

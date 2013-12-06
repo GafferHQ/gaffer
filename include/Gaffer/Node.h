@@ -76,10 +76,11 @@ class Node : public GraphComponent
 		//////////////////////////////////////////////////////////////
 		//@{
 		/// Emitted immediately after each call to ValuePlug::setValue() for
-		/// unconnected input plugs on this node. It is acceptable for slots
-		/// connected to this signal to rewire the node graph by adding and
-		/// removing connections and nodes, and changing the values of other
-		/// plugs.
+		/// unconnected input plugs on this node. Also called for all outputs
+		/// of such plugs, as in effect they are also having their value set too.
+		/// It is acceptable for slots connected to this signal to rewire the
+		/// node graph by adding and removing connections and nodes, and changing
+		/// the values of other plugs.
 		/// \note Passive observers of the plug value should use plugDirtiedSignal()
 		/// rather than plugSetSignal().
 		UnaryPlugSignal &plugSetSignal();

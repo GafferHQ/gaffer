@@ -1437,6 +1437,42 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		switch = GafferScene.ShaderSwitch()
 		
 		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( switch["out"] ) )
+
+	def testCoshaderSwitchingInBox( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+	
+		script = Gaffer.ScriptNode()
+		
+		script["coshaderNode0"] = GafferRenderMan.RenderManShader()
+		script["coshaderNode0"].loadShader( coshader )
+
+		script["coshaderNode1"] = GafferRenderMan.RenderManShader()
+		script["coshaderNode1"].loadShader( coshader )
+
+		script["coshaderNode0"]["parameters"]["floatParameter"].setValue( 0 )
+		script["coshaderNode1"]["parameters"]["floatParameter"].setValue( 1 )
+
+		script["shaderNode"] = GafferRenderMan.RenderManShader()
+		script["shaderNode"].loadShader( shader )
+	
+		script["switch"] = GafferScene.ShaderSwitch()
+		script["switch"]["in"].setInput( script["coshaderNode0"]["out"] )
+		script["switch"]["in1"].setInput( script["coshaderNode1"]["out"] )
+		
+		script["shaderNode"]["parameters"]["coshaderParameter"].setInput( script["switch"]["out"] )
+				
+		self.assertEqual( script["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
+		
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( script.children( Gaffer.Node.staticTypeId() ) ) )
+		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
+		
+		promotedIndex = box.promotePlug( box["switch"]["index"] )
+		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
+		
+		promotedIndex.setValue( 1 )
+		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 1 )
 				
 if __name__ == "__main__":
 	unittest.main()
