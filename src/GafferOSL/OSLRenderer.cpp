@@ -39,6 +39,7 @@
 #include "boost/algorithm/string/classification.hpp"
 
 #include "OSL/oslclosure.h"
+#include "OSL/genclosure.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
@@ -302,9 +303,34 @@ OSLRenderer::State::~State()
 
 IE_CORE_DEFINERUNTIMETYPED( OSLRenderer );
 
+struct OSLRenderer::EmissionParameters
+{
+};
+
 OSLRenderer::OSLRenderer()
 	:	m_shadingSystem( ShadingSystem::create( new OSLRenderer::RendererServices ), ShadingSystem::destroy )
 {
+	struct ClosureDefinition{
+		const char *name;
+		int id;
+		ClosureParam parameters[32];
+	};
+	
+	ClosureDefinition closureDefinitions[] = {
+		{ "emission", 1, { CLOSURE_FINISH_PARAM( EmissionParameters ) } },
+		// end marker
+		{ NULL, 0, {} }
+	};
+	
+	for( int i = 0; closureDefinitions[i].name; ++i )
+	{
+		m_shadingSystem->register_closure(
+			closureDefinitions[i].name,
+			closureDefinitions[i].id,
+			closureDefinitions[i].parameters,
+			NULL, NULL, NULL
+		);
+	}
 }
 
 OSLRenderer::~OSLRenderer()
