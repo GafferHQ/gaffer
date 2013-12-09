@@ -253,15 +253,23 @@ class Slider( GafferUI.Widget ) :
 		
 		if position < 0 :
 			painter.drawPolygon(
-				QtCore.QPoint( 8, 4 ),
-				QtCore.QPoint( 8, size.y - 4 ),
-				QtCore.QPoint( 2, size.y / 2 ),
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( 8, 4 ),
+						QtCore.QPointF( 8, size.y - 4 ),
+						QtCore.QPointF( 2, size.y / 2 ),
+					]
+				)
 			)
 		elif position > 1 :
 			painter.drawPolygon(
-				QtCore.QPoint( size.x - 8, 4 ),
-				QtCore.QPoint( size.x - 8, size.y - 4 ),
-				QtCore.QPoint( size.x - 2, size.y / 2 ),
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( size.x - 8, 4 ),
+						QtCore.QPointF( size.x - 8, size.y - 4 ),
+						QtCore.QPointF( size.x - 2, size.y / 2 ),
+					]
+				)
 			)
 		else :
 			painter.drawEllipse( QtCore.QPoint( position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
