@@ -59,14 +59,14 @@ def _qtImport( name, lazy=False ) :
 			else :
 				__qtModuleName = "PyQt4"
 
-			# PyQt unfortunately uses an implementation-specific
-			# naming scheme for its new-style signal and slot classes.
-			# We use this to make it compatible with PySide, according to :
-			#
-			#     http://qt-project.org/wiki/Differences_Between_PySide_and_PyQt
-			if "PyQt" in __qtModuleName :
-				QtCore = __import__( __qtModuleName + ".QtCore" ).QtCore
-				QtCore.Signal = QtCore.pyqtSignal
+		# PyQt unfortunately uses an implementation-specific
+		# naming scheme for its new-style signal and slot classes.
+		# We use this to make it compatible with PySide, according to :
+		#
+		#     http://qt-project.org/wiki/Differences_Between_PySide_and_PyQt
+		if "PyQt" in __qtModuleName :
+			QtCore = __import__( __qtModuleName + ".QtCore" ).QtCore
+			QtCore.Signal = QtCore.pyqtSignal
 
 	# import the submodule from those bindings and return it
 	if lazy :
