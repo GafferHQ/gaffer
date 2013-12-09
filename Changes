@@ -37,6 +37,7 @@
 - Removed OIIO versioning workaround - previously we had to rename the OIIO library to avoid conflicts with Arnold, but since Arnold 4.1 such conflicts no longer exist.
 - Updated default boost version to 1.51.0.
 - Added dependenciesPackage build target. This can be used to make a package of prebuilt dependencies to seed a build. from.
+- Updated default Cortex version to 8.0.0b5.
 
 # 0.86.0
 
