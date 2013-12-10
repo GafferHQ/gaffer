@@ -66,7 +66,7 @@ class ValuePlug::Computation
 	public :
 	
 		Computation( const ValuePlug *resultPlug )
-			:	m_resultPlug( resultPlug ), m_resultWritten( false )
+			:	m_resultPlug( resultPlug ), m_resultValue( NULL )
 		{
 			g_threadComputations.local().push( this );
 		}
@@ -113,7 +113,7 @@ class ValuePlug::Computation
 				else
 				{
 					computeOrSetFromInput();
-					if( m_resultWritten )
+					if( m_resultValue )
 					{
 						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
 					}
@@ -129,7 +129,7 @@ class ValuePlug::Computation
 			// the call to computeOrSetFromInput() above should cause setValue() to be called
 			// on the result plug, which in turn will call ValuePlug::setObjectValue(), which will
 			// then store the result in the current computation by calling receiveResult().
-			if( !m_resultWritten )
+			if( !m_resultValue )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % m_resultPlug->fullName() ) );			
 			}
@@ -150,7 +150,6 @@ class ValuePlug::Computation
 			}
 			
 			computation->m_resultValue = result;
-			computation->m_resultWritten = true;
 		}
 		
 		static Computation *current()
@@ -202,7 +201,6 @@ class ValuePlug::Computation
 	
 		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
-		bool m_resultWritten;
 
 		typedef std::stack<Computation *> ComputationStack;
 		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
