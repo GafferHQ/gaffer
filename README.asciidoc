@@ -11,7 +11,35 @@ Compiled binary releases are available for download from the https://github.com/
 
 === Building ===
 
+Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, you'll want to make sure you have the following prerequisites installed on your system - these will be used to perform the build itself :
+
+- http://www.scons.org[SCons]
+- http://www.stack.nl/~dimitri/doxygen/[Doxygen]
+- http://inkscape.org[Inkscape]
+
+Gaffer also depends on a number of 3rd party libraries and python modules, many of which are not entirely straightforward to build. The Gaffer build process itself can build all the dependencies automatically though, and this is the approach that we recommend.
+
+First off, you'll need to download the https://drive.google.com/file/d/0B72ea0GVGhwlTktqSTFIT3U4MEk/edit?usp=sharing[source code for the 3rd party dependencies]. The tarball contains everything you'll need, including some important tweaks to some of the packages. Untarring the download should give a directory containing all the source - we'll refer to this directory as `<DEPENDENCIES_SRC_DIR>`, so you can substitute in the actual location you use.
+
+Next, get yourself a clone of the Gaffer source and change into that directory :
+
+  git clone https://github.com/ImageEngine/gaffer.git
+  cd gaffer
+
+
+Decide where you would like your build to be created - we will refer to this location as `<BUILD_DIR>` below, so you can substitute in the correct location. Now tell SCons you would like to build all the 3rd party dependencies :
+
+  scons BUILD_DEPENDENCIES=1 DEPENDENCIES_SRC_DIR=<DEPENDENCIES_SRC_DIR> BUILD_DIR=<BUILD_DIR>
+
+This will take a _long_ time. Go out and buy yourself one of those fancy espresso machines from a distant shop (walk, don't drive), come back, make yourself a coffee, and drink it really slowly. If all is well, you now have everything you need to build Gaffer itself, which you can do as follows :
+
+  scons BUILD_DIR=<BUILD_DIR> build
+
+With a little luck, that's it, and you can repeat just the last command any time you want to rebuild (there is no need to repeat the dependencies build, and you probably don't want a second espresso machine anyway).
+
 === Contributing ===
+
+Contributions to Gaffer are welcome. For small fixes we suggest just going ahead and making a pull request - for anything larger we recommend dicussing it on the https://groups.google.com/forum/#!forum/gaffer-dev[developer list] first, to avoid duplication of effort and to ensure that your whizz-bang ideas fit in with the general direction of the project.
 
 === Copyright and License ===
 © 2013, Image Engine Design Inc. © 2013, John Haddon under https://github.com/ImageEngine/gaffer/blob/master/LICENSE[the BSD license]
