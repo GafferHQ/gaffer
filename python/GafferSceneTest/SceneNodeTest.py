@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import threading
 
 import IECore
 
@@ -150,8 +151,49 @@ class SceneNodeTest( GafferTest.TestCase ) :
 		with context:
 			self.assertEqual( subTree["out"]["transform"].getValue(), IECore.M44f() )
 	
+	def testCacheThreadSafety( self ) :
 	
+		p1 = GafferScene.Plane()
+		p1["divisions"].setValue( IECore.V2i( 50 ) )
+		
+		p2 = GafferScene.Plane()
+		p2["divisions"].setValue( IECore.V2i( 51 ) )
+		
+		g = GafferScene.Group()
+		g["in"].setInput( p1["out"] )
+		g["in1"].setInput( p2["out"] )
+		
+		# not enough for both objects - will cause cache thrashing
+		Gaffer.ValuePlug.setCacheMemoryLimit( p1["out"].object( "/plane" ).memoryUsage() )
+		
+		exceptions = []
+		def traverser() :
+		
+			try :
+				GafferSceneTest.traverseScene( g["out"], Gaffer.Context() )
+			except Exception, e :
+				exceptions.append( e )
+				
+		threads = []
+		for i in range( 0, 10 ) :
+			thread = threading.Thread( target = traverser )
+			threads.append( thread )
+			thread.start()
+		
+		for thread in threads :
+			thread.join()
 	
+		for e in exceptions :
+			raise e
+	
+	def setUp( self ) :
+	
+		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
+	
+	def tearDown( self ) :
+	
+		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
+		
 if __name__ == "__main__":
 	unittest.main()
 
