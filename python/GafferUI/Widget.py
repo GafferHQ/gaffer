@@ -1998,6 +1998,8 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __updateDrag( self, qObject, qEvent ) :
 	
+		self.__dragDropEvent.modifiers = Widget._modifiers( qEvent.modifiers() )
+
 		# emit enter and leave events as necessary, updating
 		# the destination widget as we do.
 		self.__doDragEnterAndLeave( qObject, qEvent )

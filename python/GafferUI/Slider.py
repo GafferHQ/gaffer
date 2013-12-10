@@ -253,15 +253,23 @@ class Slider( GafferUI.Widget ) :
 		
 		if position < 0 :
 			painter.drawPolygon(
-				QtCore.QPoint( 8, 4 ),
-				QtCore.QPoint( 8, size.y - 4 ),
-				QtCore.QPoint( 2, size.y / 2 ),
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( 8, 4 ),
+						QtCore.QPointF( 8, size.y - 4 ),
+						QtCore.QPointF( 2, size.y / 2 ),
+					]
+				)
 			)
 		elif position > 1 :
 			painter.drawPolygon(
-				QtCore.QPoint( size.x - 8, 4 ),
-				QtCore.QPoint( size.x - 8, size.y - 4 ),
-				QtCore.QPoint( size.x - 2, size.y / 2 ),
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( size.x - 8, 4 ),
+						QtCore.QPointF( size.x - 8, size.y - 4 ),
+						QtCore.QPointF( size.x - 2, size.y / 2 ),
+					]
+				)
 			)
 		else :
 			painter.drawEllipse( QtCore.QPoint( position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
@@ -319,7 +327,7 @@ class Slider( GafferUI.Widget ) :
 		if index is not None :
 			self.setSelectedIndex( index )
 			if len( self.getPositions() ) == 1 :
-				self.__setPositionInternal( index, event.line.p0.x, self.PositionChangedReason.Click  )
+				self.__setPositionInternal( index, event.line.p0.x, self.PositionChangedReason.Click, clamp=True  )
 		elif self.getSizeEditable() :
 			positions = self.getPositions()[:]
 			positions.append( float( event.line.p0.x ) / self.size().x )
@@ -338,18 +346,30 @@ class Slider( GafferUI.Widget ) :
 	def __dragEnter( self, widget, event ) :
 	
 		if event.sourceWidget is self :
-			self.__setPositionInternal( self.getSelectedIndex(), event.line.p0.x, self.PositionChangedReason.DragBegin )
+			self.__setPositionInternal(
+				self.getSelectedIndex(), event.line.p0.x,
+				self.PositionChangedReason.DragBegin,
+				clamp = not (event.modifiers & event.modifiers.Shift ),
+			)
 			return True
 			
 		return False
 		
 	def __dragMove( self, widget, event ) :
 	
-		self.__setPositionInternal( self.getSelectedIndex(), event.line.p0.x, self.PositionChangedReason.DragMove )
+		self.__setPositionInternal(
+			self.getSelectedIndex(), event.line.p0.x,
+			self.PositionChangedReason.DragMove,
+			clamp = not (event.modifiers & event.modifiers.Shift ),
+		)
 
 	def __dragEnd( self, widget, event ) :
 	
-		self.__setPositionInternal( self.getSelectedIndex(), event.line.p0.x, self.PositionChangedReason.DragEnd )
+		self.__setPositionInternal(
+			self.getSelectedIndex(), event.line.p0.x,
+			self.PositionChangedReason.DragEnd,
+			clamp = not (event.modifiers & event.modifiers.Shift ),
+		)
 		
 	def __keyPress( self, widget, event ) :
 	
@@ -368,7 +388,11 @@ class Slider( GafferUI.Widget ) :
 			
 			x = self.getPositions()[self.getSelectedIndex()] * self.size().x
 			x += pixelIncrement if event.key in ( "Right", "Up" ) else -pixelIncrement
-			self.__setPositionInternal( self.getSelectedIndex(), x, self.PositionChangedReason.Increment )
+			self.__setPositionInternal(
+				self.getSelectedIndex(), x,
+				self.PositionChangedReason.Increment,
+				clamp = not (event.modifiers & event.modifiers.Shift ),
+			)
 			return True
 		
 		elif event.key in ( "Backspace", "Delete" ) :
@@ -387,10 +411,14 @@ class Slider( GafferUI.Widget ) :
 					
 		return False
 		
-	def __setPositionInternal( self, index, widgetX, reason ) :
+	def __setPositionInternal( self, index, widgetX, reason, clamp ) :
 
+		position = float( widgetX ) / self.size().x
+		if clamp :
+			position = min( 1.0, max( 0.0, position ) )
+		
 		positions = self.getPositions()[:]
-		positions[index] = float( widgetX ) / self.size().x
+		positions[index] = position
 		self._setPositionsInternal( positions, reason )
 		
 	def __emitPositionChanged( self, reason ) :
