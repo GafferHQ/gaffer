@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,62 +34,62 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_IMAGESAMPLER_H
+#define GAFFERIMAGE_IMAGESAMPLER_H
+
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/CompoundNumericPlug.h"
+
+#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {
 
-enum TypeId
-{
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatDataTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764,
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772,
-	BoxFilterTypeId = 110773,
-	BilinearFilterTypeId = 110774,
-	SplineFilterTypeId = 110775,
-	BSplineFilterTypeId = 110776,
-	HermiteFilterTypeId = 110777,
-	CubicFilterTypeId = 110778,
-	MitchellFilterTypeId = 110779,
-	CatmullRomFilterTypeId = 110780,
-	SincFilterTypeId = 110781,
-	LanczosFilterTypeId = 110782,
-	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
-	RemoveChannelsTypeId = 110785,
-	ColorProcessorTypeId = 110786,
-	ClampTypeId = 110787,
-	ImageMixinBaseTypeId = 110788,
-	ImageContextProcessorTypeId = 110789,
-	ImageTimeWarpTypeId = 110790,
-	ImageContextVariablesTypeId = 110791,
-	ImageSwitchTypeId = 110792,
-	ImageSamplerTypeId = 110793,
+IE_CORE_FORWARDDECLARE( ImagePlug )
+IE_CORE_FORWARDDECLARE( FilterPlug )
 
-	LastTypeId = 110849
+/// Samples colours at image locations.
+/// \todo Support for choosing which channels to sample - ideally
+/// we need ChannelMaskPlug to properly support layers to do that.
+class ImageSampler : public Gaffer::ComputeNode
+{
+
+	public :
+
+		ImageSampler( const std::string &name=defaultName<ImageSampler>() );
+		virtual ~ImageSampler();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageSampler, ImageSamplerTypeId, ComputeNode );
+		
+		ImagePlug *imagePlug();
+		const ImagePlug *imagePlug() const;
+		
+		Gaffer::V2fPlug *pixelPlug();
+		const Gaffer::V2fPlug *pixelPlug() const;
+		
+		FilterPlug *filterPlug();
+		const FilterPlug *filterPlug() const;
+		
+		Gaffer::Color4fPlug *colorPlug();
+		const Gaffer::Color4fPlug *colorPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+				
+	protected :
+		
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
+	private :
+		
+		// Returns the channel to be read for the specified child of colorPlug(),
+		// returning the empty string if the channel doesn't exist.
+		std::string channelName( const Gaffer::ValuePlug *output ) const;
+		
+		static size_t g_firstPlugIndex;
+		
 };
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_IMAGESAMPLER_H

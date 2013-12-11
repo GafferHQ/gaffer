@@ -52,6 +52,7 @@ IE_CORE_FORWARDDECLARE( ImageProcessor )
 IE_CORE_FORWARDDECLARE( Grade )
 IE_CORE_FORWARDDECLARE( ImageStats )
 IE_CORE_FORWARDDECLARE( ImagePlug )
+IE_CORE_FORWARDDECLARE( ImageSampler )
 
 } // namespace GafferImage
 
@@ -94,7 +95,7 @@ class ImageView : public GafferUI::View
 		/// convert the incoming data to an image to view on an "out" ImagePlug.
 		/// \note If the necessary conversion requires several nodes, a Box
 		/// provides a means of packaging them to meet these requirements.
-		/// \note Subclasses are not allowed to call setProcessor() as the
+		/// \note Subclasses are not allowed to call setPreprocessor() as the
 		/// preprocessor is managed by the ImageView base class.
 		void insertConverter( Gaffer::NodePtr converter );
 		
@@ -104,6 +105,9 @@ class ImageView : public GafferUI::View
 
 		GafferImage::ImageStats *imageStatsNode();
 		const GafferImage::ImageStats *imageStatsNode() const;
+		
+		GafferImage::ImageSampler *imageSamplerNode();
+		const GafferImage::ImageSampler *imageSamplerNode() const;
 		
 		GafferImage::Grade *gradeNode();
 		const GafferImage::Grade *gradeNode() const;

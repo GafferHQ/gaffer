@@ -64,7 +64,14 @@ void bindSampler()
 				)
 			) 
 		)
-		.def( init<const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode>() )
+		.def(
+			init<const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode>
+			(
+				(
+					arg( "boundingMode" ) = Sampler::Black
+				)
+			)
+		)
 		.def( "setSampleWindow", &Sampler::setSampleWindow )
 		.def( "getSampleWindow", &Sampler::getSampleWindow )
 		.def( "hash", &Sampler::hash )
