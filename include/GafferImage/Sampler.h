@@ -49,62 +49,62 @@ namespace GafferImage
 class Sampler
 {
 
-public : 
+	public :
 	
-	enum BoundingMode
-	{
-		Black = 0,
-		Clamp = 1
-	};
+		enum BoundingMode
+		{
+			Black = 0,
+			Clamp = 1
+		};
 	
-	/// Sampler Constructor
-	/// @param plug The image plug to sample from.
-	/// @param channelName The channel to sample.
-	/// @param boundingMode The method of handling samples that fall out of the sample window.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
+		/// Sampler Constructor
+		/// @param plug The image plug to sample from.
+		/// @param channelName The channel to sample.
+		/// @param boundingMode The method of handling samples that fall out of the sample window.
+		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
 		
-	/// Sampler Constructor (with a filter)
-	/// @param plug The image plug to sample from.
-	/// @param channelName The channel to sample.
-	/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-	/// @param boundingMode The method of handling samples that fall out of the sample window.
-	Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
+		/// Sampler Constructor (with a filter)
+		/// @param plug The image plug to sample from.
+		/// @param channelName The channel to sample.
+		/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
+		/// @param boundingMode The method of handling samples that fall out of the sample window.
+		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
 
-	/// Sets the sample area that the sampler can access.
-	void setSampleWindow( const Imath::Box2i &window );
+		/// Sets the sample area that the sampler can access.
+		void setSampleWindow( const Imath::Box2i &window );
 	
-	/// Returns the valid sample area.	
-	inline Imath::Box2i getSampleWindow() const;
+		/// Returns the valid sample area.
+		inline Imath::Box2i getSampleWindow() const;
 
-	/// Samples a colour value from the channel at x, y.
-	inline float sample( int x, int y );
+		/// Samples a colour value from the channel at x, y.
+		inline float sample( int x, int y );
 
-	/// Sub-samples the image using a filter.
-	inline float sample( float x, float y );
+		/// Sub-samples the image using a filter.
+		inline float sample( float x, float y );
 
-	/// Accumulates the hashes of the tiles that it accesses.
-	void hash( IECore::MurmurHash &h ) const;
+		/// Accumulates the hashes of the tiles that it accesses.
+		void hash( IECore::MurmurHash &h ) const;
 
-private:
+	private:
 
-	/// Cached data access
-	/// @param p Any point within the cache that we wish to retrieve the data for.
-	/// @param tileData Is set to the tile's channel data.
-	/// @param tileOrigin The coordinate of the tile's  minimum corner.
-	/// @param tileIndex XY indices that can be used to access the colour value of point 'p' from tileData.
-	inline void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tileOrigin, Imath::V2i &tileIndex );
+		/// Cached data access
+		/// @param p Any point within the cache that we wish to retrieve the data for.
+		/// @param tileData Is set to the tile's channel data.
+		/// @param tileOrigin The coordinate of the tile's  minimum corner.
+		/// @param tileIndex XY indices that can be used to access the colour value of point 'p' from tileData.
+		inline void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tileOrigin, Imath::V2i &tileIndex );
 
-	const ImagePlug *m_plug;
-	const std::string m_channelName;
-	Imath::Box2i m_sampleWindow;
-	Imath::Box2i m_userSampleWindow;
+		const ImagePlug *m_plug;
+		const std::string m_channelName;
+		Imath::Box2i m_sampleWindow;
+		Imath::Box2i m_userSampleWindow;
 
-	std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;	
-	Imath::Box2i m_cacheWindow;
-	int m_cacheWidth;
+		std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
+		Imath::Box2i m_cacheWindow;
+		int m_cacheWidth;
 
-	BoundingMode m_boundingMode;
-	ConstFilterPtr m_filter;
+		BoundingMode m_boundingMode;
+		ConstFilterPtr m_filter;
 
 };
 
