@@ -50,20 +50,22 @@
 #include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/OpenColorIO.h"
 #include "GafferImage/ObjectToImage.h"
-#include "GafferImageBindings/FormatBinding.h"
-#include "GafferImageBindings/FormatPlugBinding.h"
-#include "GafferImageBindings/SamplerBinding.h"
 #include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/Constant.h"
 #include "GafferImage/Select.h"
 #include "GafferImage/Reformat.h"
-#include "GafferImageBindings/FilterPlugBindings.h"
-#include "GafferImageBindings/FilterBinding.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/ImageStats.h"
+#include "GafferImage/ImageSampler.h"
+
+#include "GafferImageBindings/FormatBinding.h"
+#include "GafferImageBindings/FormatPlugBinding.h"
+#include "GafferImageBindings/SamplerBinding.h"
+#include "GafferImageBindings/FilterPlugBindings.h"
+#include "GafferImageBindings/FilterBinding.h"
 #include "GafferImageBindings/RemoveChannelsBinding.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 #include "GafferImageBindings/MixinBinding.h"
@@ -127,6 +129,8 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<Reformat>();
 	GafferBindings::DependencyNodeClass<ImageTransform>();
 	GafferBindings::DependencyNodeClass<ImageStats>();
+	GafferBindings::DependencyNodeClass<ImageSampler>();
+
 	GafferImageBindings::bindRemoveChannels();
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();

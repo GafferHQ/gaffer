@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,30 +34,57 @@
 #  
 ##########################################################################
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from RemoveChannelsTest import RemoveChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
+import IECore
 
+import Gaffer
+import GafferTest
+import GafferImage
+
+class ImageSamplerTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+	
+		dataWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 74 ) )
+		image = IECore.ImagePrimitive( dataWindow, dataWindow )
+		red = IECore.FloatVectorData()
+		green = IECore.FloatVectorData()
+		blue = IECore.FloatVectorData()
+		image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, red )
+		image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, green )
+		image["B"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, blue )
+		for y in range( 0, 75 ) :
+			for x in range( 0, 75 ) :
+				red.append( x )
+				green.append( y )
+				blue.append( 0 )
+
+		imageNode = GafferImage.ObjectToImage()
+		imageNode["object"].setValue( image )
+				
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( imageNode["out"] )
+		sampler["filter"].setValue( "Box" )
+		
+		hashes = set()
+		for x in range( 0, 75 ) :
+			for y in range( 0, 75 ) :
+				sampler["pixel"].setValue( IECore.V2f( x, y ) )
+				# the flip in y is necessary as gaffer image coordinates run bottom->top and
+				# cortex image coordinates run top->bottom.
+				self.assertEqual( sampler["color"].getValue(), IECore.Color4f( x, 74 - y, 0, 0 ) )
+				hashes.add( str( sampler["color"].hash() ) )
+		
+		self.assertEqual( len( hashes ), 75 * 75 )
+	
+	def testFilterAffectsHash( self ) :
+	
+		constant = GafferImage.Constant()
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( constant["out"] )
+		
+		h = sampler["color"].hash()
+		sampler["filter"].setValue( "Box" )
+		self.assertNotEqual( sampler["color"].hash(), h )
+			
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
