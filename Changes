@@ -1,3 +1,16 @@
+# 0.87.1
+
+#### UI
+
+- Constrained slider positions inside range by default (#99). Shift modifier allows slides to exceed range.
+- Key modifiers are now correctly updated during drags.
+- Fixed PySide incompatibility in Slider.
+
+####
+
+- Added ImageSampler node to GafferImage
+- Fixed colour space used for ImageView colour sampling (now in linear space).
+
 # 0.87.0
 
 #### UI
