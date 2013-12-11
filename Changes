@@ -6,7 +6,7 @@
 - Key modifiers are now correctly updated during drags.
 - Fixed PySide incompatibility in Slider.
 
-####
+#### Image
 
 - Added ImageSampler node to GafferImage
 - Fixed colour space used for ImageView colour sampling (now in linear space).
