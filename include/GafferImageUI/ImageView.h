@@ -52,6 +52,7 @@ IE_CORE_FORWARDDECLARE( ImageProcessor )
 IE_CORE_FORWARDDECLARE( Grade )
 IE_CORE_FORWARDDECLARE( ImageStats )
 IE_CORE_FORWARDDECLARE( ImagePlug )
+IE_CORE_FORWARDDECLARE( ImageSampler )
 
 } // namespace GafferImage
 
@@ -104,6 +105,9 @@ class ImageView : public GafferUI::View
 
 		GafferImage::ImageStats *imageStatsNode();
 		const GafferImage::ImageStats *imageStatsNode() const;
+		
+		GafferImage::ImageSampler *imageSamplerNode();
+		const GafferImage::ImageSampler *imageSamplerNode() const;
 		
 		GafferImage::Grade *gradeNode();
 		const GafferImage::Grade *gradeNode() const;

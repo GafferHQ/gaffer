@@ -66,6 +66,8 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/Clamp.h"
+#include "GafferImage/ImageSampler.h"
+#include "GafferImage/FilterPlug.h"
 
 #include "GafferImageUI/ImageView.h"
 
@@ -100,6 +102,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		ImageViewGadget(
 			IECore::ConstImagePrimitivePtr image,
 			GafferImage::ImageStatsPtr imageStats,
+			GafferImage::ImageSamplerPtr imageSampler,
 			int &channelToView,
 			Imath::V2f &mousePos,
 			Color4f &sampleColor,
@@ -118,7 +121,8 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_dragSelecting( false ),
 				m_drawSelection( false ),
 				m_channelToView( channelToView ),
-				m_imageStats( imageStats )
+				m_imageStats( imageStats ),
+				m_imageSampler( imageSampler )
 		{
 			V3f dataMin( m_dataWindow.min.x, m_dataWindow.min.y, 0.f );
 			V3f dataMax( 1.f + m_dataWindow.max.x, 1.f + m_dataWindow.max.y, 0.f );
@@ -395,39 +399,15 @@ class ImageViewGadget : public GafferUI::Gadget
 			return Box2f( gadgetToDisplaySpace( box.min ), gadgetToDisplaySpace( box.max ) );
 		}
 
-		/// Samples a color from the image.
-		///\todo: This method currently samples a pixel from the ImagePrimitive and this means that the sampled colour is the result of the image preprocessor.
-		/// Instead we should really be sampling from the input image plug so that the user is presented with raw colour data.
+		/// \todo This is not the final intended use of the ImageSampler -
+		/// we should just be updating the position in it during mouse move,
+		/// and then a Widget overlay should be automatically displaying
+		/// the colorPlug() value (updating automatically when it is notified
+		/// of dirtiness).
 		Color4f sampleColor( const V2f &point ) const
 		{
-			V2i samplePos(
-				fastFloatRound( point.x - .5 ) - m_dataWindow.min.x,
-				( ( m_displayWindow.max.y - fastFloatRound( point.y - .5 ) ) - m_dataWindow.min.y )
-			);
-			
-			if ( samplePos.x < 0 || samplePos.y < 0 || samplePos.x > m_dataWindow.size().x || samplePos.y > m_dataWindow.size().y )
-			{
-				return Color4f( 0.f, 0.f, 0.f, 0.f );
-			}
-
-			Color4f color;
-			std::vector<std::string> channelNames;
-			m_image->channelNames( channelNames );
-			std::string channel[4] = { "R", "G", "B", "A" };
-			for ( int c = 0; c < 4; ++c )
-			{
-				if ( std::find( channelNames.begin(), channelNames.end(), channel[c] ) != channelNames.end() )
-				{
-					const std::vector<float> &channelData = m_image->getChannel<float>( channel[c] )->readable();
-					color[c] = channelData[ samplePos.y * ( m_dataWindow.size().x + 1 ) + samplePos.x ];
-				}
-				else
-				{
-					color[c] = 0.f;
-				}
-			}
-
-			return color;
+			m_imageSampler->pixelPlug()->setValue( point );
+			return m_imageSampler->colorPlug()->getValue();
 		};
 
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
@@ -901,6 +881,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		Imath::Box3f m_sampleWindow;
 		GafferImage::ImageStatsPtr m_imageStats;
+		GafferImage::ImageSamplerPtr m_imageSampler;
 		std::vector<ColorUiElement> m_colorUiElements;
 };
 
@@ -939,6 +920,13 @@ ImageView::ImageView( const std::string &name )
 	addChild( statsNode ); /// \todo Store this in the preprocessor when we've disallowed the changing of it by subclasses
 	statsNode->inPlug()->setInput( preprocessorInput );
 	statsNode->channelsPlug()->setInput( preprocessorInput->channelNamesPlug() );
+
+	ImageSamplerPtr samplerNode = new ImageSampler( "__imageSampler" );
+	addChild( samplerNode ); /// \todo Store this in the preprocessor when we've disallowed the changing of it by subclasses
+	samplerNode->imagePlug()->setInput( preprocessorInput );
+	/// \todo This gives us nearest neighbour filtering which is what we want,
+	// but only because the Sampler class doesn't do Box sampling properly.
+	samplerNode->filterPlug()->setValue( "Box" );
 	
 	ClampPtr clampNode = new Clamp();
 	preprocessor->setChild(  "__clipping", clampNode );
@@ -1073,6 +1061,16 @@ const GafferImage::ImageStats *ImageView::imageStatsNode() const
 	return getChild<ImageStats>( "__imageStats" );
 }
 
+GafferImage::ImageSampler *ImageView::imageSamplerNode()
+{
+	return getChild<ImageSampler>( "__imageSampler" );
+}
+
+const GafferImage::ImageSampler *ImageView::imageSamplerNode() const
+{
+	return getChild<ImageSampler>( "__imageSampler" );
+}
+
 GafferImage::Grade *ImageView::gradeNode()
 {
 	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
@@ -1109,7 +1107,7 @@ void ImageView::update()
 		imageStatsNode()->inPlug()->setInput( imagePlug );
 		imageStatsNode()->channelsPlug()->setInput( imagePlug->channelNamesPlug() );
 
-		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), m_channelToView, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
+		Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), imageSamplerNode(), m_channelToView, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
 		bool hadChild = viewportGadget()->getChild<Gadget>();
 		viewportGadget()->setChild( imageViewGadget );
 		if( !hadChild )
