@@ -46,6 +46,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Nodule.h"
+#include "GafferUI/Metadata.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -127,14 +128,28 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 		return result;
 	}
 	
+	std::string title;
 	Gaffer::ScriptNodePtr script = m_node->ancestor<Gaffer::ScriptNode>();
 	if( script )
 	{
-		result = m_node->relativeName( script );
+		title = m_node->relativeName( script );
 	}
 	else
 	{
-		result = m_node->getName();
+		title = m_node->getName();
+	}
+	
+	result = "<h3>" + title + "</h3>";
+	
+	std::string description = Metadata::nodeDescription( m_node );
+	if( description.size() )
+	{
+		result += "\n\n" + description;
+	}
+	
+	if( ConstStringDataPtr summary = Metadata::nodeValue<StringData>( m_node, "summary" ) )
+	{
+		result += "\n\n" + summary->readable();
 	}
 	
 	return result;
