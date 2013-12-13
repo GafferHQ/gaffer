@@ -101,5 +101,29 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( b2.min, b1.min + IECore.V2i( 100 ) )
 		self.assertEqual( b2.max, b1.max + IECore.V2i( 100 ) )
 	
+	def testOverlayMousePosition( self ) :
+	
+		w = GafferUI.Window( borderWidth = 10 )
+		g = GafferUI.GLWidget()
+		f = GafferUI.Frame()
+		b = GafferUI.Button()
+		
+		w.setChild( g )
+		g.addOverlay( f )
+		f.setChild( b )
+		
+		w.setVisible( True )
+
+		w.setPosition( IECore.V2i( 100 ) )
+		self.waitForIdle( 1000 )
+		
+		wBound = w.bound()
+		bBound = b.bound()
+		
+		wP = GafferUI.Widget.mousePosition( relativeTo = w )
+		bP = GafferUI.Widget.mousePosition( relativeTo = b )
+		
+		self.assertEqual( bBound.min - wBound.min, wP - bP )
+		
 if __name__ == "__main__":
 	unittest.main()

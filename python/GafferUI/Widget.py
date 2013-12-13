@@ -527,10 +527,11 @@ class Widget( object ) :
 	def mousePosition( relativeTo=None ) :
 	
 		p = QtGui.QCursor.pos()
+		p = IECore.V2i( p.x(), p.y() )
 		if relativeTo is not None :
-			p = relativeTo._qtWidget().mapFromGlobal( p )
+			p = p - relativeTo.bound().min
 			
-		return IECore.V2i( p.x(), p.y() )
+		return p
 	
 	## Returns the widget at the specified screen position.
 	# If widgetType is specified, then it is used to find
