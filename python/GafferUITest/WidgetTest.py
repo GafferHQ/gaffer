@@ -409,6 +409,22 @@ class WidgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center() ) is t2 )
 		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center(), widgetType=GafferUI.Window ) is w1 )
 		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center(), widgetType=GafferUI.Window ) is w2 )
+
+	def testMousePosition( self ) :
+	
+		w = GafferUI.Window( borderWidth = 8 )
+		b = GafferUI.Button()
+		w.setChild( b )
+		w.setVisible( True )
+				
+		w.setPosition( IECore.V2i( 100 ) )
+
+		self.waitForIdle( 1000 )
+		
+		mouseGlobal = GafferUI.Widget.mousePosition()
+		mouseLocal = GafferUI.Widget.mousePosition( relativeTo = b )
+		
+		self.assertEqual( mouseGlobal, mouseLocal + b.bound().min )
 		
 if __name__ == "__main__":
 	unittest.main()
