@@ -72,6 +72,33 @@ class MetadataTest( GafferUITest.TestCase ) :
 		GafferUI.Metadata.registerNodeDescription( self.DerivedAddNode.staticTypeId(), "a not very helpful description" )
 		self.assertEqual( GafferUI.Metadata.nodeDescription( derivedAdd ), "a not very helpful description" )
 		self.assertEqual( GafferUI.Metadata.nodeDescription( add ), "AddNode" )
+	
+	def testExtendedNodeDescription( self ) :
+	
+		multiply = GafferTest.MultiplyNode()
+		
+		self.assertEqual( GafferUI.Metadata.nodeDescription( multiply ), "" )
+		
+		GafferUI.Metadata.registerNodeDescription(
+		
+			GafferTest.MultiplyNode,
+			"description",
+			
+			"op1",
+			"op1 description",
+			
+			"op2",
+			{
+				"description" : "op2 description",
+				"otherValue" : 100,
+			}
+			
+		)
+		
+		self.assertEqual( GafferUI.Metadata.nodeDescription( multiply ), "description" )
+		self.assertEqual( GafferUI.Metadata.plugDescription( multiply["op1"] ), "op1 description" )
+		self.assertEqual( GafferUI.Metadata.plugDescription( multiply["op2"] ), "op2 description" )
+		self.assertEqual( GafferUI.Metadata.plugValue( multiply["op2"], "otherValue" ), 100 )
 		
 	def testPlugDescription( self ) :
 	
@@ -100,7 +127,7 @@ class MetadataTest( GafferUITest.TestCase ) :
 
 		add = GafferTest.AddNode()
 
-		self.assertEqual( GafferUI.Metadata.nodeValue( add["op1"], "aKey" ), None )
+		self.assertEqual( GafferUI.Metadata.nodeValue( add, "aKey" ), None )
 		self.assertEqual( GafferUI.Metadata.plugValue( add["op1"], "aKey" ), None )
 
 		GafferUI.Metadata.registerNodeValue( GafferTest.AddNode, "aKey", "something" )
