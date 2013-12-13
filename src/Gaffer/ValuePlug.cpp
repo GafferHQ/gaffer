@@ -66,7 +66,7 @@ class ValuePlug::Computation
 	public :
 	
 		Computation( const ValuePlug *resultPlug )
-			:	m_resultPlug( resultPlug ), m_resultWritten( false )
+			:	m_resultPlug( resultPlug ), m_resultValue( NULL )
 		{
 			g_threadComputations.local().push( this );
 		}
@@ -103,20 +103,11 @@ class ValuePlug::Computation
 			if( cacheable )
 			{
 				IECore::MurmurHash hash = m_resultPlug->hash();
-				if( g_valueCache.cached( hash ) )
-				{
-					/// \todo This is not threadsafe!
-					/// Can we resolve this by doing the compute in the getter
-					/// or having the getter return 0 for failure?
-					return g_valueCache.get( hash );
-				}
-				else
+				m_resultValue = g_valueCache.get( hash );
+				if( !m_resultValue )
 				{
 					computeOrSetFromInput();
-					if( m_resultWritten )
-					{
-						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
-					}
+					g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
 				}
 			}
 			else
@@ -126,13 +117,6 @@ class ValuePlug::Computation
 				computeOrSetFromInput();
 			}
 			
-			// the call to computeOrSetFromInput() above should cause setValue() to be called
-			// on the result plug, which in turn will call ValuePlug::setObjectValue(), which will
-			// then store the result in the current computation by calling receiveResult().
-			if( !m_resultWritten )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % m_resultPlug->fullName() ) );			
-			}
 			return m_resultValue;
 		}
 				
@@ -150,7 +134,6 @@ class ValuePlug::Computation
 			}
 			
 			computation->m_resultValue = result;
-			computation->m_resultWritten = true;
 		}
 		
 		static Computation *current()
@@ -180,6 +163,8 @@ class ValuePlug::Computation
 		
 	private :
 	
+		// Fills in m_resultValue by calling ComputeNode::compute() or ValuePlug::setFrom().
+		// Throws if the result was not successfully retrieved.
 		void computeOrSetFromInput()
 		{
 			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
@@ -198,11 +183,19 @@ class ValuePlug::Computation
 				// cast is ok - see comment above.
 				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
 			}
+			
+			// the calls above should cause setValue() to be called on the result plug, which in
+			// turn will call ValuePlug::setObjectValue(), which will then store the result in
+			// the current computation by calling receiveResult(). If that hasn't happened then
+			// something has gone wrong and we should complain about it.
+			if( !m_resultValue )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % m_resultPlug->fullName() ) );
+			}
 		}
 	
 		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
-		bool m_resultWritten;
 
 		typedef std::stack<Computation *> ComputationStack;
 		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
@@ -210,7 +203,8 @@ class ValuePlug::Computation
 		
 		static IECore::ObjectPtr nullGetter( const IECore::MurmurHash &h, size_t &cost )
 		{
-			throw IECore::Exception( "Getter not implemented." );
+			cost = 0;
+			return NULL;
 		}
 		
 		typedef IECore::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
