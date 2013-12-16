@@ -70,6 +70,7 @@
 #include "GafferUIBindings/PointerBinding.h"
 #include "GafferUIBindings/BackdropNodeGadgetBinding.h"
 #include "GafferUIBindings/MetadataBinding.h"
+#include "GafferUIBindings/SpacerGadgetBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -109,5 +110,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindPointer();
 	bindBackdropNodeGadget();
 	bindMetadata();
+	bindSpacerGadget();
 	
 }
