@@ -120,7 +120,19 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( 0, 1, 0 ) )
 		self.assertEqual( g.noduleTangent( g.nodule( n["sum"] ) ), IECore.V3f( 0, -1, 0 ) )
+	
+	def testNodulePositionMetadata( self ) :
+	
+		n = GafferTest.MultiplyNode()
 		
+		g = GafferUI.StandardNodeGadget( n )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
+
+		GafferUI.Metadata.registerPlugValue( n.typeId(), "op1", "nodeGadget:nodulePosition", "left" )
+				
+		g = GafferUI.StandardNodeGadget( n )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
 	

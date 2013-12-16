@@ -55,6 +55,7 @@
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/SpacerGadget.h"
+#include "GafferUI/Metadata.h"
 
 using namespace GafferUI;
 using namespace Gaffer;
@@ -301,6 +302,26 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 	if( m_orientation == LinearContainer::Y )
 	{
 		edge = edge == TopEdge ? LeftEdge : RightEdge;
+	}
+	
+	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug.get(), "nodeGadget:nodulePosition" ) )
+	{
+		if( d->readable() == "left" )
+		{
+			edge = LeftEdge;
+		}
+		else if( d->readable() == "right" )
+		{
+			edge = RightEdge;
+		}
+		else if( d->readable() == "bottom" )
+		{
+			edge = BottomEdge;
+		}
+		else
+		{
+			edge = TopEdge;
+		}
 	}
 	
 	LinearContainer *container = noduleContainer( edge );

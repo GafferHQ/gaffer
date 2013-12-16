@@ -44,6 +44,13 @@
 namespace GafferUI
 {
 
+/// The standard means of representing a Node in a GraphGadget.
+/// Nodes are represented as rectangular boxes with the name displayed
+/// centrally and the nodules arranged at the sides. The orientation
+/// argument to the constructor is used to determine whether the direction
+/// of flow is left->right or top->bottom, and in addition nodules may be
+/// positioned arbitrarily using a "nodeGadget:nodulePosition" Metadata entry
+/// with a value of "left", "right", "top" or "bottom".
 class StandardNodeGadget : public NodeGadget
 {
 
