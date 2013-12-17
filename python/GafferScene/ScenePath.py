@@ -56,15 +56,18 @@ class ScenePath( Gaffer.Path ) :
 	
 	def isValid( self ) :
 	
+		if not Gaffer.Path.isValid( self ) :
+			return False
+	
 		with self.__context :
-			with IECore.IgnoredExceptions( Exception ) :
-				## \todo Possibly we should just have a "valid" child plug
-				# Or perhaps instead we should just walk up from the root,
-				# checking that all the correct child names exist.
-				self.__scenePlug.bound( str( self ) )
-				return True
+			path = IECore.InternedStringVectorData()
+			for p in self :
+				childNames = self.__scenePlug.childNames( path )
+				if p not in childNames :
+					return False
+				path.append( p )
 				
-		return False
+		return True
 	
 	def info( self ) :
 	
