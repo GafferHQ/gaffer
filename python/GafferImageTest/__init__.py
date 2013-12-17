@@ -35,6 +35,8 @@
 #  
 ##########################################################################
 
+from _GafferImageTest import *
+
 from ImagePlugTest import ImagePlugTest
 from ImageReaderTest import ImageReaderTest
 from OpenColorIOTest import OpenColorIOTest

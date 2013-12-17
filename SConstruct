@@ -926,7 +926,14 @@ libraries = {
 		"requiredOptions" : [ "OIIO_SRC_DIR", "OCIO_SRC_DIR" ],
 	},
 	
-	"GafferImageTest" : {},
+	"GafferImageTest" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferImage" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferImageTest", "GafferImageBindings" ],
+		},
+	},
 	
 	"GafferImageUITest" : {},
 	
