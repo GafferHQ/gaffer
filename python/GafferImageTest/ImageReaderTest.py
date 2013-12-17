@@ -49,6 +49,8 @@ class ImageReaderTest( unittest.TestCase ) :
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
 	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/negativeDisplayWindow.exr" )
+	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" )
+	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.jpg" )
 
 	def testInternalImageSpaceConversion( self ) :
 		
@@ -183,6 +185,27 @@ class ImageReaderTest( unittest.TestCase ) :
 		image2.blindData().clear()
 		
 		self.assertEqual( image, image2 )
+
+	def testJpgRead( self ) :
+
+		exrReader = GafferImage.ImageReader()
+		exrReader["fileName"].setValue( self.circlesExrFileName )
+
+		jpgReader = GafferImage.ImageReader()
+		jpgReader["fileName"].setValue( self.circlesJpgFileName )
+
+		exrImage = exrReader["out"].image()
+		jpgImage = jpgReader["out"].image()
+
+		exrImage.blindData().clear()
+		jpgImage.blindData().clear()
+
+		imageDiffOp = IECore.ImageDiffOp()
+		res = imageDiffOp(
+			imageA = exrImage,
+			imageB = jpgImage,
+		)
+		self.assertFalse( res.value )	
 				
 if __name__ == "__main__":
 	unittest.main()
