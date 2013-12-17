@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,46 +34,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "GafferUI/SpacerGadget.h"
 
-namespace GafferUI
+using namespace GafferUI;
+
+IE_CORE_DEFINERUNTIMETYPED( SpacerGadget );
+
+SpacerGadget::SpacerGadget( const Imath::Box3f &size )
+	:	Gadget( defaultName<SpacerGadget>() ), m_bound( size )
 {
+}
 
-enum TypeId
+SpacerGadget::~SpacerGadget()
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	
-	LastTypeId = 110500
-};
+}
 
-} // namespace GafferUI
+void SpacerGadget::doRender( const Style *style ) const
+{
+}
 
-#endif // GAFFERUI_TYPEIDS_H
+Imath::Box3f SpacerGadget::bound() const
+{
+	return m_bound;
+}
+
+bool SpacerGadget::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return false;
+}
+

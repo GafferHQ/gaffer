@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,38 +34,23 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import IECore
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
+import GafferUI
+import GafferUITest
+
+class SpacerGadgetTest( GafferUITest.TestCase ) :
+
+	def test( self ) :
+	
+		s = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 3 ) ) )
+		self.assertEqual( s.bound(), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 3 ) ) )
+		
+		t = GafferUI.TextGadget( "t" )
+		self.assertFalse( s.acceptsChild( t ) )
+		
+		self.assertRaises( RuntimeError, s.addChild, t )
+		
+if __name__ == "__main__":
+	unittest.main()
+	

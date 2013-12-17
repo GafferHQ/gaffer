@@ -54,6 +54,8 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/StandardNodule.h"
+#include "GafferUI/SpacerGadget.h"
+#include "GafferUI/Metadata.h"
 
 using namespace GafferUI;
 using namespace Gaffer;
@@ -64,39 +66,94 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 
 static const float g_borderWidth = 0.5f;
-static const float g_minWidth = 10.0f;
 static const float g_spacing = 0.5f;
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-	:	NodeGadget( node ), m_nodeEnabled( true ), m_labelsVisibleOnHover( true ), m_dragDestinationProxy( 0 )
+	:	NodeGadget( node ),
+		m_orientation( orientation ),
+		m_nodeEnabled( true ),
+		m_labelsVisibleOnHover( true ),
+		m_dragDestinationProxy( 0 )
 {
-	LinearContainer::Orientation oppositeOrientation = orientation == LinearContainer::X ? LinearContainer::Y : LinearContainer::X;
 
-	LinearContainerPtr mainContainer = new LinearContainer(
-		"mainContainer",
-		oppositeOrientation,
+	// build our ui structure
+	////////////////////////////////////////////////////////
+	
+	const float horizontalNoduleSpacing = 2.0f;
+	const float verticalNoduleSpacing = 0.2f;
+	const float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+
+	// four containers for nodules - one each for the top, bottom, left and right.
+	// these contain spacers at either end to prevent nodules being placed in
+	// the corners of the node gadget, and also to guarantee a minimim width for the
+	// vertical containers and a minimum height for the horizontal ones.
+	
+	LinearContainerPtr topNoduleContainer = new LinearContainer( "topNoduleContainer", LinearContainer::X, LinearContainer::Centre, horizontalNoduleSpacing );
+	topNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 0, 1, 0 ) ) ) );
+	topNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 0, 1, 0 ) ) ) );
+	
+	LinearContainerPtr bottomNoduleContainer = new LinearContainer( "bottomNoduleContainer", LinearContainer::X, LinearContainer::Centre, horizontalNoduleSpacing );
+	bottomNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 0, 1, 0 ) ) ) );
+	bottomNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 0, 1, 0 ) ) ) );
+
+	LinearContainerPtr leftNoduleContainer = new LinearContainer( "leftNoduleContainer", LinearContainer::Y, LinearContainer::Centre, verticalNoduleSpacing, LinearContainer::Decreasing );
+	leftNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0, 0 ) ) ) );
+	leftNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0, 0 ) ) ) );
+
+	LinearContainerPtr rightNoduleContainer = new LinearContainer( "rightNoduleContainer", LinearContainer::Y, LinearContainer::Centre, verticalNoduleSpacing, LinearContainer::Decreasing );
+	rightNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0, 0 ) ) ) );
+	rightNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0, 0 ) ) ) );
+
+	// column - this is our outermost structuring container
+
+	LinearContainerPtr column = new LinearContainer(
+		"column",
+		LinearContainer::Y,
 		LinearContainer::Centre,
-		g_spacing,
-		orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing
+		0.0f,
+		LinearContainer::Decreasing
 	);
 
-	const float noduleSpacing = orientation == LinearContainer::X ? 2.0f : 0.2f;
-	LinearContainer::Direction noduleDirection = orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing;
-	LinearContainerPtr inputNoduleContainer = new LinearContainer( "inputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing, noduleDirection );
-	LinearContainerPtr outputNoduleContainer = new LinearContainer( "outputNoduleContainer", orientation, LinearContainer::Centre, noduleSpacing, noduleDirection );
-
-	mainContainer->addChild( outputNoduleContainer );
+	column->addChild( topNoduleContainer );
+	column->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, g_spacing, 0 ) ) ) );
+	
+	LinearContainerPtr row = new LinearContainer(
+		"row",
+		LinearContainer::X,
+		LinearContainer::Centre,
+		g_spacing
+	);
+	
+	column->addChild( row );
+	
+	// central row - this holds our main contents, with the
+	// nodule containers surrounding it.
+	
+	row->addChild( leftNoduleContainer );
 	
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
 	contentsContainer->setPadding( Box3f( V3f( -g_borderWidth ), V3f( g_borderWidth ) ) );
 	
-	mainContainer->addChild( contentsContainer );
-	mainContainer->addChild( inputNoduleContainer );
-
-	setChild( mainContainer );
+	row->addChild( contentsContainer );
+	
+	row->addChild( rightNoduleContainer );
+	column->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, g_spacing, 0 ) ) ) );
+	column->addChild( bottomNoduleContainer );
+	
+	setChild( column );
 	setContents( new NameGadget( node ) );
 	
+	// nodules for all current plugs
+	
+	for( Gaffer::PlugIterator it( node ); it!=it.end(); it++ )
+	{
+		addNodule( *it );
+	}
+
+	// connect to the signals we need in order to operate
+	////////////////////////////////////////////////////////
+
 	Gaffer::ScriptNodePtr script = node->scriptNode();
 	if( script )
 	{
@@ -106,11 +163,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
-	
-	for( Gaffer::PlugIterator it( node ); it!=it.end(); it++ )
-	{
-		addNodule( *it );
-	}
 	
 	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node ) )
 	{
@@ -122,17 +174,18 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		}
 	}
 	
-	
 	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &StandardNodeGadget::dragLeave, this, ::_1, ::_2 ) );
 	dropSignal().connect( boost::bind( &StandardNodeGadget::drop, this, ::_1, ::_2 ) );
 	
-	inputNoduleContainer->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
-	inputNoduleContainer->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
+	for( int e = FirstEdge; e <= LastEdge; e++ )
+	{
+		LinearContainer *c = noduleContainer( (Edge)e );
+		c->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
+		c->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
+	}
 
-	outputNoduleContainer->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
-	outputNoduleContainer->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -142,58 +195,12 @@ StandardNodeGadget::~StandardNodeGadget()
 Imath::Box3f StandardNodeGadget::bound() const
 {
 	Box3f b = IndividualContainer::bound();
-	
-	LinearContainer::Orientation orientation = inputNoduleContainer()->getOrientation();
 
-	if( orientation == LinearContainer::X )
-	{
-		// enforce a minimum width
-		float width = std::max( b.size().x, g_minWidth );
-		float c = b.center().x;
-		b.min.x = c - width / 2.0f;
-		b.max.x = c + width / 2.0f;
-	}
-	
-	// add the missing spacing to the border if we have no nodules on a given side
-			
-	Box3f inputContainerBound = inputNoduleContainer()->transformedBound( this );
-	Box3f outputContainerBound = outputNoduleContainer()->transformedBound( this );
-	if( inputContainerBound.isEmpty() )
-	{
-		if( orientation == LinearContainer::X )
-		{
-			b.max.y += g_spacing + g_borderWidth;
-		}
-		else
-		{
-			b.min.x -= g_spacing + g_borderWidth;		
-		}
-	}
-	
-	if( outputContainerBound.isEmpty() )
-	{
-		if( orientation == LinearContainer::X )
-		{
-			b.min.y -= g_spacing + g_borderWidth;
-		}
-		else
-		{
-			b.max.x += g_spacing + g_borderWidth;
-		}
-	}
-	
-	// add on a little bit in the major axis, so that the nodules don't get drawn in the frame corner
-	
-	if( orientation == LinearContainer::X )
-	{
-		b.min.x -= g_borderWidth;
-		b.max.x += g_borderWidth;
-	}
-	else
-	{
-		b.min.y -= g_borderWidth;
-		b.max.y += g_borderWidth;
-	}
+	// cheat a little - shave a bit off to make it possible to
+	// select the node by having the drag region cover only the
+	// background frame, and not the full extent of the nodules.
+	b.min += V3f( g_spacing, g_spacing, 0 );
+	b.max -= V3f( g_spacing, g_spacing, 0 );
 	
 	return b;
 }
@@ -209,41 +216,14 @@ void StandardNodeGadget::doRender( const Style *style ) const
 		state = Style::HighlightedState;
 	}
 	
-	// draw 
+	// draw our background frame
 	Box3f b = bound();
-
-	LinearContainer::Orientation orientation = inputNoduleContainer()->getOrientation();
-	
-	Box3f inputContainerBound = inputNoduleContainer()->transformedBound( this );
-	Box3f outputContainerBound = outputNoduleContainer()->transformedBound( this );
-	
-	if( !inputContainerBound.isEmpty() )
-	{
-		if( orientation == LinearContainer::X )
-		{
-			b.max.y -= inputContainerBound.size().y / 2.0f;
-		}
-		else
-		{
-			b.min.x += inputContainerBound.size().x / 2.0f;
-		}
-	}
-	if( !outputContainerBound.isEmpty() )
-	{
-		if( orientation == LinearContainer::X )
-		{
-			b.min.y += outputContainerBound.size().y / 2.0f;
-		}
-		else
-		{
-			b.max.x -= outputContainerBound.size().x / 2.0f;		
-		}
-	}
-
 	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ), g_borderWidth, state );
 	
+	// draw our contents
 	NodeGadget::doRender( style );
 	
+	// draw a strikethrough if we're disabled
 	if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
 	{
 		/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
@@ -283,17 +263,28 @@ const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
 
 Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
 {
-	LinearContainer::Orientation orientation = inputNoduleContainer()->getOrientation();
-	Plug::Direction direction = nodule->plug()->direction();
-	if( orientation == LinearContainer::X )
+	if( noduleContainer( LeftEdge )->isAncestorOf( nodule ) )
 	{
-		return direction == Plug::In ? V3f( 0, 1, 0 ) : V3f( 0, -1, 0 );
+		return V3f( -1, 0, 0 );
 	}
-	return direction == Plug::In ? V3f( -1, 0, 0 ) : V3f( 1, 0, 0 );
+	else if( noduleContainer( RightEdge )->isAncestorOf( nodule ) )
+	{
+		return V3f( 1, 0, 0 );
+	}
+	else if( noduleContainer( TopEdge )->isAncestorOf( nodule ) )
+	{
+		return V3f( 0, 1, 0 );
+	}
+	else
+	{
+		return V3f( 0, -1, 0 );
+	}
 }
 
 NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 {
+	// create a Nodule if we actually want one
+	
 	if( plug->getName().string().compare( 0, 2, "__" )==0 )
 	{
 		return 0;
@@ -305,49 +296,87 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 		return 0;
 	}
 	
-	if( plug->direction()==Gaffer::Plug::In )
+	// decide which nodule container to put it in
+	
+	Edge edge = plug->direction() == Gaffer::Plug::In ? TopEdge : BottomEdge;
+	if( m_orientation == LinearContainer::Y )
 	{
-		inputNoduleContainer()->addChild( nodule );
+		edge = edge == TopEdge ? LeftEdge : RightEdge;
 	}
-	else
+	
+	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug.get(), "nodeGadget:nodulePosition" ) )
 	{
-		outputNoduleContainer()->addChild( nodule );
+		if( d->readable() == "left" )
+		{
+			edge = LeftEdge;
+		}
+		else if( d->readable() == "right" )
+		{
+			edge = RightEdge;
+		}
+		else if( d->readable() == "bottom" )
+		{
+			edge = BottomEdge;
+		}
+		else
+		{
+			edge = TopEdge;
+		}
 	}
+	
+	LinearContainer *container = noduleContainer( edge );
+	
+	// remove the spacer at the end, add the nodule, and replace the spacer at the end
+	
+	SpacerGadgetPtr spacer = container->getChild<SpacerGadget>( container->children().size() - 1 );
+	container->removeChild( spacer );
+	noduleContainer( edge )->addChild( nodule );
+	container->addChild( spacer );
+	
+	// remember our nodule
 	
 	m_nodules[plug.get()] = nodule.get();
 	
 	return nodule;
 }
 
-LinearContainer *StandardNodeGadget::outputNoduleContainer()
+LinearContainer *StandardNodeGadget::noduleContainer( Edge edge )
 {
-	return getChild<Gadget>()->getChild<LinearContainer>( 0 );
+	Gadget *column = getChild<Gadget>();
+	
+	if( edge == TopEdge )
+	{
+		return column->getChild<LinearContainer>( 0 );
+	}
+	else if( edge == BottomEdge )
+	{
+		return column->getChild<LinearContainer>( 4 );
+	}
+	
+	Gadget *row = column->getChild<Gadget>( 2 );
+	if( edge == LeftEdge )
+	{
+		return row->getChild<LinearContainer>( 0 );
+	}
+	else
+	{
+		return row->getChild<LinearContainer>( 2 );
+	}
 }
 
-const LinearContainer *StandardNodeGadget::outputNoduleContainer() const
+const LinearContainer *StandardNodeGadget::noduleContainer( Edge edge ) const
 {
-	return getChild<Gadget>()->getChild<LinearContainer>( 0 );
+	return const_cast<StandardNodeGadget *>( this )->noduleContainer( edge );
 }
 
 IndividualContainer *StandardNodeGadget::contentsContainer()
 {
-	return getChild<Gadget>()->getChild<IndividualContainer>( 1 );
-
+	return getChild<Gadget>()->getChild<Gadget>( 2 )->getChild<IndividualContainer>( 1 );
 }
 
 const IndividualContainer *StandardNodeGadget::contentsContainer() const
 {
-	return getChild<Gadget>()->getChild<IndividualContainer>( 1 );
-}
-
-LinearContainer *StandardNodeGadget::inputNoduleContainer()
-{
-	return getChild<Gadget>()->getChild<LinearContainer>( 2 );
-}
-
-const LinearContainer *StandardNodeGadget::inputNoduleContainer() const
-{
-	return getChild<Gadget>()->getChild<LinearContainer>( 2 );
+	return getChild<Gadget>()->getChild<Gadget>( 2 )->getChild<IndividualContainer>( 1 );
 }
 
 void StandardNodeGadget::selectionChanged( Gaffer::Set *selection, IECore::RunTimeTyped *n )

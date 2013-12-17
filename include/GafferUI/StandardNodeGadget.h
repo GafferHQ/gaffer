@@ -44,6 +44,13 @@
 namespace GafferUI
 {
 
+/// The standard means of representing a Node in a GraphGadget.
+/// Nodes are represented as rectangular boxes with the name displayed
+/// centrally and the nodules arranged at the sides. The orientation
+/// argument to the constructor is used to determine whether the direction
+/// of flow is left->right or top->bottom, and in addition nodules may be
+/// positioned arbitrarily using a "nodeGadget:nodulePosition" Metadata entry
+/// with a value of "left", "right", "top" or "bottom".
 class StandardNodeGadget : public NodeGadget
 {
 
@@ -78,15 +85,22 @@ class StandardNodeGadget : public NodeGadget
 		
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 		
-		LinearContainer *inputNoduleContainer();
-		const LinearContainer *inputNoduleContainer() const;
+		enum Edge
+		{
+			TopEdge,
+			BottomEdge,
+			LeftEdge,
+			RightEdge,
+			FirstEdge = TopEdge,
+			LastEdge = RightEdge
+		};
+		
+		LinearContainer *noduleContainer( Edge edge );
+		const LinearContainer *noduleContainer( Edge edge ) const;
 		
 		IndividualContainer *contentsContainer();
 		const IndividualContainer *contentsContainer() const;
 		
-		LinearContainer *outputNoduleContainer();
-		const LinearContainer *outputNoduleContainer() const;
-	
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
 				
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
@@ -108,6 +122,7 @@ class StandardNodeGadget : public NodeGadget
 		Nodule *closestCompatibleNodule( const DragDropEvent &event );
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
 
+		const LinearContainer::Orientation m_orientation;
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
 		// we accept drags from nodules and forward them to the

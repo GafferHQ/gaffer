@@ -35,7 +35,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "boost/algorithm/string/find.hpp"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -46,6 +46,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Nodule.h"
+#include "GafferUI/Metadata.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -127,14 +128,24 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 		return result;
 	}
 	
-	Gaffer::ScriptNodePtr script = m_node->ancestor<Gaffer::ScriptNode>();
-	if( script )
+	std::string title = m_node->typeName();
+	boost::iterator_range<string::const_iterator> r = boost::find_last( title, ":" );
+	if( r )
 	{
-		result = m_node->relativeName( script );
+		title = &*(r.end());
 	}
-	else
+	
+	result = "<h3>" + title + "</h3>";
+	
+	std::string description = Metadata::nodeDescription( m_node );
+	if( description.size() )
 	{
-		result = m_node->getName();
+		result += "\n\n" + description;
+	}
+	
+	if( ConstStringDataPtr summary = Metadata::nodeValue<StringData>( m_node, "summary" ) )
+	{
+		result += "\n\n" + summary->readable();
 	}
 	
 	return result;

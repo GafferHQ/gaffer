@@ -154,7 +154,6 @@ from Bookmarks import Bookmarks
 
 # then stuff specific to graph uis
 
-from Metadata import Metadata
 from PlugValueWidget import PlugValueWidget
 from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget

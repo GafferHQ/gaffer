@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,46 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERUI_SPACERGADGET_H
+#define GAFFERUI_SPACERGADGET_H
+
+#include "GafferUI/Gadget.h"
 
 namespace GafferUI
 {
 
-enum TypeId
+class SpacerGadget : public Gadget
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
+
+	public :
+
+		SpacerGadget( const Imath::Box3f &size );
+		virtual ~SpacerGadget();
+		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::SpacerGadget, SpacerGadgetTypeId, Gadget );
+
+		virtual Imath::Box3f bound() const;
+
+		/// Rejects all children.
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+			
+	protected :
 	
-	LastTypeId = 110500
+		virtual void doRender( const Style *style ) const;
+
+	private :
+		
+		Imath::Box3f m_bound;
+		
 };
+
+IE_CORE_DECLAREPTR( SpacerGadget )
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#endif // GAFFERUI_SPACERGADGET_H
