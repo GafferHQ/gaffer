@@ -68,6 +68,30 @@ class ScenePathTest( unittest.TestCase ) :
 		self.assertEqual( p2.root(), "" )
 		self.assertEqual( [ str( c ) for c in p2.children() ], [ "group1/pCube1" ] )
 	
+	def testIsValid( self ) :
+	
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"].setInput( plane["out"] )
+		
+		p = GafferScene.ScenePath( group["out"], Gaffer.Context(), "/" )
+		self.assertTrue( p.isValid() )
+		
+		p.setFromString( "/group" )
+		self.assertTrue( p.isValid() )
+		
+		p.setFromString( "/group/plane" )
+		self.assertTrue( p.isValid() )
+
+		p.setFromString( "/group/plane2" )
+		self.assertFalse( p.isValid() )
+		
+		p.setFromString( "/group2/plane" )
+		self.assertFalse( p.isValid() )
+
+		p.setFromString( "" )
+		self.assertFalse( p.isValid() )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
