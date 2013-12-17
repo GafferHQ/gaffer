@@ -35,7 +35,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
+#include "boost/algorithm/string/find.hpp"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -128,15 +128,11 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 		return result;
 	}
 	
-	std::string title;
-	Gaffer::ScriptNodePtr script = m_node->ancestor<Gaffer::ScriptNode>();
-	if( script )
+	std::string title = m_node->typeName();
+	boost::iterator_range<string::const_iterator> r = boost::find_last( title, ":" );
+	if( r )
 	{
-		title = m_node->relativeName( script );
-	}
-	else
-	{
-		title = m_node->getName();
+		title = &*(r.end());
 	}
 	
 	result = "<h3>" + title + "</h3>";
