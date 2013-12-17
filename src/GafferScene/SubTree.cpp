@@ -56,6 +56,7 @@ SubTree::SubTree( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "root", Plug::In, "" ) );
+	addChild( new BoolPlug( "includeRoot", Plug::In, false ) );
 }
 
 SubTree::~SubTree()
@@ -72,6 +73,16 @@ const Gaffer::StringPlug *SubTree::rootPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *SubTree::includeRootPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *SubTree::includeRootPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
@@ -80,7 +91,7 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
-	else if( input == rootPlug() )
+	else if( input == rootPlug() || input == includeRootPlug() )
 	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
@@ -92,32 +103,109 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 
 void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ScenePath source = sourcePath( path );
-	h = inPlug()->boundHash( source );
+	bool createRoot = false;
+	ScenePath source = sourcePath( path, createRoot );
+	if( createRoot )
+	{
+		h = hashOfTransformedChildBounds( path, parent );
+	}
+	else
+	{
+		h = inPlug()->boundHash( source );
+	}
+}
+
+Imath::Box3f SubTree::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	bool createRoot = false;
+	const ScenePath source = sourcePath( path, createRoot );
+	if( createRoot )
+	{
+		return unionOfTransformedChildBounds( path, parent );
+	}
+	else
+	{
+		return inPlug()->bound( source );
+	}
 }
 
 void SubTree::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ScenePath source = sourcePath( path );
+	bool createRoot = false;
+	ScenePath source = sourcePath( path, createRoot );
+	assert( !createRoot ); // SceneNode::hash() shouldn't call this for the root path
 	h = inPlug()->transformHash( source );
+}
+
+Imath::M44f SubTree::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	bool createRoot = false;
+	const ScenePath source = sourcePath( path, createRoot );
+	assert( !createRoot ); // SceneNode::compute() shouldn't call this for the root path
+	return inPlug()->transform( source );
 }
 
 void SubTree::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ScenePath source = sourcePath( path );
+	bool createRoot = false;
+	ScenePath source = sourcePath( path, createRoot );
+	assert( !createRoot ); // SceneNode::hash() shouldn't call this for the root path
 	h = inPlug()->attributesHash( source );
+}
+
+IECore::ConstCompoundObjectPtr SubTree::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	bool createRoot = false;
+	const ScenePath source = sourcePath( path, createRoot );
+	assert( !createRoot ); // SceneNode::compute() shouldn't call this for the root path
+	return inPlug()->attributes( source );
 }
 
 void SubTree::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ScenePath source = sourcePath( path );
+	bool createRoot = false;
+	ScenePath source = sourcePath( path, createRoot );
+	assert( !createRoot ); // SceneNode::hash() shouldn't call this for the root path
 	h = inPlug()->objectHash( source );
+}
+
+IECore::ConstObjectPtr SubTree::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	bool createRoot = false;
+	const ScenePath source = sourcePath( path, createRoot );
+	assert( !createRoot ); // SceneNode::compute() shouldn't call this for the root path
+	return inPlug()->object( source );
 }
 
 void SubTree::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ScenePath source = sourcePath( path );
-	h = inPlug()->childNamesHash( source );
+	bool createRoot = false;
+	const ScenePath source = sourcePath( path, createRoot );
+	if( createRoot )
+	{
+		SceneProcessor::hashChildNames( path, context, parent, h );
+		h.append( *(source.rbegin()) );
+	}
+	else
+	{
+		h = inPlug()->childNamesHash( source );
+	}
+}
+
+IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{		
+	bool createRoot = false;
+	const ScenePath source = sourcePath( path, createRoot );
+	if( createRoot )
+	{
+		IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
+		result->writable().push_back( *(source.rbegin()) );
+		return result;
+	}
+	else
+	{
+		return inPlug()->childNames( source );
+	}
 }
 
 void SubTree::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -125,31 +213,7 @@ void SubTree::hashGlobals( const Gaffer::Context *context, const ScenePlug *pare
 	SceneProcessor::hashGlobals( context, parent, h );
 	inPlug()->globalsPlug()->hash( h );
 	rootPlug()->hash( h );
-}
-		
-Imath::Box3f SubTree::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->bound( sourcePath( path ) );
-}
-
-Imath::M44f SubTree::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->transform( sourcePath( path ) );
-}
-
-IECore::ConstCompoundObjectPtr SubTree::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->attributes( sourcePath( path ) );
-}
-
-IECore::ConstObjectPtr SubTree::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->object( sourcePath( path ) );
-}
-
-IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{		
-	return inPlug()->childNames( sourcePath( path ) );
+	includeRootPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -165,13 +229,23 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 			root += "/";
 		}
 
+		size_t prefixSize = root.size() - 1; // number of characters to remove from front of each declaration
+		if( includeRootPlug()->getValue() && prefixSize )
+		{
+			size_t lastSlashButOne = root.rfind( "/", prefixSize-1 );
+			if( lastSlashButOne != string::npos )
+			{
+				prefixSize = lastSlashButOne;
+			}
+		}
+
 		IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
 		for( IECore::CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
 		{
 			const IECore::InternedString &inputPath = it->first;
 			if( inputPath.string().compare( 0, root.size(), root ) == 0 )
 			{
-				std::string outputPath( inputPath, root.size()-1 );
+				std::string outputPath( inputPath, prefixSize );
 				forwardDeclarations->writable()[outputPath] = it->second;
 			}
 		}
@@ -181,7 +255,7 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 	return result;
 }
 
-SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath ) const
+SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &createRoot ) const
 {
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
@@ -192,6 +266,23 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath ) const
 	{
 		result.push_back( *it );
 	}
-	result.insert( result.end(), outputPath.begin(), outputPath.end() );
+	
+	createRoot = false;
+	if( result.size() && includeRootPlug()->getValue() )
+	{
+		if( outputPath.size() )
+		{
+			result.insert( result.end(), outputPath.begin() + 1, outputPath.end() );
+		}
+		else
+		{
+			createRoot = true;
+		}
+	}
+	else
+	{
+		result.insert( result.end(), outputPath.begin(), outputPath.end() );	
+	}
+	
 	return result;
 }

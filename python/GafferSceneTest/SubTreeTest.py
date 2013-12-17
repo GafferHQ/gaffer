@@ -163,6 +163,15 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertForwardDeclarationsValid( s["out"] )
 
+		# with includeRoot == True
+		
+		s["includeRoot"].setValue( True )
+		
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/lightGroup1/light" ] )
+
+		self.assertForwardDeclarationsValid( s["out"] )
+
 	def testForwardDeclarationPassThroughWhenNoRoot( self ) :
 
 		l = GafferSceneTest.TestLight()
@@ -181,6 +190,20 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
 		self.assertForwardDeclarationsValid( s["out"] )
 
+		# with includeRoot == True
+		
+		s["includeRoot"].setValue( True )
+		
+		s["root"].setValue( "" )
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
+		self.assertForwardDeclarationsValid( s["out"] )
+
+		s["root"].setValue( "/" )
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
+		self.assertForwardDeclarationsValid( s["out"] )
+		
 	def testAffects( self ) :
 	
 		s = GafferScene.SubTree()
@@ -189,6 +212,76 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 			a = s.affects( s["in"][n] )
 			self.assertEqual( len( a ), 1 )
 			self.assertTrue( a[0].isSame( s["out"][n] ) )
+
+	def testIncludeRoot( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( a["out"] )
+		s["root"].setValue( "/pCube1" )
+		s["includeRoot"].setValue( True )
+				
+		self.assertSceneValid( s["out"] )
+		
+		self.assertScenesEqual( s["out"], a["out"], pathsToIgnore = [ "/", ] )
+		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "pCube1" ] ) )
+		self.assertEqual( s["out"].bound( "/" ), a["out"].bound( "/pCube1" ) )		
+
+		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
+
+	def testRootBoundWithTransformedChild( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( a["out"] )
+		s["root"].setValue( "/pCube1" )
+		s["includeRoot"].setValue( True )
+				
+		with Gaffer.Context() as c :
+			
+			c.setFrame( 10 )
+			
+			expectedRootBound = a["out"].bound( "/pCube1" )
+			expectedRootBound = expectedRootBound.transform( a["out"].transform( "/pCube1" ) )
+			
+			self.assertEqual( s["out"].bound( "/" ), expectedRootBound )		
+
+	def testIncludeRootPassesThroughWhenNoRootSpecified( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( a["out"] )
+		s["root"].setValue( "" )
+		s["includeRoot"].setValue( True )
+				
+		self.assertSceneValid( s["out"] )
+
+		self.assertScenesEqual( a["out"], s["out"] )
+		self.assertSceneHashesEqual( a["out"], s["out"] )
+		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
+
+	def testForwardDeclarationsWithIncludeRoot( self ) :
+	
+		l = GafferSceneTest.TestLight()
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+		
+		self.assertForwardDeclarationsValid( g["out"] )
+		
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "/group" )
+		s["includeRoot"].setValue( True )
+		
+		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
+		self.assertForwardDeclarationsValid( s["out"] )
 			
 if __name__ == "__main__":
 	unittest.main()
