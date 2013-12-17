@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
 class ImageReaderTest( unittest.TestCase ) :
 
@@ -206,6 +207,16 @@ class ImageReaderTest( unittest.TestCase ) :
 			imageB = jpgImage,
 		)
 		self.assertFalse( res.value )	
+
+	def testOIIOJpgRead( self ) :
+	
+		# call through to c++ test.
+		GafferImageTest.testOIIOJpgRead()
+				
+	def testOIIOExrRead( self ) :
+	
+		# call through to c++ test.
+		GafferImageTest.testOIIOExrRead()
 				
 if __name__ == "__main__":
 	unittest.main()
