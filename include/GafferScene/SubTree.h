@@ -60,6 +60,9 @@ class SubTree : public SceneProcessor
 		Gaffer::StringPlug *rootPlug();
 		const Gaffer::StringPlug *rootPlug() const;
 		
+		Gaffer::BoolPlug *includeRootPlug();
+		const Gaffer::BoolPlug *includeRootPlug() const;
+		
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 	
 	protected :
@@ -77,11 +80,19 @@ class SubTree : public SceneProcessor
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
-
-		ScenePath sourcePath( const ScenePath &outputPath ) const;
 		
 	private :
 	
+		// Generally the work of the SubTree node is easy - we just remap the
+		// output path to a source path and pass through the results unchanged from
+		// that source path. There is one situation in which this won't work - when
+		// outputPath == "/" and includeRoot == true. In this case we must actually perform
+		// some computation to create the right bounding box and the right child name.
+		// This method returns the appropriate source path for the simple case, and in
+		// the slightly more complex case sets createRoot to true and returns the
+		// root path itself.
+		ScenePath sourcePath( const ScenePath &outputPath, bool &createRoot ) const;
+
 		static size_t g_firstPlugIndex;
 			
 };
