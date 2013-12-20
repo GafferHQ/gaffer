@@ -1,6 +1,5 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -35,34 +34,52 @@
 #  
 ##########################################################################
 
-from _GafferImageTest import *
+import unittest
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from SelectTest import SelectTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from RemoveChannelsTest import RemoveChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
+import IECore
 
+import Gaffer
+import GafferImage
+
+class FormatDataTest( unittest.TestCase ) :
+
+	def test( self ) :
+	
+		f1 = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 0.5 )
+		f2 = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 1 )
+		
+		fd1a = GafferImage.FormatData( f1 )
+		fd1b = GafferImage.FormatData( f1 )
+		fd2 = GafferImage.FormatData( f2 )
+		
+		self.assertEqual( fd1a.value, f1 )
+		self.assertEqual( fd1b.value, f1 )
+		self.assertEqual( fd2.value, f2 )
+		
+		self.assertEqual( fd1a, fd1b )
+		self.assertNotEqual( fd1a, fd2 )
+		
+		self.assertEqual( fd1a.hash(), fd1b.hash() )
+		self.assertNotEqual( fd1a.hash(), fd2.hash() )
+		
+		fd2c = fd2.copy()
+		self.assertEqual( fd2c, fd2 )
+		self.assertEqual( fd2c.hash(), fd2.hash() )
+
+	def testSerialisation( self ) :
+	
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 200, 100 ) ), 0.5 )
+		fd = GafferImage.FormatData( f )
+		
+		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
+		
+		fd.save( m, "f" )
+		
+		m2 = IECore.MemoryIndexedIO( m.buffer(), [], IECore.IndexedIO.OpenMode.Read )
+		fd2 = IECore.Object.load( m2, "f" )
+		
+		self.assertEqual( fd2, fd )
+		self.assertEqual( fd2.value, f )
+		
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

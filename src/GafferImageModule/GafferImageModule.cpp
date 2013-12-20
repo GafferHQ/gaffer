@@ -69,6 +69,7 @@
 #include "GafferImageBindings/RemoveChannelsBinding.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 #include "GafferImageBindings/MixinBinding.h"
+#include "GafferImageBindings/FormatDataBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -139,6 +140,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindSampler();
 	GafferImageBindings::bindFilters();
 	GafferImageBindings::bindMixin();
+	GafferImageBindings::bindFormatData();
 	
 	GafferBindings::NodeClass<ImageWriter> imageWriter;
 	GafferBindings::ExecutableBinding< GafferBindings::NodeClass<ImageWriter>, ImageWriter>::bind( imageWriter );
