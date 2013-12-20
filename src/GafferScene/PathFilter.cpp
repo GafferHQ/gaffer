@@ -99,8 +99,13 @@ void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &
 
 unsigned PathFilter::computeMatch( const Gaffer::Context *context ) const
 {
-	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	return m_matcher.match( path );
+	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
+	if( pathData )
+	{
+		return m_matcher.match( pathData->readable() );
+	}
+	return NoMatch;
 }
 
 void PathFilter::plugSet( Gaffer::Plug *plug )
