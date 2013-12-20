@@ -106,7 +106,45 @@ inline bool Format::operator != ( const Format& rhs ) const
 {
 	return m_displayWindow != rhs.m_displayWindow || m_pixelAspect != rhs.m_pixelAspect;
 }
-				
+
+inline int Format::yDownToFormatSpace( int yDown ) const
+{
+	const int distanceFromTop = yDown - m_displayWindow.min.y;
+	return m_displayWindow.max.y - distanceFromTop;
+}
+
+inline Imath::V2i Format::yDownToFormatSpace( const Imath::V2i &yDown ) const
+{
+	return Imath::V2i( yDown.x, yDownToFormatSpace( yDown.y ) );
+}
+
+inline Imath::Box2i Format::yDownToFormatSpace( const Imath::Box2i &yDown ) const
+{
+	Imath::Box2i result;
+	result.extendBy( yDownToFormatSpace( yDown.min ) );
+	result.extendBy( yDownToFormatSpace( yDown.max ) );
+	return result;
+}
+
+inline int Format::formatToYDownSpace( int yUp ) const
+{
+	const int distanceFromTop = m_displayWindow.max.y - yUp;
+	return m_displayWindow.min.y + distanceFromTop;
+}
+
+inline Imath::V2i Format::formatToYDownSpace( const Imath::V2i &yUp ) const
+{
+	return Imath::V2i( yUp.x, formatToYDownSpace( yUp.y ) );
+}
+
+inline Imath::Box2i Format::formatToYDownSpace( const Imath::Box2i &yUp ) const
+{
+	Imath::Box2i result;
+	result.extendBy( formatToYDownSpace( yUp.min ) );
+	result.extendBy( formatToYDownSpace( yUp.max ) );
+	return result;
+}
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_FORMAT_INL
