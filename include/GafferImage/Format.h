@@ -73,7 +73,7 @@ class Format
 		/// Accessors
 		inline double getPixelAspect() const { return m_aspect; }
 		inline void setPixelAspect( double aspect ){ m_aspect = aspect; }
-		inline Imath::Box2i getDisplayWindow() const { return m_displayWindow; }
+		inline const Imath::Box2i &getDisplayWindow() const { return m_displayWindow; }
 		inline void setDisplayWindow( const Imath::Box2i &window ){ m_displayWindow = window; }
 		int width() const;
 		int height() const;

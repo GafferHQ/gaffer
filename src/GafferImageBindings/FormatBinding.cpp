@@ -122,7 +122,7 @@ void bindFormat()
 		.def( "height", &Format::height )
 		.def( "getPixelAspect", &Format::getPixelAspect )
 		.def( "setPixelAspect", &Format::setPixelAspect )
-		.def( "getDisplayWindow", &Format::getDisplayWindow )
+		.def( "getDisplayWindow", &Format::getDisplayWindow, return_value_policy<copy_const_reference>() )
 		.def( "setDisplayWindow", &Format::setDisplayWindow )
 		
 		// Static bindings
