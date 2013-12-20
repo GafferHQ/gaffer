@@ -34,64 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FORMAT_H
-#define GAFFER_FORMAT_H
+#ifndef GAFFERIMAGE_FORMAT_H
+#define GAFFERIMAGE_FORMAT_H
 
 #include "OpenEXR/ImathBox.h"
 
 #include "Gaffer/ScriptNode.h"
-
-#include "GafferImage/TypeIds.h"
 
 namespace GafferImage
 {
 
 class Format
 {
-	public:
+
+	public :
 	
 		typedef boost::signal<void (const std::string&)> UnaryFormatSignal;
 		
-		Format( int width, int height, double aspect = 1. ):
-			m_aspect( aspect )
-		{
-			width = std::max( 0, width );
-			height = std::max( 0, height );
-			m_displayWindow = Imath::Box2i( Imath::V2i( 0, 0 ), Imath::V2i( width-1, height-1 ) );
-		}
+		inline Format();
+		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1. );
+		inline Format( int width, int height, double pixelAspect = 1. );
 		
-		Format( const Imath::Box2i &displayWindow, double aspect = 1. ):
-			m_displayWindow( displayWindow ),
-			m_aspect( aspect )
-		{}
+		inline const Imath::Box2i &getDisplayWindow() const;
+		inline void setDisplayWindow( const Imath::Box2i &window );
+
+		inline int width() const;
+		inline int height() const;
+
+		inline double getPixelAspect() const;
+		inline void setPixelAspect( double pixelAspect );
 		
-		Format():
-			m_aspect( 1. )
-		{
-		}
-		
-		/// Accessors
-		inline double getPixelAspect() const { return m_aspect; }
-		inline void setPixelAspect( double aspect ){ m_aspect = aspect; }
-		inline const Imath::Box2i &getDisplayWindow() const { return m_displayWindow; }
-		inline void setDisplayWindow( const Imath::Box2i &window ){ m_displayWindow = window; }
-		int width() const;
-		int height() const;
-		
-		/// Overloaded OStream operator to write the formats name to the ostream.
-		friend std::ostream& operator<<(std::ostream& os, GafferImage::Format const& format);
-		
-		/// Equality operators
-		inline bool operator == ( const Format& rhs ) const
-		{
-			return m_displayWindow == rhs.m_displayWindow && m_aspect == rhs.m_aspect;
-		}
-		
-		inline bool operator != ( const Format& rhs ) const
-		{
-			return m_displayWindow != rhs.m_displayWindow || m_aspect != rhs.m_aspect;
-		}
-		
+		inline bool operator == ( const Format &rhs ) const;
+		inline bool operator != ( const Format &rhs ) const;
+
 		/// @name Default Format methods
 		/// These functions are used to create, set and get the formatPlug
 		/// which resides on the script node. When a GafferImage node is created
@@ -101,6 +76,9 @@ class Format
 		/// slot which updates an entry on the context every time that the plug is changed.
 		/// This causes the hash of the context to change which triggers the viewer to
 		/// recalculate it's output image.
+		/// \todo The Format should just be a basic class like Box or Vec -
+		/// keep the named format registry here but move all the stuff related
+		/// to nodes and plugs and contexts into FormatPlug.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		static void setDefaultFormat( Gaffer::ScriptNode *scriptNode, const Format &format );
@@ -131,7 +109,7 @@ class Format
 		static const IECore::InternedString defaultFormatContextName;
 		static const IECore::InternedString defaultFormatPlugName;
 		
-	private:
+	private :
 		
 		typedef std::pair< std::string, Format > FormatEntry;
 		typedef std::map< std::string, Format > FormatMap;
@@ -143,11 +121,14 @@ class Format
 		static void generateFormatName( std::string &name, const Format &format);
 		
 		Imath::Box2i m_displayWindow;
-		double m_aspect;
+		double m_pixelAspect;
+
 };
 
 std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
 
 } // namespace GafferImage
 
-#endif // GAFFER_FORMAT_H
+#include "GafferImage/Format.inl"
+
+#endif // GAFFERIMAGE_FORMAT_H

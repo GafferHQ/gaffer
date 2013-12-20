@@ -167,24 +167,6 @@ const Format &Format::getFormat( const std::string &name )
 	return (*it).second;
 }
 
-int Format::width() const
-{
-	if ( m_displayWindow.isEmpty() )
-	{
-		return 0;
-	}
-	return m_displayWindow.max.x - m_displayWindow.min.x + 1;
-}
-
-int Format::height() const
-{
-	if ( m_displayWindow.isEmpty() )
-	{
-		return 0;
-	}
-	return m_displayWindow.max.y - m_displayWindow.min.y + 1;
-}
-
 void Format::generateFormatName( std::string &name, const Format &format)
 {
 	name = boost::str( boost::format( "%dx%d %.3f" ) % format.width() % format.height() % format.getPixelAspect() );
