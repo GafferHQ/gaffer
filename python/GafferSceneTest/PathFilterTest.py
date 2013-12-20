@@ -119,6 +119,21 @@ class PathFilterTest( unittest.TestCase ) :
 		s["a"]["filter"].setInput( s["f"]["match"] )
 		
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
+	
+	def testCopyPaste( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["f"] = GafferScene.PathFilter()
+		s["a"] = GafferScene.Attributes()
+		s["a"]["filter"].setInput( s["f"]["match"] )
+		
+		ss = s.serialise( s, Gaffer.StandardSet( [ s["a"] ] ) )
+		
+		s.execute( ss )
+		
+		self.assertTrue( isinstance( s["a1"], GafferScene.Attributes ) )
+		self.assertEqual( s["a1"]["filter"].getInput(), None )
 		
 if __name__ == "__main__":
 	unittest.main()
