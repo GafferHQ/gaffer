@@ -646,32 +646,73 @@ OSLRenderer::ShadingEnginePtr OSLRenderer::shadingEngine() const
 	return new ShadingEngine( this, m_shadingSystem->state() );
 }
 
+//////////////////////////////////////////////////////////////////////////
+// OSLRenderer::ShadingResults
+//////////////////////////////////////////////////////////////////////////
+
+class OSLRenderer::ShadingResults
+{
+
+	public :
+
+		ShadingResults( size_t numPoints )
+			:	m_results( new CompoundData ), m_ci( NULL )
+		{
+			Color3fVectorDataPtr ciData = new Color3fVectorData();
+			m_ci = &ciData->writable();
+			m_ci->resize( numPoints );
+	
+			CompoundDataPtr result = new CompoundData();
+			m_results->writable()["Ci"] = ciData;
+		}
+		
+		void addResult( size_t pointIndex, const ClosureColor *result )
+		{
+			(*m_ci)[pointIndex] = integrateClosure( result );
+		}
+		
+		CompoundDataPtr results()
+		{
+			return m_results;
+		}
+
+	private :
+
+		static Color3f integrateClosure( const ClosureColor *closure )
+		{
+			if( closure )
+			{
+				switch( closure->type )
+				{
+					case ClosureColor::COMPONENT :
+#ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
+						return Color3f( static_cast<const ClosureComponent*>( closure )->w );
+#else
+						return Color3f( 1 );
+#endif
+					case ClosureColor::MUL :
+						return static_cast<const ClosureMul *>( closure )->weight * integrateClosure( static_cast<const ClosureMul *>( closure )->closure ) ;
+					case ClosureColor::ADD :
+						return
+							integrateClosure( static_cast<const ClosureAdd *>( closure )->closureA ) +
+							integrateClosure( static_cast<const ClosureAdd *>( closure )->closureB );
+				}
+			}
+			return Color3f( 0 );
+		}
+
+		CompoundDataPtr m_results;
+		vector<Color3f> *m_ci;
+		
+};
+
+//////////////////////////////////////////////////////////////////////////
+// OSLRenderer::ShadingEngine
+//////////////////////////////////////////////////////////////////////////
+
 OSLRenderer::ShadingEngine::ShadingEngine( ConstOSLRendererPtr renderer, OSL::ShadingAttribStateRef shadingState )
 	:	m_renderer( renderer ), m_shadingState( shadingState )
 {
-}
-
-static Color3f integrateClosure( const ClosureColor *closure )
-{
-	if( closure )
-	{
-		switch( closure->type )
-		{
-			case ClosureColor::COMPONENT :
-#ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
-				return Color3f( static_cast<const ClosureComponent*>( closure )->w );
-#else
-				return Color3f( 1 );
-#endif
-			case ClosureColor::MUL :
-				return static_cast<const ClosureMul *>( closure )->weight * integrateClosure( static_cast<const ClosureMul *>( closure )->closure ) ;
-			case ClosureColor::ADD :
-				return
-					integrateClosure( static_cast<const ClosureAdd *>( closure )->closureA ) +
-					integrateClosure( static_cast<const ClosureAdd *>( closure )->closureB );
-		}
-	}
-	return Color3f( 0 );
 }
 
 template <typename T>
@@ -766,17 +807,11 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	
 	// allocate data for the result
 	
-	Color3fVectorDataPtr ciData = new Color3fVectorData();
-	std::vector<Color3f> &ci = ciData->writable();
-	ci.resize( numPoints );
-	
-	CompoundDataPtr result = new CompoundData();
-	result->writable()["Ci"] = ciData;
-
-	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
+	ShadingResults results( numPoints );
 	
 	// iterate over the input points, doing the shading as we go
 
+	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
 	for( size_t i = 0; i < numPoints; ++i )
 	{
 		shaderGlobals.P = *p++;
@@ -796,13 +831,11 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 		shaderGlobals.Ci = NULL;
 		
 		m_renderer->m_shadingSystem->execute( *shadingContext, *m_shadingState, shaderGlobals );
-				
-		ci[i] = integrateClosure( shaderGlobals.Ci );
-		
+		results.addResult( i, shaderGlobals.Ci );
 		renderState.incrementPointIndex();
 	}
 	
 	m_renderer->m_shadingSystem->release_context( shadingContext );
 	
-	return result;
+	return results.results();
 }

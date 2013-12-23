@@ -154,6 +154,7 @@ class OSLRenderer : public IECore::Renderer
 
 		class RenderState;
 		class RendererServices;
+		class ShadingResults;
 		struct EmissionParameters;
 
 		boost::shared_ptr<OSL::ShadingSystem> m_shadingSystem;
