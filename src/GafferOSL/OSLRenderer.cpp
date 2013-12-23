@@ -118,6 +118,99 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 };
 
 //////////////////////////////////////////////////////////////////////////
+// OSLRenderer::RenderState
+//////////////////////////////////////////////////////////////////////////
+
+class OSLRenderer::RenderState
+{
+	
+	public :
+		
+		RenderState( const IECore::CompoundData *shadingPoints )
+			:	m_pointIndex( 0 )
+		{
+			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
+				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
+			{
+				UserData userData;
+				userData.typeDesc = typeDescFromData( it->second.get(), userData.basePointer );
+				if( userData.basePointer )
+				{
+					userData.name = it->first;
+					if( userData.typeDesc.arraylen )
+					{
+						// we unarray the TypeDesc so we can use it directly with
+						// convert_value() in get_userdata().
+						userData.typeDesc.unarray();
+						userData.array = true;
+					}
+					m_userData.push_back( userData );
+				}
+			}
+			
+			sort( m_userData.begin(), m_userData.end() );
+		}
+
+		bool userData( ustring name, TypeDesc type, void *value ) const
+		{
+			vector<UserData>::const_iterator it = lower_bound(
+				m_userData.begin(),
+				m_userData.end(),
+				name
+			);
+			
+			if( it == m_userData.end() || it->name != name )
+			{
+				return false;
+			}
+			
+			const char *src = static_cast<const char *>( it->basePointer );
+			if( it->array )
+			{
+				src += m_pointIndex * it->typeDesc.elementsize();
+			}
+			
+			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
+		
+		}
+		
+		void incrementPointIndex()
+		{
+			m_pointIndex++;
+		}
+
+	private :
+			
+		size_t m_pointIndex;
+		
+		struct UserData
+		{
+			UserData()
+				:	basePointer( NULL ), array( false )
+			{
+			}
+		
+			ustring name;
+			const void *basePointer;
+			TypeDesc typeDesc;
+			bool array;
+			
+			bool operator < ( const UserData &rhs ) const
+			{
+				return name.c_str() < rhs.name.c_str();
+			}
+			
+			bool operator < ( const ustring &rhs ) const
+			{
+				return name.c_str() < rhs.c_str();
+			}
+		};
+		
+		vector<UserData> m_userData; // sorted on name for quick lookups
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // OSLRenderer::RendererServices
 //////////////////////////////////////////////////////////////////////////
 
@@ -125,74 +218,6 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 {
 
 	public :
-
-		class RenderState
-		{
-			
-			public :
-				
-				RenderState( const IECore::CompoundData *shadingPoints )
-					:	m_pointIndex( 0 )
-				{
-					for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
-					     eIt = shadingPoints->readable().end(); it != eIt; ++it )
-					{
-						UserData userData;
-						userData.typeDesc = typeDescFromData( it->second.get(), userData.basePointer );
-						if( userData.basePointer )
-						{
-							userData.name = it->first;
-							if( userData.typeDesc.arraylen )
-							{
-								// we unarray the TypeDesc so we can use it directly with
-								// convert_value() in get_userdata().
-								userData.typeDesc.unarray();
-								userData.array = true;
-							}
-							m_userData.push_back( userData );
-						}
-					}
-					
-					sort( m_userData.begin(), m_userData.end() );
-				}
-				
-				void incrementPointIndex()
-				{
-					m_pointIndex++;
-				}
-		
-			private :
-			
-				friend class RendererServices;
-				
-				size_t m_pointIndex;
-				
-				struct UserData
-				{
-					UserData()
-						:	basePointer( NULL ), array( false )
-					{
-					}
-				
-					ustring name;
-					const void *basePointer;
-					TypeDesc typeDesc;
-					bool array;
-					
-					bool operator < ( const UserData &rhs ) const
-					{
-						return name.c_str() < rhs.name.c_str();
-					}
-					
-					bool operator < ( const ustring &rhs ) const
-					{
-						return name.c_str() < rhs.c_str();
-					}
-				};
-				
-				std::vector<UserData> m_userData; // sorted on name for quick lookups
-		
-		};
 		
 		RendererServices()
 		{
@@ -241,24 +266,7 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 				return false;
 			}
 			const RenderState *renderState = static_cast<RenderState *>( rState );
-			vector<RenderState::UserData>::const_iterator it = lower_bound(
-				renderState->m_userData.begin(),
-				renderState->m_userData.end(),
-				name
-			);
-			
-			if( it == renderState->m_userData.end() || it->name != name )
-			{
-				return false;
-			}
-			
-			const char *src = static_cast<const char *>( it->basePointer );
-			if( it->array )
-			{
-				src += renderState->m_pointIndex * it->typeDesc.elementsize();
-			}
-			
-			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
+			return renderState->userData( name, type, value );
 		}
 
 		virtual bool has_userdata( ustring name, TypeDesc type, void *rState )
@@ -268,13 +276,7 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 				return false;
 			}
 			const RenderState *renderState = static_cast<RenderState *>( rState );
-			vector<RenderState::UserData>::const_iterator it = lower_bound(
-				renderState->m_userData.begin(),
-				renderState->m_userData.end(),
-				name
-			);
-			
-			return it != renderState->m_userData.end() && it->name == name;
+			return renderState->userData( name, type, NULL );
 		}
 
 };
@@ -750,7 +752,7 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	// add a RenderState to the ShaderGlobals. this will
 	// get passed to our RendererServices queries.
 	
-	RendererServices::RenderState renderState( points );
+	RenderState renderState( points );
 	shaderGlobals.renderstate = &renderState;
 	
 	// get pointers to varying data, we'll use these to
@@ -770,9 +772,9 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	
 	CompoundDataPtr result = new CompoundData();
 	result->writable()["Ci"] = ciData;
-   	
-    ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
 
+	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
+	
 	// iterate over the input points, doing the shading as we go
 
 	for( size_t i = 0; i < numPoints; ++i )

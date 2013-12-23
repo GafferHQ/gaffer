@@ -152,6 +152,7 @@ class OSLRenderer : public IECore::Renderer
 
 	private :
 
+		class RenderState;
 		class RendererServices;
 		struct EmissionParameters;
 
