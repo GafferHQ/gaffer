@@ -309,6 +309,11 @@ struct OSLRenderer::EmissionParameters
 {
 };
 
+struct OSLRenderer::DebugParameters
+{
+	ustring name;
+};
+
 OSLRenderer::OSLRenderer()
 	:	m_shadingSystem( ShadingSystem::create( new OSLRenderer::RendererServices ), ShadingSystem::destroy )
 {
@@ -319,7 +324,8 @@ OSLRenderer::OSLRenderer()
 	};
 	
 	ClosureDefinition closureDefinitions[] = {
-		{ "emission", 1, { CLOSURE_FINISH_PARAM( EmissionParameters ) } },
+		{ "emission", EmissionClosureId, { CLOSURE_FINISH_PARAM( EmissionParameters ) } },
+		{ "debug", DebugClosureId, { CLOSURE_STRING_PARAM( DebugParameters, name ), CLOSURE_FINISH_PARAM( DebugParameters ) } },
 		// end marker
 		{ NULL, 0, {} }
 	};
@@ -660,7 +666,7 @@ class OSLRenderer::ShadingResults
 		{
 			Color3fVectorDataPtr ciData = new Color3fVectorData();
 			m_ci = &ciData->writable();
-			m_ci->resize( numPoints );
+			m_ci->resize( numPoints, Color3f( 0.0f ) );
 	
 			CompoundDataPtr result = new CompoundData();
 			m_results->writable()["Ci"] = ciData;
@@ -668,7 +674,7 @@ class OSLRenderer::ShadingResults
 		
 		void addResult( size_t pointIndex, const ClosureColor *result )
 		{
-			(*m_ci)[pointIndex] = integrateClosure( result );
+			addResult( pointIndex, result, Color3f( 1.0f ) );
 		}
 		
 		CompoundDataPtr results()
@@ -678,31 +684,97 @@ class OSLRenderer::ShadingResults
 
 	private :
 
-		static Color3f integrateClosure( const ClosureColor *closure )
+		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight )
 		{
 			if( closure )
 			{
 				switch( closure->type )
 				{
 					case ClosureColor::COMPONENT :
+					{
+						const ClosureComponent *closureComponent = static_cast<const ClosureComponent*>( closure );
+						Color3f closureWeight = weight;
 #ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
-						return Color3f( static_cast<const ClosureComponent*>( closure )->w );
-#else
-						return Color3f( 1 );
-#endif
+						closureWeight *= closureComponent->w;
+#endif						
+						switch( closureComponent->id )
+						{
+							case EmissionClosureId :
+								addEmission( pointIndex, closureComponent, closureWeight );
+								break;
+							case DebugClosureId :
+								addDebug( pointIndex, closureComponent, closureWeight );
+								break;
+						}
+						break;
+					}
 					case ClosureColor::MUL :
-						return static_cast<const ClosureMul *>( closure )->weight * integrateClosure( static_cast<const ClosureMul *>( closure )->closure ) ;
+						addResult(
+							pointIndex,
+							static_cast<const ClosureMul *>( closure )->closure,
+							weight * static_cast<const ClosureMul *>( closure )->weight
+						);
+						break;
 					case ClosureColor::ADD :
-						return
-							integrateClosure( static_cast<const ClosureAdd *>( closure )->closureA ) +
-							integrateClosure( static_cast<const ClosureAdd *>( closure )->closureB );
+						addResult( pointIndex, static_cast<const ClosureAdd *>( closure )->closureA, weight );
+						addResult( pointIndex, static_cast<const ClosureAdd *>( closure )->closureB, weight );
+						break;
 				}
 			}
-			return Color3f( 0 );
+		}
+		
+		void addEmission( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
+		{
+			(*m_ci)[pointIndex] += weight;
+		}
+		
+		void addDebug( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
+		{
+			const DebugParameters *parameters = static_cast<const DebugParameters *>( closure->data() );
+			vector<DebugResult>::iterator it = lower_bound(
+				m_debugResults.begin(),
+				m_debugResults.end(),
+				parameters->name
+			);
+			
+			if( it == m_debugResults.end() || it->name != parameters->name )
+			{
+				Color3fVectorDataPtr data = new Color3fVectorData();
+				data->writable().resize( m_ci->size(), Color3f( 0.0f ) );
+				m_results->writable()[parameters->name.c_str()] = data;
+				DebugResult result;
+				result.name = parameters->name;
+				result.basePointer = data->baseWritable();
+				it = m_debugResults.insert( it, result );
+			}
+			
+			static_cast<Color3f *>( it->basePointer )[pointIndex] = weight;
 		}
 
+		struct DebugResult
+		{
+			DebugResult()
+				:	basePointer( NULL )
+			{
+			}
+		
+			ustring name;
+			void *basePointer;
+			
+			bool operator < ( const DebugResult &rhs ) const
+			{
+				return name.c_str() < rhs.name.c_str();
+			}
+			
+			bool operator < ( const ustring &rhs ) const
+			{
+				return name.c_str() < rhs.c_str();
+			}
+		};
+		
 		CompoundDataPtr m_results;
 		vector<Color3f> *m_ci;
+		vector<DebugResult> m_debugResults; // sorted on name for quick lookups
 		
 };
 

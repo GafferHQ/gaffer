@@ -155,7 +155,15 @@ class OSLRenderer : public IECore::Renderer
 		class RenderState;
 		class RendererServices;
 		class ShadingResults;
+		
+		enum ClosureId
+		{
+			EmissionClosureId,
+			DebugClosureId
+		};
+		
 		struct EmissionParameters;
+		struct DebugParameters;
 
 		boost::shared_ptr<OSL::ShadingSystem> m_shadingSystem;
 

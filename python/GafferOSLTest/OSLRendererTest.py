@@ -178,6 +178,43 @@ class OSLRendererTest( GafferOSLTest.OSLTestCase ) :
 			
 			for c in p["Ci"] :
 				self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+	
+	def testDebugClosure( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosure.osl" )
 		
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, { "name" : "a", "weight" : IECore.Color3f( 1, 0, 0 ) } )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			self.assertTrue( "Ci" in shading )
+			self.assertTrue( "a" in shading )
+
+			self.assertEqual( len( shading["a"] ), len( points["P"] ) )
+			
+			for c in shading["Ci"] :
+				self.assertEqual( c, IECore.Color3f( 0 ) )
+			
+			for a in shading["a"] :
+				self.assertEqual( a, IECore.Color3f( 1, 0, 0 ) )
+				
+	def testMultipleDebugClosures( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/multipleDebugClosures.osl" )
+		
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, {} )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			for n in ( "u", "v", "P" ) :
+				for i in range( 0, len( shading[n] ) ) :
+					self.assertEqual( shading[n][i], IECore.Color3f( points[n][i] ) )
+						
 if __name__ == "__main__":
 	unittest.main()
