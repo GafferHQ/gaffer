@@ -74,6 +74,25 @@ TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::I
 	}
 }
 
+GeometricData::Interpretation geometricInterpretationFromVecSemantics( TypeDesc::VECSEMANTICS semantics )
+{
+	switch( semantics )
+	{
+		case TypeDesc::NOXFORM :
+			return GeometricData::Numeric;
+		case TypeDesc::COLOR :
+			return GeometricData::Color;
+		case TypeDesc::POINT :
+			return GeometricData::Point;
+		case TypeDesc::VECTOR :
+			return GeometricData::Vector;
+		case TypeDesc::NORMAL :
+			return GeometricData::Normal;
+		default :
+			return GeometricData::Numeric;
+	}
+}
+
 TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 {
 	switch( data->typeId() )
@@ -116,6 +135,56 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 			return TypeDesc();
 	}
 };
+
+template<typename T>
+typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
+{
+	typename T::Ptr result = new T();
+	result->writable().resize( type.arraylen );
+	basePointer = result->baseWritable();
+	return result;
+}
+
+template<typename T>
+typename T::Ptr geometricVectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
+{
+	typename T::Ptr result = vectorDataFromTypeDesc<T>( type, basePointer );
+	result->setInterpretation( geometricInterpretationFromVecSemantics( (TypeDesc::VECSEMANTICS)type.vecsemantics ) );
+	return result;
+}
+
+DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
+{
+	if( type.arraylen )
+	{
+		if( type.aggregate == TypeDesc::SCALAR )
+		{
+			switch( type.basetype )
+			{
+				case TypeDesc::INT :
+					return vectorDataFromTypeDesc<IntVectorData>( type, basePointer );
+				case TypeDesc::FLOAT :
+					return vectorDataFromTypeDesc<FloatVectorData>( type, basePointer );
+			}
+		}
+		else if( type.aggregate == TypeDesc::VEC3 )
+		{
+			switch( type.basetype )
+			{
+				case TypeDesc::INT :
+					return geometricVectorDataFromTypeDesc<V3iVectorData>( type, basePointer );
+				case TypeDesc::FLOAT :
+					if( type.vecsemantics == TypeDesc::COLOR )
+					{
+						return vectorDataFromTypeDesc<Color3fVectorData>( type, basePointer );
+					}
+					return geometricVectorDataFromTypeDesc<V3fVectorData>( type, basePointer );
+			}
+		}
+	}
+	
+	return NULL;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // OSLRenderer::RenderState
@@ -171,7 +240,6 @@ class OSLRenderer::RenderState
 			}
 			
 			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
-		
 		}
 		
 		void incrementPointIndex()
@@ -324,8 +392,22 @@ OSLRenderer::OSLRenderer()
 	};
 	
 	ClosureDefinition closureDefinitions[] = {
-		{ "emission", EmissionClosureId, { CLOSURE_FINISH_PARAM( EmissionParameters ) } },
-		{ "debug", DebugClosureId, { CLOSURE_STRING_PARAM( DebugParameters, name ), CLOSURE_FINISH_PARAM( DebugParameters ) } },
+		{
+			"emission",
+			EmissionClosureId,
+			{
+				CLOSURE_FINISH_PARAM( EmissionParameters )
+			}
+		},
+		{
+			"debug",
+			DebugClosureId,
+			{
+				CLOSURE_STRING_PARAM( DebugParameters, name ),
+				CLOSURE_STRING_KEYPARAM( "type" ),
+				CLOSURE_FINISH_PARAM( DebugParameters )
+			}
+		},
 		// end marker
 		{ NULL, 0, {} }
 	};
@@ -739,18 +821,36 @@ class OSLRenderer::ShadingResults
 			
 			if( it == m_debugResults.end() || it->name != parameters->name )
 			{
-				Color3fVectorDataPtr data = new Color3fVectorData();
-				data->writable().resize( m_ci->size(), Color3f( 0.0f ) );
-				m_results->writable()[parameters->name.c_str()] = data;
 				DebugResult result;
 				result.name = parameters->name;
-				result.basePointer = data->baseWritable();
+				result.type = TypeDesc::TypeColor;
+				if( closure->nattrs )
+				{
+					result.type = TypeDesc( closure->attrs()[0].str().c_str() );
+				}
+				result.type.arraylen = m_ci->size();					
+				DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
+				if( !data )
+				{
+					throw IECore::Exception( "Unsupported type specified in debug() closure." );
+				}
+				result.type.unarray(); // so we can use convert_value
+				m_results->writable()[result.name.c_str()] = data;
 				it = m_debugResults.insert( it, result );
 			}
 			
-			static_cast<Color3f *>( it->basePointer )[pointIndex] = weight;
+			char *dst = static_cast<char *>( it->basePointer );
+			dst += pointIndex * it->type.elementsize();
+			ShadingSystem::convert_value(
+				dst,
+				it->type,
+				&weight,
+				it->type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
+			);
 		}
 
+		/// \todo This is a lot like the UserData struct above - maybe we should
+		/// just have one type we can use for both?
 		struct DebugResult
 		{
 			DebugResult()
@@ -759,6 +859,7 @@ class OSLRenderer::ShadingResults
 			}
 		
 			ustring name;
+			TypeDesc type;
 			void *basePointer;
 			
 			bool operator < ( const DebugResult &rhs ) const
