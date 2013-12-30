@@ -481,7 +481,7 @@ void StandardStyle::setFontScale( TextType textType, float scale )
 	changedSignal()( this );
 }
 
-const float StandardStyle::getFontScale( TextType textType ) const
+float StandardStyle::getFontScale( TextType textType ) const
 {
 	return m_fontScales[textType];
 }
