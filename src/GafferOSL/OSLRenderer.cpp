@@ -40,6 +40,7 @@
 
 #include "OSL/oslclosure.h"
 #include "OSL/genclosure.h"
+#include "OSL/oslversion.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
@@ -418,7 +419,11 @@ OSLRenderer::OSLRenderer()
 			closureDefinitions[i].name,
 			closureDefinitions[i].id,
 			closureDefinitions[i].parameters,
-			NULL, NULL, NULL
+			NULL,
+			NULL
+#if OSL_LIBRARY_VERSION_MAJOR == 1 && OSL_LIBRARY_VERSION_MINOR <= 4
+			,NULL
+#endif
 		);
 	}
 }
