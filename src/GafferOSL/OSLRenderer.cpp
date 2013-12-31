@@ -141,7 +141,7 @@ template<typename T>
 typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
 {
 	typename T::Ptr result = new T();
-	result->writable().resize( type.arraylen );
+	result->writable().resize( type.arraylen, typename T::ValueType::value_type( 0 ) );
 	basePointer = result->baseWritable();
 	return result;
 }
