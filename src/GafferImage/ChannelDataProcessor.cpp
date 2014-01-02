@@ -95,18 +95,14 @@ void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCont
 
 bool ChannelDataProcessor::channelEnabled( const std::string &channel ) const
 {
-	if ( !ImageProcessor::channelEnabled( channel ) )
+	if( !ImageProcessor::channelEnabled( channel ) )
 	{
 		return false;
 	}
 
-	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to operate on.
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelMaskPlug()->maskChannels( maskChannels );
-
-	// Check to see if the channel that we wish to process is masked.
-	return ( std::find( maskChannels.begin(), maskChannels.end(), channel ) != maskChannels.end() );
+	IECore::ConstStringVectorDataPtr channelMaskData = channelMaskPlug()->getValue();
+	const std::vector<std::string> &channelMask = channelMaskData->readable();
+	return std::find( channelMask.begin(), channelMask.end(), channel ) != channelMask.end();
 }
 
 IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
