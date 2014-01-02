@@ -34,24 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-// we undefine NDEBUG so we can use assert() for our test cases.
-/// \todo We might like to define our own assert which throws an
-/// exception which is designed to be caught by the python test
-/// runner and reported nicely.
-#undef NDEBUG
-
 #include <cstdlib>
+
+#include "boost/format.hpp"
 
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
 
-#include "GafferImage/ImageReader.h"
-#include "GafferImageTest/ImageReaderTest.h"
-
 #include "IECore/Exception.h"
 
-using namespace tbb;
-using namespace Imath;
+#include "GafferImageTest/ImageReaderTest.h"
 
 /// Test whether a bug in OIIO is present or not to prove that the issue is not in our code.
 /// It appears that the get_pixels function in OIIO does not correctly convert JPG images
