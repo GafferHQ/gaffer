@@ -928,7 +928,7 @@ libraries = {
 	
 	"GafferImageTest" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferImage" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX",  ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferImageTest", "GafferImageBindings" ],
