@@ -108,6 +108,27 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["outputSpace"].setValue( "sRGB" )
 
 		self.assertNotEqual( i["out"].imageHash(), o["out"].imageHash() )
+	
+	def testChannelsAreSeparate( self ) :
+	
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" ) )
+		
+		o = GafferImage.OpenColorIO()
+		o["in"].setInput( i["out"] )
+				
+		o["inputSpace"].setValue( "linear" )
+		o["outputSpace"].setValue( "sRGB" )
+
+		self.assertNotEqual(
+			o["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+			o["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+		)
+		
+		self.assertNotEqual(
+			o["out"].channelData( "R", IECore.V2i( 0 ) ),
+			o["out"].channelData( "G", IECore.V2i( 0 ) )
+		)
 		
 if __name__ == "__main__":
 	unittest.main()

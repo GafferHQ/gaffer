@@ -186,6 +186,7 @@ IECore::ConstStringVectorDataPtr ColorProcessor::computeChannelNames( const Gaff
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelData( output, context, h );
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	colorDataPlug()->hash( h );
 }
 
