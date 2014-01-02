@@ -39,6 +39,8 @@
 #include "boost/algorithm/string/classification.hpp"
 
 #include "OSL/oslclosure.h"
+#include "OSL/genclosure.h"
+#include "OSL/oslversion.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
@@ -70,6 +72,25 @@ TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::I
 			return TypeDesc::COLOR;
 		default :
 			return TypeDesc::NOXFORM;
+	}
+}
+
+GeometricData::Interpretation geometricInterpretationFromVecSemantics( TypeDesc::VECSEMANTICS semantics )
+{
+	switch( semantics )
+	{
+		case TypeDesc::NOXFORM :
+			return GeometricData::Numeric;
+		case TypeDesc::COLOR :
+			return GeometricData::Color;
+		case TypeDesc::POINT :
+			return GeometricData::Point;
+		case TypeDesc::VECTOR :
+			return GeometricData::Vector;
+		case TypeDesc::NORMAL :
+			return GeometricData::Normal;
+		default :
+			return GeometricData::Numeric;
 	}
 }
 
@@ -116,6 +137,148 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 	}
 };
 
+template<typename T>
+typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
+{
+	typename T::Ptr result = new T();
+	result->writable().resize( type.arraylen, typename T::ValueType::value_type( 0 ) );
+	basePointer = result->baseWritable();
+	return result;
+}
+
+template<typename T>
+typename T::Ptr geometricVectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
+{
+	typename T::Ptr result = vectorDataFromTypeDesc<T>( type, basePointer );
+	result->setInterpretation( geometricInterpretationFromVecSemantics( (TypeDesc::VECSEMANTICS)type.vecsemantics ) );
+	return result;
+}
+
+DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
+{
+	if( type.arraylen )
+	{
+		if( type.aggregate == TypeDesc::SCALAR )
+		{
+			switch( type.basetype )
+			{
+				case TypeDesc::INT :
+					return vectorDataFromTypeDesc<IntVectorData>( type, basePointer );
+				case TypeDesc::FLOAT :
+					return vectorDataFromTypeDesc<FloatVectorData>( type, basePointer );
+			}
+		}
+		else if( type.aggregate == TypeDesc::VEC3 )
+		{
+			switch( type.basetype )
+			{
+				case TypeDesc::INT :
+					return geometricVectorDataFromTypeDesc<V3iVectorData>( type, basePointer );
+				case TypeDesc::FLOAT :
+					if( type.vecsemantics == TypeDesc::COLOR )
+					{
+						return vectorDataFromTypeDesc<Color3fVectorData>( type, basePointer );
+					}
+					return geometricVectorDataFromTypeDesc<V3fVectorData>( type, basePointer );
+			}
+		}
+	}
+	
+	return NULL;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// OSLRenderer::RenderState
+//////////////////////////////////////////////////////////////////////////
+
+class OSLRenderer::RenderState
+{
+	
+	public :
+		
+		RenderState( const IECore::CompoundData *shadingPoints )
+			:	m_pointIndex( 0 )
+		{
+			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
+				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
+			{
+				UserData userData;
+				userData.typeDesc = typeDescFromData( it->second.get(), userData.basePointer );
+				if( userData.basePointer )
+				{
+					userData.name = it->first;
+					if( userData.typeDesc.arraylen )
+					{
+						// we unarray the TypeDesc so we can use it directly with
+						// convert_value() in get_userdata().
+						userData.typeDesc.unarray();
+						userData.array = true;
+					}
+					m_userData.push_back( userData );
+				}
+			}
+			
+			sort( m_userData.begin(), m_userData.end() );
+		}
+
+		bool userData( ustring name, TypeDesc type, void *value ) const
+		{
+			vector<UserData>::const_iterator it = lower_bound(
+				m_userData.begin(),
+				m_userData.end(),
+				name
+			);
+			
+			if( it == m_userData.end() || it->name != name )
+			{
+				return false;
+			}
+			
+			const char *src = static_cast<const char *>( it->basePointer );
+			if( it->array )
+			{
+				src += m_pointIndex * it->typeDesc.elementsize();
+			}
+			
+			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
+		}
+		
+		void incrementPointIndex()
+		{
+			m_pointIndex++;
+		}
+
+	private :
+			
+		size_t m_pointIndex;
+		
+		struct UserData
+		{
+			UserData()
+				:	basePointer( NULL ), array( false )
+			{
+			}
+		
+			ustring name;
+			const void *basePointer;
+			TypeDesc typeDesc;
+			bool array;
+			
+			bool operator < ( const UserData &rhs ) const
+			{
+				return name.c_str() < rhs.name.c_str();
+			}
+			
+			bool operator < ( const ustring &rhs ) const
+			{
+				return name.c_str() < rhs.c_str();
+			}
+		};
+		
+		vector<UserData> m_userData; // sorted on name for quick lookups
+
+};
+
 //////////////////////////////////////////////////////////////////////////
 // OSLRenderer::RendererServices
 //////////////////////////////////////////////////////////////////////////
@@ -124,74 +287,6 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 {
 
 	public :
-
-		class RenderState
-		{
-			
-			public :
-				
-				RenderState( const IECore::CompoundData *shadingPoints )
-					:	m_pointIndex( 0 )
-				{
-					for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
-					     eIt = shadingPoints->readable().end(); it != eIt; ++it )
-					{
-						UserData userData;
-						userData.typeDesc = typeDescFromData( it->second.get(), userData.basePointer );
-						if( userData.basePointer )
-						{
-							userData.name = it->first;
-							if( userData.typeDesc.arraylen )
-							{
-								// we unarray the TypeDesc so we can use it directly with
-								// convert_value() in get_userdata().
-								userData.typeDesc.unarray();
-								userData.array = true;
-							}
-							m_userData.push_back( userData );
-						}
-					}
-					
-					sort( m_userData.begin(), m_userData.end() );
-				}
-				
-				void incrementPointIndex()
-				{
-					m_pointIndex++;
-				}
-		
-			private :
-			
-				friend class RendererServices;
-				
-				size_t m_pointIndex;
-				
-				struct UserData
-				{
-					UserData()
-						:	basePointer( NULL ), array( false )
-					{
-					}
-				
-					ustring name;
-					const void *basePointer;
-					TypeDesc typeDesc;
-					bool array;
-					
-					bool operator < ( const UserData &rhs ) const
-					{
-						return name.c_str() < rhs.name.c_str();
-					}
-					
-					bool operator < ( const ustring &rhs ) const
-					{
-						return name.c_str() < rhs.c_str();
-					}
-				};
-				
-				std::vector<UserData> m_userData; // sorted on name for quick lookups
-		
-		};
 		
 		RendererServices()
 		{
@@ -240,24 +335,7 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 				return false;
 			}
 			const RenderState *renderState = static_cast<RenderState *>( rState );
-			vector<RenderState::UserData>::const_iterator it = lower_bound(
-				renderState->m_userData.begin(),
-				renderState->m_userData.end(),
-				name
-			);
-			
-			if( it == renderState->m_userData.end() || it->name != name )
-			{
-				return false;
-			}
-			
-			const char *src = static_cast<const char *>( it->basePointer );
-			if( it->array )
-			{
-				src += renderState->m_pointIndex * it->typeDesc.elementsize();
-			}
-			
-			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
+			return renderState->userData( name, type, value );
 		}
 
 		virtual bool has_userdata( ustring name, TypeDesc type, void *rState )
@@ -267,13 +345,7 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 				return false;
 			}
 			const RenderState *renderState = static_cast<RenderState *>( rState );
-			vector<RenderState::UserData>::const_iterator it = lower_bound(
-				renderState->m_userData.begin(),
-				renderState->m_userData.end(),
-				name
-			);
-			
-			return it != renderState->m_userData.end() && it->name == name;
+			return renderState->userData( name, type, NULL );
 		}
 
 };
@@ -302,9 +374,58 @@ OSLRenderer::State::~State()
 
 IE_CORE_DEFINERUNTIMETYPED( OSLRenderer );
 
+struct OSLRenderer::EmissionParameters
+{
+};
+
+struct OSLRenderer::DebugParameters
+{
+	ustring name;
+};
+
 OSLRenderer::OSLRenderer()
 	:	m_shadingSystem( ShadingSystem::create( new OSLRenderer::RendererServices ), ShadingSystem::destroy )
 {
+	struct ClosureDefinition{
+		const char *name;
+		int id;
+		ClosureParam parameters[32];
+	};
+	
+	ClosureDefinition closureDefinitions[] = {
+		{
+			"emission",
+			EmissionClosureId,
+			{
+				CLOSURE_FINISH_PARAM( EmissionParameters )
+			}
+		},
+		{
+			"debug",
+			DebugClosureId,
+			{
+				CLOSURE_STRING_PARAM( DebugParameters, name ),
+				CLOSURE_STRING_KEYPARAM( "type" ),
+				CLOSURE_FINISH_PARAM( DebugParameters )
+			}
+		},
+		// end marker
+		{ NULL, 0, {} }
+	};
+	
+	for( int i = 0; closureDefinitions[i].name; ++i )
+	{
+		m_shadingSystem->register_closure(
+			closureDefinitions[i].name,
+			closureDefinitions[i].id,
+			closureDefinitions[i].parameters,
+			NULL,
+			NULL
+#if OSL_LIBRARY_VERSION_MAJOR == 1 && OSL_LIBRARY_VERSION_MINOR <= 4
+			,NULL
+#endif
+		);
+	}
 }
 
 OSLRenderer::~OSLRenderer()
@@ -618,28 +739,158 @@ OSLRenderer::ShadingEnginePtr OSLRenderer::shadingEngine() const
 	return new ShadingEngine( this, m_shadingSystem->state() );
 }
 
+//////////////////////////////////////////////////////////////////////////
+// OSLRenderer::ShadingResults
+//////////////////////////////////////////////////////////////////////////
+
+class OSLRenderer::ShadingResults
+{
+
+	public :
+
+		ShadingResults( size_t numPoints )
+			:	m_results( new CompoundData ), m_ci( NULL )
+		{
+			Color3fVectorDataPtr ciData = new Color3fVectorData();
+			m_ci = &ciData->writable();
+			m_ci->resize( numPoints, Color3f( 0.0f ) );
+	
+			CompoundDataPtr result = new CompoundData();
+			m_results->writable()["Ci"] = ciData;
+		}
+		
+		void addResult( size_t pointIndex, const ClosureColor *result )
+		{
+			addResult( pointIndex, result, Color3f( 1.0f ) );
+		}
+		
+		CompoundDataPtr results()
+		{
+			return m_results;
+		}
+
+	private :
+
+		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight )
+		{
+			if( closure )
+			{
+				switch( closure->type )
+				{
+					case ClosureColor::COMPONENT :
+					{
+						const ClosureComponent *closureComponent = static_cast<const ClosureComponent*>( closure );
+						Color3f closureWeight = weight;
+#ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
+						closureWeight *= closureComponent->w;
+#endif						
+						switch( closureComponent->id )
+						{
+							case EmissionClosureId :
+								addEmission( pointIndex, closureComponent, closureWeight );
+								break;
+							case DebugClosureId :
+								addDebug( pointIndex, closureComponent, closureWeight );
+								break;
+						}
+						break;
+					}
+					case ClosureColor::MUL :
+						addResult(
+							pointIndex,
+							static_cast<const ClosureMul *>( closure )->closure,
+							weight * static_cast<const ClosureMul *>( closure )->weight
+						);
+						break;
+					case ClosureColor::ADD :
+						addResult( pointIndex, static_cast<const ClosureAdd *>( closure )->closureA, weight );
+						addResult( pointIndex, static_cast<const ClosureAdd *>( closure )->closureB, weight );
+						break;
+				}
+			}
+		}
+		
+		void addEmission( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
+		{
+			(*m_ci)[pointIndex] += weight;
+		}
+		
+		void addDebug( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
+		{
+			const DebugParameters *parameters = static_cast<const DebugParameters *>( closure->data() );
+			vector<DebugResult>::iterator it = lower_bound(
+				m_debugResults.begin(),
+				m_debugResults.end(),
+				parameters->name
+			);
+			
+			if( it == m_debugResults.end() || it->name != parameters->name )
+			{
+				DebugResult result;
+				result.name = parameters->name;
+				result.type = TypeDesc::TypeColor;
+				if( closure->nattrs )
+				{
+					result.type = TypeDesc( closure->attrs()[0].str().c_str() );
+				}
+				result.type.arraylen = m_ci->size();					
+				DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
+				if( !data )
+				{
+					throw IECore::Exception( "Unsupported type specified in debug() closure." );
+				}
+				result.type.unarray(); // so we can use convert_value
+				m_results->writable()[result.name.c_str()] = data;
+				it = m_debugResults.insert( it, result );
+			}
+			
+			char *dst = static_cast<char *>( it->basePointer );
+			dst += pointIndex * it->type.elementsize();
+			ShadingSystem::convert_value(
+				dst,
+				it->type,
+				&weight,
+				it->type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
+			);
+		}
+
+		/// \todo This is a lot like the UserData struct above - maybe we should
+		/// just have one type we can use for both?
+		struct DebugResult
+		{
+			DebugResult()
+				:	basePointer( NULL )
+			{
+			}
+		
+			ustring name;
+			TypeDesc type;
+			void *basePointer;
+			
+			bool operator < ( const DebugResult &rhs ) const
+			{
+				return name.c_str() < rhs.name.c_str();
+			}
+			
+			bool operator < ( const ustring &rhs ) const
+			{
+				return name.c_str() < rhs.c_str();
+			}
+		};
+		
+		CompoundDataPtr m_results;
+		vector<Color3f> *m_ci;
+		vector<DebugResult> m_debugResults; // sorted on name for quick lookups
+		
+};
+
+//////////////////////////////////////////////////////////////////////////
+// OSLRenderer::ShadingEngine
+//////////////////////////////////////////////////////////////////////////
+
 OSLRenderer::ShadingEngine::ShadingEngine( ConstOSLRendererPtr renderer, OSL::ShadingAttribStateRef shadingState )
 	:	m_renderer( renderer ), m_shadingState( shadingState )
 {
-}
-
-static Color3f integrateClosure( const ClosureColor *closure )
-{
-	if( closure )
-	{
-		switch( closure->type )
-		{
-			case ClosureColor::COMPONENT :
-				return Color3f( 1 ); // not the best integrator ever!
-			case ClosureColor::MUL :
-				return static_cast<const ClosureMul *>( closure )->weight * integrateClosure( static_cast<const ClosureMul *>( closure )->closure ) ;
-			case ClosureColor::ADD :
-				return
-					integrateClosure( static_cast<const ClosureAdd *>( closure )->closureA ) +
-					integrateClosure( static_cast<const ClosureAdd *>( closure )->closureB );
-		}
-	}
-	return Color3f( 0 );
 }
 
 template <typename T>
@@ -720,7 +971,7 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	// add a RenderState to the ShaderGlobals. this will
 	// get passed to our RendererServices queries.
 	
-	RendererServices::RenderState renderState( points );
+	RenderState renderState( points );
 	shaderGlobals.renderstate = &renderState;
 	
 	// get pointers to varying data, we'll use these to
@@ -734,17 +985,11 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	
 	// allocate data for the result
 	
-	Color3fVectorDataPtr ciData = new Color3fVectorData();
-	std::vector<Color3f> &ci = ciData->writable();
-	ci.resize( numPoints );
+	ShadingResults results( numPoints );
 	
-	CompoundDataPtr result = new CompoundData();
-	result->writable()["Ci"] = ciData;
-   	
-    ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
-
 	// iterate over the input points, doing the shading as we go
 
+	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
 	for( size_t i = 0; i < numPoints; ++i )
 	{
 		shaderGlobals.P = *p++;
@@ -764,13 +1009,11 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 		shaderGlobals.Ci = NULL;
 		
 		m_renderer->m_shadingSystem->execute( *shadingContext, *m_shadingState, shaderGlobals );
-				
-		ci[i] = integrateClosure( shaderGlobals.Ci );
-		
+		results.addResult( i, shaderGlobals.Ci );
 		renderState.incrementPointIndex();
 	}
 	
 	m_renderer->m_shadingSystem->release_context( shadingContext );
 	
-	return result;
+	return results.results();
 }

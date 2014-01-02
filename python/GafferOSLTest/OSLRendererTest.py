@@ -178,6 +178,73 @@ class OSLRendererTest( GafferOSLTest.OSLTestCase ) :
 			
 			for c in p["Ci"] :
 				self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+	
+	def testDebugClosure( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosure.osl" )
 		
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, { "name" : "a", "weight" : IECore.Color3f( 1, 0, 0 ) } )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			self.assertTrue( "Ci" in shading )
+			self.assertTrue( "a" in shading )
+
+			self.assertEqual( len( shading["a"] ), len( points["P"] ) )
+			
+			for c in shading["Ci"] :
+				self.assertEqual( c, IECore.Color3f( 0 ) )
+			
+			for a in shading["a"] :
+				self.assertEqual( a, IECore.Color3f( 1, 0, 0 ) )
+				
+	def testMultipleDebugClosures( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/multipleDebugClosures.osl" )
+		
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, {} )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			for n in ( "u", "v", "P" ) :
+				for i in range( 0, len( shading[n] ) ) :
+					self.assertEqual( shading[n][i], IECore.Color3f( points[n][i] ) )
+
+	def testTypedDebugClosure( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/typedDebugClosure.osl" )
+		
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, {} )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			self.assertTrue( isinstance( shading["f"], IECore.FloatVectorData ) )
+			self.assertTrue( isinstance( shading["p"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["v"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["n"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["c"], IECore.Color3fVectorData ) )
+			
+			self.assertEqual( shading["p"].getInterpretation(), IECore.GeometricData.Interpretation.Point )
+			self.assertEqual( shading["v"].getInterpretation(), IECore.GeometricData.Interpretation.Vector )
+			self.assertEqual( shading["n"].getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+			
+			for i in range( 0, len( points["P"] ) ) :
+				self.assertEqual( shading["f"][i], points["u"][i] )
+				
+			for n in ( "p", "v", "n", "c" ) :
+				for i in range( 0, len( points["P"] ) ) :
+					self.assertEqual( shading[n][i][0], points["P"][i][0] )
+					self.assertEqual( shading[n][i][1], points["P"][i][1] )
+					self.assertEqual( shading[n][i][2], points["P"][i][2] )
+			
 if __name__ == "__main__":
 	unittest.main()
