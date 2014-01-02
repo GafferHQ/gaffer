@@ -67,6 +67,15 @@ static ImageCache *imageCache()
 		if( lock.upgrade_to_writer() )
 		{
 			cache = ImageCache::create();
+			// ImageReaderTest.testOIIOJpgRead exposes a bug in
+			// OpenImageIO where ImageCache::get_pixels() returns
+			// incorrect data when reading from non-float images.
+			// By forcing the image to be float on loading, we
+			// can work around that problem.
+			/// \todo Consider removing this once the bug is fixed in
+			/// OIIO - and test any performance implications of performing
+			/// the conversion in get_pixels() rather than immediately on load.
+			cache->attribute( "forcefloat", 1 );
 		}
 	}
 	return cache;
