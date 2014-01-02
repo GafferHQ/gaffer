@@ -105,7 +105,7 @@ class StandardStyle : public Style
 		/// \todo Perhaps this should be something on the IECore or
 		/// IECoreGL Font classes?
 		void setFontScale( TextType textType, float scale );
-		const float getFontScale( TextType textType ) const;
+		float getFontScale( TextType textType ) const;
 		
 	private :
 	

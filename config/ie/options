@@ -76,6 +76,9 @@ if targetApp :
 	pythonVersion = targetAppReg["pythonVersion"]
 	targetAppMajorVersion = targetAppReg.get( "majorVersion", targetAppVersion )
 	
+	if "compilerFlags" in targetAppReg :
+		CXXFLAGS = CXXFLAGS + targetAppReg["compilerFlags"]
+	
 else :
 
 	targetApp = "gaffer"
@@ -98,8 +101,14 @@ try :
 except :
 	pass
 
-dlReg = IEEnv.registry["apps"]["3delight"][getOption( "DL_VERSION", os.environ["DL_VERSION"] )][IEEnv.platform()]
-RMAN_ROOT = dlReg["location"]
+dlVersion = getOption( "DL_VERSION", os.environ["DL_VERSION"] )
+
+try :
+	dlReg = IEEnv.registry["apps"]["3delight"][dlVersion][IEEnv.platform()]
+	if dlReg["compiler"]==compiler and dlReg["compilerVersion"]==compilerVersion :
+		RMAN_ROOT = dlReg["location"]
+except :
+	pass
 
 # we don't want to bother building with osl support
 OSL_SRC_DIR = ""
@@ -181,6 +190,11 @@ if targetAppVersion :
 			0,
 			os.path.join( IEEnv.Environment.rootPath(), targetAppLocation, directory ),
 		)
+
+	LOCATE_DEPENDENCY_LIBPATH.insert(
+		0,
+		os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
+	)
 	
 	LOCATE_DEPENDENCY_LIBPATH.insert(
 		0,
@@ -194,6 +208,12 @@ if getOption( "RELEASE", "0" )=="0" :
 		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 	)
 	
+	if targetAppVersion :
+		LOCATE_DEPENDENCY_LIBPATH.insert(
+			0,
+			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
+		)
+
 ##########################################################################
 # get compiler set up
 ##########################################################################
