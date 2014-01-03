@@ -84,6 +84,7 @@ class MessageWidget( GafferUI.Widget ) :
 			self.__textChangedConnection = self.__text.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 	
 		self.__messageHandler = _MessageHandler( self )
+		self.__processingEvents = False
 	
 	## Returns the MultiLineTextWidget used internally for displaying the messages.
 	# This can be manipulated directly to clear the output or to interleave the messages
@@ -115,9 +116,18 @@ class MessageWidget( GafferUI.Widget ) :
 		with Gaffer.BlockedConnection( self.__textChangedConnection ) :
 			self.__text._qtWidget().appendHtml( formatted )
 
-		# update the gui so messages are output as they occur, rather than all getting queued
-		# up till the end.
-		QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+		# Update the gui so messages are output as they occur, rather than all getting queued
+		# up till the end. We have to be careful to avoid recursion when doing this - another
+		# thread may be queuing up loads of messages using self.messageHandler(), and those
+		# will get processed by processEvents(), resulting in a recursive call to appendMessage().
+		# If the other thread supplies messages fast enough and we don't guard against recursion
+		# then we can end up exceeding Python's stack limit very quickly.
+		if not self.__processingEvents :
+			try :
+				self.__processingEvents = True
+				QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+			finally :
+				self.__processingEvents = False
 	
 	## May be called to append a message describing an exception. By default the currently handled exception is displayed
 	# but another exception can be displayed by specifying exceptionInfo in the same format as returned by sys.exc_info().
