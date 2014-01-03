@@ -54,39 +54,7 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		
 		self.assertTrue( isinstance( view, GafferImageUI.ImageView ) )
 		self.assertTrue( view["in"].getInput().isSame( image["out"] ) )
-		
-	def testDeprecatedDeriving( self ) :
-	
-		class MyView( GafferImageUI.ImageView ) :
-		
-			def __init__( self, viewedPlug = None ) :
-			
-				GafferImageUI.ImageView.__init__( self, "MyView", Gaffer.ObjectPlug( "in", defaultValue = IECore.NullObject.defaultNullObject() ) )
 				
-				self["in"].setInput( viewedPlug )
-				
-				self.__preprocessor = Gaffer.Node()
-				self.__preprocessor["in"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject.defaultNullObject() )
-				self.__preprocessor["out"] = GafferImage.ImagePlug( direction = Gaffer.Plug.Direction.Out )
-				self.__preprocessor["constant"] = GafferImage.Constant()
-				self.__preprocessor["constant"]["format"].setValue( GafferImage.Format( 20, 20, 1 ) )
-				self.__preprocessor["out"].setInput( self.__preprocessor["constant"]["out"] )
-				
-				self._setPreprocessor( self.__preprocessor )
-					
-		GafferUI.View.registerView( GafferTest.SphereNode.staticTypeId(), "out", MyView )
-
-		sphere = GafferTest.SphereNode()
-				
-		view = GafferUI.View.create( sphere["out"] )
-		self.assertTrue( isinstance( view, MyView ) )
-		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
-		self.assertTrue( isinstance( view["in"], Gaffer.ObjectPlug ) )
-		view["exposure"].setValue( 1 )
-		view["gamma"].setValue( 0.5 )
-		
-		view._update()
-		
 	def testDeriving( self ) :
 	
 		class MyView( GafferImageUI.ImageView ) :

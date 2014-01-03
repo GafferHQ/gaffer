@@ -55,14 +55,9 @@ class ImageViewWrapper : public NodeWrapper<ImageView>
 	
 	public :
 	
-		/// \todo Remove deprecated input argument.
-		ImageViewWrapper( PyObject *self, const std::string &name, Gaffer::PlugPtr input = 0 )
+		ImageViewWrapper( PyObject *self, const std::string &name )
 			:	NodeWrapper<ImageView>( self, name )
 		{
-			if( input )
-			{
-				setChild( "in", input );
-			}
 		}
 
 };
@@ -111,8 +106,7 @@ void GafferImageUIBindings::bindImageView()
 {
 
 	GafferBindings::NodeClass<ImageView, ImageViewWrapperPtr>()
-		/// \todo Remove deprecated input argument.
-		.def( init<const std::string &, Gaffer::PlugPtr>() )
+		.def( init<const std::string &>() )
 		.def( "_insertConverter", &ImageView::insertConverter )
 		.def( "registerDisplayTransform", &registerDisplayTransform )
 		.staticmethod( "registerDisplayTransform" )
