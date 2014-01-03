@@ -929,7 +929,7 @@ ImageView::ImageView( const std::string &name )
 	samplerNode->filterPlug()->setValue( "Box" );
 	
 	ClampPtr clampNode = new Clamp();
-	preprocessor->setChild(  "__clipping", clampNode );
+	preprocessor->setChild(  "__clamp", clampNode );
 	clampNode->inPlug()->setInput( preprocessorInput );
 	clampNode->minClampToEnabledPlug()->setValue( true );
 	clampNode->maxClampToEnabledPlug()->setValue( true );
@@ -939,7 +939,6 @@ ImageView::ImageView( const std::string &name )
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
 	clippingPlug->setFlags( Plug::AcceptsInputs, false );
 	addChild( clippingPlug );
-	clampNode->enabledPlug()->setInput( clippingPlug );
 
 	GradePtr gradeNode = new Grade;
 	preprocessor->setChild( "__grade", gradeNode );
@@ -952,9 +951,6 @@ ImageView::ImageView( const std::string &name )
 	PlugPtr gammaPlug = gradeNode->gammaPlug()->getChild( 0 )->createCounterpart( "gamma", Plug::In );
 	gammaPlug->setFlags( Plug::AcceptsInputs, false );
 	addChild( gammaPlug );
-	gradeNode->gammaPlug()->getChild( 0 )->setInput( gammaPlug );
-	gradeNode->gammaPlug()->getChild( 1 )->setInput( gammaPlug );
-	gradeNode->gammaPlug()->getChild( 2 )->setInput( gammaPlug );
 
 	addChild( new StringPlug( "displayTransform", Plug::In, "Default", Plug::Default & ~Plug::AcceptsInputs ) );
 
@@ -1071,6 +1067,16 @@ const GafferImage::ImageSampler *ImageView::imageSamplerNode() const
 	return getPreprocessor<Node>()->getChild<ImageSampler>( "__imageSampler" );
 }
 
+GafferImage::Clamp *ImageView::clampNode()
+{
+	return getPreprocessor<Node>()->getChild<Clamp>( "__clamp" );
+}
+
+const GafferImage::Clamp *ImageView::clampNode() const
+{
+	return getPreprocessor<Node>()->getChild<Clamp>( "__clamp" );
+}
+
 GafferImage::Grade *ImageView::gradeNode()
 {
 	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
@@ -1097,10 +1103,18 @@ void ImageView::update()
 
 void ImageView::plugSet( Gaffer::Plug *plug )
 {
-	if( plug == exposurePlug() )
+	if( plug == clippingPlug() )
+	{
+		clampNode()->enabledPlug()->setValue( clippingPlug()->getValue() );
+	}
+	else if( plug == exposurePlug() )
 	{
 		const float m = pow( 2.0f, exposurePlug()->getValue() );
 		gradeNode()->multiplyPlug()->setValue( Color3f( m ) );
+	}
+	else if( plug == gammaPlug() )
+	{
+		gradeNode()->gammaPlug()->setValue( Color3f( gammaPlug()->getValue() ) );
 	}
 	else if( plug == displayTransformPlug() )
 	{
