@@ -35,9 +35,9 @@
 ##########################################################################
 
 import os
-import time
 import unittest
 import random
+import threading
 
 import IECore
 
@@ -45,6 +45,22 @@ import Gaffer
 import GafferImage
 
 class DisplayTest( unittest.TestCase ) :
+
+	def setUp( self ) :
+	
+		self.__dataReceivedSemaphore = threading.Semaphore( 0 )
+		self.__dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( Gaffer.WeakMethod( self.__dataReceived ) )
+
+		self.__imageReceivedSemaphore = threading.Semaphore( 0 )
+		self.__imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( Gaffer.WeakMethod( self.__imageReceived ) )
+		
+	def __dataReceived( self, plug ) :
+	
+		self.__dataReceivedSemaphore.release()
+
+	def __imageReceived( self, plug ) :
+	
+		self.__imageReceivedSemaphore.release()
 
 	def testDefaultFormat( self ) :
 
@@ -79,7 +95,7 @@ class DisplayTest( unittest.TestCase ) :
 		)
 
 		for i in range( 0, 1000 ) :
-		
+					
 			h1 = self.__tileHashes( node, "Y" )
 			t1 = self.__tiles( node, "Y" )
 			
@@ -97,8 +113,8 @@ class DisplayTest( unittest.TestCase ) :
 			bucketData.resize( numPixels, i + 1 )
 			driver.imageData( bucketWindow, bucketData )
 		
-			time.sleep( .005 )
-		
+			self.__dataReceivedSemaphore.acquire()
+			
 			h2 = self.__tileHashes( node, "Y" )
 			t2 = self.__tiles( node, "Y" )
 		
@@ -173,7 +189,8 @@ class DisplayTest( unittest.TestCase ) :
 				driver.imageData( bucketBound, bucketData )
 				
 		driver.imageClose()
-		time.sleep( 0.1 )
+		
+		self.__imageReceivedSemaphore.acquire()
 
 		self.assertEqual( imageReader["out"].image(), node["out"].image() )
 		
