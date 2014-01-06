@@ -56,7 +56,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.CompoundDataPlugValueWidget( plug, collapsed=None ),
 )
 
-GafferUI.Metadata.registerPlugValue( 
+Gaffer.Metadata.registerPlugValue( 
 	Gaffer.ScriptNode.staticTypeId(),
 	"variables",
 	"nodeUI:section",

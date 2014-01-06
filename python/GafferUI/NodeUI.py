@@ -105,4 +105,4 @@ class NodeUI( GafferUI.Widget ) :
 
 GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "user", lambda plug : None )
 
-GafferUI.Metadata.registerPlugValue( Gaffer.Node, "user", "nodeUI:section", "User" )
+Gaffer.Metadata.registerPlugValue( Gaffer.Node, "user", "nodeUI:section", "User" )

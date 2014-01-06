@@ -81,7 +81,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "minimumExpansionDepth", _ExpansionPlugValueWidget )
 
-GafferUI.Metadata.registerPlugValue( GafferSceneUI.SceneView, "minimumExpansionDepth", "divider", True )
+Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "minimumExpansionDepth", "divider", True )
 
 ##########################################################################
 # Lookthrough
@@ -118,15 +118,15 @@ GafferUI.PlugValueWidget.registerCreator(
 	_LookThroughPlugValueWidget,
 )
 
-GafferUI.Metadata.registerPlugValue( GafferSceneUI.SceneView, "lookThrough", "label", "" )
+Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "lookThrough", "label", "" )
 
-GafferUI.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.enabled",
+Gaffer.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.enabled",
 	"When enabled, locks the view to look through a specific camera in the scene. "
 	"By default, the current render camera is used, but this can be changed using the lookThrough.camera "
 	"setting."
 )
 
-GafferUI.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.camera",
+Gaffer.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.camera",
 	"Specifies the camera to look through when lookThrough.enabled is on. The default value "
 	"means that the current render camera will be used - the paths to other cameras may be specified "
 	"to choose another camera."

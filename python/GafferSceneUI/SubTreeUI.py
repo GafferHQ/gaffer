@@ -44,7 +44,7 @@ import GafferSceneUI
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.SubTree,
 

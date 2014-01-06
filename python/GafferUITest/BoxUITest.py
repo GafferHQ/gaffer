@@ -53,7 +53,7 @@ class BoxUITest( GafferUITest.TestCase ) :
 	
 		IECore.registerRunTimeTyped( NodulePositionNode )
 		
-		GafferUI.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
+		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
 
 		s = Gaffer.ScriptNode()
 		g = GafferUI.GraphGadget( s )

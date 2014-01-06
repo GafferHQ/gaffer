@@ -34,14 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_METADATABINDING_H
-#define GAFFERUIBINDINGS_METADATABINDING_H
+#ifndef GAFFER_METADATA_INL
+#define GAFFER_METADATA_INL
 
-namespace GafferUIBindings
+namespace Gaffer
 {
 
-void bindMetadata();
+template<typename T>
+typename T::ConstPtr Metadata::nodeValue( const Node *node, IECore::InternedString key, bool inherit )
+{
+	return IECore::runTimeCast<const T>( nodeValueInternal( node, key, inherit ) );
+}
 
-} // namespace GafferUIBindings
+template<typename T>
+typename T::ConstPtr Metadata::plugValue( const Plug *plug, IECore::InternedString key, bool inherit )
+{
+	return IECore::runTimeCast<const T>( plugValueInternal( plug, key, inherit ) );
+}
 
-#endif // GAFFERUIBINDINGS_METADATABINDING_H
+} // namespace Gaffer
+
+#endif // GAFFER_METADATA_INL

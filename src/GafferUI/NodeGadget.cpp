@@ -40,13 +40,13 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/NameGadget.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Nodule.h"
-#include "GafferUI/Metadata.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -137,13 +137,13 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 	
 	result = "<h3>" + title + "</h3>";
 	
-	std::string description = Metadata::nodeDescription( m_node );
+	std::string description = Gaffer::Metadata::nodeDescription( m_node );
 	if( description.size() )
 	{
 		result += "\n\n" + description;
 	}
 	
-	if( ConstStringDataPtr summary = Metadata::nodeValue<StringData>( m_node, "summary" ) )
+	if( ConstStringDataPtr summary = Gaffer::Metadata::nodeValue<StringData>( m_node, "summary" ) )
 	{
 		result += "\n\n" + summary->readable();
 	}

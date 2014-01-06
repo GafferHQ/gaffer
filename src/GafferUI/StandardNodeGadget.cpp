@@ -46,6 +46,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -55,7 +56,6 @@
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/SpacerGadget.h"
-#include "GafferUI/Metadata.h"
 
 using namespace GafferUI;
 using namespace Gaffer;

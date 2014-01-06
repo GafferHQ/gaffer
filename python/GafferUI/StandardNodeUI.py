@@ -182,7 +182,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			if plug.getName().startswith( "__" ) :
 				continue
 				
-			sectionName = GafferUI.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
+			sectionName = Gaffer.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
 			if self.__displayMode != self.DisplayMode.Tabbed and sectionName != self.__defaultSectionName :
 				continue
 				
@@ -198,7 +198,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			sectionColumn = self.__sectionColumn( sectionName )
 			sectionColumn.append( widget )
 
-			if GafferUI.Metadata.plugValue( plug, "divider" ) :
+			if Gaffer.Metadata.plugValue( plug, "divider" ) :
 				sectionColumn.append( GafferUI.Divider() )
 
 	def __currentTabChanged( self, tabbedContainer, current ) :

@@ -44,7 +44,7 @@ import GafferUI
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.InteractiveRender,
 

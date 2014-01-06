@@ -24,7 +24,7 @@ def addNodeDefinitionToDoc( doc, nodename, node ):
 	doc.write(string)
 	
 	#get node description from metadata
-	desc = GafferUI.Metadata.nodeDescription(node)
+	desc = Gaffer.Metadata.nodeDescription(node)
 	
 	#record the node description from the metadata
 	if desc == "":
@@ -62,7 +62,7 @@ def checkForChildPlugsAndAddToDoc( doc, plug , inDepth ):
 	#if this plug is not a compound plug, or is a IO plug, or is made up of rgb/xyz data we don't need to go any deeper
 	endPlugs = ['Gaffer::Color3fPlug', 'Gaffer::Color4fPlug', 'Gaffer::V3fPlug']#, 'Gaffer::CompoundDataPlug::MemberPlug']
 	if len(childPlugs) == 0 or isPlugPluggable( plug ) or plug.typeName() in endPlugs:
-		addPlugDefinitionToDoc( doc, plug.getName(), GafferUI.Metadata.plugDescription(plug), plug.typeName(), depth )
+		addPlugDefinitionToDoc( doc, plug.getName(), Gaffer.Metadata.plugDescription(plug), plug.typeName(), depth )
 		
 	elif plug.typeName() == 'Gaffer::CompoundDataPlug::MemberPlug':
 		#special case for these compound plugs that have the enable/disable check.
@@ -72,11 +72,11 @@ def checkForChildPlugsAndAddToDoc( doc, plug , inDepth ):
 			if cplug.getName() == 'value':
 				valueType = cplug.typeName()
 		
-		addPlugDefinitionToDoc( doc, plug.getName()+'.value', GafferUI.Metadata.plugDescription(plug), valueType, depth )
+		addPlugDefinitionToDoc( doc, plug.getName()+'.value', Gaffer.Metadata.plugDescription(plug), valueType, depth )
 		
 	else:
 		#we have children so recursively check for more children
-		addPlugDefinitionToDoc( doc, plug.getName(), GafferUI.Metadata.plugDescription(plug), plug.typeName(), depth )
+		addPlugDefinitionToDoc( doc, plug.getName(), Gaffer.Metadata.plugDescription(plug), plug.typeName(), depth )
 		for childPlug in childPlugs:
 			checkForChildPlugsAndAddToDoc( doc, childPlug, depth )
 

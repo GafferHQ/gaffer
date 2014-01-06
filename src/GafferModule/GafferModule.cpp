@@ -82,6 +82,7 @@
 #include "GafferBindings/BehaviourBinding.h"
 #include "GafferBindings/ArrayPlugBinding.h"
 #include "GafferBindings/Serialisation.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -131,6 +132,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindReference();
 	bindArrayPlug();
 	bindSerialisation();
+	bindMetadata();
 			
 	NodeClass<Backdrop>();
 

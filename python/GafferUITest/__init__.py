@@ -82,7 +82,6 @@ from ScriptWindowTest import ScriptWindowTest
 from CompoundPlugValueWidgetTest import CompoundPlugValueWidgetTest
 from CompoundEditorTest import CompoundEditorTest
 from MultiSelectionMenuTest import MultiSelectionMenuTest
-from MetadataTest import MetadataTest
 from StandardGraphLayoutTest import StandardGraphLayoutTest
 from StandardNodeUITest import StandardNodeUITest
 from ViewTest import ViewTest

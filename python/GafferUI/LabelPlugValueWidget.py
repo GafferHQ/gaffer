@@ -70,7 +70,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.__label.setGraphComponent( plug )
 		
-		label = GafferUI.Metadata.plugValue( plug, "label" ) if plug is not None else None
+		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
 		if label is not None :
 			self.__label.setText( label )
 
