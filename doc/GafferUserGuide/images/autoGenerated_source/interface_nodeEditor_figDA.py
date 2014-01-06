@@ -17,10 +17,10 @@ script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [  ] )
 
 nodeEditor = layout.editors(GafferUI.NodeEditor)[0]
 #open the Shading group
-plugWidget = nodeEditor.nodeUI().plugValueWidget(script['RenderManAttributes']['attributes']['shadingRate'])
+plugWidget = nodeEditor.nodeUI().plugValueWidget(script['RenderManAttributes']['attributes']['shadingRate'],lazy=False)
 collapsible = plugWidget.ancestor(GafferUI.Collapsible)
-collapsible.setCollapsible(False)
+collapsible.setCollapsed(False)
 #open the Visibility group
-plugWidget = nodeEditor.nodeUI().plugValueWidget(script['RenderManAttributes']['attributes']['cameraVisibility'])
+plugWidget = nodeEditor.nodeUI().plugValueWidget(script['RenderManAttributes']['attributes']['cameraVisibility'],lazy=False)
 collapsible = plugWidget.ancestor(GafferUI.Collapsible)
-collapsible.setCollapsible(False)
+collapsible.setCollapsed(False)

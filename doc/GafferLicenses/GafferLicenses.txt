@@ -1,6 +1,6 @@
 = Gaffer Licenses
 image engine
-v0.83.0, 2013
+v0.87.0, 2014
 :doctype: book
 
 
