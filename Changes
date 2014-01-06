@@ -1,3 +1,43 @@
+#### Core
+
+- Fixed threading issue in caching code.
+
+#### UI
+
+- NodeGraph node tooltips now display a helpful description for the node. Node authors can define this text using the "description" Metadata entry (which is intended to provide a static description of the node's purpose) and the "summary" Metadata which may optionally be computed dynamically to describe the current state of the node (#157).
+- Fixed initial value jump viewer gamma/exposure  virtual sliders.
+- NodeGraph nodes may now display plugs on all sides, rather than just top/bottom or left/right as before. Node authors may control plug placement by defining a "nodeGadget:nodulePosition" Metadata entry.
+- ShaderAssignment nodes now receive their shader input from the left (#82).
+- Fixed OpDialogue hangs caused by the rapid output of many messages from an Op.
+- Fixed strange browser behaviour when editing a path which is no longer valid (#64).
+
+#### Scene
+
+- Added "includeRoot" plug to GafferScene::SubTree. This means that when choosing /path/to/theNewRoot as the root, the subtree will be output under /theNewRoot rather than /. Previously this was only possible by using an Isolate node followed by a Subtree (#565).
+- Fixed bug in copying a node which has an input from an unselected PathFilter.
+
+#### Image
+
+- Fixed ImageReader problem which caused the green and blue channels of non-float images to be offset horizontally.
+- Fixed bug which could cause the OpenColorIO node to output greyscale images.
+
+#### OSL
+
+- Updated for compatibility with OSL 1.3, 1.4 and 1.5 (master branch).
+- Removed unsupported closures from OSLRenderer.
+- Added debug() closure support to OSLRenderer to allow the output of multiple values via ShadingEngine::shade(). The closure takes an optional "type" keyword argument to define the type of the resulting output.
+
+#### API
+
+- Added GafferUI.SpacerGadget class.
+- Reimplemented GafferUI.Metadata in C++, so it can be used from C++ code as well as from Python.
+- Fixed bug in Widget.mousePosition() with GLWidget overlays.
+- Fixed GafferScene.ScenePath.isValid() to only consider a path as valid if all parents up to the root exist according to ScenePlug.childNames().
+
+#### Build
+
+- Fixed compilation with GCC 4.4.
+
 # 0.87.1
 
 #### UI
