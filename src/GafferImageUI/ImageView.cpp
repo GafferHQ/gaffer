@@ -931,6 +931,7 @@ ImageView::ImageView( const std::string &name )
 	ClampPtr clampNode = new Clamp();
 	preprocessor->setChild(  "__clamp", clampNode );
 	clampNode->inPlug()->setInput( preprocessorInput );
+	clampNode->enabledPlug()->setValue( false );
 	clampNode->minClampToEnabledPlug()->setValue( true );
 	clampNode->maxClampToEnabledPlug()->setValue( true );
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
