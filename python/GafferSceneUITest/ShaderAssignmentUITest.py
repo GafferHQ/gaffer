@@ -37,41 +37,33 @@
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferUI
 import GafferUITest
+import GafferScene
+import GafferSceneTest
+import GafferSceneUI
 
-class BoxUITest( GafferUITest.TestCase ) :
+class ShaderAssignmentUITest( GafferUITest.TestCase ) :
 
-	def testNodulePositions( self ) :
+	def testBoxNodulePositions( self ) :
 	
-		class NodulePositionNode( GafferTest.AddNode ) :
-		
-			def __init__( self, name = "NodulePositionNode" ) :
-			
-				GafferTest.AddNode.__init__( self, name )
-	
-		IECore.registerRunTimeTyped( NodulePositionNode )
-		
-		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
-		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
-
 		s = Gaffer.ScriptNode()
 		g = GafferUI.GraphGadget( s )
 		
-		s["a"] = GafferTest.AddNode()
-		s["n"] = NodulePositionNode()
-		s["r"] = GafferTest.AddNode()
-		
-		s["n"]["op1"].setInput( s["a"]["sum"] )
-		s["r"]["op1"].setInput( s["n"]["sum"] )
-		
-		box = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
-				
+		s["p"] = GafferScene.Plane()
+		s["s"] = GafferSceneTest.TestShader()
+		s["a"] = GafferScene.ShaderAssignment()
+	
+		s["a"]["in"].setInput( s["p"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+	
+		box = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
+			
 		boxGadget = g.nodeGadget( box )
 		
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( -1, 0, 0 ) ) 
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( 0, 1, 0 ) ) 
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in1"] ) ), IECore.V3f( -1, 0, 0 ) ) 
 		
 if __name__ == "__main__":
 	unittest.main()
+	

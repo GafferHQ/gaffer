@@ -257,7 +257,7 @@ const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedStri
 	{
 		return NULL;
 	}
-	return it->second->member<IECore::Data>( key, true );
+	return it->second->member<IECore::Data>( key );
 }
 
 void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
@@ -351,6 +351,9 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					if( mapIt == plugMap.end() )
 					{
 						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
+						// we want intermediate inputs to appear on the same side of the node as the
+						// equivalent internal plug, so we copy the relevant metadata over.
+						result->setPlugMetadata( intermediateInput, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
 						intermediateInput->setFlags( Plug::Dynamic, true );
 						result->addChild( intermediateInput );
 						intermediateInput->setInput( input );
@@ -378,6 +381,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							if( mapIt == plugMap.end() )
 							{
 								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
+								result->setPlugMetadata( intermediateOutput, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
 								intermediateOutput->setFlags( Plug::Dynamic, true );
 								result->addChild( intermediateOutput );
 								intermediateOutput->setInput( plug );
@@ -425,7 +429,7 @@ int registerMetadata()
 {
 	/// \todo Perhaps if Metadata::registerPlugValue() allowed match strings for keys
 	/// as well as plugs, we wouldn't need to loop over an explicit list of keys.
-	const char *keys[] = { "description", NULL };
+	const char *keys[] = { "description", "nodeGadget:nodulePosition", NULL };
 	for( const char **key = keys; *key; key++ )
 	{
 		Metadata::registerPlugValue( Box::staticTypeId(), boost::regex( ".*" ), *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
@@ -433,6 +437,6 @@ int registerMetadata()
 	return 0;
 }
 
-static int registration = registerMetadata();
+int registration = registerMetadata();
 
 } // namespace anonymous
