@@ -518,6 +518,29 @@ class BoxTest( unittest.TestCase ) :
 		# likewise here, the enclosed network had no external connections so the
 		# box should have no additional children other than the nested box.
 		self.assertEqual( b2.keys(), Gaffer.Box().keys() + [ b.getName() ] )
+	
+	def testMetadata( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["a1"] = GafferTest.AddNode()
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["a1"]["sum"] )
+	
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a2"] ] ) )
+	
+		self.assertEqual( b.getPlugMetadata( b["in"], "description" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( b["in"], "description" ), None )
+		
+		b.setPlugMetadata( b["in"], "description", "hello" )
+		self.assertEqual( b.getPlugMetadata( b["in"], "description" ), IECore.StringData( "hello" ) )
+		self.assertEqual( Gaffer.Metadata.plugValue( b["in"], "description" ), "hello" )
+	
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["Box"].getPlugMetadata( s2["Box"]["in"], "description" ), IECore.StringData( "hello" ) )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["Box"]["in"], "description" ), "hello" )
 		
 if __name__ == "__main__":
 	unittest.main()

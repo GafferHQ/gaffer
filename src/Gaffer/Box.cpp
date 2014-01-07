@@ -44,6 +44,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Metadata.h"
 
 using namespace Gaffer;
 
@@ -249,6 +250,32 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 	return true;
 }
 
+const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedString key ) const
+{
+	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
+	if( it == m_plugMetadata.end() )
+	{
+		return NULL;
+	}
+	return it->second->member<IECore::Data>( key, true );
+}
+
+void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	IECore::CompoundDataPtr data;
+	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
+	if( it == m_plugMetadata.end() )
+	{
+		data = new IECore::CompoundData;
+		m_plugMetadata[plug] = data;
+	}
+	else
+	{
+		data = it->second;
+	}
+	data->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+}
+
 void Box::exportForReference( const std::string &fileName ) const
 {
 	const ScriptNode *script = scriptNode();
@@ -372,3 +399,40 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 
 	return result;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Metadata registration
+// We use this to make the per-instance Box metadata available through
+// the standard Metadata query system.
+//////////////////////////////////////////////////////////////////////////
+
+namespace // anonymous
+{
+
+IECore::ConstDataPtr boxPlugMetadata( const Plug *plug, IECore::InternedString key )
+{
+	const Box *box = static_cast<const Box *>( plug->node() );
+	IECore::ConstDataPtr value = box->getPlugMetadata( plug, key );
+	if( value )
+	{
+		return value;
+	}
+	
+	return NULL;
+}
+
+int registerMetadata()
+{
+	/// \todo Perhaps if Metadata::registerPlugValue() allowed match strings for keys
+	/// as well as plugs, we wouldn't need to loop over an explicit list of keys.
+	const char *keys[] = { "description", NULL };
+	for( const char **key = keys; *key; key++ )
+	{
+		Metadata::registerPlugValue( Box::staticTypeId(), boost::regex( ".*" ), *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
+	}
+	return 0;
+}
+
+static int registration = registerMetadata();
+
+} // namespace anonymous
