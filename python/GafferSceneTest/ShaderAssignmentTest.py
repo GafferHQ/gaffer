@@ -234,6 +234,11 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s = GafferScene.ShaderSwitch()
 		
 		self.assertTrue( a["shader"].acceptsInput( s["out"] ) )
+
+	def testAcceptsNoneInputs( self ) :
+		
+		a = GafferScene.ShaderAssignment()
+		self.assertTrue( a["shader"].acceptsInput( None ) )
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -187,6 +187,11 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 		return false;
 	}
 
+	if( !inputPlug )
+	{
+		return true;
+	}
+
 	if( !isInstanceOf( ComputeNode::staticTypeId() ) && ( plug == enabledPlug() || plug == indexPlug() ) )
 	{
 		// we're not a compute node, so we have to implement the switching by making an internal connection

@@ -320,6 +320,12 @@ class SwitchTest( GafferTest.TestCase ) :
 		indexInput.setValue( 3 )
 		self.assertTrue( n["out"].source().isSame( input0 ) )
 
+	def testDependencyNodeAcceptsNoneInputs( self ) :
+	
+		n = Gaffer.SwitchDependencyNode()
+		self.assertTrue( n["enabled"].acceptsInput( None ) )
+		self.assertTrue( n["index"].acceptsInput( None ) )
+
 	def setUp( self ) :
 	
 		GafferTest.TestCase.setUp( self )
