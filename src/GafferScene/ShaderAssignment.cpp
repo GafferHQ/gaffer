@@ -94,6 +94,11 @@ bool ShaderAssignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plu
 		return false;
 	}
 	
+	if( !inputPlug )
+	{
+		return true;
+	}
+	
 	if( plug == shaderPlug() )
 	{
 		const Node *sourceNode = inputPlug->source<Plug>()->node();
