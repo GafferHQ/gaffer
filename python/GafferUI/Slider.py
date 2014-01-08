@@ -438,7 +438,7 @@ class _Widget( QtGui.QWidget ) :
 		
 	def sizeHint( self ) :
 	
-		return QtCore.QSize( 150, 18 )
+		return QtCore.QSize( 200, 18 )
 		
 	def paintEvent( self, event ) :
 		
