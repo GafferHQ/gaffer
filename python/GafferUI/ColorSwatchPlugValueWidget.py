@@ -179,7 +179,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 	def __colorChanged( self, colorChooser, reason ) :
 	
-		if not GafferUI.Slider.changesShouldBeMerged( self.__lastChangedReason, reason ) :
+		if not GafferUI.ColorChooser.changesShouldBeMerged( self.__lastChangedReason, reason ) :
 			self.__mergeGroupId += 1
 		self.__lastChangedReason = reason
 				
