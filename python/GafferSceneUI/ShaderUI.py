@@ -49,7 +49,7 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.Shader,
 

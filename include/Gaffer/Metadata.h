@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_METADATA_H
-#define GAFFERUI_METADATA_H
+#ifndef GAFFER_METADATA_H
+#define GAFFER_METADATA_H
 
 #include "boost/regex.hpp"
 #include "boost/function.hpp"
@@ -49,11 +49,6 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Node )
 IE_CORE_FORWARDDECLARE( Plug )
 
-} // namespace Gaffer
-
-namespace GafferUI
-{
-
 /// The Metadata class provides a registry of metadata for the different types
 /// of Nodes and Plugs. This metadata assists in creating UIs and can be used to
 /// generate documentation. Metadata can consist of either static values represented
@@ -63,8 +58,8 @@ class Metadata
 
 	public :
 
-		typedef boost::function<IECore::ConstDataPtr ( const Gaffer::Node *node )> NodeValueFunction;
-		typedef boost::function<IECore::ConstDataPtr ( const Gaffer::Plug *plug )> PlugValueFunction;
+		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
+		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
 
 		/// Registers a static metadata value for the specified node type.
 		static void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value );
@@ -74,13 +69,13 @@ class Metadata
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
-		static typename T::ConstPtr nodeValue( const Gaffer::Node *node, IECore::InternedString key, bool inherit = true );
+		static typename T::ConstPtr nodeValue( const Node *node, IECore::InternedString key, bool inherit = true );
 		
 		/// Utility method calling registerNodeValue( nodeTypeId, "description", description ).
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, const std::string &description );
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, NodeValueFunction description );
 		/// Utility method calling nodeValue( node, "description", inherit );
-		static std::string nodeDescription( const Gaffer::Node *node, bool inherit = true );
+		static std::string nodeDescription( const Node *node, bool inherit = true );
 		
 		/// Registers a static metadata value for plugs with the specified path on the specified node type.
 		static void registerPlugValue( IECore::TypeId nodeTypeId, const boost::regex &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
@@ -90,23 +85,23 @@ class Metadata
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
-		static typename T::ConstPtr plugValue( const Gaffer::Plug *plug, IECore::InternedString key, bool inherit = true );
+		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true );
 	
 		/// Utility function calling registerPlugValue( nodeTypeId, plugPath, "description", description )
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const boost::regex &plugPath, const std::string &description );
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const boost::regex &plugPath, PlugValueFunction description );
 		/// Utility function calling plugValue( plug, "description", inherit )
-		static std::string plugDescription( const Gaffer::Plug *plug, bool inherit = true );
+		static std::string plugDescription( const Plug *plug, bool inherit = true );
 	
 	private :
 	
-		static IECore::ConstDataPtr nodeValueInternal( const Gaffer::Node *node, IECore::InternedString key, bool inherit );
-		static IECore::ConstDataPtr plugValueInternal( const Gaffer::Plug *plug, IECore::InternedString key, bool inherit );
+		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit );
+		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit );
 
 };
 
-} // namespace GafferUI
+} // namespace Gaffer
 
-#include "GafferUI/Metadata.inl"
+#include "Gaffer/Metadata.inl"
 
-#endif // GAFFERUI_METADATA_H
+#endif // GAFFER_METADATA_H

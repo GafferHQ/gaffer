@@ -43,7 +43,7 @@ import GafferOSL
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferOSL.OSLImage,
 

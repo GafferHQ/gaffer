@@ -34,11 +34,12 @@
 #  
 ##########################################################################
 
+import Gaffer
 import GafferUI
 import GafferScene
 
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.Options,
 

@@ -51,6 +51,11 @@ namespace GafferBindings
 class BoxSerialiser : public NodeSerialiser
 {
 	
+	virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+	{
+		modules.insert( "IECore" ); // for the setPlugMetadata() calls
+	}
+
 	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
@@ -68,12 +73,52 @@ class BoxSerialiser : public NodeSerialiser
 		}
 		return NodeSerialiser::childNeedsConstruction( child );
 	}	
+
+	virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		std::string result = NodeSerialiser::postHierarchy( graphComponent, identifier, serialisation );
+		
+		const Box *box = static_cast<const Box *>( graphComponent );
+		for( RecursivePlugIterator pIt( box ); pIt != pIt.end(); ++pIt )
+		{
+			Box::PlugMetadataMap::const_iterator mIt = box->m_plugMetadata.find( *pIt );
+			if( mIt == box->m_plugMetadata.end() )
+			{
+				continue;
+			}
+			const IECore::CompoundDataMap &metadata = mIt->second->readable();
+			for( IECore::CompoundDataMap::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
+			{
+				if( !it->second )
+				{
+					continue;
+				}
+				
+				object pythonValue( it->second );
+				std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
+				result += boost::str(
+					boost::format( "%s.setPlugMetadata( %s, \"%s\", %s )\n" ) %
+						identifier %
+						serialisation.identifier( pIt->get() ) %
+						it->first %
+						stringValue
+				);
+			}
+		}
+		return result;
+	}
 	
 };
 
 static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
 {
 	return b.promotePlug( descendantPlug );
+}
+
+static IECore::DataPtr getPlugMetadata( Box &b, const Plug *plug, const char *key )
+{
+	const IECore::Data *d = b.getPlugMetadata( plug, key );
+	return d ? d->copy() : NULL;
 }
 
 void bindBox()
@@ -87,6 +132,8 @@ void bindBox()
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
 		.def( "unpromotePlug", &Box::unpromotePlug )
 		.def( "exportForReference", &Box::exportForReference )
+		.def( "getPlugMetadata", &getPlugMetadata )
+		.def( "setPlugMetadata", &Box::setPlugMetadata )
 		.def( "create", &Box::create )
 		.staticmethod( "create" )
 	;

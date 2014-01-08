@@ -128,7 +128,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
 
-		GafferUI.Metadata.registerPlugValue( n.typeId(), "op1", "nodeGadget:nodulePosition", "left" )
+		Gaffer.Metadata.registerPlugValue( n.typeId(), "op1", "nodeGadget:nodulePosition", "left" )
 				
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( -1, 0, 0 ) )

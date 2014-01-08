@@ -37,7 +37,16 @@
 #ifndef GAFFER_BOX_H
 #define GAFFER_BOX_H
 
+#include "IECore/CompoundData.h"
+
 #include "Gaffer/Node.h"
+
+namespace GafferBindings
+{
+
+class BoxSerialiser;
+
+} // namespace GafferBindings
 
 namespace Gaffer
 {
@@ -78,6 +87,13 @@ class Box : public Node
 		/// \undoable
 		void unpromotePlug( Plug *promotedDescandantPlug );
 
+		/// Because the content of Boxes is user generated, it doesn't
+		/// make sense to register a fixed set of metadata as with other
+		/// node types. Instead, each instance stores its own metadata, which
+		/// can be queried and set with these methods.
+		const IECore::Data *getPlugMetadata( const Plug *plug, IECore::InternedString key ) const;
+		void setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
+
 		/// Exports the contents of the Box so that it can be referenced
 		/// by a Reference node.
 		void exportForReference( const std::string &fileName ) const;
@@ -90,7 +106,13 @@ class Box : public Node
 	private :
 
 		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const;
-							
+		
+		typedef std::map<ConstPlugPtr, IECore::CompoundDataPtr> PlugMetadataMap;
+		
+		PlugMetadataMap m_plugMetadata;
+
+		friend class GafferBindings::BoxSerialiser;
+		
 };
 
 typedef FilteredChildIterator<TypePredicate<Box> > BoxIterator;

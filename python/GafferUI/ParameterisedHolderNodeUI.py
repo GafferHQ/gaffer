@@ -115,6 +115,6 @@ def __plugDescription( plug ) :
 	
 	return parameter.description
 
-GafferUI.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderNode, "parameters.*", __plugDescription )
-GafferUI.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderComputeNode, "parameters.*", __plugDescription )
-GafferUI.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderDependencyNode, "parameters.*", __plugDescription )
+Gaffer.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderNode, "parameters.*", __plugDescription )
+Gaffer.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderComputeNode, "parameters.*", __plugDescription )
+Gaffer.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderDependencyNode, "parameters.*", __plugDescription )

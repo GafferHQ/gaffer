@@ -125,7 +125,7 @@ class __FileNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().node().load( self.getPlug().getValue() )
 			
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), "fileName", __FileNamePlugValueWidget )
-GafferUI.Metadata.registerPlugValue( Gaffer.Reference, "fileName", "nodeUI:section", "header" )
+Gaffer.Metadata.registerPlugValue( Gaffer.Reference, "fileName", "nodeUI:section", "header" )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), re.compile( "out[0-9]*" ), None )
@@ -171,4 +171,4 @@ GafferUI.Nodule.registerNodule( Gaffer.Reference.staticTypeId(), "fileName", lam
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerPlugValue( Gaffer.Reference, "user", "nodeUI:section", "Settings" )
+Gaffer.Metadata.registerPlugValue( Gaffer.Reference, "user", "nodeUI:section", "Settings" )

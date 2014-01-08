@@ -40,7 +40,7 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.Prune,
 

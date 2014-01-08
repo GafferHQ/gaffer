@@ -107,9 +107,9 @@ GafferUI.PlugValueWidget.registerCreator(
 	defaultToggleValue = True,
 )
 
-GafferUI.Metadata.registerPlugValue( GafferImageUI.ImageView, "clipping", "divider", True )
+Gaffer.Metadata.registerPlugValue( GafferImageUI.ImageView, "clipping", "divider", True )
 
-GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "clipping",
+Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "clipping",
 	"Highlights the regions in which the colour values go above 1 or below 0."
 )
 
@@ -121,7 +121,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	defaultToggleValue = 1,
 )
 
-GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "exposure",
+Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "exposure",
 	"Applies an exposure adjustment to the image."
 )
 
@@ -133,13 +133,13 @@ GafferUI.PlugValueWidget.registerCreator(
 	defaultToggleValue = 2,
 )
 
-GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "gamma",
+Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "gamma",
 	"Applies a gamma correction to the image."
 )
 
 ## Display Transform
 
-GafferUI.Metadata.registerPlugValue( GafferImageUI.ImageView, "displayTransform", "label", "" )
+Gaffer.Metadata.registerPlugValue( GafferImageUI.ImageView, "displayTransform", "label", "" )
 
 def __displayTransformPlugValueWidgetCreator( plug ) :
 
@@ -161,6 +161,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	__displayTransformPlugValueWidgetCreator
 )
 
-GafferUI.Metadata.registerPlugDescription( GafferImageUI.ImageView, "displayTransform",
+Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "displayTransform",
 	"Applies colour space transformations for viewing the image correctly."
 )

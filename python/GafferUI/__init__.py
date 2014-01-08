@@ -239,3 +239,7 @@ import ExpressionUI
 import BoxUI
 import ReferenceUI
 import BackdropUI
+
+# backwards compatibility
+## \todo Remove me
+Metadata = __import__( "Gaffer" ).Metadata

@@ -65,7 +65,7 @@ def nodeMenuCreateCommand( menu ) :
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 Gaffer.Backdrop,
 

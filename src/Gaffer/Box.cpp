@@ -44,6 +44,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Metadata.h"
 
 using namespace Gaffer;
 
@@ -249,6 +250,32 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 	return true;
 }
 
+const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedString key ) const
+{
+	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
+	if( it == m_plugMetadata.end() )
+	{
+		return NULL;
+	}
+	return it->second->member<IECore::Data>( key );
+}
+
+void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	IECore::CompoundDataPtr data;
+	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
+	if( it == m_plugMetadata.end() )
+	{
+		data = new IECore::CompoundData;
+		m_plugMetadata[plug] = data;
+	}
+	else
+	{
+		data = it->second;
+	}
+	data->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+}
+
 void Box::exportForReference( const std::string &fileName ) const
 {
 	const ScriptNode *script = scriptNode();
@@ -324,6 +351,9 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					if( mapIt == plugMap.end() )
 					{
 						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
+						// we want intermediate inputs to appear on the same side of the node as the
+						// equivalent internal plug, so we copy the relevant metadata over.
+						result->setPlugMetadata( intermediateInput, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
 						intermediateInput->setFlags( Plug::Dynamic, true );
 						result->addChild( intermediateInput );
 						intermediateInput->setInput( input );
@@ -351,6 +381,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							if( mapIt == plugMap.end() )
 							{
 								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
+								result->setPlugMetadata( intermediateOutput, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
 								intermediateOutput->setFlags( Plug::Dynamic, true );
 								result->addChild( intermediateOutput );
 								intermediateOutput->setInput( plug );
@@ -372,3 +403,40 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 
 	return result;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Metadata registration
+// We use this to make the per-instance Box metadata available through
+// the standard Metadata query system.
+//////////////////////////////////////////////////////////////////////////
+
+namespace // anonymous
+{
+
+IECore::ConstDataPtr boxPlugMetadata( const Plug *plug, IECore::InternedString key )
+{
+	const Box *box = static_cast<const Box *>( plug->node() );
+	IECore::ConstDataPtr value = box->getPlugMetadata( plug, key );
+	if( value )
+	{
+		return value;
+	}
+	
+	return NULL;
+}
+
+int registerMetadata()
+{
+	/// \todo Perhaps if Metadata::registerPlugValue() allowed match strings for keys
+	/// as well as plugs, we wouldn't need to loop over an explicit list of keys.
+	const char *keys[] = { "description", "nodeGadget:nodulePosition", NULL };
+	for( const char **key = keys; *key; key++ )
+	{
+		Metadata::registerPlugValue( Box::staticTypeId(), boost::regex( ".*" ), *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
+	}
+	return 0;
+}
+
+int registration = registerMetadata();
+
+} // namespace anonymous

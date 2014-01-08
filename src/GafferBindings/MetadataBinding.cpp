@@ -43,17 +43,15 @@
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Metadata.h"
 
-#include "GafferUI/Metadata.h"
-
-#include "GafferUIBindings/MetadataBinding.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;
-using namespace GafferUI;
 
-namespace GafferUIBindings
+namespace GafferBindings
 {
 
 struct PythonNodeValueFunction
@@ -316,4 +314,4 @@ void bindMetadata()
 
 }
 
-} // namespace GafferUIBindings
+} // namespace GafferBindings

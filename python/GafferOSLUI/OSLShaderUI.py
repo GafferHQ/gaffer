@@ -58,7 +58,7 @@ GafferUI.Nodule.registerNodule( GafferOSL.OSLShader.staticTypeId(), "out", __out
 # Metadata
 ##########################################################################
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferOSL.OSLShader,
 

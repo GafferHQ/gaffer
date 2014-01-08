@@ -1,25 +1,25 @@
 ##########################################################################
-#
+#  
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#
+#  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#
+#  
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#
+#  
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#
+#  
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#
+#  
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,23 +31,47 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+#  
 ##########################################################################
 
+import IECore
+
 import Gaffer
+import GafferTest
 import GafferUI
+import GafferUITest
 
-import GafferScene
+class BoxUITest( GafferUITest.TestCase ) :
 
-Gaffer.Metadata.registerNodeDescription(
+	def testNodulePositions( self ) :
+	
+		class NodulePositionNode( GafferTest.AddNode ) :
+		
+			def __init__( self, name = "NodulePositionNode" ) :
+			
+				GafferTest.AddNode.__init__( self, name )
+	
+		IECore.registerRunTimeTyped( NodulePositionNode )
+		
+		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
+		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
 
-GafferScene.Light,
-
-"""Creates a scene with a single light in it.""",
-
-"parameters",
-"""The parameters of the light shader - these will vary based on the light type.""",
-
-)
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Light.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+		
+		s["a"] = GafferTest.AddNode()
+		s["n"] = NodulePositionNode()
+		s["r"] = GafferTest.AddNode()
+		
+		s["n"]["op1"].setInput( s["a"]["sum"] )
+		s["r"]["op1"].setInput( s["n"]["sum"] )
+		
+		box = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+				
+		boxGadget = g.nodeGadget( box )
+		
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( -1, 0, 0 ) ) 
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		
+if __name__ == "__main__":
+	unittest.main()

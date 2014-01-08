@@ -441,13 +441,13 @@ def __plugDivider( plug ) :
 		
 	return d.value.lower() in ( "True", "true", "1" )	
 
-GafferUI.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
+Gaffer.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
 
-GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
-GafferUI.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
+Gaffer.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
+Gaffer.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
 
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "label", __plugLabel )
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "label", __plugLabel )
+Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "label", __plugLabel )
+Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "label", __plugLabel )
 
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "divider", __plugDivider )
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "divider", __plugDivider )
+Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "divider", __plugDivider )
+Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "divider", __plugDivider )

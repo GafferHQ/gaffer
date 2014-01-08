@@ -38,7 +38,7 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-GafferUI.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.ObjectSource,
 "A node which produces scenes with exactly one object in them.",

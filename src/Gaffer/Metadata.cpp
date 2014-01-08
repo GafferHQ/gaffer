@@ -38,13 +38,12 @@
 
 #include "Gaffer/Node.h"
 
-#include "GafferUI/Metadata.h"
+#include "Gaffer/Metadata.h"
 
 using namespace std;
 using namespace IECore;
-using namespace Gaffer;
 
-namespace GafferUI
+namespace Gaffer
 {
 
 namespace Detail
@@ -83,7 +82,7 @@ void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedStr
 	nodeMetadata.nodeValues[key] = value;
 }
 
-IECore::ConstDataPtr Metadata::nodeValueInternal( const Gaffer::Node *node, IECore::InternedString key, bool inherit )
+IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit )
 {
 	IECore::TypeId typeId = node->typeId();
 	while( typeId != InvalidTypeId )
@@ -112,7 +111,7 @@ void Metadata::registerNodeDescription( IECore::TypeId nodeTypeId, NodeValueFunc
 	registerNodeValue( nodeTypeId, "description", description );
 }
 
-std::string Metadata::nodeDescription( const Gaffer::Node *node, bool inherit )
+std::string Metadata::nodeDescription( const Node *node, bool inherit )
 {
 	if( ConstStringDataPtr d = nodeValue<StringData>( node, "description", inherit ) )
 	{
@@ -133,7 +132,7 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const boost::regex 
 	plugValues[key] = value; 
 }
 
-IECore::ConstDataPtr Metadata::plugValueInternal( const Gaffer::Plug *plug, IECore::InternedString key, bool inherit )
+IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit )
 {
 	const Node *node = plug->node();
 	if( !node )
@@ -177,7 +176,7 @@ void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const boost::
 	registerPlugValue( nodeTypeId, plugPath, "description", description );	
 }
 
-std::string Metadata::plugDescription( const Gaffer::Plug *plug, bool inherit )
+std::string Metadata::plugDescription( const Plug *plug, bool inherit )
 {
 	if( ConstStringDataPtr d = plugValue<StringData>( plug, "description", inherit ) )
 	{
@@ -186,4 +185,4 @@ std::string Metadata::plugDescription( const Gaffer::Plug *plug, bool inherit )
 	return "";
 }
 
-} // namespace GafferUI
+} // namespace Gaffer

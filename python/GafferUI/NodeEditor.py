@@ -148,7 +148,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 					GafferUI.Image( "info.png" )
 				toolTip = "<h3>" + node.typeName().rpartition( ":" )[2] + "</h3>"
-				description = GafferUI.Metadata.nodeDescription( node )
+				description = Gaffer.Metadata.nodeDescription( node )
 				if description :
 					toolTip += "\n\n" + description
 				infoSection.setToolTip( toolTip )
