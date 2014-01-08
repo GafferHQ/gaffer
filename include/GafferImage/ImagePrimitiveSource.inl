@@ -170,6 +170,9 @@ GafferImage::Format ImagePrimitiveSource<BaseType>::computeFormat( const Gaffer:
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
+		/// \todo Stop ignoring the origin - just return the display window as-is,
+		/// then use the space conversion methods in Format to implement computeDataWindow()
+		/// and computeChannelData() appropriately.
 		result = image->getDisplayWindow();
 		return GafferImage::Format( result.size().x+1, result.size().y+1 );
 	}

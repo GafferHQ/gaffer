@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import random
 
 import IECore
 import Gaffer
@@ -167,7 +168,23 @@ class FormatTest( unittest.TestCase ) :
 		
 		# Get the new list of format names and check that it is the same as the old list
 		self.assertEqual( set( existingFormatNames ), set( GafferImage.Format.formatNames() ) )
+	
+	def testCoordinateSystemTransforms( self ) :
+	
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 300 ) ), 1 )
 		
+		self.assertEqual( f.yDownToFormatSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
+		self.assertEqual( f.yDownToFormatSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
+
+		self.assertEqual( f.formatToYDownSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
+		self.assertEqual( f.formatToYDownSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
+	
+		for i in range( 0, 1000 ) :
+		
+			p = IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) )
+			pDown = f.formatToYDownSpace( p )
+			self.assertEqual( f.yDownToFormatSpace( pDown ), p )
+	
 	def __assertTestFormat( self, testFormat ):
 		self.assertEqual( testFormat.getPixelAspect(), 1.4 )
 		self.assertEqual( testFormat.width(), 1234 )

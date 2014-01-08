@@ -117,7 +117,7 @@ class ImagePlugTest( GafferTest.TestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 	
-		self.assertTypeNamesArePrefixed( GafferImage, namesToIgnore = set( ( "IECore::FormatData", ) ) )
+		self.assertTypeNamesArePrefixed( GafferImage )
 		self.assertTypeNamesArePrefixed( GafferImageTest )
 
 	def testDefaultNames( self ) :

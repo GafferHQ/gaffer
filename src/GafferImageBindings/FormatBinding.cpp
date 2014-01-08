@@ -116,14 +116,24 @@ void bindFormat()
 	static void (*setDefaultFormatPtr2)( ScriptNode *scriptNode, const std::string & ) (&Format::setDefaultFormat);
 	
 	class_<Format>( "Format", init<int, int, double>() )
+		
 		.def( init< const Imath::Box2i &, double >() )
 		.def( init<>() )
+		
 		.def( "width", &Format::width )
 		.def( "height", &Format::height )
 		.def( "getPixelAspect", &Format::getPixelAspect )
 		.def( "setPixelAspect", &Format::setPixelAspect )
-		.def( "getDisplayWindow", &Format::getDisplayWindow )
+		.def( "getDisplayWindow", &Format::getDisplayWindow, return_value_policy<copy_const_reference>() )
 		.def( "setDisplayWindow", &Format::setDisplayWindow )
+		
+		.def( "yDownToFormatSpace", ( int (Format::*)( int ) const )&Format::yDownToFormatSpace )
+		.def( "yDownToFormatSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::yDownToFormatSpace )
+		.def( "yDownToFormatSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::yDownToFormatSpace )
+
+		.def( "formatToYDownSpace", ( int (Format::*)( int ) const )&Format::formatToYDownSpace )
+		.def( "formatToYDownSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::formatToYDownSpace )
+		.def( "formatToYDownSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::formatToYDownSpace )
 		
 		// Static bindings
 		.def( "formatAddedSignal", &Format::formatAddedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatAddedSignal" )

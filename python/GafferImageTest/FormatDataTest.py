@@ -39,54 +39,47 @@ import unittest
 import IECore
 
 import Gaffer
-import GafferTest
-import GafferUI
-import GafferUITest
 import GafferImage
-import GafferImageUI
 
-class ImageViewTest( GafferUITest.TestCase ) :
+class FormatDataTest( unittest.TestCase ) :
 
-	def testFactory( self ) :
+	def test( self ) :
 	
-		image = GafferImage.Constant()
-		view = GafferUI.View.create( image["out"] )
+		f1 = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 0.5 )
+		f2 = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 1 )
 		
-		self.assertTrue( isinstance( view, GafferImageUI.ImageView ) )
-		self.assertTrue( view["in"].getInput().isSame( image["out"] ) )
-				
-	def testDeriving( self ) :
-	
-		class MyView( GafferImageUI.ImageView ) :
+		fd1a = GafferImage.FormatData( f1 )
+		fd1b = GafferImage.FormatData( f1 )
+		fd2 = GafferImage.FormatData( f2 )
 		
-			def __init__( self, viewedPlug = None ) :
-			
-				GafferImageUI.ImageView.__init__( self, "MyView" )
-			
-				converter = Gaffer.Node()
-				converter["in"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject.defaultNullObject() )
-				converter["out"] = GafferImage.ImagePlug( direction = Gaffer.Plug.Direction.Out )
-				converter["constant"] = GafferImage.Constant()
-				converter["constant"]["format"].setValue( GafferImage.Format( 20, 20, 1 ) )
-				converter["out"].setInput( converter["constant"]["out"] )
-				
-				self._insertConverter( converter )
-				
-				self["in"].setInput( viewedPlug )
-					
-		GafferUI.View.registerView( GafferTest.SphereNode.staticTypeId(), "out", MyView )
+		self.assertEqual( fd1a.value, f1 )
+		self.assertEqual( fd1b.value, f1 )
+		self.assertEqual( fd2.value, f2 )
+		
+		self.assertEqual( fd1a, fd1b )
+		self.assertNotEqual( fd1a, fd2 )
+		
+		self.assertEqual( fd1a.hash(), fd1b.hash() )
+		self.assertNotEqual( fd1a.hash(), fd2.hash() )
+		
+		fd2c = fd2.copy()
+		self.assertEqual( fd2c, fd2 )
+		self.assertEqual( fd2c.hash(), fd2.hash() )
 
-		sphere = GafferTest.SphereNode()
-				
-		view = GafferUI.View.create( sphere["out"] )
-		self.assertTrue( isinstance( view, MyView ) )
-		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
-		self.assertTrue( isinstance( view["in"], Gaffer.ObjectPlug ) )
-		view["exposure"].setValue( 1 )
-		view["gamma"].setValue( 0.5 )
+	def testSerialisation( self ) :
+	
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 200, 100 ) ), 0.5 )
+		fd = GafferImage.FormatData( f )
 		
-		view._update()	
+		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
+		
+		fd.save( m, "f" )
+		
+		m2 = IECore.MemoryIndexedIO( m.buffer(), [], IECore.IndexedIO.OpenMode.Read )
+		fd2 = IECore.Object.load( m2, "f" )
+		
+		self.assertEqual( fd2, fd )
+		self.assertEqual( fd2.value, f )
 		
 if __name__ == "__main__":
 	unittest.main()
-	

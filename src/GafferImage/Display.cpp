@@ -37,15 +37,20 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/multi_array.hpp"
 
 #include "IECore/LRUCache.h"
 #include "IECore/DisplayDriverServer.h"
-#include "IECore/ImageDisplayDriver.h"
+#include "IECore/DisplayDriver.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/BoxOps.h"
+
+#include "Gaffer/Context.h"
 
 #include "GafferImage/Display.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
@@ -73,23 +78,45 @@ static DisplayDriverServerCache g_serverCache( cacheGetter, 10 );
 namespace GafferImage
 {
 
-class GafferDisplayDriver : public IECore::ImageDisplayDriver
+class GafferDisplayDriver : public IECore::DisplayDriver
 {
 
 	public :
 	
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::GafferDisplayDriver, GafferDisplayDriverTypeId, ImageDisplayDriver );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::GafferDisplayDriver, GafferDisplayDriverTypeId, DisplayDriver );
 
 		GafferDisplayDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow,
 			const vector<string> &channelNames, ConstCompoundDataPtr parameters )
-			:	ImageDisplayDriver( displayWindow, dataWindow, channelNames, parameters )
+			:	DisplayDriver( displayWindow, dataWindow, channelNames, parameters ),
+				m_gafferFormat( displayWindow, 1 ),
+				m_gafferDataWindow( m_gafferFormat.yDownToFormatSpace( dataWindow ) )
 		{
+			const V2i dataWindowMinTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.min ) / ImagePlug::tileSize();
+			const V2i dataWindowMaxTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.max ) / ImagePlug::tileSize();
+			
+			m_tiles.resize(
+				TileArray::extent_gen()
+					[TileArray::extent_range( dataWindowMinTileIndex.x, dataWindowMaxTileIndex.x + 1 )]
+					[TileArray::extent_range( dataWindowMinTileIndex.y, dataWindowMaxTileIndex.y + 1 )]
+					[channelNames.size()]
+			);
+			
 			m_parameters = parameters ? parameters->copy() : CompoundDataPtr( new CompoundData );
 			instanceCreatedSignal()( this );
 		}
 
 		virtual ~GafferDisplayDriver()
 		{
+		}
+		
+		const Format &gafferFormat() const
+		{
+			return m_gafferFormat;
+		}
+		
+		const Box2i &gafferDataWindow() const
+		{
+			return m_gafferDataWindow;
 		}
 		
 		const CompoundData *parameters() const
@@ -99,16 +126,93 @@ class GafferDisplayDriver : public IECore::ImageDisplayDriver
 		
 		virtual void imageData( const Imath::Box2i &box, const float *data, size_t dataSize )
 		{
-			ImageDisplayDriver::imageData( box, data, dataSize );
+			Box2i yUpBox = m_gafferFormat.yDownToFormatSpace( box );
+			const V2i boxMinTileOrigin = ImagePlug::tileOrigin( yUpBox.min );
+			const V2i boxMaxTileOrigin = ImagePlug::tileOrigin( yUpBox.max );
+			for( int tileOriginY = boxMinTileOrigin.y; tileOriginY <= boxMaxTileOrigin.y; tileOriginY += ImagePlug::tileSize() )
+			{
+				for( int tileOriginX = boxMinTileOrigin.x; tileOriginX <= boxMaxTileOrigin.x; tileOriginX += ImagePlug::tileSize() )
+				{
+					for( int channelIndex = 0, numChannels = channelNames().size(); channelIndex < numChannels; ++channelIndex )
+					{
+						const V2i tileOrigin( tileOriginX, tileOriginY );
+						ConstFloatVectorDataPtr *tileData = tileReference( tileOrigin, channelIndex );
+						if( !tileData )
+						{
+							// we've been sent data outside of the data window
+							continue;
+						}
+						
+						FloatVectorDataPtr updatedTileData;
+						if( *tileData )
+						{
+							// we must create a new object to hold the updated tile data,
+							// because the old one might well have been returned from
+							// computeChannelData and be being held in the cache.
+							updatedTileData = (*tileData)->copy();
+						}
+						else
+						{
+							updatedTileData = ImagePlug::blackTile()->copy();
+						}
+						
+						vector<float> &updatedTile = updatedTileData->writable();
+						
+						const Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() - 1 ) );
+						const Box2i transferBound = IECore::boxIntersection( tileBound, yUpBox );
+						for( int y = transferBound.min.y; y<=transferBound.max.y; ++y )
+						{
+							int srcY = m_gafferFormat.formatToYDownSpace( y );
+							size_t srcIndex = ( ( srcY - box.min.y ) * ( box.size().x + 1 ) * numChannels ) + ( transferBound.min.x - box.min.x ) + channelIndex;
+							size_t dstIndex = ( y - tileBound.min.y ) * ImagePlug::tileSize() + transferBound.min.x - tileBound.min.x;
+							const size_t srcEndIndex = srcIndex + transferBound.size().x * numChannels;
+							while( srcIndex <= srcEndIndex )
+							{
+								updatedTile[dstIndex] = data[srcIndex];
+								srcIndex += numChannels;
+								dstIndex++;
+							}
+						}
+						
+						*tileData = updatedTileData;
+					}
+				}
+			}
+			
 			dataReceivedSignal()( this, box );
 		}
 		
 		virtual void imageClose()
 		{
-			ImageDisplayDriver::imageClose();
 			imageReceivedSignal()( this );
 		}
 
+		virtual bool scanLineOrderOnly() const
+		{
+			return false;
+		}
+		
+		virtual bool acceptsRepeatedData() const
+		{
+			return true;
+		}
+		
+		ConstFloatVectorDataPtr channelData( const Imath::V2i &tileOrigin, const std::string &channelName )
+		{
+			vector<string>::const_iterator cIt = find( channelNames().begin(), channelNames().end(), channelName );
+			if( cIt == channelNames().end() )
+			{
+				return ImagePlug::blackTile();
+			}
+			
+			ConstFloatVectorDataPtr *t = tileReference( tileOrigin, cIt - channelNames().begin() );
+			if( t && *t )
+			{
+				return *t;
+			}
+			return ImagePlug::blackTile();
+		}
+		
 		typedef boost::signal<void ( GafferDisplayDriver *, const Imath::Box2i & )> DataReceivedSignal;
 		DataReceivedSignal &dataReceivedSignal()
 		{
@@ -132,6 +236,29 @@ class GafferDisplayDriver : public IECore::ImageDisplayDriver
 	
 		static const DisplayDriverDescription<GafferDisplayDriver> g_description;
 
+		ConstFloatVectorDataPtr *tileReference( const V2i &tileOrigin, size_t channelIndex )
+		{
+			V2i tileIndex = tileOrigin / ImagePlug::tileSize();
+			
+			if(
+				tileIndex.x < m_tiles.index_bases()[0] ||
+				tileIndex.x >= (int)(m_tiles.index_bases()[0] + m_tiles.shape()[0] ) ||
+				tileIndex.y < m_tiles.index_bases()[1] ||
+				tileIndex.y >= (int)(m_tiles.index_bases()[1] + m_tiles.shape()[1] )
+			)
+			{
+				// outside data window
+				return NULL;
+			}
+			return &(m_tiles[tileIndex.x][tileIndex.y][channelIndex]);
+		}
+
+		// indexed by tileIndexX, tileIndexY, channelIndex.
+		typedef boost::multi_array<ConstFloatVectorDataPtr, 3> TileArray;
+		TileArray m_tiles;
+
+		Format m_gafferFormat;
+		Imath::Box2i m_gafferDataWindow;
 		IECore::ConstCompoundDataPtr m_parameters;
 		DataReceivedSignal m_dataReceivedSignal;
 		ImageReceivedSignal m_imageReceivedSignal;
@@ -151,7 +278,7 @@ IE_CORE_DEFINERUNTIMETYPED( Display );
 size_t Display::g_firstPlugIndex = 0;
 
 Display::Display( const std::string &name )
-	:	ImagePrimitiveNode( name )
+	:	ImageNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -184,10 +311,6 @@ Display::Display( const std::string &name )
 			Plug::Default & ~Plug::Serialisable
 		)
 	);
-	
-	// we don't want caching for the output image, because we're basically
-	// caching the whole thing internally ourselves anyway.
-	imagePrimitivePlug()->setFlags( Plug::Cacheable, false );
 		
 	plugSetSignal().connect( boost::bind( &Display::plugSet, this, ::_1 ) );
 	GafferDisplayDriver::instanceCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
@@ -220,7 +343,7 @@ const Gaffer::IntPlug *Display::updateCountPlug() const
 				
 void Display::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImagePrimitiveNode::affects( input, outputs );
+	ImageNode::affects( input, outputs );
 	
 	if( input == portPlug() || input == updateCountPlug() )
 	{
@@ -243,15 +366,108 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 	return s;
 }
 
-void Display::hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Display::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	portPlug()->hash( h );
-	updateCountPlug()->hash( h );
+	ImageNode::hashFormat( output, context, h );
+	
+	Format format;
+	if( m_driver )
+	{
+		format = m_driver->gafferFormat();
+	}
+	else
+	{
+		/// \todo We should not need the default value here - there should always be a default
+		/// format in the context - something is broken in the Format mechanism.
+		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+	}
+	
+	h.append( format.getDisplayWindow() );
+	h.append( format.getPixelAspect() );
 }
 
-IECore::ConstImagePrimitivePtr Display::computeImagePrimitive( const Gaffer::Context *context ) const
+GafferImage::Format Display::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return m_driver ? m_driver->image() : 0;
+	Format format;
+	if( m_driver )
+	{
+		format = m_driver->gafferFormat();
+	}
+	else
+	{
+		/// \todo We should not need the default value here - there should always be a default
+		/// format in the context - something is broken in the Format mechanism.
+		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+	}
+	
+	return format;
+}
+
+void Display::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashChannelNames( output, context, h );
+	if( m_driver )
+	{
+		h.append(
+			&(m_driver->channelNames()[0]),
+			m_driver->channelNames().size()
+		);
+	}	
+}
+
+IECore::ConstStringVectorDataPtr Display::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	if( m_driver )
+	{
+		return new StringVectorData( m_driver->channelNames() );
+	}
+	return new StringVectorData();
+}
+
+void Display::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashDataWindow( output, context, h );
+	Box2i dataWindow; // empty
+	if( m_driver )
+	{
+		dataWindow = m_driver->gafferDataWindow();
+	}
+	h.append( dataWindow );
+}
+
+Imath::Box2i Display::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	if( m_driver )
+	{
+		return m_driver->gafferDataWindow();
+	}
+	return Box2i();
+}
+
+void Display::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ConstFloatVectorDataPtr channelData = ImagePlug::blackTile();
+	if( m_driver )
+	{
+		channelData = m_driver->channelData(
+			context->get<Imath::V2i>( ImagePlug::tileOriginContextName ),
+			context->get<std::string>( ImagePlug::channelNameContextName )
+		);
+	}
+	h = channelData->Object::hash();
+}
+
+IECore::ConstFloatVectorDataPtr Display::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	ConstFloatVectorDataPtr channelData = ImagePlug::blackTile();
+	if( m_driver )
+	{
+		channelData = m_driver->channelData(
+			context->get<Imath::V2i>( ImagePlug::tileOriginContextName ),
+			context->get<std::string>( ImagePlug::channelNameContextName )
+		);
+	}
+	return channelData;
 }
 
 void Display::plugSet( Gaffer::Plug *plug )

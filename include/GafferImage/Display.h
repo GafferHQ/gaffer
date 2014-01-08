@@ -41,19 +41,19 @@
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferImage/ImagePrimitiveSource.h"
+#include "GafferImage/ImageNode.h"
 
 namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-class Display : public ImagePrimitiveNode
+class Display : public ImageNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Display, DisplayTypeId, ImagePrimitiveNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Display, DisplayTypeId, ImageNode );
 
 		Display( const std::string &name = defaultName<Display>() );
 		virtual ~Display();
@@ -69,10 +69,19 @@ class Display : public ImagePrimitiveNode
 		static UnaryPlugSignal &imageReceivedSignal();
 		
 	protected :
+		
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const;		
-	
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
 	private :
 	
 		IECore::DisplayDriverServerPtr m_server;

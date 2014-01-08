@@ -40,78 +40,18 @@
 #include "boost/foreach.hpp"
 #include "boost/bind.hpp"
 
-#include "IECore/TypedData.h"
-#include "IECore/TypedData.inl"
-#include "IECore/MurmurHash.h"
-
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/ApplicationRoot.h"
 
 #include "GafferImage/Format.h"
-#include "GafferImage/FormatData.h"
 #include "GafferImage/FormatPlug.h"
-#include "GafferImage/TypeIds.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
 
 const IECore::InternedString Format::defaultFormatPlugName = "defaultFormat";
 const IECore::InternedString Format::defaultFormatContextName = "image:defaultFormat";
-
-namespace IECore
-{
-	IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( FormatData, FormatDataTypeId )
-	
-	template<>
-	void FormatData::save( SaveContext *context ) const
-	{
-		Data::save( context );
-		assert( baseSize() == 4 );
-		IndexedIO *container = context->rawContainer();
-		container->write( "window", (const int*)FormatData::baseReadable(), FormatData::baseSize() );
-		container->write( "aspect", readable().getPixelAspect() );
-	}
-	
-	template<>
-	void FormatData::load( LoadContextPtr context )
-	{
-		Data::load( context );
-		assert( ( sizeof( FormatData::ValueType ) / sizeof( FormatData::BaseType ) ) == 4 );
-		const IndexedIO *container;
-		FormatData::BaseType *p = FormatData::baseWritable();
-		
-		try
-		{
-			container = context->rawContainer();
-			container->read( "window", (int*&)p, 4 );
-		}
-		catch( ... )
-		{
-			unsigned int v = 0;
-			container = context->container( staticTypeName(), v );
-			container->read( "window", (int*&)p, 4 );
-		}
-		
-		const IndexedIO *rawContainer = context->rawContainer();
-	
-		double aspect = 1.;
-		rawContainer->read( "aspect", aspect );
-		
-		writable().setPixelAspect( aspect );
-	}
-	
-	template<>
-	void SimpleDataHolder<Format>::hash( MurmurHash &h ) const
-	{
-		Format f = readable();
-		h.append( f.getDisplayWindow().min );
-		h.append( f.getDisplayWindow().max );
-		h.append( f.getPixelAspect() );
-	}
-	
-	template class TypedData< Format >;
-};
 
 Format::FormatMap &Format::formatMap()
 {
@@ -225,24 +165,6 @@ const Format &Format::getFormat( const std::string &name )
 	}
 	
 	return (*it).second;
-}
-
-int Format::width() const
-{
-	if ( m_displayWindow.isEmpty() )
-	{
-		return 0;
-	}
-	return m_displayWindow.max.x - m_displayWindow.min.x + 1;
-}
-
-int Format::height() const
-{
-	if ( m_displayWindow.isEmpty() )
-	{
-		return 0;
-	}
-	return m_displayWindow.max.y - m_displayWindow.min.y + 1;
 }
 
 void Format::generateFormatName( std::string &name, const Format &format)
