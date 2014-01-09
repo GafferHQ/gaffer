@@ -87,6 +87,7 @@ from DeleteAttributesTest import DeleteAttributesTest
 from UnionFilterTest import UnionFilterTest
 from SceneSwitchTest import SceneSwitchTest
 from ShaderSwitchTest import ShaderSwitchTest
+from ParentConstraintTest import ParentConstraintTest
 
 if __name__ == "__main__":
 	import unittest

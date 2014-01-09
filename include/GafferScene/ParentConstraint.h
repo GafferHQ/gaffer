@@ -34,39 +34,43 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_PARENTCONSTRAINT_H
+#define GAFFERSCENE_PARENTCONSTRAINT_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/TransformPlug.h"
 
 #include "GafferScene/Constraint.h"
-#include "GafferScene/AimConstraint.h"
-#include "GafferScene/PointConstraint.h"
-#include "GafferScene/ParentConstraint.h"
 
-#include "GafferSceneBindings/ConstraintBinding.h"
-
-using namespace boost::python;
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneBindings::bindConstraint()
+namespace GafferScene
 {
 
-	{
-		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
+class ParentConstraint : public Constraint
+{
+
+	public :
+
+		ParentConstraint( const std::string &name=defaultName<ParentConstraint>() );
+		virtual ~ParentConstraint();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ParentConstraint, ParentConstraintTypeId, Constraint );
 		
-		enum_<Constraint::TargetMode>( "TargetMode" )
-			.value( "Origin", Constraint::Origin )
-			.value( "BoundMin", Constraint::BoundMin )
-			.value( "BoundMax", Constraint::BoundMax )
-			.value( "BoundCenter", Constraint::BoundCenter )
-		;
-	}
+		Gaffer::TransformPlug *relativeTransformPlug();
+		const Gaffer::TransformPlug *relativeTransformPlug() const;
+		
+	protected :
+		
+		virtual bool affectsConstraint( const Gaffer::Plug *input ) const;
+		virtual void hashConstraint( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::M44f computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform ) const;
+
+	private :
 	
-	GafferBindings::DependencyNodeClass<AimConstraint>();
-	GafferBindings::DependencyNodeClass<PointConstraint>();
-	GafferBindings::DependencyNodeClass<ParentConstraint>();
+		static size_t g_firstPlugIndex;
 	
-}
+};
+
+IE_CORE_DECLAREPTR( ParentConstraint )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_PARENTCONSTRAINT_H
