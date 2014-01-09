@@ -34,39 +34,47 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/Constraint.h"
-#include "GafferScene/AimConstraint.h"
-#include "GafferScene/PointConstraint.h"
 #include "GafferScene/ParentConstraint.h"
 
-#include "GafferSceneBindings/ConstraintBinding.h"
-
-using namespace boost::python;
-
 using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferScene;
 
-void GafferSceneBindings::bindConstraint()
-{
+IE_CORE_DEFINERUNTIMETYPED( ParentConstraint );
 
-	{
-		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
-		
-		enum_<Constraint::TargetMode>( "TargetMode" )
-			.value( "Origin", Constraint::Origin )
-			.value( "BoundMin", Constraint::BoundMin )
-			.value( "BoundMax", Constraint::BoundMax )
-			.value( "BoundCenter", Constraint::BoundCenter )
-		;
-	}
-	
-	GafferBindings::DependencyNodeClass<AimConstraint>();
-	GafferBindings::DependencyNodeClass<PointConstraint>();
-	GafferBindings::DependencyNodeClass<ParentConstraint>();
-	
+size_t ParentConstraint::g_firstPlugIndex = 0;
+
+ParentConstraint::ParentConstraint( const std::string &name )
+	:	Constraint( name )
+{
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new TransformPlug( "relativeTransform" ) );
+}
+
+ParentConstraint::~ParentConstraint()
+{
+}
+
+Gaffer::TransformPlug *ParentConstraint::relativeTransformPlug()
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::TransformPlug *ParentConstraint::relativeTransformPlug() const
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+}
+
+bool ParentConstraint::affectsConstraint( const Gaffer::Plug *input ) const
+{
+	return relativeTransformPlug()->isAncestorOf( input );
+}
+
+void ParentConstraint::hashConstraint( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	relativeTransformPlug()->hash( h );
+}
+
+Imath::M44f ParentConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform ) const
+{
+	return relativeTransformPlug()->matrix() * fullTargetTransform;
 }

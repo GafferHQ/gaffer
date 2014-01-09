@@ -187,6 +187,7 @@ nodeMenu.append( "/Scene/Hierarchy/Switch", GafferScene.SceneSwitch, searchText 
 nodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
 nodeMenu.append( "/Scene/Transform/Point Constraint", GafferScene.PointConstraint, searchText = "PointConstraint" )
 nodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, searchText = "AimConstraint" )
+nodeMenu.append( "/Scene/Transform/Parent Constraint", GafferScene.ParentConstraint, searchText = "ParentConstraint" )
 nodeMenu.append( "/Scene/Context/Time Warp", GafferScene.SceneTimeWarp, searchText = "SceneTimeWarp" )
 nodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables, searchText = "SceneContextVariables" )
 nodeMenu.append( "/Scene/Globals/Displays", GafferScene.Displays )

@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,39 +34,32 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
+import GafferScene
+
+##########################################################################
+# Metadata
+##########################################################################
+
+Gaffer.Metadata.registerNodeDescription(
+
+GafferScene.ParentConstraint,
+
+"""Constrains objects from one part of the scene hierarchy as if they were children of another part of the hierarchy.""",
+
+"relativeTransform",
+{
+	"description" : "Transforms the constrained object relative to the target location.",
+	"nodeUI:section" : "Transform",
+}
+
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ParentConstraint.staticTypeId(), "relativeTransform", GafferUI.TransformPlugValueWidget, collapsed=None )
+
