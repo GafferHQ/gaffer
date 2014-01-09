@@ -1,25 +1,33 @@
 #### Core
 
 - Fixed threading issue in caching code.
+- Implemented per-instance metadata for Box nodes. This will provide the basis for the user to make further customisations to Boxes, like setting descriptions for plugs and so on.
+- Fixed bug in Switch node which could cause crashes when promoting the index plug.
 
 #### UI
 
 - NodeGraph node tooltips now display a helpful description for the node. Node authors can define this text using the "description" Metadata entry (which is intended to provide a static description of the node's purpose) and the "summary" Metadata which may optionally be computed dynamically to describe the current state of the node (#157).
-- Fixed initial value jump viewer gamma/exposure  virtual sliders.
+- Fixed initial value jump in viewer gamma/exposure virtual sliders.
 - NodeGraph nodes may now display plugs on all sides, rather than just top/bottom or left/right as before. Node authors may control plug placement by defining a "nodeGadget:nodulePosition" Metadata entry.
 - ShaderAssignment nodes now receive their shader input from the left (#82).
 - Fixed OpDialogue hangs caused by the rapid output of many messages from an Op.
 - Fixed strange browser behaviour when editing a path which is no longer valid (#64).
+- Improved image viewer responsiveness, especially when used as a render viewer.
+- Fixed position of plugs in the NodeGraph when the node gadget was very narrow.
+- Made Box nodule positions match internal nodule positions (#608).
 
 #### Scene
 
 - Added "includeRoot" plug to GafferScene::SubTree. This means that when choosing /path/to/theNewRoot as the root, the subtree will be output under /theNewRoot rather than /. Previously this was only possible by using an Isolate node followed by a Subtree (#565).
 - Fixed bug in copying a node which has an input from an unselected PathFilter.
+- Fixed bug in ShaderAssignment node which could cause crashes when querying for acceptable inputs.
 
 #### Image
 
 - Fixed ImageReader problem which caused the green and blue channels of non-float images to be offset horizontally.
 - Fixed bug which could cause the OpenColorIO node to output greyscale images.
+- Optimised Display node.
+- Optimised ChannelDataProcessor::channelEnabled().
 
 #### OSL
 
@@ -33,6 +41,10 @@
 - Reimplemented GafferUI.Metadata in C++, so it can be used from C++ code as well as from Python.
 - Fixed bug in Widget.mousePosition() with GLWidget overlays.
 - Fixed GafferScene.ScenePath.isValid() to only consider a path as valid if all parents up to the root exist according to ScenePlug.childNames().
+- Added space conversion methods to GafferImage::Format. These are useful for converting between the Cortex and OpenEXR Y-down space to the Gaffer y-up space.
+- Fixed GafferImage::FormatData serialisation.
+- Removed deprecated ImageView( name, inputPlug ) constructor.  This was being used by old View subclasses which would pass their own input plug and then use setPreprocessor() to insert some conversion network. Subclasses should now use insertConverter(), following the example in GafferImageUITest.ImageViewTest.testDeriving.
+- Moved Metadata class from libGafferUI module to libGaffer.
 
 #### Build
 
