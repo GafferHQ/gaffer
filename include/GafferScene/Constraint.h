@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,6 +65,9 @@ class Constraint : public SceneElementProcessor
 		
 		Gaffer::IntPlug *targetModePlug();
 		const Gaffer::IntPlug *targetModePlug() const;
+		
+		Gaffer::V3fPlug *targetOffsetPlug();
+		const Gaffer::V3fPlug *targetOffsetPlug() const;
 		
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
