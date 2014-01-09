@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -55,6 +55,7 @@ Constraint::Constraint( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "target" ) );
 	addChild( new IntPlug( "targetMode", Plug::In, Origin, Origin, BoundCenter ) );
+	addChild( new V3fPlug( "targetOffset" ) );
 }
 
 Constraint::~Constraint()
@@ -80,12 +81,27 @@ const Gaffer::IntPlug *Constraint::targetModePlug() const
 {
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
 }
+
+Gaffer::V3fPlug *Constraint::targetOffsetPlug()
+{
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::V3fPlug *Constraint::targetOffsetPlug() const
+{
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 2 );
+}
 		
 void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 	
-	if( input == targetPlug() || input == targetModePlug() || affectsConstraint( input ) )
+	if(
+		input == targetPlug() ||
+		input == targetModePlug() ||
+		input->parent<Plug>() == targetOffsetPlug() ||
+		affectsConstraint( input )
+	)
 	{
 		outputs.push_back( outPlug()->transformPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
@@ -113,6 +129,8 @@ void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Co
 	{
 		h.append( inPlug()->boundHash( targetPath ) );
 	}
+	
+	targetOffsetPlug()->hash( h );
 	
 	hashConstraint( context, h );
 }
@@ -151,6 +169,8 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 			}
 		}
 	}
+	
+	fullTargetTransform.translate( targetOffsetPlug()->getValue() );
 	
 	const M44f fullConstrainedTransform = computeConstraint( fullTargetTransform, fullInputTransform );
 	return fullConstrainedTransform * parentTransform.inverse();
