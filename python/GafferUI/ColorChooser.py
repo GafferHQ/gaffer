@@ -45,7 +45,7 @@ import GafferUI
 QtGui = GafferUI._qtImport( "QtGui" )
 
 # A custom slider for drawing the backgrounds.
-class ColorSlider( GafferUI.NumericSlider ) :
+class _ComponentSlider( GafferUI.NumericSlider ) :
 
 	def __init__( self, color, component, **kw ) :
 	
@@ -114,7 +114,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 	def __init__( self, color=IECore.Color3f( 1 ) ) :
 	
-		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		
 		GafferUI.Widget.__init__( self, self.__column )
 
@@ -122,38 +122,44 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__defaultColor = color
 
 		self.__sliders = {}
+		self.__numericWidgets = {}
+		self.__componentValueChangedConnections = []
 
-		self.__sliders["r"] = ColorSlider( color, "r" )
-		self.__sliders["g"] = ColorSlider( color, "g" )
-		self.__sliders["b"] = ColorSlider( color, "b" )
-		self.__sliders["a"] = ColorSlider( color, "a" )
-		self.__column.append( self.__sliders["r"] )
-		self.__column.append( self.__sliders["g"] )
-		self.__column.append( self.__sliders["b"] )
-		self.__column.append( self.__sliders["a"] )
-
-		self.__sliders["h"] = ColorSlider( color, "h" )
-		self.__sliders["s"] = ColorSlider( color, "s" )
-		self.__sliders["v"] = ColorSlider( color, "v" )
-		self.__column.append( self.__sliders["h"] )
-		self.__column.append( self.__sliders["s"] )
-		self.__column.append( self.__sliders["v"] )
-
-		self.__sliderConnections = []
-		for s in self.__sliders.values() :
-			self.__sliderConnections.append( s.valueChangedSignal().connect( Gaffer.WeakMethod( self.__sliderChanged ) ) )
-
-		swatchRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-		self.__initialColorSwatch = GafferUI.ColorSwatch( color )		
-		self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
-		swatchRow.append( self.__initialColorSwatch, expand=True )
-		self.__colorSwatch = GafferUI.ColorSwatch( color )
-		swatchRow.append( self.__colorSwatch, expand=True )
-		self.__column.append( swatchRow, expand=True )
+		with self.__column :
+		
+			# sliders and numeric widgets
+			for component in "rgbahsv" :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					
+					numericWidget = GafferUI.NumericWidget( 0.0 )
+					numericWidget.setFixedCharacterWidth( 6 )
+					numericWidget.component = component
+					self.__numericWidgets[component] = numericWidget
+					
+					slider = _ComponentSlider( color, component )
+					self.__sliders[component] = slider
+					
+					self.__componentValueChangedConnections.append(
+						numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
+					)
+					
+					self.__componentValueChangedConnections.append(
+						slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
+					)
+			
+			# initial and current colour swatches
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, parenting = { "expand" : True } ) :
+		
+				self.__initialColorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
+				self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
+		
+				GafferUI.Spacer( IECore.V2i( 4, 40 ) )
+		
+				self.__colorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
 
 		self.__colorChangedSignal = Gaffer.Signal2()
 		
-		self.__setSlidersFromColor()
+		self.__updateUIFromColor()
 	
 	## The default color starts as the value passed when creating the dialogue.
 	# It is represented with a swatch which when clicked will revert the current
@@ -176,69 +182,94 @@ class ColorChooser( GafferUI.Widget ) :
 
 	## A signal emitted whenever the color is changed. Slots should
 	# have the signature slot( ColorChooser, reason ). The reason
-	# argument may be passed either a ColorChooser.ColorChangedReason
-	# or a Slider.PositionChangedReason to describe the reason for the
-	# change.
+	# argument may be passed either a ColorChooser.ColorChangedReason,
+	# a Slider.PositionChangedReason or a NumericWidget.ValueChangedReason
+	# to describe the reason for the change.
 	def colorChangedSignal( self ) :
 	
 		return self.__colorChangedSignal
+
+	## Returns True if a user would expect the specified sequence
+	# of changes to be merged into a single undoable event.
+	@classmethod
+	def changesShouldBeMerged( cls, firstReason, secondReason ) :
+
+		if isinstance( firstReason, GafferUI.Slider.PositionChangedReason ) :
+			return GafferUI.Slider.changesShouldBeMerged( firstReason, secondReason )
+		elif isinstance( firstReason, GafferUI.NumericWidget.ValueChangedReason ) :
+			return GafferUI.NumericWidget.changesShouldBeMerged( firstReason, secondReason )
+
+		return False
 
 	def __initialColorPress( self, button, event ) :
 	
 		self.__setColorInternal( self.getInitialColor(), self.ColorChangedReason.Reset )
 
-	def __sliderChanged( self, slider, reason ) :
+	def __componentValueChanged( self, componentWidget, reason ) :
 		
+		## \todo We're doing the clamping here because NumericWidget
+		# doesn't provide the capability itself. Add the functionality
+		# into the NumericWidget and remove this code.
+		componentValue = componentWidget.getValue()
+		componentValue = max( componentValue, 0 )
+		if componentWidget.component in ( "a", "h", "s" ) :
+			componentValue = min( componentValue, 1 )
+			
 		newColor = self.__color.__class__( self.__color )	
-		if slider.component in ( "r", "g", "b", "a" ) :
-			a = { "r" : 0, "g" : 1, "b" : 2, "a" : 3 }[slider.component]
-			newColor[a] = slider.getValue()
+		if componentWidget.component in ( "r", "g", "b", "a" ) :
+			a = { "r" : 0, "g" : 1, "b" : 2, "a" : 3 }[componentWidget.component]
+			newColor[a] = componentValue
 		else :
-			newColor[0] = self.__sliders["h"].getValue()
-			newColor[1] = self.__sliders["s"].getValue()
-			newColor[2] = self.__sliders["v"].getValue()
+			newColor = newColor.rgbToHSV()
+			a = { "h" : 0, "s" : 1, "v" : 2 }[componentWidget.component]
+			newColor[a] = componentValue
 			newColor = newColor.hsvToRGB()
 			
-		for slider in self.__sliders.values() :
-			slider.setColor( newColor )		
-
 		self.__setColorInternal( newColor, reason )
 	
 	def __setColorInternal( self, color, reason ) :
 	
 		dragBeginOrEnd = reason in (
 			GafferUI.NumericSlider.PositionChangedReason.DragBegin,
-			GafferUI.NumericSlider.PositionChangedReason.DragEnd
+			GafferUI.NumericSlider.PositionChangedReason.DragEnd,
+			GafferUI.NumericWidget.ValueChangedReason.DragBegin,
+			GafferUI.NumericWidget.ValueChangedReason.DragEnd,
 		)
 		if color != self.__color or dragBeginOrEnd :
 			# we never optimise away drag begin or end, because it's important
 			# that they emit in pairs.		
 			self.__color = color
-			self.__setSlidersFromColor()
 			self.__colorSwatch.setColor( color )
-		
 			self.__colorChangedSignal( self, reason )
-		
-	def __setSlidersFromColor( self ) :
+
+		## \todo This is outside the conditional because the clamping we do
+		# in __componentValueChanged means the color value may not correspond
+		# to the value in the ui, even if it hasn't actually changed. Move this
+		# back inside the conditional when we get the clamping performed internally
+		# in NumericWidget.
+		self.__updateUIFromColor()
+
+	def __updateUIFromColor( self ) :
 	
-		with Gaffer.BlockedConnection( self.__sliderConnections ) :
+		with Gaffer.BlockedConnection( self.__componentValueChangedConnections ) :
 	
 			c = self.getColor()
 
 			for slider in self.__sliders.values() :
 				slider.setColor( c )		
-
-			self.__sliders["r"].setValue( c[0] )
-			self.__sliders["g"].setValue( c[1] )
-			self.__sliders["b"].setValue( c[2] )
+			
+			for component, index in ( ( "r", 0 ), ( "g", 1 ), ( "b", 2 ) ) :
+				self.__sliders[component].setValue( c[index] )
+				self.__numericWidgets[component].setValue( c[index] )
 			
 			if c.dimensions() == 4 :
 				self.__sliders["a"].setValue( c[3] )
-				self.__sliders["a"].setVisible( True )
+				self.__numericWidgets["a"].setValue( c[3] )
+				self.__sliders["a"].parent().setVisible( True )
 			else :
-				self.__sliders["a"].setVisible( False )
+				self.__sliders["a"].parent().setVisible( False )
 
 			c = c.rgbToHSV()
-			self.__sliders["h"].setValue( c[0] )
-			self.__sliders["s"].setValue( c[1] )
-			self.__sliders["v"].setValue( c[2] )
+			for component, index in ( ( "h", 0 ), ( "s", 1 ), ( "v", 2 ) ) :
+				self.__sliders[component].setValue( c[index] )
+				self.__numericWidgets[component].setValue( c[index] )
