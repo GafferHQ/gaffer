@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -103,6 +103,47 @@ class TransformPlugTest( unittest.TestCase ) :
 		self.failIf( p.typeId() == Gaffer.CompoundPlug.staticTypeId() )
 		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
 
+	def testPivot( self ) :
+	
+		p = Gaffer.TransformPlug()
+		
+		p["rotate"].setValue( IECore.V3f( 0, 90, 0 ) )
+		
+		self.assertTrue(
+			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+				1e-6
+			)
+		)
+		
+		p["pivot"].setValue( IECore.V3f( 1, 0, 0 ) )
+				
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+				1e-6
+			)
+		)
+
+		p["pivot"].setValue( IECore.V3f( -1, 0, 0 ) )
+				
+		self.assertTrue(
+			IECore.V3f( -1, 0, -2 ).equalWithAbsError(
+				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+				1e-6
+			)
+		)
+
+		p["rotate"].setValue( IECore.V3f( 0, 0, 0 ) )
+		p["scale"].setValue( IECore.V3f( 2, 1, 1 ) )
+		
+		self.assertTrue(
+			IECore.V3f( 3, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+				1e-6
+			)
+		)
+		
 if __name__ == "__main__":
 	unittest.main()
 	
