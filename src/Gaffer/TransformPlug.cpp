@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -44,9 +44,13 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( TransformPlug );
 
+size_t TransformPlug::g_firstPlugIndex = 0;
+
 TransformPlug::TransformPlug( const std::string &name, Direction direction, unsigned flags )
 	:	CompoundPlug( name, direction, flags )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+
 	addChild(
 		new V3fPlug(
 			"translate",
@@ -79,6 +83,17 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 			flags
 		)
 	);
+	
+	addChild(
+		new V3fPlug(
+			"pivot",
+			direction,
+			V3f( 0 ),
+			V3f( limits<float>::min() ),
+			V3f( limits<float>::max() ),
+			flags
+		)
+	);
 }
 
 TransformPlug::~TransformPlug()
@@ -87,7 +102,7 @@ TransformPlug::~TransformPlug()
 
 bool TransformPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	return children().size() != 3;
+	return children().size() != 4;
 }
 
 PlugPtr TransformPlug::createCounterpart( const std::string &name, Direction direction ) const
@@ -97,39 +112,51 @@ PlugPtr TransformPlug::createCounterpart( const std::string &name, Direction dir
 
 V3fPlug *TransformPlug::translatePlug()
 {
-	return getChild<V3fPlug>( "translate" );
+	return getChild<V3fPlug>( g_firstPlugIndex );
 }
 
 const V3fPlug *TransformPlug::translatePlug() const
 {
-	return getChild<V3fPlug>( "translate" );
+	return getChild<V3fPlug>( g_firstPlugIndex );
 }
 
 V3fPlug *TransformPlug::rotatePlug()
 {
-	return getChild<V3fPlug>( "rotate" );
+	return getChild<V3fPlug>( g_firstPlugIndex + 1 );
 }
 
 const V3fPlug *TransformPlug::rotatePlug() const
 {
-	return getChild<V3fPlug>( "rotate" );
+	return getChild<V3fPlug>( g_firstPlugIndex + 1 );
 }
 
 V3fPlug *TransformPlug::scalePlug()
 {
-	return getChild<V3fPlug>( "scale" );
+	return getChild<V3fPlug>( g_firstPlugIndex + 2 );
 }
 
 const V3fPlug *TransformPlug::scalePlug() const
 {
-	return getChild<V3fPlug>( "scale" );
+	return getChild<V3fPlug>( g_firstPlugIndex + 2 );
+}
+
+V3fPlug *TransformPlug::pivotPlug()
+{
+	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
+}
+
+const V3fPlug *TransformPlug::pivotPlug() const
+{
+	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 Imath::M44f TransformPlug::matrix() const
 {
+	const V3f pivot = pivotPlug()->getValue();
 	M44f result;
-	result.translate( translatePlug()->getValue() );
+	result.translate( pivot + translatePlug()->getValue() );
 	result.rotate( IECore::degreesToRadians( rotatePlug()->getValue() ) );
 	result.scale( scalePlug()->getValue() );
+	result.translate( -pivot );
 	return result;
 }

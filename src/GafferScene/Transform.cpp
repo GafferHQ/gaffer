@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -48,6 +48,7 @@ Transform::Transform( const std::string &name )
 	:	SceneElementProcessor( name, Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new IntPlug( "space", Plug::In, World, World, Object ) );
 	addChild( new TransformPlug( "transform" ) );
 }
 
@@ -55,21 +56,31 @@ Transform::~Transform()
 {
 }
 
+Gaffer::IntPlug *Transform::spacePlug()
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *Transform::spacePlug() const
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
+}
+
 Gaffer::TransformPlug *Transform::transformPlug()
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::TransformPlug *Transform::transformPlug() const
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
 }
 
 void Transform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 	
-	if( transformPlug()->isAncestorOf( input ) )
+	if( input == spacePlug() || transformPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->transformPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
@@ -83,10 +94,20 @@ bool Transform::processesTransform() const
 
 void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	spacePlug()->hash( h );
 	transformPlug()->hash( h );
 }
 
 Imath::M44f Transform::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
-	return inputTransform * transformPlug()->matrix();
+	Space space = static_cast<Space>( spacePlug()->getValue() );
+	Imath::M44f matrix = transformPlug()->matrix();
+	if( space == World )
+	{
+		return inputTransform * matrix;
+	}
+	else
+	{
+		return matrix * inputTransform;
+	}
 }

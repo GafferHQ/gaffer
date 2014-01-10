@@ -39,13 +39,6 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
-namespace GafferImage
-{
-
-IE_CORE_FORWARDDECLARE( Format );
-
-}; // namespace GafferImage
-
 namespace Gaffer
 {
 
