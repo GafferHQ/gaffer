@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -108,5 +108,34 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( t.correspondingInput( t["in"] ), None )
 		self.assertEqual( t.correspondingInput( t["enabled"] ), None )
 
+	def testSpace( self ) :
+	
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		
+		transform = GafferScene.Transform()
+		transform["in"].setInput( sphere["out"] )
+		
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		transform["filter"].setInput( filter["match"] )
+		
+		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.World )
+		
+		transform["transform"]["rotate"]["y"].setValue( 90 )
+		self.assertTrue(
+			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+				0.000001
+			)
+		)
+
+		transform["space"].setValue( GafferScene.Transform.Space.Object )
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+				0.000001
+			)
+		)
 if __name__ == "__main__":
 	unittest.main()

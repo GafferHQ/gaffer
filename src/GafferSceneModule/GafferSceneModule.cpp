@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2013, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,6 @@
 #include "GafferScene/SceneReader.h"
 #include "GafferScene/Light.h"
 #include "GafferScene/OpenGLShader.h"
-#include "GafferScene/Transform.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/Isolate.h"
 #include "GafferScene/Cube.h"
@@ -84,6 +83,7 @@
 #include "GafferSceneBindings/AttributesBinding.h"
 #include "GafferSceneBindings/FilterBinding.h"
 #include "GafferSceneBindings/MixinBinding.h"
+#include "GafferSceneBindings/TransformBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -131,7 +131,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<StandardOptions>();
 	GafferBindings::DependencyNodeClass<SubTree>();
 	GafferBindings::DependencyNodeClass<Light>();
-	GafferBindings::DependencyNodeClass<Transform>();
 	GafferBindings::DependencyNodeClass<Prune>();
 	GafferBindings::DependencyNodeClass<Isolate>();
 	GafferBindings::DependencyNodeClass<Text>();
@@ -157,5 +156,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindAttributes();
 	bindFilter();
 	bindMixin();
+	bindTransform();
 	
 }

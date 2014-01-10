@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,54 +34,23 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TRANSFORM_H
-#define GAFFERSCENE_TRANSFORM_H
+#include "boost/python.hpp"
 
-#include "Gaffer/TransformPlug.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/Transform.h"
 
-namespace GafferScene
+#include "GafferSceneBindings/TransformBinding.h"
+
+using namespace boost::python;
+using namespace GafferScene;
+
+void GafferSceneBindings::bindTransform()
 {
-
-class Transform : public SceneElementProcessor
-{
-
-	public :
-
-		Transform( const std::string &name=defaultName<Transform>() );
-		virtual ~Transform();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Transform, TransformTypeId, SceneElementProcessor );
-		
-		enum Space
-		{
-			World,
-			Object
-		};
-		
-		Gaffer::IntPlug *spacePlug();
-		const Gaffer::IntPlug *spacePlug() const;
-		
-		Gaffer::TransformPlug *transformPlug();
-		const Gaffer::TransformPlug *transformPlug() const;
-		
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		
-	protected :
-					
-		virtual bool processesTransform() const;
-		virtual void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
-
-	private :
+	scope s = GafferBindings::DependencyNodeClass<Transform>();
 	
-		static size_t g_firstPlugIndex;
-	
-};
-
-IE_CORE_DECLAREPTR( Transform )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_TRANSFORM_H
+	enum_<Transform::Space>( "Space" )
+		.value( "World", Transform::World )
+		.value( "Object", Transform::Object )
+	;
+}

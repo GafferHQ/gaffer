@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -45,9 +45,22 @@ GafferScene.Transform,
 
 """Modifies the transforms of all locations matched by the filter.""",
 
+"space",
+"""The space in which the transform is applied.""",
+
 "transform",
 """The transform to be applied.""",
 
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Transform.staticTypeId(),
+	"space",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "World", GafferScene.Transform.Space.World ),
+		( "Object", GafferScene.Transform.Space.Object ),
+	)
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Transform.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
