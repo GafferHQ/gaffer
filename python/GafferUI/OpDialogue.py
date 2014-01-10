@@ -280,7 +280,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 	def __initiateErrorDisplay( self, exceptionInfo ) :
 		
 		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueFailure.png" ) )
-		self.__progressLabel.setText( "<h3>" + str( exceptionInfo[1] ) + "</h3>" )
+		self.__progressLabel.setText( "<h3>Failed</h3>" )
 	
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
