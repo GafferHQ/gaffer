@@ -1,8 +1,11 @@
+# 0.88.0
+
 #### Core
 
 - Fixed threading issue in caching code.
 - Implemented per-instance metadata for Box nodes. This will provide the basis for the user to make further customisations to Boxes, like setting descriptions for plugs and so on.
 - Fixed bug in Switch node which could cause crashes when promoting the index plug.
+- Added pivot to TransformPlug.
 
 #### UI
 
@@ -15,6 +18,7 @@
 - Improved image viewer responsiveness, especially when used as a render viewer.
 - Fixed position of plugs in the NodeGraph when the node gadget was very narrow.
 - Made Box nodule positions match internal nodule positions (#608).
+- Simplified OpDialogue error display - long error messages are now only visible in the Details view, rather than cluttering up the main window, and potentially making it very large on screen.
 
 #### Scene
 
@@ -23,6 +27,9 @@
 - Added "targetOffset" plug to the Constraint node. This is of most use for offsetting the aim point in the AimConstraint node (#278).
 - Fixed bug in copying a node which has an input from an unselected PathFilter.
 - Fixed bug in ShaderAssignment node which could cause crashes when querying for acceptable inputs.
+- Improved the transform node
+	- Added a pivot plug (#156)
+	- Added a space plug to specify whether the transform is applied in World or Object space.
 
 #### Image
 
