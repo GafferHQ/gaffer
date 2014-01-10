@@ -18,7 +18,9 @@
 
 #### Scene
 
+- Added a ParentConstraint node (#26).
 - Added "includeRoot" plug to GafferScene::SubTree. This means that when choosing /path/to/theNewRoot as the root, the subtree will be output under /theNewRoot rather than /. Previously this was only possible by using an Isolate node followed by a Subtree (#565).
+- Added "targetOffset" plug to the Constraint node. This is of most use for offsetting the aim point in the AimConstraint node (#278).
 - Fixed bug in copying a node which has an input from an unselected PathFilter.
 - Fixed bug in ShaderAssignment node which could cause crashes when querying for acceptable inputs.
 
