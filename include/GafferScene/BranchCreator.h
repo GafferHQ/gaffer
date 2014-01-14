@@ -56,14 +56,11 @@ class BranchCreator : public SceneProcessor
 		Gaffer::StringPlug *parentPlug();
 		const Gaffer::StringPlug *parentPlug() const;
 		
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
-				
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
-		BranchCreator( const std::string &name=defaultName<BranchCreator>(), const std::string &namePlugDefaultValue="" );
+		BranchCreator( const std::string &name=defaultName<BranchCreator>() );
 		
 		/// Implemented in terms of the hashBranch*() methods below - derived classes must implement those methods
 		/// rather than these ones.
@@ -114,7 +111,7 @@ class BranchCreator : public SceneProcessor
 	private :
 	
 		// If path is on a branch, then returns true and :
-		//     parentPath + name + branchPath == path.
+		//     parentPath + branchPath == path, branchPath != []
 		// else if path is above a branch, then returns false and :
 		//     parentPath == root of the relevant branch, branchPath == []
 		// else if path is unrelated to a branch, returns false and :

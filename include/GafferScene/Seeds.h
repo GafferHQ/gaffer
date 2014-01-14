@@ -53,6 +53,9 @@ class Seeds : public BranchCreator
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Seeds, SeedsTypeId, BranchCreator );
 		
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
 		Gaffer::FloatPlug *densityPlug();
 		const Gaffer::FloatPlug *densityPlug() const;
 		

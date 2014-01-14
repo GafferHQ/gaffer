@@ -117,6 +117,12 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.Seeds()
 		self.assertEqual( s["name"].defaultValue(), "seeds" )
 		self.assertEqual( s["name"].getValue(), "seeds" )
-		 		
+	
+	def testAffects( self ) :
+	
+		s = GafferScene.Seeds()
+		a = s.affects( s["name"] )
+		self.assertEqual( [ x.relativeName( s ) for x in a ], [ "out.childNames" ] )
+		
 if __name__ == "__main__":
 	unittest.main()

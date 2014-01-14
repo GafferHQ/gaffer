@@ -50,9 +50,10 @@ IE_CORE_DEFINERUNTIMETYPED( Seeds );
 size_t Seeds::g_firstPlugIndex = 0;
 
 Seeds::Seeds( const std::string &name )
-	:	BranchCreator( name, "seeds" )
+	:	BranchCreator( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "name", Plug::In, "seeds" ) );
 	addChild( new FloatPlug( "density", Plug::In, 1.0f, 0.0f ) );
 	addChild( new StringPlug( "pointType", Plug::In, "gl:point" ) );
 }
@@ -61,24 +62,34 @@ Seeds::~Seeds()
 {
 }
 
+Gaffer::StringPlug *Seeds::namePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *Seeds::namePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
 Gaffer::FloatPlug *Seeds::densityPlug()
 {
-	return getChild<FloatPlug>( g_firstPlugIndex );
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::FloatPlug *Seeds::densityPlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex );
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringPlug *Seeds::pointTypePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringPlug *Seeds::pointTypePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -89,25 +100,20 @@ void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
+	else if( input == namePlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );	
+	}
 }
 
 void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath.size() == 0 )
-	{
-		h = inPlug()->boundHash( parentPath );
-		return;
-	}
-	BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
+	h = inPlug()->boundHash( parentPath );
 }
 
 Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath.size() == 0 )
-	{
-		 return inPlug()->bound( parentPath );
-	}
-	return Box3f();
+	return inPlug()->bound( parentPath );
 }
 
 void Seeds::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -132,18 +138,21 @@ IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &
 
 void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	BranchCreator::hashBranchObject( parentPath, branchPath, context, h );
-	if( branchPath.size() == 0 )
+	if( branchPath.size() == 1 )
 	{
+		BranchCreator::hashBranchObject( parentPath, branchPath, context, h );
 		h.append( inPlug()->objectHash( parentPath ) );
 		densityPlug()->hash( h );
 		pointTypePlug()->hash( h );
+		return;
 	}
+	
+	h = outPlug()->objectPlug()->defaultValue()->Object::hash();
 }
 
 IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath.size() == 0 )
+	if( branchPath.size() == 1 )
 	{
 		// do what we came for
 		ConstMeshPrimitivePtr mesh = runTimeCast<const MeshPrimitive>( inPlug()->object( parentPath ) );
@@ -166,10 +175,27 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 
 void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
+	if( branchPath.size() == 0 )
+	{
+		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
+		namePlug()->hash( h );
+	}
+	else
+	{
+		h = outPlug()->childNamesPlug()->defaultValue()->Object::hash();
+	}
 }
 
 IECore::ConstInternedStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return outPlug()->childNamesPlug()->defaultValue();
+	if( branchPath.size() == 0 )
+	{
+		InternedStringVectorDataPtr result = new InternedStringVectorData();
+		result->writable().push_back( namePlug()->getValue() );
+		return result;
+	}
+	else
+	{
+		return outPlug()->childNamesPlug()->defaultValue();
+	}
 }

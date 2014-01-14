@@ -53,6 +53,9 @@ class Instancer : public BranchCreator
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Instancer, InstancerTypeId, BranchCreator );
 		
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
 		ScenePlug *instancePlug();
 		const ScenePlug *instancePlug() const;
 		

@@ -166,5 +166,11 @@ class InstancerTest( unittest.TestCase ) :
 		self.assertEqual( n["name"].defaultValue(), "instances" )
 		self.assertEqual( n["name"].getValue(), "instances" )
 
+	def testAffects( self ) :
+	
+		n = GafferScene.Instancer()
+		a = n.affects( n["name"] )
+		self.assertEqual( [ x.relativeName( n ) for x in a ], [ "out.childNames" ] )
+		
 if __name__ == "__main__":
 	unittest.main()
