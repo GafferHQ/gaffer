@@ -122,8 +122,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
 		for( size_t i=0; i<p->readable().size(); i++ )
 		{
-			/// \todo We could have a very fast InternedString( int ) constructor rather than all this lexical cast nonsense
-			branchChildPath[branchChildPath.size()-1] = boost::lexical_cast<string>( i );
+			branchChildPath[branchChildPath.size()-1] = InternedString( i );
 			Box3f branchChildBound = computeBranchBound( parentPath, branchChildPath, context );
 			branchChildBound = transform( branchChildBound, computeBranchTransform( parentPath, branchChildPath, context ) );
 			result.extendBy( branchChildBound );			
@@ -262,7 +261,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		InternedStringVectorDataPtr result = new InternedStringVectorData();
 		for( size_t i=0; i<p->readable().size(); i++ )
 		{
-			result->writable().push_back( boost::lexical_cast<string>( i ) );
+			result->writable().push_back( InternedString( i ) );
 		}
 		
 		return result;
