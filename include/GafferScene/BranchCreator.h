@@ -65,6 +65,8 @@ class BranchCreator : public SceneProcessor
 
 		BranchCreator( const std::string &name=defaultName<BranchCreator>(), const std::string &namePlugDefaultValue="" );
 		
+		/// Implemented in terms of the hashBranch*() methods below - derived classes must implement those methods
+		/// rather than these ones.
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
@@ -72,6 +74,8 @@ class BranchCreator : public SceneProcessor
 		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
+		/// Implemented in terms of the computeBranch*() methods below - derived classes must implement those methods
+		/// rather than these ones.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -79,6 +83,18 @@ class BranchCreator : public SceneProcessor
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		
+		/// @name Branch evaluation methods
+		/// These must be implemented by derived classes. The hashBranch*() methods must either :
+		///
+		///   - Call the base class implementation and then append to the hash with anything that
+		///     will be used in the corresponding computeBranch*() method.
+		///
+		/// or :
+		///
+		///   - Assign directly to the hash from an input hash to signify that the input will be
+		///     passed through unchanged by the corresponding computBranch*() method.
+		///
+		//@{
 		virtual void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 		
@@ -93,6 +109,7 @@ class BranchCreator : public SceneProcessor
 		
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
+		//@}
 		
 	private :
 	

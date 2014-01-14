@@ -96,7 +96,9 @@ void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branc
 	if( branchPath.size() == 0 )
 	{
 		h = inPlug()->boundHash( parentPath );
+		return;
 	}
+	BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
 }
 
 Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
@@ -110,6 +112,7 @@ Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const Scene
 
 void Seeds::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
 }
 
 Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
@@ -119,6 +122,7 @@ Imath::M44f Seeds::computeBranchTransform( const ScenePath &parentPath, const Sc
 
 void Seeds::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BranchCreator::hashBranchAttributes( parentPath, branchPath, context, h );
 }
 
 IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
@@ -128,6 +132,7 @@ IECore::ConstCompoundObjectPtr Seeds::computeBranchAttributes( const ScenePath &
 
 void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BranchCreator::hashBranchObject( parentPath, branchPath, context, h );
 	if( branchPath.size() == 0 )
 	{
 		h.append( inPlug()->objectHash( parentPath ) );
@@ -161,6 +166,7 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 
 void Seeds::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
 }
 
 IECore::ConstInternedStringVectorDataPtr Seeds::computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const

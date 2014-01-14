@@ -102,10 +102,6 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 
 void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	/// \todo We could avoid calling the base class method when we know we're going to overwrite the hash anyway.
-	/// This could make sense in all the hash*() methods.
-	SceneProcessor::hashBound( path, context, parent, h );
-
 	ScenePath parentPath, branchPath;
 	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
 	
@@ -125,8 +121,6 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 
 void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashTransform( path, context, parent, h );
-
 	ScenePath parentPath, branchPath;
 	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
 	
@@ -142,8 +136,6 @@ void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context 
 
 void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashAttributes( path, context, parent, h );
-
 	ScenePath parentPath, branchPath;
 	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
 	
@@ -159,8 +151,6 @@ void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context
 
 void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashObject( path, context, parent, h );
-
 	ScenePath parentPath, branchPath;
 	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
 	
@@ -176,8 +166,6 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 
 void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashChildNames( path, context, parent, h );
-
 	ScenePath parentPath, branchPath;
 	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
 	
@@ -288,6 +276,31 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 IECore::ConstCompoundObjectPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return inPlug()->globalsPlug()->getValue();
+}
+
+void BranchCreator::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashBound( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), context, inPlug(), h );
+}
+
+void BranchCreator::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashTransform( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), context, inPlug(), h );
+}
+
+void BranchCreator::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashAttributes( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), context, inPlug(), h );
+}
+
+void BranchCreator::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashObject( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), context, inPlug(), h );
+}
+
+void BranchCreator::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashChildNames( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), context, inPlug(), h );
 }
 
 bool BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
