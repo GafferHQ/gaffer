@@ -99,12 +99,6 @@ class PlugWidget( GafferUI.Widget ) :
 		layout.addWidget( self.__label._qtWidget() )
 		layout.addWidget( self.__valueWidget._qtWidget() )
 		
-		# if the plug is a user plug, then set things up so it can be renamed
-		# by double clicking on the label.
-		if plug.node()["user"].isAncestorOf( plug ) :
-			self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )
-			self.__editableLabel = None
-		
 		# The plugValueWidget() may have smarter drop behaviour than the labelPlugValueWidget(),
 		# because it has specialised PlugValueWidget._dropValue(). It's also more meaningful to the
 		# user if we highlight the plugValueWidget() on dragEnter rather than the label. So we
@@ -128,26 +122,6 @@ class PlugWidget( GafferUI.Widget ) :
 	def labelWidth() :
 	
 		return 150
-
-	def __labelDoubleClicked( self, label, event ) :
-	
-		assert( label is self.__label )
-		
-		if self.__editableLabel is None :
-			self.__editableLabel = GafferUI.NameWidget( self.plugValueWidget().getPlug() )
-			self.__editableLabel._qtWidget().setFixedWidth( self.labelWidth() )
-			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__labelEditingFinished ) )
-			self._qtWidget().layout().insertWidget( 0, self.__editableLabel._qtWidget() )
-		
-		self.__label.setVisible( False )
-		self.__editableLabel.setVisible( True )
-		self.__editableLabel.setSelection( 0, len( self.__editableLabel.getText() ) )
-		self.__editableLabel.grabFocus()
-	
-	def __labelEditingFinished( self, label ) :
-	
-		self.__label.setVisible( True )
-		self.__editableLabel.setVisible( False )
 
 	def __labelDragEnter( self, label, event ) :
 			
