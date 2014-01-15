@@ -136,26 +136,17 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 					for( int channelIndex = 0, numChannels = channelNames().size(); channelIndex < numChannels; ++channelIndex )
 					{
 						const V2i tileOrigin( tileOriginX, tileOriginY );
-						ConstFloatVectorDataPtr *tileData = tileReference( tileOrigin, channelIndex );
+						ConstFloatVectorDataPtr tileData = getTile( tileOrigin, channelIndex );
 						if( !tileData )
 						{
 							// we've been sent data outside of the data window
 							continue;
 						}
 						
-						FloatVectorDataPtr updatedTileData;
-						if( *tileData )
-						{
-							// we must create a new object to hold the updated tile data,
-							// because the old one might well have been returned from
-							// computeChannelData and be being held in the cache.
-							updatedTileData = (*tileData)->copy();
-						}
-						else
-						{
-							updatedTileData = ImagePlug::blackTile()->copy();
-						}
-						
+						// we must create a new object to hold the updated tile data,
+						// because the old one might well have been returned from
+						// computeChannelData and be being held in the cache.
+						FloatVectorDataPtr updatedTileData = tileData->copy();
 						vector<float> &updatedTile = updatedTileData->writable();
 						
 						const Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() - 1 ) );
@@ -174,7 +165,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 							}
 						}
 						
-						*tileData = updatedTileData;
+						setTile( tileOrigin, channelIndex, updatedTileData );
 					}
 				}
 			}
@@ -205,12 +196,15 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 				return ImagePlug::blackTile();
 			}
 			
-			ConstFloatVectorDataPtr *t = tileReference( tileOrigin, cIt - channelNames().begin() );
-			if( t && *t )
+			ConstFloatVectorDataPtr tile = getTile( tileOrigin, cIt - channelNames().begin() );
+			if( tile )
 			{
-				return *t;
+				return tile;
 			}
-			return ImagePlug::blackTile();
+			else
+			{
+				return ImagePlug::blackTile();
+			}
 		}
 		
 		typedef boost::signal<void ( GafferDisplayDriver *, const Imath::Box2i & )> DataReceivedSignal;
@@ -236,7 +230,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 	
 		static const DisplayDriverDescription<GafferDisplayDriver> g_description;
 
-		ConstFloatVectorDataPtr *tileReference( const V2i &tileOrigin, size_t channelIndex )
+		ConstFloatVectorDataPtr getTile( const V2i &tileOrigin, size_t channelIndex )
 		{
 			V2i tileIndex = tileOrigin / ImagePlug::tileSize();
 			
@@ -250,12 +244,29 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 				// outside data window
 				return NULL;
 			}
-			return &(m_tiles[tileIndex.x][tileIndex.y][channelIndex]);
+			
+			tbb::spin_rw_mutex::scoped_lock tileLock( m_tileMutex, false /* read */ );
+			
+			ConstFloatVectorDataPtr result = m_tiles[tileIndex.x][tileIndex.y][channelIndex];
+			if( !result )
+			{
+				result = ImagePlug::blackTile();
+			}
+			
+			return result;
+		}
+		
+		void setTile( const V2i &tileOrigin, size_t channelIndex, ConstFloatVectorDataPtr tile )
+		{
+			V2i tileIndex = tileOrigin / ImagePlug::tileSize();
+			tbb::spin_rw_mutex::scoped_lock tileLock( m_tileMutex, true /* write */ );
+			m_tiles[tileIndex.x][tileIndex.y][channelIndex] = tile;
 		}
 
 		// indexed by tileIndexX, tileIndexY, channelIndex.
 		typedef boost::multi_array<ConstFloatVectorDataPtr, 3> TileArray;
 		TileArray m_tiles;
+		tbb::spin_rw_mutex m_tileMutex;
 
 		Format m_gafferFormat;
 		Imath::Box2i m_gafferDataWindow;
