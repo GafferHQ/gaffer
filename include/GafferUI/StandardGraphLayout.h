@@ -80,12 +80,12 @@ class StandardGraphLayout : public GraphLayout
 		Gaffer::Plug *correspondingOutput( const Gaffer::Plug *input ) const;
 		size_t unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
 						
-		// We calculate node positions based on the assumption that connections flow left to right and/or top to bottom.
-		// From this we compute a hard constraint which guarantees that a node is not to the left of or above its inputs and is
-		// not below or to the left of its outputs. In the case of all connections being either vertical or horizontal, this will only
-		// give us a constraint in one dimension, so we compute a soft constraint for that dimension, based on trying to keep the
-		// node centered between its connections. Returns false if no positions were found and therefore nothing could be computed,
-		// true otherwise.
+		// We calculate node positions based on their connections to other nodes. We first compute a hard
+		// constraint which guarantees that the node is to the side of it's connections indicated by the nodule
+		// tangents. In the case of all connections being either vertical or horizontal, this will only
+		// give us a constraint in one dimension, so we compute a soft constraint for that dimension, based on
+		// trying to keep the node centered between its connections. Returns false if no connections were found
+		// and therefore nothing could be computed, true otherwise.
 		bool nodeConstraints( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedNodes, Imath::Box2f &hardConstraint, Imath::V2f &softConstraint ) const;
 
 };

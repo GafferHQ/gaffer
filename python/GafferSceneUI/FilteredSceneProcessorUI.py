@@ -54,6 +54,7 @@ GafferScene.FilteredSceneProcessor,
 {
 	"description" : """The filter used to control which parts of the scene are processed. A Filter node should be connected here.""",
 	"nodeUI:section" : "Filter",
+	"nodeGadget:nodulePosition" : "right",
 }
 
 )

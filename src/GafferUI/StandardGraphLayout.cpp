@@ -429,42 +429,76 @@ bool StandardGraphLayout::nodeConstraints( GraphGadget *graph, Gaffer::Node *nod
 	
 	for( std::vector<ConnectionGadget *>::const_iterator it = connections.begin(), eIt = connections.end(); it != eIt; it++ )
 	{
-		// find the nodule at the other end of the connection
+		// find the nodules at either end of the connection
+		
 		const ConnectionGadget *connection = *it;
-		const Nodule *nodule = 0;
+		const Nodule *thisNodule = NULL; // the one on the node we're computing the constraints for
+		const Nodule *otherNodule = NULL; // the one on the other node
 		if( connection->srcNodule()->plug()->node() == node )
 		{
-			nodule = connection->dstNodule();
+			thisNodule = connection->srcNodule();
+			otherNodule = connection->dstNodule();
 		}
 		else
 		{
-			nodule = connection->srcNodule();
+			thisNodule = connection->dstNodule();
+			otherNodule = connection->srcNodule();
 		}
 	
-		// use it to update the constraints
+		const V3f thisNodulePos = thisNodule->transformedBound( 0 ).center();
+		const V3f otherNodulePos = otherNodule->transformedBound( 0 ).center();
+
+		// update the soft constraint using the position of the other nodule
 		
-		V3f	nodulePos = nodule->transformedBound( 0 ).center();		
-		softConstraint += V2f( nodulePos.x, nodulePos.y );
+		softConstraint += V2f( otherNodulePos.x, otherNodulePos.y );
 		
-		const NodeGadget *nodeGadget = nodule->ancestor<NodeGadget>();
-		V3f tangent = nodeGadget->noduleTangent( nodule );
+		// update the hard constraint using the position and tangent of the other nodule
 		
-		if( tangent.dot( V3f( 0, -1, 0 ) ) > 0.5f ) // down
+		const NodeGadget *otherNodeGadget = otherNodule->ancestor<NodeGadget>();
+		const V3f otherTangent = otherNodeGadget->noduleTangent( otherNodule );
+		
+		if( otherTangent.dot( V3f( 0, -1, 0 ) ) > 0.5f ) // down
 		{
-			hardConstraint.max.y = std::min( hardConstraint.max.y, nodulePos.y - 10.0f );
+			hardConstraint.max.y = std::min( hardConstraint.max.y, otherNodulePos.y - 10.0f );
 		}
-		else if( tangent.dot( V3f( 0, 1, 0 ) ) > 0.5f ) // up
+		else if( otherTangent.dot( V3f( 0, 1, 0 ) ) > 0.5f ) // up
 		{
-			hardConstraint.min.y = std::max( hardConstraint.min.y, nodulePos.y + 10.0f );
+			hardConstraint.min.y = std::max( hardConstraint.min.y, otherNodulePos.y + 10.0f );
 		}
 		
-		if( tangent.dot( V3f( 1, 0, 0 ) ) > 0.5f ) // right
+		if( otherTangent.dot( V3f( 1, 0, 0 ) ) > 0.5f ) // right
 		{
-			hardConstraint.min.x = std::max( hardConstraint.min.x, nodulePos.x + 10.0f );
+			hardConstraint.min.x = std::max( hardConstraint.min.x, otherNodulePos.x + 10.0f );
 		}
-		else if( tangent.dot( V3f( -1, 0, 0 ) ) > 0.5f ) // left
+		else if( otherTangent.dot( V3f( -1, 0, 0 ) ) > 0.5f ) // left
 		{
-			hardConstraint.max.x = std::min( hardConstraint.max.x, nodulePos.x - 10.0f );
+			hardConstraint.max.x = std::min( hardConstraint.max.x, otherNodulePos.x - 10.0f );
+		}
+		
+		// update the hard constraint using the position and tangent of this nodule.
+		// in many cases the tangents will be opposite and this will have no effect,
+		// but vertical -> horizontal tangent connections can exist and this is necessary
+		// to take them into account.
+		
+		const NodeGadget *thisNodeGadget = thisNodule->ancestor<NodeGadget>();
+		const V3f thisTangent = thisNodeGadget->noduleTangent( thisNodule );
+		
+		if( thisTangent.dot( V3f( 0, -1, 0 ) ) > 0.5f ) // down
+		{
+			hardConstraint.min.y = std::max( hardConstraint.min.y, otherNodulePos.y + 10.0f );
+		}
+		else if( thisTangent.dot( V3f( 0, 1, 0 ) ) > 0.5f ) // up
+		{
+			hardConstraint.max.y = std::min( hardConstraint.max.y, otherNodulePos.y - 10.0f );
+		}
+		
+		if( thisTangent.dot( V3f( 1, 0, 0 ) ) > 0.5f ) // right
+		{
+			hardConstraint.max.x = std::min( hardConstraint.max.x, otherNodulePos.x - 10.0f );
+		}
+		else if( thisTangent.dot( V3f( -1, 0, 0 ) ) > 0.5f ) // left
+		{
+			hardConstraint.min.x = std::max( hardConstraint.min.x, otherNodulePos.x + 10.0f );
 		}
 	}
 
