@@ -1,3 +1,19 @@
+# 0.88.1
+
+#### Core
+
+- Added env app which mimics /usr/bin/env
+- Enabled Python threading by default in Gaffer python module
+
+#### UI
+
+- Renaming is available for promoted children of CompoundDataPlugs
+- Moved scene node filter plugs to the right hand side of the node
+
+#### Image
+
+- Fixed threading issue in Display node
+
 # 0.88.0
 
 #### Core
