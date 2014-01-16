@@ -62,6 +62,10 @@ class BranchCreator : public SceneProcessor
 
 		BranchCreator( const std::string &name=defaultName<BranchCreator>() );
 		
+		/// Implemented for mappingPlug().
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
 		/// Implemented in terms of the hashBranch*() methods below - derived classes must implement those methods
 		/// rather than these ones.
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
@@ -110,13 +114,22 @@ class BranchCreator : public SceneProcessor
 		
 	private :
 	
+		/// Used to calculate the name remapping needed to prevent name clashes with
+		/// the existing scene.
+		Gaffer::ObjectPlug *mappingPlug();
+		const Gaffer::ObjectPlug *mappingPlug() const;
+		
+		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		IECore::CompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
+
 		// If path is on a branch, then returns true and :
-		//     parentPath + branchPath == path, branchPath != []
+		//     parentPath == root of the relevant branch and
+		//     branchPath == path within branch, branchPath != []
 		// else if path is above a branch, then returns false and :
 		//     parentPath == root of the relevant branch, branchPath == []
 		// else if path is unrelated to a branch, returns false and :
 		//     parentPath == branchPath == []
-		bool parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+		bool parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 		

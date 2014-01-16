@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,7 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
+#include "boost/regex.hpp"
+#include "boost/lexical_cast.hpp"
 
 #include "Gaffer/Context.h"
 
@@ -56,6 +57,7 @@ BranchCreator::BranchCreator( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "parent" ) );
+	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundData() ) );
 }
 
 BranchCreator::~BranchCreator()
@@ -70,6 +72,16 @@ Gaffer::StringPlug *BranchCreator::parentPlug()
 const Gaffer::StringPlug *BranchCreator::parentPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::ObjectPlug *BranchCreator::mappingPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::ObjectPlug *BranchCreator::mappingPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
 }
 
 void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -89,10 +101,32 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
+void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{	
+	SceneProcessor::hash( output, context, h );
+
+	if( output == mappingPlug() )
+	{
+		hashMapping( context, h );
+	}
+}
+
+void BranchCreator::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == mappingPlug() )
+	{
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMapping( context ) );
+		return;
+	}
+	
+	SceneProcessor::compute( output, context );
+}
+
 void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
 	if( onBranch )
 	{
@@ -110,8 +144,9 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 
 Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
 	if( onBranch )
 	{
@@ -129,8 +164,9 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 
 void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
 	if( onBranch )
 	{
@@ -144,8 +180,9 @@ void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context 
 
 Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
 	if( onBranch )
 	{
@@ -159,8 +196,9 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 
 void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
 	if( onBranch )
 	{
@@ -174,8 +212,9 @@ void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context
 
 IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
 	if( onBranch )
 	{
@@ -189,8 +228,9 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 
 void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
 	if( onBranch )
 	{
@@ -204,8 +244,9 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 
 IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
 	if( onBranch )
 	{
@@ -219,8 +260,9 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 
 void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
 	if( onBranch )
 	{
@@ -228,8 +270,7 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 	}
 	else if( path == parentPath )
 	{
-		/// \todo Merge with existing child names
-		hashBranchChildNames( parentPath, branchPath, context, h );
+		h = mapping->member<InternedStringVectorData>( "__BranchCreatorChildNames" )->Object::hash();
 	}
 	else
 	{
@@ -239,8 +280,9 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 
 IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( path, parentPath, branchPath );
+	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
 	if( onBranch )
 	{
@@ -248,8 +290,7 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 	}
 	else if( path == parentPath )
 	{
-		/// \todo Merge with existing child names
-		return computeBranchChildNames( parentPath, branchPath, context );	
+		return mapping->member<InternedStringVectorData>( "__BranchCreatorChildNames" );
 	}
 	else
 	{
@@ -293,19 +334,101 @@ void BranchCreator::hashBranchChildNames( const ScenePath &parentPath, const Sce
 	SceneProcessor::hashChildNames( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), context, inPlug(), h );
 }
 
-bool BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
+void BranchCreator::hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	ScenePlug::ScenePath parent;
+	string parentAsString = parentPlug()->getValue();
+	ScenePlug::stringToPath( parentAsString, parent );
+	
+	h.append( inPlug()->childNamesHash( parent ) );
+	
+	MurmurHash branchChildNamesHash;
+	hashBranchChildNames( parent, ScenePath(), context, branchChildNamesHash );
+	h.append( branchChildNamesHash );
+}
+
+/// \todo This mapping is very similar to the one created by the Group node. Perhaps
+/// some generalisation of the two could form the basis for a nice unified HierarchyProcessor?
+/// In this case I think we would have a custom mapping class rather than just pass around
+/// CompoundData, and then parentAndBranchPaths() (or the future version of it) could be a method
+/// on the mapping object.
+IECore::CompoundDataPtr BranchCreator::computeMapping( const Gaffer::Context *context ) const
+{
+	// get the parent. currently this is simply retrieving the value of parentPlug(),
+	// but if we wanted to support multiple parents in future, here we would find the
+	// parent appropriate to the current "scene:path" context entry.
 	
 	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
+	ScenePlug::ScenePath parent;
 	string parentAsString = parentPlug()->getValue();
-	Tokenizer parentTokenizer( parentAsString, boost::char_separator<char>( "/" ) );	
-	ScenePath parent;
-	for( Tokenizer::const_iterator it = parentTokenizer.begin(), eIt = parentTokenizer.end(); it != eIt; it++ )
+	ScenePlug::stringToPath( parentAsString, parent );
+	
+	// create our result. in future it might be useful to create our datatype for this,
+	// but for now we're just packing everything into a CompoundData.
+
+	CompoundDataPtr result = new CompoundData;
+	result->writable()["__BranchCreatorParent"] = new InternedStringVectorData( parent );
+	
+	// calculate the child names for the result. this is the full list of child names
+	// immediately below the parent. we need to be careful to ensure that we rename any
+	// branch names which conflict with existing children of the parent.
+	
+	ConstInternedStringVectorDataPtr inChildNamesData = inPlug()->childNames( parent );
+	ConstInternedStringVectorDataPtr branchChildNamesData = computeBranchChildNames( parent, ScenePath(), context );
+	InternedStringVectorDataPtr childNamesData = new InternedStringVectorData();
+	
+	const vector<InternedString> &inChildNames = inChildNamesData->readable();
+	const vector<InternedString> &branchChildNames = branchChildNamesData->readable();
+	vector<InternedString> &childNames = childNamesData->writable();
+	
+	result->writable()["__BranchCreatorChildNames"] = childNamesData;
+	
+	set<InternedString> allNames;
+	for( vector<InternedString>::const_iterator it = inChildNames.begin(); it != inChildNames.end(); ++it )
 	{
-		parent.push_back( *it );
+		allNames.insert( *it );
+		childNames.push_back( *it );
 	}
 	
+	boost::regex namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
+	boost::format namePrefixSuffixFormatter( "%s%d" );
+
+	for( vector<InternedString>::const_iterator it = branchChildNames.begin(); it != branchChildNames.end(); ++it )
+	{
+		InternedString name = *it;
+		if( allNames.find( name ) != allNames.end() )
+		{
+			// uniqueify the name
+			string prefix = name;
+			int suffix = 1;
+			
+			boost::cmatch match;
+			if( regex_match( name.value().c_str(), match, namePrefixSuffixRegex ) )
+			{
+				prefix = match[1];
+				suffix = boost::lexical_cast<int>( match[2] );
+			}
+			
+			do
+			{
+				name = boost::str( namePrefixSuffixFormatter % prefix % suffix );
+				suffix++;
+			} while( allNames.find( name ) != allNames.end() );
+		}
+		
+		allNames.insert( name );
+		childNames.push_back( name );
+		
+		result->writable()[name] = new InternedStringData( *it );
+	}
+	
+	return result;
+}
+
+bool BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
+{
+	const ScenePath &parent = mapping->member<InternedStringVectorData>( "__BranchCreatorParent" )->readable();
+
 	ScenePath::const_iterator parentIterator, parentIteratorEnd, pathIterator, pathIteratorEnd;
 	
 	for(
@@ -327,9 +450,21 @@ bool BranchCreator::parentAndBranchPaths( const ScenePath &path, ScenePath &pare
 		parentPath = parent;
 		return false;
 	}
-		
+	
+	// descendant of parent
+	
+	const InternedStringData *branchName = mapping->member<InternedStringData>( *pathIterator );
+	if( !branchName )
+	{
+		// descendant comes from the input, rather than being part of the generated branch
+		return false;
+	}
+	
 	// somewhere on the new branch
+
 	parentPath = parent;
-	branchPath.insert( branchPath.end(), pathIterator, pathIteratorEnd );
+	branchPath.push_back( branchName->readable() );
+	branchPath.insert( branchPath.end(), ++pathIterator, pathIteratorEnd );
+	
 	return true;
 }
