@@ -134,7 +134,9 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 	}
 	else if( parentPath.size() )
 	{
-		h = hashOfTransformedChildBounds( path, outPlug() );
+		SceneProcessor::hashBound( path, context, parent, h );
+		inPlug()->boundPlug()->hash( h );
+		h.append( hashOfTransformedChildBounds( path, outPlug() ) );
 	}
 	else
 	{
@@ -154,7 +156,9 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 	}
 	else if( parentPath.size() )
 	{
-		return unionOfTransformedChildBounds( path, outPlug() );
+		Box3f result = inPlug()->boundPlug()->getValue();
+		result.extendBy( unionOfTransformedChildBounds( path, outPlug() ) );
+		return result;
 	}
 	else
 	{
