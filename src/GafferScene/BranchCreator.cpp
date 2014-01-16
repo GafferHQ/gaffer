@@ -378,6 +378,15 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 	}
 	ScenePlug::stringToPath( parentAsString, parent );
 	
+	// see if we're interested in creating children or not. if we're not
+	// we can early out. no innuendo intended.
+	
+	ConstInternedStringVectorDataPtr branchChildNamesData = computeBranchChildNames( parent, ScenePath(), context );
+	if( !branchChildNamesData->readable().size() )
+	{
+		return static_cast<const CompoundData *>( mappingPlug()->defaultValue() );
+	}
+
 	// create our result. in future it might be useful to create our datatype for this,
 	// but for now we're just packing everything into a CompoundData.
 
@@ -389,7 +398,6 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 	// branch names which conflict with existing children of the parent.
 	
 	ConstInternedStringVectorDataPtr inChildNamesData = inPlug()->childNames( parent );
-	ConstInternedStringVectorDataPtr branchChildNamesData = computeBranchChildNames( parent, ScenePath(), context );
 	InternedStringVectorDataPtr childNamesData = new InternedStringVectorData();
 	
 	const vector<InternedString> &inChildNames = inChildNamesData->readable();
