@@ -190,8 +190,13 @@ IECore::ConstInternedStringVectorDataPtr Seeds::computeBranchChildNames( const S
 {
 	if( branchPath.size() == 0 )
 	{
+		std::string name = namePlug()->getValue();
+		if( name.empty() )
+		{
+			return outPlug()->childNamesPlug()->defaultValue();
+		}
 		InternedStringVectorDataPtr result = new InternedStringVectorData();
-		result->writable().push_back( namePlug()->getValue() );
+		result->writable().push_back( name );
 		return result;
 	}
 	else
