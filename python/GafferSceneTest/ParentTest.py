@@ -161,6 +161,25 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertScenesEqual( p["out"], g["out"] )
 		self.assertSceneHashesEqual( p["out"], g["out"] )
+	
+	def testParentInsideParent( self ) :
+	
+		c = GafferScene.Cube()
+		
+		p1 = GafferScene.Parent()
+		p1["in"].setInput( c["out"] )
+		p1["parent"].setValue( "/cube" )
+		p1["child"].setInput( c["out"] )
+		
+		self.assertEqual( p1["out"].childNames( "/cube" ), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+		p2 = GafferScene.Parent()
+		p2["in"].setInput( p1["out"] )
+		p2["parent"].setValue( "/cube/cube" )
+		p2["child"].setInput( c["out"] )
+
+		self.assertEqual( p2["out"].childNames( "/cube" ), IECore.InternedStringVectorData( [ "cube" ] ) )
+		self.assertEqual( p2["out"].childNames( "/cube/cube" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

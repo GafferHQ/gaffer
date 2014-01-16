@@ -340,14 +340,10 @@ void BranchCreator::hashBranchChildNames( const ScenePath &parentPath, const Sce
 
 void BranchCreator::hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ScenePlug::ScenePath parent;
 	string parentAsString = parentPlug()->getValue();
-	if( parentAsString.empty() )
-	{
-		h = mappingPlug()->defaultValue()->Object::hash();
-		return;
-	}
+	h.append( parentAsString );
 	
+	ScenePlug::ScenePath parent;
 	ScenePlug::stringToPath( parentAsString, parent );
 	
 	h.append( inPlug()->childNamesHash( parent ) );
