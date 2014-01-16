@@ -145,6 +145,21 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p["child"].setInput( cLarge["out"] )
 
 		self.assertSceneValid( p["out"] )
-				
+	
+	def testEmptyParent( self ) :
+	
+		c = GafferScene.Cube()
+		
+		g = GafferScene.Group()
+		g["in"].setInput( c["out"] )
+		
+		p = GafferScene.Parent()
+		p["in"].setInput( g["out"] )
+		p["parent"].setValue( "" )
+		p["child"].setInput( c["out"] )
+		
+		self.assertScenesEqual( p["out"], g["out"] )
+		self.assertSceneHashesEqual( p["out"], g["out"] )
+		
 if __name__ == "__main__":
 	unittest.main()

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,6 +39,7 @@
 #define GAFFERSCENE_BRANCHCREATOR_H
 
 #include "GafferScene/SceneProcessor.h"
+#include "GafferScene/Filter.h"
 
 namespace GafferScene
 {
@@ -120,16 +121,32 @@ class BranchCreator : public SceneProcessor
 		const Gaffer::ObjectPlug *mappingPlug() const;
 		
 		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		IECore::CompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
+		IECore::ConstCompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
 
-		// If path is on a branch, then returns true and :
-		//     parentPath == root of the relevant branch and
-		//     branchPath == path within branch, branchPath != []
-		// else if path is above a branch, then returns false and :
-		//     parentPath == root of the relevant branch, branchPath == []
-		// else if path is unrelated to a branch, returns false and :
-		//     parentPath == branchPath == []
-		bool parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+		// Computes the relevant parent and branch paths for computing the result
+		// at the specified path. Returns a Filter::Result to describe where path is
+		// relative to the parent, as follows :
+		//
+		// AncestorMatch
+		//
+		// The path is on a branch below the parent, parentPath and branchPath
+		// are filled in appropriately, and branchPath will not be empty.
+		//
+		// ExactMatch
+		//
+		// The path is at the parent exactly, parentPath will be filled
+		// in appropriately and branchPath will be empty.
+		//
+		// DescendantMatch
+		//
+		// The path is above the parent, parentPath will be filled in
+		// appropriately and branchPath will be empty.
+		//
+		// NoMatch
+		//
+		// The path is a direct pass through from the input - neither
+		// parentPath nor branchPath will be filled in.
+		Filter::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 		

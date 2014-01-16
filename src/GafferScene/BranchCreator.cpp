@@ -126,13 +126,13 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		hashBranchBound( parentPath, branchPath, context, h );
 	}
-	else if( parentPath.size() )
+	else if( parentMatch == Filter::ExactMatch || parentMatch == Filter::DescendantMatch )
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
 		inPlug()->boundPlug()->hash( h );
@@ -148,13 +148,13 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		return computeBranchBound( parentPath, branchPath, context );
 	}
-	else if( parentPath.size() )
+	else if( parentMatch == Filter::ExactMatch || parentMatch == Filter::DescendantMatch )
 	{
 		Box3f result = inPlug()->boundPlug()->getValue();
 		result.extendBy( unionOfTransformedChildBounds( path, outPlug() ) );
@@ -170,9 +170,9 @@ void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context 
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		hashBranchTransform( parentPath, branchPath, context, h );				
 	}
@@ -186,9 +186,9 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		return computeBranchTransform( parentPath, branchPath, context );
 	}
@@ -202,9 +202,9 @@ void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		hashBranchAttributes( parentPath, branchPath, context, h );
 	}
@@ -218,9 +218,9 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		return computeBranchAttributes( parentPath, branchPath, context );
 	}
@@ -234,9 +234,9 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		hashBranchObject( parentPath, branchPath, context, h );
 	}
@@ -250,9 +250,9 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		return computeBranchObject( parentPath, branchPath, context );
 	}
@@ -266,13 +266,13 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 	
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		hashBranchChildNames( parentPath, branchPath, context, h );
 	}
-	else if( path == parentPath )
+	else if( parentMatch == Filter::ExactMatch )
 	{
 		h = mapping->member<InternedStringVectorData>( "__BranchCreatorChildNames" )->Object::hash();
 	}
@@ -286,13 +286,13 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 {
 	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	bool onBranch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
 
-	if( onBranch )
+	if( parentMatch == Filter::AncestorMatch )
 	{
 		return computeBranchChildNames( parentPath, branchPath, context );
 	}
-	else if( path == parentPath )
+	else if( parentMatch == Filter::ExactMatch )
 	{
 		return mapping->member<InternedStringVectorData>( "__BranchCreatorChildNames" );
 	}
@@ -342,6 +342,12 @@ void BranchCreator::hashMapping( const Gaffer::Context *context, IECore::MurmurH
 {
 	ScenePlug::ScenePath parent;
 	string parentAsString = parentPlug()->getValue();
+	if( parentAsString.empty() )
+	{
+		h = mappingPlug()->defaultValue()->Object::hash();
+		return;
+	}
+	
 	ScenePlug::stringToPath( parentAsString, parent );
 	
 	h.append( inPlug()->childNamesHash( parent ) );
@@ -356,7 +362,7 @@ void BranchCreator::hashMapping( const Gaffer::Context *context, IECore::MurmurH
 /// In this case I think we would have a custom mapping class rather than just pass around
 /// CompoundData, and then parentAndBranchPaths() (or the future version of it) could be a method
 /// on the mapping object.
-IECore::CompoundDataPtr BranchCreator::computeMapping( const Gaffer::Context *context ) const
+IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Context *context ) const
 {
 	// get the parent. currently this is simply retrieving the value of parentPlug(),
 	// but if we wanted to support multiple parents in future, here we would find the
@@ -365,6 +371,11 @@ IECore::CompoundDataPtr BranchCreator::computeMapping( const Gaffer::Context *co
 	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
 	ScenePlug::ScenePath parent;
 	string parentAsString = parentPlug()->getValue();
+	if( parentAsString.empty() )
+	{
+		// no parent specified so no mapping needed
+		return static_cast<const CompoundData *>( mappingPlug()->defaultValue() );
+	}
 	ScenePlug::stringToPath( parentAsString, parent );
 	
 	// create our result. in future it might be useful to create our datatype for this,
@@ -429,8 +440,13 @@ IECore::CompoundDataPtr BranchCreator::computeMapping( const Gaffer::Context *co
 	return result;
 }
 
-bool BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
+Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const
 {
+	if( !mapping->readable().size() )
+	{
+		return Filter::NoMatch;
+	}
+	
 	const ScenePath &parent = mapping->member<InternedStringVectorData>( "__BranchCreatorParent" )->readable();
 
 	ScenePath::const_iterator parentIterator, parentIteratorEnd, pathIterator, pathIteratorEnd;
@@ -444,24 +460,24 @@ bool BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, c
 	{
 		if( *parentIterator != *pathIterator )
 		{
-			return false;
+			return Filter::NoMatch;
 		}
 	}
 	
 	if( pathIterator == pathIteratorEnd )
 	{
-		// ancestor of parent, or parent itself
+		// path is ancestor of parent, or parent itself
 		parentPath = parent;
-		return false;
+		return parentIterator == parentIteratorEnd ? Filter::ExactMatch : Filter::DescendantMatch;
 	}
 	
-	// descendant of parent
+	// path is descendant of parent
 	
 	const InternedStringData *branchName = mapping->member<InternedStringData>( *pathIterator );
 	if( !branchName )
 	{
 		// descendant comes from the input, rather than being part of the generated branch
-		return false;
+		return Filter::NoMatch;
 	}
 	
 	// somewhere on the new branch
@@ -470,5 +486,5 @@ bool BranchCreator::parentAndBranchPaths( const IECore::CompoundData *mapping, c
 	branchPath.push_back( branchName->readable() );
 	branchPath.insert( branchPath.end(), ++pathIterator, pathIteratorEnd );
 	
-	return true;
+	return Filter::AncestorMatch;
 }

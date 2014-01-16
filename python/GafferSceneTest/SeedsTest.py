@@ -165,5 +165,16 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( s["out"], p["out"] )
 
+	def testEmptyParent( self ) :
+	
+		p = GafferScene.Plane()
+		s = GafferScene.Seeds()
+		
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "" )
+		
+		self.assertScenesEqual( s["out"], p["out"] )
+		self.assertSceneHashesEqual( s["out"], p["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

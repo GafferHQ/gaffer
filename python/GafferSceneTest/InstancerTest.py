@@ -193,6 +193,20 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["name"].setValue( "" )
 
 		self.assertScenesEqual( instancer["out"], plane["out"] )
+
+	def testEmptyParent( self ) :
+	
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		
+		instancer["parent"].setValue( "" )
+		
+		self.assertScenesEqual( instancer["out"], plane["out"] )
+		self.assertSceneHashesEqual( instancer["out"], plane["out"] )
 		
 if __name__ == "__main__":
 	unittest.main()
