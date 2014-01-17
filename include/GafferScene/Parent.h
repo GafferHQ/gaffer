@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,30 +34,27 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_INSTANCER_H
-#define GAFFERSCENE_INSTANCER_H
+#ifndef GAFFERSCENE_PARENT_H
+#define GAFFERSCENE_PARENT_H
 
 #include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
 {
 
-class Instancer : public BranchCreator
+class Parent : public BranchCreator
 {
 
 	public :
 
-		Instancer( const std::string &name=defaultName<Instancer>() );
-		virtual ~Instancer();
+		Parent( const std::string &name=defaultName<Parent>() );
+		virtual ~Parent();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Instancer, InstancerTypeId, BranchCreator );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Parent, ParentTypeId, BranchCreator );
 		
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
+		ScenePlug *childPlug();
+		const ScenePlug *childPlug() const;
 
-		ScenePlug *instancePlug();
-		const ScenePlug *instancePlug() const;
-		
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
@@ -77,19 +73,15 @@ class Instancer : public BranchCreator
 		
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
-		
+
 	private :
 	
-		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
-		int instanceIndex( const ScenePath &branchPath ) const;
-		Gaffer::ContextPtr instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const;
-
 		static size_t g_firstPlugIndex;
 		
 };
 
-IE_CORE_DECLAREPTR( Instancer )
+IE_CORE_DECLAREPTR( Parent )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_INSTANCER_H
+#endif // GAFFERSCENE_PARENT_H

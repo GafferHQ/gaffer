@@ -84,6 +84,7 @@
 #include "GafferSceneBindings/FilterBinding.h"
 #include "GafferSceneBindings/MixinBinding.h"
 #include "GafferSceneBindings/TransformBinding.h"
+#include "GafferSceneBindings/ParentBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -157,5 +158,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindFilter();
 	bindMixin();
 	bindTransform();
+	bindParent();
 	
 }

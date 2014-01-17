@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,15 +35,13 @@
 #  
 ##########################################################################
 
-import unittest
-
 import IECore
 
 import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class InstancerTest( unittest.TestCase ) :
+class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
@@ -166,5 +164,50 @@ class InstancerTest( unittest.TestCase ) :
 		self.assertEqual( n["name"].defaultValue(), "instances" )
 		self.assertEqual( n["name"].getValue(), "instances" )
 
+	def testAffects( self ) :
+	
+		n = GafferScene.Instancer()
+		a = n.affects( n["name"] )
+		self.assertEqual( [ x.relativeName( n ) for x in a ], [ "out.childNames" ] )
+	
+	def testParentBoundsWhenNoInstances( self ) :
+	
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive ) # no points, so we can't instance onto it
+		
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/sphere" )
+		instancer["instance"].setInput( sphere["out"] )
+		
+		self.assertSceneValid( instancer["out"] )
+		self.assertEqual( instancer["out"].bound( "/sphere" ), sphere["out"].bound( "/sphere" ) )
+
+	def testEmptyName( self ) :
+	
+		plane = GafferScene.Plane()
+		
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["parent"].setValue( "/plane" )
+		instancer["name"].setValue( "" )
+
+		self.assertScenesEqual( instancer["out"], plane["out"] )
+		self.assertSceneHashesEqual( instancer["out"], plane["out"] )
+
+	def testEmptyParent( self ) :
+	
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		
+		instancer["parent"].setValue( "" )
+		
+		self.assertScenesEqual( instancer["out"], plane["out"] )
+		self.assertSceneHashesEqual( instancer["out"], plane["out"] )
+		
 if __name__ == "__main__":
 	unittest.main()

@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -117,6 +117,65 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.Seeds()
 		self.assertEqual( s["name"].defaultValue(), "seeds" )
 		self.assertEqual( s["name"].getValue(), "seeds" )
-		 		
+	
+	def testAffects( self ) :
+	
+		s = GafferScene.Seeds()
+		a = s.affects( s["name"] )
+		self.assertEqual( [ x.relativeName( s ) for x in a ], [ "out.childNames" ] )
+	
+	def testMultipleChildren( self ) :
+	
+		p = GafferScene.Plane()
+		
+		s = GafferScene.Seeds()
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "seeds" )
+		
+		s2 = GafferScene.Seeds()
+		s2["in"].setInput( s["out"] )
+		s2["parent"].setValue( "/plane" )
+		s2["name"].setValue( "seeds" )
+		s2["density"].setValue( 10 )
+		
+		self.assertEqual( s2["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds", "seeds1" ] ) )
+		self.assertTrue( len( s2["out"].object( "/plane/seeds" )["P"].data ) < len( s2["out"].object( "/plane/seeds1" )["P"].data ) )
+		
+		self.assertSceneValid( s["out"] )
+		self.assertSceneValid( s2["out"] )
+		
+		s["name"].setValue( "seeds1" )
+		self.assertEqual( s2["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds1", "seeds" ] ) )
+		self.assertTrue( len( s2["out"].object( "/plane/seeds1" )["P"].data ) < len( s2["out"].object( "/plane/seeds" )["P"].data ) )
+		
+		self.assertEqual( s2["out"].objectHash( "/plane/seeds1" ), s["out"].objectHash( "/plane/seeds1" ) )
+		
+		self.assertSceneValid( s["out"] )
+		self.assertSceneValid( s2["out"] )
+
+	def testEmptyName( self ) :
+	
+		p = GafferScene.Plane()
+		
+		s = GafferScene.Seeds()
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "" )
+
+		self.assertScenesEqual( s["out"], p["out"] )
+		self.assertSceneHashesEqual( s["out"], p["out"] )
+
+	def testEmptyParent( self ) :
+	
+		p = GafferScene.Plane()
+		s = GafferScene.Seeds()
+		
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "" )
+		
+		self.assertScenesEqual( s["out"], p["out"] )
+		self.assertSceneHashesEqual( s["out"], p["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

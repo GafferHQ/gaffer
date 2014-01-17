@@ -54,9 +54,10 @@ IE_CORE_DEFINERUNTIMETYPED( Instancer );
 size_t Instancer::g_firstPlugIndex = 0;
 
 Instancer::Instancer( const std::string &name )
-	:	BranchCreator( name, "instances" )
+	:	BranchCreator( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "name", Plug::In, "instances" ) );
 	addChild( new ScenePlug( "instance" ) );
 }
 
@@ -64,14 +65,24 @@ Instancer::~Instancer()
 {
 }
 
+Gaffer::StringPlug *Instancer::namePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *Instancer::namePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
 ScenePlug *Instancer::instancePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex );
+	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
 
 const ScenePlug *Instancer::instancePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex );
+	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
 		
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -82,121 +93,152 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
+	else if( input == namePlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+	}
 }
 
 void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 1 )
 	{
+		// "/" or "/name"
+	
+		BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
+	
+		/// \todo This is a massive cop-out. See if we can improve it.
+		h.append( computeBranchBound( parentPath, branchPath, context ) );
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		h = instancePlug()->boundPlug()->hash();
-		return;
-	}
-	
-	// branchPath == "/"
-	
-	/// \todo This is a massive cop-out. See if we can improve it.
-	h.append( computeBranchBound( parentPath, branchPath, context ) );
-	
+	}	
 }
 
 Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 1 )
 	{
+		// "/" or "/name"
+		Box3f result;
+		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
+		if( p )
+		{
+			ScenePath branchChildPath( branchPath );
+			if( branchChildPath.size() == 0 )
+			{
+				branchChildPath.push_back( namePlug()->getValue() );
+			}
+			branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+			for( size_t i=0; i<p->readable().size(); i++ )
+			{
+				branchChildPath[branchChildPath.size()-1] = InternedString( i );
+				Box3f branchChildBound = computeBranchBound( parentPath, branchChildPath, context );
+				branchChildBound = transform( branchChildBound, computeBranchTransform( parentPath, branchChildPath, context ) );
+				result.extendBy( branchChildBound );			
+			}
+		}
+
+		return result;
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		return instancePlug()->boundPlug()->getValue();
 	}
-	
-	// branchPath == "/"
-	
-	Box3f result;
-	ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-	if( p )
-	{
-		ScenePath branchChildPath( branchPath );
-		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
-		for( size_t i=0; i<p->readable().size(); i++ )
-		{
-			/// \todo We could have a very fast InternedString( int ) constructor rather than all this lexical cast nonsense
-			branchChildPath[branchChildPath.size()-1] = boost::lexical_cast<string>( i );
-			Box3f branchChildBound = computeBranchBound( parentPath, branchChildPath, context );
-			branchChildBound = transform( branchChildBound, computeBranchTransform( parentPath, branchChildPath, context ) );
-			result.extendBy( branchChildBound );			
-		}
-	}
-
-	return result;
 }
 
 void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 2 )
 	{
+		// "/", "/name" or "/name/instanceNumber"
+		BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
+		if( branchPath.size() == 2 )
+		{
+			h.append( inPlug()->objectHash( parentPath ) );
+			h.append( instanceIndex( branchPath ) );
+		}
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		h = instancePlug()->transformPlug()->hash();
-	}
-	
-	if( branchPath.size() == 1 )
-	{
-		h.append( inPlug()->objectHash( parentPath ) );
-		h.append( instanceIndex( branchPath ) );
 	}
 }
 
 Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	M44f result;
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 2 )
 	{
-		Context::Scope scopedContext( ic );
-		result = instancePlug()->transformPlug()->getValue();
-	}
-	
-	if( branchPath.size() == 1 )
-	{
-		int index = instanceIndex( branchPath );
-		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-		if( p && (size_t)index < p->readable().size() )
+		// "/", "/name" or "/name/instanceNumber"
+		M44f result;
+		if( branchPath.size() == 2 )
 		{
-			M44f t;
-			t.translate( p->readable()[index] );
-			result *= t;
+			int index = instanceIndex( branchPath );
+			ConstV3fVectorDataPtr p = sourcePoints( parentPath );
+			if( p && (size_t)index < p->readable().size() )
+			{
+				M44f t;
+				t.translate( p->readable()[index] );
+				result *= t;
+			}
 		}
+		return result;
 	}
-	return result;
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
+		Context::Scope scopedContext( ic );
+		return instancePlug()->transformPlug()->getValue();
+	}
 }
 
 void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 1 )
 	{
+		// "/" or "/name"
+		h = outPlug()->attributesPlug()->defaultValue()->Object::hash();
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		h = instancePlug()->attributesPlug()->hash();
-	}
+	}	
 }
 
 IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 1 )
 	{
+		// "/" or "/name"
+		return outPlug()->attributesPlug()->defaultValue();	
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		return instancePlug()->attributesPlug()->getValue();
 	}
-	return outPlug()->attributesPlug()->defaultValue();
 }
 
 void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 1 )
 	{
+		// "/" or "/name"
+		h = outPlug()->objectPlug()->defaultValue()->Object::hash();	
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		h = instancePlug()->objectPlug()->hash();
 	}
@@ -204,24 +246,36 @@ void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &
 
 IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	ContextPtr ic = instanceContext( context, branchPath );
-	if( ic )
+	if( branchPath.size() <= 1 )
 	{
+		// "/" or "/name"
+		return outPlug()->objectPlug()->defaultValue();	
+	}
+	else
+	{
+		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		return instancePlug()->objectPlug()->getValue();
 	}
-	return outPlug()->objectPlug()->defaultValue();
 }
 
 void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( branchPath.size() == 0 )
 	{
-		namePlug()->hash( h );
+		// "/"
+		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
+		namePlug()->hash( h );	
+	}
+	else if( branchPath.size() == 1 )
+	{
+		// "/name"
+		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
 		h.append( inPlug()->objectHash( parentPath ) );
 	}
 	else
 	{
+		// "/name/..."
 		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic );
 		h = instancePlug()->childNamesPlug()->hash();
@@ -232,11 +286,18 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 {
 	if( branchPath.size() == 0 )
 	{
+		// "/"
 		std::string name = namePlug()->getValue();
-		if( !name.size() )
+		if( name.empty() )
 		{
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
+		InternedStringVectorDataPtr result = new InternedStringVectorData();
+		result->writable().push_back( name );		
+		return result;
+	}
+	else if( branchPath.size() == 1 )
+	{
 		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
 		if( !p || !p->readable().size() )
 		{
@@ -246,7 +307,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		InternedStringVectorDataPtr result = new InternedStringVectorData();
 		for( size_t i=0; i<p->readable().size(); i++ )
 		{
-			result->writable().push_back( boost::lexical_cast<string>( i ) );
+			result->writable().push_back( InternedString( i ) );
 		}
 		
 		return result;
@@ -272,12 +333,12 @@ ConstV3fVectorDataPtr Instancer::sourcePoints( const ScenePath &parentPath ) con
 
 int Instancer::instanceIndex( const ScenePath &branchPath ) const
 {
-	return boost::lexical_cast<int>( branchPath[0].value() );
+	return boost::lexical_cast<int>( branchPath[1].value() );
 }
 
 Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const
 {
-	if( branchPath.size() == 0 )
+	if( branchPath.size() < 2 )
 	{
 		return 0;
 	}
@@ -285,7 +346,7 @@ Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentCont
 	ContextPtr result = new Context( *parentContext );
 
 	InternedStringVectorDataPtr instancePath = new InternedStringVectorData;
-	instancePath->writable().insert( instancePath->writable().end(), branchPath.begin() + 1, branchPath.end() );
+	instancePath->writable().insert( instancePath->writable().end(), branchPath.begin() + 2, branchPath.end() );
 	result->set( ScenePlug::scenePathContextName, instancePath.get() );
 	
 	result->set( "instancer:id", instanceIndex( branchPath ) );
