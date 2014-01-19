@@ -34,11 +34,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
-
 #include "IECore/CompoundData.h"
-#include "IECore/AttributeBlock.h"
-#include "IECore/LRUCache.h"
 
 #include "Gaffer/Context.h"
 
@@ -54,107 +50,6 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferOSL;
-
-//////////////////////////////////////////////////////////////////////////
-// LRUCache of ShadingEngines
-//////////////////////////////////////////////////////////////////////////
-
-namespace GafferOSL
-{
-
-namespace Detail
-{
-
-struct ShadingEngineCacheKey
-{
-	
-	ShadingEngineCacheKey( const OSLShader *s )
-		:	shader( s ), hash( s->stateHash() )
-	{
-	}
-
-	bool operator == ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash == other.hash;
-	}
-	
-	bool operator != ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash != other.hash;
-	}
-
-	bool operator < ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash < other.hash;
-	}
-	
-	mutable const OSLShader *shader;	
-	MurmurHash hash;
-
-};
-
-static OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
-{
-	cost = 1;
-	
-	ConstObjectVectorPtr state = key.shader->state();
-	key.shader = NULL; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
-	
-	if( !state->members().size() )
-	{
-		return NULL;
-	}
-	
-	static OSLRendererPtr g_renderer;	
-	static tbb::mutex g_rendererMutex;
-
-	tbb::mutex::scoped_lock lock( g_rendererMutex );
-		
-	if( !g_renderer )
-	{
-		g_renderer = new OSLRenderer;
-		if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
-		{
-			g_renderer->setOption( "osl:searchpath:shader", new StringData( searchPath ) );
-		}
-		g_renderer->worldBegin();
-	}
-	
-	IECore::AttributeBlock attributeBlock( g_renderer );
-
-	for( ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
-	{
-		const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-		if( s )
-		{
-			s->render( g_renderer );
-		}
-	}
-		
-	return g_renderer->shadingEngine();
-}
-
-typedef LRUCache<ShadingEngineCacheKey, OSLRenderer::ConstShadingEnginePtr> ShadingEngineCache;
-static ShadingEngineCache g_shadingEngineCache( getter, 10000 );
-
-} // namespace Detail
-
-OSLRenderer::ConstShadingEnginePtr OSLImage::shadingEngine( const Gaffer::Plug *shaderPlug )
-{
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug->source<Plug>()->node() );
-	if( !shader )
-	{
-		return NULL;
-	}
-
-	return Detail::g_shadingEngineCache.get( Detail::ShadingEngineCacheKey( shader ) );
-}
-
-} // namespace GafferOSL
-
-//////////////////////////////////////////////////////////////////////////
-// OSLImage
-//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( OSLImage );
 
@@ -344,7 +239,9 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
-	OSLRenderer::ConstShadingEnginePtr shadingEngine = OSLImage::shadingEngine( shaderPlug() );
+	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	OSLRenderer::ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : NULL;
+	
 	if( !shadingEngine )
 	{
 		return static_cast<const CompoundData *>( shadingPlug()->defaultValue() );	

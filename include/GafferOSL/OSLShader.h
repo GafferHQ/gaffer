@@ -40,6 +40,7 @@
 #include "GafferScene/Shader.h"
 
 #include "GafferOSL/TypeIds.h"
+#include "GafferOSL/OSLRenderer.h"
 
 namespace GafferOSL
 {
@@ -58,11 +59,15 @@ class OSLShader : public GafferScene::Shader
 		/// \todo Make this method virtual and define it on the Shader base class.
 		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
+		OSLRenderer::ConstShadingEnginePtr shadingEngine() const;
+
 	protected :
 	
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 							
 };
+
+IE_CORE_DECLAREPTR( OSLShader )
 
 } // namespace GafferOSL
 
