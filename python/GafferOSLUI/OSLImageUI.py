@@ -49,15 +49,24 @@ GafferOSL.OSLImage,
 
 """Executes OSL shaders to perform image processing.""",
 
-"shader",
-"The shader to be executed - connect the output from an OSL network here.",
+"channel",
+{
+	"description" : "The channels to be added to the image.",
+	"nodeGadget:nodulePosition" : "left",	
+}
 
 )
 
 ##########################################################################
 # Nodules
 ##########################################################################
+	
+GafferUI.Nodule.registerNodule( GafferOSL.OSLImage.staticTypeId(), "channel.*", GafferUI.StandardNodule )
 
-GafferUI.Nodule.registerNodule( GafferOSL.OSLImage.staticTypeId(), "shader", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule(
+	GafferOSL.OSLImage.staticTypeId(),
+	"channel",
+	lambda plug : GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y ),
+)
 
 

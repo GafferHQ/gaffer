@@ -87,7 +87,7 @@ class OSLImage : public GafferImage::ImageProcessor
 		/// caching once there and once in the shadingPlug.
 		Gaffer::ObjectPlug *shadingPlug();
 		const Gaffer::ObjectPlug *shadingPlug() const;
-	
+		
 		void hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeShading( const Gaffer::Context *context ) const;
 
