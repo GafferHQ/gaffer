@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -58,17 +58,20 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			
 				GafferUI.Label( "Location" )
 			
-				modeMenu = GafferUI.SelectionMenu()
+				modeMenu = GafferUI.MultiSelectionMenu(
+					allowMultipleSelection = False,
+					allowEmptySelection = False,
+				)
 				for mode in self.__modes :
-					modeMenu.addItem( mode[0] )
-				self.__modeChangedConnection = modeMenu.currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__modeChanged ) )
+					modeMenu.append( mode[0] )
+				self.__modeChangedConnection = modeMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__modeChanged ) )
 		
 			self.__pathChooser = GafferUI.PathChooserWidget( Gaffer.DictPath( {}, "/" ), previewTypes=GafferUI.PathPreviewWidget.types() )
 			self.__pathChooser.pathWidget().setVisible( False )
 		
 		self.__modeInstances = {}
 		self.__currentModeInstance = None
-		self.__modeChanged( modeMenu )
+		modeMenu.setSelection( [ self.__modes[0][0] ] )
 	
 	## Returns the PathChooserWidget which forms the majority of this ui.
 	def pathChooser( self ) :
@@ -81,7 +84,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 		
 	def __modeChanged( self, modeMenu ) :
 	
-		label = modeMenu.getCurrentItem()
+		label = modeMenu.getSelection()[0]
 		if label not in self.__modeInstances :
 			for mode in self.__modes :
 				if mode[0] == label :
