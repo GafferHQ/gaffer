@@ -1,3 +1,14 @@
+#### Scene
+
+- Added Parent node. This allows one hierarchy to be parented into another (#91).
+- Fixed bug which could cause incorrect bound computation at the parent node in the Instancer.
+- Seeds and Instancer classes now preserve existing children of the parent location, renaming the new locations to avoid name clashes if necessary.
+
+#### API
+
+- Removed BranchCreator name plug - derived classes are now responsible for generating the entirety of their branch.
+- Modified BranchCreator hashing slightly to improve performance - derived classes hashBranch*() methods are now responsible for calling the base class implementation.
+
 # 0.88.1
 
 #### Core
