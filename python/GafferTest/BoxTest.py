@@ -607,6 +607,24 @@ class BoxTest( unittest.TestCase ) :
 			self.assertTrue( "read only" in str( e ) )
 			self.assertEqual( b.keys(), k )
 			self.assertEqual( b["user"].keys(), uk )
+	
+	def testMakePlugReadOnlyAfterPromoting( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.AddNode()
+		s["n"]["op1"].setValue( 0 )
+		s["n"]["op2"].setValue( 0 )
+		
+		self.assertEqual( s["n"]["sum"].getValue(), 0 )
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		
+		op1 = b.promotePlug( b["n"]["op1"] )
+		b["n"]["op1"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		
+		op1.setValue( 1 )
+		self.assertEqual( b["n"]["sum"].getValue(), 1 )
 		
 if __name__ == "__main__":
 	unittest.main()
