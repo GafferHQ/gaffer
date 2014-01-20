@@ -577,6 +577,36 @@ class BoxTest( unittest.TestCase ) :
 			self.assertTrue( "read only" in str( e ) )
 			self.assertEqual( b.keys(), k )
 			self.assertEqual( b["user"].keys(), uk )
+	
+	def testCantPromotePlugWithReadOnlyChildren( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["c"] = Gaffer.Color3fPlug()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		
+		self.assertTrue( b.canPromotePlug( b["n"]["c"] ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["c"]["r"] ) )
+		
+		b["n"]["c"]["r"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		
+		self.assertFalse( b.canPromotePlug( b["n"]["c"] ) )
+		self.assertFalse( b.canPromotePlug( b["n"]["c"]["r"] ) )
+		
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["c"] )
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["c"]["r"] )
+		
+		k = b.keys()
+		uk = b["user"].keys()
+		try :
+			b.promotePlug( b["n"]["c"] )
+		except Exception, e :
+			self.assertTrue( "Cannot promote" in str( e ) )
+			self.assertTrue( "read only" in str( e ) )
+			self.assertEqual( b.keys(), k )
+			self.assertEqual( b["user"].keys(), uk )
 		
 if __name__ == "__main__":
 	unittest.main()
