@@ -47,7 +47,10 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifetime( self ) :
 
+		application = Gaffer.Application( "Layout tester" )
 		scriptNode = Gaffer.ScriptNode()
+		application.root()["scripts"].addChild( scriptNode )
+
 		scriptNode["write"] = Gaffer.ObjectWriter()
 		scriptNode.selection().add( scriptNode["write"] )
 				
@@ -75,9 +78,11 @@ class EditorWidgetTest( GafferUITest.TestCase ) :
 	
 	def testSerialisation( self ) :
 	
+		application = Gaffer.Application( "Layout tester" )
 		scriptNode = Gaffer.ScriptNode()
+		application.root()["scripts"].addChild( scriptNode )
 		
-		layouts = GafferUI.Layouts.acquire( Gaffer.Application( "Layout tester" ) )
+		layouts = GafferUI.Layouts.acquire( application )
 		for type in GafferUI.EditorWidget.types() :
 			editor = GafferUI.EditorWidget.create( type, scriptNode )
 			layouts.add( "testLayout", editor )
