@@ -182,6 +182,22 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 		}
 	}
 
+	if( descendantPlug->getFlags( Plug::ReadOnly ) )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it is read only." ) % descendantPlug->fullName()
+				)
+			);
+		}
+	}
+
 	if( !descendantPlug->getFlags( Plug::Serialisable ) )
 	{
 		if( !throwExceptions )

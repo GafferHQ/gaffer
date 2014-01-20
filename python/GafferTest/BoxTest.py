@@ -541,6 +541,42 @@ class BoxTest( unittest.TestCase ) :
 		
 		self.assertEqual( s2["Box"].getPlugMetadata( s2["Box"]["in"], "description" ), IECore.StringData( "hello" ) )
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["Box"]["in"], "description" ), "hello" )
+	
+	def testCantPromoteReadOnlyPlug( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["i"] = Gaffer.IntPlug()
+		s["n"]["c"] = Gaffer.Color3fPlug()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		
+		self.assertTrue( b.canPromotePlug( b["n"]["i"] ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["c"] ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["c"]["r"] ) )
+		
+		b["n"]["i"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		b["n"]["c"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		b["n"]["c"]["r"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		
+		self.assertFalse( b.canPromotePlug( b["n"]["i"] ) )
+		self.assertFalse( b.canPromotePlug( b["n"]["c"] ) )
+		self.assertFalse( b.canPromotePlug( b["n"]["c"]["r"] ) )
+		
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["i"] )
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["c"] )
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["c"]["r"] )
+		
+		k = b.keys()
+		uk = b["user"].keys()
+		try :
+			b.promotePlug( b["n"]["i"] )
+		except Exception, e :
+			self.assertTrue( "Cannot promote" in str( e ) )
+			self.assertTrue( "read only" in str( e ) )
+			self.assertEqual( b.keys(), k )
+			self.assertEqual( b["user"].keys(), uk )
 		
 if __name__ == "__main__":
 	unittest.main()
