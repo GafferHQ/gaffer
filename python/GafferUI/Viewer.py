@@ -78,6 +78,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self._updateFromSet()
 	
+	def view( self ) :
+	
+		return self.__currentView
+	
 	def __repr__( self ) :
 
 		return "GafferUI.Viewer( scriptNode )"
