@@ -272,6 +272,12 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", childPlugNamesToIgnore = ( "childNames", ) )
 		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", childPlugNamesToIgnore = ( "childNames", ) )
+	
+	def testSupportedExtensions( self ) :
+	
+		e = GafferScene.SceneReader.supportedExtensions()
+		self.assertTrue( "scc" in e )
+		self.assertTrue( "lscc" in e )
 		
 	def tearDown( self ) :
 	

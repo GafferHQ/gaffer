@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -92,6 +92,12 @@ void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}
+}
+
+size_t SceneReader::supportedExtensions( std::vector<std::string> &extensions )
+{
+	extensions = SceneInterface::supportedExtensions();
+	return extensions.size();
 }
 
 void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

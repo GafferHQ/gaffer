@@ -39,6 +39,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "IECore/SceneInterface.h"
+
 #include "GafferScene/FileSource.h"
 
 namespace GafferScene
@@ -59,6 +61,8 @@ class SceneReader : public FileSource
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 				
+		static size_t supportedExtensions( std::vector<std::string> &extensions );
+
 	protected :
 	
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
