@@ -157,22 +157,30 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			if focusItem.widget().focusWidget() is not None :
 				focusItem.widget().focusWidget().clearFocus()
 		
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+			
 		return self.__viewportGadget.buttonPressSignal()( self.__viewportGadget, event )
 
 	def __buttonRelease( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.buttonReleaseSignal()( self.__viewportGadget, event )
 		
 	def __buttonDoubleClick( self, widget, event ) :
 						
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.buttonDoubleClickSignal()( self.__viewportGadget, event )
 		
 	def __mouseMove( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
 
 		# we always return false so that any overlay items will get appropriate
@@ -182,32 +190,44 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __dragBegin( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.dragBeginSignal()( self.__viewportGadget, event )
 
 	def __dragEnter( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.dragEnterSignal()( self.__viewportGadget, event )
 
 	def __dragMove( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.dragMoveSignal()( self.__viewportGadget, event )
 
 	def __dragLeave( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.dragLeaveSignal()( self.__viewportGadget, event )
 
 	def __drop( self, widget, event ) :
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.dropSignal()( self.__viewportGadget, event )
 		
 	def __dragEnd( self, widget, event ) :
 	
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.dragEndSignal()( self.__viewportGadget, event )
 		
 	def __keyPress( self, widget, event ) :
@@ -218,7 +238,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			if self._qtWidget().scene().focusItem().widget().focusWidget() is not None :
 				return False
 		
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.keyPressSignal()( self.__viewportGadget, event )
 
 	def __keyRelease( self, widget, event ) :
@@ -227,12 +249,16 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			if self._qtWidget().scene().focusItem().widget().focusWidget() is not None :
 				return False
 
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.keyReleaseSignal()( self.__viewportGadget, event )
 	
 	def __wheel( self, widget, event ) :
 	
-		self._glWidget().makeCurrent()
+		if not self._makeCurrent() :
+			return False
+
 		return self.__viewportGadget.wheelSignal()( self.__viewportGadget, event )
 				
 ## Used to make the tooltips dependent on which gadget is under the mouse
@@ -249,7 +275,8 @@ class _EventFilter( QtCore.QObject ) :
 			widget = GafferUI.Widget._owner( qObject )			
 			assert( isinstance( widget, GadgetWidget ) )
 			
-			widget._glWidget().makeCurrent()
+			if not widget._makeCurrent() :
+				return False
 
 			toolTip = widget.getViewportGadget().getToolTip( 
 				IECore.LineSegment3f(
