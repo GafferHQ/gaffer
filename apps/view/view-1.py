@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferSceneUI
 
 class view( Gaffer.Application ) :
 
@@ -70,24 +71,17 @@ class view( Gaffer.Application ) :
 		
 			raise Exception( "Must view exactly one file." )
 			
-		self.__script = Gaffer.ScriptNode()
-		
-		## \todo We need a smarter way of choosing a reader so we
-		# can use ImageReaders and SceneReaders too. Perhaps we should
-		# create an improved ReaderPathPreview and then just use it
-		# as the core of this app.
-		readNode = Gaffer.ObjectReader()
-		readNode["fileName"].setValue( args["files"][0] )
-		
-		self.__script.addChild( readNode )
-		self.__script.selection().add( readNode )
-		
-		self.__window = GafferUI.Window( title = "Gaffer Viewer", resizeable=True) 
-			
-		viewer = GafferUI.Viewer( self.__script )
-		
-		self.__window.setChild( viewer )
-		
+		self.__window = GafferUI.Window(
+			title = "Gaffer Viewer",
+			sizeMode = GafferUI.Window.SizeMode.Manual
+		)
+
+		self.__window.setChild(
+			GafferUI.CompoundPathPreview(
+				Gaffer.FileSystemPath( args["files"][0] )
+			)
+		)
+
 		self.__closedConnection = self.__window.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 		
 		## \todo The window doesn't appear without this naughtiness. I think we either need to
