@@ -189,6 +189,24 @@ class TypedPlugTest( unittest.TestCase ) :
 		self.assertEqual( s2["n"]["p"].defaultValue(), "defaultValue" )
 		self.assertEqual( s2["n"]["p"].getValue(), "apple" )
 		self.assertEqual( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
+	
+	def testBoolPlugNumericConnections( self ) :
+		
+		b = Gaffer.BoolPlug()
+		
+		for p in ( Gaffer.FloatPlug(), Gaffer.IntPlug() ) :
+		
+			b.setInput( p )
+			self.assertEqual( b.getValue(), False )
+		
+			p.setValue( 1 )
+			self.assertEqual( b.getValue(), True )
+		
+			p.setValue( 0 )
+			self.assertEqual( b.getValue(), False )
+		
+			p.setValue( 1000 )
+			self.assertEqual( b.getValue(), True )
 		
 if __name__ == "__main__":
 	unittest.main()
