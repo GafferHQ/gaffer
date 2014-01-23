@@ -71,9 +71,22 @@ class UserPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
+		result.append( "/Add/Bool", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.BoolPlug ) } )
 		result.append( "/Add/Float", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FloatPlug ) } )
 		result.append( "/Add/Int", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.IntPlug ) } )
+		result.append( "/Add/NumericDivider", { "divider" : True } )
+
 		result.append( "/Add/String", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
+		result.append( "/Add/StringDivider", { "divider" : True } )
+
+		result.append( "/Add/V2i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2iPlug ) } )
+		result.append( "/Add/V3i", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3iPlug ) } )
+		result.append( "/Add/V2f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2fPlug ) } )
+		result.append( "/Add/V3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3fPlug  ) } )
+		result.append( "/Add/VectorDivider", { "divider" : True } )
+		
+		result.append( "/Add/Color3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
+		result.append( "/Add/Color4f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
 
 		return result
 
