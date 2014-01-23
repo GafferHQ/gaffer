@@ -44,6 +44,7 @@
 
 #include "GafferScene/SceneReader.h"
 
+using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
@@ -57,16 +58,40 @@ IE_CORE_DEFINERUNTIMETYPED( SceneReader );
 
 /// \todo hard coded framerate should be replaced with a getTime() method on Gaffer::Context or something
 const double SceneReader::g_frameRate( 24 );
+size_t SceneReader::g_firstPlugIndex = 0;
+
 static IECore::BoolDataPtr g_trueBoolData = new IECore::BoolData( true );
 
 SceneReader::SceneReader( const std::string &name )
 	:	FileSource( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "tags" ) );
 	plugSetSignal().connect( boost::bind( &SceneReader::plugSet, this, ::_1 ) );
 }
 
 SceneReader::~SceneReader()
 {
+}
+
+Gaffer::StringPlug *SceneReader::tagsPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *SceneReader::tagsPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	FileSource::affects( input, outputs );
+	
+	if( input == tagsPlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+	}
 }
 
 void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -160,6 +185,12 @@ void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *cont
 	{
 		h.append( context->getFrame() );
 	}
+}
+
+void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashChildNames( path, context, parent, h );
+	tagsPlug()->hash( h );
 }
 
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -265,9 +296,51 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 		return parent->childNamesPlug()->defaultValue();
 	}
 
-	InternedStringVectorDataPtr result = new InternedStringVectorData;
-	s->childNames( result->writable() );
-	return result;
+	// get the child names
+	
+	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
+	vector<InternedString> &result = resultData->writable();
+	s->childNames( result );
+	
+	// filter out any which don't have the right tags
+	
+	std::string tagsString = tagsPlug()->getValue();
+	if( !tagsString.empty() )
+	{
+		typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+		Tokenizer tagsTokenizer( tagsString, boost::char_separator<char>( " " ) );
+		
+		vector<InternedString> tags;
+		std::copy( tagsTokenizer.begin(), tagsTokenizer.end(), back_inserter( tags ) );
+		
+		vector<InternedString>::iterator newResultEnd = result.begin();
+		SceneInterface::NameList childTags;
+		for( vector<InternedString>::const_iterator cIt = result.begin(), cEIt = result.end(); cIt != cEIt; ++cIt )
+		{
+			ConstSceneInterfacePtr child = s->child( *cIt );
+			childTags.clear();
+			child->readTags( childTags, IECore::SceneInterface::EveryTag );
+			
+			bool childMatches = false;
+			for( SceneInterface::NameList::const_iterator tIt = childTags.begin(), tEIt = childTags.end(); tIt != tEIt; ++tIt )
+			{
+				if( find( tags.begin(), tags.end(), *tIt ) != tags.end() )
+				{
+					childMatches = true;
+					break;
+				}
+			}
+		
+			if( childMatches )
+			{
+				*newResultEnd++ = *cIt;
+			}
+		}
+		
+		result.erase( newResultEnd, result.end() );
+	}
+	
+	return resultData;
 }
 
 IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
