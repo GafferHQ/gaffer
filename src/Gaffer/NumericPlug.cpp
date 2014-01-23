@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,6 +38,7 @@
 #include "OpenEXR/ImathFun.h"
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -84,7 +85,9 @@ bool NumericPlug<T>::acceptsInput( const Plug *input ) const
 	}
 	if( input )
 	{
-		return input->isInstanceOf( FloatPlug::staticTypeId() ) || input->isInstanceOf( IntPlug::staticTypeId() );
+		return input->isInstanceOf( FloatPlug::staticTypeId() ) ||
+		       input->isInstanceOf( IntPlug::staticTypeId() ) ||
+		       input->isInstanceOf( BoolPlug::staticTypeId() );
 	}
 	return true;
 }
@@ -160,6 +163,9 @@ void NumericPlug<T>::setFrom( const ValuePlug *other )
 			break;
 		case IntPlugTypeId :
 			setValue( (T)static_cast<const IntPlug *>( other )->getValue() );
+			break;
+		case BoolPlugTypeId :
+			setValue( (T)static_cast<const BoolPlug *>( other )->getValue() );
 			break;
 		default :
 			throw IECore::Exception( "Unsupported plug type" );
