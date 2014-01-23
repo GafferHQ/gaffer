@@ -63,7 +63,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( self.__testFile )
-		reader["refreshCount"].setValue( 1 )
+		reader["refreshCount"].setValue( self.uniqueInt( self.__testFile ) )
 		
 		scene = reader["out"]
 		self.assertEqual( scene.childNames( "/" ), IECore.InternedStringVectorData( [ "1" ] ) )
@@ -84,7 +84,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		# it thinks it's reading an old file...
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( self.__testFile )
-		reader["refreshCount"].setValue( 2 )
+		reader["refreshCount"].setValue( self.uniqueInt( self.__testFile ) )
 		
 		scene = reader["out"]
 		self.assertEqual( scene.childNames( "/" ), IECore.InternedStringVectorData( [ "transform" ] ) )
@@ -106,7 +106,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		# we have to remember to set the refresh counts to different values in different tests, otherwise
 		# it thinks it's reading an old file...
-		reader["refreshCount"].setValue( 3 )
+		reader["refreshCount"].setValue( self.uniqueInt( self.__testFile ) )
 		
 		scene = reader["out"]
 		self.assertSceneValid( scene )
@@ -232,7 +232,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( SceneReadWriteTest.__testFile )
-		reader["refreshCount"].setValue( 4 )
+		reader["refreshCount"].setValue( self.uniqueInt( SceneReadWriteTest.__testFile ) )
 		
 		scene = reader["out"]
 		
@@ -273,7 +273,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		# we have to remember to set the refresh counts to different values in different tests, otherwise
 		# it thinks it's reading an old file...
-		reader["refreshCount"].setValue( 5 )
+		reader["refreshCount"].setValue( self.uniqueInt( self.__testFile ) )
 		
 		self.assertSceneValid( reader["out"] )
 		self.assertEqual( reader["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "transform" ] ) )
