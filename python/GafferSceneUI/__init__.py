@@ -72,3 +72,4 @@ import ShaderSwitchUI
 import ShaderAssignmentUI
 import ParentConstraintUI
 import ParentUI
+from SceneReaderPathPreview import SceneReaderPathPreview
