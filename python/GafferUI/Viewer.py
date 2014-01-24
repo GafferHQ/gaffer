@@ -70,8 +70,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
-		self.__toolbarFrame = GafferUI.Frame( borderWidth = 4, borderStyle=GafferUI.Frame.BorderStyle.None )
-		self.__gadgetWidget.addOverlay( self.__toolbarFrame )
+		with GafferUI.ListContainer( borderWidth = 2, spacing = 2 ) as toolbarColumn :
+			self.__nodeToolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+			self.__toolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+		self.__gadgetWidget.addOverlay( toolbarColumn )
 		
 		self.__views = []
 		self.__currentView = None
@@ -120,13 +122,17 @@ class Viewer( GafferUI.NodeSetEditor ) :
 										
 		if self.__currentView is not None :	
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
+			self.__nodeToolbarFrame.setChild( GafferUI.NodeToolbar.create( node ) )
 			self.__toolbarFrame.setChild( self.__currentView.__toolbar )
 			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			self.__nodeToolbarFrame.setChild( None )
 			self.__toolbarFrame.setChild( None )
-			
+		
+		self.__nodeToolbarFrame.setVisible( self.__nodeToolbarFrame.getChild() is not None )
+
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
