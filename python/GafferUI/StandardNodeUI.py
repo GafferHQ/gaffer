@@ -174,7 +174,8 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		# mapping from plug name to PlugValueWidget for use in plugValueWidget().
 		## \todo Using names makes us vulnerable to plug name changes - do better. We
 		# currently have the same problem in CompoundPlugValueWidget, where the problem is
-		# worse because the names are much more likely to change.
+		# worse because the names are much more likely to change. See also StandardNodeToolbar,
+		# where there are some notes as to how this might be fixed.
 		self.__plugValueWidgets = {} 
 		
 		for plug in self.node().children( Gaffer.Plug.staticTypeId() ) :

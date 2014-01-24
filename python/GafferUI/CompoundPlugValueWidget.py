@@ -189,6 +189,8 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		return self.getPlug().children()
 	
+	## \todo Mapping plugName->widget makes us vulnerable to name changes.
+	# See similar comments in StandardNodeUI and StandardNodeToolbar.
 	def __updateChildPlugUIs( self ) :
 	
 		# ditch child uis we don't need any more
