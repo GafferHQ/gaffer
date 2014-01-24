@@ -177,11 +177,13 @@ from NodeMenu import NodeMenu
 import FileMenu
 import LayoutMenu
 import EditMenu
-from Viewer import Viewer
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from NodeUI import NodeUI
 from StandardNodeUI import StandardNodeUI
+from NodeToolbar import NodeToolbar
+from StandardNodeToolbar import StandardNodeToolbar
+from Viewer import Viewer
 from ColorSwatchPlugValueWidget import ColorSwatchPlugValueWidget
 from ColorPlugValueWidget import ColorPlugValueWidget
 from AboutWindow import AboutWindow
